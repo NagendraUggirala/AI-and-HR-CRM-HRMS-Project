@@ -1,32 +1,70 @@
 import React, { useState } from "react";
-import { Modal, Button, Form } from "react-bootstrap";
+import { Modal, Button, Form, Card, Badge } from "react-bootstrap";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 
+// React Icons Import
+import { 
+  FiFileText, 
+  FiFile, 
+  FiPlus, 
+  FiEdit, 
+  FiTrash2, 
+  FiX,
+  FiCheck,
+  FiCalendar,
+  FiDollarSign,
+  FiMail,
+  FiPhone,
+  FiMapPin,
+  FiUser,
+  FiTrendingUp,
+  FiGrid,
+  FiFilter,
+  FiDownload,
+  FiCircle,
+  FiAlertCircle,
+  FiTag,
+  FiBriefcase,
+  FiGlobe,
+  FiTarget,
+  FiClock
+} from "react-icons/fi";
 
+// Dummy avatar image paths
+const dummyImages = [
+    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
+    "https://images.unsplash.com/photo-1494790108755-2616b786d4d1?w=100&h=100&fit=crop&crop=face",
+    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
+    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&crop=face",
+    "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face",
+    "https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=100&h=100&fit=crop&crop=face",
+    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face",
+    "https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=100&h=100&fit=crop&crop=face",
+    "https://images.unsplash.com/photo-1520813792240-56fc4a3765a7?w=100&h=100&fit=crop&crop=face",
+];
 
-
-const defaultAvatar =
-    "/assets/img/users/user-09.jpg";
+const defaultAvatar = dummyImages[0];
 
 export default function Deals() {
     const initialDealsData = [
         {
             stage: "New",
-            color: "purple",
+            color: "primary",
+            icon: <FiCircle />,
             leads: 3,
             amount: "16,90,000/-",
             deals: [
                 {
                     initials: "WR",
                     title: "Website Redesign",
-                    amount: "4,50,000/-",
-                    email: "sushanth@gmail.com",
-                    phone: "9550987534",
+                    amount: "4,30,000/-",
+                    email: "scalantv@gmail.com",
+                    phone: "9556987534",
                     location: "India",
                     owner: "Sushanth",
-                    ownerImg: "/assets/img/users/user-09.jpg",
+                    ownerImg: dummyImages[0],
                     progress: "85%",
                     date: "10 Jan 2024",
                 },
@@ -38,7 +76,7 @@ export default function Deals() {
                     phone: "9876543210",
                     location: "India",
                     owner: "Raghav",
-                    ownerImg: "/assets/img/users/user-13.jpg",
+                    ownerImg: dummyImages[1],
                     progress: "15%",
                     date: "12 Jan 2024",
                 },
@@ -50,7 +88,7 @@ export default function Deals() {
                     phone: "9993489516",
                     location: "India",
                     owner: "Siddhartha",
-                    ownerImg: "/assets/img/users/user-32.jpg",
+                    ownerImg: dummyImages[2],
                     progress: "95%",
                     date: "10 Jan 2024",
                 },
@@ -59,6 +97,7 @@ export default function Deals() {
         {
             stage: "Prospect",
             color: "info",
+            icon: <FiUser />,
             leads: 30,
             amount: "19,94,938/-",
             deals: [
@@ -66,11 +105,11 @@ export default function Deals() {
                     initials: "AP",
                     title: "App Development",
                     amount: "3,15,000/-",
-                    email: "janu200@gmail.com",
-                    phone: "9988776655",
+                    email: "jswz200@gmail.com",
+                    phone: "9688776655",
                     location: "India",
                     owner: "Jahnavi",
-                    ownerImg: "/assets/img/users/user-22.jpg",
+                    ownerImg: dummyImages[3],
                     progress: "95%",
                     date: "10 Jan 2024",
                 },
@@ -82,7 +121,7 @@ export default function Deals() {
                     phone: "9997770001",
                     location: "India",
                     owner: "Praveena",
-                    ownerImg: "/assets/img/users/user-12.jpg",
+                    ownerImg: dummyImages[4],
                     progress: "15%",
                     date: "12 Jan 2024",
                 },
@@ -94,7 +133,7 @@ export default function Deals() {
                     phone: "9823456019",
                     location: "India",
                     owner: "Aravind",
-                    ownerImg: "/assets/img/users/user-08.jpg",
+                    ownerImg: dummyImages[5],
                     progress: "65%",
                     date: "10 Jan 2024",
                 },
@@ -103,6 +142,7 @@ export default function Deals() {
         {
             stage: "Proposal",
             color: "warning",
+            icon: <FiFileText />,
             leads: 30,
             amount: "19,94,938/-",
             deals: [
@@ -111,10 +151,10 @@ export default function Deals() {
                     title: "SEO Services",
                     amount: "8,40,000/-",
                     email: "surya999@gmail.com",
-                    phone: "9506348195",
+                    phone: "9506348965",
                     location: "India",
                     owner: "Surya Prakash",
-                    ownerImg: "/assets/img/users/user-49.jpg",
+                    ownerImg: dummyImages[6],
                     progress: "60%",
                     date: "10 Jan 2024",
                 },
@@ -126,7 +166,7 @@ export default function Deals() {
                     phone: "9848621906",
                     location: "India",
                     owner: "Ankitha",
-                    ownerImg: "/assets/img/users/user-38.jpg",
+                    ownerImg: dummyImages[7],
                     progress: "15%",
                     date: "12 Jan 2024",
                 },
@@ -135,6 +175,7 @@ export default function Deals() {
         {
             stage: "Won",
             color: "success",
+            icon: <FiCheck />,
             leads: 30,
             amount: "19,94,938/-",
             deals: [
@@ -142,11 +183,11 @@ export default function Deals() {
                     initials: "CM",
                     title: "Cloud Migration",
                     amount: "1,80,000/-",
-                    email: "keerthisuresh@gmail.com",
-                    phone: "9802459315",
+                    email: "kearthilurtech@gmail.com",
+                    phone: "9802459355",
                     location: "India",
-                    owner: "keerthi Suresh",
-                    ownerImg: "/assets/img/users/user-40.jpg",
+                    owner: "Kearthi Sunsh",
+                    ownerImg: dummyImages[8],
                     progress: "85%",
                     date: "10 Jan 2024",
                 },
@@ -162,39 +203,24 @@ export default function Deals() {
     const [selectedStageIndex, setSelectedStageIndex] = useState(null);
     const [selectedDealIndex, setSelectedDealIndex] = useState(null);
     const [sortBy, setSortBy] = useState("Last 7 Days");
-    const [exportType, setExportType] = useState("");
 
     const initialForm = {
         dealName: "",
-        pipeline: "",
-        status: "",
         dealValue: "",
-        currency: "",
-        period: "",
-        periodValue: "",
         contact: "",
-        project: "",
-        dueDate: "",
-        closingDate: "",
-        assignee: "",
-        tags: "",
-        followupDate: "",
-        source: "",
-        priority: "",
-        description: "",
-        initials: "",
-        title: "",
-        amount: "",
-        email: "",
         phone: "",
-        location: "",
-        owner: "",
-        ownerImg: "",
+        location: "India",
+        assignee: "",
         progress: "",
         date: "",
+        stage: "New",
+        pipeline: "Sales",
+        status: "Open",
+        project: "Office Management App",
+        source: "Phone Calls",
+        priority: "Medium",
     };
     const [formData, setFormData] = useState(initialForm);
-
 
     const makeInitials = (name) => {
         if (!name) return "";
@@ -204,11 +230,14 @@ export default function Deals() {
     };
 
     // Open Add Modal
-    const openAddModal = (stageIndex) => {
+    const openAddModal = (stageIndex = 0) => {
         setSelectedStageIndex(stageIndex);
         setSelectedDealIndex(null);
         setIsEditing(false);
-        setFormData(initialForm);
+        setFormData({
+            ...initialForm,
+            stage: dealsState[stageIndex]?.stage || "New"
+        });
         setShowAddEditModal(true);
     };
 
@@ -223,17 +252,11 @@ export default function Deals() {
             dealValue: deal.amount || "",
             contact: deal.email || "",
             phone: deal.phone || "",
-            project: deal.location || "",
-            assignee: deal.owner || "",
-            ownerImg: deal.ownerImg || defaultAvatar,
-            initials: deal.initials || makeInitials(deal.owner || deal.title || ""),
-            title: deal.title || "",
-            amount: deal.amount || "",
-            email: deal.email || "",
             location: deal.location || "",
-            owner: deal.owner || "",
+            assignee: deal.owner || "",
             progress: deal.progress || "",
             date: deal.date || "",
+            stage: dealsState[stageIndex]?.stage || "New"
         });
         setSelectedStageIndex(stageIndex);
         setSelectedDealIndex(dealIndex);
@@ -243,74 +266,99 @@ export default function Deals() {
 
     const handleExport = (type) => {
         if (type === "Excel") {
-            const worksheet = XLSX.utils.json_to_sheet(dealsState.flatMap(s => s.deals));
+            const allDeals = dealsState.flatMap((stage) =>
+                stage.deals.map((deal) => ({
+                    Stage: stage.stage,
+                    "Deal Name": deal.title,
+                    Amount: deal.amount,
+                    Email: deal.email,
+                    Phone: deal.phone,
+                    Location: deal.location,
+                    Owner: deal.owner,
+                    Progress: deal.progress,
+                    Date: deal.date,
+                }))
+            );
+
+            const worksheet = XLSX.utils.json_to_sheet(allDeals);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Deals");
             const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
             const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-            saveAs(blob, "deals.xlsx");   // 👈 file downloaded in user’s browser
+            saveAs(blob, "deals-report.xlsx");
         } else if (type === "PDF") {
-            alert("PDF export not yet implemented!");
-        }
-    };
-
-    const handleExports = (type) => {
-        if (type === "PDF") {
             const doc = new jsPDF();
-            doc.text("Deals Report", 10, 10);
-            dealsState.forEach((stage, i) => {
-                doc.text(`${stage.stage} (${stage.deals.length} deals)`, 10, 20 + i * 10);
+            
+            doc.setFontSize(16);
+            doc.setTextColor(66, 139, 202);
+            doc.text("Deals Report", 20, 20);
+            
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            const today = new Date().toLocaleDateString();
+            doc.text(`Generated: ${today}`, 20, 30);
+            
+            let y = 40;
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.text("Summary", 20, y);
+            
+            y += 8;
+            doc.setFontSize(10);
+            dealsState.forEach((stage) => {
+                if (y > 280) {
+                    doc.addPage();
+                    y = 20;
+                }
+                doc.text(`${stage.stage}: ${stage.deals.length} deals, ${stage.amount}`, 
+                    25, y);
+                y += 7;
             });
-            doc.save("deals.pdf");   // 👈 file downloaded in user’s browser
+            
+            doc.save("deals-report.pdf");
         }
     };
-
 
     // Save (Add or Edit)
     const handleSave = (e) => {
         e.preventDefault();
 
-
+        const stageIndex = dealsState.findIndex(stage => stage.stage === formData.stage);
+        const randomAvatar = dummyImages[Math.floor(Math.random() * dummyImages.length)];
+        
         const cardDeal = {
-            initials:
-                formData.initials || makeInitials(formData.assignee || formData.dealName || ""),
-            title: formData.dealName || formData.title || "Untitled Deal",
-            amount: formData.dealValue || formData.amount || "",
-            email: formData.contact || formData.email || "",
+            initials: makeInitials(formData.assignee || formData.dealName || ""),
+            title: formData.dealName || "Untitled Deal",
+            amount: formData.dealValue || "",
+            email: formData.contact || "",
             phone: formData.phone || "",
-            location: formData.project || formData.location || "",
-            owner: formData.assignee || formData.owner || "",
-            ownerImg: formData.ownerImg || defaultAvatar,
-            progress: formData.progress || "",
-            date: formData.dueDate || formData.closingDate || formData.date || "",
-
-            meta: {
-                pipeline: formData.pipeline,
-                status: formData.status,
-                currency: formData.currency,
-                period: formData.period,
-                periodValue: formData.periodValue,
-                tags: formData.tags,
-                followupDate: formData.followupDate,
-                source: formData.source,
-                priority: formData.priority,
-                description: formData.description,
-            },
+            location: formData.location || "India",
+            owner: formData.assignee || "",
+            ownerImg: randomAvatar,
+            progress: formData.progress || "0%",
+            date: formData.date || new Date().toLocaleDateString('en-GB'),
         };
 
         setDealsState((prev) => {
             const copy = prev.map((s) => ({ ...s, deals: [...s.deals] }));
+            
             if (isEditing && selectedStageIndex !== null && selectedDealIndex !== null) {
-                // Replace existing deal
-                copy[selectedStageIndex].deals[selectedDealIndex] = { ...cardDeal };
-            } else if (selectedStageIndex !== null) {
-                // Add new deal to stage
-                copy[selectedStageIndex].deals.push(cardDeal);
+                if (stageIndex !== selectedStageIndex) {
+                    copy[selectedStageIndex].deals.splice(selectedDealIndex, 1);
+                    copy[stageIndex].deals.push(cardDeal);
+                } else {
+                    copy[stageIndex].deals[selectedDealIndex] = { ...cardDeal };
+                }
+            } else {
+                if (stageIndex !== -1) {
+                    copy[stageIndex].deals.push(cardDeal);
+                } else {
+                    copy[0].deals.push(cardDeal);
+                }
             }
             return copy;
         });
 
-        // close modal & reset
         setShowAddEditModal(false);
         setIsEditing(false);
         setSelectedDealIndex(null);
@@ -347,403 +395,663 @@ export default function Deals() {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    return (
-        <div>
+    // Get progress color based on percentage
+    const getProgressColor = (progress) => {
+        const percentage = parseInt(progress) || 0;
+        if (percentage >= 80) return "success";
+        if (percentage >= 50) return "warning";
+        return "danger";
+    };
 
-           
-            <div className="d-flex justify-content-between">
+    return (
+        <div className="deals-container">
+            {/* Header Section */}
+            <div className="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                    <h1 className="mb-1 mt-2 fs-4"><b>Deals</b></h1>
+                    <h1 className="mb-0 fs-6 fw-bold">
+                        <FiTrendingUp className="me-2 text-primary" size={16} />
+                        Deals
+                    </h1>
                 </div>
 
-                <div className="d-flex my-xl-auto right-content align-items-center flex-wrap">
-                    <div className="me-2 mb-2 dropdown">
-                        <button
-                            className="btn btn-white dropdown-toggle"
+                <div className="d-flex align-items-center gap-2">
+                    <div className="dropdown">
+                        <Button
+                            variant="outline-primary"
+                            size="sm"
+                            className="dropdown-toggle d-flex align-items-center"
                             data-bs-toggle="dropdown"
                         >
-                            <i className="ti ti-file-export me-1" /> Export
-                        </button>
-                        <ul className="dropdown-menu">
+                            <FiDownload className="me-1" size={14} />
+                            Export
+                        </Button>
+                        <ul className="dropdown-menu dropdown-menu-end shadow">
                             <li>
                                 <button
-                                    className="dropdown-item"
-                                    onClick={() => handleExports("PDF")}
+                                    className="dropdown-item d-flex align-items-center"
+                                    onClick={() => handleExport("PDF")}
                                 >
-                                    PDF
+                                    <FiFile className="me-2" size={14} />
+                                    Export as PDF
                                 </button>
                             </li>
                             <li>
                                 <button
-                                    className="dropdown-item"
+                                    className="dropdown-item d-flex align-items-center"
                                     onClick={() => handleExport("Excel")}
                                 >
-                                    Excel
+                                    <FiFileText className="me-2" size={14} />
+                                    Export as Excel
                                 </button>
                             </li>
                         </ul>
                     </div>
 
-                    <div className="mb-2">
-
-                        <Button
-                            variant="secondary"
-                            onClick={() => {
-                                openAddModal(0);
-                            }}
-                        >
-                            <i className="ti ti-circle-plus me-2" />
-                            Add Deal
-                        </Button>
-                    </div>
+                    <Button
+                        variant="primary"
+                        size="sm"
+                        className="d-flex align-items-center"
+                        onClick={() => openAddModal()}
+                    >
+                        <FiPlus className="me-1" size={14} />
+                        Add Deal
+                    </Button>
                 </div>
             </div>
 
-
-            {/* Deals Grid Header */}
-            <div className="card w-100 mb-3">
-                <div className="card-body p-3 d-flex justify-content-between">
-                    <h5 className="fs-6"><b>Deals Grid</b></h5>
-                    <div className="dropdown">
-                        <button
-                            className="btn btn-sm btn-white dropdown-toggle"
-                            data-bs-toggle="dropdown"
-                        >
-                            Sort By : {sortBy}
-                        </button>
-                        <ul className="dropdown-menu">
-                            <li>
-                                <button
-                                    className="dropdown-item"
-                                    onClick={() => setSortBy("Last 7 Days")}
-                                >
-                                    Last 7 Days
-                                </button>
-                            </li>
-                            <li>
-                                <button
-                                    className="dropdown-item"
-                                    onClick={() => setSortBy("Monthly")}
-                                >
-                                    Monthly
-                                </button>
-                            </li>
-                            <li>
-                                <button
-                                    className="dropdown-item"
-                                    onClick={() => setSortBy("Weekly")}
-                                >
-                                    Weekly
-                                </button>
-                            </li>
-                            <li>
-                                <button
-                                    className="dropdown-item"
-                                    onClick={() => setSortBy("Yearly")}
-                                >
-                                    Yearly
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-
-            <div className="d-flex overflow-x-auto align-items-start mb-4">
-                <div className="d-flex">
-                    {dealsState.map((stage, stageIndex) => (
-                        <div key={stage.stage} className="me-3" style={{ minWidth: 320 }}>
-                            <div className="card w-100 mb-0">
-                                <div className="card-body d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h4 className="fw-medium d-flex align-items-center mb-1 fs-6">
-                                            <i className={`ti ti-circle-filled fs-8 text-${stage.color} me-2`} />
-                                            <b>{stage.stage}</b>
-                                        </h4>
-                                        <span className="fw-normal text-default">
-                                            {stage.leads} Deals - {stage.amount}
-                                        </span>
-                                    </div>
-
-                                    <div className="action-icon d-inline-flex">
+            {/* Deals Grid Section with Sort By on Right */}
+            <Card className="mb-3 shadow-sm border-light">
+                <Card.Body className="p-2">
+                    <div className="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 className="mb-0 fw-semibold" style={{ fontSize: "0.85rem" }}>
+                                Deals Grid
+                            </h5>
+                        </div>
+                        <div className="dropdown">
+                            <Button
+                                variant="outline-secondary"
+                                size="sm"
+                                className="dropdown-toggle d-flex align-items-center"
+                                data-bs-toggle="dropdown"
+                            >
+                                <FiFilter className="me-1" size={12} />
+                                Sort By: {sortBy}
+                            </Button>
+                            <ul className="dropdown-menu dropdown-menu-end shadow">
+                                {["Last 7 Days", "Weekly", "Monthly", "Yearly"].map((option) => (
+                                    <li key={option}>
                                         <button
-                                            type="button"
-                                            className="btn btn-sm btn-outline-primary"
-                                            onClick={() => openAddModal(stageIndex)}
+                                            className="dropdown-item d-flex align-items-center"
+                                            onClick={() => setSortBy(option)}
                                         >
-                                            <i className="ti ti-circle-plus" />
+                                            <FiCalendar className="me-2" size={12} />
+                                            {option}
                                         </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                </Card.Body>
+            </Card>
+
+            {/* Deals Grid - Compact Layout */}
+            <div className="row g-3 mb-4">
+                {dealsState.map((stage, stageIndex) => (
+                    <div key={stage.stage} className="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+                        <Card className="shadow-sm border-light h-100">
+                            <Card.Body className="p-2">
+                                {/* Stage Header - Compact */}
+                                <div className={`p-2 mb-2 border-bottom`}>
+                                    <div className="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <Badge bg={stage.color} className="mb-1 px-2 py-1" style={{ fontSize: "0.7rem" }}>
+                                                {stage.stage}
+                                            </Badge>
+                                            <h6 className="mb-0 text-muted" style={{ fontSize: "0.75rem" }}>
+                                                {stage.leads} Deals • {stage.amount}
+                                            </h6>
+                                        </div>
+                                        <Button
+                                            variant="outline-primary"
+                                            size="sm"
+                                            className="rounded-circle p-0 d-flex align-items-center justify-content-center"
+                                            style={{ width: "22px", height: "22px" }}
+                                            onClick={() => openAddModal(stageIndex)}
+                                            title="Add Deal"
+                                        >
+                                            <FiPlus size={10} />
+                                        </Button>
                                     </div>
                                 </div>
 
-                                <div className="kanban-drag-wrap pt-3">
+                                {/* Stage Deals - Compact Cards */}
+                                <div className="p-1">
                                     {stage.deals.map((deal, dealIndex) => (
-                                        <div key={`${stageIndex}-${dealIndex}`} className="card w-100 kanban-card mb-3">
-                                            <div className="card-body">
-                                                <div className={`border-${stage.color}  mb-3`} />
+                                        <div key={`${stageIndex}-${dealIndex}`} className="mb-2 p-2 border rounded">
+                                            {/* Deal Header - Top */}
+                                            <div className="d-flex justify-content-between align-items-center mb-1">
+                                                <h6 className="mb-0 fw-bold" style={{ fontSize: "0.8rem" }}>
+                                                    {deal.title}
+                                                </h6>
+                                                <Badge bg={getProgressColor(deal.progress)} className="px-2 py-1" style={{ fontSize: "0.6rem" }}>
+                                                    {deal.progress}
+                                                </Badge>
+                                            </div>
 
-                                                <div className="d-flex align-items-center mb-3">
-                                                    <div className="avatar avatar-lg bg-gray flex-shrink-0 me-2">
-                                                        <span className="avatar-title text-dark">{deal.initials}</span>
-                                                    </div>
-                                                    <h6 className="fw-medium"><b>{deal.title}</b></h6>
+                                            {/* Deal Amount - Prominent */}
+                                            <div className="mb-2">
+                                                <div className="d-flex align-items-center">
+                                                    <FiDollarSign className="text-success me-1" size={9} />
+                                                    <span className="fw-bold" style={{ fontSize: "0.75rem" }}>{deal.amount}</span>
                                                 </div>
+                                            </div>
 
-                                                <div className="mb-3 d-flex flex-column">
-                                                    <p>
-                                                        <i className="ti ti-cash text-dark me-2" />
-                                                        {deal.amount}
-                                                    </p>
-                                                    <p>
-                                                        <i className="ti ti-mail text-dark me-2" />
-                                                        {deal.email}
-                                                    </p>
-                                                    <p>
-                                                        <i className="ti ti-phone text-dark me-2" />
-                                                        {deal.phone}
-                                                    </p>
-                                                    <p>
-                                                        <i className="ti ti-map-pin-2 text-dark me-2" />
-                                                        {deal.location}
-                                                    </p>
+                                            {/* Contact Info - Compact */}
+                                            <div className="mb-2">
+                                                <div className="d-flex align-items-center mb-1">
+                                                    <FiMail className="text-muted me-1" size={8} />
+                                                    <span className="small" style={{ fontSize: "0.65rem" }}>{deal.email}</span>
                                                 </div>
-
-                                                <div className="d-flex justify-content-between align-items-center">
-                                                    <div className="d-flex align-items-center">
-                                                        <img src={deal.ownerImg || defaultAvatar} alt="owner" className="avatar avatar-md avatar-rounded me-2" />
-                                                        <span>{deal.owner}</span>
-                                                    </div>
-                                                    <span className="badge badge-sm badge-info-transparent">
-                                                        <i className="ti ti-progress me-1" />
-                                                        {deal.progress}
-                                                    </span>
+                                                <div className="d-flex align-items-center">
+                                                    <FiPhone className="text-muted me-1" size={8} />
+                                                    <span className="small" style={{ fontSize: "0.65rem" }}>{deal.phone}</span>
                                                 </div>
+                                            </div>
 
-                                                <div className="d-flex align-items-center justify-content-between border-top pt-3 mt-3">
-                                                    <span>
-                                                        <i className="ti ti-calendar-due text-gray-5" /> {deal.date}
-                                                    </span>
-
-                                                    <div>
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-sm btn-link me-2"
-                                                            onClick={() => openEditModal(stageIndex, dealIndex)}
-                                                        >
-                                                            <i className="ti ti-edit" />
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-sm btn-link text-danger"
-                                                            onClick={() => openDeleteModal(stageIndex, dealIndex)}
-                                                        >
-                                                            <i className="ti ti-trash" />
-                                                        </button>
-                                                    </div>
+                                            {/* Owner and Actions - Bottom */}
+                                            <div className="d-flex justify-content-between align-items-center pt-2 border-top">
+                                                <div className="d-flex align-items-center">
+                                                    <img
+                                                        src={deal.ownerImg || dummyImages[Math.floor(Math.random() * dummyImages.length)]}
+                                                        alt={deal.owner}
+                                                        className="avatar avatar-xs rounded-circle me-1"
+                                                        style={{ width: "20px", height: "20px" }}
+                                                        onError={(e) => {
+                                                            e.target.src = dummyImages[Math.floor(Math.random() * dummyImages.length)]
+                                                        }}
+                                                    />
+                                                    <span className="small text-muted" style={{ fontSize: "0.65rem" }}>{deal.owner}</span>
                                                 </div>
+                                                <div className="d-flex gap-1">
+                                                    <Button
+                                                        variant="outline-primary"
+                                                        size="sm"
+                                                        className="rounded-circle p-0 d-flex align-items-center justify-content-center"
+                                                        style={{ width: "20px", height: "20px" }}
+                                                        onClick={() => openEditModal(stageIndex, dealIndex)}
+                                                        title="Edit Deal"
+                                                    >
+                                                        <FiEdit size={9} />
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline-danger"
+                                                        size="sm"
+                                                        className="rounded-circle p-0 d-flex align-items-center justify-content-center"
+                                                        style={{ width: "20px", height: "20px" }}
+                                                        onClick={() => openDeleteModal(stageIndex, dealIndex)}
+                                                        title="Delete Deal"
+                                                    >
+                                                        <FiTrash2 size={9} />
+                                                    </Button>
+                                                </div>
+                                            </div>
+
+                                            {/* Date - Small */}
+                                            <div className="mt-1 text-end">
+                                                <span className="text-muted" style={{ fontSize: "0.6rem" }}>
+                                                    <FiCalendar className="me-1" size={6} />
+                                                    {deal.date}
+                                                </span>
                                             </div>
                                         </div>
                                     ))}
+
                                     {stage.deals.length === 0 && (
-                                        <div className="text-center text-muted small p-3">No deals</div>
+                                        <div className="text-center py-3">
+                                            <FiAlertCircle className="text-muted mb-1" size={16} />
+                                            <p className="text-muted mb-2 small" style={{ fontSize: "0.65rem" }}>No deals in this stage</p>
+                                            <Button
+                                                variant="outline-secondary"
+                                                size="sm"
+                                                onClick={() => openAddModal(stageIndex)}
+                                                className="d-flex align-items-center justify-content-center mx-auto"
+                                                style={{ fontSize: "0.7rem", padding: "2px 8px" }}
+                                            >
+                                                <FiPlus className="me-1" size={10} />
+                                                Add Deal
+                                            </Button>
+                                        </div>
                                     )}
                                 </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                            </Card.Body>
+                        </Card>
+                    </div>
+                ))}
             </div>
 
-            {/* Add / Edit Modal (react-bootstrap) */}
+            {/* Add / Edit Modal */}
             <Modal show={showAddEditModal} onHide={() => setShowAddEditModal(false)} size="lg" centered>
+                <Modal.Header closeButton className="border-bottom py-2">
+                    <Modal.Title className="d-flex align-items-center fs-6">
+                        {isEditing ? (
+                            <>
+                                <FiEdit className="text-warning me-2" size={15} />
+                                Edit Deal
+                            </>
+                        ) : (
+                            <>
+                                <FiPlus className="text-primary me-2" size={15} />
+                                Add New Deal
+                            </>
+                        )}
+                    </Modal.Title>
+                </Modal.Header>
                 <Form onSubmit={handleSave}>
-                    <Modal.Header closeButton>
-                        <Modal.Title>{isEditing ? "Edit Deal" : "Add New Deal"}</Modal.Title>
-                    </Modal.Header>
-
-                    <Modal.Body>
-                        <div className="row">
+                    <Modal.Body className="py-2">
+                        <div className="row g-2">
                             {/* Deal Name */}
-                            <div className="col-md-12 mb-3">
-                                <Form.Label>Deal Name<span className="text-danger">*</span></Form.Label>
-                                <Form.Control
-                                    name="dealName"
-                                    value={formData.dealName}
-                                    onChange={handleChange}
-                                    required
-                                />
+                            <div className="col-md-12">
+                                <Form.Group>
+                                    <Form.Label className="fw-medium d-flex align-items-center" style={{ fontSize: "0.85rem" }}>
+                                        <FiTag className="me-1" size={13} />
+                                        Deal Name <span className="text-danger ms-1">*</span>
+                                    </Form.Label>
+                                    <Form.Control
+                                        size="sm"
+                                        name="dealName"
+                                        value={formData.dealName}
+                                        onChange={handleChange}
+                                        required
+                                        placeholder="Enter deal name"
+                                    />
+                                </Form.Group>
                             </div>
 
-                            {/* Pipeline */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Pipeline
-                                    <span className="text-danger">*</span></Form.Label>
-
-                                <Form.Select name="pipeline" value={formData.pipeline} onChange={handleChange} required>
-                                    <option value="">Select</option>
-                                    <option>Sales</option>
-                                    <option>Marketing</option>
-                                    <option>Calls</option>
-                                </Form.Select>
+                            {/* Stage */}
+                            <div className="col-md-12">
+                                <Form.Group>
+                                    <Form.Label className="fw-medium d-flex align-items-center" style={{ fontSize: "0.85rem" }}>
+                                        <FiGrid className="me-1" size={13} />
+                                        Stage <span className="text-danger ms-1">*</span>
+                                    </Form.Label>
+                                    <Form.Select 
+                                        size="sm"
+                                        name="stage" 
+                                        value={formData.stage} 
+                                        onChange={handleChange} 
+                                        required
+                                    >
+                                        {dealsState.map((stage) => (
+                                            <option key={stage.stage} value={stage.stage}>
+                                                {stage.stage}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                </Form.Group>
                             </div>
 
-                            {/* Status */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Status<span className="text-danger">*</span></Form.Label>
-                                <Form.Select name="status" value={formData.status} onChange={handleChange} required>
-                                    <option value="">Select</option>
-                                    <option>Open</option>
-                                    <option>Won</option>
-                                    <option>Lost</option>
-                                </Form.Select>
+                            {/* Pipeline & Status */}
+                            <div className="col-md-6">
+                                <Form.Group>
+                                    <Form.Label className="fw-medium d-flex align-items-center" style={{ fontSize: "0.85rem" }}>
+                                        <FiTarget className="me-1" size={13} />
+                                        Pipeline
+                                    </Form.Label>
+                                    <Form.Select 
+                                        size="sm"
+                                        name="pipeline" 
+                                        value={formData.pipeline} 
+                                        onChange={handleChange}
+                                    >
+                                        <option>Sales</option>
+                                        <option>Marketing</option>
+                                        <option>Calls</option>
+                                    </Form.Select>
+                                </Form.Group>
+                            </div>
+                            <div className="col-md-6">
+                                <Form.Group>
+                                    <Form.Label className="fw-medium d-flex align-items-center" style={{ fontSize: "0.85rem" }}>
+                                        <FiClock className="me-1" size={13} />
+                                        Status
+                                    </Form.Label>
+                                    <Form.Select 
+                                        size="sm"
+                                        name="status" 
+                                        value={formData.status} 
+                                        onChange={handleChange}
+                                    >
+                                        <option>Open</option>
+                                        <option>Won</option>
+                                        <option>Lost</option>
+                                    </Form.Select>
+                                </Form.Group>
                             </div>
 
-                            {/* Deal Value */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Deal Value<span className="text-danger">*</span></Form.Label>
-                                <Form.Control name="dealValue" value={formData.dealValue} onChange={handleChange} />
+                            {/* Deal Value & Progress */}
+                            <div className="col-md-6">
+                                <Form.Group>
+                                    <Form.Label className="fw-medium d-flex align-items-center" style={{ fontSize: "0.85rem" }}>
+                                        <FiDollarSign className="me-1" size={13} />
+                                        Deal Value <span className="text-danger ms-1">*</span>
+                                    </Form.Label>
+                                    <Form.Control 
+                                        size="sm"
+                                        name="dealValue" 
+                                        value={formData.dealValue} 
+                                        onChange={handleChange} 
+                                        required
+                                        placeholder="0,00,000/-"
+                                    />
+                                </Form.Group>
+                            </div>
+                            <div className="col-md-6">
+                                <Form.Group>
+                                    <Form.Label className="fw-medium d-flex align-items-center" style={{ fontSize: "0.85rem" }}>
+                                        <FiTrendingUp className="me-1" size={13} />
+                                        Progress <span className="text-danger ms-1">*</span>
+                                    </Form.Label>
+                                    <Form.Control 
+                                        size="sm"
+                                        name="progress" 
+                                        value={formData.progress} 
+                                        onChange={handleChange} 
+                                        required
+                                        placeholder="e.g., 75%"
+                                    />
+                                </Form.Group>
                             </div>
 
-                            {/* Currency */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Currency<span className="text-danger">*</span></Form.Label>
-                                <Form.Select name="currency" value={formData.currency} onChange={handleChange}>
-                                    <option value="">Select</option>
-                                    <option>Rupee</option>
-                                    <option>Dollar</option>
-                                    <option>Euro</option>
-                                </Form.Select>
+                            {/* Contact & Phone */}
+                            <div className="col-md-6">
+                                <Form.Group>
+                                    <Form.Label className="fw-medium d-flex align-items-center" style={{ fontSize: "0.85rem" }}>
+                                        <FiMail className="me-1" size={13} />
+                                        Contact <span className="text-danger ms-1">*</span>
+                                    </Form.Label>
+                                    <Form.Control 
+                                        size="sm"
+                                        name="contact" 
+                                        value={formData.contact} 
+                                        onChange={handleChange} 
+                                        required
+                                        type="email"
+                                        placeholder="email@example.com"
+                                    />
+                                </Form.Group>
+                            </div>
+                            <div className="col-md-6">
+                                <Form.Group>
+                                    <Form.Label className="fw-medium d-flex align-items-center" style={{ fontSize: "0.85rem" }}>
+                                        <FiPhone className="me-1" size={13} />
+                                        Phone <span className="text-danger ms-1">*</span>
+                                    </Form.Label>
+                                    <Form.Control 
+                                        size="sm"
+                                        name="phone" 
+                                        value={formData.phone} 
+                                        onChange={handleChange} 
+                                        required
+                                        placeholder="+91 9876543210"
+                                    />
+                                </Form.Group>
                             </div>
 
-                            {/* Period */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Period<span className="text-danger">*</span></Form.Label>
-                                <Form.Control name="period" value={formData.period} onChange={handleChange} />
+                            {/* Location & Project */}
+                            <div className="col-md-6">
+                                <Form.Group>
+                                    <Form.Label className="fw-medium d-flex align-items-center" style={{ fontSize: "0.85rem" }}>
+                                        <FiMapPin className="me-1" size={13} />
+                                        Location
+                                    </Form.Label>
+                                    <Form.Control 
+                                        size="sm"
+                                        name="location" 
+                                        value={formData.location} 
+                                        onChange={handleChange} 
+                                        placeholder="City, Country"
+                                    />
+                                </Form.Group>
+                            </div>
+                            <div className="col-md-6">
+                                <Form.Group>
+                                    <Form.Label className="fw-medium d-flex align-items-center" style={{ fontSize: "0.85rem" }}>
+                                        <FiBriefcase className="me-1" size={13} />
+                                        Project
+                                    </Form.Label>
+                                    <Form.Select 
+                                        size="sm"
+                                        name="project" 
+                                        value={formData.project} 
+                                        onChange={handleChange}
+                                    >
+                                        <option>Office Management App</option>
+                                        <option>Clinic Management</option>
+                                        <option>Educational Platform</option>
+                                    </Form.Select>
+                                </Form.Group>
                             </div>
 
-                            {/* Period Value */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Period Value<span className="text-danger">*</span></Form.Label>
-                                <Form.Control name="periodValue" value={formData.periodValue} onChange={handleChange} />
+                            {/* Assignee & Date */}
+                            <div className="col-md-6">
+                                <Form.Group>
+                                    <Form.Label className="fw-medium d-flex align-items-center" style={{ fontSize: "0.85rem" }}>
+                                        <FiUser className="me-1" size={13} />
+                                        Assignee <span className="text-danger ms-1">*</span>
+                                    </Form.Label>
+                                    <Form.Control 
+                                        size="sm"
+                                        name="assignee" 
+                                        value={formData.assignee} 
+                                        onChange={handleChange} 
+                                        required
+                                        placeholder="Enter assignee name"
+                                    />
+                                </Form.Group>
+                            </div>
+                            <div className="col-md-6">
+                                <Form.Group>
+                                    <Form.Label className="fw-medium d-flex align-items-center" style={{ fontSize: "0.85rem" }}>
+                                        <FiCalendar className="me-1" size={13} />
+                                        Date
+                                    </Form.Label>
+                                    <Form.Control 
+                                        size="sm"
+                                        type="date" 
+                                        name="date" 
+                                        value={formData.date} 
+                                        onChange={handleChange}
+                                    />
+                                </Form.Group>
                             </div>
 
-                            {/* Contact */}
-                            <div className="col-md-12 mb-3">
-                                <Form.Label>Contact<span className="text-danger">*</span></Form.Label>
-                                <Form.Control name="contact" value={formData.contact} onChange={handleChange} />
+                            {/* Source & Priority */}
+                            <div className="col-md-6">
+                                <Form.Group>
+                                    <Form.Label className="fw-medium d-flex align-items-center" style={{ fontSize: "0.85rem" }}>
+                                        <FiGlobe className="me-1" size={13} />
+                                        Source
+                                    </Form.Label>
+                                    <Form.Select 
+                                        size="sm"
+                                        name="source" 
+                                        value={formData.source} 
+                                        onChange={handleChange}
+                                    >
+                                        <option>Phone Calls</option>
+                                        <option>Social Media</option>
+                                        <option>Referral Sites</option>
+                                        <option>Web Analytics</option>
+                                        <option>Previous Purchase</option>
+                                    </Form.Select>
+                                </Form.Group>
                             </div>
-
-                            {/* Project */}
-                            <div className="col-md-12 mb-3">
-                                <Form.Label>Project<span className="text-danger">*</span></Form.Label>
-                                <Form.Select name="project" value={formData.project} onChange={handleChange}>
-                                    <option value="">Select</option>
-                                    <option>Office Management App</option>
-                                    <option>Clinic Management</option>
-                                    <option>Educational Platform</option>
-                                </Form.Select>
-                            </div>
-
-                            {/* Dates */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Due Date<span className="text-danger">*</span></Form.Label>
-                                <Form.Control type="date" name="dueDate" value={formData.dueDate} onChange={handleChange} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Expected Closing Date<span className="text-danger">*</span></Form.Label>
-                                <Form.Control type="date" name="closingDate" value={formData.closingDate} onChange={handleChange} />
-                            </div>
-
-                            {/* Assignee */}
-                            <div className="col-md-12 mb-3">
-                                <Form.Label>Assignee<span className="text-danger">*</span></Form.Label>
-                                <Form.Control name="assignee" value={formData.assignee} onChange={handleChange} />
-                            </div>
-
-                            {/* Tags */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Tags<span className="text-danger">*</span></Form.Label>
-                                <Form.Control name="tags" value={formData.tags} onChange={handleChange} />
-                            </div>
-
-                            {/* Followup Date */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Followup Date<span className="text-danger">*</span></Form.Label>
-                                <Form.Control type="date" name="followupDate" value={formData.followupDate} onChange={handleChange} />
-                            </div>
-
-                            {/* Source */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Source<span className="text-danger">*</span></Form.Label>
-                                <Form.Select name="source" value={formData.source} onChange={handleChange}>
-                                    <option value="">Select</option>
-                                    <option>Phone Calls</option>
-                                    <option>Social Media</option>
-                                    <option>Referral Sites</option>
-                                    <option>Web Analytics</option>
-                                    <option>Previous Purchase</option>
-                                </Form.Select>
-                            </div>
-
-                            {/* Priority */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Priority<span className="text-danger">*</span></Form.Label>
-                                <Form.Select name="priority" value={formData.priority} onChange={handleChange}>
-                                    <option value="">Select</option>
-                                    <option>High</option>
-                                    <option>Low</option>
-                                    <option>Medium</option>
-                                </Form.Select>
-                            </div>
-
-                            {/* Description */}
-                            <div className="col-md-12 mb-3">
-                                <Form.Label>Description<span className="text-danger">*</span></Form.Label>
-                                <Form.Control as="textarea" name="description" value={formData.description} onChange={handleChange} rows={3} />
+                            <div className="col-md-6">
+                                <Form.Group>
+                                    <Form.Label className="fw-medium d-flex align-items-center" style={{ fontSize: "0.85rem" }}>
+                                        <FiTarget className="me-1" size={13} />
+                                        Priority
+                                    </Form.Label>
+                                    <Form.Select 
+                                        size="sm"
+                                        name="priority" 
+                                        value={formData.priority} 
+                                        onChange={handleChange}
+                                    >
+                                        <option>High</option>
+                                        <option>Medium</option>
+                                        <option>Low</option>
+                                    </Form.Select>
+                                </Form.Group>
                             </div>
                         </div>
                     </Modal.Body>
 
-                    <Modal.Footer>
-                        <Button variant="light" onClick={() => setShowAddEditModal(false)}>
+                    <Modal.Footer className="border-top py-2">
+                        <Button 
+                            variant="light" 
+                            size="sm"
+                            onClick={() => setShowAddEditModal(false)}
+                            className="d-flex align-items-center"
+                        >
+                            <FiX className="me-1" size={14} />
                             Cancel
                         </Button>
-                        <Button type="submit" variant="secondary">
-                            {isEditing ? "Save" : "Add Deal"}
+                        <Button 
+                            type="submit" 
+                            size="sm"
+                            variant={isEditing ? "warning" : "primary"}
+                            className="d-flex align-items-center"
+                        >
+                            {isEditing ? (
+                                <>
+                                    <FiCheck className="me-1" size={14} />
+                                    Save Changes
+                                </>
+                            ) : (
+                                <>
+                                    <FiPlus className="me-1" size={14} />
+                                    Create Deal
+                                </>
+                            )}
                         </Button>
                     </Modal.Footer>
                 </Form>
             </Modal>
 
-
-            {/* Delete Modal */}
-            <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
-                <Modal.Body className="text-center">
-                    <span className="avatar avatar-xl bg-transparent-danger text-danger mb-3">
-                        <i className="ti ti-trash fs-36" />
-                    </span>
-                    <h4 className="mb-1">Confirm Delete</h4>
-                    <p className="mb-3">
-                        You want to delete{" "}
-                        <b>
+            {/* Delete Confirmation Modal */}
+            <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered size="md">
+                <Modal.Body className="text-center p-3">
+                    <div className="avatar avatar-xl bg-danger bg-opacity-10 text-danger rounded-circle mb-2 d-flex align-items-center justify-content-center mx-auto">
+                        <FiTrash2 size={24} />
+                    </div>
+                    <h5 className="mb-2 fw-bold fs-6">Confirm Delete</h5>
+                    <p className="text-muted mb-3">
+                        Are you sure you want to delete "
+                        <span className="fw-bold text-danger">
                             {selectedStageIndex !== null && selectedDealIndex !== null
-                                ? dealsState[selectedStageIndex].deals[selectedDealIndex]?.title
-                                : ""}
-                        </b>{" "}
-                        ? This can’t be undone.
+                                ? dealsState[selectedStageIndex]?.deals[selectedDealIndex]?.title
+                                : "this deal"}
+                        </span>
+                        "? This action cannot be undone.
                     </p>
-                    <div className="d-flex justify-content-center">
-                        <Button variant="light" className="me-3" onClick={() => setShowDeleteModal(false)}>
+                    <div className="d-flex justify-content-center gap-2">
+                        <Button 
+                            variant="light" 
+                            size="sm"
+                            onClick={() => setShowDeleteModal(false)}
+                            className="d-flex align-items-center"
+                        >
+                            <FiX className="me-1" size={14} />
                             Cancel
                         </Button>
-                        <Button variant="danger" onClick={handleDelete}>
-                            Yes, Delete
+                        <Button 
+                            variant="danger" 
+                            size="sm"
+                            onClick={handleDelete}
+                            className="d-flex align-items-center"
+                        >
+                            <FiTrash2 className="me-1" size={14} />
+                            Delete
                         </Button>
                     </div>
                 </Modal.Body>
             </Modal>
-            
+
+            {/* Add custom CSS for better alignment and spacing */}
+            <style>{`
+                .deals-container {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                }
+                
+                .avatar {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                
+                .avatar-xs {
+                    width: 18px !important;
+                    height: 18px !important;
+                    font-size: 0.55rem !important;
+                }
+                
+                .avatar-sm {
+                    width: 22px !important;
+                    height: 22px !important;
+                    font-size: 0.65rem !important;
+                }
+                
+                .avatar-title {
+                    margin: 0;
+                    line-height: 1;
+                }
+                
+                /* Make cards more compact */
+                .card {
+                    font-size: 0.8rem !important;
+                }
+                
+                .small {
+                    font-size: 0.7rem !important;
+                }
+                
+                /* Better spacing for compact layout */
+                .border-bottom {
+                    border-bottom: 1px solid #dee2e6 !important;
+                }
+                
+                .border-top {
+                    border-top: 1px solid #dee2e6 !important;
+                }
+                
+                /* Ensure consistent spacing */
+                .p-1 {
+                    padding: 0.2rem !important;
+                }
+                
+                .p-2 {
+                    padding: 0.4rem !important;
+                }
+                
+                .mb-1 {
+                    margin-bottom: 0.2rem !important;
+                }
+                
+                .mb-2 {
+                    margin-bottom: 0.4rem !important;
+                }
+                
+                .me-1 {
+                    margin-right: 0.2rem !important;
+                }
+                
+                .me-2 {
+                    margin-right: 0.4rem !important;
+                }
+            `}</style>
         </div>
     );
 }

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 
-
 const Activities = () => {
     const [activities, setActivities] = useState([]);
     const [selectAll, setSelectAll] = useState(false);
     const [selectedActivity, setSelectedActivity] = useState("calls");
+    const [newActivityAdded, setNewActivityAdded] = useState(false);
     
     useEffect(() => {
         const mockData = [
@@ -13,7 +13,7 @@ const Activities = () => {
                 title: "We scheduled a meeting for next week",
                 type: "Meeting",
                 badgeClass: "badge-pink-transparent",
-                icon: "ti ti-device-computer-camera",
+                icon: "bi bi-camera-video", // Bootstrap Icon
                 dueDate: "16 Jan 2024",
                 owner: "Durga prasad",
                 createdDate: "14 Jan 2024",
@@ -24,7 +24,7 @@ const Activities = () => {
                 title: "Had conversation with Fred regarding task",
                 type: "Calls",
                 badgeClass: "badge-purple-transparent",
-                icon: "ti ti-phone",
+                icon: "bi bi-telephone", // Bootstrap Icon
                 dueDate: "24 Jan 2024",
                 owner: "Pavani",
                 createdDate: "21 Jan 2024",
@@ -35,7 +35,7 @@ const Activities = () => {
                 title: "Analysing latest time estimation for new project",
                 type: "Tasks",
                 badgeClass: "badge-info-transparent",
-                icon: "ti ti-subtask",
+                icon: "bi bi-list-task", // Bootstrap Icon
                 dueDate: "23 Feb 2024",
                 owner: "Hruthik",
                 createdDate: "20 Feb 2024",
@@ -46,7 +46,7 @@ const Activities = () => {
                 title: "Store and manage contact data",
                 type: "Email",
                 badgeClass: "badge-warning-transparent",
-                icon: "ti ti-mail",
+                icon: "bi bi-envelope", // Bootstrap Icon
                 dueDate: "18 Mar 2024",
                 owner: "Swetha",
                 createdDate: "15 Mar 2024",
@@ -57,19 +57,18 @@ const Activities = () => {
                 title: "Call John and discuss about project",
                 type: "calls",
                 badgeClass: "badge-purple-transparent",
-                icon: "ti ti-phone",
+                icon: "bi bi-telephone",
                 dueDate: "12 feb 2024",
                 owner: "Kranthi",
                 createdDate: "17 feb 2024",
                 checked: false,
             },
-
             {
                 id: 6,
                 title: "Will have a meeting before project start",
                 type: "Meeting",
                 badgeClass: "badge-pink-transparent",
-                icon: "ti ti-device-computer-camera",
+                icon: "bi bi-camera-video",
                 dueDate: "12 May 2025",
                 owner: "Naveen",
                 createdDate: "17 May 2025",
@@ -80,7 +79,7 @@ const Activities = () => {
                 title: "Built landing pages",
                 type: "Email",
                 badgeClass: "badge-warning-transparent",
-                icon: "ti ti-mail",
+                icon: "bi bi-envelope",
                 dueDate: "07 june 2024",
                 owner: "Sameer",
                 createdDate: "20 june 2024",
@@ -91,7 +90,7 @@ const Activities = () => {
                 title: "Discussed budget proposal with Edwin",
                 type: "Calls",
                 badgeClass: "badge-purple-transparent",
-                icon: "ti ti-phone",
+                icon: "bi bi-telephone",
                 dueDate: "24 Jan 2024",
                 owner: "Afran",
                 createdDate: "21 Jan 2024",
@@ -111,12 +110,16 @@ const Activities = () => {
     };
 
     const handleCheckboxChange = (id) => {
-        setActivities((prev) =>
-            prev.map((item) =>
-                item.id === id ? { ...item, checked: !item.checked } : item
-            )
+        const updatedActivities = activities.map(item =>
+            item.id === id ? { ...item, checked: !item.checked } : item
         );
+        
+        setActivities(updatedActivities);
+        
+        const allSelected = updatedActivities.every(item => item.checked);
+        setSelectAll(allSelected);
     };
+
     const [formData, setFormData] = useState({
         title: "",
         activityType: "Calls",
@@ -131,164 +134,249 @@ const Activities = () => {
         contact: "",
         company: "",
     });
-    const [activity, setActivity] = useState({
-        title: "",
-        type: "Calls",
-        dueDate: "",
-        time: "",
-        reminder: "",
-        reminderType: "Work",
-        owner: "",
-        guests: "",
-        description: "",
-        deals: "",
-        contacts: "",
-        companies: "",
-    });
-
-    // Form states for Edit Activity (pre-filled)
-    const [editActivity, setEditActivity] = useState({
-        title: "We scheduled a meeting for next week",
-        type: "Calls",
-        dueDate: "",
-        time: "",
-        reminder: "",
-        reminderType: "Work",
-        owner: "Hendry Milner",
-        guests: "Sharon Roy",
-        description: "",
-        deals: "konopelski",
-        contacts: "Guilory Berggren",
-        companies: "Nimbus Networks",
-    });
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleActivityType = (type) => {
-        setFormData((prev) => ({ ...prev, activityType: type }));
-    };
-
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log("New Activity:", formData);
+        
+        const newActivity = {
+            id: activities.length + 1,
+            title: formData.title || "New Activity",
+            type: selectedActivity.charAt(0).toUpperCase() + selectedActivity.slice(1),
+            badgeClass: getBadgeClass(selectedActivity),
+            icon: getActivityIcon(selectedActivity),
+            dueDate: formData.dueDate || new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }),
+            owner: formData.owner || "New Owner",
+            createdDate: new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }),
+            checked: false,
+        };
 
-    };
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [isCollapsed, setIsCollapsed] = useState(false);
-
-    useEffect(() => {
-        if (isCollapsed) {
-            document.body.classList.add("activity-collapsed");
-        } else {
-            document.body.classList.remove("activity-collapsed");
+        setActivities([newActivity, ...activities]);
+        
+        setNewActivityAdded(true);
+        
+        setFormData({
+            title: "",
+            activityType: "Calls",
+            dueDate: "",
+            time: "",
+            remainder: "",
+            remainderType: "Work",
+            owner: "",
+            guests: "",
+            description: "",
+            deal: "",
+            contact: "",
+            company: "",
+        });
+        
+        setSelectedActivity("calls");
+        
+        const modal = document.getElementById('add_activity');
+        if (modal) {
+            const modalInstance = window.bootstrap?.Modal?.getInstance(modal);
+            if (modalInstance) {
+                modalInstance.hide();
+            } else {
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                document.body.classList.remove('modal-open');
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.remove();
+                }
+            }
         }
-    }, [isCollapsed]);
-    return (
-        <div>
-            <div>
-            
+        
+        setTimeout(() => {
+            setNewActivityAdded(false);
+        }, 3000);
+    };
 
-                {/* Heading + Button in same line */}
-                <div className="d-flex align-items-center justify-content-between mb-3">
-                    <h2 className="fs-4 mb-0"><strong>Activity</strong></h2>
+    const getBadgeClass = (type) => {
+        switch(type) {
+            case "calls": return "badge-purple-transparent";
+            case "email": return "badge-warning-transparent";
+            case "meeting": return "badge-pink-transparent";
+            case "task": return "badge-info-transparent";
+            default: return "badge-purple-transparent";
+        }
+    };
+
+    const getActivityIcon = (type) => {
+        switch(type) {
+            case "calls": return "bi bi-telephone";
+            case "email": return "bi bi-envelope";
+            case "meeting": return "bi bi-camera-video";
+            case "task": return "bi bi-list-task";
+            default: return "bi bi-telephone";
+        }
+    };
+
+    const handleDeleteClick = () => {
+        const updatedActivities = activities.filter(activity => !activity.checked);
+        setActivities(updatedActivities);
+        setSelectAll(false);
+    };
+
+    return (
+        <div className="activities-container">
+            {/* Success Alert */}
+            {newActivityAdded && (
+                <div className="alert alert-success alert-dismissible fade show" role="alert">
+                    <i className="bi bi-check-circle me-2"></i>
+                    <strong>Success!</strong> New activity has been added successfully.
+                    <button 
+                        type="button" 
+                        className="btn-close" 
+                        onClick={() => setNewActivityAdded(false)}
+                    ></button>
+                </div>
+            )}
+
+            {/* Header */}
+            <div className="header-section mb-4">
+                <div className="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h4 className="page-title mb-1" style={{ fontSize: '1.25rem', fontWeight: '600' }}>
+                            <strong>Activity</strong>
+                        </h4>
+                        <p className="text-muted mb-0" style={{ fontSize: '0.875rem' }}>Manage your activities and tasks</p>
+                    </div>
                     <button
                         type="button"
-                        className="btn btn-secondary d-flex align-items-center btn-sm"
+                        className="btn btn-primary btn-add-activity"
                         data-bs-toggle="modal"
                         data-bs-target="#add_activity"
+                        style={{ padding: '0.375rem 1rem', fontSize: '0.875rem' }}
                     >
-                        <i className="ti ti-circle-plus me-2"></i>Add Activity
+                        <i className="bi bi-plus-circle me-2"></i>Add Activity
                     </button>
                 </div>
             </div>
-            <div className="card w-100 shadow">
-                <div className="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5><b>Activity List</b></h5>
 
-                    <div className="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-
-
-
+            {/* Main Card */}
+            <div className="card activity-card shadow-sm">
+                <div className="card-header bg-white d-flex align-items-center justify-content-between py-3">
+                    <h6 className="card-title mb-0" style={{ fontSize: '1rem', fontWeight: '600' }}>
+                        <strong>Activity List</strong>
+                    </h6>
+                    <div className="d-flex align-items-center gap-2">
+                        <div className="form-check">
+                            <input
+                                className="form-check-input"
+                                type="checkbox"
+                                id="selectAllCheckbox"
+                                checked={selectAll}
+                                onChange={handleSelectAll}
+                            />
+                            <label className="form-check-label text-muted" htmlFor="selectAllCheckbox" style={{ fontSize: '0.875rem' }}>
+                                Select All
+                            </label>
+                        </div>
                     </div>
                 </div>
 
                 {/* Table */}
-                <div className="card-body p-0 w-100">
-                    <div className="custom-datatable-filter table-responsive">
-                        <table className="table datatable">
-                            <thead className="thead-light">
+                <div className="card-body p-0">
+                    <div className="table-responsive">
+                        <table className="table table-hover mb-0">
+                            <thead className="table-light">
                                 <tr>
-                                    <th className="no-sort">
-                                        <div className="form-check form-check-md">
+                                    <th width="60" className="ps-4">
+                                        <div className="form-check">
                                             <input
                                                 className="form-check-input"
                                                 type="checkbox"
+                                                id="selectAllHeader"
                                                 checked={selectAll}
                                                 onChange={handleSelectAll}
                                             />
                                         </div>
                                     </th>
-                                    <th>Title</th>
-                                    <th>Activity Type</th>
-                                    <th>Due Date</th>
-                                    <th>Owner</th>
-                                    <th>Created Date</th>
-                                    <th></th>
+                                    <th className="fw-semibold" style={{ fontSize: '0.875rem' }}>Title</th>
+                                    <th className="fw-semibold" style={{ fontSize: '0.875rem' }}>Activity Type</th>
+                                    <th className="fw-semibold" style={{ fontSize: '0.875rem' }}>Due Date</th>
+                                    <th className="fw-semibold" style={{ fontSize: '0.875rem' }}>Owner</th>
+                                    <th className="fw-semibold" style={{ fontSize: '0.875rem' }}>Created Date</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {activities.map((activity) => (
-                                    <tr key={activity.id}>
-                                        <td>
-                                            <div className="form-check form-check-md">
+                                    <tr key={activity.id} className={activity.checked ? "table-active" : ""}>
+                                        <td className="ps-4 align-middle">
+                                            <div className="form-check">
                                                 <input
                                                     className="form-check-input"
                                                     type="checkbox"
+                                                    id={`checkbox-${activity.id}`}
                                                     checked={activity.checked || false}
                                                     onChange={() => handleCheckboxChange(activity.id)}
                                                 />
                                             </div>
                                         </td>
-                                        <td>
-                                            <p className="fs-14 text-dark fw-medium">{activity.title}</p>
+                                        <td className="align-middle">
+                                            <div className="d-flex align-items-center">
+                                                {/* Bootstrap Icon before title */}
+                                                <div className="me-3 d-flex align-items-center justify-content-center" 
+                                                     style={{ 
+                                                         width: '32px', 
+                                                         height: '32px',
+                                                         borderRadius: '6px',
+                                                         backgroundColor: 'rgba(0, 123, 255, 0.1)'
+                                                     }}>
+                                                    <i className={`${activity.icon} text-primary`} style={{ fontSize: '16px' }}></i>
+                                                </div>
+                                                <div>
+                                                    <p className="mb-0 fw-medium" style={{ fontSize: '0.875rem' }}>{activity.title}</p>
+                                                </div>
+                                            </div>
                                         </td>
-                                        <td>
-                                            <span className={`badge ${activity.badgeClass}`}>
-                                                <i className={`${activity.icon} me-1`}></i>
+                                        <td className="align-middle">
+                                            <span className={`badge ${activity.badgeClass} d-inline-flex align-items-center gap-1 py-1 px-2`} style={{ fontSize: '0.75rem' }}>
+                                                <i className={`${activity.icon}`} style={{ fontSize: '12px' }}></i>
                                                 {activity.type}
                                             </span>
                                         </td>
-                                        <td>{activity.dueDate}</td>
-                                        <td>{activity.owner}</td>
-                                        <td>{activity.createdDate}</td>
-                                        <td>
-                                            <div className="action-icon d-inline-flex">
-                                                <a
-                                                    href="#!"
-                                                    className="me-2"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#edit_activity"
-                                                >
-                                                    <i className="ti ti-edit"></i>
-                                                </a>
-                                                <a
-                                                    href="#!"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#delete_modal"
-                                                >
-                                                    <i className="ti ti-trash"></i>
-                                                </a>
+                                        <td className="align-middle">
+                                            <div className="d-flex align-items-center">
+                                                <i className="bi bi-calendar text-muted me-2" style={{ fontSize: '14px' }}></i>
+                                                <span className="text-dark" style={{ fontSize: '0.875rem' }}>{activity.dueDate}</span>
                                             </div>
+                                        </td>
+                                        <td className="align-middle">
+                                            <div className="d-flex align-items-center">
+                                                <div className="avatar-circle-sm bg-primary text-white me-2" style={{ width: '28px', height: '28px', fontSize: '12px' }}>
+                                                    {activity.owner.charAt(0)}
+                                                </div>
+                                                <span style={{ fontSize: '0.875rem' }}>{activity.owner}</span>
+                                            </div>
+                                        </td>
+                                        <td className="align-middle">
+                                            <div className="text-muted" style={{ fontSize: '0.875rem' }}>{activity.createdDate}</div>
                                         </td>
                                     </tr>
                                 ))}
                                 {activities.length === 0 && (
                                     <tr>
-                                        <td colSpan="7" className="text-center text-muted py-3">
-                                            No activities found.
+                                        <td colSpan="6" className="text-center py-5">
+                                            <div className="empty-state">
+                                                <i className="bi bi-calendar-week fs-1 text-muted mb-3"></i>
+                                                <p className="text-muted mb-0">No activities found</p>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-primary mt-3"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#add_activity"
+                                                    style={{ padding: '0.375rem 1rem', fontSize: '0.875rem' }}
+                                                >
+                                                    <i className="bi bi-plus-circle me-2"></i>Add First Activity
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 )}
@@ -298,178 +386,127 @@ const Activities = () => {
                 </div>
             </div>
 
-            <div
-                className="modal fade"
-                id="add_activity"
-                tabIndex="-1"
-                aria-hidden="true"
-            >
+            {/* Add Activity Modal */}
+            <div className="modal fade" id="add_activity" tabIndex="-1" aria-hidden="true">
                 <div className="modal-dialog modal-dialog-centered modal-lg">
-                    <div className="modal-content">
-                        {/* Header */}
-                        <div className="modal-header">
-                            <h4 className="modal-title">Add New Activity</h4>
+                    <div className="modal-content border-0 shadow">
+                        <div className="modal-header bg-light">
+                            <h5 className="modal-title fw-bold mb-0">Add New Activity</h5>
                             <button
                                 type="button"
-                                className="btn-close custom-btn-close"
+                                className="btn-close"
                                 data-bs-dismiss="modal"
                                 aria-label="Close"
-                            >
-                                <i className="ti ti-x"></i>
-                            </button>
+                                onClick={() => {
+                                    setSelectedActivity("calls");
+                                    setFormData({
+                                        title: "",
+                                        activityType: "Calls",
+                                        dueDate: "",
+                                        time: "",
+                                        remainder: "",
+                                        remainderType: "Work",
+                                        owner: "",
+                                        guests: "",
+                                        description: "",
+                                        deal: "",
+                                        contact: "",
+                                        company: "",
+                                    });
+                                }}
+                            ></button>
                         </div>
-
-                        {/* Form */}
+                        
                         <form onSubmit={handleSubmit}>
-                            <div className="modal-body pb-0">
-                                <div className="row">
+                            <div className="modal-body p-4">
+                                <div className="row g-3">
                                     {/* Title */}
-                                    <div className="col-md-12">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Title <span className="text-danger">*</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                name="title"
-                                                value={formData.title}
-                                                onChange={handleChange}
-                                                required
-                                            />
-                                        </div>
+                                    <div className="col-12">
+                                        <label className="form-label fw-medium">
+                                            Title <span className="text-danger">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            name="title"
+                                            value={formData.title}
+                                            onChange={handleChange}
+                                            required
+                                            placeholder="Enter activity title"
+                                        />
                                     </div>
 
-                                    {/* Activity Type */}
-                                    <div className="col-md-12">
-                                        <label className="form-label">
+                                    {/* Activity Type with Checkbox Selection */}
+                                    <div className="col-12">
+                                        <label className="form-label fw-medium mb-3">
                                             Activity Type <span className="text-danger">*</span>
                                         </label>
-
-                                        <div className="col-md-12">
-
-
-                                            {/* Buttons */}
-                                            <div className="activity-items d-flex align-items-center mb-3">
-                                                <a
-                                                    href="#"
-                                                    className={`br-5 d-flex align-items-center justify-content-center me-2 ${selectedActivity === "calls" ? "active" : ""
-                                                        }`}
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        setSelectedActivity("calls");
-                                                    }}
-                                                >
-                                                    <i className="ti ti-phone me-1"></i>Calls
-                                                </a>
-
-                                                <a
-                                                    href="#"
-                                                    className={`br-5 d-flex align-items-center justify-content-center me-2 ${selectedActivity === "email" ? "active" : ""
-                                                        }`}
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        setSelectedActivity("email");
-                                                    }}
-                                                >
-                                                    <i className="ti ti-mail me-1"></i>Email
-                                                </a>
-
-                                                <a
-                                                    href="#"
-                                                    className={`br-5 d-flex align-items-center justify-content-center me-2 ${selectedActivity === "meeting" ? "active" : ""
-                                                        }`}
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        setSelectedActivity("meeting");
-                                                    }}
-                                                >
-                                                    <i className="ti ti-user-circle me-1"></i>Meeting
-                                                </a>
-
-                                                <a
-                                                    href="#"
-                                                    className={`br-5 d-flex align-items-center justify-content-center me-2 ${selectedActivity === "task" ? "active" : ""
-                                                        }`}
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        setSelectedActivity("task");
-                                                    }}
-                                                >
-                                                    <i className="ti ti-list-check me-1"></i>Task
-                                                </a>
-                                            </div>
-
-                                            {/* Data sections */}
-                                            <div className="activity-form mt-3">
-                                                {selectedActivity === "calls" && (
-                                                    <div>
-                                                        <h6>Call Details</h6>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control mb-2"
-                                                            placeholder="Enter Contact Name"
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            placeholder="Enter Contact Number"
-                                                        />
+                                        <div className="activity-type-selector mb-4">
+                                            <div className="row g-2">
+                                                {[
+                                                    { id: "calls", label: "Calls", icon: "bi bi-telephone" },
+                                                    { id: "email", label: "Email", icon: "bi bi-envelope" },
+                                                    { id: "meeting", label: "Meeting", icon: "bi bi-camera-video" },
+                                                    { id: "task", label: "Task", icon: "bi bi-list-task" },
+                                                ].map((type) => (
+                                                    <div key={type.id} className="col-6 col-md-3">
+                                                        <div 
+                                                            className={`activity-type-card text-center p-3 rounded cursor-pointer position-relative ${
+                                                                selectedActivity === type.id ? "active" : ""
+                                                            }`}
+                                                            onClick={() => setSelectedActivity(type.id)}
+                                                        >
+                                                            {selectedActivity === type.id && (
+                                                                <div className="position-absolute top-0 end-0 m-2">
+                                                                    <i className="bi bi-check-circle fs-5 text-primary"></i>
+                                                                </div>
+                                                            )}
+                                                            <div className="activity-icon mb-2">
+                                                                <i className={`${type.icon} fs-3`}></i>
+                                                            </div>
+                                                            <span className="fw-medium">{type.label}</span>
+                                                        </div>
                                                     </div>
-                                                )}
-
-                                                {selectedActivity === "email" && (
-                                                    <div>
-                                                        <h6>Email Details</h6>
-                                                        <input
-                                                            type="email"
-                                                            className="form-control mb-2"
-                                                            placeholder="Enter Email"
-                                                        />
-                                                        <input
-                                                            type="password"
-                                                            className="form-control"
-                                                            placeholder="Enter Password"
-                                                        />
-                                                    </div>
-                                                )}
-
-                                                {selectedActivity === "meeting" && (
-                                                    <div>
-                                                        <h6>Meeting Details</h6>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control mb-2"
-                                                            placeholder="Enter Meeting ID"
-                                                        />
-                                                        <input
-                                                            type="password"
-                                                            className="form-control"
-                                                            placeholder="Enter Meeting Password"
-                                                        />
-                                                    </div>
-                                                )}
-
-                                                {selectedActivity === "task" && (
-                                                    <div>
-                                                        <h6>Task Details</h6>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            placeholder="Enter Task"
-                                                        />
-                                                    </div>
-                                                )}
+                                                ))}
                                             </div>
                                         </div>
+
+                                        {selectedActivity === "calls" && (
+                                            <div className="activity-details bg-light p-3 rounded mb-3">
+                                                <h6 className="fw-medium mb-3">Call Details</h6>
+                                                <div className="row g-2">
+                                                    <div className="col-md-6">
+                                                        <input
+                                                            type="text"
+                                                            className="form-control"
+                                                            placeholder="Contact Name"
+                                                            name="callContact"
+                                                            onChange={handleChange}
+                                                        />
+                                                    </div>
+                                                    <div className="col-md-6">
+                                                        <input
+                                                            type="text"
+                                                            className="form-control"
+                                                            placeholder="Phone Number"
+                                                            name="callPhone"
+                                                            onChange={handleChange}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
-                                    {/* Due Date */}
+                                    {/* Date and Time */}
                                     <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Due Date <span className="text-danger">*</span>
-                                            </label>
+                                        <label className="form-label fw-medium">
+                                            Due Date <span className="text-danger">*</span>
+                                        </label>
+                                        <div className="input-group">
+                                            <span className="input-group-text">
+                                                <i className="bi bi-calendar"></i>
+                                            </span>
                                             <input
                                                 type="date"
                                                 className="form-control"
@@ -481,12 +518,14 @@ const Activities = () => {
                                         </div>
                                     </div>
 
-                                    {/* Time */}
                                     <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Time <span className="text-danger">*</span>
-                                            </label>
+                                        <label className="form-label fw-medium">
+                                            Time <span className="text-danger">*</span>
+                                        </label>
+                                        <div className="input-group">
+                                            <span className="input-group-text">
+                                                <i className="bi bi-clock"></i>
+                                            </span>
                                             <input
                                                 type="time"
                                                 className="form-control"
@@ -498,1978 +537,400 @@ const Activities = () => {
                                         </div>
                                     </div>
 
-                                    {/* Remainder */}
+                                    {/* Reminder */}
                                     <div className="col-md-8">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Remainder <span className="text-danger">*</span>
-                                            </label>
+                                        <label className="form-label fw-medium">Reminder</label>
+                                        <div className="input-group">
+                                            <span className="input-group-text">
+                                                <i className="bi bi-bell"></i>
+                                            </span>
                                             <input
                                                 type="text"
                                                 className="form-control"
                                                 name="remainder"
                                                 value={formData.remainder}
                                                 onChange={handleChange}
+                                                placeholder="Set reminder"
                                             />
                                         </div>
                                     </div>
+                                    
                                     <div className="col-md-4">
-                                        <div className="mb-3">
-                                            <label className="form-label">Type</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                name="remainderType"
-                                                value={formData.remainderType}
-                                                onChange={handleChange}
-                                                placeholder="Enter type"
-                                            />
-                                        </div>
+                                        <label className="form-label fw-medium">Type</label>
+                                        <select 
+                                            className="form-select"
+                                            name="remainderType"
+                                            value={formData.remainderType}
+                                            onChange={handleChange}
+                                        >
+                                            <option value="Work">Work</option>
+                                            <option value="Personal">Personal</option>
+                                            <option value="Urgent">Urgent</option>
+                                        </select>
                                     </div>
 
-
-                                    {/* Owner */}
+                                    {/* Owner and Guests */}
                                     <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label className="form-label">Owner</label>
+                                        <label className="form-label fw-medium">Owner</label>
+                                        <div className="input-group">
+                                            <span className="input-group-text">
+                                                <i className="bi bi-person"></i>
+                                            </span>
                                             <input
                                                 type="text"
                                                 className="form-control"
                                                 name="owner"
                                                 value={formData.owner}
                                                 onChange={handleChange}
-                                                placeholder="Enter owner name"
+                                                placeholder="Owner name"
                                             />
                                         </div>
                                     </div>
 
-
-                                    {/* Guests */}
                                     <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label className="form-label">Guests</label>
+                                        <label className="form-label fw-medium">Guests</label>
+                                        <div className="input-group">
+                                            <span className="input-group-text">
+                                                <i className="bi bi-people"></i>
+                                            </span>
                                             <input
                                                 type="text"
                                                 className="form-control"
                                                 name="guests"
                                                 value={formData.guests}
                                                 onChange={handleChange}
-                                                placeholder="Enter guest name"
+                                                placeholder="Guest names"
                                             />
                                         </div>
                                     </div>
 
-
                                     {/* Description */}
-                                    <div className="col-md-12">
-                                        <div className="mb-3">
-                                            <label className="form-label">Description</label>
-                                            <textarea
-                                                className="form-control"
-                                                rows="3"
-                                                name="description"
-                                                value={formData.description}
-                                                onChange={handleChange}
-                                            ></textarea>
-                                        </div>
+                                    <div className="col-12">
+                                        <label className="form-label fw-medium">Description</label>
+                                        <textarea
+                                            className="form-control"
+                                            rows="3"
+                                            name="description"
+                                            value={formData.description}
+                                            onChange={handleChange}
+                                            placeholder="Add description..."
+                                        ></textarea>
                                     </div>
 
-                                    {/* Deals */}
-                                    <div className="col-md-12">
-                                        <div className="mb-3">
-                                            <label className="form-label">Deals</label>
+                                    {/* Related Entities */}
+                                    <div className="col-md-4">
+                                        <label className="form-label fw-medium">Related Deals</label>
+                                        <div className="input-group">
                                             <input
                                                 type="text"
                                                 className="form-control"
                                                 name="deals"
                                                 value={formData.deals}
                                                 onChange={handleChange}
-                                                placeholder="Enter deal"
+                                                placeholder="Deals"
                                             />
+                                            <button
+                                                className="btn btn-outline-primary"
+                                                type="button"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#add_deals"
+                                            >
+                                                <i className="bi bi-plus"></i>
+                                            </button>
                                         </div>
                                     </div>
 
-                                    {/* Contacts */}
-                                    <div className="col-md-12">
-                                        <div className="mb-3">
-                                            <label className="form-label">Contacts</label>
+                                    <div className="col-md-4">
+                                        <label className="form-label fw-medium">Related Contacts</label>
+                                        <div className="input-group">
                                             <input
                                                 type="text"
                                                 className="form-control"
                                                 name="contacts"
                                                 value={formData.contacts}
                                                 onChange={handleChange}
-                                                placeholder="Enter contact"
+                                                placeholder="Contacts"
                                             />
+                                            <button
+                                                className="btn btn-outline-primary"
+                                                type="button"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#add_contact"
+                                            >
+                                                <i className="bi bi-plus"></i>
+                                            </button>
                                         </div>
                                     </div>
 
-
-                                    {/* Companies */}
-                                    <div className="col-md-12">
-                                        <div className="mb-3">
-                                            <label className="form-label">Companies</label>
+                                    <div className="col-md-4">
+                                        <label className="form-label fw-medium">Related Companies</label>
+                                        <div className="input-group">
                                             <input
                                                 type="text"
                                                 className="form-control"
                                                 name="companies"
                                                 value={formData.companies}
                                                 onChange={handleChange}
-                                                placeholder="Enter company"
+                                                placeholder="Companies"
                                             />
+                                            <button
+                                                className="btn btn-outline-primary"
+                                                type="button"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#add_company"
+                                            >
+                                                <i className="bi bi-plus"></i>
+                                            </button>
                                         </div>
                                     </div>
-
                                 </div>
                             </div>
 
-                            {/* Footer */}
-                            <div className="modal-footer">
+                            <div className="modal-footer border-top">
                                 <button
                                     type="button"
-                                    className="btn btn-light text-primary me-2"
+                                    className="btn btn-light"
+                                    data-bs-dismiss="modal"
+                                    onClick={() => {
+                                        setSelectedActivity("calls");
+                                        setFormData({
+                                            title: "",
+                                            activityType: "Calls",
+                                            dueDate: "",
+                                            time: "",
+                                            remainder: "",
+                                            remainderType: "Work",
+                                            owner: "",
+                                            guests: "",
+                                            description: "",
+                                            deal: "",
+                                            contact: "",
+                                            company: "",
+                                        });
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button type="submit" className="btn btn-primary">
+                                    <i className="bi bi-plus me-2"></i>
+                                    Add Activity
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            {/* Delete Confirmation Modal */}
+            <div className="modal fade" id="delete_modal" tabIndex="-1" aria-hidden="true">
+                <div className="modal-dialog modal-dialog-centered modal-sm">
+                    <div className="modal-content border-0 shadow">
+                        <div className="modal-body p-4 text-center">
+                            <div className="mb-4">
+                                <div className="delete-icon mb-3">
+                                    <i className="bi bi-trash fs-1 text-danger"></i>
+                                </div>
+                                <h5 className="fw-bold mb-2">Confirm Delete</h5>
+                                <p className="text-muted mb-0">
+                                    Are you sure you want to delete this activity? This action cannot be undone.
+                                </p>
+                            </div>
+                            <div className="d-flex gap-2 justify-content-center">
+                                <button
+                                    type="button"
+                                    className="btn btn-light flex-fill"
                                     data-bs-dismiss="modal"
                                 >
                                     Cancel
                                 </button>
-                                <button type="submit" className="btn btn-secondary">
-                                    Add Activity    
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-
-            <div className="modal fade" id="edit_activity">
-                <div className="modal-dialog modal-dialog-centered modal-lg">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h4 className="modal-title">Edit Activity</h4>
-                            <button
-                                type="button"
-                                className="btn-close custom-btn-close"
-                                data-bs-dismiss="modal"
-                                aria-label="Close"
-                            >
-                                <i className="ti ti-x"></i>
-                            </button>
-                        </div>
-
-                        <form action="">
-                            <div className="modal-body pb-0">
-                                <div className="row">
-                                    <div className="col-md-12">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Title <span className="text-danger">*</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                defaultValue="We scheduled a meeting for next week"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-12">
-                                        <label className="form-label">
-                                            Activity Type <span className="text-danger">*</span>
-                                        </label>
-
-                                        {/* Buttons */}
-                                        <div className="activity-items d-flex align-items-center mb-3">
-                                            <a
-                                                href="#"
-                                                className={`br-5 d-flex align-items-center justify-content-center me-2 ${selectedActivity === "calls" ? "active" : ""
-                                                    }`}
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    setSelectedActivity("calls");
-                                                }}
-                                            >
-                                                <i className="ti ti-phone me-1"></i>Calls
-                                            </a>
-
-                                            <a
-                                                href="#"
-                                                className={`br-5 d-flex align-items-center justify-content-center me-2 ${selectedActivity === "email" ? "active" : ""
-                                                    }`}
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    setSelectedActivity("email");
-                                                }}
-                                            >
-                                                <i className="ti ti-mail me-1"></i>Email
-                                            </a>
-
-                                            <a
-                                                href="#"
-                                                className={`br-5 d-flex align-items-center justify-content-center me-2 ${selectedActivity === "meeting" ? "active" : ""
-                                                    }`}
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    setSelectedActivity("meeting");
-                                                }}
-                                            >
-                                                <i className="ti ti-user-circle me-1"></i>Meeting
-                                            </a>
-
-                                            <a
-                                                href="#"
-                                                className={`br-5 d-flex align-items-center justify-content-center me-2 ${selectedActivity === "task" ? "active" : ""
-                                                    }`}
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    setSelectedActivity("task");
-                                                }}
-                                            >
-                                                <i className="ti ti-list-check me-1"></i>Task
-                                            </a>
-                                        </div>
-
-                                        {/* Data sections */}
-                                        <div className="activity-form mt-3">
-                                            {selectedActivity === "calls" && (
-                                                <div>
-                                                    <h6>Call Details</h6>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control mb-2"
-                                                        placeholder="Enter Contact Name"
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-                                                        placeholder="Enter Contact Number"
-                                                    />
-                                                </div>
-                                            )}
-
-                                            {selectedActivity === "email" && (
-                                                <div>
-                                                    <h6>Email Details</h6>
-                                                    <input
-                                                        type="email"
-                                                        className="form-control mb-2"
-                                                        placeholder="Enter Email"
-                                                    />
-                                                    <input
-                                                        type="password"
-                                                        className="form-control"
-                                                        placeholder="Enter Password"
-                                                    />
-                                                </div>
-                                            )}
-
-                                            {selectedActivity === "meeting" && (
-                                                <div>
-                                                    <h6>Meeting Details</h6>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control mb-2"
-                                                        placeholder="Enter Meeting ID"
-                                                    />
-                                                    <input
-                                                        type="password"
-                                                        className="form-control"
-                                                        placeholder="Enter Meeting Password"
-                                                    />
-                                                </div>
-                                            )}
-
-                                            {selectedActivity === "task" && (
-                                                <div>
-                                                    <h6>Task Details</h6>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-                                                        placeholder="Enter Task"
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Due Date <span className="text-danger">*</span>
-                                            </label>
-                                            <div className="input-icon-end position-relative">
-                                                <input
-                                                    type="text"
-                                                    className="form-control datetimepicker"
-                                                    placeholder="dd/mm/yyyy"
-                                                />
-                                                <span className="input-icon-addon">
-                                                    <i className="ti ti-calendar text-gray-7"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Time <span className="text-danger">*</span>
-                                            </label>
-                                            <div className="input-icon-end position-relative">
-                                                <input type="text" className="form-control timepicker" />
-                                                <span className="input-icon-addon">
-                                                    <i className="ti ti-clock-hour-10 text-gray-7"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-12 lead-phno-col del-phno-col">
-                                        <div className="row">
-                                            <div className="col-lg-8">
-                                                <div className="input-block mb-3">
-                                                    <label className="form-label">
-                                                        Remainder <span className="text-danger">*</span>
-                                                    </label>
-                                                    <div className="input-icon-start position-relative">
-                                                        <input type="text" className="form-control" />
-                                                        <span className="input-icon-addon">
-                                                            <i className="ti ti-bell text-gray-7"></i>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Owner <span className="text-danger">*</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                name="owner"
-                                                placeholder="Enter owner name"
-                                            />
-                                        </div>
-                                    </div>
-
-
-                                    <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Guests <span className="text-danger">*</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                name="guests"
-                                                placeholder="Enter guest names"
-                                            />
-                                        </div>
-                                    </div>
-
-
-                                    <div className="col-md-12">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Description <span className="text-danger">*</span>
-                                            </label>
-                                            <div className="summernote"></div>
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-12">
-                                        <div className="input-block mb-3">
-                                            <div className="d-flex justify-content-between align-items-center">
-                                                <label className="col-form-label">
-                                                    Deals <span className="text-danger">*</span>
-                                                </label>
-                                                <a
-                                                    href="#"
-                                                    className="add-new text-primary"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#add_deals"
-                                                >
-                                                    <i className="ti ti-plus text-primary me-1"></i>Add New
-                                                </a>
-                                            </div>
-                                            <input
-                                                type="text"
-                                                className="form-control mt-2"
-                                                name="deals"
-                                                placeholder="Enter deal name"
-                                            />
-                                        </div>
-                                    </div>
-
-
-
-                                    <div className="col-md-12">
-                                        <div className="input-block mb-3">
-                                            <div className="d-flex justify-content-between align-items-center">
-                                                <label className="col-form-label">
-                                                    Contacts <span className="text-danger">*</span>
-                                                </label>
-                                                <a
-                                                    href="#"
-                                                    className="add-new text-primary"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#add_contact"
-                                                >
-                                                    <i className="ti ti-plus text-primary me-1"></i>Add New
-                                                </a>
-                                            </div>
-                                            <input
-                                                type="text"
-                                                className="form-control mt-2"
-                                                name="contact"
-                                                placeholder="Enter contact name"
-                                            />
-                                        </div>
-                                    </div>
-
-
-                                    <div className="col-md-12">
-                                        <div className="input-block mb-3">
-                                            <div className="d-flex justify-content-between align-items-center">
-                                                <label className="col-form-label">
-                                                    Company Name<span className="text-danger">*</span>
-                                                </label>
-                                                <a
-                                                    href="#"
-                                                    className="add-new text-primary"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#add_company"
-                                                >
-                                                    <i className="ti ti-plus text-primary me-1"></i>Add New
-                                                </a>
-                                            </div>
-                                            <input
-                                                type="text"
-                                                className="form-control mt-2"
-                                                name="company "
-                                                placeholder="Enter company name"
-                                            />
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-
-                            <div className="modal-footer">
-                                <button type="button" className="btn btn-light text-primary btn-sm me-2" data-bs-dismiss="modal">
-                                    Cancel
-                                </button>
-                                <button type="submit" className="btn btn-secondary btn-sm">
-                                    Save
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-
-            <div className="modal fade" id="add_deals">
-                <div className="modal-dialog modal-dialog-centered modal-lg">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h4 className="modal-title">Add New Deals</h4>
-                            <button
-                                type="button"
-                                className="btn-close custom-btn-close"
-                                data-bs-dismiss="modal"
-                                aria-label="Close"
-                            >
-                                <i className="ti ti-x"></i>
-                            </button>
-                        </div>
-
-                        <form action="">
-                            <div className="modal-body pb-0">
-                                <div className="row">
-
-                                    <div className="col-md-12">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Deal Name <span className="text-danger">*</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                name="dealName"
-                                                placeholder="Enter deal name"
-                                            />
-                                        </div>
-                                    </div>
-
-
-                                    <div className="col-md-6">
-                                        <div className="input-block mb-3">
-                                            <div className="d-flex justify-content-between align-items-center">
-                                                <label className="form-label">
-                                                    Pipeline <span className="text-danger">*</span>
-                                                </label>
-                                                <a
-                                                    href="#"
-                                                    className="add-new text-primary"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#add_pipeline"
-                                                >
-                                                    <i className="ti ti-plus text-primary me-1"></i>Add New
-                                                </a>
-                                            </div>
-                                            <input
-                                                type="text"
-                                                className="form-control mt-2"
-                                                name="pipeline"
-                                                placeholder="Enter pipeline"
-                                            />
-                                        </div>
-                                    </div>
-
-
-                                    <div className="col-md-6 w-25">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Status <span className="text-danger">*</span>
-                                            </label>
-                                            <select className="select">
-                                                <option>Select</option>
-                                                <option>Open</option>
-                                                <option>Won</option>
-                                                <option>Lost</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Deal Value <span className="text-danger">*</span>
-                                            </label>
-                                            <input type="text" className="form-control" />
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Currency <span className="text-danger">*</span>
-                                            </label>
-                                            <select className="select">
-                                                <option>Select</option>
-                                                <option>Dollar</option>
-                                                <option>Euro</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Period <span className="text-danger">*</span>
-                                            </label>
-                                            <select className="select">
-                                                <option>Select</option>
-                                                <option>Days</option>
-                                                <option>Months</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Period Value <span className="text-danger">*</span>
-                                            </label>
-                                            <input type="text" className="form-control" />
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-12">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Contact <span className="text-danger">*</span>
-                                            </label>
-                                            <input
-                                                className="input-tags form-control"
-                                                placeholder="Add new"
-                                                type="text"
-                                                data-role="tagsinput"
-                                                name="Label"
-
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-12">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Project <span className="text-danger">*</span>
-                                            </label>
-                                            <input
-                                                className="input-tags form-control"
-                                                placeholder="Add new"
-                                                type="text"
-                                                data-role="tagsinput"
-                                                name="Label"
-
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Due Date <span className="text-danger">*</span>
-                                            </label>
-                                            <div className="input-icon-end position-relative">
-                                                <input
-                                                    type="text"
-                                                    className="form-control datetimepicker"
-                                                    placeholder="dd/mm/yyyy"
-                                                />
-                                                <span className="input-icon-addon">
-                                                    <i className="ti ti-calendar text-gray-7"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Expected Closing Date <span className="text-danger">*</span>
-                                            </label>
-                                            <div className="input-icon-end position-relative">
-                                                <input
-                                                    type="text"
-                                                    className="form-control datetimepicker"
-                                                    placeholder="dd/mm/yyyy"
-                                                />
-                                                <span className="input-icon-addon">
-                                                    <i className="ti ti-calendar text-gray-7"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-12">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Assignee <span className="text-danger">*</span>
-                                            </label>
-                                            <input
-                                                className="input-tags form-control"
-                                                placeholder="Add new"
-                                                type="text"
-                                                data-role="tagsinput"
-                                                name="Label"
-
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Tags <span className="text-danger">*</span>
-                                            </label>
-                                            <input
-                                                className="input-tags form-control"
-                                                placeholder="Add new"
-                                                type="text"
-                                                data-role="tagsinput"
-                                                name="Label"
-
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Followup Date <span className="text-danger">*</span>
-                                            </label>
-                                            <div className="input-icon-end position-relative">
-                                                <input
-                                                    type="text"
-                                                    className="form-control datetimepicker"
-                                                    placeholder="dd/mm/yyyy"
-                                                />
-                                                <span className="input-icon-addon">
-                                                    <i className="ti ti-calendar text-gray-7"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Source <span className="text-danger">*</span>
-                                            </label>
-                                            <select className="select">
-                                                <option>Select</option>
-                                                <option>Phone Calls</option>
-                                                <option>Social Media</option>
-                                                <option>Refferal Sites</option>
-                                                <option>Web Analytics</option>
-                                                <option>Previous Purchase</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Priority <span className="text-danger">*</span>
-                                            </label>
-                                            <select className="select">
-                                                <option>Select</option>
-                                                <option>High</option>
-                                                <option>Low</option>
-                                                <option>Medium</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-12">
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Description <span className="text-danger">*</span>
-                                            </label>
-                                            <textarea className="form-control"></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="modal-footer">
-                                <button type="button" className="btn btn-light text-primary btn-sm me-2" data-bs-dismiss="modal">
-                                    Cancel
-                                </button>
-                                <button type="submit" className="btn btn-secondary btn-sm">
-                                    Add Deal
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-
-            <div className="modal fade" id="add_contact">
-                <div className="modal-dialog modal-dialog-centered modal-lg">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h4 className="modal-title">Add New Contact</h4>
-                            <button
-                                type="button"
-                                className="btn-close custom-btn-close"
-                                data-bs-dismiss="modal"
-                                aria-label="Close"
-                            >
-                                <i className="ti ti-x"></i>
-                            </button>
-                        </div>
-
-                        <form action="">
-                            <div className="contact-grids-tab">
-                                <ul className="nav nav-underline" id="myTab1" role="tablist">
-                                    <li className="nav-item" role="presentation">
-                                        <button
-                                            className="nav-link active"
-                                            id="info-tab1"
-                                            data-bs-toggle="tab"
-                                            data-bs-target="#basic-info1"
-                                            type="button"
-                                            role="tab"
-                                            aria-selected="true"
-                                        >
-                                            Basic Information
-                                        </button>
-                                    </li>
-                                    <li className="nav-item" role="presentation">
-                                        <button
-                                            className="nav-link"
-                                            id="address-tab1"
-                                            data-bs-toggle="tab"
-                                            data-bs-target="#address1"
-                                            type="button"
-                                            role="tab"
-                                            aria-selected="false"
-                                        >
-                                            Address
-                                        </button>
-                                    </li>
-                                    <li className="nav-item" role="presentation">
-                                        <button
-                                            className="nav-link"
-                                            id="social-profile-tab1"
-                                            data-bs-toggle="tab"
-                                            data-bs-target="#social-profile1"
-                                            type="button"
-                                            role="tab"
-                                            aria-selected="false"
-                                        >
-                                            Social Profiles
-                                        </button>
-                                    </li>
-                                    <li className="nav-item" role="presentation">
-                                        <button
-                                            className="nav-link"
-                                            id="access-tab1"
-                                            data-bs-toggle="tab"
-                                            data-bs-target="#access1"
-                                            type="button"
-                                            role="tab"
-                                            aria-selected="false"
-                                        >
-                                            Access
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <div className="tab-content" id="myTabContent1">
-                                {/* Basic Info Tab */}
-                                <div
-                                    className="tab-pane fade show active"
-                                    id="basic-info1"
-                                    role="tabpanel"
-                                    aria-labelledby="info-tab1"
-                                    tabIndex="0"
+                                <button
+                                    type="button"
+                                    className="btn btn-danger flex-fill"
+                                    data-bs-dismiss="modal"
+                                    onClick={handleDeleteClick}
                                 >
-                                    <div className="modal-body pb-0">
-                                        <div className="row">
-                                            {/* Profile Upload */}
-                                            <div className="col-md-12">
-                                                <div className="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
-                                                    <div className="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames">
-                                                        <i className="ti ti-photo text-gray-2 fs-16"></i>
-                                                    </div>
-                                                    <div className="profile-upload">
-                                                        <div className="mb-2">
-                                                            <h6 className="mb-1">Upload Profile Image</h6>
-                                                            <p className="fs-12">Image should be below 4 mb</p>
-                                                        </div>
-                                                        <div className="profile-uploader d-flex align-items-center">
-                                                            <div className="drag-upload-btn btn btn-sm btn-primary me-2">
-                                                                Upload
-                                                                <input type="file" className="form-control image-sign" multiple />
-                                                            </div>
-                                                            <a href="#" className="btn btn-light  text-primary btn-sm">
-                                                                Cancel
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Basic Info Fields */}
-                                            <div className="col-md-4">
-                                                <div className="mb-3">
-                                                    <label className="form-label">
-                                                        First Name <span className="text-danger">*</span>
-                                                    </label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-                                            <div className="col-md-4">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Last Name</label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-                                            <div className="col-md-4">
-                                                <div className="mb-3">
-                                                    <label className="form-label">
-                                                        Job Title <span className="text-danger">*</span>
-                                                    </label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-                                            <div className="col-md-4">
-                                                <div className="mb-3">
-                                                    <label className="form-label">
-                                                        Company Name <span className="text-danger">*</span>
-                                                    </label>
-                                                    <select className="select">
-                                                        <option>Select</option>
-                                                        <option>BrightWave Innovations</option>
-                                                        <option>Stellar Dynamics</option>
-                                                        <option>Quantum Nexus</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-4">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Email</label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-                                            <div className="col-md-4">
-                                                <div className="mb-3">
-                                                    <label className="form-label">
-                                                        Phone Number <span className="text-danger">*</span>
-                                                    </label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-                                            <div className="col-md-4">
-                                                <div className="mb-3">
-                                                    <label className="form-label">
-                                                        Phone Number 2 <span className="text-danger">*</span>
-                                                    </label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-                                            <div className="col-md-4">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Fax</label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-
-                                            {/* Deals */}
-                                            <div className="col-md-4">
-                                                <div className="input-block mb-3">
-                                                    <div className="d-flex justify-content-between align-items-center mb-2">
-                                                        <label className="col-form-label p-0">
-                                                            Deals <span className="text-danger">*</span>
-                                                        </label>
-                                                        <a
-                                                            href="#"
-                                                            className="add-new text-primary"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#add_deals"
-                                                        >
-                                                            <i className="ti ti-plus text-primary me-1"></i>Add New
-                                                        </a>
-                                                    </div>
-                                                    <select className="select">
-                                                        <option>Select</option>
-                                                        <option>Collins</option>
-                                                        <option>Konopelski</option>
-                                                        <option>Adams</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            {/* More fields (Date of Birth, Ratings, Owner, Industry, etc.) */}
-                                            <div className="col-md-4">
-                                                <div className="mb-3">
-                                                    <label className="form-label">
-                                                        Date of Birth <span className="text-danger">*</span>
-                                                    </label>
-                                                    <div className="input-icon-end position-relative">
-                                                        <input type="text" className="form-control datetimepicker" placeholder="dd/mm/yyyy" />
-                                                        <span className="input-icon-addon">
-                                                            <i className="ti ti-calendar text-gray-7"></i>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-4">
-                                                <div className="mb-3">
-                                                    <label className="form-label">
-                                                        Ratings <span className="text-danger">*</span>
-                                                    </label>
-                                                    <div className="input-icon-end position-relative">
-                                                        <input type="text" className="form-control" />
-                                                        <span className="input-icon-addon">
-                                                            <i className="ti ti-star text-gray-6"></i>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-4">
-                                                <div className="mb-3">
-                                                    <label className="form-label">
-                                                        Owner <span className="text-danger">*</span>
-                                                    </label>
-                                                    <select className="select">
-                                                        <option>Select</option>
-                                                        <option>Hendry Milner</option>
-                                                        <option>Guilory Berggren</option>
-                                                        <option>Jami Carlile</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            {/* Industry, Currency, Language, Tags, Source */}
-                                            <div className="col-md-4">
-                                                <div className="mb-3">
-                                                    <label className="form-label">
-                                                        Industry <span className="text-danger">*</span>
-                                                    </label>
-                                                    <select className="select">
-                                                        <option>Select</option>
-                                                        <option>Retail Industry</option>
-                                                        <option>Banking</option>
-                                                        <option>Hotels</option>
-                                                        <option>Financial Services</option>
-                                                        <option>Insurance</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-4">
-                                                <div className="mb-3">
-                                                    <label className="form-label">
-                                                        Currency <span className="text-danger">*</span>
-                                                    </label>
-                                                    <select className="select">
-                                                        <option>Select</option>
-                                                        <option>USD</option>
-                                                        <option>Euro</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-4">
-                                                <div className="mb-3">
-                                                    <label className="form-label">
-                                                        Language <span className="text-danger">*</span>
-                                                    </label>
-                                                    <select className="select">
-                                                        <option>Select</option>
-                                                        <option>English</option>
-                                                        <option>Arabic</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">
-                                                        Tags <span className="text-danger">*</span>
-                                                    </label>
-                                                    <input
-                                                        className="input-tags form-control"
-                                                        placeholder="Add new"
-                                                        type="text"
-                                                        data-role="tagsinput"
-                                                        name="Label"
-                                                        defaultValue="Collab,Promotion,Rated,Davis"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">
-                                                        Source <span className="text-danger">*</span>
-                                                    </label>
-                                                    <select className="select">
-                                                        <option>Select</option>
-                                                        <option>Phone Calls</option>
-                                                        <option>Social Media</option>
-                                                        <option>Refferal Sites</option>
-                                                        <option>Web Analytics</option>
-                                                        <option>Previous Purchase</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="modal-footer">
-                                        <button type="button" className="btn btn-light text-primary me-2" data-bs-dismiss="modal">
-                                            Cancel
-                                        </button>
-                                        <button type="submit" className="btn btn-primary">
-                                            Save
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Address Tab */}
-                                <div className="tab-pane fade" id="address1" role="tabpanel" aria-labelledby="address-tab1" tabIndex="0">
-                                    <div className="modal-body pb-0">
-                                        <div className="row">
-                                            <div className="col-md-12">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Address <span className="text-danger">*</span></label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Country <span className="text-danger">*</span></label>
-                                                    <select className="select">
-                                                        <option>Select</option>
-                                                        <option>USA</option>
-                                                        <option>Canada</option>
-                                                        <option>Germany</option>
-                                                        <option>France</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">State <span className="text-danger">*</span></label>
-                                                    <select className="select">
-                                                        <option>Select</option>
-                                                        <option>California</option>
-                                                        <option>New York</option>
-                                                        <option>Texas</option>
-                                                        <option>Florida</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">City <span className="text-danger">*</span></label>
-                                                    <select className="select">
-                                                        <option>Select</option>
-                                                        <option>Los Angeles</option>
-                                                        <option>San Diego</option>
-                                                        <option>Fresno</option>
-                                                        <option>San Francisco</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Zipcode <span className="text-danger">*</span></label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="modal-footer">
-                                        <button type="button" className="btn btn-light text-primary me-2" data-bs-dismiss="modal">
-                                            Cancel
-                                        </button>
-                                        <button type="submit" className="btn btn-primary">
-                                            Save
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Social Profile Tab */}
-                                <div className="tab-pane fade" id="social-profile1" role="tabpanel" aria-labelledby="social-profile-tab1" tabIndex="0">
-                                    <div className="modal-body pb-0">
-                                        <div className="row">
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Facebook</label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Twitter</label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">LinkedIn</label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Skype</label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Whatsapp</label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Instagram</label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="modal-footer">
-                                        <button type="button" className="btn btn-light text-primary me-2" data-bs-dismiss="modal">
-                                            Cancel
-                                        </button>
-                                        <button type="submit" className="btn btn-primary">
-                                            Save
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Access Tab */}
-                                <div className="tab-pane fade" id="access1" role="tabpanel" aria-labelledby="access-tab1" tabIndex="0">
-                                    <div className="modal-body pb-0">
-                                        <div className="mb-4">
-                                            <h6 className="fs-14 fw-medium mb-1">Visibility</h6>
-                                            <div className="d-flex align-items-center">
-                                                <div className="form-check me-3">
-                                                    <input className="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1" />
-                                                    <label className="form-check-label text-dark" htmlFor="flexRadioDefault1">
-                                                        Public
-                                                    </label>
-                                                </div>
-                                                <div className="form-check me-3">
-                                                    <input className="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" defaultChecked />
-                                                    <label className="form-check-label text-dark" htmlFor="flexRadioDefault2">
-                                                        Private
-                                                    </label>
-                                                </div>
-                                                <div className="form-check">
-                                                    <input className="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault3" defaultChecked />
-                                                    <label className="form-check-label text-dark" htmlFor="flexRadioDefault3">
-                                                        Select People
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="p-3 bg-gray br-5 mb-4">
-                                            {/* Users Checkboxes */}
-                                            {[6, 7, 8, 9, 10].map((user) => (
-                                                <div className="d-flex align-items-center mb-3" key={user}>
-                                                    <input className="form-check-input me-1" type="checkbox" id={`user-${user}`} />
-                                                    <div className="d-flex align-items-center file-name-icon">
-                                                        <a href="#" className="avatar avatar-md border avatar-rounded">
-                                                            <img
-                                                                src={``}
-                                                                className="img-fluid"
-                                                                alt="img"
-                                                            />
-                                                        </a>
-                                                        <div className="ms-2">
-                                                            <h6 className="fw-normal">
-                                                                <a href="#">User {user}</a>
-                                                            </h6>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-
-                                            <div className="d-flex align-items-center justify-content-center">
-                                                <a href="#" className="btn btn-primary">
-                                                    Confirm
-                                                </a>
-                                            </div>
-                                        </div>
-
-                                        <div className="mb-3">
-                                            <label className="form-label">Status</label>
-                                            <select className="select">
-                                                <option>Select</option>
-                                                <option>Active</option>
-                                                <option>Inactive</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div className="modal-footer">
-                                        <button type="button" className="btn btn-light text-primary me-2" data-bs-dismiss="modal">
-                                            Cancel
-                                        </button>
-                                        <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#success_compay">
-                                            Save
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <div className="modal fade" id="add_company">
-                <div className="modal-dialog modal-dialog-centered modal-lg">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h4 className="modal-title">Add New Company</h4>
-                            <button type="button" className="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-                                <i className="ti ti-x"></i>
-                            </button>
-                        </div>
-
-                        <form action="">
-                            <div className="contact-grids-tab">
-                                <ul className="nav nav-underline" id="myTab" role="tablist">
-                                    <li className="nav-item" role="presentation">
-                                        <button className="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#basic-info" type="button" role="tab" aria-selected="true">
-                                            Basic Information
-                                        </button>
-                                    </li>
-                                    <li className="nav-item" role="presentation">
-                                        <button className="nav-link" id="address-tab" data-bs-toggle="tab" data-bs-target="#address" type="button" role="tab" aria-selected="false">
-                                            Address
-                                        </button>
-                                    </li>
-                                    <li className="nav-item" role="presentation">
-                                        <button className="nav-link" id="social-profile-tab" data-bs-toggle="tab" data-bs-target="#social-profile" type="button" role="tab" aria-selected="false">
-                                            Social Profiles
-                                        </button>
-                                    </li>
-                                    <li className="nav-item" role="presentation">
-                                        <button className="nav-link" id="access-tab" data-bs-toggle="tab" data-bs-target="#access" type="button" role="tab" aria-selected="false">
-                                            Access
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <div className="tab-content" id="myTabContent">
-                                {/* Basic Info */}
-                                <div className="tab-pane fade show active" id="basic-info" role="tabpanel" aria-labelledby="info-tab" tabIndex="0">
-                                    <div className="modal-body pb-0">
-                                        <div className="row">
-                                            {/* Profile Image Upload */}
-                                            <div className="col-md-12">
-                                                <div className="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
-                                                    <div className="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames">
-                                                        <i className="ti ti-photo text-gray-2 fs-16"></i>
-                                                    </div>
-                                                    <div className="profile-upload">
-                                                        <div className="mb-2">
-                                                            <h6 className="mb-1">Upload Profile Image</h6>
-                                                            <p className="fs-12">Image should be below 4 mb</p>
-                                                        </div>
-                                                        <div className="profile-uploader d-flex align-items-center">
-                                                            <div className="drag-upload-btn btn btn-sm btn-primary me-2">
-                                                                Upload
-                                                                <input type="file" className="form-control image-sign" multiple />
-                                                            </div>
-                                                            <a href="#" className="btn btn-light text-primary btn-sm">Cancel</a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Company Info Fields */}
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Company Name <span className="text-danger">*</span></label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Email</label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Phone Number <span className="text-danger">*</span></label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Phone Number 2</label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Fax</label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Website</label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Ratings <span className="text-danger">*</span></label>
-                                                    <div className="input-icon-end position-relative">
-                                                        <input type="text" className="form-control" />
-                                                        <span className="input-icon-addon">
-                                                            <i className="ti ti-star text-gray-6"></i>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Owner <span className="text-danger">*</span></label>
-                                                    <select className="select">
-                                                        <option>Select</option>
-                                                        <option>Hendry Milner</option>
-                                                        <option>Guilory Berggren</option>
-                                                        <option>Jami Carlile</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Tags <span className="text-danger">*</span></label>
-                                                    <input className="input-tags form-control" placeholder="Add new" type="text" defaultValue="Collab" />
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <div className="d-flex justify-content-between align-items-center mb-2">
-                                                        <label className="col-form-label p-0">Deals <span className="text-danger">*</span></label>
-                                                        <a href="#" className="add-new text-primary" data-bs-target="#add_deals" data-bs-toggle="modal">
-                                                            <i className="ti ti-plus text-primary me-1"></i>Add New
-                                                        </a>
-                                                    </div>
-                                                    <select className="select">
-                                                        <option>Select</option>
-                                                        <option>Collins</option>
-                                                        <option>Konopelski</option>
-                                                        <option>Adams</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Industry <span className="text-danger">*</span></label>
-                                                    <select className="select">
-                                                        <option>Select</option>
-                                                        <option>Retail Industry</option>
-                                                        <option>Banking</option>
-                                                        <option>Hotels</option>
-                                                        <option>Financial Services</option>
-                                                        <option>Insurance</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Source <span className="text-danger">*</span></label>
-                                                    <select className="select">
-                                                        <option>Select</option>
-                                                        <option>Phone Calls</option>
-                                                        <option>Social Media</option>
-                                                        <option>Referral Sites</option>
-                                                        <option>Web Analytics</option>
-                                                        <option>Previous Purchase</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Currency <span className="text-danger">*</span></label>
-                                                    <select className="select">
-                                                        <option>Select</option>
-                                                        <option>USD</option>
-                                                        <option>Euro</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Language <span className="text-danger">*</span></label>
-                                                    <select className="select">
-                                                        <option>Select</option>
-                                                        <option>English</option>
-                                                        <option>Arabic</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-12">
-                                                <div className="mb-3">
-                                                    <label className="form-label">About <span className="text-danger">*</span></label>
-                                                    <textarea className="form-control" />
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-12">
-                                                <div className="mb-3">
-                                                    <div className="d-flex justify-content-between align-items-center mb-2">
-                                                        <label className="col-form-label p-0">Contact <span className="text-danger">*</span></label>
-                                                        <a href="#" className="add-new text-primary" data-bs-target="#add_contact" data-bs-toggle="modal">
-                                                            <i className="ti ti-plus text-primary me-1"></i>Add New
-                                                        </a>
-                                                    </div>
-                                                    <select className="select2" multiple>
-                                                        <option>Darlee Robertson</option>
-                                                        <option defaultValue>Sharon Roy</option>
-                                                        <option>Vaughan</option>
-                                                        <option>Jessica</option>
-                                                        <option>Carol Thomas</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="modal-footer">
-                                        <button type="button" className="btn btn-light text-primary me-2" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" className="btn btn-primary">Save</button>
-                                    </div>
-                                </div>
-
-                                {/* Address Tab */}
-                                <div className="tab-pane fade" id="address" role="tabpanel" aria-labelledby="address-tab" tabIndex="0">
-                                    <div className="modal-body pb-0">
-                                        <div className="row">
-                                            <div className="col-md-12">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Address <span className="text-danger">*</span></label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Country <span className="text-danger">*</span></label>
-                                                    <select className="select">
-                                                        <option>Select</option>
-                                                        <option>USA</option>
-                                                        <option>Canada</option>
-                                                        <option>Germany</option>
-                                                        <option>France</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">State <span className="text-danger">*</span></label>
-                                                    <select className="select">
-                                                        <option>Select</option>
-                                                        <option>California</option>
-                                                        <option>New York</option>
-                                                        <option>Texas</option>
-                                                        <option>Florida</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">City <span className="text-danger">*</span></label>
-                                                    <select className="select">
-                                                        <option>Select</option>
-                                                        <option>Los Angeles</option>
-                                                        <option>San Diego</option>
-                                                        <option>Fresno</option>
-                                                        <option>San Francisco</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Zipcode <span className="text-danger">*</span></label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="modal-footer">
-                                        <button type="button" className="btn btn-light text-primary me-2" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" className="btn btn-primary">Save</button>
-                                    </div>
-                                </div>
-
-                                {/* Social Profile & Access tabs can be similarly converted with same rules */}
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <div className="modal fade" id="add_pipeline">
-                <div className="modal-dialog modal-dialog-centered modal-lg">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h4 className="modal-title">Add New Pipeline</h4>
-                            <button type="button" className="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-                                <i className="ti ti-x"></i>
-                            </button>
-                        </div>
-
-                        <form action="">
-                            <div className="modal-body pb-0">
-                                <div className="row">
-                                    {/* Pipeline Name */}
-                                    <div className="col-md-12">
-                                        <div className="mb-3">
-                                            <label className="form-label">Pipeline Name <span className="text-danger">*</span></label>
-                                            <input type="text" className="form-control" />
-                                        </div>
-                                    </div>
-
-                                    {/* Pipeline Stages */}
-                                    <div className="col-md-12">
-                                        <div className="input-block mb-3">
-                                            <div className="d-flex justify-content-between align-items-center">
-                                                <label className="form-label">Pipeline Stages <span className="text-danger">*</span></label>
-                                                <a href="#" className="add-new text-primary" data-bs-toggle="modal" data-bs-target="#add_stage">
-                                                    <i className="ti ti-plus text-primary me-1"></i>Add New
-                                                </a>
-                                            </div>
-
-                                            {/* Stage List */}
-                                            {["Inpipeline", "Follow Up", "Schedule Service"].map((stage, index) => (
-                                                <div key={index} className="p-3 border border-gray br-5 mb-2">
-                                                    <div className="d-flex align-items-center justify-content-between">
-                                                        <div className="d-flex align-items-center">
-                                                            <span className="me-2"><i className="ti ti-grip-vertical"></i></span>
-                                                            <h6 className="fs-14 fw-normal">{stage}</h6>
-                                                        </div>
-                                                        <div className="d-flex align-items-center">
-                                                            <a href="#" className="text-default" data-bs-toggle="modal" data-bs-target="#edit_stage">
-
-                                                            </a>
-                                                            <a href="#" className="text-default" data-bs-toggle="modal" data-bs-target="#delete_modal">
-                                                                <span><i className="ti ti-trash"></i></span>
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Access */}
-                                    <div className="col-md-12">
-                                        <div className="mb-3">
-
-
-                                            <div className="tab-content">
-                                                <div className="tab-pane fade" id="select-person">
-                                                    <div className="access-wrapper">
-                                                        {[20, 21].map((id) => (
-                                                            <div key={id} className="p-3 border border-gray br-5 mb-2">
-                                                                <div className="d-flex align-items-center justify-content-between">
-                                                                    <div className="d-flex align-items-center file-name-icon">
-                                                                        <a href="#" className="avatar avatar-md border avatar-rounded">
-                                                                            <img
-                                                                                src={``}
-                                                                                className="img-fluid"
-                                                                                alt="img"
-                                                                            />
-                                                                        </a>
-                                                                        <div className="ms-2">
-                                                                            <h6 className="fw-medium"><a href="#">Sharon Roy</a></h6>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="d-flex align-items-center">
-                                                                        <a href="#" className="text-danger">Remove</a>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="modal-footer">
-                                <button type="button" className="btn btn-light text-primary btn-sm me-2" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" className="btn btn-secondary btn-sm">Add Pipeline</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <div className="modal fade" id="edit_pipeline">
-                <div className="modal-dialog modal-dialog-centered modal-lg">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h4 className="modal-title">Edit Pipeline</h4>
-                            <button type="button" className="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-                                <i className="ti ti-x"></i>
-                            </button>
-                        </div>
-
-                        <form action="">
-                            <div className="modal-body pb-0">
-                                <div className="row">
-                                    {/* Pipeline Name */}
-                                    <div className="col-md-12">
-                                        <div className="mb-3">
-                                            <label className="form-label">Pipeline Name <span className="text-danger">*</span></label>
-                                            <input type="text" className="form-control" defaultValue="Marketing" />
-                                        </div>
-                                    </div>
-
-                                    {/* Pipeline Stages */}
-                                    <div className="col-md-12">
-                                        <div className="input-block mb-3">
-                                            <div className="d-flex justify-content-between align-items-center">
-                                                <label className="form-label">Pipeline Stages <span className="text-danger">*</span></label>
-                                                <a href="#" className="add-new text-primary" data-bs-toggle="modal" data-bs-target="#add_stage">
-                                                    <i className="ti ti-plus text-primary me-1"></i>Add New
-                                                </a>
-                                            </div>
-
-                                            {["Inpipeline", "Follow Up", "Schedule Service"].map((stage, index) => (
-                                                <div key={index} className="p-3 border border-gray br-5 mb-2">
-                                                    <div className="d-flex align-items-center justify-content-between">
-                                                        <div className="d-flex align-items-center">
-                                                            <span className="me-2"><i className="ti ti-grip-vertical"></i></span>
-                                                            <h6 className="fs-14 fw-normal">{stage}</h6>
-                                                        </div>
-                                                        <div className="d-flex align-items-center">
-                                                            <a href="#" className="text-default">
-                                                                <span className="me-2"><i className="ti ti-edit"></i></span>
-                                                            </a>
-                                                            <a href="#" className="text-default">
-                                                                <span><i className="ti ti-trash"></i></span>
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Access */}
-                                    <div className="col-md-12">
-                                        <div className="mb-3">
-                                            <label className="form-label">Access</label>
-                                            <div className="d-flex access-item nav">
-                                                <div className="d-flex align-items-center">
-                                                    <div className="radio-btn d-flex align-items-center" data-bs-toggle="tab" data-bs-target="#all2">
-                                                        <input type="radio" className="status-radio me-2" id="all2" name="status" defaultChecked />
-                                                        <label htmlFor="all2">All</label>
-                                                    </div>
-                                                    <div className="radio-btn d-flex align-items-center" data-bs-toggle="tab" data-bs-target="#select-person2">
-                                                        <input type="radio" className="status-radio me-2" id="select2" name="status" />
-                                                        <label htmlFor="select2">Select Person</label>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="tab-content">
-                                                <div className="tab-pane fade" id="select-person2">
-                                                    <div className="access-wrapper">
-                                                        {[20, 21].map((id) => (
-                                                            <div key={id} className="p-3 border border-gray br-5 mb-2">
-                                                                <div className="d-flex align-items-center justify-content-between">
-                                                                    <div className="d-flex align-items-center file-name-icon">
-                                                                        <a href="#" className="avatar avatar-md border avatar-rounded">
-                                                                            <img
-                                                                                src={``}
-                                                                                className="img-fluid"
-                                                                                alt="img"
-                                                                            />
-                                                                        </a>
-                                                                        <div className="ms-2">
-                                                                            <h6 className="fw-medium"><a href="#">Sharon Roy</a></h6>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="d-flex align-items-center">
-                                                                        <a href="#" className="text-danger">Remove</a>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="modal-footer">
-                                <button type="button" className="btn btn-light text-primary me-2" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" className="btn btn-primary">Add Pipeline</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            <div className="modal fade" id="pipeline-access">
-                <div className="modal-dialog modal-dialog-centered modal-md">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h4 className="modal-title">Pipeline Access</h4>
-                            <button type="button" className="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-                                <i className="ti ti-x"></i>
-                            </button>
-                        </div>
-
-                        <form action="">
-                            <div className="modal-body pb-0">
-                                <div className="row">
-                                    {/* Search */}
-                                    <div className="col-md-12">
-                                        <div className="mb-3">
-                                            <div className="input-icon-end position-relative">
-                                                <input type="text" className="form-control" placeholder="Search" />
-                                                <span className="input-icon-addon">
-                                                    <i className="ti ti-search text-gray-7"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Access Users */}
-                                    <div className="col-md-12">
-                                        <div className="mb-3">
-                                            <div className="p-2 border br-5">
-                                                <div className="pipeline-access-items">
-                                                    {[
-                                                        { id: 19, name: "Darlee Robertson", role: "Darlee Robertson" },
-                                                        { id: 20, name: "Sharon Roy", role: "Installer" },
-                                                        { id: 21, name: "Vaughan Lewis", role: "Senior Manager" },
-                                                        { id: 33, name: "Jessica Louise", role: "Test Engineer" },
-                                                        { id: 34, name: "Test Engineer", role: "UI /UX Designer" }
-                                                    ].map((user, index) => (
-                                                        <div key={index} className="d-flex align-items-center p-2">
-                                                            <div className="form-check form-check-md me-2">
-                                                                <input className="form-check-input" type="checkbox" />
-                                                            </div>
-                                                            <div className="d-flex align-items-center file-name-icon">
-                                                                <a href="#" className="avatar avatar-md border avatar-rounded">
-                                                                    <img
-                                                                        src={``}
-                                                                        className="img-fluid"
-                                                                        alt="img"
-                                                                    />
-                                                                </a>
-                                                                <div className="ms-2">
-                                                                    <h6 className="fw-medium fs-12">
-                                                                        <a href="#">{user.name}</a>
-                                                                    </h6>
-                                                                    <span className="fs-10 fw-normal">{user.role}</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-
-                            <div className="modal-footer">
-                                <button type="button" className="btn btn-light text-primary me-2" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" className="btn btn-primary">Confirm</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            <div className="modal fade" id="add_stage">
-                <div className="modal-dialog modal-dialog-centered modal-md">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h4 className="modal-title">Add New Stage</h4>
-                            <button type="button" className="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-                                <i className="ti ti-x"></i>
-                            </button>
-                        </div>
-
-                        <form action=" ">
-                            <div className="modal-body pb-0">
-                                <div className="row">
-                                    <div className="col-md-12">
-                                        <div className="mb-3">
-                                            <label className="form-label">Stage Name <span className="text-danger"> *</span></label>
-                                            <input type="text" className="form-control" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="modal-footer"><div className="modal fade" id="edit_stage">
-                                <div className="modal-dialog modal-dialog-centered modal-md">
-                                    <div className="modal-content">
-                                        <div className="modal-header">
-                                            <h4 className="modal-title">Edit Stage</h4>
-                                            <button type="button" className="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-                                                <i className="ti ti-x"></i>
-                                            </button>
-                                        </div>
-
-                                        <form action=" ">
-                                            <div className="modal-body pb-0">
-                                                <div className="row">
-                                                    <div className="col-md-12">
-                                                        <div className="mb-3">
-                                                            <label className="form-label">Edit Name <span className="text-danger"> *</span></label>
-                                                            <input type="text" className="form-control" defaultValue="Inpipeline" />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="modal-footer">
-                                                <button type="button" className="btn btn-light text-primary me-2" data-bs-dismiss="modal">Cancel</button>
-                                                <button type="submit" className="btn btn-primary">Save Changes</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-
-                                <button type="button" className="btn btn-light text-primary btn-sm me-2" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" className="btn btn-secondary btn-sm">Add Stage</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            <div className="modal fade" id="delete_modal">
-                <div className="modal-dialog modal-dialog-centered">
-                    <div className="modal-content">
-                        <div className="modal-body text-center">
-                            <span className="avatar avatar-xl bg-transparent-danger text-danger mb-3">
-                                <i className="ti ti-trash-x fs-36"></i>
-                            </span>
-                            <h4 className="mb-1">Confirm Delete</h4>
-                            <p className="mb-3">
-                                You want to delete all the marked items, this can't be undone once you delete.
-                            </p>
-                            <div className="d-flex justify-content-center">
-                                <button type="button" className="btn btn-light text-primary me-3" data-bs-dismiss="modal">
-                                    Cancel
+                                    Delete
                                 </button>
-                                <a
-                                    href=""
-                                    className="btn btn-danger"
-                                >
-                                    Yes, Delete
-                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-           
+
+            {/* Bootstrap Icons CSS Link (Add in your index.html or layout file) */}
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+
+            {/* CSS Styling */}
+            <style jsx>{`
+                .activities-container {
+                    padding: 1.5rem;
+                }
+                
+                .page-title {
+                    color: #2c3e50;
+                }
+                
+                .btn-add-activity {
+                    font-weight: 500;
+                }
+                
+                .activity-card {
+                    border: 1px solid #e9ecef;
+                    border-radius: 0.75rem;
+                }
+                
+                .card-title {
+                    color: #2c3e50;
+                }
+                
+                .table thead th {
+                    border-bottom: 2px solid #e9ecef;
+                    padding: 0.75rem;
+                    font-weight: 600;
+                    color: #495057;
+                }
+                
+                .table tbody td {
+                    padding: 0.75rem;
+                    vertical-align: middle;
+                    border-color: #f1f3f4;
+                }
+                
+                .table tbody tr:hover {
+                    background-color: #f8f9fa;
+                }
+                
+                .table-active {
+                    background-color: rgba(0, 123, 255, 0.05) !important;
+                }
+                
+                .avatar-circle-sm {
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 600;
+                }
+                
+                .empty-state {
+                    padding: 2rem 1rem;
+                }
+                
+                .activity-type-card {
+                    border: 2px solid #dee2e6;
+                    transition: all 0.2s;
+                    cursor: pointer;
+                    position: relative;
+                }
+                
+                .activity-type-card:hover {
+                    border-color: #0d6efd;
+                    background-color: #f8f9fa;
+                }
+                
+                .activity-type-card.active {
+                    border-color: #0d6efd;
+                    background-color: rgba(13, 110, 253, 0.1);
+                }
+                
+                .activity-type-card.active .activity-icon {
+                    color: #0d6efd;
+                }
+                
+                .badge-pink-transparent {
+                    background-color: rgba(255, 107, 158, 0.1);
+                    color: #ff6b9e;
+                    border: 1px solid rgba(255, 107, 158, 0.2);
+                }
+                
+                .badge-purple-transparent {
+                    background-color: rgba(108, 92, 231, 0.1);
+                    color: #6c5ce7;
+                    border: 1px solid rgba(108, 92, 231, 0.2);
+                }
+                
+                .badge-info-transparent {
+                    background-color: rgba(0, 184, 217, 0.1);
+                    color: #00b8d9;
+                    border: 1px solid rgba(0, 184, 217, 0.2);
+                }
+                
+                .badge-warning-transparent {
+                    background-color: rgba(255, 171, 0, 0.1);
+                    color: #ffab00;
+                    border: 1px solid rgba(255, 171, 0, 0.2);
+                }
+                
+                .delete-icon {
+                    width: 60px;
+                    height: 60px;
+                    margin: 0 auto;
+                    background: rgba(220, 53, 69, 0.1);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                
+                .form-control:focus, .form-select:focus {
+                    border-color: #86b7fe;
+                    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+                }
+                
+                .input-group-text {
+                    background-color: #f8f9fa;
+                    border-color: #dee2e6;
+                    color: #6c757d;
+                }
+                
+                /* Custom checkbox styling */
+                .form-check-input {
+                    width: 1.1em;
+                    height: 1.1em;
+                    cursor: pointer;
+                    border: 2px solid #adb5bd;
+                }
+                
+                .form-check-input:checked {
+                    background-color: #0d6efd;
+                    border-color: #0d6efd;
+                }
+                
+                .form-check-input:checked::after {
+                    content: "✓";
+                    position: absolute;
+                    color: white;
+                    font-size: 0.8em;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                }
+                
+                .form-check-input:focus {
+                    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+                }
+                
+                @media (max-width: 768px) {
+                    .activities-container {
+                        padding: 1rem;
+                    }
+                    
+                    .btn-add-activity {
+                        width: 100%;
+                        margin-top: 0.5rem;
+                    }
+                    
+                    .table-responsive {
+                        border: 1px solid #dee2e6;
+                        border-radius: 0.5rem;
+                    }
+                    
+                    .activity-type-card {
+                        padding: 0.75rem 0.25rem;
+                    }
+                }
+            `}</style>
         </div>
-
     );
 };
 
