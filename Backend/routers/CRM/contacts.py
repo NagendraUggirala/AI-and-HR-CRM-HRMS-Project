@@ -7,7 +7,7 @@ import os
 
 from schema import contact
 from core.database import get_db
-import crud
+import crud_ops
 from model import Contact as ContactModel
 
 router = APIRouter()
@@ -46,21 +46,21 @@ def convert_contact_output(db_contact: ContactModel):
 # -------------------- CREATE CONTACT -------------------- #
 @router.post("/", response_model=contact.ContactResponse)
 def create_contact(contact_data: contact.ContactCreate, db: Session = Depends(get_db)):
-    db_contact = crud.create_contact(db=db, contact=contact_data)
+    db_contact = crud_ops.create_contact(db=db, contact=contact_data)
     return convert_contact_output(db_contact)
 
 
 # -------------------- READ ALL CONTACTS -------------------- #
 @router.get("/", response_model=List[contact.ContactResponse])
 def read_contacts(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
-    db_contacts = crud.get_contacts(db=db, skip=skip, limit=limit)
+    db_contacts = crud_ops.get_contacts(db=db, skip=skip, limit=limit)
     return [convert_contact_output(c) for c in db_contacts]
 
 
 # -------------------- READ SINGLE CONTACT -------------------- #
 @router.get("/{contact_id}", response_model=contact.ContactResponse)
 def read_contact(contact_id: int, db: Session = Depends(get_db)):
-    db_contact = crud.get_contact(db=db, contact_id=contact_id)
+    db_contact = crud_ops.get_contact(db=db, contact_id=contact_id)
     if not db_contact:
         raise HTTPException(status_code=404, detail="Contact not found")
     return convert_contact_output(db_contact)
@@ -69,7 +69,7 @@ def read_contact(contact_id: int, db: Session = Depends(get_db)):
 # -------------------- UPDATE CONTACT -------------------- #
 @router.put("/{contact_id}", response_model=contact.ContactResponse)
 def update_contact(contact_id: int, updated: contact.ContactUpdate, db: Session = Depends(get_db)):
-    db_contact = crud.update_contact(db=db, contact_id=contact_id, updated=updated)
+    db_contact = crud_ops.update_contact(db=db, contact_id=contact_id, updated=updated)
     if not db_contact:
         raise HTTPException(status_code=404, detail="Contact not found")
     return convert_contact_output(db_contact)
@@ -78,7 +78,7 @@ def update_contact(contact_id: int, updated: contact.ContactUpdate, db: Session 
 # -------------------- DELETE CONTACT -------------------- #
 @router.delete("/{contact_id}")
 def delete_contact(contact_id: int, db: Session = Depends(get_db)):
-    ok = crud.delete_contact(db=db, contact_id=contact_id)
+    ok = crud_ops.delete_contact(db=db, contact_id=contact_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Contact not found")
     return {"detail": "Contact deleted successfully"}

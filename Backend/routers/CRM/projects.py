@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from core.session import get_db
+import crud_ops
 
 from schema.project import (
     ProjectCreate,
@@ -10,7 +11,7 @@ from schema.project import (
     ProjectOut,
 )
 
-from crud.project_crud import (
+from crud_ops.project_crud import (
     create_project,
     list_projects,
     get_project,

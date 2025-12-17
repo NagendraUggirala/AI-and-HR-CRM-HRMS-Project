@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 # Correct import: task_crud
-from crud.task import (
+from crud_ops.task import (
     create_task,
     list_tasks,
     get_task,

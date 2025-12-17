@@ -12,7 +12,7 @@ from schema.contact import ContactBase
 from schema.company import CompanyBase
 from schema.activity import Activity
 
-import crud
+import crud_ops
 import model
 
 router = APIRouter()
@@ -43,12 +43,12 @@ def get_deal(deal_id: int, db: Session = Depends(get_db)):
 
 @router.get("/leads", response_model=List[LeadRead])
 def read_leads(skip: int = 0, limit: int = Query(100, le=1000), db: Session = Depends(get_db)):
-    return crud.get_leads(db, skip=skip, limit=limit)
+    return crud_ops.get_leads(db, skip=skip, limit=limit)
 
 
 @router.get("/leads/{lead_id}", response_model=LeadRead)
 def read_lead(lead_id: int, db: Session = Depends(get_db)):
-    lead = crud.get_lead(db, lead_id)
+    lead = crud_ops.get_lead(db, lead_id)
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")
     return lead
@@ -93,7 +93,7 @@ def recent_companies(limit: int = 10, db: Session = Depends(get_db)):
 @router.get("/activities", response_model=List[Activity])
 def read_activities(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     try:
-        return crud.get_activities(db, skip=skip, limit=limit)
+        return crud_ops.get_activities(db, skip=skip, limit=limit)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

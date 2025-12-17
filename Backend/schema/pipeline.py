@@ -8,8 +8,8 @@ from datetime import date
 from enum import Enum as PyEnum
 
 class StatusEnum(str, PyEnum):
-    active = "Active"
-    inactive = "Inactive"
+    active = "active"
+    inactive = "inactive"
 
 class PipelineBase(BaseModel):
     pipeline_Name: str

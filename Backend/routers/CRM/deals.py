@@ -5,6 +5,7 @@ from typing import List, Optional
 from core.database import get_db      # 👈 FIXED
 from model import Deal
 from schema.deal import  DealCreate, DealUpdate, DealOut
+import crud_ops
 
 router = APIRouter()
 

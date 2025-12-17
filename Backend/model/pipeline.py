@@ -1,10 +1,9 @@
-from sqlalchemy import Column, Integer, String, Float, Date, Time, Text, Boolean, Enum, TIMESTAMP, func
+from sqlalchemy import Column, Integer, String, Float, Date, Enum
 from core.database import Base
 import enum
-from typing import Optional, List
 
 
-class StatusEnum(enum.Enum):
+class StatusEnum(str, enum.Enum):
     active = "active"
     inactive = "inactive"
 
@@ -18,7 +17,13 @@ class Pipeline(Base):
     deals = Column(Integer, nullable=False)
     stages = Column(String, nullable=False)
     created_date = Column(Date, nullable=False)
-    status = Column(Enum(StatusEnum), nullable=False, default=StatusEnum.active)
 
-
-# ---------------- ACTIVITY MODEL ---------------- #
+    status = Column(
+        Enum(
+            StatusEnum,
+            name="pipeline_status_enum",      # ✅ explicit DB enum name
+            values_callable=lambda x: [e.value for e in x]  # ✅ force lowercase values
+        ),
+        nullable=False,
+        default=StatusEnum.active
+    )
