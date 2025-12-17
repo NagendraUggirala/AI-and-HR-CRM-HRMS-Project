@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import SQLModel, Session, select
 from core.database import engine, Base
-from models import User
+from model.models import User
  
 # Debug info
 import sqladmin, inspect
@@ -99,7 +99,7 @@ from routers.offers.offer_tracking_router import router as offer_tracking_router
 from routers.HR_Automation.Onboarding.routers import candidates as onboard_candidates, uploads
 from routers.HR_Automation.attendance.routers import attendance, leave
 from routers.AI_Interview_Bot.routes import interviews
- 
+from routers.CRM import contacts, company, deals, leads, pipelines, activities, analytics,projects, clients, tasks
  
 # -------------------------------------------------------
 # CORS
@@ -189,6 +189,19 @@ app.include_router(interviews.router, prefix="/api/interviews")
 app.include_router(email_router)
 app.include_router(offer_template_router, prefix="/api/offers")
 app.include_router(offer_tracking_router, prefix="/api/offers")
+
+# Additional CRM Modules
+app.include_router(contacts.router,prefix="/contacts",tags=["contacts"])
+app.include_router(company.router,prefix="/companies",tags=["companies"])
+app.include_router(deals.router,prefix="/deals",tags=["deals"])
+app.include_router(leads.router,prefix="/leads",tags=["leads"])
+app.include_router(pipelines.router,prefix="/pipelines",tags=["pipelines"])
+app.include_router(activities.router,prefix="/activities",tags=["activities"])
+app.include_router(analytics.router,prefix="/analytics",tags=["analytics"])
+app.include_router(clients.router)
+app.include_router(projects.router)
+app.include_router(tasks.router)
+
  
  
 # -------------------------------------------------------

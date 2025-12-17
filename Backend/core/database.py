@@ -1,24 +1,51 @@
-import os
+# core/database.py
+
 from sqlmodel import SQLModel, create_engine, Session
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, declarative_base
+from core.config import settings  # your settings
 
-POSTGRES_USER = "postgres"
-POSTGRES_PASSWORD = "12345"
-POSTGRES_DB = "hr_ai"
-POSTGRES_HOST = "localhost"
-POSTGRES_PORT = "5432"
+# ----------------------------
+# Database URL
+# ----------------------------
+DATABASE_URL = settings.DATABASE_URL
 
-DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+# ----------------------------
+# Engine (shared)
+# ----------------------------
+engine = create_engine(
+    DATABASE_URL,
+    echo=True,
+    pool_pre_ping=True
+)
 
-engine = create_engine(DATABASE_URL, echo=True)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# ----------------------------
+# For SQLAlchemy models
+# ----------------------------
 Base = declarative_base()
 
-def get_db():
-    with Session(engine) as session:
-        yield session
+# ----------------------------
+# SQLModel Session maker
+# ----------------------------
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+    class_=Session   # <-- IMPORTANT (ensures session.exec works)
+)
 
+# ----------------------------
+# FastAPI Dependency
+# ----------------------------
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# ----------------------------
+# Initialize DB (run at startup)
+# ----------------------------
 def init_db():
-    SQLModel.metadata.create_all(bind=engine)  # for SQLModel tables
-    Base.metadata.create_all(bind=engine)      # for SQLAlchemy tables
+    SQLModel.metadata.create_all(engine)
+    Base.metadata.create_all(engine)

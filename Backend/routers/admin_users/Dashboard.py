@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select, func
 from typing import List, Optional
-from database import get_db
-from models import Job, Candidate, User, Application
-from schemas import JobCreate, JobRead, CandidateRead
+# from database import get_db
+import core.database as database
+from model.models import Job, Candidate, User, Application
+from schema import JobCreate, JobRead, CandidateRead
 from auth import get_current_user
 from datetime import datetime, timedelta
 
