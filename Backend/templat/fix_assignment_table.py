@@ -15,7 +15,7 @@ if sys.platform == 'win32':
 def fix_assignment_table():
     """Remove NOT NULL constraint from candidate_id column"""
     
-    print("🔧 Fixing assignment table...")
+    print(" Fixing assignment table...")
     
     try:
         # Create engine
@@ -35,17 +35,17 @@ def fix_assignment_table():
                 # Commit transaction
                 trans.commit()
                 
-                print("✅ SUCCESS! Assignment table fixed!")
+                print(" SUCCESS! Assignment table fixed!")
                 print("   - candidate_id column now allows NULL values")
-                print("\n🎉 You can now assign assessments without errors!")
+                print("\n You can now assign assessments without errors!")
                 
             except Exception as e:
                 trans.rollback()
-                print(f"❌ Error during ALTER TABLE: {e}")
+                print(f" Error during ALTER TABLE: {e}")
                 raise
                 
     except Exception as e:
-        print(f"❌ Failed to connect to database: {e}")
+        print(f"Failed to connect to database: {e}")
         print("\nTry running this SQL command manually:")
         print("ALTER TABLE assignment ALTER COLUMN candidate_id DROP NOT NULL;")
         return False

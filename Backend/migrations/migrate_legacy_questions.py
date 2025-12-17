@@ -18,7 +18,7 @@ if sys.platform == 'win32':
 from sqlalchemy import create_engine, text, inspect
 from sqlalchemy.orm import Session
 from core.database import DATABASE_URL, SessionLocal
-from models import LegacyQuestion
+from model import LegacyQuestion
 import json
 
 def migrate_questions():
@@ -33,15 +33,15 @@ def migrate_questions():
             tables = inspector.get_table_names()
             
             if 'legacy_questions' not in tables:
-                print("⚠️  Table 'legacy_questions' does not exist. Nothing to migrate.")
+                print("Table 'legacy_questions' does not exist. Nothing to migrate.")
                 return
             
             # Check if aptitude_questions table exists (it should, created by SQLAlchemy)
             if 'aptitude_questions' not in tables:
-                print("⚠️  Table 'aptitude_questions' does not exist. Creating it...")
+                print(" Table 'aptitude_questions' does not exist. Creating it...")
                 # Create the table using the model
                 LegacyQuestion.__table__.create(engine, checkfirst=True)
-                print("✅ Created aptitude_questions table")
+                print("Created aptitude_questions table")
             
             # Count existing records in both tables
             legacy_count = session.execute(
@@ -52,30 +52,30 @@ def migrate_questions():
                 text("SELECT COUNT(*) FROM aptitude_questions")
             ).scalar()
             
-            print(f"\n📊 Current Status:")
+            print(f"\nCurrent Status:")
             print(f"   legacy_questions: {legacy_count} records")
             print(f"   aptitude_questions: {aptitude_count} records")
             
             if legacy_count == 0:
-                print("\n⚠️  No data in legacy_questions table. Nothing to migrate.")
+                print("\nNo data in legacy_questions table. Nothing to migrate.")
                 return
             
             if aptitude_count > 0:
-                print(f"\n⚠️  aptitude_questions already has {aptitude_count} records.")
+                print(f"\n aptitude_questions already has {aptitude_count} records.")
                 response = input("   Do you want to continue? This will add more records. (y/n): ")
                 if response.lower() != 'y':
-                    print("❌ Migration cancelled.")
+                    print("Migration cancelled.")
                     return
             
             # Transfer all data from legacy_questions to aptitude_questions
-            print(f"\n🔄 Transferring {legacy_count} records from legacy_questions to aptitude_questions...")
+            print(f"\n ransferring {legacy_count} records from legacy_questions to aptitude_questions...")
             
             # First, clear aptitude_questions if it exists and has data
             if aptitude_count > 0:
                 print(f"   Clearing existing {aptitude_count} records from aptitude_questions...")
                 session.execute(text("TRUNCATE TABLE aptitude_questions"))
                 session.commit()
-                print("   ✅ Cleared aptitude_questions table")
+                print("  Cleared aptitude_questions table")
             
             # Use raw SQL to copy all data
             # Simple INSERT ... SELECT without ON CONFLICT since we cleared the table
@@ -119,17 +119,17 @@ def migrate_questions():
                             )
                             transferred_count += 1
                         except Exception as insert_error:
-                            print(f"   ⚠️  Error inserting ID {row[0]}: {insert_error}")
+                            print(f" Error inserting ID {row[0]}: {insert_error}")
                             continue
                     
                     session.commit()
                     if (i + batch_size) % 500 == 0:
                         print(f"   Progress: {transferred_count}/{len(legacy_data)} records...")
                 
-                print(f"   ✅ Successfully inserted {transferred_count} records")
-                
+                print(f" Successfully inserted {transferred_count} records")
+            
             except Exception as e:
-                print(f"   ❌ Error during transfer: {e}")
+                print(f"  Error during transfer: {e}")
                 import traceback
                 traceback.print_exc()
                 session.rollback()
@@ -140,7 +140,7 @@ def migrate_questions():
                 text("SELECT COUNT(*) FROM aptitude_questions")
             ).scalar()
             
-            print(f"\n✅ Migration Complete!")
+            print(f"\n Migration Complete!")
             print(f"   Transferred: {legacy_count} records")
             print(f"   Total in aptitude_questions: {new_count} records")
             
@@ -150,15 +150,15 @@ def migrate_questions():
             ).fetchall()
             
             if sample:
-                print(f"\n📝 Sample records in aptitude_questions:")
+                print(f"\nnnSample records in aptitude_questions:")
                 for row in sample:
                     print(f"   ID: {row[0]}, Set: {row[1]}, Question: {row[2]}...")
             
-            print("\n✅ All data has been successfully migrated!")
+            print("\n All data has been successfully migrated!")
             print("   You can now safely drop the legacy_questions table if needed.")
             
     except Exception as e:
-        print(f"\n❌ Error during migration: {e}")
+        print(f"\n  Error during migration: {e}")
         import traceback
         traceback.print_exc()
         return False

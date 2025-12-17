@@ -15,7 +15,7 @@ if sys.platform == 'win32':
 def fix_assessment_table():
     """Remove NOT NULL constraint from created_by column"""
     
-    print("🔧 Fixing assessment table...")
+    print(" Fixing assessment table...")
     
     try:
         # Create engine
@@ -35,17 +35,17 @@ def fix_assessment_table():
                 # Commit transaction
                 trans.commit()
                 
-                print("✅ SUCCESS! Assessment table fixed!")
+                print(" SUCCESS! Assessment table fixed!")
                 print("   - created_by column now allows NULL values")
-                print("\n🎉 You can now create assessments without errors!")
+                print("\n You can now create assessments without errors!")
                 
             except Exception as e:
                 trans.rollback()
-                print(f"❌ Error during ALTER TABLE: {e}")
+                print(f"Error during ALTER TABLE: {e}")
                 raise
                 
     except Exception as e:
-        print(f"❌ Failed to connect to database: {e}")
+        print(f" Failed to connect to database: {e}")
         print("\nTry running this SQL command manually:")
         print("ALTER TABLE assessment ALTER COLUMN created_by DROP NOT NULL;")
         return False

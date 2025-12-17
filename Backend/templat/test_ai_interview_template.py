@@ -5,7 +5,7 @@ This script tests if the AI interview template creation is now working.
 """
 
 from core.database import SessionLocal
-from models import AIInterviewTemplate, User, Base
+from model import AIInterviewTemplate, User, Base
 from sqlalchemy import text
 
 def test_create_template():

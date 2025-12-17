@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timedelta
-from typing import Optional  # ✅ required for Optional
+from typing import Optional  
 import model.models
 from core.database import get_db
 from .utils import parse_date_str
@@ -12,8 +12,8 @@ router = APIRouter(prefix="/analytics", tags=["Analytics"])
 @router.get("/kpis")
 def get_kpis(
     role: Optional[str] = Query(None),
-    start_date: Optional[str] = Query(None),   # ✅ replaced | None → Optional
-    expiryDate: Optional[str] = Query(None),   # ✅ replaced | None → Optional
+    start_date: Optional[str] = Query(None),   
+    expiryDate: Optional[str] = Query(None),   
     db: Session = Depends(get_db)
 ):
     # Parse dates

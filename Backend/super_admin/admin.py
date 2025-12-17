@@ -4,7 +4,7 @@ from fastapi import Depends, HTTPException, status, Request
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 from core.database import engine, get_db
-from models import User
+from model import User
 from routers.admin_users.auth import get_current_user
 from fastapi_mail import FastMail, MessageSchema, MessageType, ConnectionConfig
 import os

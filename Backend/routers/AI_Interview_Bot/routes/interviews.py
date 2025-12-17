@@ -34,7 +34,7 @@ def ensure_answer_columns():
                     ALTER TABLE answers 
                     ADD COLUMN question_text TEXT
                 """))
-                print("✅ Added 'question_text' column to answers table")
+                print("Added 'question_text' column to answers table")
             
             # Check if template_question_index column exists
             result = conn.execute(text("""
@@ -49,7 +49,7 @@ def ensure_answer_columns():
                     ALTER TABLE answers 
                     ADD COLUMN template_question_index INTEGER
                 """))
-                print("✅ Added 'template_question_index' column to answers table")
+                print("Added 'template_question_index' column to answers table")
             
             # Check if audio_path column exists
             result = conn.execute(text("""
@@ -64,7 +64,7 @@ def ensure_answer_columns():
                     ALTER TABLE answers 
                     ADD COLUMN audio_path VARCHAR
                 """))
-                print("✅ Added 'audio_path' column to answers table")
+                print("Added 'audio_path' column to answers table")
             
             # Make question_id nullable if it's not already
             result = conn.execute(text("""
@@ -97,9 +97,9 @@ def ensure_answer_columns():
                     FOREIGN KEY (question_id) 
                     REFERENCES questions(id)
                 """))
-                print("✅ Made 'question_id' nullable in answers table")
+                print("Made 'question_id' nullable in answers table")
     except Exception as e:
-        print(f"⚠️ Warning: Could not ensure answer table columns: {e}")
+        print(f" Warning: Could not ensure answer table columns: {e}")
         import traceback
         traceback.print_exc()
 
@@ -333,13 +333,13 @@ def submit_answer(
             
             # Verify file was saved
             if os.path.exists(video_path_full) and os.path.getsize(video_path_full) > 0:
-                print(f"✅ Video saved successfully: {video_path_full} (size: {os.path.getsize(video_path_full)} bytes)")
+                print(f" Video saved successfully: {video_path_full} (size: {os.path.getsize(video_path_full)} bytes)")
                 print(f"   Database path: {video_path}")
             else:
-                print(f"⚠️ Warning: Video file may not have been saved properly: {video_path_full}")
+                print(f" Warning: Video file may not have been saved properly: {video_path_full}")
                 video_path = None
         except Exception as e:
-            print(f"❌ Error saving video file: {str(e)}")
+            print(f" Error saving video file: {str(e)}")
             import traceback
             traceback.print_exc()
             video_path = None
@@ -374,13 +374,13 @@ def submit_answer(
             
             # Verify file was saved
             if os.path.exists(audio_path_full) and os.path.getsize(audio_path_full) > 0:
-                print(f"✅ Audio saved successfully: {audio_path_full} (size: {os.path.getsize(audio_path_full)} bytes)")
+                print(f" Audio saved successfully: {audio_path_full} (size: {os.path.getsize(audio_path_full)} bytes)")
                 print(f"   Database path: {audio_path}")
             else:
-                print(f"⚠️ Warning: Audio file may not have been saved properly: {audio_path_full}")
+                print(f" Warning: Audio file may not have been saved properly: {audio_path_full}")
                 audio_path = None
         except Exception as e:
-            print(f"❌ Error saving audio file: {str(e)}")
+            print(f" Error saving audio file: {str(e)}")
             import traceback
             traceback.print_exc()
             audio_path = None
@@ -390,9 +390,9 @@ def submit_answer(
     if answer_text and question_text:
         try:
             score = score_answer(question_text, answer_text)
-            print(f"✅ AI Score for candidate {candidate_id}, question {question_id}: {score}/10")
+            print(f"AI Score for candidate {candidate_id}, question {question_id}: {score}/10")
         except Exception as e:
-            print(f"❌ Error calculating AI score: {str(e)}")
+            print(f" Error calculating AI score: {str(e)}")
             score = 0  # Default score if AI fails
 
     # Save answer to database
@@ -413,7 +413,7 @@ def submit_answer(
     db.refresh(ans)
     
     # Log saved answer details for debugging
-    print(f"✅ Answer saved to database:")
+    print(f" Answer saved to database:")
     print(f"   - Answer ID: {ans.id}")
     print(f"   - Candidate ID: {candidate_id}")
     print(f"   - Question Index: {question_id}")
@@ -436,7 +436,7 @@ def get_interview_results(db: Session = Depends(get_db), user: User = Depends(ge
     """
     Get all interview results with candidate information and scores, filtered by recruiter
     """
-    print(f"🔍 Fetching interview results for user: {user.id} (role: {user.role})")
+    print(f" Fetching interview results for user: {user.id} (role: {user.role})")
     
     # Get recruiter's candidate emails
     recruiter_candidate_emails = set()
@@ -445,7 +445,7 @@ def get_interview_results(db: Session = Depends(get_db), user: User = Depends(ge
     if user.role.lower() != "admin":
         # Get all job IDs for this recruiter
         job_ids = list(db.exec(select(Job.id).where(Job.recruiter_id == user.id)).all())
-        print(f"🔍 Recruiter {user.id} has {len(job_ids)} jobs")
+        print(f" Recruiter {user.id} has {len(job_ids)} jobs")
         recruiter_has_jobs = len(job_ids) > 0
         
         if job_ids:
@@ -466,10 +466,10 @@ def get_interview_results(db: Session = Depends(get_db), user: User = Depends(ge
                     if candidate.email:
                         recruiter_candidate_emails.add(candidate.email.lower().strip())
         
-        print(f"🔍 Recruiter {user.id} has {len(recruiter_candidate_emails)} unique candidate emails from applications")
+        print(f" Recruiter {user.id} has {len(recruiter_candidate_emails)} unique candidate emails from applications")
         if recruiter_candidate_emails:
             sample_emails = list(recruiter_candidate_emails)[:5]
-            print(f"🔍 Sample emails: {sample_emails}")
+            print(f" Sample emails: {sample_emails}")
     
     # Get all candidates who have submitted answers
     query = db.query(InterviewCandidate).join(
@@ -484,18 +484,18 @@ def get_interview_results(db: Session = Depends(get_db), user: User = Depends(ge
                     [email.lower().strip() for email in recruiter_candidate_emails]
                 )
             )
-            print(f"🔍 Filtering interview candidates by {len(recruiter_candidate_emails)} emails from applications")
+            print(f" Filtering interview candidates by {len(recruiter_candidate_emails)} emails from applications")
         elif recruiter_has_jobs:
             # Recruiter has jobs but no applications yet - return empty
-            print(f"⚠️ Recruiter {user.id} has jobs but no applications, returning empty results")
+            print(f" Recruiter {user.id} has jobs but no applications, returning empty results")
             return []
         else:
             # No jobs at all - return empty
-            print(f"⚠️ Recruiter {user.id} has no jobs, returning empty results")
+            print(f" Recruiter {user.id} has no jobs, returning empty results")
             return []
     
     candidates_with_answers = query.all()
-    print(f"📋 Found {len(candidates_with_answers)} candidates with interview answers")
+    print(f" Found {len(candidates_with_answers)} candidates with interview answers")
     
     results = []
     for candidate in candidates_with_answers:

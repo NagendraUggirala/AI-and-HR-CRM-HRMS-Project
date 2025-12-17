@@ -9,13 +9,13 @@ load_dotenv()
 try:
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
-        print("⚠️ WARNING: OPENAI_API_KEY not found in environment variables. AI scoring will use fallback.")
+        print(" WARNING: OPENAI_API_KEY not found in environment variables. AI scoring will use fallback.")
         client = None
     else:
         client = OpenAI(api_key=api_key)
-        print("✅ OpenAI client initialized successfully")
+        print("OpenAI client initialized successfully")
 except Exception as e:
-    print(f"⚠️ WARNING: Failed to initialize OpenAI client: {str(e)}")
+    print(f" WARNING: Failed to initialize OpenAI client: {str(e)}")
     client = None
 
 def score_answer(question: str, answer: str) -> int:
@@ -27,7 +27,7 @@ def score_answer(question: str, answer: str) -> int:
     
     # Fallback if OpenAI is not available
     if not client:
-        print("⚠️ Using fallback scoring (no OpenAI)")
+        print(" Using fallback scoring (no OpenAI)")
         # Simple length-based scoring as fallback
         if not answer or len(answer.strip()) < 10:
             return 0
@@ -68,11 +68,11 @@ Provide ONLY a number between 0 and 10 as your response (e.g., "7" or "8.5")."""
             score = max(0, min(10, score))
             return int(round(score))
         else:
-            print(f"⚠️ Could not parse AI score from: {score_text}")
+            print(f" Could not parse AI score from: {score_text}")
             return 5  # Default middle score if parsing fails
             
     except Exception as e:
-        print(f"❌ Error in AI scoring: {str(e)}")
+        print(f" Error in AI scoring: {str(e)}")
         # Fallback to length-based scoring
         if not answer or len(answer.strip()) < 10:
             return 0

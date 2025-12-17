@@ -5,7 +5,7 @@ Understanding the recruiter job posting and candidate application process
 """
 
 from core.database import SessionLocal
-from models import User, Job, Candidate, Application
+from model import User, Job, Candidate, Application
 
 def analyze_database():
     db = SessionLocal()
@@ -15,14 +15,14 @@ def analyze_database():
     print("=" * 60)
     
     # Count records
-    print(f"\n📊 RECORD COUNTS:")
+    print(f"\n RECORD COUNTS:")
     print(f"   Users: {db.query(User).count()}")
     print(f"   Jobs: {db.query(Job).count()}")
     print(f"   Candidates: {db.query(Candidate).count()}")
     print(f"   Applications: {db.query(Application).count()}")
     
     # Recruiter details
-    print(f"\n👤 RECRUITER DETAILS:")
+    print(f"\n RECRUITER DETAILS:")
     user = db.query(User).filter(User.id == 4).first()
     if user:
         print(f"   ID: {user.id}")
@@ -32,7 +32,7 @@ def analyze_database():
         print(f"   Company: {user.company_name}")
     
     # Jobs posted by recruiter
-    print(f"\n💼 JOBS POSTED BY RECRUITER:")
+    print(f"\n JOBS POSTED BY RECRUITER:")
     jobs = db.query(Job).filter(Job.recruiter_id == 4).all()
     for job in jobs:
         print(f"   Job {job.id}: {job.title}")
@@ -42,7 +42,7 @@ def analyze_database():
         print(f"     Skills: {job.skills}")
     
     # Applications to each job
-    print(f"\n📝 APPLICATIONS TO EACH JOB:")
+    print(f"\n APPLICATIONS TO EACH JOB:")
     for job in jobs:
         apps = db.query(Application).filter(Application.job_id == job.id).all()
         print(f"   Job {job.id} ({job.title}): {len(apps)} applications")
@@ -52,7 +52,7 @@ def analyze_database():
             print(f"       Applied: {app.applied_at}")
     
     # Candidate details
-    print(f"\n👥 CANDIDATE DETAILS:")
+    print(f"\n CANDIDATE DETAILS:")
     candidates = db.query(Candidate).limit(5).all()
     for candidate in candidates:
         print(f"   {candidate.name}:")
@@ -63,14 +63,14 @@ def analyze_database():
         print(f"     Notes: {candidate.notes}")
     
     # Application flow analysis
-    print(f"\n🔄 APPLICATION FLOW ANALYSIS:")
+    print(f"\n APPLICATION FLOW ANALYSIS:")
     print("   1. Recruiter (User) creates Job")
     print("   2. Candidate applies to Job")
     print("   3. Application record links Candidate to Job")
     print("   4. Application status tracks progress")
     
     # Relationships
-    print(f"\n🔗 DATABASE RELATIONSHIPS:")
+    print(f"\nDATABASE RELATIONSHIPS:")
     print("   User (1) → Job (Many) [recruiter_id]")
     print("   Job (1) → Application (Many) [job_id]")
     print("   Candidate (1) → Application (Many) [candidate_id]")

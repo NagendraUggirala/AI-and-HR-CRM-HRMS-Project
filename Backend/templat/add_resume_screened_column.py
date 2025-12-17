@@ -23,7 +23,7 @@ if sys.platform == 'win32':
 def add_resume_screened_column():
     """Add resume_screened column to candidate_records table"""
     
-    print("🔧 Adding resume_screened column to candidate_records table...")
+    print(" Adding resume_screened column to candidate_records table...")
     
     try:
         # Create engine
@@ -46,19 +46,19 @@ def add_resume_screened_column():
                 column_exists = result.scalar()
                 
                 if column_exists:
-                    print("✅ Column 'resume_screened' already exists!")
+                    print(" Column 'resume_screened' already exists!")
                     trans.rollback()
                     return True
                 
                 # Add the column
-                print("📝 Adding resume_screened column...")
+                print(" Adding resume_screened column...")
                 conn.execute(text("""
                     ALTER TABLE candidate_records 
                     ADD COLUMN resume_screened VARCHAR(20) DEFAULT 'no';
                 """))
                 
                 # Update existing records to 'no' (they haven't been screened yet)
-                print("📝 Setting default value for existing records...")
+                print(" Setting default value for existing records...")
                 conn.execute(text("""
                     UPDATE candidate_records 
                     SET resume_screened = 'no' 
@@ -68,18 +68,18 @@ def add_resume_screened_column():
                 # Commit transaction
                 trans.commit()
                 
-                print("✅ SUCCESS! Column added successfully!")
+                print(" SUCCESS! Column added successfully!")
                 print("   - resume_screened column added with default value 'no'")
                 print("   - All existing records set to 'no'")
-                print("\n🎉 You can now track resume screening status!")
+                print("\n You can now track resume screening status!")
                 
             except Exception as e:
                 trans.rollback()
-                print(f"❌ Error during ALTER TABLE: {e}")
+                print(f" Error during ALTER TABLE: {e}")
                 raise
                 
     except Exception as e:
-        print(f"❌ Failed to connect to database: {e}")
+        print(f" Failed to connect to database: {e}")
         print("\nTry running this SQL command manually:")
         print("ALTER TABLE candidate_records ADD COLUMN resume_screened VARCHAR(20) DEFAULT 'no';")
         print("UPDATE candidate_records SET resume_screened = 'no' WHERE resume_screened IS NULL;")
@@ -98,12 +98,12 @@ if __name__ == "__main__":
     if success:
         print()
         print("="*60)
-        print("✅ Migration completed successfully!")
+        print(" Migration completed successfully!")
         print("="*60)
     else:
         print()
         print("="*60)
-        print("❌ Migration failed. Please check the error above.")
+        print(" Migration failed. Please check the error above.")
         print("="*60)
         sys.exit(1)
 

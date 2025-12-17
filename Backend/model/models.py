@@ -41,7 +41,7 @@ class User(SQLModel, table=True):
     email: str
     hashed_password: str
     role: str
-    is_active: bool = Field(default=True)  # ✅ new
+    is_active: bool = Field(default=True)  
     company_name: Optional[str]
     company_website: Optional[str]
     company_id: Optional[str] = None
@@ -91,7 +91,7 @@ class Application(SQLModel, table=True):
     candidate_id: int = Field(foreign_key="candidate.id")
     candidate_name: str
     candidate_email: str
-    stage: str = "Applied"  # Changed from status (ApplicationStatus enum) to stage (String)
+    stage: str = "Applied"  
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     applied_at: datetime = Field(default_factory=datetime.utcnow)
@@ -121,7 +121,7 @@ class Assessment(SQLModel, table=True):
 
 class Assignment(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    candidate_id: Optional[int] = None  # No FK constraint - can reference any candidate table
+    candidate_id: Optional[int] = None  
     assessment_id: int = Field(foreign_key="assessment.id")
     due_date: Optional[date] = None
     status: str = "Assigned"
@@ -145,7 +145,7 @@ class OfferTemplate(SQLModel, table=True):
     salary_range_min: Optional[float] = None
     salary_range_max: Optional[float] = None
     benefits: List[str] = Field(default_factory=list, sa_column=Column(SA_JSON))
-    validity_days: int = 30  # Default offer validity in days
+    validity_days: int = 30  
     created_by: Optional[int] = Field(default=None, foreign_key="user.id")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)

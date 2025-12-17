@@ -14,7 +14,7 @@ from core.database import engine, SessionLocal
 def fix_table():
     """Fix the aiinterviewtemplate table structure"""
     
-    print("🔧 Fixing AIInterviewTemplate table...")
+    print(" Fixing AIInterviewTemplate table...")
     
     with engine.connect() as conn:
         try:
@@ -28,10 +28,10 @@ def fix_table():
             table_exists = result.scalar()
             
             if not table_exists:
-                print("✅ Table doesn't exist yet, will be created with correct structure")
+                print(" Table doesn't exist yet, will be created with correct structure")
                 return
             
-            print("📊 Table exists, checking structure...")
+            print(" Table exists, checking structure...")
             
             # Get current column type
             result = conn.execute(text("""
@@ -45,15 +45,15 @@ def fix_table():
             print(f"   Current 'questions' column type: {current_type}")
             
             # Drop and recreate table (safest approach)
-            response = input("\n⚠️  Do you want to drop and recreate the table? This will delete all AI interview templates. (yes/no): ")
+            response = input("\n Do you want to drop and recreate the table? This will delete all AI interview templates. (yes/no): ")
             
             if response.lower() == 'yes':
-                print("\n🗑️  Dropping old table...")
+                print("\n Dropping old table...")
                 conn.execute(text("DROP TABLE IF EXISTS aiinterviewtemplate CASCADE;"))
                 conn.commit()
-                print("✅ Table dropped")
+                print(" Table dropped")
                 
-                print("\n🔨 Creating new table with correct structure...")
+                print("\n Creating new table with correct structure...")
                 conn.execute(text("""
                     CREATE TABLE aiinterviewtemplate (
                         id SERIAL PRIMARY KEY,
@@ -66,27 +66,27 @@ def fix_table():
                     );
                 """))
                 conn.commit()
-                print("✅ Table created with correct structure")
+                print(" Table created with correct structure")
                 
-                print("\n✨ Done! The table is now ready for structured questions.")
+                print("\n Done! The table is now ready for structured questions.")
                 print("   Questions format: [{'q': '...', 'a': '...'}, ...]")
             else:
-                print("\n❌ Cancelled. No changes made.")
-                print("\n💡 Alternative: You can manually alter the column:")
+                print("\n Cancelled. No changes made.")
+                print("\n Alternative: You can manually alter the column:")
                 print("   ALTER TABLE aiinterviewtemplate ALTER COLUMN questions TYPE JSON USING questions::json;")
                 
         except Exception as e:
-            print(f"\n❌ Error: {e}")
+            print(f"\n Error: {e}")
             conn.rollback()
 
 def test_insert():
     """Test inserting a sample template"""
     
-    print("\n🧪 Testing insert...")
+    print("\n Testing insert...")
     
     db = SessionLocal()
     try:
-        from models import AIInterviewTemplate
+        from model import AIInterviewTemplate
         
         # Create test template
         test_template = AIInterviewTemplate(
@@ -105,7 +105,7 @@ def test_insert():
         db.commit()
         db.refresh(test_template)
         
-        print(f"✅ Test insert successful! Template ID: {test_template.id}")
+        print(f" Test insert successful! Template ID: {test_template.id}")
         print(f"   Questions: {test_template.questions}")
         
         # Clean up test data
@@ -113,10 +113,10 @@ def test_insert():
         if response.lower() == 'y':
             db.delete(test_template)
             db.commit()
-            print("✅ Test template deleted")
+            print(" Test template deleted")
         
     except Exception as e:
-        print(f"❌ Test failed: {e}")
+        print(f" Test failed: {e}")
         db.rollback()
     finally:
         db.close()
@@ -124,7 +124,7 @@ def test_insert():
 def menu():
     """Interactive menu"""
     print("\n" + "="*60)
-    print("🔧 AIInterviewTemplate Table Fix Utility")
+    print(" AIInterviewTemplate Table Fix Utility")
     print("="*60)
     print("\n1. Fix table structure (drop & recreate)")
     print("2. Test insert")
@@ -138,10 +138,10 @@ def menu():
     elif choice == "2":
         test_insert()
     elif choice == "3":
-        print("👋 Goodbye!")
+        print(" Goodbye!")
         exit()
     else:
-        print("❌ Invalid option")
+        print(" Invalid option")
     
     # Show menu again
     input("\nPress Enter to continue...")
@@ -151,9 +151,9 @@ if __name__ == "__main__":
     try:
         menu()
     except KeyboardInterrupt:
-        print("\n\n👋 Goodbye!")
+        print("\n\n Goodbye!")
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n Error: {e}")
 
 
 

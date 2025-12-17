@@ -21,8 +21,8 @@ class Pipeline(Base):
     status = Column(
         Enum(
             StatusEnum,
-            name="pipeline_status_enum",      # ✅ explicit DB enum name
-            values_callable=lambda x: [e.value for e in x]  # ✅ force lowercase values
+            name="pipeline_status_enum",      
+            values_callable=lambda x: [e.value for e in x]  
         ),
         nullable=False,
         default=StatusEnum.active

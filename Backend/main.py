@@ -138,7 +138,7 @@ def on_startup():
             )
             session.add(user)
             session.commit()
-            print("✅ Default Super Admin created: superadmin / admin123")
+            print("Default Super Admin created: superadmin / admin123")
  
  
 # -------------------------------------------------------

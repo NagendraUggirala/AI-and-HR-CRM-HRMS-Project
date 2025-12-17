@@ -24,7 +24,7 @@ def migrate():
                     ALTER TABLE answers 
                     ADD COLUMN question_text TEXT
                 """))
-                print("✅ Added 'question_text' column to answers table")
+                print("Added 'question_text' column to answers table")
             
             # Check if template_question_index column exists
             result = conn.execute(text("""
@@ -40,7 +40,7 @@ def migrate():
                     ALTER TABLE answers 
                     ADD COLUMN template_question_index INTEGER
                 """))
-                print("✅ Added 'template_question_index' column to answers table")
+                print("Added 'template_question_index' column to answers table")
             
             # Make question_id nullable (if not already)
             # First check current constraint
@@ -71,12 +71,12 @@ def migrate():
                     FOREIGN KEY (question_id) 
                     REFERENCES questions(id)
                 """))
-                print("✅ Made 'question_id' nullable in answers table")
+                print("Made 'question_id' nullable in answers table")
             
-            print("✅ Migration completed successfully!")
+            print("Migration completed successfully!")
             
     except Exception as e:
-        print(f"❌ Migration error: {e}")
+        print(f"Migration error: {e}")
         import traceback
         traceback.print_exc()
         raise

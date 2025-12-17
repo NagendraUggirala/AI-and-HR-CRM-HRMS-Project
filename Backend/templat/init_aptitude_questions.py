@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 from sqlalchemy.orm import Session
 from core.database import SessionLocal, engine, Base
-from models import LegacyQuestion
+from model import LegacyQuestion
 
 # Create tables if they don't exist
 Base.metadata.create_all(bind=engine)
@@ -22,16 +22,16 @@ def load_questions_from_json():
     json_file_path = Path(__file__).parent / "routers" / "Candidate_assessments" / "Assessment" / "aptitude" / "data" / "questions.json"
     
     if not json_file_path.exists():
-        print(f"❌ Error: Questions file not found at {json_file_path}")
+        print(f" Error: Questions file not found at {json_file_path}")
         return []
     
     try:
         with open(json_file_path, 'r', encoding='utf-8') as f:
             questions_data = json.load(f)
-        print(f"✅ Loaded {len(questions_data)} questions from JSON file")
+        print(f" Loaded {len(questions_data)} questions from JSON file")
         return questions_data
     except Exception as e:
-        print(f"❌ Error loading JSON file: {e}")
+        print(f" Error loading JSON file: {e}")
         return []
 
 def init_aptitude_questions():
@@ -43,34 +43,34 @@ def init_aptitude_questions():
         # Check if questions already exist
         existing_count = db.query(LegacyQuestion).count()
         if existing_count > 0:
-            print(f"⚠️ Questions already exist ({existing_count} questions)")
+            print(f" Questions already exist ({existing_count} questions)")
             response = input("Do you want to replace all questions? (yes/no): ")
             if response.lower() == 'yes':
                 db.query(LegacyQuestion).delete()
                 db.commit()
-                print("✅ Cleared existing questions")
+                print(" Cleared existing questions")
             else:
-                print("❌ Cancelled")
+                print(" Cancelled")
                 return
         
         # Load questions from JSON
         questions_data = load_questions_from_json()
         
         if not questions_data:
-            print("❌ No questions to load")
+            print(" No questions to load")
             return
         
         # Add questions to database
         added_count = 0
         skipped_count = 0
         
-        print("\n📝 Adding questions to database...")
+        print("\nAdding questions to database...")
         
         for q_data in questions_data:
             try:
                 # Validate required fields
                 if not all(key in q_data for key in ['id', 'question', 'options', 'answer']):
-                    print(f"⚠️ Skipping invalid question (ID: {q_data.get('id', 'unknown')})")
+                    print(f" Skipping invalid question (ID: {q_data.get('id', 'unknown')})")
                     skipped_count += 1
                     continue
                 
@@ -89,35 +89,35 @@ def init_aptitude_questions():
                     print(f"  Added {added_count} questions...")
                     
             except Exception as e:
-                print(f"⚠️ Error adding question ID {q_data.get('id', 'unknown')}: {e}")
+                print(f" Error adding question ID {q_data.get('id', 'unknown')}: {e}")
                 skipped_count += 1
                 continue
         
         db.commit()
         
-        print(f"\n✅ Successfully added {added_count} questions!")
+        print(f"\n Successfully added {added_count} questions!")
         if skipped_count > 0:
-            print(f"⚠️ Skipped {skipped_count} invalid questions")
-        print(f"📊 Total questions in database: {db.query(LegacyQuestion).count()}")
+            print(f" Skipped {skipped_count} invalid questions")
+        print(f" Total questions in database: {db.query(LegacyQuestion).count()}")
         
         # Show sample questions
-        print("\n📝 Sample Questions (first 5):")
+        print("\n Sample Questions (first 5):")
         sample_questions = db.query(LegacyQuestion).limit(5).all()
         for i, q in enumerate(sample_questions, 1):
             print(f"\n{i}. {q.question}")
             for key, value in q.options.items():
                 print(f"   {key}: {value}")
-            print(f"   ✅ Answer: {q.answer}")
+            print(f" Answer: {q.answer}")
         
         # Prompt to generate sets
         print("\n" + "="*70)
-        print("⚠️ IMPORTANT: You need to assign questions to sets!")
+        print(" IMPORTANT: You need to assign questions to sets!")
         print("Run this command after loading questions:")
         print("  python -c \"from routers.Candidate_assessments.Assessment.aptitude.utils import generate_sets_db; generate_sets_db()\"")
         print("="*70)
             
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f" Error: {e}")
         db.rollback()
         raise
     finally:

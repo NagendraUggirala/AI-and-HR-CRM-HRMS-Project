@@ -25,7 +25,7 @@ def sync_candidate_stages():
             print()
             
             # 1. Update candidate_records stages based on scores
-            print("1️⃣ Updating candidate_records stages...")
+            print("  Updating candidate_records stages...")
             update_records_query = text("""
                 UPDATE candidate_records 
                 SET stage = CASE 
@@ -41,10 +41,10 @@ def sync_candidate_stages():
             result = conn.execute(update_records_query, {"threshold": SCORE_THRESHOLD})
             conn.commit()
             records_updated = result.rowcount
-            print(f"   ✅ Updated {records_updated} candidate_records")
+            print(f"  Updated {records_updated} candidate_records")
             
             # 2. Update candidate table stages based on candidate_records
-            print("\n2️⃣ Syncing candidate table stages from candidate_records...")
+            print("\n Syncing candidate table stages from candidate_records...")
             sync_candidates_query = text("""
                 UPDATE candidate c
                 SET stage = cr.stage
@@ -58,10 +58,10 @@ def sync_candidate_stages():
             result = conn.execute(sync_candidates_query)
             conn.commit()
             candidates_updated = result.rowcount
-            print(f"   ✅ Updated {candidates_updated} candidate records")
+            print(f"  Updated {candidates_updated} candidate records")
             
             # 3. Update application table stages based on candidate_records
-            print("\n3️⃣ Syncing application table stages from candidate_records...")
+            print("\nSyncing application table stages from candidate_records...")
             sync_applications_from_records_query = text("""
                 UPDATE application a
                 SET stage = cr.stage,
@@ -76,10 +76,10 @@ def sync_candidate_stages():
             result = conn.execute(sync_applications_from_records_query)
             conn.commit()
             applications_from_records_updated = result.rowcount
-            print(f"   ✅ Updated {applications_from_records_updated} application records from candidate_records")
+            print(f"   Updated {applications_from_records_updated} application records from candidate_records")
             
             # 4. Update application table stages based on candidate table
-            print("\n4️⃣ Syncing application table stages from candidate table...")
+            print("\n Syncing application table stages from candidate table...")
             sync_applications_from_candidate_query = text("""
                 UPDATE application a
                 SET stage = c.stage,
@@ -94,10 +94,10 @@ def sync_candidate_stages():
             result = conn.execute(sync_applications_from_candidate_query)
             conn.commit()
             applications_from_candidate_updated = result.rowcount
-            print(f"   ✅ Updated {applications_from_candidate_updated} application records from candidate table")
+            print(f" Updated {applications_from_candidate_updated} application records from candidate table")
             
             # 5. Show statistics
-            print("\n5️⃣ Current Statistics:")
+            print("\n Current Statistics:")
             
             # Count by stage in candidate_records
             stats_query = text("""
@@ -147,7 +147,7 @@ def sync_candidate_stages():
                 print(f"      {stage}: {count} applications")
             
             # 4. Find mismatches
-            print("\n4️⃣ Checking for mismatches...")
+            print("\n4️ Checking for mismatches...")
             mismatch_query = text("""
                 SELECT 
                     c.id,
@@ -165,21 +165,21 @@ def sync_candidate_stages():
             
             mismatches = conn.execute(mismatch_query, {"threshold": SCORE_THRESHOLD}).fetchall()
             if mismatches:
-                print(f"   ⚠️ Found {len(mismatches)} mismatches (showing first 20):")
+                print(f"    Found {len(mismatches)} mismatches (showing first 20):")
                 for c_id, email, c_stage, r_stage, score in mismatches:
                     score_str = f"{score:.2f}" if score else "NULL"
                     print(f"      Email: {email} | candidate.stage: {c_stage} | candidate_records.stage: {r_stage} | score: {score_str}")
             else:
-                print("   ✅ No mismatches found!")
+                print("    No mismatches found!")
             
             print("\n" + "=" * 60)
-            print("✅ Sync completed successfully!")
+            print(" Sync completed successfully!")
             print("=" * 60)
             
             return True
             
     except Exception as e:
-        print(f"\n❌ Error during sync: {e}")
+        print(f"\n Error during sync: {e}")
         import traceback
         traceback.print_exc()
         return False

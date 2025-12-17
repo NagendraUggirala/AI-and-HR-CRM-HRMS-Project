@@ -10,7 +10,7 @@ Usage:
 
 from sqlalchemy.orm import Session
 from core.database import SessionLocal, engine
-from models import Question, Base
+from model import Question, Base
 
 # Create tables if they don't exist
 Base.metadata.create_all(bind=engine)
@@ -24,10 +24,10 @@ def init_questions():
         # Check if questions already exist
         existing_count = db.query(Question).count()
         if existing_count > 0:
-            print(f"✅ Questions already exist ({existing_count} questions)")
+            print(f" Questions already exist ({existing_count} questions)")
             response = input("Do you want to add more questions anyway? (y/n): ")
             if response.lower() != 'y':
-                print("❌ Cancelled")
+                print(" Cancelled")
                 return
         
         # Sample interview questions
@@ -91,18 +91,18 @@ def init_questions():
                 added_count += 1
         
         db.commit()
-        print(f"\n✅ Successfully added {added_count} new questions!")
-        print(f"📊 Total questions in database: {db.query(Question).count()}")
+        print(f"\n Successfully added {added_count} new questions!")
+        print(f" Total questions in database: {db.query(Question).count()}")
         
         # Display all questions
-        print("\n📝 Current Questions:")
+        print("\n Current Questions:")
         all_questions = db.query(Question).all()
         for i, q in enumerate(all_questions, 1):
             icon = "📝" if q.question_type == "text" else "📹"
             print(f"{i}. {icon} {q.question_text[:60]}...")
             
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f" Error: {e}")
         db.rollback()
     finally:
         db.close()
@@ -114,18 +114,18 @@ def clear_questions():
     try:
         count = db.query(Question).count()
         if count == 0:
-            print("❌ No questions to delete")
+            print(" No questions to delete")
             return
             
-        response = input(f"⚠️ Are you sure you want to delete all {count} questions? (yes/no): ")
+        response = input(f" Are you sure you want to delete all {count} questions? (yes/no): ")
         if response.lower() == 'yes':
             db.query(Question).delete()
             db.commit()
-            print(f"✅ Deleted {count} questions")
+            print(f" Deleted {count} questions")
         else:
-            print("❌ Cancelled")
+            print(" Cancelled")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f" Error: {e}")
         db.rollback()
     finally:
         db.close()
@@ -138,36 +138,36 @@ def list_questions():
         questions = db.query(Question).all()
         
         if not questions:
-            print("❌ No questions found in database")
-            print("💡 Run option 1 to initialize questions")
+            print(" No questions found in database")
+            print(" Run option 1 to initialize questions")
             return
         
-        print(f"\n📊 Total Questions: {len(questions)}\n")
+        print(f"\n Total Questions: {len(questions)}\n")
         
         text_questions = [q for q in questions if q.question_type == "text"]
         video_questions = [q for q in questions if q.question_type == "video"]
         
-        print(f"📝 Text Questions: {len(text_questions)}")
+        print(f" Text Questions: {len(text_questions)}")
         for i, q in enumerate(text_questions, 1):
             print(f"  {i}. {q.question_text}")
         
-        print(f"\n📹 Video Questions: {len(video_questions)}")
+        print(f"\n Video Questions: {len(video_questions)}")
         for i, q in enumerate(video_questions, 1):
             print(f"  {i}. {q.question_text}")
             
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f" Error: {e}")
     finally:
         db.close()
 
 def menu():
     """Interactive menu"""
     print("\n" + "="*60)
-    print("🎯 AI Interview Questions - Database Manager")
+    print(" AI Interview Questions - Database Manager")
     print("="*60)
     print("\n1. Initialize/Add Questions")
     print("2. List All Questions")
-    print("3. Clear All Questions (⚠️ Dangerous)")
+    print("3. Clear All Questions ( Dangerous)")
     print("4. Exit")
     print("\n" + "="*60)
     
@@ -180,10 +180,10 @@ def menu():
     elif choice == "3":
         clear_questions()
     elif choice == "4":
-        print("👋 Goodbye!")
+        print("Goodbye!")
         exit()
     else:
-        print("❌ Invalid option")
+        print(" Invalid option")
     
     # Show menu again
     input("\nPress Enter to continue...")
@@ -193,9 +193,9 @@ if __name__ == "__main__":
     try:
         menu()
     except KeyboardInterrupt:
-        print("\n\n👋 Goodbye!")
+        print("\n\n Goodbye!")
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n Error: {e}")
 
 
 
