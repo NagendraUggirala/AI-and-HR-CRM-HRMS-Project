@@ -1,4 +1,4 @@
-# 🔄 Sequential Assessment Flow - Implementation Guide
+<!-- # 🔄 Sequential Assessment Flow - Implementation Guide
 
 ## Overview
 This document describes the **automated sequential assessment flow** where candidates automatically receive the next assessment link when they pass the current one.
@@ -8,7 +8,7 @@ This document describes the **automated sequential assessment flow** where candi
 ## 📊 Assessment Flow Architecture
 
 ### **Flow Diagram:**
-```
+
 Recruiter Creates Assessments in Library
                 ↓
 Recruiter Assigns ONLY Aptitude Test
@@ -75,9 +75,6 @@ Instructions:
 2. You will receive an OTP for verification
 3. The test includes Reading, Writing, and Listening sections
 4. Complete the test in one sitting
-```
-
----
 
 ### 2. **Communication Test** (`Backend/routers/Candidate_assessments/Assessment/communication/comm_routes.py`)
 
@@ -90,7 +87,7 @@ Instructions:
 - **If Rejected:** Sends rejection email
 
 **Email Content (Qualified):**
-```
+
 Subject: ✅ Communication Test Passed - Next: Coding Assessment
 
 Dear [Candidate Name],
@@ -300,9 +297,4 @@ For issues or questions about the assessment flow:
 3. Ensure email service is configured properly
 4. Check `Assignment` and `Assessment` tables for data consistency
 
----
-
-**Last Updated:** November 6, 2025  
-**Version:** 2.0  
-**Status:** ✅ Fully Implemented and Tested
-
+--- -->
