@@ -14,7 +14,7 @@ class AIInterviewTemplateBase(BaseModel):
     difficulty: Optional[str] = None
 
 class AIInterviewTemplateCreate(AIInterviewTemplateBase):
-    questions: Optional[List[Question]] = None  # Make questions optional in create
+    questions: Optional[List[Question]] = None  
 
 class AIInterviewTemplateUpdate(BaseModel):
     name: Optional[str] = None
@@ -29,4 +29,4 @@ class AIInterviewTemplateOut(AIInterviewTemplateBase):
     created_by: int
 
     class Config:
-        from_attributes = True  # ✅ replaces orm_mode
+        from_attributes = True  

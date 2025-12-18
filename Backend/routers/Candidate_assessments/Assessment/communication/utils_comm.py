@@ -10,17 +10,17 @@ from dotenv import load_dotenv
 from typing import Optional, Dict,Tuple
 from email.mime.text import MIMEText
 
-# ---------------- Load environment ----------------
+#  Load environment 
 load_dotenv()
 
 EMAIL_USER = os.getenv("EMAIL_USER")
 EMAIL_PASS = os.getenv("EMAIL_PASS")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# ---------------- OpenAI Setup ----------------
+#  OpenAI Setup 
 openai.api_key = OPENAI_API_KEY
 
-# ---------------- OTP ----------------
+#  OTP 
 otp_store: Dict[str, Dict] = {}  # store OTPs
 
 def generate_otp(length: int = 6) -> str:
@@ -40,11 +40,11 @@ def send_email(to: str, subject: str, body: str) -> Tuple[bool, str]:
             server.login(EMAIL_USER, EMAIL_PASS)
             server.send_message(msg)
 
-        return True, f"✅ Email sent successfully to {to}"
+        return True, f" Email sent successfully to {to}"
     except Exception as e:
-        return False, f"❌ Email error while sending to {to}: {e}"
+        return False, f" Email error while sending to {to}: {e}"
 
-# ---------------- AI Exam ----------------
+#  AI Exam 
 def generate_full_exam(candidate_email: str, candidate_name: str) -> Optional[Dict]:
     """Generate a professional communication exam using OpenAI API."""
     prompt = f"""
@@ -70,11 +70,11 @@ Return ONLY valid JSON with these keys:
                 exam_json["reading_mcqs"] = exam_json.get("reading_mcqs", [])[:5]
                 return exam_json
         except Exception as e:
-            print(f"⚠️ Attempt {attempt+1} failed: {e}")
+            print(f" Attempt {attempt+1} failed: {e}")
             time.sleep(2)
     return None
 
-# ---------------- Scoring ----------------
+#  Scoring 
 def score_text(answer: str, prompt: str, max_marks: int) -> int:
     """Score a candidate's answer using OpenAI API."""
     if not answer.strip():
@@ -95,11 +95,11 @@ def score_text(answer: str, prompt: str, max_marks: int) -> int:
             if match:
                 return min(int(match.group()), max_marks)
         except Exception as e:
-            print(f"⚠️ Scoring attempt {attempt+1} failed: {e}")
+            print(f" Scoring attempt {attempt+1} failed: {e}")
             time.sleep(1)
     return 0
 
-# ---------------- Result Email ----------------
+#  Result Email 
 def generate_candidate_email(candidate_name: str, passed: bool) -> Dict[str, str]:
     """Prepare email subject and body based on candidate result."""
     if passed:

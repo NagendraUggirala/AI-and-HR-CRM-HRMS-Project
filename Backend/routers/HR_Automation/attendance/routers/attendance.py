@@ -2,9 +2,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import date
-from core.database import get_db  # ✅ absolute import from backend root
-from .. import crud
-from schema import schemas       # relative import for CRUD inside attendance package
+from core.database import get_db  
+from schema import schemas
+from crud_ops import crud     
 
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
 

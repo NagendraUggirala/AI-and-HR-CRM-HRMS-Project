@@ -5,7 +5,7 @@ This script tests if the AI interview template creation is now working.
 """
 
 from core.database import SessionLocal
-from model import AIInterviewTemplate, User, Base
+from model.models import AIInterviewTemplate, User, Base
 from sqlalchemy import text
 
 def test_create_template():
@@ -14,14 +14,14 @@ def test_create_template():
     db = SessionLocal()
     
     try:
-        print("🧪 Testing AI Interview Template Creation...")
+        print("Testing AI Interview Template Creation...")
         print("="*60)
         
         # Check if user exists (need created_by reference)
         user = db.query(User).first()
         if not user:
-            print("❌ No users found in database")
-            print("💡 Create a user first or use created_by=None for testing")
+            print("No users found in database")
+            print(" Create a user first or use created_by=None for testing")
             
             # Try without foreign key check
             response = input("\nTry creating template without user? (y/n): ")
@@ -30,7 +30,7 @@ def test_create_template():
             user_id = None
         else:
             user_id = user.id
-            print(f"✅ Found user: {user.email} (ID: {user.id})")
+            print(f"Found user: {user.email} (ID: {user.id})")
         
         # Test data
         test_templates = [
@@ -75,7 +75,7 @@ def test_create_template():
         created_count = 0
         for template_data in test_templates:
             try:
-                print(f"\n📝 Creating: {template_data['name']}")
+                print(f"\n Creating: {template_data['name']}")
                 print(f"   Type: {template_data['interview_type']}")
                 print(f"   Questions: {len(template_data['questions'])}")
                 print(f"   Duration: {template_data['time_limit']} min")
@@ -84,33 +84,33 @@ def test_create_template():
                 db.add(template)
                 db.flush()  # Flush to get ID without committing
                 
-                print(f"✅ Created successfully! ID: {template.id}")
+                print(f" Created successfully! ID: {template.id}")
                 created_count += 1
                 
             except Exception as e:
-                print(f"❌ Failed: {e}")
+                print(f" Failed: {e}")
                 db.rollback()
                 continue
         
         if created_count > 0:
-            response = input(f"\n✅ Successfully created {created_count} templates. Commit to database? (y/n): ")
+            response = input(f"\n Successfully created {created_count} templates. Commit to database? (y/n): ")
             if response.lower() == 'y':
                 db.commit()
-                print("✅ Templates saved to database!")
+                print(" Templates saved to database!")
                 
                 # List all templates
-                print("\n📋 All Templates:")
+                print("\n All Templates:")
                 all_templates = db.query(AIInterviewTemplate).all()
                 for i, t in enumerate(all_templates, 1):
                     print(f"{i}. {t.name} ({t.interview_type}) - {len(t.questions)} questions")
             else:
                 db.rollback()
-                print("❌ Rolled back. No changes saved.")
+                print(" Rolled back. No changes saved.")
         else:
-            print("\n❌ No templates were created successfully")
+            print("\n No templates were created successfully")
             
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n Error: {e}")
         import traceback
         traceback.print_exc()
         db.rollback()
@@ -126,11 +126,11 @@ def list_templates():
         templates = db.query(AIInterviewTemplate).all()
         
         if not templates:
-            print("❌ No templates found")
-            print("💡 Run test_create_template() to create some")
+            print(" No templates found")
+            print(" Run test_create_template() to create some")
             return
         
-        print(f"\n📊 Total Templates: {len(templates)}\n")
+        print(f"\n Total Templates: {len(templates)}\n")
         
         for i, t in enumerate(templates, 1):
             print(f"\n{i}. {t.name}")
@@ -144,7 +144,7 @@ def list_templates():
                     print(f"         → {q['a'][:60]}...")
             
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f" Error: {e}")
         import traceback
         traceback.print_exc()
     finally:
@@ -158,19 +158,19 @@ def clear_templates():
     try:
         count = db.query(AIInterviewTemplate).count()
         if count == 0:
-            print("❌ No templates to delete")
+            print(" No templates to delete")
             return
         
-        response = input(f"⚠️  Delete all {count} templates? (yes/no): ")
+        response = input(f"  Delete all {count} templates? (yes/no): ")
         if response.lower() == 'yes':
             db.query(AIInterviewTemplate).delete()
             db.commit()
-            print(f"✅ Deleted {count} templates")
+            print(f" Deleted {count} templates")
         else:
-            print("❌ Cancelled")
+            print(" Cancelled")
             
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f" Error: {e}")
         db.rollback()
     finally:
         db.close()
@@ -178,7 +178,7 @@ def clear_templates():
 def menu():
     """Interactive menu"""
     print("\n" + "="*60)
-    print("🧪 AI Interview Template - Test Suite")
+    print(" AI Interview Template - Test Suite")
     print("="*60)
     print("\n1. Test Create Templates")
     print("2. List All Templates")
@@ -195,10 +195,10 @@ def menu():
     elif choice == "3":
         clear_templates()
     elif choice == "4":
-        print("👋 Goodbye!")
+        print(" Goodbye!")
         exit()
     else:
-        print("❌ Invalid option")
+        print(" Invalid option")
     
     input("\nPress Enter to continue...")
     menu()
@@ -207,9 +207,9 @@ if __name__ == "__main__":
     try:
         menu()
     except KeyboardInterrupt:
-        print("\n\n👋 Goodbye!")
+        print("\n\n Goodbye!")
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n Error: {e}")
 
 
 

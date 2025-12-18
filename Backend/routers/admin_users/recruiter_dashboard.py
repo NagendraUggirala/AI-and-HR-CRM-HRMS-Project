@@ -10,7 +10,7 @@ from schema.schemas import JobCreate, JobRead, JobUpdate, CandidateRead
 
 router = APIRouter()
 
-# --- Jobs Endpoints ---
+#  Jobs Endpoints 
 @router.post("/jobs", response_model=JobRead)
 def create_job(payload: JobCreate, db: Session = Depends(get_db), user: User = Depends(require_roles(["recruiter", "admin"]))):
     now = datetime.utcnow()
@@ -74,7 +74,7 @@ def delete_job(job_id: int, db: Session = Depends(get_db), user: User = Depends(
     db.commit()
     return {"detail": "Job deleted"}
 
-# --- Candidates Endpoints ---
+#  Candidates Endpoints 
 @router.get("/candidates")
 def list_candidates(
     skills: Optional[str] = Query(None),
@@ -192,7 +192,7 @@ def candidate_detail(candidate_id: int, db: Session = Depends(get_db), user: Use
     
     return candidate
 
-# --- Pipeline Endpoint ---
+#  Pipeline Endpoint 
 @router.get("/pipeline/{job_id}")
 def pipeline_view(job_id: int, db: Session = Depends(get_db), user: User = Depends(require_roles(["recruiter", "admin"]))):
     job = db.get(Job, job_id)
@@ -214,7 +214,7 @@ def pipeline_view(job_id: int, db: Session = Depends(get_db), user: User = Depen
     ).all()
     return {stage[0]: stage[1] for stage in stages}
 
-# --- Analytics Endpoint ---
+#  Analytics Endpoint 
 @router.get("/analytics/applications-over-time")
 def applications_over_time(days: int = 30, db: Session = Depends(get_db), user: User = Depends(require_roles(["recruiter", "admin"]))):
     start_date = datetime.utcnow() - timedelta(days=days)
@@ -237,7 +237,7 @@ def applications_over_time(days: int = 30, db: Session = Depends(get_db), user: 
     ).group_by(func.date(Candidate.created_at)).order_by(func.date(Candidate.created_at))
     return [{"date": d[0], "count": d[1]} for d in db.exec(query).all()]
 
-# --- Settings Endpoint ---
+#  Settings Endpoint 
 @router.get("/settings")
 def recruiter_settings(user: User = Depends(require_roles(["recruiter", "admin"]))):
     return {"user_id": user.id, "email": user.email, "role": user.role}

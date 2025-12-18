@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-import model.models
+from model.models import SavedJobs
 from core.database import SessionLocal
 from schema import schemas
 
@@ -16,7 +16,7 @@ def get_db():
 
 @router.post("/", response_model=schemas.SavedJobs)
 def create_saved_job(job: schemas.SavedJobsCreate, db: Session = Depends(get_db)):
-    db_job = model.models.SavedJobs(title=job.title, company=job.company, location=job.location)
+    db_job = SavedJobs(title=job.title, company=job.company, location=job.location)
     db.add(db_job)
     db.commit()
     db.refresh(db_job)
@@ -24,11 +24,11 @@ def create_saved_job(job: schemas.SavedJobsCreate, db: Session = Depends(get_db)
 
 @router.get("/", response_model=list[schemas.SavedJobs])
 def read_saved_jobs(db: Session = Depends(get_db)):
-    return db.query(model.models.SavedJobs).all()
+    return db.query(SavedJobs).all()
 
 @router.delete("/{job_id}", status_code=204)
 def delete_saved_job(job_id: int, db: Session = Depends(get_db)):
-    job = db.query(model.models.SavedJobs).filter(model.models.SavedJobs.id == job_id).first()
+    job = db.query(SavedJobs).filter(SavedJobs.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Saved job not found")
     db.delete(job)

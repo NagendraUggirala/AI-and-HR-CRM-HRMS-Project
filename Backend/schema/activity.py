@@ -16,11 +16,11 @@ class ActivityBase(BaseModel):
     remainder: Optional[str] = None
     remainder_type: Optional[str] = None
     owner: Optional[str] = None
-    guests: Optional[str] = None       # Comma-separated string
+    guests: Optional[str] = None       
     description: Optional[str] = None
-    deals: Optional[str] = None        # Comma-separated string
-    contacts: Optional[str] = None     # Comma-separated string
-    companies: Optional[str] = None    # Comma-separated string
+    deals: Optional[str] = None        
+    contacts: Optional[str] = None     
+    companies: Optional[str] = None    
     created_date: Optional[date] = None
 
 # Schema for creating an activity
@@ -36,4 +36,4 @@ class Activity(ActivityBase):
     id: int
 
     class Config:
-        orm_mode = True  # Needed to work with SQLAlchemy models
+        orm_mode = True  

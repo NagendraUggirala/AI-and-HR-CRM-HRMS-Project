@@ -28,5 +28,5 @@ class AssessmentOut(AssessmentBase):
     created_by: Optional[int] = None
 
     class Config:
-        # pydantic v2-compatible
+        
         from_attributes = True

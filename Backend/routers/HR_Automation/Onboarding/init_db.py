@@ -1,4 +1,4 @@
-from models import SessionLocal, Document, init_db
+from model.models import SessionLocal, Document, init_db
 
 init_db()
 

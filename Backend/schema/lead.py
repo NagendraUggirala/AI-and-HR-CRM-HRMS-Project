@@ -3,7 +3,7 @@ from typing import Optional
 from datetime import datetime
 from enum import Enum
 
-# ---------------- LEAD SCHEMAS ---------------- #
+# LEAD SCHEMAS 
 
 class LeadBase(BaseModel):
     name: str
@@ -40,7 +40,7 @@ class LeadRead(LeadBase):
     model_config = {"from_attributes": True}
 
 
-# ---------------- ANALYTICS SCHEMAS ---------------- #
+# ANALYTICS SCHEMAS 
 
 class StageSummary(BaseModel):
     stage_name: str

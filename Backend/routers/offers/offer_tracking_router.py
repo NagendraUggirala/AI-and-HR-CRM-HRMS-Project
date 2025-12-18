@@ -167,10 +167,10 @@ def send_offer_endpoint(request: SendOfferRequest, db: Session = Depends(get_db)
             
             if candidate:
                 actual_candidate_id = candidate.id
-                print(f"✅ Found candidate in main table: ID={candidate.id}, Email={candidate.email}")
+                print(f" Found candidate in main table: ID={candidate.id}, Email={candidate.email}")
             else:
                 # If candidate doesn't exist in main table, create one or use None
-                print(f"⚠️ Candidate with email {request.candidate_email} not found in main candidate table")
+                print(f" Candidate with email {request.candidate_email} not found in main candidate table")
                 # Set candidate_id to None - the offer will still be created with candidate_name and candidate_email
                 actual_candidate_id = None
         
@@ -205,9 +205,9 @@ def send_offer_endpoint(request: SendOfferRequest, db: Session = Depends(get_db)
             try:
                 from routers.Candidate_assessments.Assessment.utils.stage_sync import update_candidate_stage_all_tables
                 update_candidate_stage_all_tables(db, request.candidate_email, 'Offered')
-                print(f"✅ Updated candidate stage to 'Offered' for candidate_id={actual_candidate_id}")
+                print(f" Updated candidate stage to 'Offered' for candidate_id={actual_candidate_id}")
             except Exception as e:
-                print(f"⚠️ Could not update candidate stage: {e}")
+                print(f" Could not update candidate stage: {e}")
         
         # Send email
         subject = f"Job Offer - {request.position}"

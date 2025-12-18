@@ -8,10 +8,7 @@ from sqlmodel import select
 from schema import schemas
 
 
-router = APIRouter(
-    prefix="/api/candidates",
-    tags=["candidates"]
-)
+router = APIRouter(prefix="/api/candidates",tags=["candidates"])
 
 @router.get("/", response_model=list[schemas.CandidateSchema])
 def read_candidates(db: Session = Depends(get_db), user: User = Depends(get_current_user)):

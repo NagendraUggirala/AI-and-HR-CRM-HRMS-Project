@@ -8,9 +8,9 @@ from sqlalchemy import Column, Integer, String, Text, Date, ForeignKey, JSON as 
 from sqlalchemy.orm import relationship
 from core.database import Base, engine
 
-# ======================
+
 # ENUMS
-# ======================
+
 class Role(str, enum.Enum):
     recruiter = "recruiter"
     company = "company"
@@ -31,9 +31,9 @@ class DocStatus(str, enum.Enum):
     pending = "Pending"
     uploaded = "Uploaded"
 
-# ======================
+
 # CORE MODELS (SQLModel)
-# ======================
+
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
@@ -126,9 +126,9 @@ class Assignment(SQLModel, table=True):
     due_date: Optional[date] = None
     status: str = "Assigned"
 
-# ======================
+
 # OFFER MANAGEMENT
-# ======================
+
 class OfferStatus(str, enum.Enum):
     draft = "Draft"
     sent = "Sent"
@@ -171,9 +171,9 @@ class OfferTracking(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-# ======================
+
 # EXAM / LEGACY MODELS
-# ======================
+
 class LegacyQuestion(Base):
     __tablename__ = "aptitude_questions"
     id = Column(Integer, primary_key=True, index=True)
@@ -192,9 +192,9 @@ class LegacyCandidate(Base):
     status = Column(String, nullable=True)
     answers = Column(SA_JSON, nullable=True)
 
-# ======================
+
 # ATTENDANCE & LEAVE
-# ======================
+
 class Attendance(Base):
     __tablename__ = "attendance"
     id = Column(Integer, primary_key=True, index=True)
@@ -210,9 +210,9 @@ class LeaveRequest(Base):
     reason = Column(String)
     status = Column(SAEnum(LeaveStatus), default=LeaveStatus.pending)
 
-# ======================
+
 # ONBOARDING / DIGITAL SIGNATURE
-# ======================
+
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -293,9 +293,9 @@ class Answer(Base):
     question = relationship("Question", foreign_keys=[question_id])
 
 
-# ======================
+
 # DATABASE INITIALIZATION
-# ======================
+
 def init_db():
     """
     Initialize all tables

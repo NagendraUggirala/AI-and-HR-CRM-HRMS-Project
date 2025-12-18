@@ -14,15 +14,15 @@ import sqladmin, inspect
 print(">>> SQLADMIN VERSION:", sqladmin.__version__)
 print(">>> SQLADMIN FILE:", inspect.getfile(sqladmin))
  
-# -------------------------------------------------------
+
 # CREATE FASTAPI APP  (THIS MUST COME FIRST)
-# -------------------------------------------------------
+
 app = FastAPI(title="AI Recruitment HR Platform")
  
  
-# -------------------------------------------------------
+
 # ADMIN BASIC AUTH MIDDLEWARE
-# -------------------------------------------------------
+
 @app.middleware("http")
 async def admin_protect(request: Request, call_next):
  
@@ -70,9 +70,9 @@ async def admin_protect(request: Request, call_next):
     return await call_next(request)
  
  
-# -------------------------------------------------------
+
 # IMPORT ROUTERS
-# -------------------------------------------------------
+
 from routers.admin_users.auth import router as auth_router
 from routers.jobs import router as jobs_router
 from routers.admin_users.admin import router as admin_router
@@ -101,9 +101,9 @@ from routers.HR_Automation.attendance.routers import attendance, leave
 from routers.AI_Interview_Bot.routes import interviews
 from routers.CRM import contacts, company, deals, leads, pipelines, activities, analytics,projects, clients, tasks
  
-# -------------------------------------------------------
+
 # CORS
-# -------------------------------------------------------
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
@@ -113,9 +113,9 @@ app.add_middleware(
 )
  
  
-# -------------------------------------------------------
+
 # STARTUP — CREATE TABLES & DEFAULT SUPERADMIN
-# -------------------------------------------------------
+
 @app.on_event("startup")
 def on_startup():
     SQLModel.metadata.create_all(bind=engine)
@@ -141,9 +141,9 @@ def on_startup():
             print("Default Super Admin created: superadmin / admin123")
  
  
-# -------------------------------------------------------
+
 # SQLADMIN PANEL
-# -------------------------------------------------------
+
 from sqladmin import Admin, ModelView
  
 class UserAdmin(ModelView, model=User):
@@ -157,9 +157,9 @@ admin = Admin(app=app, engine=engine, title="Super Admin Dashboard")
 admin.add_view(UserAdmin)
  
  
-# -------------------------------------------------------
+
 # ROUTE REGISTRATION
-# -------------------------------------------------------
+
 app.include_router(auth_router)
 app.include_router(jobs_router)
 app.include_router(admin_router, prefix="/api/admin")
@@ -204,18 +204,18 @@ app.include_router(tasks.router)
 
  
  
-# -------------------------------------------------------
+
 # STATIC FILES
-# -------------------------------------------------------
+
 if not os.path.exists("uploads"):
     os.makedirs("uploads")
  
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
  
  
-# -------------------------------------------------------
+
 # TEST ENDPOINT
-# -------------------------------------------------------
+
 @app.get("/api/test")
 def test_api():
     return {"message": "Backend is working correctly!"}

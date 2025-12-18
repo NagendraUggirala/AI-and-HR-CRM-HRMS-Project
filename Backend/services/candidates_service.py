@@ -1,5 +1,5 @@
 from sqlmodel import Session, select
-from models import Candidate
+from model.models import Candidate
 from typing import List
 
 def get_candidates(db: Session, job_id: int = None, skills: str = None, stage: str = None) -> List[Candidate]:

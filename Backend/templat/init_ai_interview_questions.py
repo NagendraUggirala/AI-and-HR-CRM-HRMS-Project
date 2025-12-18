@@ -10,7 +10,7 @@ Usage:
 
 from sqlalchemy.orm import Session
 from core.database import SessionLocal, engine
-from model import Question, Base
+from model.models import Question, Base
 
 # Create tables if they don't exist
 Base.metadata.create_all(bind=engine)

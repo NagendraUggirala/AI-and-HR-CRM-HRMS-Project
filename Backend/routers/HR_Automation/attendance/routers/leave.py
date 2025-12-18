@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from .. import crud
+from crud_ops import crud
 from core.database import get_db
-from schema import schemas  # ✅ absolute import
+from schema import schemas 
 
 router = APIRouter(prefix="/leave", tags=["Leave"])
 

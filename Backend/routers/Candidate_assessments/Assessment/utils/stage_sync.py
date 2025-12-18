@@ -50,7 +50,7 @@ def update_candidate_stage_all_tables(db: Session, email: str, new_stage: str) -
                     db.refresh(candidate)
                 except:
                     pass  # refresh() might not be available in all session types
-                print(f"✅ Updated Candidate.stage to '{new_stage}' for {email}")
+                print(f" Updated Candidate.stage to '{new_stage}' for {email}")
                 updated = True
         except Exception as e:
             print(f"Warning: Could not update Candidate table: {e}")
@@ -79,7 +79,7 @@ def update_candidate_stage_all_tables(db: Session, email: str, new_stage: str) -
                     {"stage": new_stage, "id": candidate_record_id}
                 )
                 db.commit()
-                print(f"✅ Updated candidate_records.stage to '{new_stage}' for {email}")
+                print(f" Updated candidate_records.stage to '{new_stage}' for {email}")
                 updated = True
         except Exception as e:
             print(f"Warning: Could not update candidate_records table: {e}")
@@ -120,11 +120,11 @@ def update_candidate_stage_all_tables(db: Session, email: str, new_stage: str) -
                 apps_updated_by_id = result2.rowcount
                 
                 if apps_updated_by_id > 0:
-                    print(f"✅ Updated {apps_updated_by_id} Application record(s) by candidate_id to '{new_stage}' for {email}")
+                    print(f" Updated {apps_updated_by_id} Application record(s) by candidate_id to '{new_stage}' for {email}")
                     updated = True
             
             if apps_updated_by_email > 0:
-                print(f"✅ Updated {apps_updated_by_email} Application record(s) by email to '{new_stage}' for {email}")
+                print(f" Updated {apps_updated_by_email} Application record(s) by email to '{new_stage}' for {email}")
                 updated = True
         except Exception as e:
             print(f"Warning: Could not update Application table: {e}")

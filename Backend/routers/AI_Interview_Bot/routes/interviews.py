@@ -285,7 +285,7 @@ def submit_answer(
     Since questions come from templates, we need the question text for AI scoring.
     Accepts video file (primary) or audio file (if provided separately).
     """
-    print(f"📥 Received answer submission:")
+    print(f"Received answer submission:")
     print(f"   - Candidate ID: {candidate_id}")
     print(f"   - Question ID: {question_id}")
     print(f"   - Question Text: {question_text[:50] if question_text else 'None'}...")

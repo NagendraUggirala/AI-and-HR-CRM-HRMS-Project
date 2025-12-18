@@ -22,7 +22,7 @@ def get_base_url():
     """Get the base URL for the frontend application"""
     return os.getenv("FRONTEND_URL", "http://localhost:3000")
 
-# ---------------- OTP Endpoints ----------------
+#  OTP Endpoints 
 @router.post("/send")
 def send_otp(data: CandidateCreate, db: Session = Depends(get_db)):
     candidate = db.query(Candidate).filter_by(email=data.email).first()
@@ -54,12 +54,12 @@ def verify_otp(data: OTPVerify, db: Session = Depends(get_db)):
     if TEMP_OTPS.get(data.email) != data.otp:
         raise HTTPException(status_code=400, detail="Invalid OTP")
 
-    candidate.verified = 1  # ⚡ LegacyCandidate uses Integer
+    candidate.verified = 1 
     db.commit()
     TEMP_OTPS.pop(data.email, None)
     return {"message": "OTP verified successfully"}
 
-# ---------------- Exam Endpoints ----------------
+#  Exam Endpoints 
 @router.get("/instructions")
 def instructions(email: str = None, db: Session = Depends(get_db)):
     """

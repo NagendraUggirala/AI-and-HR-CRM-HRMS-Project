@@ -91,7 +91,7 @@ async def send_assessment_email(request: AssessmentEmailRequest):
             <body>
                 <div class="container">
                     <div class="header">
-                        <h2>🎯 Assessment Invitation</h2>
+                        <h2> Assessment Invitation</h2>
                     </div>
                     <div class="content">
                         <p>{request.body.replace(chr(10), '<br>')}</p>

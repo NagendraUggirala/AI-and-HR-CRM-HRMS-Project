@@ -17,7 +17,7 @@ UPLOAD_FOLDER = "uploads/profiles"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
-# ---------------------- UTIL: Convert DB Model → Frontend JSON ---------------------- #
+# UTIL: Convert DB Model → Frontend JSON 
 def convert_contact_output(db_contact: ContactModel):
     """Convert DB fields into frontend-friendly structure."""
     if not db_contact:
@@ -43,21 +43,21 @@ def convert_contact_output(db_contact: ContactModel):
     return contact_dict
 
 
-# -------------------- CREATE CONTACT -------------------- #
+#  CREATE CONTACT  
 @router.post("/", response_model=contact.ContactResponse)
 def create_contact(contact_data: contact.ContactCreate, db: Session = Depends(get_db)):
     db_contact = crud_ops.create_contact(db=db, contact=contact_data)
     return convert_contact_output(db_contact)
 
 
-# -------------------- READ ALL CONTACTS -------------------- #
+#  READ ALL CONTACTS  
 @router.get("/", response_model=List[contact.ContactResponse])
 def read_contacts(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
     db_contacts = crud_ops.get_contacts(db=db, skip=skip, limit=limit)
     return [convert_contact_output(c) for c in db_contacts]
 
 
-# -------------------- READ SINGLE CONTACT -------------------- #
+#  READ SINGLE CONTACT  
 @router.get("/{contact_id}", response_model=contact.ContactResponse)
 def read_contact(contact_id: int, db: Session = Depends(get_db)):
     db_contact = crud_ops.get_contact(db=db, contact_id=contact_id)
@@ -66,7 +66,7 @@ def read_contact(contact_id: int, db: Session = Depends(get_db)):
     return convert_contact_output(db_contact)
 
 
-# -------------------- UPDATE CONTACT -------------------- #
+#  UPDATE CONTACT  
 @router.put("/{contact_id}", response_model=contact.ContactResponse)
 def update_contact(contact_id: int, updated: contact.ContactUpdate, db: Session = Depends(get_db)):
     db_contact = crud_ops.update_contact(db=db, contact_id=contact_id, updated=updated)
@@ -75,7 +75,7 @@ def update_contact(contact_id: int, updated: contact.ContactUpdate, db: Session 
     return convert_contact_output(db_contact)
 
 
-# -------------------- DELETE CONTACT -------------------- #
+#  DELETE CONTACT  
 @router.delete("/{contact_id}")
 def delete_contact(contact_id: int, db: Session = Depends(get_db)):
     ok = crud_ops.delete_contact(db=db, contact_id=contact_id)
@@ -84,7 +84,7 @@ def delete_contact(contact_id: int, db: Session = Depends(get_db)):
     return {"detail": "Contact deleted successfully"}
 
 
-# -------------------- UPDATE PROFILE PHOTO -------------------- #
+#  UPDATE PROFILE PHOTO  
 @router.put("/{contact_id}/profile-photo")
 def update_profile_photo(
     contact_id: int,

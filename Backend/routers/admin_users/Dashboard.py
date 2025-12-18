@@ -1,22 +1,22 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select, func
 from typing import List, Optional
-# from database import get_db
+from core.database import get_db
 import core.database as database
 from model.models import Job, Candidate, User, Application
-from schema import JobCreate, JobRead, CandidateRead
+from schema.schemas import JobCreate, JobRead, CandidateRead
 from auth import get_current_user
 from datetime import datetime, timedelta
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
-# --- Role check dependency ---
+#  Role check dependency 
 def recruiter_or_admin(user: User = Depends(get_current_user)):
     if user.role.lower() not in ["recruiter", "admin"]:
         raise HTTPException(status_code=403, detail="Access forbidden")
     return user
 
-# --- Dashboard Widgets ---
+#  Dashboard Widgets 
 @router.get("/widgets")
 def dashboard_widgets(user: User = Depends(recruiter_or_admin), db: Session = Depends(get_db)):
     # Count active jobs (status contains "Open" or "Published")
@@ -54,7 +54,7 @@ def dashboard_widgets(user: User = Depends(recruiter_or_admin), db: Session = De
         "candidates_in_pipeline": len(candidates_in_pipeline)
     }
 
-# --- Create Job ---
+#  Create Job 
 @router.post("/jobs", response_model=JobRead)
 def create_job(payload: JobCreate, user: User = Depends(recruiter_or_admin), db: Session = Depends(get_db)):
     job = Job(**payload.dict(), recruiter_id=user.id, created_at=datetime.utcnow(), updated_at=datetime.utcnow())
@@ -63,7 +63,7 @@ def create_job(payload: JobCreate, user: User = Depends(recruiter_or_admin), db:
     db.refresh(job)
     return job
 
-# --- List Jobs with filters ---
+#  List Jobs with filters 
 @router.get("/jobs", response_model=List[JobRead])
 def list_jobs(
     status: Optional[str] = Query(None),
@@ -89,7 +89,7 @@ def list_jobs(
 
     return db.exec(query).all()
 
-# --- Job Detail ---
+#  Job Detail 
 @router.get("/jobs/{job_id}", response_model=JobRead)
 def job_detail(job_id: int, user: User = Depends(recruiter_or_admin), db: Session = Depends(get_db)):
     job = db.get(Job, job_id)
@@ -99,7 +99,7 @@ def job_detail(job_id: int, user: User = Depends(recruiter_or_admin), db: Sessio
         raise HTTPException(status_code=403, detail="Access forbidden")
     return job
 
-# --- Bulk Delete Jobs ---
+#  Bulk Delete Jobs 
 @router.delete("/jobs/bulk")
 def bulk_delete_jobs(job_ids: List[int], user: User = Depends(recruiter_or_admin), db: Session = Depends(get_db)):
     for job_id in job_ids:
@@ -109,7 +109,7 @@ def bulk_delete_jobs(job_ids: List[int], user: User = Depends(recruiter_or_admin
     db.commit()
     return {"msg": "Jobs deleted successfully"}
 
-# --- Candidates Endpoints ---
+#  Candidates Endpoints 
 @router.get("/candidates", response_model=List[CandidateRead])
 def list_candidates(
     skills: Optional[str] = Query(None),
@@ -204,7 +204,7 @@ def candidate_detail(candidate_id: int, user: User = Depends(recruiter_or_admin)
     
     return candidate
 
-# --- Analytics ---
+#  Analytics 
 @router.get("/analytics/applications-over-time")
 def applications_over_time(days: int = 30, user: User = Depends(recruiter_or_admin), db: Session = Depends(get_db)):
     start_date = datetime.utcnow() - timedelta(days=days)

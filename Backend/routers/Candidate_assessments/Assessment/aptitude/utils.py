@@ -32,7 +32,7 @@ def generate_sets_db():
             q.set_no = set_no
     db.commit()
     db.close()
-    print("✅ 10 sets assigned successfully!")
+    print("10 sets assigned successfully!")
 
 def assign_questions(student_id: int, question_count: int = 25):
     """

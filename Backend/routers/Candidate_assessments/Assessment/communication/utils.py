@@ -13,7 +13,7 @@ from config import (
 )
 import psycopg2
 
-# ---------------- OTP ----------------
+#  OTP 
 # Store OTP with expiration: { email: {"otp": "123456", "expires": datetime } }
 otp_store = {}
 OTP_VALIDITY_MINUTES = 5
@@ -51,7 +51,7 @@ def send_email(receiver, subject, body):
         print("Email error:", e)
         return False
 
-# ---------------- Database ----------------
+#  Database 
 def get_db_connection():
     return psycopg2.connect(
         host=DB_HOST, port=DB_PORT, dbname=DB_NAME,
@@ -82,7 +82,7 @@ def save_submission(name, email, question_title, language, code, output, success
     cur.close()
     conn.close()
 
-# ---------------- AI Questions ----------------
+#  AI Questions 
 def ai_or_fallback_questions():
     fallback_questions = [
         {
@@ -115,7 +115,7 @@ def ai_or_fallback_questions():
     except Exception:
         return fallback_questions
 
-# ---------------- Run Code ----------------
+#  Run Code 
 def run_code_detailed(language, code):
     try:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -147,7 +147,7 @@ def run_code_detailed(language, code):
     except Exception as e:
         return False, str(e)
 
-# ---------------- AI Email ----------------
+#  AI Email 
 def generate_ai_email(name, status_text):
     if not openai_client:
         return f"Dear {name},\nYou are {status_text} after the coding exam.\nWith regards, HR Team."

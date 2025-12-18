@@ -11,7 +11,7 @@ import json
 
 router = APIRouter()
 
-# ---------------- OTP store with expiration ----------------
+#  OTP store with expiration 
 # { email: {"otp": "123456", "expires": datetime } }
 otp_store = {}
 OTP_VALIDITY_MINUTES = 5
@@ -34,7 +34,7 @@ def verify_otp_func(email, otp):
         return True
     return False
 
-# ---------------- Models ----------------
+#  Models 
 class OTPRequest(BaseModel):
     name: str
     email: str
@@ -54,7 +54,7 @@ class FinalizeRequest(BaseModel):
     name: str
     email: str
 
-# ---------------- OTP ----------------
+#  OTP 
 @router.post("/send-otp")
 def send_otp(data: OTPRequest):
     otp = generate_otp()
@@ -67,10 +67,10 @@ def verify_otp_route(data: VerifyOTPRequest):
     verified = verify_otp_func(data.email, data.otp)
     return {"verified": verified}
 
-# ---------------- Questions ----------------
+#  Questions 
 @router.get("/questions")
 def get_questions(email: str = None):
-    # 🔥 REJECTION CHECK: Prevent rejected candidates from taking assessments
+    #  REJECTION CHECK: Prevent rejected candidates from taking assessments
     if email:
         try:
             conn = get_db_connection()
@@ -119,16 +119,16 @@ def get_questions(email: str = None):
         print("Save questions error:", e)
     return {"questions": questions}
 
-# ---------------- Run Code ----------------
+#  Run Code 
 @router.post("/run_code")
 def run_code_endpoint(data: CodeSubmission):
     success, output = run_code_detailed(data.language, data.code)
     return {"success": success, "output": output or "No output"}
 
-# ---------------- Submit Code ----------------
+#  Submit Code 
 @router.post("/submit")
 def submit_code(data: CodeSubmission):
-    # 🔥 REJECTION CHECK: Prevent rejected candidates from submitting assessments
+    #  REJECTION CHECK: Prevent rejected candidates from submitting assessments
     try:
         conn = get_db_connection()
         cur = conn.cursor()
@@ -162,10 +162,10 @@ def submit_code(data: CodeSubmission):
         "output": output or ""
     }
 
-# ---------------- Finalize Exam ----------------
+#  Finalize Exam 
 @router.post("/finalize")
 def finalize(data: FinalizeRequest, background_tasks: BackgroundTasks):
-    # 🔥 REJECTION CHECK: Prevent rejected candidates from finalizing assessments
+    #  REJECTION CHECK: Prevent rejected candidates from finalizing assessments
     try:
         conn = get_db_connection()
         cur = conn.cursor()
@@ -205,7 +205,7 @@ def finalize(data: FinalizeRequest, background_tasks: BackgroundTasks):
             from sqlalchemy.orm import Session
             from sqlalchemy import text
             from core.database import SessionLocal
-            from models import Assignment, Assessment
+            from model.models import Assignment, Assessment
             
             db: Session = SessionLocal()
             try:
@@ -236,9 +236,9 @@ def finalize(data: FinalizeRequest, background_tasks: BackgroundTasks):
                     
                     db.commit()
                     
-                    # 🔥 SEQUENTIAL FLOW: Send appropriate email based on result
+                    #  SEQUENTIAL FLOW: Send appropriate email based on result
                     if success_count >= 1:
-                        # 🔥 STAGE MANAGEMENT: Change stage to "Interview" if passed (both tables)
+                        #  STAGE MANAGEMENT: Change stage to "Interview" if passed (both tables)
                         try:
                             update_candidate_stage_both_tables(db, data.email, "Interview")
                         except Exception as stage_error:
@@ -270,14 +270,14 @@ HR Team - Recruitment"""
                             background_tasks.add_task(
                                 send_email,
                                 data.email,
-                                "✅ Coding Test Passed - Interview Scheduling",
+                                "Coding Test Passed - Interview Scheduling",
                                 email_body
                             )
-                            print(f"✅ Sent Interview scheduling link to {data.email}")
+                            print(f"Sent Interview scheduling link to {data.email}")
                         except Exception as email_error:
                             print(f"Warning: Could not send interview email: {email_error}")
                     else:
-                        # 🔥 STAGE MANAGEMENT: Change stage to "Rejected" if failed (both tables)
+                        #  STAGE MANAGEMENT: Change stage to "Rejected" if failed (both tables)
                         try:
                             update_candidate_stage_both_tables(db, data.email, "Rejected")
                         except Exception as stage_error:

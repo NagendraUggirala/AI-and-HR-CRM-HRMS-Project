@@ -15,7 +15,7 @@ UPLOAD_FOLDER = "uploads/logos"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
-# -------------------- CREATE -------------------- #
+#  CREATE
 @router.post("/", response_model=company.CompanyResponse)
 def create_company(
     company_name: str = Form(...),
@@ -101,13 +101,13 @@ def create_company(
     return new_company
 
 
-# -------------------- READ ALL -------------------- #
+#  READ ALL
 @router.get("/", response_model=List[company.CompanyResponse])
 def read_companies(db: Session = Depends(get_db)):
     return db.query(model.Company).all()
 
 
-# -------------------- READ ONE -------------------- #
+#  READ ONE
 @router.get("/{company_id}", response_model=company.CompanyResponse)
 def read_company(company_id: int, db: Session = Depends(get_db)):
     company_obj = db.query(model.Company).filter(model.Company.id == company_id).first()
@@ -116,7 +116,7 @@ def read_company(company_id: int, db: Session = Depends(get_db)):
     return company_obj
 
 
-# -------------------- UPDATE -------------------- #
+#  UPDATE
 @router.put("/{company_id}", response_model=company.CompanyResponse)
 def update_company(
     company_id: int,
@@ -157,7 +157,7 @@ def update_company(
     if not db_company:
         raise HTTPException(status_code=404, detail="Company not found")
 
-    # ---------- LOGO ----------
+    # LOGO
     if logo:
         filename = f"{company_id}_{logo.filename}"
         file_path = os.path.join(UPLOAD_FOLDER, filename)
@@ -165,7 +165,7 @@ def update_company(
             shutil.copyfileobj(logo.file, f)
         db_company.logo = filename
 
-    # ---------- FIELDS ----------
+    # FIELDS 
     updates = {
         "company_name": company_name,
         "phone_number": phone_number,
@@ -208,7 +208,7 @@ def update_company(
     return db_company
 
 
-# -------------------- UPDATE LOGO -------------------- #
+#  UPDATE LOGO  
 @router.put("/{company_id}/logo")
 def update_company_logo(
     company_id: int,
@@ -231,7 +231,7 @@ def update_company_logo(
     return {"message": "Logo updated", "logo": logo_path}
 
 
-# -------------------- DELETE -------------------- #
+#  DELETE  
 @router.delete("/{company_id}")
 def delete_company(company_id: int, db: Session = Depends(get_db)):
     db_company = db.query(model.Company).filter(model.Company.id == company_id).first()

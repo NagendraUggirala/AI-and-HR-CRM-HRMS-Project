@@ -17,9 +17,9 @@ load_dotenv()
 
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
-# -----------------------------
+
 # Password Hashing
-# -----------------------------
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_password_hash(password: str) -> str:
@@ -28,9 +28,9 @@ def get_password_hash(password: str) -> str:
 def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
-# -----------------------------
+
 # JWT Config
-# -----------------------------
+
 SECRET_KEY = "your_super_secret_key"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours (changed from 15 minutes)
@@ -39,9 +39,9 @@ RESET_TOKEN_EXPIRE_MINUTES = 60  # 1 hour (changed from 15 minutes)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
-# -----------------------------
+
 # Mail Config
-# -----------------------------
+
 conf = ConnectionConfig(
     MAIL_USERNAME=os.getenv("EMAIL_USER"),
     MAIL_PASSWORD=os.getenv("EMAIL_PASS"),
@@ -64,9 +64,9 @@ async def send_email(to: str, subject: str, body: str):
     fm = FastMail(conf)
     await fm.send_message(message)
 
-# -----------------------------
+
 # Schemas
-# -----------------------------
+
 class UserCreate(BaseModel):
     name: str
     username: Optional[str] = None
@@ -96,9 +96,9 @@ class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
 
-# -----------------------------
+
 # JWT Helpers
-# -----------------------------
+
 def create_access_token(data: dict, expires_delta: timedelta):
     to_encode = data.copy()
     expire = datetime.utcnow() + expires_delta
@@ -124,9 +124,9 @@ def verify_reset_token(token: str):
     except JWTError:
         raise HTTPException(status_code=400, detail="Invalid or expired token")
 
-# -----------------------------
+
 # Signup - Inactive by Default + Email Notifications
-# -----------------------------
+
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
 async def signup(payload: UserCreate, session: Session = Depends(get_db)):
     if payload.role == "recruiter" and not payload.company_name:
@@ -187,9 +187,9 @@ async def signup(payload: UserCreate, session: Session = Depends(get_db)):
         "message": "Account created successfully. Waiting for Super Admin approval."
     }
 
-# -----------------------------
+
 # Login (JSON)
-# -----------------------------
+
 @router.post("/login-json")
 def login_json(payload: LoginRequest, session: Session = Depends(get_db)):
     user = session.exec(select(User).where(User.email == payload.email)).first()
@@ -212,9 +212,9 @@ def login_json(payload: LoginRequest, session: Session = Depends(get_db)):
         "email": user.email
     }
 
-# -----------------------------
+
 # Login (OAuth2)
-# -----------------------------
+
 @router.post("/login", response_model=TokenResponse)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_db)):
     user = session.exec(select(User).where(User.email == form_data.username)).first()
@@ -236,9 +236,9 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = D
         "role": user.role
     }
 
-# -----------------------------
+
 # Forgot Password
-# -----------------------------
+
 @router.post("/forgot-password")
 async def forgot_password(payload: ForgotPasswordRequest, session: Session = Depends(get_db)):
     user = session.exec(select(User).where(User.email == payload.email)).first()
@@ -255,9 +255,9 @@ async def forgot_password(payload: ForgotPasswordRequest, session: Session = Dep
     )
     return {"msg": "Reset link sent to your email"}
 
-# -----------------------------
+
 # Reset Password
-# -----------------------------
+
 @router.post("/reset-password")
 async def reset_password(payload: ResetPasswordRequest, session: Session = Depends(get_db)):
     user_id = verify_reset_token(payload.token)
@@ -280,9 +280,9 @@ async def reset_password(payload: ResetPasswordRequest, session: Session = Depen
     )
     return {"msg": "Password reset successful. A confirmation email has been sent."}
 
-# -----------------------------
+
 # Get Current User + Role Guard
-# -----------------------------
+
 def get_current_user(token: str = Depends(oauth2_scheme), session: Session = Depends(get_db)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])

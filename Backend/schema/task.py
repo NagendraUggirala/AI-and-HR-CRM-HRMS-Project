@@ -14,7 +14,6 @@ class TaskBase(BaseModel):
 
 
 class TaskCreate(TaskBase):
-    # allow sending projected time parts from client when creating
     projected_days: Optional[int] = 0
     projected_hours: Optional[int] = 0
     projected_minutes: Optional[int] = 0
@@ -35,11 +34,10 @@ class TaskUpdate(BaseModel):
 
 class TaskInDBBase(TaskBase):
     id: int
-    # expose the DB total-minutes value as projected_minutes_total
     projected_minutes_total: int = 0
 
     model_config = {
-        "from_attributes": True,   # for pydantic v2; allows reading from ORM attributes
+        "from_attributes": True,
     }
 
 

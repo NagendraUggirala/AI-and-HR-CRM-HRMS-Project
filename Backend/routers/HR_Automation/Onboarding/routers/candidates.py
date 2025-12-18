@@ -1,42 +1,7 @@
-'''from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy.orm import Session
-from model.models import Candidate, Document, SessionLocal, init_db
-
-router = APIRouter(prefix="/candidates", tags=["Candidates"])
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-@router.post("/")
-def create_candidate(name: str, email: str, db: Session = Depends(get_db)):
-    existing = db.query(Candidate).filter(Candidate.email == email).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Candidate already exists")
-
-    candidate = Candidate(name=name, email=email)
-    db.add(candidate)
-    db.commit()
-    db.refresh(candidate)
-
-    # Seed required documents
-    for doc_name in ["ID", "Tax", "Certificate"]:
-        db.add(Document(name=doc_name, candidate_id=candidate.id))
-    db.commit()
-
-    return {"id": candidate.id, "name": candidate.name, "email": candidate.email}
-
-@router.get("/")
-def list_candidates(db: Session = Depends(get_db)):
-    candidates = db.query(Candidate).all()
-    return [{"id": c.id, "name": c.name, "email": c.email} for c in candidates]'''
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
 from model.models import Candidate, OnboardingDocument as Document
-from core.database import SessionLocal, engine  # <- import from your database module
+from core.database import SessionLocal, engine 
 
 
 router = APIRouter(prefix="/candidates", tags=["Candidates"])

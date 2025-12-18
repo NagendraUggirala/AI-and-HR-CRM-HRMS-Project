@@ -5,19 +5,9 @@ from typing import List
 from core.session import get_db
 import crud_ops
 
-from schema.project import (
-    ProjectCreate,
-    ProjectUpdate,
-    ProjectOut,
-)
+from schema.project import (ProjectCreate,ProjectUpdate,ProjectOut)
 
-from crud_ops.project_crud import (
-    create_project,
-    list_projects,
-    get_project,
-    update_project,
-    delete_project,
-)
+from crud_ops.project_crud import (create_project,list_projects,get_project,update_project,delete_project)
 
 router = APIRouter(prefix="/projects", tags=["Projects"])
 

@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 from sqlalchemy.orm import Session
 from core.database import SessionLocal, engine, Base
-from model import LegacyQuestion
+from model.models import LegacyQuestion
 
 # Create tables if they don't exist
 Base.metadata.create_all(bind=engine)

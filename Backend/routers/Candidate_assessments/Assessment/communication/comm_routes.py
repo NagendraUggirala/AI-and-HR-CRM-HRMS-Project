@@ -1,15 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from urllib.parse import quote_plus
-from routers.Candidate_assessments.Assessment.communication.utils_comm import (
-    generate_otp,
-    send_email,
-    generate_full_exam,
-    score_text,
-    generate_candidate_email,
-    otp_store
-)
-
+from routers.Candidate_assessments.Assessment.communication.utils_comm import (generate_otp,send_email,generate_full_exam,score_text,generate_candidate_email,otp_store)
 from core.database import DATABASE_URL, SessionLocal as MainSessionLocal
 from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, DateTime, Text, text
 from sqlalchemy.orm import sessionmaker, declarative_base
@@ -17,27 +9,24 @@ from model.models import Assignment, Assessment
 from routers.Candidate_assessments.Assessment.utils.stage_sync import update_candidate_stage_both_tables
 import datetime, json, time, os
 
-# ---------------- Database Setup ----------------
+#  Database Setup 
 engine = create_engine(DATABASE_URL, echo=True, future=True)
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 Base = declarative_base()
 
-# ---------------- model.models ----------------
+#  model.models 
 class ExamAttempt(Base):
     __tablename__ = "communication_assessment_results"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
     email = Column(String(100), nullable=False)
-
     reading_paragraph = Column(Text)
     reading_mcqs = Column(Text)
     writing_prompt = Column(Text)
     listening_paragraph = Column(Text)
-
     writing_answer = Column(Text)
     listening_answer = Column(Text)
     mcq_answers = Column(Text)
-
     writing_score = Column(Float)
     listening_score = Column(Float)
     mcq_score = Column(Float)
@@ -47,7 +36,7 @@ class ExamAttempt(Base):
 
 Base.metadata.create_all(bind=engine)
 
-# ---------------- Database Migration: Add missing columns ----------------
+#  Database Migration: Add missing columns 
 def ensure_table_columns():
     """Ensure all required columns exist in the communication_assessment_results table."""
     try:
@@ -64,7 +53,7 @@ def ensure_table_columns():
                     ALTER TABLE communication_assessment_results 
                     ADD COLUMN passed BOOLEAN
                 """))
-                print("✅ Added 'passed' column to communication_assessment_results table")
+                print(" Added 'passed' column to communication_assessment_results table")
             
             # Check and add 'submitted_at' column if it doesn't exist
             result = conn.execute(text("""
@@ -78,16 +67,16 @@ def ensure_table_columns():
                     ALTER TABLE communication_assessment_results 
                     ADD COLUMN submitted_at TIMESTAMP
                 """))
-                print("✅ Added 'submitted_at' column to communication_assessment_results table")
+                print(" Added 'submitted_at' column to communication_assessment_results table")
     except Exception as e:
-        print(f"⚠️ Warning: Could not ensure table columns: {e}")
+        print(f" Warning: Could not ensure table columns: {e}")
         import traceback
         traceback.print_exc()
 
 # Run migration on module load
 ensure_table_columns()
 
-# ---------------- Router ----------------
+#  Router 
 router = APIRouter()
 
 # Helper function to get base URL
@@ -95,7 +84,7 @@ def get_base_url():
     """Get the base URL for the frontend application"""
     return os.getenv("FRONTEND_URL", "http://localhost:3000")
 
-# ---------------- Request model.models ----------------
+#  Request model.models 
 class OTPRequest(BaseModel):
     name: str
     email: str
@@ -110,22 +99,7 @@ class CommSubmission(BaseModel):
     writing_answer: str
     listening_answer: str
     mcq_answers: dict
-
-# #---------------- Mock OTP Endpoint ----------------
-# @router.get("/mock-otp")
-# def mock_otp(email: str):
-#     """
-#     Returns existing OTP for testing or generates a new one if not exist.
-#     """
-#     record = otp_store.get(email)
-#     if record and time.time() < record["expires"]:
-#         otp = record["otp"]
-#     else:
-#         otp = generate_otp()
-#         otp_store[email] = {"otp": otp, "expires": time.time() + 300}  # 5 min
-#     return {"email": email, "otp": otp, "message": "Mock OTP returned for testing."}
-
-# ---------------- Send OTP ----------------
+ 
 @router.post("/send-otp")
 def send_otp_route(data: OTPRequest):
     otp = generate_otp()
@@ -141,7 +115,7 @@ def send_otp_route(data: OTPRequest):
         raise HTTPException(status_code=500, detail=msg)
     return {"message": f"OTP sent successfully to {data.email}"}
 
-# ---------------- Verify OTP ----------------
+#  Verify OTP 
 @router.post("/verify-otp")
 def verify_otp_route(data: VerifyOTPRequest):
     record = otp_store.get(data.email)
@@ -155,10 +129,10 @@ def verify_otp_route(data: VerifyOTPRequest):
         return {"verified": True}
     return {"verified": False, "reason": "Invalid OTP"}
 
-# ---------------- Exam Routes ----------------
+#  Exam Routes 
 @router.get("/exam")
 def get_exam(name: str, email: str):
-    # 🔥 REJECTION CHECK: Prevent rejected candidates from taking assessments
+    #  REJECTION CHECK: Prevent rejected candidates from taking assessments
     try:
         with SessionLocal() as session:
             candidate_record_result = session.execute(
@@ -213,12 +187,12 @@ def get_exam(name: str, email: str):
     except Exception as e:
         import traceback
         error_trace = traceback.format_exc()
-        print(f"❌ Error in get_exam endpoint: {error_trace}")
+        print(f" Error in get_exam endpoint: {error_trace}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 @router.post("/submit")
 def submit_answers(data: CommSubmission):
-    # 🔥 REJECTION CHECK: Prevent rejected candidates from submitting assessments
+    #  REJECTION CHECK: Prevent rejected candidates from submitting assessments
     try:
         with SessionLocal() as session:
             candidate_record_result = session.execute(
@@ -299,7 +273,7 @@ def submit_answers(data: CommSubmission):
                     
                     db.commit()
                     
-                    # 🔥 SEQUENTIAL FLOW: Send appropriate email
+                    #  SEQUENTIAL FLOW: Send appropriate email
                     if passed:
                         # Send Coding test link
                         try:
@@ -324,12 +298,12 @@ Best of luck with the coding round!
 Best regards,
 HR Team - Recruitment"""
                             
-                            send_email(data.email, "✅ Communication Test Passed - Next: Coding Assessment", email_body)
-                            print(f"✅ Sent Coding test link to {data.email}")
+                            send_email(data.email, " Communication Test Passed - Next: Coding Assessment", email_body)
+                            print(f" Sent Coding test link to {data.email}")
                         except Exception as email_error:
                             print(f"Warning: Could not send next assessment email: {email_error}")
                     else:
-                        # 🔥 STAGE MANAGEMENT: Change stage to "Rejected" if failed (both tables)
+                        #  STAGE MANAGEMENT: Change stage to "Rejected" if failed (both tables)
                         try:
                             update_candidate_stage_both_tables(db, data.email, "Rejected")
                         except Exception as stage_error:
@@ -356,7 +330,7 @@ HR Team - Recruitment"""
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
 
-# ---------------- Admin Route ----------------
+#  Admin Route 
 @router.get("/all-exams")
 def get_all_exams():
     try:

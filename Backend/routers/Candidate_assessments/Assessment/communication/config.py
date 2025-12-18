@@ -3,14 +3,14 @@ from dotenv import load_dotenv
 
 load_dotenv()  # loads variables from .env file
 
-# ---------------- OpenAI ----------------
+#  OpenAI 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# ---------------- Email ----------------
+#  Email 
 EMAIL_USER = os.getenv("EMAIL_USER")
 EMAIL_PASS = os.getenv("EMAIL_PASS")
 
-# ---------------- Database (PostgreSQL) ----------------
+#  Database (PostgreSQL) 
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("DB_NAME")

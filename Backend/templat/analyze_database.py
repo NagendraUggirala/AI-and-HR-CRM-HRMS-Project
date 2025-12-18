@@ -5,7 +5,7 @@ Understanding the recruiter job posting and candidate application process
 """
 
 from core.database import SessionLocal
-from model import User, Job, Candidate, Application
+from model.models import User, Job, Candidate, Application
 
 def analyze_database():
     db = SessionLocal()

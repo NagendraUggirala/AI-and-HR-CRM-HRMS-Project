@@ -6,10 +6,10 @@ from trio import TaskStatus
 
 
 
-# --- Users ---
+# Users 
 class UserCreate(BaseModel):
     name: str
-    username: Optional[str] = None       # NEW
+    username: Optional[str] = None    
     email: EmailStr
     password: str
     role: Literal["recruiter", "company", "superadmin"]
@@ -24,7 +24,7 @@ class UserRead(BaseModel):
     email: str
     role: str
 
-# --- Jobs ---
+# Jobs
 class JobBase(BaseModel):
     title: str
     department: str
@@ -75,7 +75,7 @@ class JobRead(JobBase):
     class Config:
         orm_mode = True
 
-# --- Candidates ---
+# Candidates
 class CandidateCreate(BaseModel):
     name: str
     role: str
@@ -267,7 +267,7 @@ class CandidateSchema(BaseModel):
     class Config:
         orm_mode = True
 
-# --- Attendance & Leave ---
+# Attendance & Leave
 
 class LeaveStatus(str, Enum):
     pending = "Pending"
@@ -304,14 +304,13 @@ class LeaveRequestOut(BaseModel):
         orm_mode = True
 
 
-# ----------------------
+
 # Document Schemas
-# ----------------------
 class DocumentBase(BaseModel):
     title: str
 
 class DocumentCreate(DocumentBase):
-    pass  # used for request body when uploading a document
+    pass  
 
 class Document(DocumentBase):
     id: int
@@ -319,17 +318,16 @@ class Document(DocumentBase):
     file_path: str
 
     class Config:
-        orm_mode = True  # allows SQLAlchemy models to be returned directly
+        orm_mode = True 
 
 
-# ----------------------
+
 # Signature Schemas
-# ----------------------
 class SignatureBase(BaseModel):
     name: str
 
 class SignatureCreate(SignatureBase):
-    pass  # used for request body when uploading a signature
+    pass  
 
 class Signature(SignatureBase):
     id: int

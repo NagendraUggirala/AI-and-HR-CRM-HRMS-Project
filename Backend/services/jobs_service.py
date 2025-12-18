@@ -1,6 +1,6 @@
 
 from sqlmodel import Session, select
-from models import Job, Candidate
+from model.models import Job, Candidate
 from typing import List
 
 def create_job(db: Session, job_data: dict, recruiter_id: int) -> Job:

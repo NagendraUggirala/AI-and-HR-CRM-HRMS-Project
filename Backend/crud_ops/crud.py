@@ -8,9 +8,9 @@ from fastapi import HTTPException
 import model
 
 
-# =====================================================
+
 # CONTACT CRUD
-# =====================================================
+
 
 def create_contact(db: Session, contact):
     if contact.email:
@@ -83,9 +83,9 @@ def delete_contact(db: Session, contact_id: int) -> bool:
     return True
 
 
-# =====================================================
+
 # LEAD CRUD
-# =====================================================
+
 
 def create_lead(db: Session, lead):
     db_lead = model.Lead(**lead.dict())
@@ -136,9 +136,9 @@ def delete_lead(db: Session, lead_id: int) -> bool:
     return True
 
 
-# =====================================================
+
 # PIPELINE CRUD
-# =====================================================
+
 
 def create_pipeline(db: Session, pipeline):
     db_pipeline = model.Pipeline(**pipeline.dict())
@@ -183,9 +183,9 @@ def delete_pipeline(db: Session, pipeline_id: int) -> bool:
     return True
 
 
-# =====================================================
+
 # ACTIVITY CRUD
-# =====================================================
+
 
 def create_activity(db: Session, activity):
     db_activity = model.Activity(**activity.dict())

@@ -17,10 +17,8 @@ import model
 
 router = APIRouter()
 
-# -----------------------------
-# Deals Analytics
-# -----------------------------
 
+# Deals Analytics
 @router.get("/deals", response_model=List[DealOut])
 def list_deals(db: Session = Depends(get_db), q: Optional[str] = None):
     query = db.query(model.Deal)
@@ -36,11 +34,7 @@ def get_deal(deal_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Deal not found")
     return deal
 
-
-# -----------------------------
 # Leads Analytics
-# -----------------------------
-
 @router.get("/leads", response_model=List[LeadRead])
 def read_leads(skip: int = 0, limit: int = Query(100, le=1000), db: Session = Depends(get_db)):
     return crud_ops.get_leads(db, skip=skip, limit=limit)
@@ -54,10 +48,8 @@ def read_lead(lead_id: int, db: Session = Depends(get_db)):
     return lead
 
 
-# -----------------------------
-# Contacts Analytics
-# -----------------------------
 
+# Contacts Analytics
 @router.get("/recent-contacts", response_model=List[ContactBase])
 def recent_contacts(limit: int = 10, db: Session = Depends(get_db)):
     if hasattr(model.Contact, "created_at"):
@@ -70,10 +62,8 @@ def recent_contacts(limit: int = 10, db: Session = Depends(get_db)):
     return db.query(model.Contact).limit(limit).all()
 
 
-# -----------------------------
-# Companies Analytics
-# -----------------------------
 
+# Companies Analytics
 @router.get("/recent-companies", response_model=List[CompanyBase])
 def recent_companies(limit: int = 10, db: Session = Depends(get_db)):
     if hasattr(model.Company, "created_at"):
@@ -86,10 +76,8 @@ def recent_companies(limit: int = 10, db: Session = Depends(get_db)):
     return db.query(model.Company).limit(limit).all()
 
 
-# -----------------------------
-# Activities Analytics
-# -----------------------------
 
+# Activities Analytics
 @router.get("/activities", response_model=List[Activity])
 def read_activities(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     try:

@@ -111,7 +111,7 @@ def read_applications(db: Session = Depends(get_db)):
                             "source": "candidate"
                         }
         except Exception as e:
-            print(f"⚠️ Warning: Could not fetch additional candidates from Candidate table: {e}")
+            print(f" Warning: Could not fetch additional candidates from Candidate table: {e}")
             import traceback
             traceback.print_exc()
         
@@ -119,7 +119,7 @@ def read_applications(db: Session = Depends(get_db)):
         # This is critical for candidates who were screened via AI and updated via ReviewAIInterview
         try:
             candidate_records = db.query(CandidateRecord).all()
-            print(f"📋 Found {len(candidate_records)} candidate_records")
+            print(f" Found {len(candidate_records)} candidate_records")
             
             for record in candidate_records:
                 record_email_lower = record.candidate_email.lower() if record.candidate_email else None
@@ -145,9 +145,9 @@ def read_applications(db: Session = Depends(get_db)):
                     
                     # Log if this is an "Offered" candidate
                     if record_stage and record_stage.lower() in ['offer', 'offered']:
-                        print(f"🎯 Added/Updated candidate_record with 'Offered' stage: {record.candidate_name} ({record.candidate_email}) - stage='{record_stage}'")
+                        print(f" Added/Updated candidate_record with 'Offered' stage: {record.candidate_name} ({record.candidate_email}) - stage='{record_stage}'")
         except Exception as e:
-            print(f"⚠️ Warning: Could not fetch candidate_records: {e}")
+            print(f" Warning: Could not fetch candidate_records: {e}")
             import traceback
             traceback.print_exc()
         
@@ -157,13 +157,13 @@ def read_applications(db: Session = Depends(get_db)):
         # Log candidates with "Offered" stage for debugging
         offered_candidates = [r for r in result if r.get('candidate_stage', '').lower() in ['offer', 'offered']]
         if offered_candidates:
-            print(f"🎯 Found {len(offered_candidates)} candidate(s) with 'Offered' stage:")
+            print(f" Found {len(offered_candidates)} candidate(s) with 'Offered' stage:")
             for c in offered_candidates:
                 print(f"   - {c.get('candidate_name')} ({c.get('candidate_email')}): stage='{c.get('candidate_stage')}'")
         else:
-            print("⚠️ No candidates found with 'Offered' stage")
+            print(" No candidates found with 'Offered' stage")
         
-        print(f"✅ Returning {len(result)} application/candidate records for pipeline")
+        print(f" Returning {len(result)} application/candidate records for pipeline")
         return result
     except Exception as e:
         print(f"Error fetching applications: {e}")

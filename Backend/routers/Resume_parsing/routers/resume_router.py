@@ -49,13 +49,13 @@ def list_candidates(
     if user.role.lower() != "admin":
         # Get all job IDs for this recruiter
         job_ids = [row[0] for row in db.execute(select(Job.id).where(Job.recruiter_id == user.id)).all()]
-        print(f"🔍 Recruiter {user.id} has {len(job_ids)} jobs")
+        print(f" Recruiter {user.id} has {len(job_ids)} jobs")
         recruiter_has_jobs = len(job_ids) > 0
         
         if job_ids:
             # Get all applications for these jobs
             applications = db.execute(select(Application).where(Application.job_id.in_(job_ids))).scalars().all()
-            print(f"🔍 Found {len(applications)} applications for recruiter's jobs")
+            print(f" Found {len(applications)} applications for recruiter's jobs")
             # Get unique candidate emails from applications
             for app in applications:
                 if app.candidate_email:
@@ -69,7 +69,7 @@ def list_candidates(
                     if candidate.email:
                         recruiter_candidate_emails.add(candidate.email.lower().strip())
         
-        print(f"🔍 Recruiter {user.id} has {len(recruiter_candidate_emails)} unique candidate emails from applications")
+        print(f" Recruiter {user.id} has {len(recruiter_candidate_emails)} unique candidate emails from applications")
     
     # Query candidate records
     query = db.query(CandidateRecord).order_by(CandidateRecord.id.desc())
@@ -93,14 +93,14 @@ def list_candidates(
             # SECURITY NOTE: This shows ALL screened candidates, not just this recruiter's
             # This is acceptable for the ResumeScreening page where recruiters need to see what they've screened
             query = query.filter(CandidateRecord.resume_screened == "yes")
-            print(f"🔍 Recruiter {user.id} has jobs but no applications - showing all screened candidates (resume_screened='yes')")
+            print(f" Recruiter {user.id} has jobs but no applications - showing all screened candidates (resume_screened='yes')")
         else:
             # No jobs at all - return empty result
-            print(f"⚠️ Recruiter {user.id} has no jobs, returning empty result")
+            print(f" Recruiter {user.id} has no jobs, returning empty result")
             return []
     
     rows = query.offset(offset).limit(limit).all()
-    print(f"📋 Found {len(rows)} candidate_records after filtering")
+    print(f" Found {len(rows)} candidate_records after filtering")
     
     # Get all emails that have completed aptitude tests (only if show_all is False)
     completed_aptitude_emails = set()
@@ -112,11 +112,11 @@ def list_candidates(
                 LegacyCandidate.status.in_(['Qualified', 'Regret', 'Completed', 'Passed', 'Submitted'])
             ).all()
             completed_aptitude_emails = {c.email.lower() for c in aptitude_completed if c.email}
-            print(f"📋 Found {len(completed_aptitude_emails)} candidates who completed aptitude test")
+            print(f" Found {len(completed_aptitude_emails)} candidates who completed aptitude test")
         except Exception as e:
-            print(f"⚠️ Warning: Could not check aptitude completion status: {e}")
+            print(f" Warning: Could not check aptitude completion status: {e}")
     else:
-        print(f"📋 show_all=True: Showing all screened candidates regardless of aptitude completion")
+        print(f" show_all=True: Showing all screened candidates regardless of aptitude completion")
     
     result = []
     for r in rows:
@@ -152,8 +152,8 @@ def list_candidates(
             "created_at": r.created_at.isoformat() if r.created_at else None
         })
     
-    print(f"✅ Returning {len(result)} candidate records (after filtering aptitude completed)")
-    print(f"📊 Breakdown: Total rows={len(rows)}, Filtered out={len(rows) - len(result)}, Final result={len(result)}")
+    print(f" Returning {len(result)} candidate records (after filtering aptitude completed)")
+    print(f" Breakdown: Total rows={len(rows)}, Filtered out={len(rows) - len(result)}, Final result={len(result)}")
     return result
 
 @router.patch("/candidates/{candidate_id}/stage")
@@ -209,7 +209,7 @@ def sync_candidate_stages_endpoint(db: Session = Depends(get_db)):
         print()
         
         # 1. Update candidate_records stages based on scores
-        print("1️⃣ Updating candidate_records stages...")
+        print(" Updating candidate_records stages...")
         update_records_query = text("""
             UPDATE candidate_records 
             SET stage = CASE 
@@ -225,10 +225,10 @@ def sync_candidate_stages_endpoint(db: Session = Depends(get_db)):
         result = db.execute(update_records_query, {"threshold": SCORE_THRESHOLD})
         db.commit()
         records_updated = result.rowcount
-        print(f"   ✅ Updated {records_updated} candidate_records")
+        print(f" Updated {records_updated} candidate_records")
         
         # 2. Update candidate table stages based on candidate_records
-        print("\n2️⃣ Syncing candidate table stages from candidate_records...")
+        print("\ Syncing candidate table stages from candidate_records...")
         sync_candidates_query = text("""
             UPDATE candidate c
             SET stage = cr.stage
@@ -242,10 +242,10 @@ def sync_candidate_stages_endpoint(db: Session = Depends(get_db)):
         result = db.execute(sync_candidates_query)
         db.commit()
         candidates_updated = result.rowcount
-        print(f"   ✅ Updated {candidates_updated} candidate records")
+        print(f" Updated {candidates_updated} candidate records")
         
         # 3. Update application table stages based on candidate_records
-        print("\n3️⃣ Syncing application table stages from candidate_records...")
+        print("\n Syncing application table stages from candidate_records...")
         sync_applications_from_records_query = text("""
             UPDATE application a
             SET stage = cr.stage,
@@ -260,10 +260,10 @@ def sync_candidate_stages_endpoint(db: Session = Depends(get_db)):
         result = db.execute(sync_applications_from_records_query)
         db.commit()
         applications_from_records_updated = result.rowcount
-        print(f"   ✅ Updated {applications_from_records_updated} application records from candidate_records")
+        print(f" Updated {applications_from_records_updated} application records from candidate_records")
         
         # 4. Update application table stages based on candidate table
-        print("\n4️⃣ Syncing application table stages from candidate table...")
+        print("\n Syncing application table stages from candidate table...")
         sync_applications_from_candidate_query = text("""
             UPDATE application a
             SET stage = c.stage,
@@ -278,10 +278,10 @@ def sync_candidate_stages_endpoint(db: Session = Depends(get_db)):
         result = db.execute(sync_applications_from_candidate_query)
         db.commit()
         applications_from_candidate_updated = result.rowcount
-        print(f"   ✅ Updated {applications_from_candidate_updated} application records from candidate table")
+        print(f" Updated {applications_from_candidate_updated} application records from candidate table")
         
         # 5. Show statistics
-        print("\n5️⃣ Current Statistics:")
+        print("\n Current Statistics:")
         
         # Count by stage in candidate_records
         stats_query = text("""
@@ -318,7 +318,7 @@ def sync_candidate_stages_endpoint(db: Session = Depends(get_db)):
         })
         
     except Exception as e:
-        print(f"\n❌ Error during sync: {e}")
+        print(f"\n Error during sync: {e}")
         import traceback
         traceback.print_exc()
         return JSONResponse({
@@ -364,7 +364,7 @@ async def process_resume(
         except Exception as e:
             # If column doesn't exist, log and continue (will be handled by migration)
             if "resume_screened" in str(e) or "does not exist" in str(e):
-                print(f"⚠️ Warning: resume_screened column may not exist yet: {e}")
+                print(f" Warning: resume_screened column may not exist yet: {e}")
             else:
                 raise
 
@@ -377,7 +377,7 @@ async def process_resume(
     # Ensure score is not None (handle edge cases)
     if score is None:
         score = 0.0
-        print(f"⚠️ Warning: Score was None for {email}, setting to 0.0")
+        print(f" Warning: Score was None for {email}, setting to 0.0")
 
     # 5) Save ALL candidates (both shortlisted and rejected) to prevent duplicate screening
     email_status = "skipped"
@@ -443,7 +443,7 @@ async def process_resume(
                 )
                 db.add(candidate)
                 db.commit()
-                print(f"✅ Created Candidate record for {email} with stage '{initial_stage}'")
+                print(f" Created Candidate record for {email} with stage '{initial_stage}'")
             else:
                 # Update existing Candidate record
                 candidate.stage = initial_stage
@@ -453,7 +453,7 @@ async def process_resume(
                     candidate.resume_url = f"uploads/{file.filename}"
                 db.add(candidate)
                 db.commit()
-                print(f"✅ Updated Candidate.stage to '{initial_stage}' for {email}")
+                print(f" Updated Candidate.stage to '{initial_stage}' for {email}")
         except Exception as e:
             print(f"Warning: Could not create/update Candidate record: {e}")
             import traceback
@@ -468,27 +468,27 @@ async def process_resume(
         db.add(rec)
         db.commit()
         email_status = rec.email_sent
-        # 🔥 STAGE MANAGEMENT: Ensure Candidate table is also updated
+        #  STAGE MANAGEMENT: Ensure Candidate table is also updated
         try:
             if email:
                 update_candidate_stage_all_tables(db, email, "Applied")
         except Exception as e:
             print(f"Warning: Could not update candidate stage: {e}")
     elif score < SCORE_THRESHOLD:
-        # 🔥 REJECTED: Stage already set to "Rejected" above
+        #  REJECTED: Stage already set to "Rejected" above
         email_status = "not_sent_rejected"
         # Ensure stage is "Rejected" in candidate_records
         rec.stage = "Rejected"
         db.add(rec)
         db.commit()
-        # 🔥 STAGE MANAGEMENT: Update Candidate table (SQLModel) to "Rejected" as well
+        #  STAGE MANAGEMENT: Update Candidate table (SQLModel) to "Rejected" as well
         try:
             if email:
                 update_candidate_stage_all_tables(db, email, "Rejected")
         except Exception as e:
             print(f"Warning: Could not update candidate stage: {e}")
         
-        # 🔥 APPLICATION MANAGEMENT: Update all Application records for this candidate to "Rejected"
+        #  APPLICATION MANAGEMENT: Update all Application records for this candidate to "Rejected"
         try:
             if email:
                 # Use raw SQL to update all Application records with stage "Applied" to "Rejected"
@@ -509,7 +509,7 @@ async def process_resume(
                     db.commit()
                     sql_updated = result.rowcount
                     if sql_updated > 0:
-                        print(f"✅ Updated {sql_updated} Application record(s) to 'Rejected' for {email}")
+                        print(f" Updated {sql_updated} Application record(s) to 'Rejected' for {email}")
                 except Exception as sql_error:
                     print(f"Warning: SQL update failed: {sql_error}")
                     # Fallback to ORM approach
@@ -550,7 +550,7 @@ async def process_resume(
                         
                         if updated_apps:
                             db.commit()
-                            print(f"✅ Updated {len(updated_apps)} Application record(s) to 'Rejected' for {email} (ORM fallback)")
+                            print(f" Updated {len(updated_apps)} Application record(s) to 'Rejected' for {email} (ORM fallback)")
                     except Exception as orm_error:
                         print(f"Warning: ORM update also failed: {orm_error}")
                     

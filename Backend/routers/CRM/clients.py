@@ -2,10 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 
-from crud_ops.client_crud import (
-    create_client,
-    get_clients,
-)
+from crud_ops.client_crud import (create_client,get_clients)
 from schema.client import ClientCreate, ClientOut
 from core.database import SessionLocal
 
