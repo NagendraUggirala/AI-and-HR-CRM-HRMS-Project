@@ -4,7 +4,6 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "tasks-service"
     DATABASE_URL: str
 
-    # ADD ALL ENV VARIABLES HERE
     email_user: str
     email_pass: str
     smtp_host: str
@@ -19,6 +18,6 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
-        extra = "ignore"  # optional but safe
+        extra = "ignore" 
 
 settings = Settings()

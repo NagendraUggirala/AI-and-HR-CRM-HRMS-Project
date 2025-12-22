@@ -134,7 +134,7 @@ def read_applications(db: Session = Depends(get_db)):
                         "candidate_email": record.candidate_email,
                         "job_id": None,
                         "status": record_stage,
-                        "candidate_stage": record_stage,  # This is the key field PipelineView uses
+                        "candidate_stage": record_stage,  
                         "stage": record_stage,
                         "applied_at": record.created_at.isoformat() if record.created_at else None,
                         "role": record.role or "Not specified",
@@ -151,10 +151,8 @@ def read_applications(db: Session = Depends(get_db)):
             import traceback
             traceback.print_exc()
         
-        # Convert map to list
         result = list(email_to_record.values())
         
-        # Log candidates with "Offered" stage for debugging
         offered_candidates = [r for r in result if r.get('candidate_stage', '').lower() in ['offer', 'offered']]
         if offered_candidates:
             print(f" Found {len(offered_candidates)} candidate(s) with 'Offered' stage:")
@@ -169,7 +167,6 @@ def read_applications(db: Session = Depends(get_db)):
         print(f"Error fetching applications: {e}")
         import traceback
         traceback.print_exc()
-        # Fallback to old Applications model if Application model doesn't exist
         try:
             return db.query(model.models.Applications).all()
         except:

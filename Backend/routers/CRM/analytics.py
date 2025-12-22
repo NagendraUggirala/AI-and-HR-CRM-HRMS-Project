@@ -17,7 +17,6 @@ import model
 
 router = APIRouter()
 
-
 # Deals Analytics
 @router.get("/deals", response_model=List[DealOut])
 def list_deals(db: Session = Depends(get_db), q: Optional[str] = None):
@@ -25,7 +24,6 @@ def list_deals(db: Session = Depends(get_db), q: Optional[str] = None):
     if q:
         query = query.filter(model.Deal.deal_name.ilike(f"%{q}%"))
     return query.all()
-
 
 @router.get("/deals/{deal_id}", response_model=DealOut)
 def get_deal(deal_id: int, db: Session = Depends(get_db)):
@@ -47,8 +45,6 @@ def read_lead(lead_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Lead not found")
     return lead
 
-
-
 # Contacts Analytics
 @router.get("/recent-contacts", response_model=List[ContactBase])
 def recent_contacts(limit: int = 10, db: Session = Depends(get_db)):
@@ -61,8 +57,6 @@ def recent_contacts(limit: int = 10, db: Session = Depends(get_db)):
         )
     return db.query(model.Contact).limit(limit).all()
 
-
-
 # Companies Analytics
 @router.get("/recent-companies", response_model=List[CompanyBase])
 def recent_companies(limit: int = 10, db: Session = Depends(get_db)):
@@ -74,8 +68,6 @@ def recent_companies(limit: int = 10, db: Session = Depends(get_db)):
             .all()
         )
     return db.query(model.Company).limit(limit).all()
-
-
 
 # Activities Analytics
 @router.get("/activities", response_model=List[Activity])

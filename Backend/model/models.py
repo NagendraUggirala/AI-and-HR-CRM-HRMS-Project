@@ -10,7 +10,6 @@ from core.database import Base, engine
 
 
 # ENUMS
-
 class Role(str, enum.Enum):
     recruiter = "recruiter"
     company = "company"
@@ -256,8 +255,8 @@ class CandidateRecord(Base):
 
     resume_filename = Column(String(300))
     email_sent = Column(String(20), default="no")
-    resume_screened = Column(String(20), default="no")  # Track if resume has been screened: "yes" or "no"
-    stage = Column(String(50), default="Applied", index=True)  # Candidate stage: Applied, Screening, Rejected, etc.
+    resume_screened = Column(String(20), default="no")  
+    stage = Column(String(50), default="Applied", index=True)  
     created_at = Column(DateTime, default=datetime.utcnow)
 
 def init_db():
@@ -275,18 +274,18 @@ class Question(Base):
     __tablename__ = "questions"
     id = Column(Integer, primary_key=True, index=True)
     question_text = Column(Text, nullable=False)
-    question_type = Column(String, default="text")  # text or video
+    question_type = Column(String, default="text")  
 
 class Answer(Base):
     __tablename__ = "answers"
     id = Column(Integer, primary_key=True, index=True)
-    candidate_id = Column(Integer, ForeignKey("candidates.id"))  # References interview_candidates table (candidates)
-    question_id = Column(Integer, ForeignKey("questions.id"), nullable=True)  # Nullable for template questions
-    question_text = Column(Text, nullable=True)  # Store question text directly for template questions
-    template_question_index = Column(Integer, nullable=True)  # Index in template questions array
+    candidate_id = Column(Integer, ForeignKey("candidates.id"))  
+    question_id = Column(Integer, ForeignKey("questions.id"), nullable=True)  
+    question_text = Column(Text, nullable=True)  
+    template_question_index = Column(Integer, nullable=True)  
     answer_text = Column(Text, nullable=True)
-    audio_path = Column(String, nullable=True)  # Audio file path
-    video_path = Column(String, nullable=True)  # Video file path (backward compatibility)
+    audio_path = Column(String, nullable=True)  
+    video_path = Column(String, nullable=True) 
     score = Column(Integer, nullable=True)
 
     candidate = relationship("InterviewCandidate", foreign_keys=[candidate_id])
@@ -303,3 +302,14 @@ def init_db():
     SQLModel.metadata.create_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     print("Tables initialized.")
+
+class SavedJob(SQLModel, table=True):
+    __tablename__ = "saved_jobs"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id")
+    job_id: int = Field(foreign_key="job.id")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    user: Optional["User"] = Relationship()
+    job: Optional["Job"] = Relationship()

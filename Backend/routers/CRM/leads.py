@@ -8,6 +8,7 @@ import crud_ops
 from core.database import get_db
 import crud_ops
 
+
 router = APIRouter()
 
 @router.get("/", response_model=List[lead.LeadRead])

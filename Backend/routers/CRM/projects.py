@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from core.session import get_db
-import crud_ops
+import crud_ops.crud
 
 from schema.project import (ProjectCreate,ProjectUpdate,ProjectOut)
 
@@ -28,7 +28,6 @@ def read_project(project_id: int, db: Session = Depends(get_db)):
     if not project:
         raise HTTPException(404, "Project not found")
     return project
-
 
 @router.patch("/{project_id}", response_model=ProjectOut)
 def update_project_route(project_id: int, project_in: ProjectUpdate, db: Session = Depends(get_db)):

@@ -66,7 +66,6 @@ def ensure_answer_columns():
                 """))
                 print("Added 'audio_path' column to answers table")
             
-            # Make question_id nullable if it's not already
             result = conn.execute(text("""
                 SELECT is_nullable 
                 FROM information_schema.columns 
@@ -76,21 +75,18 @@ def ensure_answer_columns():
             
             nullable_status = result.scalar() if result.rowcount > 0 else None
             if nullable_status == 'NO':
-                # Drop and recreate foreign key to allow NULL
                 try:
                     conn.execute(text("""
                         ALTER TABLE answers 
                         DROP CONSTRAINT IF EXISTS answers_question_id_fkey
                     """))
                 except:
-                    pass  # Constraint might not exist
+                    pass
                 
                 conn.execute(text("""
                     ALTER TABLE answers 
                     ALTER COLUMN question_id DROP NOT NULL
                 """))
-                
-                # Re-add foreign key constraint (now nullable)
                 conn.execute(text("""
                     ALTER TABLE answers 
                     ADD CONSTRAINT answers_question_id_fkey 
@@ -103,10 +99,8 @@ def ensure_answer_columns():
         import traceback
         traceback.print_exc()
 
-# Run migration on module load
 ensure_answer_columns()
 
-# Pydantic model.models for request bodies
 class OTPRequest(BaseModel):
     email: EmailStr
     name: str
@@ -121,10 +115,7 @@ def send_otp_endpoint(request: OTPRequest, db: Session = Depends(get_db)):
     Generate and send OTP to candidate's email
     """
     try:
-        # Generate OTP
         otp = generate_otp()
-        
-        # Check if candidate exists, create if not
         candidate = db.query(InterviewCandidate).filter(
             InterviewCandidate.email == request.email
         ).first()
@@ -138,14 +129,11 @@ def send_otp_endpoint(request: OTPRequest, db: Session = Depends(get_db)):
             )
             db.add(candidate)
         else:
-            # Update existing candidate's OTP
             candidate.otp = otp
             candidate.otp_created_at = datetime.utcnow()
         
         db.commit()
         db.refresh(candidate)
-        
-        # Send OTP via email
         try:
             send_otp(request.email, otp)
             return {
@@ -154,13 +142,12 @@ def send_otp_endpoint(request: OTPRequest, db: Session = Depends(get_db)):
                 "candidate_id": candidate.id
             }
         except Exception as e:
-            # If email sending fails, still return success with OTP for demo
             print(f"Email sending failed: {str(e)}")
             return {
                 "success": True,
                 "message": "OTP generated (email sending skipped)",
                 "candidate_id": candidate.id,
-                "otp": otp  # For demo purposes - remove in production!
+                "otp": otp 
             }
             
     except Exception as e:
@@ -181,18 +168,14 @@ def verify_otp_endpoint(request: OTPVerify, db: Session = Depends(get_db)):
         
         if not candidate.otp:
             raise HTTPException(status_code=400, detail="No OTP found for this candidate")
-        
-        # Check if OTP is expired (10 minutes validity)
         if candidate.otp_created_at:
             time_diff = datetime.utcnow() - candidate.otp_created_at
             if time_diff > timedelta(minutes=10):
                 raise HTTPException(status_code=400, detail="OTP has expired")
         
-        # Verify OTP
         if candidate.otp != request.otp:
             raise HTTPException(status_code=400, detail="Invalid OTP")
         
-        # Clear OTP after successful verification
         candidate.otp = None
         candidate.otp_created_at = None
         db.commit()
@@ -254,16 +237,13 @@ def get_questions(
                 detail="No interview templates found. Please create a template first."
             )
     
-    # Convert template questions to the format expected by frontend
-    # Template questions are stored as [{"q": "question text", "a": "answer"}, ...]
     formatted_questions = []
     for idx, q in enumerate(template.questions):
-        # Check if question has a type specified, otherwise default to "video" for video/audio recording
-        question_type = q.get("type", "video")  # Default to video for video/audio recording
+        question_type = q.get("type", "video") 
         formatted_questions.append({
-            "id": idx + 1,  # Use index as ID since template questions don't have separate IDs
+            "id": idx + 1,  
             "text": q.get("q", ""),
-            "type": question_type,  # Use video type for video/audio recording
+            "type": question_type,  
             "template_id": template.id,
             "template_name": template.name
         })
@@ -274,10 +254,10 @@ def get_questions(
 def submit_answer(
     candidate_id: int = Form(...),
     question_id: int = Form(...),
-    question_text: str = Form(...),  # Now accept question text from frontend
+    question_text: str = Form(...),
     answer_text: str = Form(None),
     audio: UploadFile = File(None),
-    video: UploadFile = File(None),  # Keep for backward compatibility
+    video: UploadFile = File(None),  
     db: Session = Depends(get_db)
 ):
     """

@@ -3,13 +3,7 @@ from sqlalchemy.orm import Session
 from core.database import get_db
 from core.dependencies import get_current_user
 from model.models import User
-from .services.offer_template_service import (
-    create_offer_template,
-    get_offer_templates,
-    get_offer_template,
-    update_offer_template,
-    delete_offer_template
-)
+from .services.offer_template_service import (create_offer_template,get_offer_templates,get_offer_template,update_offer_template,delete_offer_template)
 from schema.offer_template import OfferTemplateCreate, OfferTemplateOut, OfferTemplateUpdate
 from typing import List, Optional
 
@@ -18,7 +12,6 @@ router = APIRouter(prefix="/offer-templates", tags=["Offer Templates"])
 @router.post("/", response_model=OfferTemplateOut)
 def create_template(data: OfferTemplateCreate, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     """Create a new offer template"""
-    # Set created_by to current user if not provided
     if not data.created_by:
         data.created_by = user.id
     return create_offer_template(db, data)
@@ -40,7 +33,6 @@ def get_template(template_id: int, db: Session = Depends(get_db), user: User = D
     if not template:
         raise HTTPException(status_code=404, detail="Offer template not found")
     
-    # Check access (unless admin)
     if user.role.lower() != "admin" and template.created_by != user.id:
         raise HTTPException(status_code=403, detail="Access forbidden")
     
@@ -58,7 +50,6 @@ def update_template(
     if not template:
         raise HTTPException(status_code=404, detail="Offer template not found")
     
-    # Check access (unless admin)
     if user.role.lower() != "admin" and template.created_by != user.id:
         raise HTTPException(status_code=403, detail="Access forbidden")
     
@@ -74,8 +65,7 @@ def delete_template(template_id: int, db: Session = Depends(get_db), user: User 
     template = get_offer_template(db, template_id)
     if not template:
         raise HTTPException(status_code=404, detail="Offer template not found")
-    
-    # Check access (unless admin)
+
     if user.role.lower() != "admin" and template.created_by != user.id:
         raise HTTPException(status_code=403, detail="Access forbidden")
     

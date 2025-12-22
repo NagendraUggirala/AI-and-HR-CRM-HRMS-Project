@@ -52,7 +52,6 @@ class SendOfferRequest(BaseModel):
 @router.post("/", response_model=OfferTrackingOut)
 def create_offer_endpoint(data: OfferTrackingCreate, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     """Create a new offer"""
-    # Set created_by to current user if not provided
     data_dict = data.dict()
     if not data_dict.get('created_by'):
         data_dict['created_by'] = user.id
@@ -82,7 +81,6 @@ def get_offer_endpoint(offer_id: int, db: Session = Depends(get_db), user: User 
     if not offer:
         raise HTTPException(status_code=404, detail="Offer not found")
     
-    # Check access (unless admin)
     if user.role.lower() != "admin" and offer.created_by != user.id:
         raise HTTPException(status_code=403, detail="Access forbidden")
     
@@ -99,8 +97,6 @@ def update_offer_endpoint(
     offer = get_offer(db, offer_id)
     if not offer:
         raise HTTPException(status_code=404, detail="Offer not found")
-    
-    # Check access (unless admin)
     if user.role.lower() != "admin" and offer.created_by != user.id:
         raise HTTPException(status_code=403, detail="Access forbidden")
     
@@ -121,8 +117,6 @@ def update_status_endpoint(
     offer = get_offer(db, offer_id)
     if not offer:
         raise HTTPException(status_code=404, detail="Offer not found")
-    
-    # Check access (unless admin)
     if user.role.lower() != "admin" and offer.created_by != user.id:
         raise HTTPException(status_code=403, detail="Access forbidden")
     
@@ -137,8 +131,6 @@ def delete_offer_endpoint(offer_id: int, db: Session = Depends(get_db), user: Us
     offer = get_offer(db, offer_id)
     if not offer:
         raise HTTPException(status_code=404, detail="Offer not found")
-    
-    # Check access (unless admin)
     if user.role.lower() != "admin" and offer.created_by != user.id:
         raise HTTPException(status_code=403, detail="Access forbidden")
     
@@ -156,8 +148,6 @@ def send_offer_endpoint(request: SendOfferRequest, db: Session = Depends(get_db)
         from model.models import Candidate
         from sqlalchemy import func
         
-        # Find the correct candidate_id from the main candidate table using email
-        # The candidate_id from request might be from AI interview system (different table)
         actual_candidate_id = request.candidate_id
         if request.candidate_email:
             # Try to find candidate in main candidate table by email
@@ -181,7 +171,7 @@ def send_offer_endpoint(request: SendOfferRequest, db: Session = Depends(get_db)
         
         # Create offer tracking record
         offer_data = OfferTrackingCreate(
-            candidate_id=actual_candidate_id,  # Use the resolved candidate_id
+            candidate_id=actual_candidate_id,  
             template_id=request.template_id,
             candidate_name=request.candidate_name,
             candidate_email=request.candidate_email,

@@ -10,8 +10,6 @@ import crud_ops
 
 router = APIRouter()
 
-# Dependency: use get_db imported from core.database (do not redefine it here)
-
 
 @router.post("/", response_model=PipelineResponse)
 def create_pipeline(pipeline: PipelineCreate, db: Session = Depends(get_db)):

@@ -337,8 +337,6 @@ class Signature(SignatureBase):
     class Config:
         orm_mode = True
 
-
-
 # Candidate schemas
 class CandidateCreate(BaseModel):
     first_name: str
@@ -373,8 +371,6 @@ class UploadOut(UploadCreate):
         orm_mode = True
 
 # Task schemas
-
-
 
 class TaskStatus(str, Enum):
     pending = "Pending"

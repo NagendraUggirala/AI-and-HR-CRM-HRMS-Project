@@ -1,14 +1,14 @@
--- ==========================================
+
 -- INSERT SAMPLE CANDIDATES AND APPLICATIONS
 -- AI Recruitment Platform
--- ==========================================
+
 
 -- Step 1: Check your job IDs first
 SELECT id, title, department, status FROM job WHERE recruiter_id = 4;
 
--- ==========================================
+
 -- Step 2: Insert 10 Sample Candidates
--- ==========================================
+
 
 INSERT INTO candidate (name, email, role, skills, stage, resume_url, notes, recruiter_comments) 
 VALUES
@@ -41,10 +41,10 @@ VALUES
 -- Verify candidates inserted
 SELECT id, name, email, role, stage FROM candidate ORDER BY id DESC LIMIT 10;
 
--- ==========================================
+
 -- Step 3: Create Applications 
 -- (Candidates apply to your job)
--- ==========================================
+
 
 -- IMPORTANT: Replace job_id = 1 with your actual job ID from Step 1!
 
@@ -63,9 +63,9 @@ VALUES
 (2, (SELECT id FROM candidate WHERE email = 'priya.sharma@email.com'), 'Priya Sharma', 'priya.sharma@email.com', 'applied', NOW(), NOW(), NOW()),
 (2, (SELECT id FROM candidate WHERE email = 'aisha.patel@email.com'), 'Aisha Patel', 'aisha.patel@email.com', 'applied', NOW(), NOW(), NOW());
 
--- ==========================================
+
 -- Step 4: Verify Data
--- ==========================================
+
 
 -- View all candidates
 SELECT id, name, email, role, skills FROM candidate;
@@ -97,9 +97,9 @@ WHERE j.recruiter_id = 4
 GROUP BY j.id, j.title
 ORDER BY j.id;
 
--- ==========================================
+
 -- Additional Sample Data (Optional)
--- ==========================================
+
 
 -- If you want more candidates:
 INSERT INTO candidate (name, email, role, skills, stage, resume_url, notes, recruiter_comments) 
@@ -110,9 +110,9 @@ VALUES
 ('Nina Desai', 'nina.desai@email.com', 'Business Analyst', 'Requirements Analysis, SQL, Tableau, Process Improvement', 'Applied', 'https://example.com/resumes/nina-desai.pdf', '4 years of experience. Strong analytical and communication skills.', NULL),
 ('Tom Anderson', 'tom.anderson@email.com', 'Marketing Manager', 'Digital Marketing, SEO, SEM, Content Strategy, Analytics', 'Applied', 'https://example.com/resumes/tom-anderson.pdf', '7 years of experience. Led campaigns with 300% ROI increase.', NULL);
 
--- ==========================================
+
 -- DONE!
--- ==========================================
+
 
 -- Final verification query:
 SELECT 

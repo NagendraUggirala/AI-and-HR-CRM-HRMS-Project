@@ -35,7 +35,8 @@ async def create_job(
     session: Session = Depends(get_db),
     current_user: User = Depends(require_roles(["recruiter"]))
 ):
-    # Parse JSON safely
+    
+    
     try:
         benefits_list = json.loads(benefits)
     except:

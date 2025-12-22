@@ -13,16 +13,14 @@ def list_jobs(
     db: Session = Depends(get_db),
     user: User = Depends(require_roles(["company", "recruiter"]))
 ):
-    # Use SQLAlchemy to eagerly load applications
+    
     from sqlalchemy import select as sa_select
     statement = sa_select(Job).where(Job.recruiter_id == user.id).options(selectinload(Job.applications))
     result = db.execute(statement)
     jobs = result.scalars().all()
-
-    # Convert to dict format with applications included
     jobs_with_applications = []
     for job in jobs:
-        # Ensure optional fields have defaults
+        
         job_dict = {
             "id": job.id,
             "title": job.title,

@@ -31,13 +31,11 @@ def convert_contact_output(db_contact: ContactModel):
     else:
         contact_dict["tags"] = []
 
-    # Ensure profile_photo is URL-friendly
     if db_contact.profile_photo:
         contact_dict["profile_photo"] = f"/{db_contact.profile_photo}"
     else:
         contact_dict["profile_photo"] = None
 
-    # Remove SQLAlchemy internal key
     contact_dict.pop("_sa_instance_state", None)
 
     return contact_dict
@@ -56,7 +54,6 @@ def read_contacts(skip: int = 0, limit: int = 50, db: Session = Depends(get_db))
     db_contacts = crud_ops.get_contacts(db=db, skip=skip, limit=limit)
     return [convert_contact_output(c) for c in db_contacts]
 
-
 #  READ SINGLE CONTACT  
 @router.get("/{contact_id}", response_model=contact.ContactResponse)
 def read_contact(contact_id: int, db: Session = Depends(get_db)):
@@ -65,7 +62,6 @@ def read_contact(contact_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Contact not found")
     return convert_contact_output(db_contact)
 
-
 #  UPDATE CONTACT  
 @router.put("/{contact_id}", response_model=contact.ContactResponse)
 def update_contact(contact_id: int, updated: contact.ContactUpdate, db: Session = Depends(get_db)):
@@ -73,7 +69,6 @@ def update_contact(contact_id: int, updated: contact.ContactUpdate, db: Session 
     if not db_contact:
         raise HTTPException(status_code=404, detail="Contact not found")
     return convert_contact_output(db_contact)
-
 
 #  DELETE CONTACT  
 @router.delete("/{contact_id}")

@@ -31,12 +31,11 @@ def update_job(
     db: Session = Depends(get_db),
     user: User = Depends(require_roles(["company", "recruiter"]))
 ):
-    # Fetch the job belonging to this recruiter
+    
     job = db.exec(select(Job).where(Job.id == job_id, Job.recruiter_id == user.id)).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found or unauthorized")
 
-    # Update fields if provided
     if title is not None:
         job.title = title
     if department is not None:

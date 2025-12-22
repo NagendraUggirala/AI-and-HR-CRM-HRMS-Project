@@ -10,7 +10,7 @@ from schema.schemas import JobCreate, JobRead, JobUpdate, CandidateRead
 
 router = APIRouter()
 
-#  Jobs Endpoints 
+ 
 @router.post("/jobs", response_model=JobRead)
 def create_job(payload: JobCreate, db: Session = Depends(get_db), user: User = Depends(require_roles(["recruiter", "admin"]))):
     now = datetime.utcnow()
@@ -74,7 +74,7 @@ def delete_job(job_id: int, db: Session = Depends(get_db), user: User = Depends(
     db.commit()
     return {"detail": "Job deleted"}
 
-#  Candidates Endpoints 
+ 
 @router.get("/candidates")
 def list_candidates(
     skills: Optional[str] = Query(None),
@@ -83,30 +83,30 @@ def list_candidates(
     db: Session = Depends(get_db),
     user: User = Depends(require_roles(["recruiter", "admin"]))
 ):
-    # Get all job IDs for the current recruiter (unless admin)
+    
     if user.role.lower() == "admin":
-        # Admins can see all candidates
+        
         job_ids = list(db.exec(select(Job.id)).all())
     else:
-        # Recruiters can only see candidates for their jobs
+        
         job_ids = list(db.exec(select(Job.id).where(Job.recruiter_id == user.id)).all())
     
     if not job_ids:
         return []
     
-    # Get all applications for these jobs
+    
     application_statement = select(Application).where(Application.job_id.in_(job_ids))
     if job_id:
         application_statement = application_statement.where(Application.job_id == job_id)
     applications = db.exec(application_statement).all()
     
-    # Get unique candidate IDs from applications
+    
     candidate_ids = list(set([app.candidate_id for app in applications]))
     
     if not candidate_ids:
         return []
     
-    # Get candidates for these IDs
+    
     candidate_statement = select(Candidate).where(Candidate.id.in_(candidate_ids))
     if stage:
         candidate_statement = candidate_statement.where(Candidate.stage == stage)
@@ -114,15 +114,9 @@ def list_candidates(
         candidate_statement = candidate_statement.where(Candidate.skills.ilike(f"%{skills}%"))
     
     candidates = db.exec(candidate_statement).all()
-    
-    # Get all candidate emails for lookup
     candidate_emails = [c.email.lower().strip() for c in candidates if c.email]
-    
-    # Fetch resume_screened status from candidate_records table
     resume_screened_map = {}
     if candidate_emails:
-        # Query candidate_records for resume_screened status
-        # Use SQLAlchemy query since db is a SQLAlchemy Session
         from sqlalchemy.orm import Session as SQLSession
         if isinstance(db, SQLSession):
             candidate_records = db.query(CandidateRecord).filter(
@@ -131,7 +125,6 @@ def list_candidates(
                 )
             ).all()
         else:
-            # Fallback: try SQLModel exec
             try:
                 candidate_records = db.exec(
                     select(CandidateRecord).where(
@@ -142,17 +135,13 @@ def list_candidates(
                 ).all()
             except:
                 candidate_records = []
-        
-        # Create a map of email -> resume_screened status
         for record in candidate_records:
             if record.candidate_email:
                 email_key = record.candidate_email.lower().strip()
                 resume_screened_map[email_key] = getattr(record, 'resume_screened', 'no')
     
-    # Convert to dict format
     result = []
     for candidate in candidates:
-        # Get resume_screened status from candidate_records
         email_key = candidate.email.lower().strip() if candidate.email else None
         resume_screened = resume_screened_map.get(email_key, 'no') if email_key else 'no'
         
@@ -166,7 +155,7 @@ def list_candidates(
             "resume_url": candidate.resume_url,
             "notes": candidate.notes,
             "recruiter_comments": candidate.recruiter_comments,
-            "resume_screened": resume_screened  # Include resume_screened from candidate_records
+            "resume_screened": resume_screened  
         })
     
     return result
@@ -177,14 +166,10 @@ def candidate_detail(candidate_id: int, db: Session = Depends(get_db), user: Use
     if not candidate:
         raise HTTPException(status_code=404, detail="Candidate not found")
     
-    # Check if user has access to this candidate through their jobs
     if user.role.lower() != "admin":
-        # Get all applications for this candidate
         applications = db.exec(select(Application).where(Application.candidate_id == candidate_id)).all()
         if not applications:
             raise HTTPException(status_code=403, detail="Access forbidden")
-        
-        # Check if any of the jobs belong to this recruiter
         job_ids = [app.job_id for app in applications]
         recruiter_jobs = db.exec(select(Job.id).where(Job.id.in_(job_ids), Job.recruiter_id == user.id)).all()
         if not recruiter_jobs:
@@ -192,21 +177,17 @@ def candidate_detail(candidate_id: int, db: Session = Depends(get_db), user: Use
     
     return candidate
 
-#  Pipeline Endpoint 
+#  Pipeline
 @router.get("/pipeline/{job_id}")
 def pipeline_view(job_id: int, db: Session = Depends(get_db), user: User = Depends(require_roles(["recruiter", "admin"]))):
     job = db.get(Job, job_id)
     if not job or (job.recruiter_id != user.id and user.role.lower() != "admin"):
         raise HTTPException(status_code=404, detail="Job not found or unauthorized")
-    
-    # Get applications for this job
     applications = db.exec(select(Application).where(Application.job_id == job_id)).all()
     candidate_ids = [app.candidate_id for app in applications]
     
     if not candidate_ids:
         return {}
-    
-    # Get candidate stages grouped by stage
     stages = db.exec(
         select(Candidate.stage, func.count(Candidate.id))
         .where(Candidate.id.in_(candidate_ids))
@@ -214,7 +195,7 @@ def pipeline_view(job_id: int, db: Session = Depends(get_db), user: User = Depen
     ).all()
     return {stage[0]: stage[1] for stage in stages}
 
-#  Analytics Endpoint 
+#  Analytics 
 @router.get("/analytics/applications-over-time")
 def applications_over_time(days: int = 30, db: Session = Depends(get_db), user: User = Depends(require_roles(["recruiter", "admin"]))):
     start_date = datetime.utcnow() - timedelta(days=days)
@@ -237,7 +218,7 @@ def applications_over_time(days: int = 30, db: Session = Depends(get_db), user: 
     ).group_by(func.date(Candidate.created_at)).order_by(func.date(Candidate.created_at))
     return [{"date": d[0], "count": d[1]} for d in db.exec(query).all()]
 
-#  Settings Endpoint 
+#  Settings 
 @router.get("/settings")
 def recruiter_settings(user: User = Depends(require_roles(["recruiter", "admin"]))):
     return {"user_id": user.id, "email": user.email, "role": user.role}

@@ -21,8 +21,7 @@ def get_offers(
 ) -> List[OfferTracking]:
     """Get all offers with optional filters, filtered by recruiter"""
     query = db.query(OfferTracking)
-    
-    # Filter by recruiter (unless admin)
+
     if user and user.role.lower() != "admin":
         query = query.filter(OfferTracking.created_by == user.id)
     

@@ -8,19 +8,13 @@ from fastapi.staticfiles import StaticFiles
 from sqlmodel import SQLModel, Session, select
 from core.database import engine, Base
 from model.models import User
- 
-# Debug info
-import sqladmin, inspect
-print(">>> SQLADMIN VERSION:", sqladmin.__version__)
-print(">>> SQLADMIN FILE:", inspect.getfile(sqladmin))
+from sqladmin import Admin, ModelView
  
 
 # CREATE FASTAPI APP  (THIS MUST COME FIRST)
 
 app = FastAPI(title="AI Recruitment HR Platform")
  
- 
-
 # ADMIN BASIC AUTH MIDDLEWARE
 
 @app.middleware("http")
@@ -142,10 +136,7 @@ def on_startup():
  
  
 
-# SQLADMIN PANEL
-
-from sqladmin import Admin, ModelView
- 
+# SQLADMIN PANEL 
 class UserAdmin(ModelView, model=User):
     column_list = [User.id, User.username, User.email, User.role, User.is_active, User.created_at]
     form_columns = [User.username, User.email, User.role, User.is_active]
@@ -155,11 +146,8 @@ class UserAdmin(ModelView, model=User):
  
 admin = Admin(app=app, engine=engine, title="Super Admin Dashboard")
 admin.add_view(UserAdmin)
- 
- 
 
 # ROUTE REGISTRATION
-
 app.include_router(auth_router)
 app.include_router(jobs_router)
 app.include_router(admin_router, prefix="/api/admin")
@@ -203,7 +191,6 @@ app.include_router(projects.router)
 app.include_router(tasks.router)
 
  
- 
 
 # STATIC FILES
 
@@ -212,10 +199,7 @@ if not os.path.exists("uploads"):
  
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
  
- 
-
 # TEST ENDPOINT
-
 @app.get("/api/test")
 def test_api():
     return {"message": "Backend is working correctly!"}

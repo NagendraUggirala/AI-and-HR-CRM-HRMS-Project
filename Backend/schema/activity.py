@@ -7,7 +7,7 @@ from datetime import date, time
 from pydantic import BaseModel
 from typing import Optional
 
-# Base schema shared by create/update
+
 class ActivityBase(BaseModel):
     title: str
     activity_type: str

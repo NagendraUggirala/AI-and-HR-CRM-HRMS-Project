@@ -237,3 +237,26 @@ def update_activity(db: Session, activity_id: int, updated):
     db.refresh(db_activity)
     return db_activity
 
+# LEAVE CRUD
+from sqlalchemy.orm import Session
+from model.models import LeaveRequest
+
+
+def create_leave(db: Session, leave):
+    db_leave = LeaveRequest(**leave.dict())
+    db.add(db_leave)
+    db.commit()
+    db.refresh(db_leave)
+    return db_leave
+
+
+def get_leaves(db: Session):
+    return db.query(LeaveRequest).all()
+
+
+def get_leave_by_id(db: Session, leave_id: int):
+    return (
+        db.query(LeaveRequest)
+        .filter(LeaveRequest.id == leave_id)
+        .first()
+    )
