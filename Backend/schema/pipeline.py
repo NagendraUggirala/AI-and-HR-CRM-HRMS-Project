@@ -22,6 +22,14 @@ class PipelineBase(BaseModel):
 class PipelineCreate(PipelineBase):
     pass
 
+class PipelineUpdate(BaseModel):
+    pipeline_Name: Optional[str] = None
+    total_deal_value: Optional[float] = None
+    deals: Optional[int] = None
+    stages: Optional[str] = None
+    created_date: Optional[date] = None
+    status: Optional[StatusEnum] = None
+
 class PipelineResponse(PipelineBase):
     id: int
 

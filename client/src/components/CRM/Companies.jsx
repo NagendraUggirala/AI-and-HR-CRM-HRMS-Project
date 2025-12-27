@@ -135,15 +135,17 @@ function Companies() {
       const data = await companiesAPI.list();
       if (Array.isArray(data)) {
         // Transform API data to match component structure
+        // Backend sends 'company_name', 'phone_number', etc.
         const transformedCompanies = data.map(company => ({
           id: company.id,
-          name: company.name || 'Untitled Company',
+          name: company.company_name || company.name || 'Untitled Company', // Backend sends 'company_name'
           email: company.email || '',
-          phone: company.phone || '',
+          phone: company.phone_number || company.phone || '', // Backend sends 'phone_number'
+          phone2: company.phone_number2 || company.phone2 || '',
           location: company.location || company.country || '',
           rating: company.rating || 0,
-          logo: '🏢', // Default logo, can be enhanced later
-          ...company
+          logo: company.logo || '🏢', // Use logo from backend if available
+          ...company // Keep all original fields
         }));
         setCrmcompanies(transformedCompanies);
         setDisplayedCompanies(transformedCompanies);
@@ -278,29 +280,29 @@ function Companies() {
       setError(null);
       setLoading(true);
       
-      // Prepare company data for API
+      // Prepare company data for API - map frontend fields to backend schema
       const companyData = {
-        name: formData.companyName || 'Untitled Company',
+        company_name: formData.companyName || 'Untitled Company', // Backend expects 'company_name', not 'name'
         email: formData.email || null,
-        phone: formData.phoneNumber || null,
-        phone2: formData.phoneNumber2 || null,
+        phone_number: formData.phoneNumber || null, // Backend expects 'phone_number', not 'phone'
+        phone_number2: formData.phoneNumber2 || null, // Backend expects 'phone_number2', not 'phone2'
         fax: formData.fax || null,
         website: formData.website || null,
-        location: formData.country || null,
+        location: formData.location || formData.country || null,
         city: formData.city || null,
         state: formData.state || null,
         country: formData.country || null,
         zipcode: formData.zipcode || null,
         address: formData.address || null,
-        rating: parseFloat(formData.ratings) || 0.0,
+        rating: formData.ratings ? parseFloat(formData.ratings) : null, // Backend expects float or null
         industry: formData.industry || null,
         source: formData.source || null,
-        currency: formData.currency || 'USD',
-        language: formData.language || 'English',
+        currency: formData.currency || null,
+        language: formData.language || null,
         owner: formData.owner || null,
         contact: formData.contact || null,
         deals: formData.deals || null,
-        tags: formData.tags || null,
+        tags: formData.tags || null, // Backend expects string, not array
         about: formData.about || null,
         facebook: formData.facebook || null,
         twitter: formData.twitter || null,
@@ -309,7 +311,7 @@ function Companies() {
         skype: formData.skype || null,
         whatsapp: formData.whatsapp || null,
         visibility: formData.visibility || 'private',
-        status: formData.status || 'Active'
+        status: formData.status || null
       };
 
       // Remove empty strings

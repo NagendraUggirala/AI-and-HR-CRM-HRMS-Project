@@ -254,19 +254,19 @@ const Leads = () => {
       setError(null);
       setLoading(true);
       
-      // Prepare lead data for API
+      // Prepare lead data for API - backend expects value as string
       const leadData = {
         name: formData.leadName || 'Untitled Lead',
-        company: formData.company || '',
-        value: parseFloat(formData.value) || 0,
-        currency: formData.currency || 'USD',
-        phone: formData.phone || '',
-        email: formData.email || '',
-        source: formData.source || '',
-        industry: formData.industry || '',
-        owner: formData.owner || '',
-        tags: formData.tags || '',
-        description: formData.description || '',
+        company: formData.company || null,
+        value: formData.value ? String(formData.value) : null, // Backend expects string, not number
+        currency: formData.currency || null,
+        phone: formData.phone || null,
+        email: formData.email || null,
+        source: formData.source || null,
+        industry: formData.industry || null,
+        owner: formData.owner || null,
+        tags: formData.tags || null, // Backend expects string, not array
+        description: formData.description || null,
         visibility: formData.visibility || 'private',
         status: formData.status || 'Not Contacted'
       };

@@ -84,7 +84,8 @@ const Analytics = () => {
   const getDealsByStage = () => {
     const stageCounts = {};
     deals.forEach(deal => {
-      const stage = deal.stage || "Unknown";
+      // Backend sends 'status', but we also check 'stage' for compatibility
+      const stage = deal.status || deal.stage || "Unknown";
       stageCounts[stage] = (stageCounts[stage] || 0) + 1;
     });
     return stageCounts;

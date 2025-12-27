@@ -112,27 +112,42 @@ app.add_middleware(
 
 @app.on_event("startup")
 def on_startup():
-    SQLModel.metadata.create_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    try:
+        # Try to create tables
+        SQLModel.metadata.create_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
+        print("✓ Database tables initialized successfully")
+    except Exception as e:
+        print(f"⚠ Warning: Could not create database tables: {e}")
+        print("  The application will continue, but database operations may fail.")
+        print("  Please ensure PostgreSQL is running and DATABASE_URL is correct.")
+        return  # Exit early if database connection fails
  
-    with Session(engine) as session:
-        superadmin = session.exec(select(User).where(User.role == "superadmin")).first()
- 
-        if not superadmin:
-            from passlib.context import CryptContext
-            pwd = CryptContext(schemes=["bcrypt"])
- 
-            user = User(
-                name="Super Admin",
-                username="superadmin",
-                email="superadmin@example.com",
-                hashed_password=pwd.hash("admin123"),
-                role="superadmin",
-                is_active=True,
-            )
-            session.add(user)
-            session.commit()
-            print("Default Super Admin created: superadmin / admin123")
+    try:
+        # Try to create default superadmin
+        with Session(engine) as session:
+            superadmin = session.exec(select(User).where(User.role == "superadmin")).first()
+
+            if not superadmin:
+                from passlib.context import CryptContext
+                pwd = CryptContext(schemes=["bcrypt"])
+
+                user = User(
+                    name="Super Admin",
+                    username="superadmin",
+                    email="superadmin@example.com",
+                    hashed_password=pwd.hash("admin123"),
+                    role="superadmin",
+                    is_active=True,
+                )
+                session.add(user)
+                session.commit()
+                print("✓ Default Super Admin created: superadmin / admin123")
+            else:
+                print("✓ Super Admin already exists")
+    except Exception as e:
+        print(f"⚠ Warning: Could not create default superadmin: {e}")
+        print("  You may need to create it manually once the database is available.")
  
  
 

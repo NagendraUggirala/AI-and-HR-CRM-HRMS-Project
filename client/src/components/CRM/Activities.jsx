@@ -28,11 +28,27 @@ const Activities = () => {
     const formatDate = (dateString) => {
         if (!dateString) return "";
         try {
-            const date = new Date(dateString);
+            // Handle both string and date object
+            const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+            if (isNaN(date.getTime())) return dateString;
             const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
             return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
         } catch (e) {
             return dateString;
+        }
+    };
+
+    // Format time for display (HH:MM:SS -> HH:MM)
+    const formatTime = (timeString) => {
+        if (!timeString) return "";
+        try {
+            // Handle time string in format "HH:MM:SS" or "HH:MM"
+            if (typeof timeString === 'string') {
+                return timeString.substring(0, 5); // Get HH:MM part
+            }
+            return timeString;
+        } catch (e) {
+            return timeString;
         }
     };
 
@@ -46,19 +62,36 @@ const Activities = () => {
             setLoading(true);
             setError(null);
             const data = await activitiesAPI.list();
+            
+            // Handle case where API returns null or undefined
+            if (!data || !Array.isArray(data)) {
+                console.warn("Activities API returned invalid data:", data);
+                setActivities([]);
+                return;
+            }
+            
             // Transform API data to include UI properties
-            const transformedData = data.map(activity => ({
-                ...activity,
-                badgeClass: getActivityStyle(activity.type).badgeClass,
-                icon: getActivityStyle(activity.type).icon,
-                dueDate: activity.due_date ? formatDate(activity.due_date) : "",
-                createdDate: activity.created_date || formatDate(activity.created_at),
-                checked: activity.checked || false
-            }));
+            // Map backend field names to frontend display names
+            const transformedData = data.map(activity => {
+                if (!activity) return null;
+                const activityType = activity.activity_type || activity.type || "Calls"; // Backend sends 'activity_type', not 'type'
+                return {
+                    ...activity,
+                    type: activityType, // Add 'type' for display compatibility
+                    badgeClass: getActivityStyle(activityType).badgeClass,
+                    icon: getActivityStyle(activityType).icon,
+                    dueDate: activity.due_date ? formatDate(activity.due_date) : "",
+                    activityTime: activity.activity_time ? formatTime(activity.activity_time) : "", // Format time for display
+                    createdDate: activity.created_date ? formatDate(activity.created_date) : "",
+                    checked: activity.checked || false
+                };
+            }).filter(activity => activity !== null); // Remove any null entries
+            
             setActivities(transformedData);
         } catch (err) {
             console.error("Error loading activities:", err);
-            setError("Failed to load activities. Please try again.");
+            setError(err.message || "Failed to load activities. Please try again.");
+            setActivities([]); // Set empty array on error
         } finally {
             setLoading(false);
         }
@@ -140,23 +173,25 @@ const Activities = () => {
             // Format date for API
             const dueDate = formData.dueDate ? new Date(formData.dueDate).toISOString().split('T')[0] : null;
             
+            // Map frontend field names to backend schema field names
             const activityData = {
                 title: formData.title,
-                type: selectedActivity.charAt(0).toUpperCase() + selectedActivity.slice(1),
+                activity_type: selectedActivity.charAt(0).toUpperCase() + selectedActivity.slice(1), // Backend expects 'activity_type', not 'type'
                 due_date: dueDate,
-                time: formData.time,
-                reminder: formData.remainder,
-                reminder_type: formData.remainderType,
-                owner: formData.owner,
-                guests: formData.guests,
-                description: formData.description,
-                deal: formData.deal,
-                contact: formData.contact,
-                company: formData.company,
-                created_date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                activity_time: formData.time || null, // Backend expects 'activity_time', not 'time'
+                remainder: formData.remainder || null, // Backend expects 'remainder', not 'reminder'
+                remainder_type: formData.remainderType || null, // Backend expects 'remainder_type', not 'reminder_type'
+                owner: formData.owner || null,
+                guests: formData.guests || null,
+                description: formData.description || null,
+                deals: formData.deal || null, // Backend expects 'deals' (plural), not 'deal'
+                contacts: formData.contact || null, // Backend expects 'contacts' (plural), not 'contact'
+                companies: formData.company || null, // Backend expects 'companies' (plural), not 'company'
+                created_date: new Date().toISOString().split('T')[0] || null // Backend expects date string in YYYY-MM-DD format
             };
 
-            await activitiesAPI.create(activityData);
+            const response = await activitiesAPI.create(activityData);
+            console.log("Activity created successfully:", response);
             
             // Reset form
             setFormData({
@@ -191,7 +226,10 @@ const Activities = () => {
                 }
             }
             
-            await loadActivities();
+            // Reload activities after a short delay to ensure backend has processed
+            setTimeout(() => {
+                loadActivities();
+            }, 300);
         } catch (err) {
             console.error("Error creating activity:", err);
             setError("Failed to create activity. Please try again.");
@@ -204,8 +242,8 @@ const Activities = () => {
         }
         try {
             setError(null);
-            await activitiesAPI.delete(id);
-            await loadActivities();
+            const response = await activitiesAPI.delete(id);
+            console.log("Activity deleted successfully:", response);
             
             // Close delete modal
             const modal = document.getElementById('delete_modal');
@@ -222,29 +260,53 @@ const Activities = () => {
                     if (backdrop) backdrop.remove();
                 }
             }
+            
+            // Reload activities after a short delay to ensure backend has processed
+            setTimeout(() => {
+                loadActivities();
+            }, 300);
         } catch (err) {
             console.error("Error deleting activity:", err);
-            setError("Failed to delete activity. Please try again.");
+            setError(err.message || "Failed to delete activity. Please try again.");
         }
     };
 
     const handleEdit = (activity) => {
         setEditingActivityId(activity.id);
+        // Map backend field names to frontend form field names
+        // Format date for date input (YYYY-MM-DD)
+        let formattedDate = "";
+        if (activity.due_date) {
+            if (typeof activity.due_date === 'string') {
+                formattedDate = activity.due_date.split('T')[0];
+            } else {
+                // Handle date object
+                const date = new Date(activity.due_date);
+                formattedDate = date.toISOString().split('T')[0];
+            }
+        }
+        
+        // Format time for time input (HH:MM)
+        let formattedTime = "";
+        if (activity.activity_time) {
+            formattedTime = formatTime(activity.activity_time);
+        }
+        
         setEditActivity({
-            title: activity.title,
-            type: activity.type,
-            dueDate: activity.due_date ? activity.due_date.split('T')[0] : "",
-            time: activity.time || "",
-            reminder: activity.reminder || "",
-            reminderType: activity.reminder_type || "Work",
+            title: activity.title || "",
+            type: activity.activity_type || "", // Backend sends 'activity_type', not 'type'
+            dueDate: formattedDate,
+            time: formattedTime, // Format time for time input
+            reminder: activity.remainder || "", // Backend sends 'remainder', not 'reminder'
+            reminderType: activity.remainder_type || "Work", // Backend sends 'remainder_type', not 'reminder_type'
             owner: activity.owner || "",
             guests: activity.guests || "",
             description: activity.description || "",
-            deals: activity.deal || "",
-            contacts: activity.contact || "",
-            companies: activity.company || "",
+            deals: activity.deals || "", // Backend sends 'deals' (plural), not 'deal'
+            contacts: activity.contacts || "", // Backend sends 'contacts' (plural), not 'contact'
+            companies: activity.companies || "", // Backend sends 'companies' (plural), not 'company'
         });
-        setSelectedActivity(activity.type?.toLowerCase() || "calls");
+        setSelectedActivity(activity.activity_type?.toLowerCase() || "calls");
     };
 
     const handleUpdateSubmit = async (e) => {
@@ -255,22 +317,24 @@ const Activities = () => {
             setError(null);
             const dueDate = editActivity.dueDate ? new Date(editActivity.dueDate).toISOString().split('T')[0] : null;
             
+            // Map frontend field names to backend schema field names
             const activityData = {
                 title: editActivity.title,
-                type: selectedActivity.charAt(0).toUpperCase() + selectedActivity.slice(1),
+                activity_type: selectedActivity.charAt(0).toUpperCase() + selectedActivity.slice(1), // Backend expects 'activity_type', not 'type'
                 due_date: dueDate,
-                time: editActivity.time,
-                reminder: editActivity.reminder,
-                reminder_type: editActivity.reminderType,
-                owner: editActivity.owner,
-                guests: editActivity.guests,
-                description: editActivity.description,
-                deal: editActivity.deals,
-                contact: editActivity.contacts,
-                company: editActivity.companies,
+                activity_time: editActivity.time || null, // Backend expects 'activity_time', not 'time'
+                remainder: editActivity.reminder || null, // Backend expects 'remainder', not 'reminder'
+                remainder_type: editActivity.reminderType || null, // Backend expects 'remainder_type', not 'reminder_type'
+                owner: editActivity.owner || null,
+                guests: editActivity.guests || null,
+                description: editActivity.description || null,
+                deals: editActivity.deals || null, // Backend expects 'deals' (plural), not 'deal'
+                contacts: editActivity.contacts || null, // Backend expects 'contacts' (plural), not 'contact'
+                companies: editActivity.companies || null, // Backend expects 'companies' (plural), not 'company'
             };
 
-            await activitiesAPI.update(editingActivityId, activityData);
+            const response = await activitiesAPI.update(editingActivityId, activityData);
+            console.log("Activity updated successfully:", response);
             
             // Close modal and reload activities
             const modal = document.getElementById('edit_activity');
@@ -289,7 +353,10 @@ const Activities = () => {
             }
             
             setEditingActivityId(null);
-            await loadActivities();
+            // Reload activities after a short delay to ensure backend has processed
+            setTimeout(() => {
+                loadActivities();
+            }, 300);
         } catch (err) {
             console.error("Error updating activity:", err);
             setError("Failed to update activity. Please try again.");

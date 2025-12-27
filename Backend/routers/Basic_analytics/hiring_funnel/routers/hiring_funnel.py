@@ -12,8 +12,13 @@ router = APIRouter()
 # Create tables automatically (can also move to startup in main.py)
 @router.on_event("startup")
 def startup():
-    Base.metadata.create_all(bind=engine)
-    print("Tables created successfully!")
+    try:
+        Base.metadata.create_all(bind=engine)
+        print("✓ Hiring funnel tables created successfully!")
+    except Exception as e:
+        print(f"⚠ Warning: Could not create hiring funnel tables: {e}")
+        print("  Database may not be available. The application will continue.")
+        print("  Please ensure PostgreSQL is running and DATABASE_URL is correct.")
 
 # Dependency to get DB session
 def get_db():

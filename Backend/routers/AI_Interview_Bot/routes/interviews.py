@@ -95,11 +95,22 @@ def ensure_answer_columns():
                 """))
                 print("Made 'question_id' nullable in answers table")
     except Exception as e:
-        print(f" Warning: Could not ensure answer table columns: {e}")
+        print(f"⚠ Warning: Could not ensure answer table columns: {e}")
+        print("  Database may not be available. The application will continue.")
         import traceback
         traceback.print_exc()
 
-ensure_answer_columns()
+# Initialize database columns lazily (only when needed, not at import time)
+# This prevents startup failures if database is not available
+def init_db_columns():
+    """Initialize database columns. Call this when database is ready."""
+    try:
+        ensure_answer_columns()
+    except Exception as e:
+        print(f"⚠ Warning: Could not initialize database columns: {e}")
+
+# Don't call at import time - let it be called lazily when routes are accessed
+# ensure_answer_columns()  # Removed - will be called on first route access if needed
 
 class OTPRequest(BaseModel):
     email: EmailStr

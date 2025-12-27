@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from jose import jwt, JWTError
 from fastapi.concurrency import run_in_threadpool
 from fastapi_mail import FastMail, MessageSchema, MessageType, ConnectionConfig
+from sqlalchemy.exc import OperationalError
 import os
 from core.database import get_db
 from model.models import User
@@ -192,7 +193,19 @@ async def signup(payload: UserCreate, session: Session = Depends(get_db)):
 
 @router.post("/login-json")
 def login_json(payload: LoginRequest, session: Session = Depends(get_db)):
-    user = session.exec(select(User).where(User.email == payload.email)).first()
+    try:
+        user = session.exec(select(User).where(User.email == payload.email)).first()
+    except OperationalError as e:
+        raise HTTPException(
+            status_code=503,
+            detail="Database connection error. Please check your database configuration and ensure PostgreSQL is running."
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database error: {str(e)}"
+        )
+    
     if not user or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
@@ -217,7 +230,19 @@ def login_json(payload: LoginRequest, session: Session = Depends(get_db)):
 
 @router.post("/login", response_model=TokenResponse)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_db)):
-    user = session.exec(select(User).where(User.email == form_data.username)).first()
+    try:
+        user = session.exec(select(User).where(User.email == form_data.username)).first()
+    except OperationalError as e:
+        raise HTTPException(
+            status_code=503,
+            detail="Database connection error. Please check your database configuration and ensure PostgreSQL is running."
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database error: {str(e)}"
+        )
+    
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 

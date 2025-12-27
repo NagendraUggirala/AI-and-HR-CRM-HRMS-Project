@@ -224,7 +224,44 @@ export const analyticsAPI = {
 
   // Get applications over time
   getApplicationsOverTime: (days = 30) => 
-    apiCall(`/api/recruiter_dashboard/analytics/applications-over-time?days=${days}`)
+    apiCall(`/api/recruiter_dashboard/analytics/applications-over-time?days=${days}`),
+
+  // ==========================================
+  // CRM ANALYTICS APIs
+  // ==========================================
+  // Get all deals (for analytics)
+  getDeals: (q = null) => {
+    const url = q ? `/analytics/deals?q=${encodeURIComponent(q)}` : '/analytics/deals';
+    return apiCall(url);
+  },
+
+  // Get deal by ID (for analytics)
+  getDeal: (id) =>
+    apiCall(`/analytics/deals/${id}`),
+
+  // Get all leads (for analytics)
+  getLeads: (skip = 0, limit = 100) =>
+    apiCall(`/analytics/leads?skip=${skip}&limit=${limit}`),
+
+  // Get lead by ID (for analytics)
+  getLead: (id) =>
+    apiCall(`/analytics/leads/${id}`),
+
+  // Get recent contacts
+  getRecentContacts: (limit = 10) =>
+    apiCall(`/analytics/recent-contacts?limit=${limit}`),
+
+  // Get recent companies
+  getRecentCompanies: (limit = 10) =>
+    apiCall(`/analytics/recent-companies?limit=${limit}`),
+
+  // Get all activities (for analytics)
+  getActivities: (skip = 0, limit = 100) =>
+    apiCall(`/analytics/activities?skip=${skip}&limit=${limit}`),
+
+  // Get recent activities
+  getRecentActivities: (limit = 10) =>
+    apiCall(`/analytics/recent-activities?limit=${limit}`)
 };
 
 // ==========================================
@@ -573,17 +610,17 @@ export const resumeAPI = {
 export const activitiesAPI = {
   // Get all activities
   list: (type = null) => {
-    const url = type ? `/api/crm/activities?type=${type}` : '/api/crm/activities';
+    const url = type ? `/activities/?type=${type}` : '/activities/';
     return apiCall(url);
   },
 
   // Get activity by ID
   getById: (id) =>
-    apiCall(`/api/crm/activities/${id}`),
+    apiCall(`/activities/${id}`),
 
   // Create activity
   create: (activityData) =>
-    apiCall('/api/crm/activities', {
+    apiCall('/activities/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(activityData)
@@ -591,7 +628,7 @@ export const activitiesAPI = {
 
   // Update activity
   update: (id, activityData) =>
-    apiCall(`/api/crm/activities/${id}`, {
+    apiCall(`/activities/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(activityData)
@@ -599,17 +636,15 @@ export const activitiesAPI = {
 
   // Delete activity
   delete: (id) =>
-    apiCall(`/api/crm/activities/${id}`, {
+    apiCall(`/activities/${id}`, {
       method: 'DELETE'
     }),
 
-  // Delete multiple activities
-  deleteMultiple: (ids) =>
-    apiCall('/api/crm/activities/delete-multiple', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(ids)
-    })
+  // Delete multiple activities (if backend supports it, otherwise delete one by one)
+  deleteMultiple: (ids) => {
+    // Backend doesn't have delete-multiple endpoint, so delete one by one
+    return Promise.all(ids.map(id => apiCall(`/activities/${id}`, { method: 'DELETE' })));
+  }
 };
 
 // ==========================================
@@ -623,17 +658,17 @@ export const contactsAPI = {
     if (filters.industry) params.append('industry', filters.industry);
     if (filters.owner) params.append('owner', filters.owner);
     const queryString = params.toString();
-    const url = queryString ? `/api/crm/contacts?${queryString}` : '/api/crm/contacts';
+    const url = queryString ? `/contacts/?${queryString}` : '/contacts/';
     return apiCall(url);
   },
 
   // Get contact by ID
   getById: (id) =>
-    apiCall(`/api/crm/contacts/${id}`),
+    apiCall(`/contacts/${id}`),
 
   // Create contact
   create: (contactData) =>
-    apiCall('/api/crm/contacts', {
+    apiCall('/contacts/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(contactData)
@@ -641,7 +676,7 @@ export const contactsAPI = {
 
   // Update contact
   update: (id, contactData) =>
-    apiCall(`/api/crm/contacts/${id}`, {
+    apiCall(`/contacts/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(contactData)
@@ -649,17 +684,15 @@ export const contactsAPI = {
 
   // Delete contact
   delete: (id) =>
-    apiCall(`/api/crm/contacts/${id}`, {
+    apiCall(`/contacts/${id}`, {
       method: 'DELETE'
     }),
 
-  // Delete multiple contacts
-  deleteMultiple: (ids) =>
-    apiCall('/api/crm/contacts/delete-multiple', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(ids)
-    })
+  // Delete multiple contacts (if backend supports it, otherwise delete one by one)
+  deleteMultiple: (ids) => {
+    // Backend doesn't have delete-multiple endpoint, so delete one by one
+    return Promise.all(ids.map(id => apiCall(`/contacts/${id}`, { method: 'DELETE' })));
+  }
 };
 
 // ==========================================
@@ -673,17 +706,17 @@ export const leadsAPI = {
     if (filters.company) params.append('company', filters.company);
     if (filters.owner) params.append('owner', filters.owner);
     const queryString = params.toString();
-    const url = queryString ? `/api/crm/leads?${queryString}` : '/api/crm/leads';
+    const url = queryString ? `/leads/?${queryString}` : '/leads/';
     return apiCall(url);
   },
 
   // Get lead by ID
   getById: (id) =>
-    apiCall(`/api/crm/leads/${id}`),
+    apiCall(`/leads/${id}`),
 
   // Create lead
   create: (leadData) =>
-    apiCall('/api/crm/leads', {
+    apiCall('/leads/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(leadData)
@@ -691,7 +724,7 @@ export const leadsAPI = {
 
   // Update lead
   update: (id, leadData) =>
-    apiCall(`/api/crm/leads/${id}`, {
+    apiCall(`/leads/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(leadData)
@@ -699,7 +732,7 @@ export const leadsAPI = {
 
   // Delete lead
   delete: (id) =>
-    apiCall(`/api/crm/leads/${id}`, {
+    apiCall(`/leads/${id}`, {
       method: 'DELETE'
     })
 };
@@ -713,34 +746,35 @@ export const dealsAPI = {
     const params = new URLSearchParams();
     if (filters.stage) params.append('stage', filters.stage);
     if (filters.owner) params.append('owner', filters.owner);
+    if (filters.q) params.append('q', filters.q); // Search query
     const queryString = params.toString();
-    const url = queryString ? `/api/crm/deals?${queryString}` : '/api/crm/deals';
+    const url = queryString ? `/deals/?${queryString}` : '/deals/';
     return apiCall(url);
   },
 
   // Get deal by ID
   getById: (id) =>
-    apiCall(`/api/crm/deals/${id}`),
+    apiCall(`/deals/${id}`),
 
   // Create deal
   create: (dealData) =>
-    apiCall('/api/crm/deals', {
+    apiCall('/deals/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dealData)
     }),
 
-  // Update deal
+  // Update deal (backend uses PATCH, not PUT)
   update: (id, dealData) =>
-    apiCall(`/api/crm/deals/${id}`, {
-      method: 'PUT',
+    apiCall(`/deals/${id}`, {
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dealData)
     }),
 
   // Delete deal
   delete: (id) =>
-    apiCall(`/api/crm/deals/${id}`, {
+    apiCall(`/deals/${id}`, {
       method: 'DELETE'
     })
 };
@@ -755,33 +789,93 @@ export const companiesAPI = {
     if (filters.industry) params.append('industry', filters.industry);
     if (filters.owner) params.append('owner', filters.owner);
     const queryString = params.toString();
-    const url = queryString ? `/api/crm/companies?${queryString}` : '/api/crm/companies';
+    const url = queryString ? `/companies/?${queryString}` : '/companies/';
     return apiCall(url);
   },
 
   // Get company by ID
   getById: (id) =>
-    apiCall(`/api/crm/companies/${id}`),
+    apiCall(`/companies/${id}`),
 
-  // Create company
-  create: (companyData) =>
-    apiCall('/api/crm/companies', {
+  // Create company (backend uses FormData, not JSON)
+  create: (companyData, logoFile = null) => {
+    const formData = new FormData();
+    
+    // Append all company fields to FormData
+    Object.keys(companyData).forEach(key => {
+      if (companyData[key] !== null && companyData[key] !== undefined) {
+        if (key === 'tags' && Array.isArray(companyData[key])) {
+          // Convert tags array to comma-separated string
+          formData.append(key, companyData[key].join(','));
+        } else {
+          formData.append(key, companyData[key]);
+        }
+      }
+    });
+    
+    // Append logo file if provided
+    if (logoFile) {
+      formData.append('logo', logoFile);
+    }
+    
+    return fetch(`${BASE_URL}/companies/`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(companyData)
-    }),
+      body: formData,
+      headers: {
+        // Don't set Content-Type header - browser will set it with boundary for FormData
+        ...(getToken() && { 'Authorization': `Bearer ${getToken()}` })
+      }
+    }).then(async (response) => {
+      if (response.ok) {
+        return await response.json();
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `API Error: ${response.status}`);
+      }
+    });
+  },
 
-  // Update company
-  update: (id, companyData) =>
-    apiCall(`/api/crm/companies/${id}`, {
+  // Update company (backend uses FormData, not JSON)
+  update: (id, companyData, logoFile = null) => {
+    const formData = new FormData();
+    
+    // Append all company fields to FormData
+    Object.keys(companyData).forEach(key => {
+      if (companyData[key] !== null && companyData[key] !== undefined) {
+        if (key === 'tags' && Array.isArray(companyData[key])) {
+          // Convert tags array to comma-separated string
+          formData.append(key, companyData[key].join(','));
+        } else {
+          formData.append(key, companyData[key]);
+        }
+      }
+    });
+    
+    // Append logo file if provided
+    if (logoFile) {
+      formData.append('logo', logoFile);
+    }
+    
+    return fetch(`${BASE_URL}/companies/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(companyData)
-    }),
+      body: formData,
+      headers: {
+        // Don't set Content-Type header - browser will set it with boundary for FormData
+        ...(getToken() && { 'Authorization': `Bearer ${getToken()}` })
+      }
+    }).then(async (response) => {
+      if (response.ok) {
+        return await response.json();
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `API Error: ${response.status}`);
+      }
+    });
+  },
 
   // Delete company
   delete: (id) =>
-    apiCall(`/api/crm/companies/${id}`, {
+    apiCall(`/companies/${id}`, {
       method: 'DELETE'
     })
 };
@@ -796,17 +890,17 @@ export const crmPipelinesAPI = {
     if (filters.status) params.append('status', filters.status);
     if (filters.stage) params.append('stage', filters.stage);
     const queryString = params.toString();
-    const url = queryString ? `/api/crm/pipelines?${queryString}` : '/api/crm/pipelines';
+    const url = queryString ? `/pipelines/?${queryString}` : '/pipelines/';
     return apiCall(url);
   },
 
   // Get pipeline by ID
   getById: (id) =>
-    apiCall(`/api/crm/pipelines/${id}`),
+    apiCall(`/pipelines/${id}`),
 
   // Create pipeline
   create: (pipelineData) =>
-    apiCall('/api/crm/pipelines', {
+    apiCall('/pipelines/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(pipelineData)
@@ -814,7 +908,7 @@ export const crmPipelinesAPI = {
 
   // Update pipeline
   update: (id, pipelineData) =>
-    apiCall(`/api/crm/pipelines/${id}`, {
+    apiCall(`/pipelines/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(pipelineData)
@@ -822,7 +916,7 @@ export const crmPipelinesAPI = {
 
   // Delete pipeline
   delete: (id) =>
-    apiCall(`/api/crm/pipelines/${id}`, {
+    apiCall(`/pipelines/${id}`, {
       method: 'DELETE'
     })
 };

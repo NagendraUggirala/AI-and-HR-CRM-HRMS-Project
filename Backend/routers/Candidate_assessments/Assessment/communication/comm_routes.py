@@ -34,12 +34,13 @@ class ExamAttempt(Base):
     passed = Column(Boolean)
     submitted_at = Column(DateTime, default=datetime.datetime.utcnow)
 
-Base.metadata.create_all(bind=engine)
-
 #  Database Migration: Add missing columns 
 def ensure_table_columns():
     """Ensure all required columns exist in the communication_assessment_results table."""
     try:
+        # Create table if it doesn't exist
+        Base.metadata.create_all(bind=engine)
+        
         with engine.begin() as conn:
             # Check and add 'passed' column if it doesn't exist
             result = conn.execute(text("""
@@ -73,8 +74,14 @@ def ensure_table_columns():
         import traceback
         traceback.print_exc()
 
-# Run migration on module load
-ensure_table_columns()
+# Initialize database tables lazily (only when needed, not at import time)
+# This prevents startup failures if database is not available
+def init_db_tables():
+    """Initialize database tables. Call this when database is ready."""
+    try:
+        ensure_table_columns()
+    except Exception as e:
+        print(f" Warning: Could not initialize database tables: {e}")
 
 #  Router 
 router = APIRouter()
@@ -132,6 +139,9 @@ def verify_otp_route(data: VerifyOTPRequest):
 #  Exam Routes 
 @router.get("/exam")
 def get_exam(name: str, email: str):
+    # Ensure database tables are initialized
+    init_db_tables()
+    
     #  REJECTION CHECK: Prevent rejected candidates from taking assessments
     try:
         with SessionLocal() as session:
@@ -192,6 +202,9 @@ def get_exam(name: str, email: str):
 
 @router.post("/submit")
 def submit_answers(data: CommSubmission):
+    # Ensure database tables are initialized
+    init_db_tables()
+    
     #  REJECTION CHECK: Prevent rejected candidates from submitting assessments
     try:
         with SessionLocal() as session:
@@ -333,6 +346,9 @@ HR Team - Recruitment"""
 #  Admin Route 
 @router.get("/all-exams")
 def get_all_exams():
+    # Ensure database tables are initialized
+    init_db_tables()
+    
     try:
         with SessionLocal() as session:
             attempts = session.query(ExamAttempt).all()

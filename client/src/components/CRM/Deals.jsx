@@ -98,14 +98,16 @@ export default function Deals() {
 
     // Helper function to calculate progress percentage
     const calculateProgress = (deal) => {
-        // Simple progress calculation based on stage
+        // Simple progress calculation based on stage/status
         const stageProgress = {
             "New": 25,
             "Prospect": 50,
             "Proposal": 75,
             "Won": 100
         };
-        return stageProgress[deal.stage] || 0;
+        // Backend sends 'status', but we also check 'stage' for compatibility
+        const dealStage = deal.status || deal.stage || "";
+        return stageProgress[dealStage] || 0;
     };
 
     // Transform API deals data to Kanban structure
@@ -114,20 +116,24 @@ export default function Deals() {
 
         const stages = stageConfig.map(stageConfigItem => {
             const stageDeals = dealsData
-                .filter(deal => (deal.stage || "").trim() === stageConfigItem.apiStage)
+                .filter(deal => {
+                    // Backend sends 'status', but we also check 'stage' for compatibility
+                    const dealStage = deal.status || deal.stage || "";
+                    return dealStage.trim() === stageConfigItem.apiStage;
+                })
                 .map(deal => ({
                     id: deal.id,
-                    initials: makeInitials(deal.name || deal.owner || ""),
-                    title: deal.name || "Untitled Deal",
-                    amount: formatAmount(deal.amount || deal.value || 0),
-                    email: deal.email || "",
+                    initials: makeInitials(deal.deal_name || deal.name || deal.owner || ""), // Backend sends 'deal_name'
+                    title: deal.deal_name || deal.name || "Untitled Deal", // Backend sends 'deal_name'
+                    amount: formatAmount(deal.deal_value || deal.amount || deal.value || 0), // Backend sends 'deal_value'
+                    email: deal.contact || deal.email || "", // Backend sends 'contact'
                     phone: deal.phone || "",
-                    location: deal.location || "",
-                    owner: deal.owner || deal.assignee || "",
+                    location: deal.project || deal.location || "", // Backend sends 'project'
+                    owner: deal.assignee || deal.owner || "", // Backend sends 'assignee'
                     ownerImg: deal.ownerImg || defaultAvatar,
                     progress: `${calculateProgress(deal)}%`,
-                    date: formatDate(deal.closingDate || deal.closed_date || deal.dueDate || deal.created_at),
-                    stage: deal.stage || stageConfigItem.apiStage,
+                    date: formatDate(deal.expected_closing_date || deal.closingDate || deal.closed_date || deal.due_date || deal.created_at), // Backend sends 'expected_closing_date' and 'due_date'
+                    stage: deal.status || deal.stage || stageConfigItem.apiStage, // Backend sends 'status'
                 }));
 
             const totalAmount = stageDeals.reduce((sum, deal) => {
@@ -220,15 +226,16 @@ export default function Deals() {
                 }
             }
 
+            // Map backend field names to frontend form field names
             setFormData({
                 ...initialForm,
-                dealName: fullDealData.name || deal.title || "",
-                dealValue: fullDealData.amount || fullDealData.value || deal.amount || "",
-                contact: fullDealData.email || deal.email || "",
+                dealName: fullDealData.deal_name || fullDealData.name || deal.title || "", // Backend sends 'deal_name'
+                dealValue: fullDealData.deal_value || fullDealData.amount || fullDealData.value || deal.amount || "", // Backend sends 'deal_value'
+                contact: fullDealData.contact || fullDealData.email || deal.email || "",
                 phone: fullDealData.phone || deal.phone || "",
-                project: fullDealData.location || deal.location || "",
-                assignee: fullDealData.owner || fullDealData.assignee || deal.owner || "",
-                stage: fullDealData.stage || deal.stage || dealsState[stageIndex]?.stage || "New",
+                project: fullDealData.project || fullDealData.location || deal.location || "", // Backend sends 'project'
+                assignee: fullDealData.assignee || fullDealData.owner || deal.owner || "",
+                stage: fullDealData.status || fullDealData.stage || deal.stage || dealsState[stageIndex]?.stage || "New", // Backend sends 'status'
                 pipeline: fullDealData.pipeline || "",
                 status: fullDealData.status || "",
                 currency: fullDealData.currency || "",
@@ -236,11 +243,11 @@ export default function Deals() {
                 source: fullDealData.source || "",
                 priority: fullDealData.priority || "",
                 description: fullDealData.description || "",
-                dueDate: fullDealData.dueDate ? fullDealData.dueDate.split('T')[0] : "",
-                closingDate: fullDealData.closingDate || fullDealData.closed_date ? (fullDealData.closingDate || fullDealData.closed_date).split('T')[0] : "",
-                followupDate: fullDealData.followupDate ? fullDealData.followupDate.split('T')[0] : "",
+                dueDate: fullDealData.due_date ? (typeof fullDealData.due_date === 'string' ? fullDealData.due_date.split('T')[0] : fullDealData.due_date) : "", // Backend sends 'due_date'
+                closingDate: fullDealData.expected_closing_date ? (typeof fullDealData.expected_closing_date === 'string' ? fullDealData.expected_closing_date.split('T')[0] : fullDealData.expected_closing_date) : "", // Backend sends 'expected_closing_date'
+                followupDate: fullDealData.followup_date ? (typeof fullDealData.followup_date === 'string' ? fullDealData.followup_date.split('T')[0] : fullDealData.followup_date) : "", // Backend sends 'followup_date'
                 ownerImg: deal.ownerImg || defaultAvatar,
-                initials: deal.initials || makeInitials(fullDealData.owner || deal.owner || deal.title || ""),
+                initials: deal.initials || makeInitials(fullDealData.assignee || fullDealData.owner || deal.owner || deal.title || ""),
             });
             setSelectedStageIndex(stageIndex);
             setSelectedDealIndex(dealIndex);
@@ -288,28 +295,25 @@ export default function Deals() {
             // Determine stage from form data or selected stage index
             const selectedStage = formData.stage || dealsState[selectedStageIndex]?.stage || "New";
             
-            // Prepare deal data for API
+            // Prepare deal data for API - map frontend fields to backend schema
             const dealData = {
-                name: formData.dealName || "Untitled Deal",
-                stage: selectedStage,
-                value: parseFloat(formData.dealValue) || 0,
-                amount: parseFloat(formData.dealValue) || 0,
-                email: formData.contact || "",
-                phone: formData.phone || "",
-                location: formData.project || "",
-                owner: formData.assignee || "",
-                assignee: formData.assignee || "",
-                pipeline: formData.pipeline || "",
-                status: formData.status || "Open",
-                currency: formData.currency || "",
-                source: formData.source || "",
-                priority: formData.priority || "",
-                description: formData.description || "",
-                tags: formData.tags || "",
-                dueDate: formData.dueDate || null,
-                closingDate: formData.closingDate || null,
-                closed_date: formData.closingDate || null,
-                followupDate: formData.followupDate || null,
+                deal_name: formData.dealName || "Untitled Deal", // Backend expects 'deal_name', not 'name'
+                pipeline: formData.pipeline || null,
+                status: formData.status || selectedStage || "Open", // Backend expects 'status', not 'stage'
+                deal_value: formData.dealValue ? parseFloat(formData.dealValue) : null, // Backend expects 'deal_value', not 'value'
+                currency: formData.currency || null,
+                period: formData.period || null,
+                period_value: formData.periodValue ? parseInt(formData.periodValue) : null,
+                contact: formData.contact || null, // Backend expects 'contact', not 'email'
+                project: formData.project || null, // Backend expects 'project', not 'location'
+                due_date: formData.dueDate || null, // Backend expects 'due_date', not 'dueDate'
+                expected_closing_date: formData.closingDate || null, // Backend expects 'expected_closing_date', not 'closingDate'
+                assignee: formData.assignee || null,
+                tags: formData.tags || null,
+                followup_date: formData.followupDate || null, // Backend expects 'followup_date', not 'followupDate'
+                source: formData.source || null,
+                priority: formData.priority || null,
+                description: formData.description || null,
             };
 
             // Remove empty strings and convert to null

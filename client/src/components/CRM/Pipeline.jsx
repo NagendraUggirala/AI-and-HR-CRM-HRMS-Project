@@ -90,14 +90,14 @@ const Pipeline = () => {
     }
   };
 
-  // Transform API data to component format
+  // Transform API data to component format - map backend field names to frontend
   const transformPipeline = (pipeline) => ({
     id: pipeline.id,
-    name: pipeline.name,
-    value: formatValue(pipeline.value),
-    valueRaw: pipeline.value,
+    name: pipeline.pipeline_Name || pipeline.name || "Untitled Pipeline", // Backend sends 'pipeline_Name'
+    value: formatValue(pipeline.total_deal_value || pipeline.value), // Backend sends 'total_deal_value'
+    valueRaw: pipeline.total_deal_value || pipeline.value,
     deals: pipeline.deals || 0,
-    stage: pipeline.stage || "In Pipeline",
+    stage: pipeline.stages || pipeline.stage || "In Pipeline", // Backend sends 'stages'
     stageColor: pipeline.stage_color || "primary",
     date: formatDate(pipeline.created_date || pipeline.created_at),
     status: pipeline.status || "Active"
@@ -194,14 +194,14 @@ const Pipeline = () => {
     e.preventDefault();
     try {
       setError(null);
+      // Map frontend fields to backend schema
       const pipelineData = {
-        name: formData.name,
-        value: parseFloat(formData.value) || 0,
-        deals: parseInt(formData.deals) || 0,
-        stage: formData.stage,
-        stage_color: formData.stage_color,
-        created_date: formData.created_date || null,
-        status: formData.status
+        pipeline_Name: formData.name || "Untitled Pipeline", // Backend expects 'pipeline_Name', not 'name'
+        total_deal_value: formData.value ? parseFloat(formData.value) : 0, // Backend expects 'total_deal_value', not 'value'
+        deals: formData.deals ? parseInt(formData.deals) : 0,
+        stages: formData.stage || "In Pipeline", // Backend expects 'stages', not 'stage'
+        created_date: formData.created_date || new Date().toISOString().split('T')[0], // Backend expects date string
+        status: formData.status || "active" // Backend expects lowercase enum
       };
 
       await crmPipelinesAPI.create(pipelineData);
@@ -232,14 +232,14 @@ const Pipeline = () => {
     
     try {
       setError(null);
+      // Map frontend fields to backend schema
       const pipelineData = {
-        name: formData.name,
-        value: parseFloat(formData.value) || 0,
-        deals: parseInt(formData.deals) || 0,
-        stage: formData.stage,
-        stage_color: formData.stage_color,
-        created_date: formData.created_date || null,
-        status: formData.status
+        pipeline_Name: formData.name || "Untitled Pipeline", // Backend expects 'pipeline_Name', not 'name'
+        total_deal_value: formData.value ? parseFloat(formData.value) : 0, // Backend expects 'total_deal_value', not 'value'
+        deals: formData.deals ? parseInt(formData.deals) : 0,
+        stages: formData.stage || "In Pipeline", // Backend expects 'stages', not 'stage'
+        created_date: formData.created_date || new Date().toISOString().split('T')[0], // Backend expects date string
+        status: formData.status || "active" // Backend expects lowercase enum
       };
 
       await crmPipelinesAPI.update(editingPipeline.id, pipelineData);
@@ -289,13 +289,14 @@ const Pipeline = () => {
       const pipeline = await crmPipelinesAPI.getById(pipelineId);
       if (pipeline) {
         setEditingPipeline(pipeline);
+        // Map backend field names to frontend form field names
         setFormData({
-          name: pipeline.name || "",
-          value: pipeline.value || "",
+          name: pipeline.pipeline_Name || pipeline.name || "", // Backend sends 'pipeline_Name'
+          value: pipeline.total_deal_value || pipeline.value || "", // Backend sends 'total_deal_value'
           deals: pipeline.deals || "",
-          stage: pipeline.stage || "In Pipeline",
+          stage: pipeline.stages || pipeline.stage || "In Pipeline", // Backend sends 'stages'
           stage_color: pipeline.stage_color || "primary",
-          created_date: pipeline.created_date ? dayjs(pipeline.created_date).format("YYYY-MM-DD") : "",
+          created_date: pipeline.created_date ? (typeof pipeline.created_date === 'string' ? pipeline.created_date.split('T')[0] : dayjs(pipeline.created_date).format("YYYY-MM-DD")) : "",
           status: pipeline.status || "Active"
         });
         setShowEditModal(true);

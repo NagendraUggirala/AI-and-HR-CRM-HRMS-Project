@@ -96,26 +96,26 @@ const Contacts = () => {
   const handleEditContact = (contact) => {
     setModalType('edit');
     setSelectedContact(contact);
-    // Map API response to form data format
+    // Map API response (backend field names) to form data format (frontend field names)
     setFormData({
       name: contact.name || '',
       lastName: contact.last_name || '',
-      role: contact.role || '',
-      phone: contact.phone || '',
-      phone2: contact.phone2 || '',
+      role: contact.job_title || '', // Backend sends 'job_title', not 'role'
+      phone: contact.phone_number || '', // Backend sends 'phone_number', not 'phone'
+      phone2: contact.phone_number2 || '', // Backend sends 'phone_number2', not 'phone2'
       location: contact.location || 'India',
-      rating: contact.rating?.toString() || '0',
+      rating: contact.ratings?.toString() || '0', // Backend sends 'ratings' (plural), not 'rating'
       email: contact.email || '',
-      company: contact.company || '',
-      dateOfBirth: contact.date_of_birth || '',
+      company: contact.company_name || '', // Backend sends 'company_name', not 'company'
+      dateOfBirth: contact.dob || '', // Backend sends 'dob', not 'date_of_birth'
       industry: contact.industry || '',
       currency: contact.currency || 'Dollar',
       language: contact.language || 'English',
       owner: contact.owner || '',
       deals: contact.deals || '',
       source: contact.source || '',
-      tags: contact.tags || [],
-      img: contact.img || '/assets/img/users/user-49.jpg',
+      tags: Array.isArray(contact.tags) ? contact.tags : (contact.tags ? contact.tags.split(',') : []), // Handle both array and comma-separated string
+      img: contact.profile_photo || '/assets/img/users/user-49.jpg', // Backend sends 'profile_photo', not 'img'
       visibility: contact.visibility || 'private',
       status: contact.status || 'Active'
     });
@@ -152,28 +152,27 @@ const Contacts = () => {
     try {
       setError(null);
       
-      // Prepare contact data for API
+      // Prepare contact data for API - map frontend fields to backend schema
       const contactData = {
-        name: formData.name,
-        last_name: formData.lastName,
-        role: formData.role,
-        phone: formData.phone,
-        phone2: formData.phone2,
-        email: formData.email,
-        company: formData.company,
-        location: formData.location,
-        rating: parseInt(formData.rating) || 0,
-        date_of_birth: formData.dateOfBirth || null,
-        industry: formData.industry,
-        currency: formData.currency,
-        language: formData.language,
-        owner: formData.owner,
-        deals: formData.deals,
-        source: formData.source,
-        tags: formData.tags || [],
-        img: formData.img,
-        status: formData.status || "Active",
-        visibility: formData.visibility || "private"
+        name: formData.name || '',
+        last_name: formData.lastName || null,
+        job_title: formData.role || '', // Backend expects 'job_title', not 'role'
+        phone_number: formData.phone || '', // Backend expects 'phone_number', not 'phone'
+        phone_number2: formData.phone2 || null, // Backend expects 'phone_number2', not 'phone2'
+        email: formData.email || null,
+        company_name: formData.company || '', // Backend expects 'company_name', not 'company'
+        location: formData.location || null,
+        ratings: formData.rating || null, // Backend expects 'ratings' (plural), not 'rating'
+        dob: formData.dateOfBirth || null, // Backend expects 'dob', not 'date_of_birth'
+        industry: formData.industry || null,
+        currency: formData.currency || null,
+        language: formData.language || null,
+        owner: formData.owner || null,
+        deals: formData.deals || null,
+        source: formData.source || null,
+        tags: formData.tags || [], // Backend expects array
+        profile_photo: formData.img || null, // Backend expects 'profile_photo', not 'img'
+        // Note: 'status' and 'visibility' are not in backend schema, so we don't send them
       };
 
       if (modalType === 'add') {
@@ -311,7 +310,7 @@ const Contacts = () => {
                   </div>
                   <div>
                     <a className="avatar avatar-xl avatar-rounded online border p-1 border-primary rounded-circle">
-                      <img src={c.img || '/assets/img/users/user-49.jpg'} alt="user" className="img-fluid h-auto w-auto" />
+                      <img src={c.profile_photo || '/assets/img/users/user-49.jpg'} alt="user" className="img-fluid h-auto w-auto" />
                     </a>
                   </div>
                   <div className="dropdown">
@@ -347,13 +346,13 @@ const Contacts = () => {
                     <a href="">{c.name} {c.last_name || ''}</a>
                   </h6>
                   <span className="badge bg-pink-transparent fs-10 fw-medium">
-                    {c.role || 'N/A'}
+                    {c.job_title || 'N/A'}
                   </span>
                 </div>
                 <div className="d-flex flex-column">
                   <p className="text-dark d-inline-flex align-items-center mb-2">
                     <i className="ti ti-phone text-gray-5 me-2"></i>
-                    {c.phone || 'N/A'}
+                    {c.phone_number || 'N/A'}
                   </p>
                   <p className="text-dark d-inline-flex align-items-center">
                     <i className="ti ti-map-pin text-gray-5 me-2"></i>
