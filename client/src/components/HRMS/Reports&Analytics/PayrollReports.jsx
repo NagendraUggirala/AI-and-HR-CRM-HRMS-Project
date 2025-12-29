@@ -135,6 +135,62 @@ const PayrollReports = () => {
       format: 'PDF, Excel',
       accessLevel: 'Finance, Strategy'
     },
+    { 
+      id: 15, 
+      name: 'Salary Component Breakdown', 
+      category: 'Salary', 
+      type: 'Detailed', 
+      frequency: 'Monthly', 
+      lastGenerated: '2024-01-15',
+      description: 'Detailed breakdown of salary components including basic, HRA, allowances, bonuses, and other earnings.',
+      columns: ['Employee ID', 'Name', 'Basic', 'HRA', 'Allowances', 'Bonus', 'Overtime', 'Other Earnings', 'Total Gross'],
+      dataSize: '2200 records',
+      estimatedTime: '2.5 minutes',
+      format: 'Excel, PDF',
+      accessLevel: 'HR, Finance'
+    },
+    { 
+      id: 16, 
+      name: 'Gross vs Net Salary Analysis', 
+      category: 'Salary', 
+      type: 'Analysis', 
+      frequency: 'Monthly', 
+      lastGenerated: '2024-01-15',
+      description: 'Comparative analysis of gross salary versus net salary with detailed deduction breakdown.',
+      columns: ['Employee ID', 'Name', 'Gross Salary', 'Total Deductions', 'Net Salary', 'Deduction %', 'Net % of Gross'],
+      dataSize: '2200 records',
+      estimatedTime: '2 minutes',
+      format: 'Excel, PDF',
+      accessLevel: 'HR, Finance, Management'
+    },
+    { 
+      id: 17, 
+      name: 'Cost-to-Company (CTC) Reports', 
+      category: 'Salary', 
+      type: 'Summary', 
+      frequency: 'Monthly', 
+      lastGenerated: '2024-01-15',
+      description: 'Comprehensive CTC analysis including all cost components, benefits, and employer contributions.',
+      columns: ['Employee ID', 'Name', 'CTC', 'Basic Salary', 'Variable Pay', 'Benefits', 'Employer PF/ESI', 'Other Costs'],
+      dataSize: '2200 records',
+      estimatedTime: '3 minutes',
+      format: 'Excel, PDF',
+      accessLevel: 'HR, Finance, Management'
+    },
+    { 
+      id: 18, 
+      name: 'Average Salary by Department/Grade', 
+      category: 'Salary', 
+      type: 'Analysis', 
+      frequency: 'Monthly', 
+      lastGenerated: '2024-01-10',
+      description: 'Average salary calculations grouped by department and grade level with comparisons.',
+      columns: ['Department', 'Grade', 'Employee Count', 'Average Salary', 'Min Salary', 'Max Salary', 'Median Salary'],
+      dataSize: '450 records',
+      estimatedTime: '45 seconds',
+      format: 'Excel',
+      accessLevel: 'HR, Compensation'
+    },
     
     // Statutory Reports
     { 
@@ -207,6 +263,48 @@ const PayrollReports = () => {
       format: 'ECR, Excel',
       accessLevel: 'HR, Compliance'
     },
+    { 
+      id: 19, 
+      name: 'PT Deduction Report', 
+      category: 'Statutory', 
+      type: 'Statutory', 
+      frequency: 'Monthly', 
+      lastGenerated: '2024-01-12',
+      description: 'Professional Tax deduction details by state and salary slabs with compliance status.',
+      columns: ['Employee ID', 'Name', 'State', 'Gross Salary', 'PT Slab', 'PT Amount', 'Deduction Month', 'Status'],
+      dataSize: '1800 records',
+      estimatedTime: '1.5 minutes',
+      format: 'Excel',
+      accessLevel: 'HR, Compliance'
+    },
+    { 
+      id: 20, 
+      name: 'Monthly Statutory Summary', 
+      category: 'Statutory', 
+      type: 'Summary', 
+      frequency: 'Monthly', 
+      lastGenerated: '2024-01-15',
+      description: 'Consolidated summary of all statutory deductions including PF, ESI, PT, and TDS for the month.',
+      columns: ['Statutory Type', 'Total Employees', 'Total Deduction', 'Employer Contribution', 'Net Payable', 'Due Date', 'Status'],
+      dataSize: '12 records',
+      estimatedTime: '30 seconds',
+      format: 'PDF, Excel',
+      accessLevel: 'HR, Finance, Compliance'
+    },
+    { 
+      id: 21, 
+      name: 'Form 16 Register', 
+      category: 'Statutory', 
+      type: 'Form', 
+      frequency: 'Annual', 
+      lastGenerated: '2024-01-05',
+      description: 'Annual Form 16 register with TDS certificates issued to employees for income tax filing.',
+      columns: ['Employee ID', 'Name', 'PAN', 'Financial Year', 'Gross Salary', 'TDS Deducted', 'Form 16 Status', 'Issue Date'],
+      dataSize: '2200 records',
+      estimatedTime: '5 minutes',
+      format: 'PDF, Excel',
+      accessLevel: 'Finance, Tax Department'
+    },
     
     // Deduction Reports
     { 
@@ -237,6 +335,34 @@ const PayrollReports = () => {
       format: 'Excel',
       accessLevel: 'HR, Accounts'
     },
+    { 
+      id: 22, 
+      name: 'Other Deduction Summary', 
+      category: 'Deduction', 
+      type: 'Summary', 
+      frequency: 'Monthly', 
+      lastGenerated: '2024-01-15',
+      description: 'Summary of all other deductions including insurance, canteen, transport, and miscellaneous deductions.',
+      columns: ['Employee ID', 'Name', 'Deduction Type', 'Amount', 'Deduction Month', 'Recovery Period', 'Balance'],
+      dataSize: '850 records',
+      estimatedTime: '1.5 minutes',
+      format: 'Excel',
+      accessLevel: 'HR, Finance'
+    },
+    { 
+      id: 23, 
+      name: 'Arrear Payment Report', 
+      category: 'Deduction', 
+      type: 'Detailed', 
+      frequency: 'Monthly', 
+      lastGenerated: '2024-01-15',
+      description: 'Detailed report of arrear payments including salary revisions, backdated increments, and settlement adjustments.',
+      columns: ['Employee ID', 'Name', 'Arrear Type', 'Period', 'Arrear Amount', 'Payment Date', 'Tax Deducted', 'Net Paid'],
+      dataSize: '420 records',
+      estimatedTime: '1 minute',
+      format: 'Excel, PDF',
+      accessLevel: 'HR, Finance'
+    },
     
     // Bank Transfer Reports
     { 
@@ -266,6 +392,34 @@ const PayrollReports = () => {
       estimatedTime: '3 minutes',
       format: 'Excel',
       accessLevel: 'Finance, Audit'
+    },
+    { 
+      id: 24, 
+      name: 'Payment File Generation Log', 
+      category: 'Bank Transfer', 
+      type: 'Log', 
+      frequency: 'Monthly', 
+      lastGenerated: '2024-01-15',
+      description: 'Detailed log of payment file generation including file creation time, bank format, record count, and processing status.',
+      columns: ['File ID', 'Bank Name', 'Generation Date', 'File Format', 'Record Count', 'Total Amount', 'Status', 'Generated By'],
+      dataSize: '180 records',
+      estimatedTime: '45 seconds',
+      format: 'Excel, CSV',
+      accessLevel: 'Finance, Banking'
+    },
+    { 
+      id: 25, 
+      name: 'Failed Payment Tracking', 
+      category: 'Bank Transfer', 
+      type: 'Tracking', 
+      frequency: 'Daily', 
+      lastGenerated: '2024-01-15',
+      description: 'Tracking of failed salary payments with failure reasons, retry attempts, and resolution status.',
+      columns: ['Payment ID', 'Employee ID', 'Name', 'Amount', 'Bank Account', 'Failure Reason', 'Failure Date', 'Retry Status', 'Resolution'],
+      dataSize: '45 records',
+      estimatedTime: '30 seconds',
+      format: 'Excel, PDF',
+      accessLevel: 'Finance, Banking, HR'
     }
   ];
 

@@ -1,7 +1,6 @@
 // PayrollReports.jsx (Part 1 of 3)
 import React, { useState, useEffect, useMemo } from 'react';
 import { Icon } from '@iconify/react/dist/iconify.js';
-import RecruiterDashboardLayout from '../../recruiterDashboard/RecruiterDashboardLayout';
 
 const PayrollReports = () => {
   // UI & navigation state
@@ -90,6 +89,24 @@ const userInfo = {
   const [selectedColumns, setSelectedColumns] = useState([]);
   const [selectedFilters, setSelectedFilters] = useState([]);
   const [builderStep, setBuilderStep] = useState(1);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewReport, setPreviewReport] = useState(null);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleForm, setScheduleForm] = useState({
+    reportId: '',
+    frequency: 'monthly',
+    day: 1,
+    time: '09:00',
+    recipients: [],
+    format: 'pdf',
+    autoGenerate: true
+  });
+  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
+  const [selectedDashboard, setSelectedDashboard] = useState(null);
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [locations, setLocations] = useState(['All', 'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Pune']);
+  const [grades, setGrades] = useState(['All', 'A', 'B', 'C', 'D', 'E']);
+  const [costCenters, setCostCenters] = useState(['All', 'CC001', 'CC002', 'CC003', 'CC004', 'CC005']);
 
   // --- Helper functions ---
   const formatCurrency = (value) => {
@@ -215,18 +232,50 @@ const userInfo = {
 
   const handleGenerateReport = (report) => {
     const name = report.name || report.reportName || 'Custom Report';
+    
+    // Show preview modal first
+    setPreviewReport({
+      ...report,
+      previewData: generatePreviewData(report)
+    });
+    setShowPreviewModal(true);
+  };
+
+  const generatePreviewData = (report) => {
+    // Generate sample preview data based on report type
+    const sampleData = [];
+    for (let i = 1; i <= 5; i++) {
+      sampleData.push({
+        employeeId: `EMP${String(i).padStart(3, '0')}`,
+        name: `Employee ${i}`,
+        department: ['Engineering', 'Sales', 'Marketing', 'HR', 'Finance'][i - 1],
+        grossSalary: 50000 + (i * 10000),
+        deductions: 5000 + (i * 1000),
+        netSalary: 45000 + (i * 9000)
+      });
+    }
+    return sampleData;
+  };
+
+  const handleConfirmGenerate = () => {
+    if (!previewReport) return;
+    
+    const name = previewReport.name || previewReport.reportName || 'Custom Report';
     const newGenerated = {
       id: `GR_${Date.now()}`,
       reportName: name,
-      period: 'Current Month',
+      period: filterPeriod !== 'All' ? filterPeriod : 'Current Month',
       generatedDate: new Date().toISOString(),
       generatedBy: 'System',
-      format: (report.format && (Array.isArray(report.format) ? report.format[0] : report.format)) || 'PDF',
+      format: (previewReport.format && (Array.isArray(previewReport.format) ? previewReport.format[0] : previewReport.format)) || 'PDF',
       size: '1.1 MB',
       status: 'completed',
-      downloadCount: 0
+      downloadCount: 0,
+      reportId: previewReport.id
     };
     setGeneratedReports(prev => [newGenerated, ...prev]);
+    setShowPreviewModal(false);
+    setPreviewReport(null);
     alert(`${name} generated successfully.`);
   };
 
@@ -236,17 +285,103 @@ const userInfo = {
   };
 
   const handleScheduleReport = (report) => {
+    setScheduleForm({
+      reportId: report.id,
+      frequency: 'monthly',
+      day: 1,
+      time: '09:00',
+      recipients: [],
+      format: (report.format && (Array.isArray(report.format) ? report.format[0] : report.format)) || 'pdf',
+      autoGenerate: true
+    });
+    setShowScheduleModal(true);
+  };
+
+  const handleSaveSchedule = () => {
+    if (!scheduleForm.reportId) {
+      alert('Please select a report');
+      return;
+    }
+
+    const report = [...standardReports, ...complianceReports, ...analyticsDashboards]
+      .find(r => r.id === scheduleForm.reportId);
+
+    if (!report) {
+      alert('Report not found');
+      return;
+    }
+
+    const scheduleText = scheduleForm.frequency === 'monthly' 
+      ? `${scheduleForm.day}${getDaySuffix(scheduleForm.day)} of every month`
+      : scheduleForm.frequency === 'weekly'
+      ? `Every ${new Date().toLocaleDateString('en-US', { weekday: 'long' })}`
+      : scheduleForm.frequency === 'daily'
+      ? 'Every day'
+      : 'Quarterly';
+
+    const nextRun = calculateNextRun(scheduleForm.frequency, scheduleForm.day, scheduleForm.time);
+
     const scheduleEntry = {
       id: `SRC_${Date.now()}`,
-      reportName: report.reportName || report.name,
-      schedule: '1st of every month',
-      nextRun: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
-      format: (report.format && (Array.isArray(report.format) ? report.format[0] : report.format)) || 'PDF',
-      recipients: ['hr@company.com'],
-      status: 'active'
+      reportName: report.name || report.reportName,
+      reportId: scheduleForm.reportId,
+      schedule: scheduleText,
+      frequency: scheduleForm.frequency,
+      day: scheduleForm.day,
+      time: scheduleForm.time,
+      nextRun: nextRun,
+      format: scheduleForm.format,
+      recipients: scheduleForm.recipients.length > 0 ? scheduleForm.recipients : ['hr@company.com'],
+      status: 'active',
+      autoGenerate: scheduleForm.autoGenerate
     };
+    
     setScheduledReports(prev => [scheduleEntry, ...prev]);
-    alert('Report scheduled (sample).');
+    setShowScheduleModal(false);
+    alert('Report scheduled successfully.');
+  };
+
+  const getDaySuffix = (day) => {
+    if (day > 3 && day < 21) return 'th';
+    switch (day % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  };
+
+  const calculateNextRun = (frequency, day, time) => {
+    const now = new Date();
+    const [hours, minutes] = time.split(':').map(Number);
+    
+    if (frequency === 'daily') {
+      const next = new Date(now);
+      next.setHours(hours, minutes, 0, 0);
+      if (next <= now) {
+        next.setDate(next.getDate() + 1);
+      }
+      return next.toISOString();
+    } else if (frequency === 'weekly') {
+      const next = new Date(now);
+      next.setHours(hours, minutes, 0, 0);
+      const daysUntilNext = (7 - next.getDay() + day) % 7 || 7;
+      next.setDate(next.getDate() + daysUntilNext);
+      return next.toISOString();
+    } else if (frequency === 'monthly') {
+      const next = new Date(now.getFullYear(), now.getMonth(), day, hours, minutes, 0, 0);
+      if (next <= now) {
+        next.setMonth(next.getMonth() + 1);
+      }
+      return next.toISOString();
+    } else if (frequency === 'quarterly') {
+      const next = new Date(now.getFullYear(), now.getMonth() - (now.getMonth() % 3) + 3, day, hours, minutes, 0, 0);
+      if (next <= now) {
+        next.setMonth(next.getMonth() + 3);
+      }
+      return next.toISOString();
+    }
+    return new Date().toISOString();
   };
 
   const handleEditCustomReport = (report) => {
@@ -500,27 +635,338 @@ const userInfo = {
     });
   };
 
+  // Enhanced report builder
   const renderReportBuilder = () => {
-  return (
-    <div className="card mt-3">
-      <div className="card-body">
-        <h4 className="fw-bold mb-3">Custom Report Builder</h4>
-        <p className="text-muted">This module lets you design a custom payroll report.</p>
+    return (
+      <div className="row g-4">
+        <div className="col-12">
+          <div className="card border shadow-none">
+            <div className="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+              <div>
+                <h5 className="mb-0">Custom Report Builder</h5>
+                <div className="small text-muted">Design your custom payroll report step by step</div>
+              </div>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setActiveSection("configure")}
+              >
+                <Icon icon="heroicons:arrow-left" className="me-2" />
+                Back to Configuration
+              </button>
+            </div>
 
-        <div className="alert alert-info">
-          <strong>Coming Soon:</strong> Drag & Drop column builder, filters, scheduling, export options.
+            <div className="card-body">
+              {/* Step Indicator */}
+              <div className="mb-4">
+                <div className="d-flex align-items-center justify-content-between">
+                  {[1, 2, 3, 4].map((step) => (
+                    <React.Fragment key={step}>
+                      <div className="d-flex flex-column align-items-center">
+                        <div
+                          className={`rounded-circle d-flex align-items-center justify-content-center ${
+                            builderStep >= step ? 'bg-primary text-white' : 'bg-light text-muted'
+                          }`}
+                          style={{ width: '40px', height: '40px' }}
+                        >
+                          {builderStep > step ? (
+                            <Icon icon="heroicons:check" />
+                          ) : (
+                            step
+                          )}
+                        </div>
+                        <div className="small mt-2 text-muted">
+                          {step === 1 ? 'Basic Info' : step === 2 ? 'Columns' : step === 3 ? 'Filters' : 'Schedule'}
+                        </div>
+                      </div>
+                      {step < 4 && (
+                        <div
+                          className={`flex-fill border-top mx-2 ${
+                            builderStep > step ? 'border-primary' : 'border-secondary'
+                          }`}
+                          style={{ height: '2px' }}
+                        />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+
+              {/* Step 1: Basic Information */}
+              {builderStep === 1 && (
+                <div>
+                  <h6 className="mb-3">Step 1: Basic Information</h6>
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label">Report Name *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={reportBuilder.name}
+                        onChange={(e) => setReportBuilder(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Enter report name"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Category</label>
+                      <select
+                        className="form-select"
+                        value={reportBuilder.category}
+                        onChange={(e) => setReportBuilder(prev => ({ ...prev, category: e.target.value }))}
+                      >
+                        <option value="Payroll">Payroll</option>
+                        <option value="Salary">Salary</option>
+                        <option value="Compliance">Compliance</option>
+                        <option value="Deduction">Deduction</option>
+                        <option value="Custom">Custom</option>
+                      </select>
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label">Description</label>
+                      <textarea
+                        className="form-control"
+                        rows="3"
+                        value={reportBuilder.description}
+                        onChange={(e) => setReportBuilder(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Describe what this report contains"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Output Format</label>
+                      <div className="d-flex gap-3">
+                        {['pdf', 'excel', 'csv'].map(format => (
+                          <div key={format} className="form-check">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              checked={reportBuilder.format.includes(format)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setReportBuilder(prev => ({
+                                    ...prev,
+                                    format: [...prev.format, format]
+                                  }));
+                                } else {
+                                  setReportBuilder(prev => ({
+                                    ...prev,
+                                    format: prev.format.filter(f => f !== format)
+                                  }));
+                                }
+                              }}
+                            />
+                            <label className="form-check-label text-capitalize">{format}</label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Select Columns */}
+              {builderStep === 2 && (
+                <div>
+                  <h6 className="mb-3">Step 2: Select Columns</h6>
+                  <div className="mb-3">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Search columns..."
+                      onChange={(e) => {
+                        // Filter columns based on search
+                      }}
+                    />
+                  </div>
+                  <div className="row g-3">
+                    {availableColumns.map(col => (
+                      <div key={col.id} className="col-md-4">
+                        <div className="card border">
+                          <div className="card-body p-2">
+                            <div className="form-check">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                checked={selectedColumns.includes(col.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedColumns([...selectedColumns, col.id]);
+                                  } else {
+                                    setSelectedColumns(selectedColumns.filter(c => c !== col.id));
+                                  }
+                                }}
+                              />
+                              <label className="form-check-label">
+                                <div className="fw-semibold">{col.name}</div>
+                                <div className="small text-muted">{col.category} • {col.type}</div>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3">
+                    <div className="alert alert-info">
+                      <strong>Selected:</strong> {selectedColumns.length} column(s)
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Apply Filters */}
+              {builderStep === 3 && (
+                <div>
+                  <h6 className="mb-3">Step 3: Apply Filters</h6>
+                  <div className="row g-3">
+                    {availableFilters.map(filter => (
+                      <div key={filter.id} className="col-md-6">
+                        <label className="form-label">{filter.name}</label>
+                        {filter.type === 'multi-select' && (
+                          <select
+                            className="form-select"
+                            multiple
+                            onChange={(e) => {
+                              const selected = Array.from(e.target.selectedOptions, option => option.value);
+                              setSelectedFilters(prev => ({
+                                ...prev,
+                                [filter.id]: selected
+                              }));
+                            }}
+                          >
+                            {filter.options.map(opt => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
+                        )}
+                        {filter.type === 'date-range' && (
+                          <div className="d-flex gap-2">
+                            <input
+                              type="date"
+                              className="form-control"
+                              value={dateRange.start}
+                              onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                            />
+                            <input
+                              type="date"
+                              className="form-control"
+                              value={dateRange.end}
+                              onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                            />
+                          </div>
+                        )}
+                        {filter.type === 'range' && (
+                          <div className="d-flex gap-2">
+                            <input
+                              type="number"
+                              className="form-control"
+                              placeholder="Min"
+                              min={filter.min}
+                              max={filter.max}
+                            />
+                            <input
+                              type="number"
+                              className="form-control"
+                              placeholder="Max"
+                              min={filter.min}
+                              max={filter.max}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: Schedule */}
+              {builderStep === 4 && (
+                <div>
+                  <h6 className="mb-3">Step 4: Schedule (Optional)</h6>
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label">Schedule Frequency</label>
+                      <select
+                        className="form-select"
+                        value={reportBuilder.schedule}
+                        onChange={(e) => setReportBuilder(prev => ({ ...prev, schedule: e.target.value }))}
+                      >
+                        <option value="none">No Schedule</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                      </select>
+                    </div>
+                    {reportBuilder.schedule !== 'none' && (
+                      <>
+                        <div className="col-md-6">
+                          <label className="form-label">Recipients (Email)</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="email1@company.com, email2@company.com"
+                            onChange={(e) => {
+                              setReportBuilder(prev => ({
+                                ...prev,
+                                recipients: e.target.value.split(',').map(e => e.trim())
+                              }));
+                            }}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation Buttons */}
+              <div className="d-flex justify-content-between mt-4">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    if (builderStep > 1) setBuilderStep(builderStep - 1);
+                    else setActiveSection('configure');
+                  }}
+                >
+                  <Icon icon="heroicons:arrow-left" className="me-2" />
+                  {builderStep > 1 ? 'Previous' : 'Cancel'}
+                </button>
+                <div className="d-flex gap-2">
+                  {builderStep < 4 && (
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => {
+                        if (builderStep === 1 && !reportBuilder.name) {
+                          alert('Please enter a report name');
+                          return;
+                        }
+                        if (builderStep === 2 && selectedColumns.length === 0) {
+                          alert('Please select at least one column');
+                          return;
+                        }
+                        setBuilderStep(builderStep + 1);
+                      }}
+                    >
+                      Next
+                      <Icon icon="heroicons:arrow-right" className="ms-2" />
+                    </button>
+                  )}
+                  {builderStep === 4 && (
+                    <button
+                      className="btn btn-success"
+                      onClick={handleCreateCustomReport}
+                    >
+                      <Icon icon="heroicons:check" className="me-2" />
+                      Create Report
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <button
-          className="btn btn-secondary mt-3"
-          onClick={() => setActiveSection("configure")}
-        >
-          Back to Configuration
-        </button>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
 
   
@@ -585,9 +1031,20 @@ const userInfo = {
                       <div className="card-footer bg-transparent border-top d-flex justify-content-between">
                         <div className="small text-muted">Formats: {Array.isArray(report.format) ? report.format.join(', ') : report.format}</div>
                         <div className="d-flex gap-2">
-                          <button className="btn btn-sm btn-outline-primary" onClick={() => { handleGenerateReport(report); }}>Generate</button>
-                          <button className="btn btn-sm btn-outline-warning" onClick={() => handleEditReport(report, 'standard')}>Edit</button>
-                          <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteReport(report.id, 'standard')}>Delete</button>
+                          <button className="btn btn-sm btn-outline-primary" onClick={() => { handleGenerateReport(report); }}>
+                            <Icon icon="heroicons:document-arrow-down" className="me-1" />
+                            Generate
+                          </button>
+                          <button className="btn btn-sm btn-outline-info" onClick={() => handleScheduleReport(report)}>
+                            <Icon icon="heroicons:clock" className="me-1" />
+                            Schedule
+                          </button>
+                          <button className="btn btn-sm btn-outline-warning" onClick={() => handleEditReport(report, 'standard')}>
+                            <Icon icon="heroicons:pencil" />
+                          </button>
+                          <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteReport(report.id, 'standard')}>
+                            <Icon icon="heroicons:trash" />
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -689,69 +1146,164 @@ const userInfo = {
     </div>
   );
 
-  const renderAnalyticsDashboards = () => (
-    <div className="row g-4">
-      <div className="col-12">
-        <div className="card border shadow-none">
-          <div className="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
-            <div>
-              <h5 className="mb-0">Analytics Dashboards</h5>
-              <div className="small text-muted">Interactive dashboards and forecasts</div>
-            </div>
-            <div className="d-flex gap-2">
-              <button className="btn btn-outline-secondary" onClick={handleRefreshData}><Icon icon="heroicons:arrow-path" className="me-2" /> Refresh</button>
-              <button className="btn btn-primary" onClick={handleAddReport}><Icon icon="heroicons:plus" className="me-2" /> + Add Dashboard</button>
-            </div>
+  const renderAnalyticsDashboards = () => {
+    const renderChart = (data, labels, title, type = 'bar') => {
+      const maxValue = Math.max(...data);
+      return (
+        <div className="mb-4">
+          <h6 className="mb-3">{title}</h6>
+          <div className="d-flex align-items-end gap-2" style={{ height: '200px' }}>
+            {data.map((value, index) => (
+              <div key={index} className="flex-fill d-flex flex-column align-items-center">
+                <div
+                  className="bg-primary rounded-top w-100 mb-2"
+                  style={{
+                    height: `${(value / maxValue) * 180}px`,
+                    minHeight: '10px'
+                  }}
+                  title={`${labels[index]}: ${formatCurrency(value)}`}
+                />
+                <div className="small text-muted text-center" style={{ fontSize: '10px', writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
+                  {labels[index]}
+                </div>
+              </div>
+            ))}
           </div>
+        </div>
+      );
+    };
 
-          <div className="card-body">
-            <div className="row g-4">
-              <div className="col-md-8">
-                <div className="card border">
-                  <div className="card-header"><h6 className="mb-0">Available Dashboards</h6></div>
-                  <div className="card-body">
-                    <div className="row g-3">
-                      {analyticsDashboards.map(d => (
-                        <div key={d.id} className="col-md-6">
-                          <div className="card h-100">
-                            <div className="card-body">
-                              <h6 className="mb-1">{d.name}</h6>
-                              <p className="small text-muted mb-2">{d.description}</p>
-                              <div className="small text-muted">Updated: {formatDate(d.lastUpdated)}</div>
-                            </div>
-                            <div className="card-footer bg-transparent border-top d-flex justify-content-between">
-                              <div className="small text-muted">Metrics: {d.metrics?.slice(0,3).join(', ')}</div>
-                              <div className="d-flex gap-2">
-                                <button className="btn btn-sm btn-outline-warning" onClick={() => handleEditReport(d, 'analytics')}>Edit</button>
-                                <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteReport(d.id, 'analytics')}>Delete</button>
+    return (
+      <div className="row g-4">
+        <div className="col-12">
+          <div className="card border shadow-none">
+            <div className="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+              <div>
+                <h5 className="mb-0">Analytics Dashboards</h5>
+                <div className="small text-muted">Interactive dashboards and forecasts</div>
+              </div>
+              <div className="d-flex gap-2">
+                <button className="btn btn-outline-secondary" onClick={handleRefreshData}>
+                  <Icon icon="heroicons:arrow-path" className="me-2" /> Refresh
+                </button>
+                <button className="btn btn-primary" onClick={handleAddReport}>
+                  <Icon icon="heroicons:plus" className="me-2" /> + Add Dashboard
+                </button>
+              </div>
+            </div>
+
+            <div className="card-body">
+              <div className="row g-4">
+                <div className="col-md-8">
+                  <div className="card border">
+                    <div className="card-header">
+                      <h6 className="mb-0">Available Dashboards</h6>
+                    </div>
+                    <div className="card-body">
+                      <div className="row g-3">
+                        {analyticsDashboards.map(d => (
+                          <div key={d.id} className="col-md-6">
+                            <div className="card h-100 border">
+                              <div className="card-body">
+                                <h6 className="mb-1">{d.name}</h6>
+                                <p className="small text-muted mb-2">{d.description}</p>
+                                <div className="small text-muted mb-2">
+                                  <Icon icon="heroicons:clock" className="me-1" />
+                                  Updated: {formatDate(d.lastUpdated)}
+                                </div>
+                                <div className="small text-muted mb-2">
+                                  <Icon icon="heroicons:chart-bar" className="me-1" />
+                                  Refresh: {d.refreshRate}
+                                </div>
+                                <div className="small">
+                                  <span className="badge bg-info-subtle text-info">
+                                    {d.accessLevel}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="card-footer bg-transparent border-top d-flex justify-content-between align-items-center">
+                                <div className="small text-muted">
+                                  Metrics: {d.metrics?.slice(0, 2).join(', ')}
+                                  {d.metrics?.length > 2 && ` +${d.metrics.length - 2}`}
+                                </div>
+                                <div className="d-flex gap-2">
+                                  <button
+                                    className="btn btn-sm btn-outline-primary"
+                                    onClick={() => {
+                                      setSelectedDashboard(d);
+                                      setShowAnalyticsModal(true);
+                                    }}
+                                  >
+                                    <Icon icon="heroicons:eye" />
+                                  </button>
+                                  <button
+                                    className="btn btn-sm btn-outline-warning"
+                                    onClick={() => handleEditReport(d, 'analytics')}
+                                  >
+                                    <Icon icon="heroicons:pencil" />
+                                  </button>
+                                  <button
+                                    className="btn btn-sm btn-outline-danger"
+                                    onClick={() => handleDeleteReport(d.id, 'analytics')}
+                                  >
+                                    <Icon icon="heroicons:trash" />
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="col-md-4">
+                  <div className="card border h-100">
+                    <div className="card-header">
+                      <h6 className="mb-0">Quick Metrics</h6>
+                    </div>
+                    <div className="card-body">
+                      <div className="mb-3">
+                        <div className="small text-muted">Total Payroll Cost</div>
+                        <div className="fw-semibold fs-5">{formatCurrency(kpis.totalPayrollCost)}</div>
+                      </div>
+                      <div className="mb-3">
+                        <div className="small text-muted">Average Salary</div>
+                        <div className="fw-semibold fs-5">{formatCurrency(kpis.avgSalary)}</div>
+                      </div>
+                      <div className="mb-3">
+                        <div className="small text-muted">Statutory Deductions</div>
+                        <div className="fw-semibold fs-5">{formatCurrency(kpis.statutoryDeductions)}</div>
+                      </div>
+                      <div>
+                        <div className="small text-muted">Net Payroll</div>
+                        <div className="fw-semibold fs-5 text-success">{formatCurrency(kpis.netPayroll)}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Chart Preview */}
+                  <div className="card border mt-3">
+                    <div className="card-header">
+                      <h6 className="mb-0">Payroll Trend</h6>
+                    </div>
+                    <div className="card-body">
+                      {renderChart(
+                        analyticsData.payrollTrends?.data || [6800000, 7000000, 7500000, 7200000, 7400000, 7600000],
+                        analyticsData.payrollTrends?.labels || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        'Last 6 Months'
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
-
-              <div className="col-md-4">
-                <div className="card border h-100">
-                  <div className="card-header"><h6 className="mb-0">Quick Metrics</h6></div>
-                  <div className="card-body">
-                    <div className="mb-3"><div className="small text-muted">Total Payroll Cost</div><div className="fw-semibold">{formatCurrency(kpis.totalPayrollCost)}</div></div>
-                    <div className="mb-3"><div className="small text-muted">Average Salary</div><div className="fw-semibold">{formatCurrency(kpis.avgSalary)}</div></div>
-                    <div className="mb-3"><div className="small text-muted">Statutory Deductions</div><div className="fw-semibold">{formatCurrency(kpis.statutoryDeductions)}</div></div>
-                    <div><div className="small text-muted">Net Payroll</div><div className="fw-semibold">{formatCurrency(kpis.netPayroll)}</div></div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
-
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderGeneratedReports = () => (
     <div className="row g-4">
@@ -992,12 +1544,26 @@ const userInfo = {
                   <td>{getStatusBadge(c.status)}</td>
                   <td>{c.month || c.quarter || c.year || 'N/A'}</td>
                   <td>
-                    <div className="d-flex gap-2">
-                      <button className="btn btn-sm btn-outline-primary" onClick={() => handleGenerateReport(c)}>Generate</button>
-                      <button className="btn btn-sm btn-outline-success" onClick={() => handleDownloadReport(c)} disabled={!(c.status === 'generated' || c.status === 'submitted')}>Download</button>
-                      <button className="btn btn-sm btn-outline-warning" onClick={() => handleEditReport(c, 'compliance')}>Edit</button>
-                      <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteReport(c.id, 'compliance')}>Delete</button>
-                    </div>
+                        <div className="d-flex gap-2">
+                          <button className="btn btn-sm btn-outline-primary" onClick={() => handleGenerateReport(c)}>
+                            <Icon icon="heroicons:document-arrow-down" className="me-1" />
+                            Generate
+                          </button>
+                          <button className="btn btn-sm btn-outline-success" onClick={() => handleDownloadReport(c)} disabled={!(c.status === 'generated' || c.status === 'submitted')}>
+                            <Icon icon="heroicons:download" className="me-1" />
+                            Download
+                          </button>
+                          <button className="btn btn-sm btn-outline-info" onClick={() => handleScheduleReport(c)}>
+                            <Icon icon="heroicons:clock" className="me-1" />
+                            Schedule
+                          </button>
+                          <button className="btn btn-sm btn-outline-warning" onClick={() => handleEditReport(c, 'compliance')}>
+                            <Icon icon="heroicons:pencil" />
+                          </button>
+                          <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteReport(c.id, 'compliance')}>
+                            <Icon icon="heroicons:trash" />
+                          </button>
+                        </div>
                   </td>
                 </tr>
               ))}
@@ -1172,7 +1738,9 @@ const userInfo = {
 
   // Final render (uses combined view)
   return (
-    
+    <
+     
+    >
       <div className="container-fluid">
         <div className="mb-4">
           <div className="d-flex align-items-center gap-3 mb-3">
@@ -1182,14 +1750,7 @@ const userInfo = {
               </button>
             )}
 
-            <div className="ms-auto d-flex gap-2">
-              <div className="input-group">
-                <input type="text" placeholder="Search reports..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="form-control" />
-                <button className="btn btn-outline-secondary" onClick={handleRefreshData}><Icon icon="heroicons:arrow-path" /></button>
-              </div>
-              <button className="btn btn-primary" onClick={handleAddReport}><Icon icon="heroicons:plus" className="me-2" /> Add Report</button>
-              <button className="btn btn-outline-primary" onClick={handleExportData}><Icon icon="heroicons:document-arrow-down" className="me-2" /> Export</button>
-            </div>
+           
           </div>
 
           <h5 className="text-3xl fw-bold text-dark mb-2 mt-3 d-flex align-items-center gap-2">
@@ -1257,6 +1818,7 @@ const userInfo = {
         )}
 
       </div>
+    </>
   );
 };
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Icon } from '@iconify/react/dist/iconify.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import RecruiterDashboardLayout from '../../recruiterDashboard/RecruiterDashboardLayout';
 
 const PreJoiningEngagement = () => {
   // ==================== MENU ITEMS ====================
@@ -407,9 +407,37 @@ const PreJoiningEngagement = () => {
   const [showAddCandidateModal, setShowAddCandidateModal] = useState(false);
   const [showChecklistModal, setShowChecklistModal] = useState(false);
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
+  const [showDocumentVerificationModal, setShowDocumentVerificationModal] = useState(false);
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [showResubmissionModal, setShowResubmissionModal] = useState(false);
+  const [showAutomationSettingsModal, setShowAutomationSettingsModal] = useState(false);
+  const [selectedDocumentForVerification, setSelectedDocumentForVerification] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [automationSettings, setAutomationSettings] = useState({
+    welcomeEmailAuto: true,
+    welcomeEmailDays: 0, // Immediately after offer acceptance
+    joiningInstructionsAuto: true,
+    joiningInstructionsDays: 7, // 7 days before joining
+    firstDayScheduleAuto: true,
+    firstDayScheduleDays: 3, // 3 days before joining
+    officeDetailsAuto: true,
+    officeDetailsDays: 5, // 5 days before joining
+    dressCodeAuto: true,
+    dressCodeDays: 5,
+    itAccessAuto: true,
+    itAccessDays: 2, // 2 days before joining
+    parkingInfoAuto: true,
+    parkingInfoDays: 3,
+    teamIntroductionAuto: true,
+    teamIntroductionDays: 1, // 1 day before joining
+    reminderEnabled: true,
+    reminderFrequency: 3, // Every 3 days
+    reminderMaxCount: 3 // Max 3 reminders
+  });
   
   const [selectedForm, setSelectedForm] = useState('');
   const [formData, setFormData] = useState({});
+  const [formErrors, setFormErrors] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterDepartment, setFilterDepartment] = useState('all');
@@ -685,14 +713,24 @@ const PreJoiningEngagement = () => {
   const handleDocumentAction = (candidateId, documentId, action, reason = '') => {
     setCandidates(prev => prev.map(candidate => {
       if (candidate.id === candidateId) {
+        const currentDoc = candidate.documents[documentId];
         const updatedDocuments = {
           ...candidate.documents,
           [documentId]: {
-            ...candidate.documents[documentId],
+            ...currentDoc,
             status: action,
             reviewedBy: userInfo.name,
             reviewedDate: new Date().toISOString().split('T')[0],
-            ...(action === 'rejected' && reason ? { rejectionReason: reason } : {})
+            ...(action === 'rejected' && reason ? { 
+              rejectionReason: reason,
+              rejectionDate: new Date().toISOString().split('T')[0],
+              resubmissionAllowed: true,
+              resubmissionCount: (currentDoc.resubmissionCount || 0) + 1
+            } : {}),
+            ...(action === 'approved' ? {
+              approvedDate: new Date().toISOString().split('T')[0],
+              rejectionReason: null
+            } : {})
           }
         };
 
@@ -718,32 +756,194 @@ const PreJoiningEngagement = () => {
       return candidate;
     }));
 
+    if (action === 'rejected') {
+      // Send rejection notification email
+      const candidate = candidates.find(c => c.id === candidateId);
+      console.log(`Rejection email sent to ${candidate?.email} for document ${documentId}. Reason: ${reason}`);
+    }
+
     alert(`Document ${action} successfully!`);
   };
 
+  const handleDocumentRejection = (candidateId, documentId) => {
+    const candidate = candidates.find(c => c.id === candidateId);
+    setSelectedDocumentForVerification({ candidateId, documentId, candidate });
+    setShowRejectionModal(true);
+  };
+
+  const handleConfirmRejection = () => {
+    if (!rejectionReason.trim()) {
+      alert('Please provide a rejection reason');
+      return;
+    }
+
+    if (selectedDocumentForVerification) {
+      handleDocumentAction(
+        selectedDocumentForVerification.candidateId,
+        selectedDocumentForVerification.documentId,
+        'rejected',
+        rejectionReason
+      );
+      setShowRejectionModal(false);
+      setRejectionReason('');
+      setSelectedDocumentForVerification(null);
+    }
+  };
+
+  const handleDocumentResubmission = (candidateId, documentId) => {
+    const candidate = candidates.find(c => c.id === candidateId);
+    setSelectedDocumentForVerification({ candidateId, documentId, candidate });
+    setShowResubmissionModal(true);
+  };
+
+  const handleConfirmResubmission = () => {
+    if (selectedDocumentForVerification) {
+      setCandidates(prev => prev.map(candidate => {
+        if (candidate.id === selectedDocumentForVerification.candidateId) {
+          const updatedDocuments = {
+            ...candidate.documents,
+            [selectedDocumentForVerification.documentId]: {
+              ...candidate.documents[selectedDocumentForVerification.documentId],
+              status: 'submitted',
+              submitted: true,
+              resubmitted: true,
+              resubmissionDate: new Date().toISOString().split('T')[0],
+              rejectionReason: null
+            }
+          };
+
+          return {
+            ...candidate,
+            documents: updatedDocuments,
+            status: 'documents_review'
+          };
+        }
+        return candidate;
+      }));
+
+      setShowResubmissionModal(false);
+      setSelectedDocumentForVerification(null);
+      alert('Document resubmitted successfully!');
+    }
+  };
+
   const handleSendCommunication = (candidateId, communicationId) => {
-    setCandidates(prev => prev.map(candidate => {
-      if (candidate.id === candidateId) {
+    const candidate = candidates.find(c => c.id === candidateId);
+    if (!candidate) return;
+
+    setCandidates(prev => prev.map(c => {
+      if (c.id === candidateId) {
         const updatedCommunications = {
-          ...candidate.communications,
+          ...c.communications,
           [communicationId]: {
             sent: true,
             date: new Date().toISOString().split('T')[0],
             sentBy: userInfo.name,
-            opened: false
+            opened: false,
+            sentTime: new Date().toISOString()
           }
         };
 
         return {
-          ...candidate,
+          ...c,
           communications: updatedCommunications
         };
       }
-      return candidate;
+      return c;
     }));
 
-    alert(`Communication sent to ${candidates.find(c => c.id === candidateId)?.name}`);
+    // Simulate email sending
+    const template = communicationTemplates.find(t => t.id === communicationId);
+    console.log(`Email sent to: ${candidate.email}`);
+    console.log(`Subject: ${template?.subject || 'Pre-Joining Communication'}`);
+    console.log(`Body: ${template?.description || 'Communication sent'}`);
+
+    alert(`Communication sent to ${candidate.name}`);
   };
+
+  // Automated communication trigger based on joining date
+  useEffect(() => {
+    const checkAutomatedCommunications = () => {
+      if (!automationSettings.welcomeEmailAuto) return;
+
+      candidates.forEach(candidate => {
+        if (!candidate.joiningDate) return;
+
+        const joiningDate = new Date(candidate.joiningDate);
+        const today = new Date();
+        const daysUntilJoining = Math.ceil((joiningDate - today) / (1000 * 60 * 60 * 24));
+
+        // Welcome email - immediately after offer acceptance
+        if (automationSettings.welcomeEmailAuto && 
+            !candidate.communications.welcomeEmail.sent &&
+            daysUntilJoining >= automationSettings.welcomeEmailDays) {
+          handleSendCommunication(candidate.id, 'welcomeEmail');
+        }
+
+        // Joining instructions - 7 days before
+        if (automationSettings.joiningInstructionsAuto &&
+            daysUntilJoining <= automationSettings.joiningInstructionsDays &&
+            daysUntilJoining > 0 &&
+            !candidate.communications.joiningInstructions.sent) {
+          handleSendCommunication(candidate.id, 'joiningInstructions');
+        }
+
+        // First day schedule - 3 days before
+        if (automationSettings.firstDayScheduleAuto &&
+            daysUntilJoining <= automationSettings.firstDayScheduleDays &&
+            daysUntilJoining > 0 &&
+            !candidate.communications.firstDaySchedule.sent) {
+          handleSendCommunication(candidate.id, 'firstDaySchedule');
+        }
+
+        // Office details - 5 days before
+        if (automationSettings.officeDetailsAuto &&
+            daysUntilJoining <= automationSettings.officeDetailsDays &&
+            daysUntilJoining > 0 &&
+            !candidate.communications.officeDetails.sent) {
+          handleSendCommunication(candidate.id, 'officeDetails');
+        }
+
+        // Dress code - 5 days before
+        if (automationSettings.dressCodeAuto &&
+            daysUntilJoining <= automationSettings.dressCodeDays &&
+            daysUntilJoining > 0 &&
+            !candidate.communications.dressCodeGuide.sent) {
+          handleSendCommunication(candidate.id, 'dressCodeGuide');
+        }
+
+        // IT access - 2 days before
+        if (automationSettings.itAccessAuto &&
+            daysUntilJoining <= automationSettings.itAccessDays &&
+            daysUntilJoining > 0 &&
+            !candidate.communications.itAccessInfo.sent) {
+          handleSendCommunication(candidate.id, 'itAccessInfo');
+        }
+
+        // Parking info - 3 days before
+        if (automationSettings.parkingInfoAuto &&
+            daysUntilJoining <= automationSettings.parkingInfoDays &&
+            daysUntilJoining > 0 &&
+            !candidate.communications.parkingInfo.sent) {
+          handleSendCommunication(candidate.id, 'parkingInfo');
+        }
+
+        // Team introduction - 1 day before
+        if (automationSettings.teamIntroductionAuto &&
+            daysUntilJoining <= automationSettings.teamIntroductionDays &&
+            daysUntilJoining > 0 &&
+            !candidate.communications.teamIntroduction.sent) {
+          handleSendCommunication(candidate.id, 'teamIntroduction');
+        }
+      });
+    };
+
+    // Check every hour for automated communications
+    const interval = setInterval(checkAutomatedCommunications, 60 * 60 * 1000);
+    checkAutomatedCommunications(); // Initial check
+
+    return () => clearInterval(interval);
+  }, [candidates, automationSettings]);
 
   const handleUploadDocument = () => {
     if (!uploadDocument.file || !uploadDocument.documentType || !uploadDocument.candidateId) {
@@ -806,26 +1006,48 @@ const PreJoiningEngagement = () => {
       return;
     }
 
+    const candidate = candidates.find(c => c.id === reminderData.candidateId);
+    if (!candidate) return;
+
+    // Check reminder count limit
+    const reminderCount = candidate.reminders.filter(r => 
+      r.type === reminderData.type && 
+      (reminderData.type === 'document' ? r.documentType === reminderData.documentType : 
+       r.communicationType === reminderData.communicationType)
+    ).length;
+
+    if (reminderCount >= automationSettings.reminderMaxCount) {
+      alert(`Maximum reminder limit (${automationSettings.reminderMaxCount}) reached for this item.`);
+      return;
+    }
+
     const newReminder = {
       id: Date.now(),
       type: reminderData.type,
       documentType: reminderData.documentType,
       communicationType: reminderData.communicationType,
       sentDate: reminderData.date || new Date().toISOString().split('T')[0],
+      sentTime: new Date().toISOString(),
       message: reminderData.message || 'Reminder sent',
       status: 'sent',
-      sentBy: userInfo.name
+      sentBy: userInfo.name,
+      reminderNumber: reminderCount + 1
     };
 
-    setCandidates(prev => prev.map(candidate => {
-      if (candidate.id === reminderData.candidateId) {
+    setCandidates(prev => prev.map(c => {
+      if (c.id === reminderData.candidateId) {
         return {
-          ...candidate,
-          reminders: [...candidate.reminders, newReminder]
+          ...c,
+          reminders: [...c.reminders, newReminder]
         };
       }
-      return candidate;
+      return c;
     }));
+
+    // Send reminder email
+    console.log(`Reminder email sent to: ${candidate.email}`);
+    console.log(`Subject: Reminder - ${reminderData.type === 'document' ? 'Document Submission' : 'Communication'}`);
+    console.log(`Message: ${reminderData.message || 'Please complete the required action.'}`);
 
     setReminderData({
       candidateId: null,
@@ -838,6 +1060,68 @@ const PreJoiningEngagement = () => {
     setShowReminderModal(false);
     alert('Reminder sent successfully!');
   };
+
+  // Automated reminder system
+  useEffect(() => {
+    if (!automationSettings.reminderEnabled) return;
+
+    const checkPendingDocuments = () => {
+      candidates.forEach(candidate => {
+        if (candidate.status === 'completed') return;
+
+        documentChecklist.forEach(doc => {
+          const docStatus = candidate.documents[doc.id];
+          if (doc.required && (!docStatus?.submitted || docStatus?.status === 'rejected')) {
+            // Check if reminder is needed
+            const lastReminder = candidate.reminders
+              .filter(r => r.type === 'document' && r.documentType === doc.id)
+              .sort((a, b) => new Date(b.sentDate) - new Date(a.sentDate))[0];
+
+            if (!lastReminder || 
+                (new Date() - new Date(lastReminder.sentDate)) / (1000 * 60 * 60 * 24) >= automationSettings.reminderFrequency) {
+              const reminderCount = candidate.reminders.filter(r => 
+                r.type === 'document' && r.documentType === doc.id
+              ).length;
+
+              if (reminderCount < automationSettings.reminderMaxCount) {
+                const autoReminder = {
+                  id: Date.now(),
+                  type: 'document',
+                  documentType: doc.id,
+                  communicationType: '',
+                  sentDate: new Date().toISOString().split('T')[0],
+                  sentTime: new Date().toISOString(),
+                  message: `Automated reminder: Please submit your ${doc.name}`,
+                  status: 'sent',
+                  sentBy: 'System',
+                  reminderNumber: reminderCount + 1,
+                  automated: true
+                };
+
+                setCandidates(prev => prev.map(c => {
+                  if (c.id === candidate.id) {
+                    return {
+                      ...c,
+                      reminders: [...c.reminders, autoReminder]
+                    };
+                  }
+                  return c;
+                }));
+
+                console.log(`Automated reminder sent to ${candidate.email} for ${doc.name}`);
+              }
+            }
+          }
+        });
+      });
+    };
+
+    // Check every day for automated reminders
+    const interval = setInterval(checkPendingDocuments, 24 * 60 * 60 * 1000);
+    checkPendingDocuments(); // Initial check
+
+    return () => clearInterval(interval);
+  }, [candidates, automationSettings]);
 
   const handleAddCandidate = (e) => {
     e.preventDefault();
@@ -1131,14 +1415,117 @@ const PreJoiningEngagement = () => {
   const FormModal = () => {
     const formFields = {
       personalInfo: [
-        { id: 'fullName', label: 'Full Name', type: 'text', required: true },
+        { id: 'fullName', label: 'Full Name (as per Aadhaar)', type: 'text', required: true },
         { id: 'dateOfBirth', label: 'Date of Birth', type: 'date', required: true },
-        { id: 'gender', label: 'Gender', type: 'select', options: ['Male', 'Female', 'Other'], required: true }
+        { id: 'gender', label: 'Gender', type: 'select', options: ['Male', 'Female', 'Other', 'Prefer not to say'], required: true },
+        { id: 'maritalStatus', label: 'Marital Status', type: 'select', options: ['Single', 'Married', 'Divorced', 'Widowed'], required: true },
+        { id: 'nationality', label: 'Nationality', type: 'text', required: true },
+        { id: 'bloodGroup', label: 'Blood Group', type: 'select', options: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'], required: false },
+        { id: 'email', label: 'Personal Email', type: 'email', required: true },
+        { id: 'personalPhone', label: 'Personal Phone', type: 'tel', required: true },
+        { id: 'alternatePhone', label: 'Alternate Phone', type: 'tel', required: false },
+        { id: 'currentAddress', label: 'Current Address', type: 'textarea', required: true },
+        { id: 'permanentAddress', label: 'Permanent Address', type: 'textarea', required: true },
+        { id: 'sameAsCurrent', label: 'Same as Current Address', type: 'checkbox', required: false }
       ],
       emergencyContact: [
         { id: 'primaryName', label: 'Primary Contact Name', type: 'text', required: true },
-        { id: 'primaryRelationship', label: 'Relationship', type: 'text', required: true },
-        { id: 'primaryPhone', label: 'Primary Phone', type: 'tel', required: true }
+        { id: 'primaryRelationship', label: 'Relationship', type: 'select', options: ['Father', 'Mother', 'Spouse', 'Sibling', 'Friend', 'Other'], required: true },
+        { id: 'primaryPhone', label: 'Primary Phone', type: 'tel', required: true },
+        { id: 'primaryAddress', label: 'Primary Contact Address', type: 'textarea', required: true },
+        { id: 'secondaryName', label: 'Secondary Contact Name', type: 'text', required: false },
+        { id: 'secondaryRelationship', label: 'Relationship', type: 'select', options: ['Father', 'Mother', 'Spouse', 'Sibling', 'Friend', 'Other'], required: false },
+        { id: 'secondaryPhone', label: 'Secondary Phone', type: 'tel', required: false },
+        { id: 'secondaryAddress', label: 'Secondary Contact Address', type: 'textarea', required: false }
+      ],
+      educationalDetails: [
+        { id: 'tenthBoard', label: '10th Board/University', type: 'text', required: true },
+        { id: 'tenthYear', label: '10th Year of Passing', type: 'number', required: true },
+        { id: 'tenthPercentage', label: '10th Percentage/CGPA', type: 'text', required: true },
+        { id: 'twelfthBoard', label: '12th Board/University', type: 'text', required: true },
+        { id: 'twelfthYear', label: '12th Year of Passing', type: 'number', required: true },
+        { id: 'twelfthPercentage', label: '12th Percentage/CGPA', type: 'text', required: true },
+        { id: 'degree', label: 'Degree', type: 'text', required: true },
+        { id: 'degreeUniversity', label: 'University/College', type: 'text', required: true },
+        { id: 'degreeYear', label: 'Year of Passing', type: 'number', required: true },
+        { id: 'degreePercentage', label: 'Percentage/CGPA', type: 'text', required: true },
+        { id: 'postGraduation', label: 'Post Graduation (if any)', type: 'text', required: false },
+        { id: 'pgUniversity', label: 'PG University/College', type: 'text', required: false },
+        { id: 'pgYear', label: 'PG Year of Passing', type: 'number', required: false },
+        { id: 'pgPercentage', label: 'PG Percentage/CGPA', type: 'text', required: false },
+        { id: 'certifications', label: 'Professional Certifications', type: 'textarea', required: false }
+      ],
+      previousEmployment: [
+        { id: 'company1', label: 'Previous Company 1', type: 'text', required: true },
+        { id: 'designation1', label: 'Designation', type: 'text', required: true },
+        { id: 'fromDate1', label: 'From Date', type: 'date', required: true },
+        { id: 'toDate1', label: 'To Date', type: 'date', required: true },
+        { id: 'reason1', label: 'Reason for Leaving', type: 'textarea', required: true },
+        { id: 'company2', label: 'Previous Company 2 (if any)', type: 'text', required: false },
+        { id: 'designation2', label: 'Designation', type: 'text', required: false },
+        { id: 'fromDate2', label: 'From Date', type: 'date', required: false },
+        { id: 'toDate2', label: 'To Date', type: 'date', required: false },
+        { id: 'reason2', label: 'Reason for Leaving', type: 'textarea', required: false },
+        { id: 'totalExperience', label: 'Total Years of Experience', type: 'number', required: true },
+        { id: 'references', label: 'Professional References', type: 'textarea', required: false }
+      ],
+      bankDetails: [
+        { id: 'accountHolderName', label: 'Account Holder Name', type: 'text', required: true },
+        { id: 'bankName', label: 'Bank Name', type: 'text', required: true },
+        { id: 'accountNumber', label: 'Account Number', type: 'text', required: true },
+        { id: 'ifscCode', label: 'IFSC Code', type: 'text', required: true },
+        { id: 'branchName', label: 'Branch Name', type: 'text', required: true },
+        { id: 'accountType', label: 'Account Type', type: 'select', options: ['Savings', 'Current'], required: true },
+        { id: 'micrCode', label: 'MICR Code', type: 'text', required: false }
+      ],
+      statutoryInfo: [
+        { id: 'panNumber', label: 'PAN Number', type: 'text', required: true },
+        { id: 'aadhaarNumber', label: 'Aadhaar Number', type: 'text', required: true },
+        { id: 'pfNumber', label: 'PF Number (if any)', type: 'text', required: false },
+        { id: 'esiNumber', label: 'ESI Number (if any)', type: 'text', required: false },
+        { id: 'uanNumber', label: 'UAN Number (if any)', type: 'text', required: false },
+        { id: 'passportNumber', label: 'Passport Number (if any)', type: 'text', required: false },
+        { id: 'passportExpiry', label: 'Passport Expiry Date', type: 'date', required: false },
+        { id: 'drivingLicense', label: 'Driving License Number', type: 'text', required: false },
+        { id: 'dlExpiry', label: 'DL Expiry Date', type: 'date', required: false }
+      ],
+      familyDetails: [
+        { id: 'fatherName', label: "Father's Name", type: 'text', required: false },
+        { id: 'fatherOccupation', label: "Father's Occupation", type: 'text', required: false },
+        { id: 'motherName', label: "Mother's Name", type: 'text', required: false },
+        { id: 'motherOccupation', label: "Mother's Occupation", type: 'text', required: false },
+        { id: 'spouseName', label: "Spouse's Name", type: 'text', required: false },
+        { id: 'spouseOccupation', label: "Spouse's Occupation", type: 'text', required: false },
+        { id: 'children', label: 'Children Details', type: 'textarea', required: false }
+      ],
+      nomineeDetails: [
+        { id: 'nomineeName', label: 'Nominee Name', type: 'text', required: true },
+        { id: 'nomineeRelationship', label: 'Relationship', type: 'select', options: ['Father', 'Mother', 'Spouse', 'Son', 'Daughter', 'Sibling', 'Other'], required: true },
+        { id: 'nomineeDateOfBirth', label: 'Nominee Date of Birth', type: 'date', required: true },
+        { id: 'nomineeAddress', label: 'Nominee Address', type: 'textarea', required: true },
+        { id: 'nomineePhone', label: 'Nominee Phone', type: 'tel', required: true },
+        { id: 'nomineeShare', label: 'Nominee Share (%)', type: 'number', required: true },
+        { id: 'guardianName', label: 'Guardian Name (if nominee is minor)', type: 'text', required: false },
+        { id: 'guardianRelationship', label: 'Guardian Relationship', type: 'text', required: false }
+      ],
+      declarations: [
+        { id: 'criminalCase', label: 'Any Criminal Case Pending?', type: 'select', options: ['No', 'Yes'], required: true },
+        { id: 'criminalDetails', label: 'Criminal Case Details (if Yes)', type: 'textarea', required: false },
+        { id: 'disciplinaryAction', label: 'Any Disciplinary Action in Previous Employment?', type: 'select', options: ['No', 'Yes'], required: true },
+        { id: 'disciplinaryDetails', label: 'Disciplinary Action Details (if Yes)', type: 'textarea', required: false },
+        { id: 'medicalCondition', label: 'Any Medical Condition?', type: 'select', options: ['No', 'Yes'], required: true },
+        { id: 'medicalDetails', label: 'Medical Condition Details (if Yes)', type: 'textarea', required: false },
+        { id: 'relativesInCompany', label: 'Relatives Working in Company?', type: 'select', options: ['No', 'Yes'], required: true },
+        { id: 'relativesDetails', label: 'Relatives Details (if Yes)', type: 'textarea', required: false },
+        { id: 'agreementAccepted', label: 'I accept all terms and conditions', type: 'checkbox', required: true }
+      ],
+      backgroundVerification: [
+        { id: 'consentGiven', label: 'I consent to background verification', type: 'checkbox', required: true },
+        { id: 'consentDate', label: 'Consent Date', type: 'date', required: true },
+        { id: 'verificationType', label: 'Verification Type', type: 'select', options: ['Standard', 'Comprehensive', 'Executive'], required: true },
+        { id: 'authorizedPerson', label: 'Authorized Person for Verification', type: 'text', required: true },
+        { id: 'authorizedPhone', label: 'Authorized Person Phone', type: 'tel', required: true },
+        { id: 'additionalInfo', label: 'Additional Information', type: 'textarea', required: false }
       ]
     };
 
@@ -1165,9 +1552,12 @@ const PreJoiningEngagement = () => {
                     
                     {field.type === 'select' ? (
                       <select
-                        className="form-select"
+                        className={`form-select ${formErrors[field.id] ? 'is-invalid' : ''}`}
                         value={formData[field.id] || ''}
-                        onChange={(e) => setFormData({...formData, [field.id]: e.target.value})}
+                        onChange={(e) => {
+                          setFormData({...formData, [field.id]: e.target.value});
+                          if (formErrors[field.id]) setFormErrors({...formErrors, [field.id]: null});
+                        }}
                         required={field.required}
                       >
                         <option value="">Select {field.label}</option>
@@ -1175,14 +1565,49 @@ const PreJoiningEngagement = () => {
                           <option key={option} value={option}>{option}</option>
                         ))}
                       </select>
+                    ) : field.type === 'textarea' ? (
+                      <textarea
+                        className={`form-control ${formErrors[field.id] ? 'is-invalid' : ''}`}
+                        rows="3"
+                        value={formData[field.id] || ''}
+                        onChange={(e) => {
+                          setFormData({...formData, [field.id]: e.target.value});
+                          if (formErrors[field.id]) setFormErrors({...formErrors, [field.id]: null});
+                        }}
+                        required={field.required}
+                        placeholder={`Enter ${field.label.toLowerCase()}`}
+                      />
+                    ) : field.type === 'checkbox' ? (
+                      <div className="form-check">
+                        <input
+                          className={`form-check-input ${formErrors[field.id] ? 'is-invalid' : ''}`}
+                          type="checkbox"
+                          checked={formData[field.id] || false}
+                          onChange={(e) => {
+                            setFormData({...formData, [field.id]: e.target.checked});
+                            if (formErrors[field.id]) setFormErrors({...formErrors, [field.id]: null});
+                          }}
+                          required={field.required}
+                        />
+                        <label className="form-check-label">{field.label}</label>
+                      </div>
                     ) : (
                       <input
                         type={field.type}
-                        className="form-control"
+                        className={`form-control ${formErrors[field.id] ? 'is-invalid' : ''}`}
                         value={formData[field.id] || ''}
-                        onChange={(e) => setFormData({...formData, [field.id]: e.target.value})}
+                        onChange={(e) => {
+                          setFormData({...formData, [field.id]: e.target.value});
+                          if (formErrors[field.id]) setFormErrors({...formErrors, [field.id]: null});
+                        }}
                         required={field.required}
+                        placeholder={`Enter ${field.label.toLowerCase()}`}
+                        min={field.type === 'number' ? 0 : undefined}
+                        max={field.type === 'date' ? new Date().toISOString().split('T')[0] : undefined}
                       />
+                    )}
+                    {formErrors[field.id] && (
+                      <div className="invalid-feedback">{formErrors[field.id]}</div>
                     )}
                   </div>
                 ))}
@@ -1294,31 +1719,57 @@ const PreJoiningEngagement = () => {
                           <td>{getStatusBadge(docStatus?.status || 'pending')}</td>
                           <td>
                             <div className="btn-group btn-group-sm">
-                              {docStatus?.submitted ? (
+                                  {docStatus?.submitted ? (
                                 <>
                                   {docStatus.status === 'submitted' && (
                                     <>
                                       <button
-                                        className="btn btn-outline-success"
+                                        className="btn btn-outline-success btn-sm"
                                         onClick={() => handleDocumentAction(selectedCandidate.id, doc.id, 'approved')}
+                                        title="Approve Document"
                                       >
+                                        <Icon icon="heroicons:check-circle" className="me-1" />
                                         Approve
                                       </button>
                                       <button
-                                        className="btn btn-outline-danger"
-                                        onClick={() => {
-                                          const reason = prompt('Enter rejection reason:');
-                                          if (reason) {
-                                            handleDocumentAction(selectedCandidate.id, doc.id, 'rejected', reason);
-                                          }
-                                        }}
+                                        className="btn btn-outline-danger btn-sm"
+                                        onClick={() => handleDocumentRejection(selectedCandidate.id, doc.id)}
+                                        title="Reject Document"
                                       >
+                                        <Icon icon="heroicons:x-circle" className="me-1" />
                                         Reject
                                       </button>
                                     </>
                                   )}
-                                  <button className="btn btn-outline-primary" disabled>
-                                    View
+                                  {docStatus.status === 'approved' && (
+                                    <span className="badge bg-success">
+                                      <Icon icon="heroicons:check-circle" className="me-1" />
+                                      Approved
+                                    </span>
+                                  )}
+                                  {docStatus.status === 'rejected' && (
+                                    <>
+                                      <button
+                                        className="btn btn-outline-warning btn-sm"
+                                        onClick={() => handleDocumentResubmission(selectedCandidate.id, doc.id)}
+                                        title="Allow Resubmission"
+                                      >
+                                        <Icon icon="heroicons:arrow-path" className="me-1" />
+                                        Resubmit
+                                      </button>
+                                      {docStatus.rejectionReason && (
+                                        <div className="small text-danger mt-1">
+                                          Reason: {docStatus.rejectionReason}
+                                        </div>
+                                      )}
+                                    </>
+                                  )}
+                                  <button 
+                                    className="btn btn-outline-primary btn-sm"
+                                    onClick={() => alert('View document functionality')}
+                                    title="View Document"
+                                  >
+                                    <Icon icon="heroicons:eye" />
                                   </button>
                                 </>
                               ) : (
@@ -1777,12 +2228,7 @@ const PreJoiningEngagement = () => {
 
   // ==================== MAIN COMPONENT RENDER ====================
   return (
-    <div 
-      menuItems={menuItems} 
-      userInfo={userInfo}
-      appName="Pre-Joining Engagement"
-    >
-      <div className="container-fluid px-3 px-md-4 py-3">
+    <div className="container-fluid px-3 px-md-4 py-3">
 
         {/* ==================== HEADER ==================== */}
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
@@ -1822,13 +2268,22 @@ const PreJoiningEngagement = () => {
                 }
               }}
             >
-              🔔 Reminders
+              <Icon icon="heroicons:bell" className="me-1" />
+              Reminders
+            </button>
+            <button 
+              className="btn btn-outline-secondary d-flex align-items-center gap-2"
+              onClick={() => setShowAutomationSettingsModal(true)}
+            >
+              <Icon icon="heroicons:cog-6-tooth" className="me-1" />
+              Automation
             </button>
             <button 
               className="btn btn-primary d-flex align-items-center gap-2"
               onClick={() => setShowAddCandidateModal(true)}
             >
-              ➕ Add Candidate
+              <Icon icon="heroicons:plus-circle" className="me-1" />
+              Add Candidate
             </button>
           </div>
         </div>
@@ -2152,7 +2607,270 @@ const PreJoiningEngagement = () => {
         {showDetailsModal && selectedCandidate && <CandidateDetailsModal />}
         {showReminderModal && <ReminderModal />}
 
-      </div>
+        {/* Document Rejection Modal */}
+        {showRejectionModal && selectedDocumentForVerification && (
+          <div className="modal show d-block fade" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content border-0 shadow-lg">
+                <div className="modal-header border-0 pb-0">
+                  <h5 className="modal-title fw-bold">
+                    <Icon icon="heroicons:x-circle" className="me-2 text-danger" />
+                    Reject Document
+                  </h5>
+                  <button className="btn-close" onClick={() => {
+                    setShowRejectionModal(false);
+                    setRejectionReason('');
+                    setSelectedDocumentForVerification(null);
+                  }}></button>
+                </div>
+                <div className="modal-body pt-0">
+                  <div className="mb-3">
+                    <p><strong>Candidate:</strong> {selectedDocumentForVerification.candidate?.name}</p>
+                    <p><strong>Document:</strong> {
+                      documentChecklist.find(d => d.id === selectedDocumentForVerification.documentId)?.name
+                    }</p>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Rejection Reason <span className="text-danger">*</span></label>
+                    <textarea
+                      className="form-control"
+                      rows="4"
+                      value={rejectionReason}
+                      onChange={(e) => setRejectionReason(e.target.value)}
+                      placeholder="Please provide a detailed reason for rejection..."
+                      required
+                    />
+                  </div>
+                  <div className="alert alert-warning">
+                    <Icon icon="heroicons:information-circle" className="me-2" />
+                    The candidate will be notified via email and can resubmit the document.
+                  </div>
+                </div>
+                <div className="modal-footer border-0">
+                  <button className="btn btn-outline-secondary" onClick={() => {
+                    setShowRejectionModal(false);
+                    setRejectionReason('');
+                    setSelectedDocumentForVerification(null);
+                  }}>
+                    Cancel
+                  </button>
+                  <button 
+                    className="btn btn-danger"
+                    onClick={handleConfirmRejection}
+                    disabled={!rejectionReason.trim()}
+                  >
+                    <Icon icon="heroicons:x-circle" className="me-2" />
+                    Confirm Rejection
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Document Resubmission Modal */}
+        {showResubmissionModal && selectedDocumentForVerification && (
+          <div className="modal show d-block fade" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content border-0 shadow-lg">
+                <div className="modal-header border-0 pb-0">
+                  <h5 className="modal-title fw-bold">
+                    <Icon icon="heroicons:arrow-path" className="me-2 text-warning" />
+                    Allow Document Resubmission
+                  </h5>
+                  <button className="btn-close" onClick={() => {
+                    setShowResubmissionModal(false);
+                    setSelectedDocumentForVerification(null);
+                  }}></button>
+                </div>
+                <div className="modal-body pt-0">
+                  <div className="mb-3">
+                    <p><strong>Candidate:</strong> {selectedDocumentForVerification.candidate?.name}</p>
+                    <p><strong>Document:</strong> {
+                      documentChecklist.find(d => d.id === selectedDocumentForVerification.documentId)?.name
+                    }</p>
+                    <p><strong>Previous Rejection Reason:</strong></p>
+                    <div className="alert alert-danger">
+                      {selectedDocumentForVerification.candidate?.documents[selectedDocumentForVerification.documentId]?.rejectionReason || 'N/A'}
+                    </div>
+                  </div>
+                  <div className="alert alert-info">
+                    <Icon icon="heroicons:information-circle" className="me-2" />
+                    The candidate will be notified to resubmit the document with corrections.
+                  </div>
+                </div>
+                <div className="modal-footer border-0">
+                  <button className="btn btn-outline-secondary" onClick={() => {
+                    setShowResubmissionModal(false);
+                    setSelectedDocumentForVerification(null);
+                  }}>
+                    Cancel
+                  </button>
+                  <button 
+                    className="btn btn-warning"
+                    onClick={handleConfirmResubmission}
+                  >
+                    <Icon icon="heroicons:arrow-path" className="me-2" />
+                    Allow Resubmission
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Automation Settings Modal */}
+        {showAutomationSettingsModal && (
+          <div className="modal show d-block fade" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-dialog-centered modal-lg">
+              <div className="modal-content border-0 shadow-lg">
+                <div className="modal-header border-0 pb-0">
+                  <h5 className="modal-title fw-bold">
+                    <Icon icon="heroicons:cog-6-tooth" className="me-2" />
+                    Automation Settings
+                  </h5>
+                  <button className="btn-close" onClick={() => setShowAutomationSettingsModal(false)}></button>
+                </div>
+                <div className="modal-body pt-0">
+                  <div className="mb-4">
+                    <h6 className="fw-bold mb-3">Communication Automation</h6>
+                    {communicationTemplates.map(template => {
+                      const settingKey = template.id === 'welcomeEmail' ? 'welcomeEmailAuto' :
+                                        template.id === 'joiningInstructions' ? 'joiningInstructionsAuto' :
+                                        template.id === 'firstDaySchedule' ? 'firstDayScheduleAuto' :
+                                        template.id === 'officeDetails' ? 'officeDetailsAuto' :
+                                        template.id === 'dressCode' ? 'dressCodeAuto' :
+                                        template.id === 'itAccess' ? 'itAccessAuto' :
+                                        template.id === 'parkingInfo' ? 'parkingInfoAuto' :
+                                        template.id === 'teamIntroduction' ? 'teamIntroductionAuto' : null;
+                      const daysKey = template.id === 'welcomeEmail' ? 'welcomeEmailDays' :
+                                     template.id === 'joiningInstructions' ? 'joiningInstructionsDays' :
+                                     template.id === 'firstDaySchedule' ? 'firstDayScheduleDays' :
+                                     template.id === 'officeDetails' ? 'officeDetailsDays' :
+                                     template.id === 'dressCode' ? 'dressCodeDays' :
+                                     template.id === 'itAccess' ? 'itAccessDays' :
+                                     template.id === 'parkingInfo' ? 'parkingInfoDays' :
+                                     template.id === 'teamIntroduction' ? 'teamIntroductionDays' : null;
+
+                      if (!settingKey) return null;
+
+                      return (
+                        <div key={template.id} className="card mb-3">
+                          <div className="card-body">
+                            <div className="d-flex justify-content-between align-items-center mb-2">
+                              <div>
+                                <h6 className="mb-1">{template.name}</h6>
+                                <small className="text-muted">{template.description}</small>
+                              </div>
+                              <div className="form-check form-switch">
+                                <input
+                                  className="form-check-input"
+                                  type="checkbox"
+                                  checked={automationSettings[settingKey]}
+                                  onChange={(e) => setAutomationSettings({
+                                    ...automationSettings,
+                                    [settingKey]: e.target.checked
+                                  })}
+                                />
+                              </div>
+                            </div>
+                            {automationSettings[settingKey] && daysKey && (
+                              <div className="mt-2">
+                                <label className="form-label small">Send {automationSettings[daysKey]} days before joining</label>
+                                <input
+                                  type="number"
+                                  className="form-control form-control-sm"
+                                  value={automationSettings[daysKey]}
+                                  onChange={(e) => setAutomationSettings({
+                                    ...automationSettings,
+                                    [daysKey]: parseInt(e.target.value) || 0
+                                  })}
+                                  min="0"
+                                  max="30"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mb-4">
+                    <h6 className="fw-bold mb-3">Reminder Automation</h6>
+                    <div className="card">
+                      <div className="card-body">
+                        <div className="form-check form-switch mb-3">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={automationSettings.reminderEnabled}
+                            onChange={(e) => setAutomationSettings({
+                              ...automationSettings,
+                              reminderEnabled: e.target.checked
+                            })}
+                          />
+                          <label className="form-check-label fw-bold">Enable Automated Reminders</label>
+                        </div>
+                        {automationSettings.reminderEnabled && (
+                          <>
+                            <div className="mb-3">
+                              <label className="form-label">Reminder Frequency (days)</label>
+                              <input
+                                type="number"
+                                className="form-control"
+                                value={automationSettings.reminderFrequency}
+                                onChange={(e) => setAutomationSettings({
+                                  ...automationSettings,
+                                  reminderFrequency: parseInt(e.target.value) || 3
+                                })}
+                                min="1"
+                                max="7"
+                              />
+                              <small className="text-muted">Send reminder every X days for pending documents</small>
+                            </div>
+                            <div className="mb-3">
+                              <label className="form-label">Maximum Reminders per Document</label>
+                              <input
+                                type="number"
+                                className="form-control"
+                                value={automationSettings.reminderMaxCount}
+                                onChange={(e) => setAutomationSettings({
+                                  ...automationSettings,
+                                  reminderMaxCount: parseInt(e.target.value) || 3
+                                })}
+                                min="1"
+                                max="10"
+                              />
+                              <small className="text-muted">Maximum number of reminders to send</small>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer border-0">
+                  <button className="btn btn-outline-secondary" onClick={() => setShowAutomationSettingsModal(false)}>
+                    Cancel
+                  </button>
+                  <button 
+                    className="btn btn-primary"
+                    onClick={() => {
+                      // Save automation settings (in real app, this would be saved to backend)
+                      alert('Automation settings saved successfully!');
+                      setShowAutomationSettingsModal(false);
+                    }}
+                  >
+                    <Icon icon="heroicons:check" className="me-2" />
+                    Save Settings
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
     </div>
   );
 };

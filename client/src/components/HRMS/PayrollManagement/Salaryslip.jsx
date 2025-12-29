@@ -828,6 +828,77 @@ HR Department`,
             </table>
           </div>
           
+          <div class="section">
+            <div class="section-title">REIMBURSEMENT DETAILS</div>
+            <table>
+              <tr>
+                <th>Type</th>
+                <th class="text-right">Amount</th>
+              </tr>
+              ${Object.entries(employee.reimbursements).filter(([key]) => key !== 'total').map(([key, value]) => `
+                <tr>
+                  <td>${key.replace(/([A-Z])/g, ' $1').toUpperCase()}</td>
+                  <td class="text-right">${formatCurrency(value)}</td>
+                </tr>
+              `).join('')}
+              <tr class="total-row">
+                <td>TOTAL REIMBURSEMENT</td>
+                <td class="text-right">${formatCurrency(employee.reimbursements.total)}</td>
+              </tr>
+            </table>
+          </div>
+          
+          ${employee.loans.totalOutstanding > 0 ? `
+          <div class="section">
+            <div class="section-title">LOAN OUTSTANDING BALANCE</div>
+            <table>
+              <tr>
+                <th>Loan Type</th>
+                <th class="text-right">Principal</th>
+                <th class="text-right">Interest</th>
+                <th class="text-right">EMI</th>
+              </tr>
+              ${Object.entries(employee.loans).filter(([key]) => key !== 'totalOutstanding').map(([key, loan]) => {
+                if (loan.principal === 0 && loan.interest === 0 && loan.emi === 0) return '';
+                return `
+                  <tr>
+                    <td>${key.replace(/([A-Z])/g, ' $1').toUpperCase()}</td>
+                    <td class="text-right">${formatCurrency(loan.principal)}</td>
+                    <td class="text-right">${formatCurrency(loan.interest)}</td>
+                    <td class="text-right">${formatCurrency(loan.emi)}</td>
+                  </tr>
+                `;
+              }).join('')}
+              <tr class="total-row">
+                <td>TOTAL OUTSTANDING</td>
+                <td colspan="3" class="text-right">${formatCurrency(employee.loans.totalOutstanding)}</td>
+              </tr>
+            </table>
+          </div>
+          ` : ''}
+          
+          <div class="section">
+            <div class="section-title">YEAR-TO-DATE SUMMARY</div>
+            <table>
+              <tr>
+                <td>Gross Salary (YTD)</td>
+                <td class="text-right">${formatCurrency(employee.yearToDate.grossSalary)}</td>
+                <td>PF Contribution (YTD)</td>
+                <td class="text-right">${formatCurrency(employee.yearToDate.pfContribution)}</td>
+              </tr>
+              <tr>
+                <td>Tax Paid (YTD)</td>
+                <td class="text-right">${formatCurrency(employee.yearToDate.taxPaid)}</td>
+                <td>ESI Contribution (YTD)</td>
+                <td class="text-right">${formatCurrency(employee.yearToDate.esiContribution)}</td>
+              </tr>
+              <tr class="total-row">
+                <td>Net Salary (YTD)</td>
+                <td colspan="3" class="text-right">${formatCurrency(employee.yearToDate.netSalary)}</td>
+              </tr>
+            </table>
+          </div>
+          
           ${slip && passwordProtect ? `
             <div class="section">
               <div class="section-title">SECURITY INFORMATION</div>
@@ -1594,6 +1665,106 @@ HR Department`;
             </table>
           </div>
         </div>
+
+        {/* Reimbursement Details */}
+        <div style={{ marginBottom: '30px' }}>
+          <div style={{ backgroundColor: '#f8f9fa', padding: '10px', borderLeft: '4px solid #16a085', marginBottom: '15px' }}>
+            <h4 style={{ margin: 0, color: '#2c3e50' }}>REIMBURSEMENT DETAILS</h4>
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#ecf0f1' }}>
+                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #bdc3c7' }}>Type</th>
+                <th style={{ padding: '12px', textAlign: 'right', borderBottom: '2px solid #bdc3c7' }}>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(selectedEmployee.reimbursements).filter(([key]) => key !== 'total').map(([key, value]) => (
+                <tr key={key}>
+                  <td style={{ padding: '12px', borderBottom: '1px solid #e0e0e0' }}>{key.replace(/([A-Z])/g, ' $1').toUpperCase()}</td>
+                  <td style={{ padding: '12px', borderBottom: '1px solid #e0e0e0', textAlign: 'right', fontWeight: '600', color: '#16a085' }}>{formatCurrency(value)}</td>
+                </tr>
+              ))}
+              <tr style={{ backgroundColor: '#d5f4e6' }}>
+                <td style={{ padding: '12px', borderBottom: '1px solid #e0e0e0', fontWeight: 'bold' }}>TOTAL REIMBURSEMENT</td>
+                <td style={{ padding: '12px', borderBottom: '1px solid #e0e0e0', textAlign: 'right', fontWeight: 'bold', color: '#16a085' }}>{formatCurrency(selectedEmployee.reimbursements.total)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Loan Outstanding Balance */}
+        {selectedEmployee.loans.totalOutstanding > 0 && (
+          <div style={{ marginBottom: '30px' }}>
+            <div style={{ backgroundColor: '#f8f9fa', padding: '10px', borderLeft: '4px solid #e67e22', marginBottom: '15px' }}>
+              <h4 style={{ margin: 0, color: '#2c3e50' }}>LOAN OUTSTANDING BALANCE</h4>
+            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#ecf0f1' }}>
+                  <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #bdc3c7' }}>Loan Type</th>
+                  <th style={{ padding: '12px', textAlign: 'right', borderBottom: '2px solid #bdc3c7' }}>Principal</th>
+                  <th style={{ padding: '12px', textAlign: 'right', borderBottom: '2px solid #bdc3c7' }}>Interest</th>
+                  <th style={{ padding: '12px', textAlign: 'right', borderBottom: '2px solid #bdc3c7' }}>EMI</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(selectedEmployee.loans).filter(([key]) => key !== 'totalOutstanding').map(([key, loan]) => {
+                  if (loan.principal === 0 && loan.interest === 0 && loan.emi === 0) return null;
+                  return (
+                    <tr key={key}>
+                      <td style={{ padding: '12px', borderBottom: '1px solid #e0e0e0' }}>{key.replace(/([A-Z])/g, ' $1').toUpperCase()}</td>
+                      <td style={{ padding: '12px', borderBottom: '1px solid #e0e0e0', textAlign: 'right' }}>{formatCurrency(loan.principal)}</td>
+                      <td style={{ padding: '12px', borderBottom: '1px solid #e0e0e0', textAlign: 'right' }}>{formatCurrency(loan.interest)}</td>
+                      <td style={{ padding: '12px', borderBottom: '1px solid #e0e0e0', textAlign: 'right', fontWeight: '600', color: '#e67e22' }}>{formatCurrency(loan.emi)}</td>
+                    </tr>
+                  );
+                })}
+                <tr style={{ backgroundColor: '#fdebd0' }}>
+                  <td style={{ padding: '12px', borderBottom: '1px solid #e0e0e0', fontWeight: 'bold' }}>TOTAL OUTSTANDING</td>
+                  <td colSpan="3" style={{ padding: '12px', borderBottom: '1px solid #e0e0e0', textAlign: 'right', fontWeight: 'bold', color: '#e67e22' }}>{formatCurrency(selectedEmployee.loans.totalOutstanding)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Year-to-Date Summary */}
+        <div style={{ marginBottom: '30px' }}>
+          <div style={{ backgroundColor: '#f8f9fa', padding: '10px', borderLeft: '4px solid #8e44ad', marginBottom: '15px' }}>
+            <h4 style={{ margin: 0, color: '#2c3e50' }}>YEAR-TO-DATE SUMMARY</h4>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '12px', borderBottom: '1px solid #e0e0e0' }}>Gross Salary (YTD)</td>
+                  <td style={{ padding: '12px', borderBottom: '1px solid #e0e0e0', textAlign: 'right', fontWeight: '600' }}>{formatCurrency(selectedEmployee.yearToDate.grossSalary)}</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '12px', borderBottom: '1px solid #e0e0e0' }}>Tax Paid (YTD)</td>
+                  <td style={{ padding: '12px', borderBottom: '1px solid #e0e0e0', textAlign: 'right', fontWeight: '600', color: '#e74c3c' }}>{formatCurrency(selectedEmployee.yearToDate.taxPaid)}</td>
+                </tr>
+              </tbody>
+            </table>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '12px', borderBottom: '1px solid #e0e0e0' }}>PF Contribution (YTD)</td>
+                  <td style={{ padding: '12px', borderBottom: '1px solid #e0e0e0', textAlign: 'right', fontWeight: '600' }}>{formatCurrency(selectedEmployee.yearToDate.pfContribution)}</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '12px', borderBottom: '1px solid #e0e0e0' }}>ESI Contribution (YTD)</td>
+                  <td style={{ padding: '12px', borderBottom: '1px solid #e0e0e0', textAlign: 'right', fontWeight: '600' }}>{formatCurrency(selectedEmployee.yearToDate.esiContribution)}</td>
+                </tr>
+                <tr style={{ backgroundColor: '#e8daef' }}>
+                  <td style={{ padding: '12px', borderBottom: '1px solid #e0e0e0', fontWeight: 'bold' }}>Net Salary (YTD)</td>
+                  <td style={{ padding: '12px', borderBottom: '1px solid #e0e0e0', textAlign: 'right', fontWeight: 'bold', color: '#8e44ad' }}>{formatCurrency(selectedEmployee.yearToDate.netSalary)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
         
         <div style={{ marginTop: '40px', borderTop: '1px solid #e0e0e0', paddingTop: '20px' }}>
           <div style={{ float: 'right', textAlign: 'center' }}>
@@ -1980,7 +2151,7 @@ HR Department`;
         </div>
       </div>
       
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: '20px', display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '10px', alignItems: 'center' }}>
         <div style={{ position: 'relative' }}>
           <input
             type="text"
@@ -2007,6 +2178,57 @@ HR Department`;
             }}
           />
         </div>
+        <select
+          style={{
+            padding: '10px',
+            borderRadius: '6px',
+            border: '1px solid #ddd',
+            fontSize: '14px',
+            backgroundColor: 'white',
+            cursor: 'pointer'
+          }}
+          onChange={(e) => {
+            const monthFilter = e.target.value;
+            if (monthFilter === 'all') {
+              setSearchTerm(prev => prev.replace(/march|february|january|december/gi, '').trim());
+            } else {
+              setSearchTerm(prev => {
+                const cleaned = prev.replace(/march|february|january|december/gi, '').trim();
+                return cleaned ? `${cleaned} ${monthFilter}` : monthFilter;
+              });
+            }
+          }}
+        >
+          <option value="all">All Months</option>
+          <option value="march 2024">March 2024</option>
+          <option value="february 2024">February 2024</option>
+          <option value="january 2024">January 2024</option>
+        </select>
+        <select
+          style={{
+            padding: '10px',
+            borderRadius: '6px',
+            border: '1px solid #ddd',
+            fontSize: '14px',
+            backgroundColor: 'white',
+            cursor: 'pointer'
+          }}
+          onChange={(e) => {
+            const statusFilter = e.target.value;
+            if (statusFilter === 'all') {
+              setSearchTerm(prev => prev.replace(/distributed|generated|pending/gi, '').trim());
+            } else {
+              setSearchTerm(prev => {
+                const cleaned = prev.replace(/distributed|generated|pending/gi, '').trim();
+                return cleaned ? `${cleaned} ${statusFilter}` : statusFilter;
+              });
+            }
+          }}
+        >
+          <option value="all">All Status</option>
+          <option value="distributed">Distributed</option>
+          <option value="generated">Generated</option>
+        </select>
       </div>
       
       <div style={{ overflowX: 'auto' }}>
@@ -2220,6 +2442,27 @@ HR Department`;
                       >
                         <Icon icon="heroicons:eye" />
                       </button>
+                      {!slip.emailSent && (
+                        <button
+                          style={{
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '6px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '14px',
+                            backgroundColor: '#16a085',
+                            color: 'white'
+                          }}
+                          onClick={() => handleResendEmail(employee, slip.id)}
+                          title="Resend Email"
+                        >
+                          <Icon icon="heroicons:paper-airplane" />
+                        </button>
+                      )}
                       <button
                         style={{
                           width: '32px',

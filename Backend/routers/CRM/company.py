@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional, List 
 import os
 import shutil
+import uuid
 
 from schema import company
 from core.database import get_db
@@ -54,11 +55,13 @@ def create_company(
     logo_filename = None
 
     if logo:
-        filename = f"{company_name}_{logo.filename}"
-        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        file_extension = os.path.splitext(logo.filename)[1] if logo.filename else '.png'
+        unique_filename = f"company_{uuid.uuid4().hex[:8]}{file_extension}"
+        file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
         with open(file_path, "wb") as f:
             shutil.copyfileobj(logo.file, f)
-        logo_filename = filename
+        # Store relative path
+        logo_filename = file_path.replace("\\", "/")
 
     new_company = model.Company(
         company_name=company_name,
@@ -98,13 +101,37 @@ def create_company(
     db.commit()
     db.refresh(new_company)
 
-    return new_company
+    return convert_company_output(new_company)
+
+
+# UTIL: Convert DB Model → Frontend JSON 
+def convert_company_output(db_company):
+    """Convert DB fields into frontend-friendly structure."""
+    if not db_company:
+        return None
+
+    company_dict = db_company.__dict__.copy()
+
+    # Normalize logo path
+    if db_company.logo:
+        # Normalize path separators and ensure it starts with /
+        normalized_path = db_company.logo.replace("\\", "/")
+        if not normalized_path.startswith("/"):
+            company_dict["logo"] = f"/{normalized_path}"
+        else:
+            company_dict["logo"] = normalized_path
+    else:
+        company_dict["logo"] = None
+
+    company_dict.pop("_sa_instance_state", None)
+    return company_dict
 
 
 #  READ ALL
 @router.get("/", response_model=List[company.CompanyResponse])
 def read_companies(db: Session = Depends(get_db)):
-    return db.query(model.Company).all()
+    db_companies = db.query(model.Company).all()
+    return [convert_company_output(c) for c in db_companies]
 
 
 #  READ ONE
@@ -113,7 +140,7 @@ def read_company(company_id: int, db: Session = Depends(get_db)):
     company_obj = db.query(model.Company).filter(model.Company.id == company_id).first()
     if not company_obj:
         raise HTTPException(status_code=404, detail="Company not found")
-    return company_obj
+    return convert_company_output(company_obj)
 
 
 #  UPDATE
@@ -159,11 +186,13 @@ def update_company(
 
     # LOGO
     if logo:
-        filename = f"{company_id}_{logo.filename}"
-        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        file_extension = os.path.splitext(logo.filename)[1] if logo.filename else '.png'
+        unique_filename = f"company_{company_id}_{uuid.uuid4().hex[:8]}{file_extension}"
+        file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
         with open(file_path, "wb") as f:
             shutil.copyfileobj(logo.file, f)
-        db_company.logo = filename
+        # Store relative path
+        db_company.logo = file_path.replace("\\", "/")
 
     # FIELDS 
     updates = {
@@ -205,7 +234,7 @@ def update_company(
 
     db.commit()
     db.refresh(db_company)
-    return db_company
+    return convert_company_output(db_company)
 
 
 #  UPDATE LOGO  
@@ -219,16 +248,25 @@ def update_company_logo(
     if not db_company:
         raise HTTPException(status_code=404, detail="Company not found")
 
-    logo_path = f"{UPLOAD_FOLDER}/company_{company_id}_{file.filename}"
+    file_extension = os.path.splitext(file.filename)[1] if file.filename else '.png'
+    unique_filename = f"company_{company_id}_{uuid.uuid4().hex[:8]}{file_extension}"
+    logo_path = os.path.join(UPLOAD_FOLDER, unique_filename)
 
     with open(logo_path, "wb") as f:
         f.write(file.file.read())
 
-    db_company.logo = logo_path
+    # Store relative path
+    relative_path = logo_path.replace("\\", "/")
+    db_company.logo = relative_path
     db.commit()
     db.refresh(db_company)
 
-    return {"message": "Logo updated", "logo": logo_path}
+    # Return normalized path for frontend
+    normalized_path = relative_path
+    if not normalized_path.startswith("/"):
+        normalized_path = f"/{normalized_path}"
+
+    return {"message": "Logo updated successfully", "logo": normalized_path}
 
 
 #  DELETE  

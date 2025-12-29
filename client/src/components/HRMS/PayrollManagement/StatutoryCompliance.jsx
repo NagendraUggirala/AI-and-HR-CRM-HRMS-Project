@@ -8,9 +8,17 @@ const StatutoryCompliance = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
+  const [showUANModal, setShowUANModal] = useState(false);
+  const [showECRModal, setShowECRModal] = useState(false);
+  const [showRemittanceModal, setShowRemittanceModal] = useState(false);
+  const [showChallanModal, setShowChallanModal] = useState(false);
+  const [showReconciliationModal, setShowReconciliationModal] = useState(false);
+  const [showVPFModal, setShowVPFModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [filterType, setFilterType] = useState('All');
   const [selectedForm, setSelectedForm] = useState(null);
+  const [selectedEmployeeForUAN, setSelectedEmployeeForUAN] = useState(null);
+  const [remittanceType, setRemittanceType] = useState('pf');
   
   // PF Configuration State
   const [pfConfig, setPfConfig] = useState({
@@ -21,7 +29,16 @@ const StatutoryCompliance = () => {
     edliContribution: 0.5,
     ceilingLimit: 15000,
     autoCalculation: true,
-    uanMandatory: true
+    uanMandatory: true,
+    eligibilityRules: {
+      minimumSalary: 0,
+      maximumSalary: null,
+      employmentType: ['permanent', 'contract'],
+      probationPeriod: 0,
+      autoEnrollment: true
+    },
+    vpfEnabled: true,
+    vpfRate: 0
   });
 
   // ESI Configuration State
@@ -30,7 +47,10 @@ const StatutoryCompliance = () => {
     employerContribution: 3.25,
     salaryThreshold: 21000,
     autoRegistration: true,
-    halfYearlyReturns: true
+    halfYearlyReturns: true,
+    registrationNumber: 'ESI123456789',
+    branchCode: 'BR001',
+    returnPeriod: 'half-yearly'
   });
 
   // Professional Tax State
@@ -50,7 +70,11 @@ const StatutoryCompliance = () => {
     financialYear: '2024-25',
     declarationRequired: true,
     form16Generation: true,
-    quarterlyTDS: true
+    quarterlyTDS: true,
+    standardDeduction: 50000,
+    advanceTaxEnabled: true,
+    selfAssessmentTaxEnabled: true,
+    tanNumber: 'TAN12345678'
   });
 
   // LWF Configuration State
@@ -85,6 +109,16 @@ const StatutoryCompliance = () => {
   const [complianceForms, setComplianceForms] = useState([]);
   const [declarations, setDeclarations] = useState([]);
   const [reconciliationReports, setReconciliationReports] = useState([]);
+  const [pfRemittances, setPfRemittances] = useState([]);
+  const [esiRemittances, setEsiRemittances] = useState([]);
+  const [ptRemittances, setPtRemittances] = useState([]);
+  const [tdsChallans, setTdsChallans] = useState([]);
+  const [ecrData, setEcrData] = useState([]);
+  const [vpfData, setVpfData] = useState([]);
+  const [gratuityPayments, setGratuityPayments] = useState([]);
+  const [bonusPayments, setBonusPayments] = useState([]);
+  const [advanceTaxData, setAdvanceTaxData] = useState([]);
+  const [uanActivations, setUanActivations] = useState([]);
 
   // Investment Declarations
   const [investmentDeclarations, setInvestmentDeclarations] = useState({
@@ -444,24 +478,37 @@ const StatutoryCompliance = () => {
   const handleCalculateTDS = (employeeId) => {
     const employee = employees.find(emp => emp.id === employeeId);
     if (employee) {
-      // Simplified TDS calculation
+      // Calculate annual salary with standard deduction
       const annualSalary = employee.grossSalary * 12;
+      const taxableIncome = annualSalary - tdsConfig.standardDeduction;
       let tds = 0;
       
       if (tdsConfig.taxRegime === 'new') {
-        if (annualSalary <= 700000) tds = 0;
-        else if (annualSalary <= 900000) tds = (annualSalary - 700000) * 0.05 / 12;
-        else if (annualSalary <= 1200000) tds = (10000 + (annualSalary - 900000) * 0.10) / 12;
-        else tds = (25000 + (annualSalary - 1200000) * 0.15) / 12;
+        // New tax regime (no deductions except standard deduction)
+        if (taxableIncome <= 700000) tds = 0;
+        else if (taxableIncome <= 900000) tds = (taxableIncome - 700000) * 0.05 / 12;
+        else if (taxableIncome <= 1200000) tds = (10000 + (taxableIncome - 900000) * 0.10) / 12;
+        else tds = (25000 + (taxableIncome - 1200000) * 0.15) / 12;
       } else {
-        // Old regime calculation
-        if (annualSalary <= 250000) tds = 0;
-        else if (annualSalary <= 500000) tds = (annualSalary - 250000) * 0.05 / 12;
-        else if (annualSalary <= 1000000) tds = (12500 + (annualSalary - 500000) * 0.20) / 12;
-        else tds = (112500 + (annualSalary - 1000000) * 0.30) / 12;
+        // Old regime calculation with deductions
+        const totalDeductions = investmentDeclarations.section80C + 
+                                investmentDeclarations.section80D + 
+                                investmentDeclarations.hraExemption + 
+                                investmentDeclarations.ltaExemption +
+                                investmentDeclarations.homeLoanInterest +
+                                investmentDeclarations.npsContribution;
+        const taxableIncomeOld = annualSalary - tdsConfig.standardDeduction - totalDeductions;
+        
+        if (taxableIncomeOld <= 250000) tds = 0;
+        else if (taxableIncomeOld <= 500000) tds = (taxableIncomeOld - 250000) * 0.05 / 12;
+        else if (taxableIncomeOld <= 1000000) tds = (12500 + (taxableIncomeOld - 500000) * 0.20) / 12;
+        else tds = (112500 + (taxableIncomeOld - 1000000) * 0.30) / 12;
       }
       
       alert(`TDS Calculation for ${employee.name}:
+      Annual Salary: ${formatCurrency(annualSalary)}
+      Standard Deduction: ${formatCurrency(tdsConfig.standardDeduction)}
+      Taxable Income: ${formatCurrency(annualSalary - tdsConfig.standardDeduction)}
       Monthly TDS Deduction: ${formatCurrency(tds)}
       Annual Projected TDS: ${formatCurrency(tds * 12)}`);
     }
@@ -776,13 +823,14 @@ const StatutoryCompliance = () => {
                   <div className="card-body">
                     <div className="row g-3">
                       <div className="col-12">
-                        <label className="form-label">Ceiling Limit</label>
+                        <label className="form-label">Ceiling Limit (₹)</label>
                         <input 
                           type="number" 
                           className="form-control"
                           value={pfConfig.ceilingLimit}
                           onChange={(e) => handleUpdateConfig('pf', 'ceilingLimit', parseFloat(e.target.value))}
                         />
+                        <small className="text-muted">PF contribution calculated on basic up to this limit</small>
                       </div>
                       <div className="col-12">
                         <div className="form-check">
@@ -805,6 +853,117 @@ const StatutoryCompliance = () => {
                           />
                           <label className="form-check-label">
                             UAN Number Mandatory
+                          </label>
+                        </div>
+                        <div className="form-check">
+                          <input 
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={pfConfig.vpfEnabled}
+                            onChange={(e) => handleUpdateConfig('pf', 'vpfEnabled', e.target.checked)}
+                          />
+                          <label className="form-check-label">
+                            Enable VPF (Voluntary Provident Fund)
+                          </label>
+                        </div>
+                      </div>
+                      {pfConfig.vpfEnabled && (
+                        <div className="col-12">
+                          <label className="form-label">Default VPF Rate (%)</label>
+                          <input 
+                            type="number" 
+                            className="form-control"
+                            value={pfConfig.vpfRate}
+                            onChange={(e) => handleUpdateConfig('pf', 'vpfRate', parseFloat(e.target.value))}
+                            step="0.01"
+                            min="0"
+                            max="100"
+                          />
+                          <small className="text-muted">Default VPF contribution rate (optional, employees can customize)</small>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* PF Eligibility Rules */}
+              <div className="col-md-6">
+                <div className="card border h-100">
+                  <div className="card-header">
+                    <h6 className="mb-0">PF Eligibility Rules</h6>
+                  </div>
+                  <div className="card-body">
+                    <div className="row g-3">
+                      <div className="col-md-6">
+                        <label className="form-label">Minimum Salary (₹)</label>
+                        <input 
+                          type="number" 
+                          className="form-control"
+                          value={pfConfig.eligibilityRules.minimumSalary}
+                          onChange={(e) => handleUpdateConfig('pf', 'eligibilityRules', { ...pfConfig.eligibilityRules, minimumSalary: parseFloat(e.target.value) })}
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Maximum Salary (₹)</label>
+                        <input 
+                          type="number" 
+                          className="form-control"
+                          value={pfConfig.eligibilityRules.maximumSalary || ''}
+                          onChange={(e) => handleUpdateConfig('pf', 'eligibilityRules', { ...pfConfig.eligibilityRules, maximumSalary: e.target.value ? parseFloat(e.target.value) : null })}
+                          placeholder="No limit"
+                        />
+                      </div>
+                      <div className="col-12">
+                        <label className="form-label">Employment Types</label>
+                        <div className="form-check">
+                          <input 
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={pfConfig.eligibilityRules.employmentType.includes('permanent')}
+                            onChange={(e) => {
+                              const types = e.target.checked 
+                                ? [...pfConfig.eligibilityRules.employmentType, 'permanent']
+                                : pfConfig.eligibilityRules.employmentType.filter(t => t !== 'permanent');
+                              handleUpdateConfig('pf', 'eligibilityRules', { ...pfConfig.eligibilityRules, employmentType: types });
+                            }}
+                          />
+                          <label className="form-check-label">Permanent</label>
+                        </div>
+                        <div className="form-check">
+                          <input 
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={pfConfig.eligibilityRules.employmentType.includes('contract')}
+                            onChange={(e) => {
+                              const types = e.target.checked 
+                                ? [...pfConfig.eligibilityRules.employmentType, 'contract']
+                                : pfConfig.eligibilityRules.employmentType.filter(t => t !== 'contract');
+                              handleUpdateConfig('pf', 'eligibilityRules', { ...pfConfig.eligibilityRules, employmentType: types });
+                            }}
+                          />
+                          <label className="form-check-label">Contract</label>
+                        </div>
+                      </div>
+                      <div className="col-12">
+                        <label className="form-label">Probation Period (days)</label>
+                        <input 
+                          type="number" 
+                          className="form-control"
+                          value={pfConfig.eligibilityRules.probationPeriod}
+                          onChange={(e) => handleUpdateConfig('pf', 'eligibilityRules', { ...pfConfig.eligibilityRules, probationPeriod: parseInt(e.target.value) })}
+                        />
+                      </div>
+                      <div className="col-12">
+                        <div className="form-check">
+                          <input 
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={pfConfig.eligibilityRules.autoEnrollment}
+                            onChange={(e) => handleUpdateConfig('pf', 'eligibilityRules', { ...pfConfig.eligibilityRules, autoEnrollment: e.target.checked })}
+                          />
+                          <label className="form-check-label">
+                            Auto-enroll eligible employees
                           </label>
                         </div>
                       </div>
@@ -864,6 +1023,237 @@ const StatutoryCompliance = () => {
                 </div>
               </div>
 
+              {/* PF Remittance Summary */}
+              <div className="col-12">
+                <div className="card border">
+                  <div className="card-header">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <h6 className="mb-0">PF Remittance Summary</h6>
+                      <button 
+                        className="btn btn-sm btn-primary"
+                        onClick={() => {
+                          setRemittanceType('pf');
+                          setShowRemittanceModal(true);
+                        }}
+                      >
+                        <Icon icon="heroicons:plus" className="me-1" />
+                        Add Remittance
+                      </button>
+                    </div>
+                  </div>
+                  <div className="card-body">
+                    <div className="table-responsive">
+                      <table className="table table-hover">
+                        <thead>
+                          <tr>
+                            <th>Month</th>
+                            <th>Total Contribution</th>
+                            <th>Employee Contribution</th>
+                            <th>Employer Contribution</th>
+                            <th>Challan Number</th>
+                            <th>Remittance Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {pfRemittances.map(remittance => (
+                            <tr key={remittance.id}>
+                              <td>{remittance.month}</td>
+                              <td className="fw-bold">{formatCurrency(remittance.totalContribution)}</td>
+                              <td className="text-primary">{formatCurrency(remittance.employeeContribution)}</td>
+                              <td className="text-success">{formatCurrency(remittance.employerContribution)}</td>
+                              <td>{remittance.challanNo}</td>
+                              <td>{remittance.remittanceDate}</td>
+                              <td>{getStatusBadge(remittance.status)}</td>
+                              <td>
+                                <button className="btn btn-sm btn-outline-primary">
+                                  View Challan
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ECR Generation */}
+              <div className="col-12">
+                <div className="card border">
+                  <div className="card-header">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <h6 className="mb-0">ECR (Electronic Challan cum Return)</h6>
+                      <button 
+                        className="btn btn-sm btn-success"
+                        onClick={() => setShowECRModal(true)}
+                      >
+                        <Icon icon="heroicons:document-plus" className="me-1" />
+                        Generate ECR
+                      </button>
+                    </div>
+                  </div>
+                  <div className="card-body">
+                    <div className="table-responsive">
+                      <table className="table table-hover">
+                        <thead>
+                          <tr>
+                            <th>Month</th>
+                            <th>Total Employees</th>
+                            <th>Total Wages</th>
+                            <th>EPF Contribution</th>
+                            <th>EPS Contribution</th>
+                            <th>EDLI Contribution</th>
+                            <th>Status</th>
+                            <th>Submitted Date</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {ecrData.map(ecr => (
+                            <tr key={ecr.id}>
+                              <td>{ecr.month}</td>
+                              <td>{ecr.totalEmployees}</td>
+                              <td>{formatCurrency(ecr.totalWages)}</td>
+                              <td>{formatCurrency(ecr.epfContribution)}</td>
+                              <td>{formatCurrency(ecr.epsContribution)}</td>
+                              <td>{formatCurrency(ecr.edliContribution)}</td>
+                              <td>{getStatusBadge(ecr.status)}</td>
+                              <td>{ecr.submittedDate}</td>
+                              <td>
+                                <div className="d-flex gap-2">
+                                  <button className="btn btn-sm btn-outline-primary">
+                                    View
+                                  </button>
+                                  <button className="btn btn-sm btn-outline-success">
+                                    Download
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* VPF Management */}
+              {pfConfig.vpfEnabled && (
+                <div className="col-12">
+                  <div className="card border">
+                    <div className="card-header">
+                      <div className="d-flex justify-content-between align-items-center">
+                        <h6 className="mb-0">VPF (Voluntary Provident Fund) Management</h6>
+                        <button 
+                          className="btn btn-sm btn-primary"
+                          onClick={() => setShowVPFModal(true)}
+                        >
+                          <Icon icon="heroicons:plus" className="me-1" />
+                          Add VPF
+                        </button>
+                      </div>
+                    </div>
+                    <div className="card-body">
+                      <div className="table-responsive">
+                        <table className="table table-hover">
+                          <thead>
+                            <tr>
+                              <th>Employee</th>
+                              <th>VPF Rate (%)</th>
+                              <th>VPF Amount</th>
+                              <th>Month</th>
+                              <th>Status</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {vpfData.map((vpf, idx) => (
+                              <tr key={idx}>
+                                <td>
+                                  <div className="fw-semibold">{vpf.name}</div>
+                                  <div className="small text-muted">{vpf.employeeId}</div>
+                                </td>
+                                <td>{vpf.vpfRate}%</td>
+                                <td className="fw-bold text-primary">{formatCurrency(vpf.vpfAmount)}</td>
+                                <td>{vpf.month}</td>
+                                <td>{getStatusBadge(vpf.status)}</td>
+                                <td>
+                                  <button className="btn btn-sm btn-outline-primary">
+                                    Edit
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* UAN Management */}
+              <div className="col-12">
+                <div className="card border">
+                  <div className="card-header">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <h6 className="mb-0">UAN Activation & Management</h6>
+                      <button 
+                        className="btn btn-sm btn-primary"
+                        onClick={() => setShowUANModal(true)}
+                      >
+                        <Icon icon="heroicons:plus" className="me-1" />
+                        Activate UAN
+                      </button>
+                    </div>
+                  </div>
+                  <div className="card-body">
+                    <div className="table-responsive">
+                      <table className="table table-hover">
+                        <thead>
+                          <tr>
+                            <th>Employee</th>
+                            <th>UAN Number</th>
+                            <th>Activation Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {uanActivations.map(uan => (
+                            <tr key={uan.id}>
+                              <td>
+                                <div className="fw-semibold">{uan.name}</div>
+                                <div className="small text-muted">{uan.employeeId}</div>
+                              </td>
+                              <td className="fw-bold">{uan.uan}</td>
+                              <td>{uan.activationDate}</td>
+                              <td>{getStatusBadge(uan.status)}</td>
+                              <td>
+                                <div className="d-flex gap-2">
+                                  <button className="btn btn-sm btn-outline-primary">
+                                    View Details
+                                  </button>
+                                  {uan.status === 'pending' && (
+                                    <button className="btn btn-sm btn-outline-success">
+                                      Activate
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* PF Reports */}
               <div className="col-12">
                 <div className="card border">
@@ -872,7 +1262,7 @@ const StatutoryCompliance = () => {
                   </div>
                   <div className="card-body">
                     <div className="row g-3">
-                      <div className="col-md-4">
+                      <div className="col-md-3">
                         <div className="card border h-100">
                           <div className="card-body text-center">
                             <Icon icon="heroicons:document-text" className="text-primary fs-1 mb-3" />
@@ -887,7 +1277,22 @@ const StatutoryCompliance = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="col-md-4">
+                      <div className="col-md-3">
+                        <div className="card border h-100">
+                          <div className="card-body text-center">
+                            <Icon icon="heroicons:document-duplicate" className="text-warning fs-1 mb-3" />
+                            <h6 className="fw-bold">Form 12A</h6>
+                            <p className="text-muted small mb-3">Exit/Transfer Form</p>
+                            <button 
+                              className="btn btn-outline-warning w-100"
+                              onClick={() => handleGenerateForm('Form12A')}
+                            >
+                              Generate
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-md-3">
                         <div className="card border h-100">
                           <div className="card-body text-center">
                             <Icon icon="heroicons:document-chart-bar" className="text-success fs-1 mb-3" />
@@ -895,14 +1300,17 @@ const StatutoryCompliance = () => {
                             <p className="text-muted small mb-3">PF Contribution Reconciliation</p>
                             <button 
                               className="btn btn-outline-success w-100"
-                              onClick={() => handleGenerateForm('PFReconciliation')}
+                              onClick={() => {
+                                setShowReconciliationModal(true);
+                                setRemittanceType('pf');
+                              }}
                             >
                               Generate
                             </button>
                           </div>
                         </div>
                       </div>
-                      <div className="col-md-4">
+                      <div className="col-md-3">
                         <div className="card border h-100">
                           <div className="card-body text-center">
                             <Icon icon="heroicons:arrow-down-tray" className="text-info fs-1 mb-3" />
@@ -1073,6 +1481,162 @@ const StatutoryCompliance = () => {
                           })}
                         </tbody>
                       </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ESI Remittance Summary */}
+              <div className="col-12">
+                <div className="card border">
+                  <div className="card-header">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <h6 className="mb-0">ESI Remittance Summary</h6>
+                      <button 
+                        className="btn btn-sm btn-primary"
+                        onClick={() => {
+                          setRemittanceType('esi');
+                          setShowRemittanceModal(true);
+                        }}
+                      >
+                        <Icon icon="heroicons:plus" className="me-1" />
+                        Add Remittance
+                      </button>
+                    </div>
+                  </div>
+                  <div className="card-body">
+                    <div className="table-responsive">
+                      <table className="table table-hover">
+                        <thead>
+                          <tr>
+                            <th>Period</th>
+                            <th>Total Contribution</th>
+                            <th>Employee Contribution</th>
+                            <th>Employer Contribution</th>
+                            <th>Challan Number</th>
+                            <th>Remittance Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {esiRemittances.map(remittance => (
+                            <tr key={remittance.id}>
+                              <td>{remittance.period}</td>
+                              <td className="fw-bold">{formatCurrency(remittance.totalContribution)}</td>
+                              <td className="text-primary">{formatCurrency(remittance.employeeContribution)}</td>
+                              <td className="text-success">{formatCurrency(remittance.employerContribution)}</td>
+                              <td>{remittance.challanNo}</td>
+                              <td>{remittance.remittanceDate}</td>
+                              <td>{getStatusBadge(remittance.status)}</td>
+                              <td>
+                                <button className="btn btn-sm btn-outline-primary">
+                                  View Challan
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ESI Registration */}
+              <div className="col-12">
+                <div className="card border">
+                  <div className="card-header">
+                    <h6 className="mb-0">ESI Registration Status</h6>
+                  </div>
+                  <div className="card-body">
+                    <div className="row g-3 mb-3">
+                      <div className="col-md-6">
+                        <label className="form-label">Registration Number</label>
+                        <input 
+                          type="text" 
+                          className="form-control"
+                          value={esiConfig.registrationNumber}
+                          onChange={(e) => handleUpdateConfig('esi', 'registrationNumber', e.target.value)}
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Branch Code</label>
+                        <input 
+                          type="text" 
+                          className="form-control"
+                          value={esiConfig.branchCode}
+                          onChange={(e) => handleUpdateConfig('esi', 'branchCode', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="alert alert-info">
+                      <Icon icon="heroicons:information-circle" className="me-2" />
+                      Registration Number: {esiConfig.registrationNumber} | Branch Code: {esiConfig.branchCode}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ESI Reports */}
+              <div className="col-12">
+                <div className="card border">
+                  <div className="card-header">
+                    <h6 className="mb-0">ESI Reports & Forms</h6>
+                  </div>
+                  <div className="card-body">
+                    <div className="row g-3">
+                      <div className="col-md-4">
+                        <div className="card border h-100">
+                          <div className="card-body text-center">
+                            <Icon icon="heroicons:document-text" className="text-info fs-1 mb-3" />
+                            <h6 className="fw-bold">ESI Return</h6>
+                            <p className="text-muted small mb-3">Half-yearly ESI Return</p>
+                            <button 
+                              className="btn btn-outline-info w-100"
+                              onClick={() => handleGenerateForm('ESIReturn')}
+                            >
+                              Generate
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-md-4">
+                        <div className="card border h-100">
+                          <div className="card-body text-center">
+                            <Icon icon="heroicons:document-chart-bar" className="text-success fs-1 mb-3" />
+                            <h6 className="fw-bold">ESI Reconciliation</h6>
+                            <p className="text-muted small mb-3">ESI Contribution Reconciliation</p>
+                            <button 
+                              className="btn btn-outline-success w-100"
+                              onClick={() => {
+                                setShowReconciliationModal(true);
+                                setRemittanceType('esi');
+                              }}
+                            >
+                              Generate
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-md-4">
+                        <div className="card border h-100">
+                          <div className="card-body text-center">
+                            <Icon icon="heroicons:document-duplicate" className="text-warning fs-1 mb-3" />
+                            <h6 className="fw-bold">ESI Challan</h6>
+                            <p className="text-muted small mb-3">Generate ESI Challan</p>
+                            <button 
+                              className="btn btn-outline-warning w-100"
+                              onClick={() => {
+                                setShowChallanModal(true);
+                                setRemittanceType('esi');
+                              }}
+                            >
+                              Generate
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1397,6 +1961,209 @@ const StatutoryCompliance = () => {
                 </div>
               </div>
 
+              {/* Standard Deduction */}
+              <div className="col-md-6">
+                <div className="card border h-100">
+                  <div className="card-header">
+                    <h6 className="mb-0">Standard Deduction</h6>
+                  </div>
+                  <div className="card-body">
+                    <div className="row g-3">
+                      <div className="col-12">
+                        <label className="form-label">Standard Deduction Amount (₹)</label>
+                        <input 
+                          type="number" 
+                          className="form-control"
+                          value={tdsConfig.standardDeduction}
+                          onChange={(e) => handleUpdateConfig('tds', 'standardDeduction', parseFloat(e.target.value))}
+                        />
+                        <small className="text-muted">Standard deduction applicable for all employees (currently ₹50,000)</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* TDS Challans */}
+              <div className="col-12">
+                <div className="card border">
+                  <div className="card-header">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <h6 className="mb-0">TDS Challans</h6>
+                      <button 
+                        className="btn btn-sm btn-primary"
+                        onClick={() => {
+                          setShowChallanModal(true);
+                          setRemittanceType('tds');
+                        }}
+                      >
+                        <Icon icon="heroicons:plus" className="me-1" />
+                        Create Challan
+                      </button>
+                    </div>
+                  </div>
+                  <div className="card-body">
+                    <div className="table-responsive">
+                      <table className="table table-hover">
+                        <thead>
+                          <tr>
+                            <th>Quarter</th>
+                            <th>TDS Amount</th>
+                            <th>Challan Number</th>
+                            <th>Deposit Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {tdsChallans.map(challan => (
+                            <tr key={challan.id}>
+                              <td>{challan.quarter}</td>
+                              <td className="fw-bold text-danger">{formatCurrency(challan.tdsAmount)}</td>
+                              <td>{challan.challanNo}</td>
+                              <td>{challan.depositDate}</td>
+                              <td>{getStatusBadge(challan.status)}</td>
+                              <td>
+                                <button className="btn btn-sm btn-outline-primary">
+                                  View Challan
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Advance Tax & Self-Assessment Tax */}
+              <div className="col-12">
+                <div className="card border">
+                  <div className="card-header">
+                    <h6 className="mb-0">Advance Tax & Self-Assessment Tax Tracking</h6>
+                  </div>
+                  <div className="card-body">
+                    <div className="row g-3 mb-3">
+                      <div className="col-md-6">
+                        <div className="form-check">
+                          <input 
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={tdsConfig.advanceTaxEnabled}
+                            onChange={(e) => handleUpdateConfig('tds', 'advanceTaxEnabled', e.target.checked)}
+                          />
+                          <label className="form-check-label">
+                            Enable Advance Tax Tracking
+                          </label>
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-check">
+                          <input 
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={tdsConfig.selfAssessmentTaxEnabled}
+                            onChange={(e) => handleUpdateConfig('tds', 'selfAssessmentTaxEnabled', e.target.checked)}
+                          />
+                          <label className="form-check-label">
+                            Enable Self-Assessment Tax Tracking
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="table-responsive">
+                      <table className="table table-hover">
+                        <thead>
+                          <tr>
+                            <th>Employee</th>
+                            <th>Advance Tax Amount</th>
+                            <th>Quarter</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {advanceTaxData.map(tax => (
+                            <tr key={tax.id}>
+                              <td>
+                                <div className="fw-semibold">{tax.name}</div>
+                                <div className="small text-muted">{tax.employeeId}</div>
+                              </td>
+                              <td className="fw-bold text-warning">{formatCurrency(tax.advanceTaxAmount)}</td>
+                              <td>{tax.quarter}</td>
+                              <td>{tax.dueDate}</td>
+                              <td>{getStatusBadge(tax.status)}</td>
+                              <td>
+                                <button className="btn btn-sm btn-outline-primary">
+                                  View Details
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tax Reconciliation */}
+              <div className="col-12">
+                <div className="card border">
+                  <div className="card-header">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <h6 className="mb-0">Tax Reconciliation & Adjustment</h6>
+                      <button 
+                        className="btn btn-sm btn-primary"
+                        onClick={() => {
+                          setShowReconciliationModal(true);
+                          setRemittanceType('tds');
+                        }}
+                      >
+                        <Icon icon="heroicons:document-chart-bar" className="me-1" />
+                        Generate Reconciliation
+                      </button>
+                    </div>
+                  </div>
+                  <div className="card-body">
+                    <div className="alert alert-info">
+                      <Icon icon="heroicons:information-circle" className="me-2" />
+                      Tax reconciliation helps identify discrepancies between TDS deducted and deposited amounts.
+                    </div>
+                    <div className="table-responsive">
+                      <table className="table table-hover">
+                        <thead>
+                          <tr>
+                            <th>Period</th>
+                            <th>TDS Deducted</th>
+                            <th>TDS Deposited</th>
+                            <th>Variance</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>Q4 FY 2023-24</td>
+                            <td className="fw-bold">{formatCurrency(150000)}</td>
+                            <td className="fw-bold text-success">{formatCurrency(150000)}</td>
+                            <td className="text-success">₹0</td>
+                            <td><span className="badge bg-success-subtle text-success">Reconciled</span></td>
+                            <td>
+                              <button className="btn btn-sm btn-outline-primary">
+                                View Details
+                              </button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* TDS Reports */}
               <div className="col-12">
                 <div className="card border">
@@ -1411,7 +2178,10 @@ const StatutoryCompliance = () => {
                             <Icon icon="heroicons:document-text" className="text-primary fs-1 mb-3" />
                             <h6 className="fw-bold">Form 16</h6>
                             <p className="text-muted small mb-3">Part A & B</p>
-                            <button className="btn btn-outline-primary w-100">
+                            <button 
+                              className="btn btn-outline-primary w-100"
+                              onClick={() => handleGenerateForm('Form16')}
+                            >
                               Generate
                             </button>
                           </div>
@@ -1423,7 +2193,10 @@ const StatutoryCompliance = () => {
                             <Icon icon="heroicons:document-chart-bar" className="text-success fs-1 mb-3" />
                             <h6 className="fw-bold">Form 24Q</h6>
                             <p className="text-muted small mb-3">Quarterly TDS Return</p>
-                            <button className="btn btn-outline-success w-100">
+                            <button 
+                              className="btn btn-outline-success w-100"
+                              onClick={() => handleGenerateForm('Form24Q')}
+                            >
                               Generate
                             </button>
                           </div>
@@ -1447,8 +2220,14 @@ const StatutoryCompliance = () => {
                             <Icon icon="heroicons:arrow-down-tray" className="text-info fs-1 mb-3" />
                             <h6 className="fw-bold">TDS Challan</h6>
                             <p className="text-muted small mb-3">Challan 281</p>
-                            <button className="btn btn-outline-info w-100">
-                              Download
+                            <button 
+                              className="btn btn-outline-info w-100"
+                              onClick={() => {
+                                setShowChallanModal(true);
+                                setRemittanceType('tds');
+                              }}
+                            >
+                              Generate
                             </button>
                           </div>
                         </div>
@@ -1591,6 +2370,55 @@ const StatutoryCompliance = () => {
                           ))}
                         </tbody>
                       </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* LWF Compliance Reports */}
+              <div className="col-12">
+                <div className="card border">
+                  <div className="card-header">
+                    <h6 className="mb-0">LWF Compliance Reports</h6>
+                  </div>
+                  <div className="card-body">
+                    <div className="row g-3">
+                      <div className="col-md-4">
+                        <div className="card border h-100">
+                          <div className="card-body text-center">
+                            <Icon icon="heroicons:document-chart-bar" className="text-primary fs-1 mb-3" />
+                            <h6 className="fw-bold">Annual LWF Report</h6>
+                            <p className="text-muted small mb-3">State-wise LWF compliance</p>
+                            <button className="btn btn-outline-primary w-100">
+                              Generate
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-md-4">
+                        <div className="card border h-100">
+                          <div className="card-body text-center">
+                            <Icon icon="heroicons:document-text" className="text-success fs-1 mb-3" />
+                            <h6 className="fw-bold">LWF Payment Summary</h6>
+                            <p className="text-muted small mb-3">Payment status report</p>
+                            <button className="btn btn-outline-success w-100">
+                              Generate
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-md-4">
+                        <div className="card border h-100">
+                          <div className="card-body text-center">
+                            <Icon icon="heroicons:chart-bar" className="text-info fs-1 mb-3" />
+                            <h6 className="fw-bold">LWF Compliance Status</h6>
+                            <p className="text-muted small mb-3">Compliance tracking report</p>
+                            <button className="btn btn-outline-info w-100">
+                              Generate
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -3000,6 +3828,267 @@ const StatutoryCompliance = () => {
                   >
                     Close
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* UAN Activation Modal */}
+        {showUANModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">UAN Activation & Management</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowUANModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <label className="form-label">Select Employee</label>
+                    <select 
+                      className="form-select"
+                      value={selectedEmployeeForUAN?.id || ''}
+                      onChange={(e) => setSelectedEmployeeForUAN(employees.find(emp => emp.id === e.target.value))}
+                    >
+                      <option value="">Select employee...</option>
+                      {employees.map(emp => (
+                        <option key={emp.id} value={emp.id}>{emp.name} ({emp.employeeId})</option>
+                      ))}
+                    </select>
+                  </div>
+                  {selectedEmployeeForUAN && (
+                    <div className="row g-3">
+                      <div className="col-md-6">
+                        <label className="form-label">UAN Number</label>
+                        <input 
+                          type="text" 
+                          className="form-control"
+                          placeholder="Enter 12-digit UAN"
+                          maxLength="12"
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Activation Date</label>
+                        <input 
+                          type="date" 
+                          className="form-control"
+                          defaultValue={new Date().toISOString().split('T')[0]}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowUANModal(false)}>Cancel</button>
+                  <button type="button" className="btn btn-primary">Activate UAN</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ECR Generation Modal */}
+        {showECRModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Generate ECR (Electronic Challan cum Return)</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowECRModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <label className="form-label">Select Month</label>
+                    <select className="form-select">
+                      <option>March 2024</option>
+                      <option>February 2024</option>
+                      <option>January 2024</option>
+                    </select>
+                  </div>
+                  <div className="alert alert-info">
+                    <Icon icon="heroicons:information-circle" className="me-2" />
+                    ECR will include all eligible employees with their wages, EPF, EPS, and EDLI contributions.
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowECRModal(false)}>Cancel</button>
+                  <button type="button" className="btn btn-primary">Generate ECR</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Remittance Modal */}
+        {showRemittanceModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    {remittanceType === 'pf' ? 'PF' : remittanceType === 'esi' ? 'ESI' : 'PT'} Remittance
+                  </h5>
+                  <button type="button" className="btn-close" onClick={() => setShowRemittanceModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label">Month/Period</label>
+                      <input type="text" className="form-control" placeholder="March 2024" />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Challan Number</label>
+                      <input type="text" className="form-control" placeholder="Enter challan number" />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Total Contribution</label>
+                      <input type="number" className="form-control" placeholder="Enter amount" />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Remittance Date</label>
+                      <input type="date" className="form-control" />
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowRemittanceModal(false)}>Cancel</button>
+                  <button type="button" className="btn btn-primary">Save Remittance</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Challan Modal */}
+        {showChallanModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    Generate {remittanceType === 'pf' ? 'PF' : remittanceType === 'esi' ? 'ESI' : remittanceType === 'pt' ? 'PT' : 'TDS'} Challan
+                  </h5>
+                  <button type="button" className="btn-close" onClick={() => setShowChallanModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label">Period</label>
+                      <input type="text" className="form-control" placeholder="March 2024" />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Amount</label>
+                      <input type="number" className="form-control" placeholder="Enter amount" />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Payment Date</label>
+                      <input type="date" className="form-control" />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Format</label>
+                      <select className="form-select">
+                        <option>PDF</option>
+                        <option>Excel</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowChallanModal(false)}>Cancel</button>
+                  <button type="button" className="btn btn-primary">Generate Challan</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Reconciliation Modal */}
+        {showReconciliationModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-xl">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    {remittanceType === 'pf' ? 'PF' : remittanceType === 'esi' ? 'ESI' : 'TDS'} Reconciliation Report
+                  </h5>
+                  <button type="button" className="btn-close" onClick={() => setShowReconciliationModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="row g-3 mb-3">
+                    <div className="col-md-6">
+                      <label className="form-label">Period</label>
+                      <input type="text" className="form-control" placeholder="March 2024" />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Format</label>
+                      <select className="form-select">
+                        <option>PDF</option>
+                        <option>Excel</option>
+                        <option>CSV</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="alert alert-info">
+                    <Icon icon="heroicons:information-circle" className="me-2" />
+                    Reconciliation report will compare deducted vs deposited amounts and highlight any discrepancies.
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowReconciliationModal(false)}>Cancel</button>
+                  <button type="button" className="btn btn-primary">Generate Report</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* VPF Modal */}
+        {showVPFModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Add VPF (Voluntary Provident Fund)</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowVPFModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label">Select Employee</label>
+                      <select className="form-select">
+                        <option value="">Select employee...</option>
+                        {employees.map(emp => (
+                          <option key={emp.id} value={emp.id}>{emp.name} ({emp.employeeId})</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">VPF Rate (%)</label>
+                      <input 
+                        type="number" 
+                        className="form-control"
+                        placeholder="Enter VPF rate"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Effective Month</label>
+                      <input type="text" className="form-control" placeholder="March 2024" />
+                    </div>
+                    <div className="col-12">
+                      <div className="alert alert-info">
+                        <Icon icon="heroicons:information-circle" className="me-2" />
+                        VPF is a voluntary contribution over and above the statutory PF contribution. Employees can contribute up to 100% of their basic salary.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowVPFModal(false)}>Cancel</button>
+                  <button type="button" className="btn btn-primary">Add VPF</button>
                 </div>
               </div>
             </div>

@@ -369,7 +369,6 @@ import {
   PersonFalling
 } from 'lucide-react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import RecruiterDashboardLayout from '../../recruiterDashboard/RecruiterDashboardLayout';
 
 // Custom icon components for missing ones
 const Chair = (props) => <div {...props}>🪑</div>;
@@ -3133,15 +3132,7 @@ const AssestManagement = () => {
     </div>
   );
 
-  return (
-    <div
-      menuItems={menuItems}
-      userInfo={userInfo}
-      appName="Asset Management"
-    >
-      {mainContent}
-    </div>
-  );
+  return mainContent;
 };
 
 export default AssestManagement;

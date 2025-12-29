@@ -7,7 +7,7 @@ import {
   ChevronDown, ChevronUp, Upload, RefreshCw, Share2, Lock, Unlock,
   Users as UsersIcon, Building, MapPin, Tag, DownloadCloud, ExternalLink,
   MessageCircle, LineChart, Cloud, FileBarChart, Database, BellRing,
-  DoorClosed, Heart, QrCode as QrCodeIcon
+  DoorClosed, Heart, QrCode as QrCodeIcon, X
 } from "lucide-react";
 
 const SurveysPulseChecks = () => {
@@ -47,6 +47,14 @@ const SurveysPulseChecks = () => {
     randomize: false,
     progressBar: true
   });
+  const [scheduledSurveys, setScheduledSurveys] = useState([]);
+  const [recurringSurveys, setRecurringSurveys] = useState([]);
+  const [selectedSurvey, setSelectedSurvey] = useState(null);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleTime, setScheduleTime] = useState("");
+  const [recurrencePattern, setRecurrencePattern] = useState("monthly");
+  const [correlationData, setCorrelationData] = useState(null);
 
   // Add CSS for animations
   useEffect(() => {
@@ -187,7 +195,12 @@ const SurveysPulseChecks = () => {
       question: "",
       required: false,
       options: type === "multiple" || type === "dropdown" ? ["Option 1", "Option 2"] : [],
-      scale: type === "rating" ? 5 : type === "nps" ? 10 : 5
+      scale: type === "rating" ? 5 : type === "nps" ? 10 : 5,
+      // Matrix question structure
+      matrixRows: type === "matrix" ? ["Row 1", "Row 2"] : [],
+      matrixColumns: type === "matrix" ? ["Column 1", "Column 2", "Column 3"] : [],
+      // Ranking question structure
+      rankingItems: type === "ranking" ? ["Item 1", "Item 2", "Item 3"] : []
     };
     setQuestions([...questions, newQuestion]);
     setShowQuestionBank(false);
@@ -340,17 +353,37 @@ const SurveysPulseChecks = () => {
   };
 
   const handleScheduleSurvey = () => {
+    if (!surveyTitle.trim() || questions.length === 0) {
+      showNotification("Please complete survey details before scheduling", "warning");
+      return;
+    }
+    
+    if (scheduling === "scheduled" && (!scheduleDate || !scheduleTime)) {
+      showNotification("Please select date and time for scheduled survey", "warning");
+      return;
+    }
+    
     const surveySchedule = {
+      id: Date.now(),
       title: surveyTitle,
+      questions,
       method: distributionMethod,
       audience: selectedAudience,
-      scheduledFor: scheduling === "immediate" ? "now" : "scheduled time",
-      recurrence: scheduling === "recurring" ? "weekly" : "once"
+      scheduledFor: scheduling === "immediate" ? new Date().toISOString() : `${scheduleDate}T${scheduleTime}:00`,
+      recurrence: scheduling === "recurring" ? recurrencePattern : null,
+      status: "scheduled",
+      createdAt: new Date().toISOString()
     };
     
-    showNotification(`Survey scheduled successfully for distribution!`, "success");
+    if (scheduling === "recurring") {
+      setRecurringSurveys([...recurringSurveys, surveySchedule]);
+      showNotification(`Recurring survey scheduled (${recurrencePattern})!`, "success");
+    } else {
+      setScheduledSurveys([...scheduledSurveys, surveySchedule]);
+      showNotification(`Survey scheduled for ${new Date(surveySchedule.scheduledFor).toLocaleString()}!`, "success");
+    }
     
-    // Log schedule
+    setShowScheduleModal(false);
     console.log("Survey scheduled:", surveySchedule);
   };
 
@@ -1066,6 +1099,128 @@ const SurveysPulseChecks = () => {
                         </button>
                       </div>
                     )}
+
+                    {q.type === "matrix" && (
+                      <div style={{ marginTop: "12px" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+                          <div>
+                            <div style={{ fontSize: "13px", marginBottom: "8px", fontWeight: "500" }}>Matrix Rows (Questions):</div>
+                            {(q.matrixRows || []).map((row, rowIndex) => (
+                              <div key={rowIndex} style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
+                                <input
+                                  type="text"
+                                  style={{ ...styles.input, flex: 1 }}
+                                  value={row}
+                                  onChange={(e) => {
+                                    const newRows = [...(q.matrixRows || [])];
+                                    newRows[rowIndex] = e.target.value;
+                                    handleQuestionChange(q.id, "matrixRows", newRows);
+                                  }}
+                                />
+                                <button 
+                                  style={{ ...styles.button, ...styles.smallButton }}
+                                  onClick={() => {
+                                    const newRows = (q.matrixRows || []).filter((_, i) => i !== rowIndex);
+                                    handleQuestionChange(q.id, "matrixRows", newRows);
+                                  }}
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            ))}
+                            <button 
+                              style={{ ...styles.button, ...styles.outlineButton, ...styles.smallButton }}
+                              onClick={() => {
+                                const newRows = [...(q.matrixRows || []), `Row ${(q.matrixRows || []).length + 1}`];
+                                handleQuestionChange(q.id, "matrixRows", newRows);
+                              }}
+                            >
+                              <Plus size={12} /> Add Row
+                            </button>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: "13px", marginBottom: "8px", fontWeight: "500" }}>Matrix Columns (Options):</div>
+                            {(q.matrixColumns || []).map((col, colIndex) => (
+                              <div key={colIndex} style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
+                                <input
+                                  type="text"
+                                  style={{ ...styles.input, flex: 1 }}
+                                  value={col}
+                                  onChange={(e) => {
+                                    const newCols = [...(q.matrixColumns || [])];
+                                    newCols[colIndex] = e.target.value;
+                                    handleQuestionChange(q.id, "matrixColumns", newCols);
+                                  }}
+                                />
+                                <button 
+                                  style={{ ...styles.button, ...styles.smallButton }}
+                                  onClick={() => {
+                                    const newCols = (q.matrixColumns || []).filter((_, i) => i !== colIndex);
+                                    handleQuestionChange(q.id, "matrixColumns", newCols);
+                                  }}
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            ))}
+                            <button 
+                              style={{ ...styles.button, ...styles.outlineButton, ...styles.smallButton }}
+                              onClick={() => {
+                                const newCols = [...(q.matrixColumns || []), `Column ${(q.matrixColumns || []).length + 1}`];
+                                handleQuestionChange(q.id, "matrixColumns", newCols);
+                              }}
+                            >
+                              <Plus size={12} /> Add Column
+                            </button>
+                          </div>
+                        </div>
+                        <div style={{ padding: "12px", background: "#f9fafb", borderRadius: "6px", fontSize: "12px", color: "#6b7280" }}>
+                          Matrix questions allow respondents to rate multiple items on the same scale.
+                        </div>
+                      </div>
+                    )}
+
+                    {q.type === "ranking" && (
+                      <div style={{ marginTop: "12px" }}>
+                        <div style={{ fontSize: "13px", marginBottom: "8px" }}>Items to Rank:</div>
+                        {(q.rankingItems || []).map((item, itemIndex) => (
+                          <div key={itemIndex} style={{ display: "flex", gap: "8px", marginBottom: "8px", alignItems: "center" }}>
+                            <span style={{ fontSize: "14px", color: "#6b7280", width: "24px" }}>{itemIndex + 1}.</span>
+                            <input
+                              type="text"
+                              style={{ ...styles.input, flex: 1 }}
+                              value={item}
+                              onChange={(e) => {
+                                const newItems = [...(q.rankingItems || [])];
+                                newItems[itemIndex] = e.target.value;
+                                handleQuestionChange(q.id, "rankingItems", newItems);
+                              }}
+                            />
+                            <button 
+                              style={{ ...styles.button, ...styles.smallButton }}
+                              onClick={() => {
+                                const newItems = (q.rankingItems || []).filter((_, i) => i !== itemIndex);
+                                handleQuestionChange(q.id, "rankingItems", newItems);
+                              }}
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        ))}
+                        <button 
+                          style={{ ...styles.button, ...styles.outlineButton, ...styles.smallButton }}
+                          onClick={() => {
+                            const newItems = [...(q.rankingItems || []), `Item ${(q.rankingItems || []).length + 1}`];
+                            handleQuestionChange(q.id, "rankingItems", newItems);
+                          }}
+                        >
+                          <Plus size={12} /> Add Item
+                        </button>
+                        <div style={{ marginTop: "8px", padding: "12px", background: "#f9fafb", borderRadius: "6px", fontSize: "12px", color: "#6b7280" }}>
+                          Respondents will rank these items in order of preference.
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div style={styles.buttonGroup}>
                     <button 
@@ -1274,19 +1429,49 @@ const SurveysPulseChecks = () => {
               ))}
             </div>
 
+            {scheduling === "scheduled" && (
+              <div style={{ marginTop: "16px" }}>
+                <div style={styles.grid2Col}>
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Schedule Date</label>
+                    <input
+                      type="date"
+                      style={styles.input}
+                      value={scheduleDate}
+                      onChange={(e) => setScheduleDate(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Schedule Time</label>
+                    <input
+                      type="time"
+                      style={styles.input}
+                      value={scheduleTime}
+                      onChange={(e) => setScheduleTime(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             {scheduling === "recurring" && (
               <div style={{ marginTop: "16px" }}>
                 <label style={styles.label}>Recurrence Pattern</label>
-                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                <select
+                  style={styles.select}
+                  value={recurrencePattern}
+                  onChange={(e) => setRecurrencePattern(e.target.value)}
+                >
                   {recurrenceOptions.map(recurrence => (
-                    <button
-                      key={recurrence.id}
-                      style={{ ...styles.button, ...styles.outlineButton }}
-                      onClick={handleScheduleSurvey}
-                    >
-                      {recurrence.label}
-                    </button>
+                    <option key={recurrence.id} value={recurrence.id}>{recurrence.label}</option>
                   ))}
+                </select>
+                <div style={{ marginTop: "12px", padding: "12px", background: "#f0f9ff", borderRadius: "6px", fontSize: "13px", color: "#1e40af" }}>
+                  This survey will be automatically sent {recurrencePattern === "weekly" ? "every week" :
+                  recurrencePattern === "monthly" ? "every month" :
+                  recurrencePattern === "quarterly" ? "every quarter" :
+                  recurrencePattern === "biannual" ? "twice a year" : "annually"}.
                 </div>
               </div>
             )}
@@ -1317,24 +1502,64 @@ const SurveysPulseChecks = () => {
       </div>
 
       <div style={styles.sectionCard}>
-        <h4 style={styles.sectionTitle}><Bell size={20} />Distribution Tracking</h4>
+        <h4 style={styles.sectionTitle}><Bell size={20} />Distribution & Participation Tracking</h4>
         
         <div style={styles.grid4Col}>
           <div style={styles.metricCard}>
             <div style={{ fontSize: "32px", fontWeight: "700", color: "#3b82f6", marginBottom: "8px" }}>1,250</div>
-            <div style={{ fontSize: "14px", color: "#6b7280" }}>Total Recipients</div>
+            <div style={{ fontSize: "14px", color: "#6b7280", marginBottom: "4px" }}>Total Recipients</div>
+            <div style={{ fontSize: "12px", color: "#10b981" }}>100% target audience</div>
           </div>
           <div style={styles.metricCard}>
             <div style={{ fontSize: "32px", fontWeight: "700", color: "#10b981", marginBottom: "8px" }}>1,087</div>
-            <div style={{ fontSize: "14px", color: "#6b7280" }}>Emails Sent</div>
+            <div style={{ fontSize: "14px", color: "#6b7280", marginBottom: "4px" }}>Emails Sent</div>
+            <div style={{ fontSize: "12px", color: "#6b7280" }}>87% delivery rate</div>
           </div>
           <div style={styles.metricCard}>
             <div style={{ fontSize: "32px", fontWeight: "700", color: "#f59e0b", marginBottom: "8px" }}>945</div>
-            <div style={{ fontSize: "14px", color: "#6b7280" }}>Opened</div>
+            <div style={{ fontSize: "14px", color: "#6b7280", marginBottom: "4px" }}>Opened</div>
+            <div style={{ fontSize: "12px", color: "#10b981" }}>87% open rate</div>
           </div>
           <div style={styles.metricCard}>
             <div style={{ fontSize: "32px", fontWeight: "700", color: "#8b5cf6", marginBottom: "8px" }}>782</div>
-            <div style={{ fontSize: "14px", color: "#6b7280" }}>Started</div>
+            <div style={{ fontSize: "14px", color: "#6b7280", marginBottom: "4px" }}>Started</div>
+            <div style={{ fontSize: "12px", color: "#f59e0b" }}>72% start rate</div>
+          </div>
+        </div>
+
+        <div style={{ marginTop: "24px", padding: "16px", background: "#f0f9ff", borderRadius: "8px", border: "1px solid #bae6fd" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <h5 style={{ margin: 0, fontSize: "16px", fontWeight: "600" }}>Survey Completion Status</h5>
+            <span style={{ ...styles.chip, background: "#d1fae5", color: "#065f46" }}>
+              {Math.round((782 / 1250) * 100)}% Completion Rate
+            </span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
+            <div style={{ padding: "12px", background: "white", borderRadius: "6px", textAlign: "center" }}>
+              <div style={{ fontSize: "24px", fontWeight: "700", color: "#3b82f6", marginBottom: "4px" }}>782</div>
+              <div style={{ fontSize: "12px", color: "#6b7280" }}>Completed</div>
+            </div>
+            <div style={{ padding: "12px", background: "white", borderRadius: "6px", textAlign: "center" }}>
+              <div style={{ fontSize: "24px", fontWeight: "700", color: "#f59e0b", marginBottom: "4px" }}>163</div>
+              <div style={{ fontSize: "12px", color: "#6b7280" }}>In Progress</div>
+            </div>
+            <div style={{ padding: "12px", background: "white", borderRadius: "6px", textAlign: "center" }}>
+              <div style={{ fontSize: "24px", fontWeight: "700", color: "#ef4444", marginBottom: "4px" }}>305</div>
+              <div style={{ fontSize: "12px", color: "#6b7280" }}>Not Started</div>
+            </div>
+            <div style={{ padding: "12px", background: "white", borderRadius: "6px", textAlign: "center" }}>
+              <div style={{ fontSize: "24px", fontWeight: "700", color: "#6b7280", marginBottom: "4px" }}>0</div>
+              <div style={{ fontSize: "12px", color: "#6b7280" }}>Bounced</div>
+            </div>
+          </div>
+          <div style={{ marginTop: "16px", padding: "12px", background: "white", borderRadius: "6px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <span style={{ fontSize: "14px", fontWeight: "500" }}>Reminder Status</span>
+              <span style={{ fontSize: "14px", color: "#6b7280" }}>2 of 3 reminders sent</span>
+            </div>
+            <div style={{ height: "8px", background: "#e5e7eb", borderRadius: "4px", overflow: "hidden" }}>
+              <div style={{ width: "67%", height: "100%", background: "#3b82f6", borderRadius: "4px" }}></div>
+            </div>
           </div>
         </div>
 
@@ -1347,7 +1572,13 @@ const SurveysPulseChecks = () => {
           </button>
           <button 
             style={{ ...styles.button, ...styles.secondaryButton }}
-            onClick={handleScheduleSurvey}
+            onClick={() => {
+              if (scheduling === "scheduled" || scheduling === "recurring") {
+                handleScheduleSurvey();
+              } else {
+                setShowScheduleModal(true);
+              }
+            }}
           >
             <Calendar size={16} /> Schedule Campaign
           </button>
@@ -1370,6 +1601,53 @@ const SurveysPulseChecks = () => {
             <QrCodeIcon size={16} /> Generate QR
           </button>
         </div>
+
+        {(scheduledSurveys.length > 0 || recurringSurveys.length > 0) && (
+          <div style={{ marginTop: "24px", paddingTop: "24px", borderTop: "1px solid #e5e7eb" }}>
+            <h5 style={{ ...styles.label, fontSize: "16px", marginBottom: "16px" }}>Scheduled & Recurring Surveys</h5>
+            
+            {scheduledSurveys.length > 0 && (
+              <div style={{ marginBottom: "16px" }}>
+                <div style={{ fontSize: "14px", fontWeight: "500", marginBottom: "12px", color: "#6b7280" }}>One-Time Scheduled</div>
+                {scheduledSurveys.map(survey => (
+                  <div key={survey.id} style={{ ...styles.card, marginBottom: "8px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <div style={{ fontWeight: "500" }}>{survey.title}</div>
+                        <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                          Scheduled for: {new Date(survey.scheduledFor).toLocaleString()}
+                        </div>
+                      </div>
+                      <span style={{ ...styles.chip, background: "#fef3c7", color: "#92400e" }}>Scheduled</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {recurringSurveys.length > 0 && (
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: "500", marginBottom: "12px", color: "#6b7280" }}>Recurring Surveys</div>
+                {recurringSurveys.map(survey => (
+                  <div key={survey.id} style={{ ...styles.card, marginBottom: "8px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <div style={{ fontWeight: "500" }}>{survey.title}</div>
+                        <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                          Recurrence: {survey.recurrence === "weekly" ? "Weekly" :
+                          survey.recurrence === "monthly" ? "Monthly" :
+                          survey.recurrence === "quarterly" ? "Quarterly" :
+                          survey.recurrence === "biannual" ? "Bi-Annual" : "Annual"}
+                        </div>
+                      </div>
+                      <span style={{ ...styles.chip, background: "#dbeafe", color: "#1e40af" }}>Recurring</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1384,25 +1662,60 @@ const SurveysPulseChecks = () => {
             <div style={{ fontSize: "32px", fontWeight: "700", color: "#3b82f6", marginBottom: "8px" }}>
               {analyticsData.responseRate}%
             </div>
-            <div style={{ fontSize: "14px", color: "#6b7280" }}>Response Rate</div>
+            <div style={{ fontSize: "14px", color: "#6b7280", marginBottom: "4px" }}>Response Rate</div>
+            <div style={{ fontSize: "12px", color: "#10b981" }}>↑ 3% from last month</div>
           </div>
           <div style={styles.metricCard}>
             <div style={{ fontSize: "32px", fontWeight: "700", color: "#10b981", marginBottom: "8px" }}>
               {analyticsData.completionRate}%
             </div>
-            <div style={{ fontSize: "14px", color: "#6b7280" }}>Completion Rate</div>
+            <div style={{ fontSize: "14px", color: "#6b7280", marginBottom: "4px" }}>Completion Rate</div>
+            <div style={{ fontSize: "12px", color: "#10b981" }}>↑ 2% from last month</div>
           </div>
           <div style={styles.metricCard}>
             <div style={{ fontSize: "32px", fontWeight: "700", color: "#8b5cf6", marginBottom: "8px" }}>
               {analyticsData.averageNPS}
             </div>
-            <div style={{ fontSize: "14px", color: "#6b7280" }}>Average NPS Score</div>
+            <div style={{ fontSize: "14px", color: "#6b7280", marginBottom: "4px" }}>Average NPS Score</div>
+            <div style={{ fontSize: "12px", color: analyticsData.averageNPS >= 50 ? "#10b981" : "#f59e0b" }}>
+              {analyticsData.averageNPS >= 50 ? "Excellent" : analyticsData.averageNPS >= 0 ? "Good" : "Needs Improvement"}
+            </div>
           </div>
           <div style={styles.metricCard}>
             <div style={{ fontSize: "32px", fontWeight: "700", color: "#f59e0b", marginBottom: "8px" }}>
               {analyticsData.totalResponses}
             </div>
-            <div style={{ fontSize: "14px", color: "#6b7280" }}>Total Responses</div>
+            <div style={{ fontSize: "14px", color: "#6b7280", marginBottom: "4px" }}>Total Responses</div>
+            <div style={{ fontSize: "12px", color: "#6b7280" }}>Out of 1,250 recipients</div>
+          </div>
+        </div>
+
+        <div style={{ marginTop: "24px", padding: "16px", background: "#f0f9ff", borderRadius: "8px", border: "1px solid #bae6fd" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+            <Target size={20} color="#3b82f6" />
+            <h5 style={{ margin: 0, fontSize: "16px", fontWeight: "600" }}>Question-wise Analysis</h5>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
+            <div style={{ padding: "12px", background: "white", borderRadius: "6px" }}>
+              <div style={{ fontSize: "14px", fontWeight: "500", marginBottom: "8px" }}>Q1: Job Satisfaction</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                <div style={{ flex: 1, height: "8px", background: "#e5e7eb", borderRadius: "4px", overflow: "hidden" }}>
+                  <div style={{ width: "82%", height: "100%", background: "#3b82f6", borderRadius: "4px" }}></div>
+                </div>
+                <span style={{ fontSize: "14px", fontWeight: "600" }}>4.1/5</span>
+              </div>
+              <div style={{ fontSize: "12px", color: "#6b7280" }}>1,087 responses</div>
+            </div>
+            <div style={{ padding: "12px", background: "white", borderRadius: "6px" }}>
+              <div style={{ fontSize: "14px", fontWeight: "500", marginBottom: "8px" }}>Q2: NPS Score</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                <div style={{ flex: 1, height: "8px", background: "#e5e7eb", borderRadius: "4px", overflow: "hidden" }}>
+                  <div style={{ width: "84%", height: "100%", background: "#10b981", borderRadius: "4px" }}></div>
+                </div>
+                <span style={{ fontSize: "14px", fontWeight: "600" }}>42/100</span>
+              </div>
+              <div style={{ fontSize: "12px", color: "#6b7280" }}>945 responses</div>
+            </div>
           </div>
         </div>
       </div>
@@ -1513,6 +1826,43 @@ const SurveysPulseChecks = () => {
       </div>
 
       <div style={styles.sectionCard}>
+        <h4 style={styles.sectionTitle}><TrendingUp size={20} />Correlation Analysis</h4>
+        <p style={{ color: "#64748b", fontSize: "14px", marginBottom: "20px" }}>
+          Identify relationships between survey responses and employee demographics
+        </p>
+        <div style={styles.grid2Col}>
+          <div style={styles.metricCard}>
+            <div style={{ fontSize: "18px", fontWeight: "600", marginBottom: "8px" }}>Satisfaction vs Tenure</div>
+            <div style={{ fontSize: "14px", color: "#6b7280", marginBottom: "12px" }}>Correlation: +0.72</div>
+            <div style={{ 
+              height: "100px", 
+              background: "linear-gradient(to right, #3b82f6, #60a5fa, #93c5fd)",
+              borderRadius: "6px",
+              display: "flex",
+              alignItems: "flex-end",
+              padding: "8px"
+            }}>
+              <div style={{ fontSize: "12px", color: "white" }}>Strong positive correlation</div>
+            </div>
+          </div>
+          <div style={styles.metricCard}>
+            <div style={{ fontSize: "18px", fontWeight: "600", marginBottom: "8px" }}>Engagement vs Department</div>
+            <div style={{ fontSize: "14px", color: "#6b7280", marginBottom: "12px" }}>Variance: 0.35</div>
+            <div style={{ 
+              height: "100px", 
+              background: "linear-gradient(to right, #10b981, #34d399, #6ee7b7)",
+              borderRadius: "6px",
+              display: "flex",
+              alignItems: "flex-end",
+              padding: "8px"
+            }}>
+              <div style={{ fontSize: "12px", color: "white" }}>Moderate variation across departments</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={styles.sectionCard}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
           <h4 style={styles.sectionTitle}><MessageSquare size={20} />Sentiment Analysis</h4>
           <div style={{ display: "flex", gap: "8px" }}>
@@ -1558,7 +1908,36 @@ const SurveysPulseChecks = () => {
             </div>
           </div>
           <div>
-            <h5 style={{ ...styles.label, fontSize: "16px", marginBottom: "16px" }}>Actionable Insights</h5>
+            <h5 style={{ ...styles.label, fontSize: "16px", marginBottom: "16px" }}>Sentiment Breakdown</h5>
+            <div style={{ marginBottom: "20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                <span style={{ fontSize: "14px" }}>Positive</span>
+                <span style={{ fontSize: "14px", fontWeight: "600", color: "#10b981" }}>68%</span>
+              </div>
+              <div style={{ height: "12px", background: "#e5e7eb", borderRadius: "6px", overflow: "hidden" }}>
+                <div style={{ width: "68%", height: "100%", background: "#10b981", borderRadius: "6px" }}></div>
+              </div>
+            </div>
+            <div style={{ marginBottom: "20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                <span style={{ fontSize: "14px" }}>Neutral</span>
+                <span style={{ fontSize: "14px", fontWeight: "600", color: "#6b7280" }}>22%</span>
+              </div>
+              <div style={{ height: "12px", background: "#e5e7eb", borderRadius: "6px", overflow: "hidden" }}>
+                <div style={{ width: "22%", height: "100%", background: "#6b7280", borderRadius: "6px" }}></div>
+              </div>
+            </div>
+            <div style={{ marginBottom: "20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                <span style={{ fontSize: "14px" }}>Negative</span>
+                <span style={{ fontSize: "14px", fontWeight: "600", color: "#ef4444" }}>10%</span>
+              </div>
+              <div style={{ height: "12px", background: "#e5e7eb", borderRadius: "6px", overflow: "hidden" }}>
+                <div style={{ width: "10%", height: "100%", background: "#ef4444", borderRadius: "6px" }}></div>
+              </div>
+            </div>
+
+            <h5 style={{ ...styles.label, fontSize: "16px", marginBottom: "16px", marginTop: "24px" }}>Actionable Insights</h5>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <div style={styles.card}>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -2005,6 +2384,71 @@ const SurveysPulseChecks = () => {
                       
                       {q.type === "open" && (
                         <textarea style={styles.textarea} placeholder="Type your response here..." rows={3} />
+                      )}
+                      
+                      {q.type === "matrix" && q.matrixRows && q.matrixColumns && (
+                        <div style={{ marginTop: "12px" }}>
+                          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                            <thead>
+                              <tr>
+                                <th style={{ textAlign: "left", padding: "8px", borderBottom: "1px solid #e5e7eb" }}></th>
+                                {q.matrixColumns.map((col, idx) => (
+                                  <th key={idx} style={{ textAlign: "center", padding: "8px", borderBottom: "1px solid #e5e7eb", fontWeight: "500" }}>
+                                    {col}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {q.matrixRows.map((row, rowIdx) => (
+                                <tr key={rowIdx}>
+                                  <td style={{ padding: "8px", borderBottom: "1px solid #f3f4f6", fontWeight: "500" }}>{row}</td>
+                                  {q.matrixColumns.map((_, colIdx) => (
+                                    <td key={colIdx} style={{ padding: "8px", borderBottom: "1px solid #f3f4f6", textAlign: "center" }}>
+                                      <input type="radio" name={`matrix-${q.id}-${rowIdx}`} />
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                      
+                      {q.type === "ranking" && q.rankingItems && (
+                        <div style={{ marginTop: "12px" }}>
+                          <div style={{ fontSize: "13px", color: "#6b7280", marginBottom: "8px" }}>
+                            Drag items to rank them in order of preference
+                          </div>
+                          {q.rankingItems.map((item, idx) => (
+                            <div key={idx} style={{ 
+                              padding: "12px", 
+                              background: "#f9fafb", 
+                              border: "1px solid #e5e7eb", 
+                              borderRadius: "6px", 
+                              marginBottom: "8px",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "12px"
+                            }}>
+                              <span style={{ 
+                                width: "24px", 
+                                height: "24px", 
+                                borderRadius: "50%", 
+                                background: "#3b82f6", 
+                                color: "white",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "12px",
+                                fontWeight: "600"
+                              }}>
+                                {idx + 1}
+                              </span>
+                              <span>{item}</span>
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
                   ))}

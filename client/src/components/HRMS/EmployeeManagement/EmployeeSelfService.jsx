@@ -9,8 +9,35 @@ const EmployeeSelfService = () => {
   const [showModal, setShowModal] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [showEditBankModal, setShowEditBankModal] = useState(false);
+  const [showUploadDocModal, setShowUploadDocModal] = useState(false);
+  const [showTicketModal, setShowTicketModal] = useState(false);
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [filterType, setFilterType] = useState('All');
+  const [notifications, setNotifications] = useState([]);
+  const [jobHistory, setJobHistory] = useState([]);
+  const [reportingHierarchy, setReportingHierarchy] = useState([]);
+  const [policyDocuments, setPolicyDocuments] = useState([]);
+  const [formsSurveys, setFormsSurveys] = useState([]);
+  const [teamCalendar, setTeamCalendar] = useState([]);
+  const [anniversaries, setAnniversaries] = useState([]);
+  
+  // Profile edit forms
+  const [profileForm, setProfileForm] = useState({
+    phone: '',
+    address: '',
+    emergencyContact: { name: '', phone: '', relationship: '' }
+  });
+  
+  const [bankForm, setBankForm] = useState({
+    accountNumber: '',
+    bankName: '',
+    ifscCode: '',
+    accountType: ''
+  });
   
   // Current User Data
   const currentUser = {
@@ -176,12 +203,56 @@ const EmployeeSelfService = () => {
       { id: 4, month: 'November 2023', amount: '$7,200', downloadLink: '#', status: 'available' }
     ]);
 
-    // Requests data
+    // Requests data with approval history
     setRequests([
-      { id: 101, type: 'leave', date: '2024-03-10', status: 'approved', description: 'Annual Leave - 3 days' },
-      { id: 102, type: 'reimbursement', date: '2024-03-05', status: 'pending', amount: '$250', description: 'Travel Expenses' },
-      { id: 103, type: 'attendance', date: '2024-03-01', status: 'approved', description: 'Attendance Regularization' },
-      { id: 104, type: 'loan', date: '2024-02-28', status: 'pending', amount: '$1000', description: 'Personal Loan Request' }
+      { 
+        id: 101, 
+        type: 'leave', 
+        date: '2024-03-10', 
+        status: 'approved', 
+        description: 'Annual Leave - 3 days',
+        approvalHistory: [
+          { step: 'Submitted', by: 'John Smith', date: '2024-03-10', status: 'completed' },
+          { step: 'Manager Review', by: 'Sarah Johnson', date: '2024-03-11', status: 'approved' },
+          { step: 'HR Approval', by: 'Emily Davis', date: '2024-03-12', status: 'approved' }
+        ]
+      },
+      { 
+        id: 102, 
+        type: 'reimbursement', 
+        date: '2024-03-05', 
+        status: 'pending', 
+        amount: '$250', 
+        description: 'Travel Expenses',
+        approvalHistory: [
+          { step: 'Submitted', by: 'John Smith', date: '2024-03-05', status: 'completed' },
+          { step: 'Manager Review', by: 'Sarah Johnson', date: '2024-03-06', status: 'pending' }
+        ]
+      },
+      { 
+        id: 103, 
+        type: 'attendance', 
+        date: '2024-03-01', 
+        status: 'approved', 
+        description: 'Attendance Regularization',
+        approvalHistory: [
+          { step: 'Submitted', by: 'John Smith', date: '2024-03-01', status: 'completed' },
+          { step: 'HR Approval', by: 'Emily Davis', date: '2024-03-02', status: 'approved' }
+        ]
+      },
+      { 
+        id: 104, 
+        type: 'loan', 
+        date: '2024-02-28', 
+        status: 'rejected', 
+        amount: '$1000', 
+        description: 'Personal Loan Request',
+        rejectionReason: 'Insufficient documentation provided',
+        approvalHistory: [
+          { step: 'Submitted', by: 'John Smith', date: '2024-02-28', status: 'completed' },
+          { step: 'Manager Review', by: 'Sarah Johnson', date: '2024-03-01', status: 'rejected' }
+        ]
+      }
     ]);
 
     // Attendance records
@@ -219,7 +290,13 @@ const EmployeeSelfService = () => {
 
     setBirthdays([
       { name: 'Sarah Johnson', date: 'Today', department: 'Marketing' },
-      { name: 'Mike Chen', date: 'Tomorrow', department: 'Engineering' }
+      { name: 'Mike Chen', date: 'Tomorrow', department: 'Engineering' },
+      { name: 'Emily Davis', date: '2024-03-20', department: 'HR' }
+    ]);
+
+    setAnniversaries([
+      { name: 'John Smith', years: 2, date: '2024-03-15', type: 'work-anniversary' },
+      { name: 'David Wilson', years: 5, date: '2024-03-18', type: 'work-anniversary' }
     ]);
 
     setAnnouncements([
@@ -233,6 +310,64 @@ const EmployeeSelfService = () => {
       sick: 10,
       taken: 5,
       total: 38
+    });
+
+    // Job History
+    setJobHistory([
+      { id: 1, position: 'Senior Software Engineer', department: 'Engineering', startDate: '2022-03-15', endDate: null, status: 'Current' },
+      { id: 2, position: 'Software Engineer', department: 'Engineering', startDate: '2020-06-01', endDate: '2022-03-14', status: 'Previous' },
+      { id: 3, position: 'Junior Developer', department: 'Engineering', startDate: '2019-01-15', endDate: '2020-05-31', status: 'Previous' }
+    ]);
+
+    // Reporting Hierarchy
+    setReportingHierarchy([
+      { name: 'Sarah Johnson', position: 'Engineering Manager', level: 1, isManager: true },
+      { name: 'John Smith', position: 'Senior Software Engineer', level: 2, isManager: false },
+      { name: 'Mike Chen', position: 'Software Engineer', level: 3, isManager: false }
+    ]);
+
+    // Policy Documents
+    setPolicyDocuments([
+      { id: 1, name: 'Employee Handbook 2024', category: 'Handbook', size: '2.5 MB', uploadDate: '2024-01-01' },
+      { id: 2, name: 'Code of Conduct', category: 'Policy', size: '1.2 MB', uploadDate: '2024-01-15' },
+      { id: 3, name: 'Leave Policy', category: 'Policy', size: '0.8 MB', uploadDate: '2024-02-01' },
+      { id: 4, name: 'IT Security Policy', category: 'Policy', size: '1.5 MB', uploadDate: '2024-02-15' }
+    ]);
+
+    // Forms and Surveys
+    setFormsSurveys([
+      { id: 1, name: 'Employee Satisfaction Survey 2024', type: 'Survey', status: 'Open', dueDate: '2024-03-31' },
+      { id: 2, name: 'Training Feedback Form', type: 'Form', status: 'Open', dueDate: null },
+      { id: 3, name: 'Annual Performance Review', type: 'Form', status: 'Completed', dueDate: '2024-02-28' }
+    ]);
+
+    // Team Calendar Events
+    setTeamCalendar([
+      { id: 1, title: 'Team Standup', date: '2024-03-15', time: '10:00 AM', type: 'meeting' },
+      { id: 2, title: 'Sprint Planning', date: '2024-03-18', time: '2:00 PM', type: 'meeting' },
+      { id: 3, title: 'Team Lunch', date: '2024-03-20', time: '12:30 PM', type: 'event' }
+    ]);
+
+    // Notifications
+    setNotifications([
+      { id: 1, message: 'Your leave request has been approved', type: 'success', date: '2024-03-12', read: false },
+      { id: 2, message: 'New payslip available for February 2024', type: 'info', date: '2024-03-10', read: false },
+      { id: 3, message: 'Your reimbursement request requires additional information', type: 'warning', date: '2024-03-08', read: true }
+    ]);
+
+    // Initialize profile form
+    setProfileForm({
+      phone: currentUser.phone,
+      address: '123 Main Street, New York, NY 10001',
+      emergencyContact: { name: 'Jane Smith', phone: '+1 (555) 987-6543', relationship: 'Spouse' }
+    });
+
+    // Initialize bank form
+    setBankForm({
+      accountNumber: 'XXXX-XXXX-1234',
+      bankName: 'Chase Bank',
+      ifscCode: 'CHASUS33',
+      accountType: 'Checking'
     });
 
     setIsLoading(false);
@@ -366,14 +501,15 @@ const EmployeeSelfService = () => {
   };
 
   const handleCreateTicket = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const newTkt = {
       id: `TKT${String(tickets.length + 1).padStart(3, '0')}`,
       subject: newTicket.subject,
       status: 'open',
       date: new Date().toISOString().split('T')[0],
       priority: newTicket.priority,
-      category: newTicket.category
+      category: newTicket.category,
+      description: newTicket.description
     };
     
     setTickets([newTkt, ...tickets]);
@@ -383,6 +519,7 @@ const EmployeeSelfService = () => {
       priority: 'medium',
       description: ''
     });
+    setShowTicketModal(false);
     
     alert('Ticket created successfully!');
   };
@@ -443,6 +580,73 @@ const EmployeeSelfService = () => {
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+  };
+
+  // New handlers
+  const handleUpdateProfile = (e) => {
+    e.preventDefault();
+    // In real app, this would update via API
+    alert('Profile update request submitted. Changes will be reviewed by HR.');
+    setShowEditProfileModal(false);
+  };
+
+  const handleUpdateBankDetails = (e) => {
+    e.preventDefault();
+    // In real app, this would submit for approval
+    alert('Bank details update submitted for approval. You will be notified once approved.');
+    setShowEditBankModal(false);
+  };
+
+  const handleUploadDocument = (e) => {
+    e.preventDefault();
+    const fileInput = e.target.querySelector('input[type="file"]');
+    if (fileInput && fileInput.files[0]) {
+      const newDoc = {
+        id: documents.length + 1,
+        name: fileInput.files[0].name,
+        type: 'uploaded',
+        date: new Date().toISOString().split('T')[0],
+        size: `${(fileInput.files[0].size / (1024 * 1024)).toFixed(2)} MB`
+      };
+      setDocuments([newDoc, ...documents]);
+      alert('Document uploaded successfully!');
+      setShowUploadDocModal(false);
+    }
+  };
+
+  const handleWithdrawRequest = (requestId) => {
+    if (window.confirm('Are you sure you want to withdraw this request?')) {
+      setRequests(requests.map(req => 
+        req.id === requestId ? { ...req, status: 'withdrawn' } : req
+      ));
+      alert('Request withdrawn successfully');
+    }
+  };
+
+  const handleResubmitRequest = (requestId) => {
+    const request = requests.find(r => r.id === requestId);
+    if (request) {
+      setNewRequest({
+        type: request.type,
+        startDate: '',
+        endDate: '',
+        reason: '',
+        attachment: null
+      });
+      setShowRequestModal(true);
+      // Remove the rejected request
+      setRequests(requests.filter(r => r.id !== requestId));
+    }
+  };
+
+  const handleCancelRequest = (requestId) => {
+    handleWithdrawRequest(requestId);
+  };
+
+  const handleMarkNotificationRead = (notificationId) => {
+    setNotifications(notifications.map(n => 
+      n.id === notificationId ? { ...n, read: true } : n
+    ));
   };
 
   // Sidebar content
@@ -706,6 +910,53 @@ const EmployeeSelfService = () => {
         </div>
       </div>
 
+      {/* Quick Links */}
+      <div className="col-12">
+        <div className="card border shadow-none">
+          <div className="card-body">
+            <h6 className="card-title mb-3">Quick Links</h6>
+            <div className="row g-3">
+              <div className="col-md-3">
+                <button 
+                  className="btn btn-outline-info w-100 d-flex flex-column align-items-center py-3"
+                  onClick={() => setActiveSection('policies')}
+                >
+                  <Icon icon="heroicons:document-text" className="fs-3 mb-2" />
+                  <span>Policies</span>
+                </button>
+              </div>
+              <div className="col-md-3">
+                <button 
+                  className="btn btn-outline-info w-100 d-flex flex-column align-items-center py-3"
+                  onClick={() => setActiveSection('forms')}
+                >
+                  <Icon icon="heroicons:clipboard-document-check" className="fs-3 mb-2" />
+                  <span>Forms & Surveys</span>
+                </button>
+              </div>
+              <div className="col-md-3">
+                <button 
+                  className="btn btn-outline-info w-100 d-flex flex-column align-items-center py-3"
+                  onClick={() => setActiveSection('calendar')}
+                >
+                  <Icon icon="heroicons:calendar-days" className="fs-3 mb-2" />
+                  <span>Team Calendar</span>
+                </button>
+              </div>
+              <div className="col-md-3">
+                <button 
+                  className="btn btn-outline-info w-100 d-flex flex-column align-items-center py-3"
+                  onClick={() => setActiveSection('directory')}
+                >
+                  <Icon icon="heroicons:users" className="fs-3 mb-2" />
+                  <span>Directory</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Recent Activities */}
       <div className="col-md-6">
         <div className="card border shadow-none h-100">
@@ -771,13 +1022,13 @@ const EmployeeSelfService = () => {
       </div>
 
       {/* Announcements */}
-      <div className="col-12">
-        <div className="card border shadow-none">
+      <div className="col-md-6">
+        <div className="card border shadow-none h-100">
           <div className="card-body">
             <h6 className="card-title mb-3">Latest Announcements</h6>
             <div className="row g-3">
               {announcements.map(announcement => (
-                <div key={announcement.id} className="col-md-6">
+                <div key={announcement.id} className="col-12">
                   <div className="card border">
                     <div className="card-body">
                       <div className="d-flex justify-content-between align-items-start">
@@ -797,6 +1048,45 @@ const EmployeeSelfService = () => {
           </div>
         </div>
       </div>
+
+      {/* Birthdays & Anniversaries */}
+      <div className="col-md-6">
+        <div className="card border shadow-none h-100">
+          <div className="card-body">
+            <h6 className="card-title mb-3">Celebrations</h6>
+            <div className="mb-3">
+              <h6 className="small text-muted mb-2">
+                <Icon icon="heroicons:cake" className="me-1" />
+                Birthdays
+              </h6>
+              {birthdays.slice(0, 3).map((birthday, index) => (
+                <div key={index} className="d-flex align-items-center mb-2 p-2 bg-light rounded">
+                  <Icon icon="heroicons:gift" className="text-warning me-2" />
+                  <div className="flex-grow-1">
+                    <div className="fw-medium small">{birthday.name}</div>
+                    <div className="text-muted small">{birthday.date} • {birthday.department}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div>
+              <h6 className="small text-muted mb-2">
+                <Icon icon="heroicons:trophy" className="me-1" />
+                Work Anniversaries
+              </h6>
+              {anniversaries.slice(0, 2).map((anniversary, index) => (
+                <div key={index} className="d-flex align-items-center mb-2 p-2 bg-light rounded">
+                  <Icon icon="heroicons:star" className="text-success me-2" />
+                  <div className="flex-grow-1">
+                    <div className="fw-medium small">{anniversary.name}</div>
+                    <div className="text-muted small">{anniversary.years} years • {anniversary.date}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 
@@ -808,7 +1098,10 @@ const EmployeeSelfService = () => {
           <div className="card-body">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <h6 className="card-title mb-0">Personal Information</h6>
-              <button className="btn btn-sm btn-outline-primary">
+              <button 
+                className="btn btn-sm btn-outline-primary"
+                onClick={() => setShowEditProfileModal(true)}
+              >
                 <Icon icon="heroicons:pencil" className="me-1" />
                 Edit
               </button>
@@ -857,7 +1150,10 @@ const EmployeeSelfService = () => {
           <div className="card-body">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <h6 className="card-title mb-0">Bank Account Details</h6>
-              <button className="btn btn-sm btn-outline-primary">
+              <button 
+                className="btn btn-sm btn-outline-primary"
+                onClick={() => setShowEditBankModal(true)}
+              >
                 <Icon icon="heroicons:pencil" className="me-1" />
                 Edit
               </button>
@@ -942,11 +1238,105 @@ const EmployeeSelfService = () => {
         </div>
       </div>
 
+      {/* Emergency Contact */}
+      <div className="col-md-6">
+        <div className="card border shadow-none">
+          <div className="card-body">
+            <h6 className="card-title mb-3">Emergency Contact</h6>
+            <div className="row g-3">
+              <div className="col-12">
+                <label className="form-label small text-muted">Name</label>
+                <p className="fw-semibold mb-0">{profileForm.emergencyContact.name}</p>
+              </div>
+              <div className="col-md-6">
+                <label className="form-label small text-muted">Phone</label>
+                <p className="fw-semibold mb-0">{profileForm.emergencyContact.phone}</p>
+              </div>
+              <div className="col-md-6">
+                <label className="form-label small text-muted">Relationship</label>
+                <p className="fw-semibold mb-0">{profileForm.emergencyContact.relationship}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Reporting Hierarchy */}
+      <div className="col-md-6">
+        <div className="card border shadow-none">
+          <div className="card-body">
+            <h6 className="card-title mb-3">Reporting Hierarchy</h6>
+            <div className="d-flex flex-column gap-2">
+              {reportingHierarchy.map((person, index) => (
+                <div key={index} className="d-flex align-items-center p-2 bg-light rounded">
+                  <div className="w-40-px h-40-px bg-primary-subtle rounded-circle d-flex align-items-center justify-content-center me-3">
+                    <Icon icon="heroicons:user" className="text-primary" />
+                  </div>
+                  <div className="flex-grow-1">
+                    <div className="fw-medium small">{person.name}</div>
+                    <div className="text-muted small">{person.position}</div>
+                  </div>
+                  {person.isManager && (
+                    <span className="badge bg-primary">Manager</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Job History */}
+      <div className="col-12">
+        <div className="card border shadow-none">
+          <div className="card-body">
+            <h6 className="card-title mb-3">Job History</h6>
+            <div className="table-responsive">
+              <table className="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Position</th>
+                    <th>Department</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {jobHistory.map(job => (
+                    <tr key={job.id}>
+                      <td className="fw-semibold">{job.position}</td>
+                      <td>{job.department}</td>
+                      <td>{job.startDate}</td>
+                      <td>{job.endDate || 'Current'}</td>
+                      <td>
+                        <span className={`badge ${job.status === 'Current' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}`}>
+                          {job.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Documents */}
       <div className="col-12">
         <div className="card border shadow-none">
           <div className="card-body">
-            <h6 className="card-title mb-3">My Documents</h6>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h6 className="card-title mb-0">My Documents</h6>
+              <button 
+                className="btn btn-sm btn-primary"
+                onClick={() => setShowUploadDocModal(true)}
+              >
+                <Icon icon="heroicons:arrow-up-tray" className="me-1" />
+                Upload Document
+              </button>
+            </div>
             <div className="table-responsive">
               <table className="table table-hover">
                 <thead>
@@ -1092,10 +1482,28 @@ const EmployeeSelfService = () => {
                         View
                       </button>
                       {request.status === 'pending' && (
-                        <button className="btn btn-sm btn-outline-danger">
-                          Cancel
+                        <button 
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleCancelRequest(request.id)}
+                        >
+                          Withdraw
                         </button>
                       )}
+                      {request.status === 'rejected' && (
+                        <button 
+                          className="btn btn-sm btn-outline-warning"
+                          onClick={() => handleResubmitRequest(request.id)}
+                        >
+                          Resubmit
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleViewDetails(request)}
+                        className="btn btn-sm btn-outline-info"
+                        title="View Approval History"
+                      >
+                        <Icon icon="heroicons:clock" />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -1313,7 +1721,7 @@ const EmployeeSelfService = () => {
           <h5 className="mb-0">Support Tickets</h5>
           <div className="d-flex gap-2">
             <button 
-              onClick={handleCreateTicket}
+              onClick={() => setShowTicketModal(true)}
               className="btn btn-success"
             >
               <Icon icon="heroicons:plus" className="me-2" />
@@ -1864,6 +2272,147 @@ const EmployeeSelfService = () => {
     </div>
   );
 
+  const renderPolicies = () => (
+    <div className="row g-4">
+      <div className="col-12">
+        <div className="card border shadow-none">
+          <div className="card-body">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h6 className="card-title mb-0">Policy Documents & Handbooks</h6>
+              <button 
+                className="btn btn-sm btn-outline-primary"
+                onClick={() => setShowPolicyModal(true)}
+              >
+                <Icon icon="heroicons:document-text" className="me-1" />
+                View All
+              </button>
+            </div>
+            <div className="table-responsive">
+              <table className="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Document Name</th>
+                    <th>Category</th>
+                    <th>Upload Date</th>
+                    <th>Size</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {policyDocuments.map(doc => (
+                    <tr key={doc.id}>
+                      <td className="fw-semibold">{doc.name}</td>
+                      <td>
+                        <span className="badge bg-info-subtle text-info">{doc.category}</span>
+                      </td>
+                      <td>{doc.uploadDate}</td>
+                      <td>{doc.size}</td>
+                      <td>
+                        <button className="btn btn-sm btn-outline-primary">
+                          <Icon icon="heroicons:arrow-down-tray" className="me-1" />
+                          Download
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderFormsSurveys = () => (
+    <div className="row g-4">
+      <div className="col-12">
+        <div className="card border shadow-none">
+          <div className="card-body">
+            <h6 className="card-title mb-3">Forms & Surveys</h6>
+            <div className="row g-3">
+              {formsSurveys.map(form => (
+                <div key={form.id} className="col-md-6">
+                  <div className="card border">
+                    <div className="card-body">
+                      <div className="d-flex justify-content-between align-items-start mb-2">
+                        <h6 className="mb-0">{form.name}</h6>
+                        <span className={`badge ${
+                          form.status === 'Open' ? 'bg-success-subtle text-success' :
+                          form.status === 'Completed' ? 'bg-primary-subtle text-primary' :
+                          'bg-secondary-subtle text-secondary'
+                        }`}>
+                          {form.status}
+                        </span>
+                      </div>
+                      <p className="text-muted small mb-2">Type: {form.type}</p>
+                      {form.dueDate && (
+                        <p className="text-muted small mb-2">Due Date: {form.dueDate}</p>
+                      )}
+                      <button className="btn btn-sm btn-primary">
+                        {form.status === 'Open' ? 'Fill Form' : 'View Response'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderCalendar = () => (
+    <div className="row g-4">
+      <div className="col-12">
+        <div className="card border shadow-none">
+          <div className="card-body">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h6 className="card-title mb-0">Team Calendar</h6>
+              <button 
+                className="btn btn-sm btn-outline-primary"
+                onClick={() => setShowCalendarModal(true)}
+              >
+                <Icon icon="heroicons:calendar" className="me-1" />
+                View Full Calendar
+              </button>
+            </div>
+            <div className="table-responsive">
+              <table className="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Event</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Type</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {teamCalendar.map(event => (
+                    <tr key={event.id}>
+                      <td className="fw-semibold">{event.title}</td>
+                      <td>{event.date}</td>
+                      <td>{event.time}</td>
+                      <td>
+                        <span className={`badge ${
+                          event.type === 'meeting' ? 'bg-primary-subtle text-primary' :
+                          'bg-success-subtle text-success'
+                        }`}>
+                          {event.type}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderContent = () => {
     switch(activeSection) {
       case 'dashboard':
@@ -1884,6 +2433,12 @@ const EmployeeSelfService = () => {
         return renderDocuments();
       case 'directory':
         return renderDirectory();
+      case 'policies':
+        return renderPolicies();
+      case 'forms':
+        return renderFormsSurveys();
+      case 'calendar':
+        return renderCalendar();
       default:
         return renderDashboard();
     }
@@ -2165,6 +2720,43 @@ const EmployeeSelfService = () => {
                         <label className="form-label small fw-semibold">Description</label>
                         <p className="form-control-plaintext">{selectedItem.description}</p>
                       </div>
+                      {selectedItem.amount && (
+                        <div className="col-md-6">
+                          <label className="form-label small fw-semibold">Amount</label>
+                          <p className="form-control-plaintext fw-bold">{selectedItem.amount}</p>
+                        </div>
+                      )}
+                      {selectedItem.rejectionReason && (
+                        <div className="col-12">
+                          <label className="form-label small fw-semibold text-danger">Rejection Reason</label>
+                          <p className="form-control-plaintext bg-danger-subtle p-2 rounded">{selectedItem.rejectionReason}</p>
+                        </div>
+                      )}
+                      {selectedItem.approvalHistory && selectedItem.approvalHistory.length > 0 && (
+                        <div className="col-12">
+                          <label className="form-label small fw-semibold">Approval History</label>
+                          <div className="list-group">
+                            {selectedItem.approvalHistory.map((step, index) => (
+                              <div key={index} className="list-group-item">
+                                <div className="d-flex justify-content-between align-items-start">
+                                  <div>
+                                    <div className="fw-medium">{step.step}</div>
+                                    <small className="text-muted">By: {step.by} • {step.date}</small>
+                                  </div>
+                                  <span className={`badge ${
+                                    step.status === 'approved' ? 'bg-success-subtle text-success' :
+                                    step.status === 'rejected' ? 'bg-danger-subtle text-danger' :
+                                    step.status === 'pending' ? 'bg-warning-subtle text-warning' :
+                                    'bg-secondary-subtle text-secondary'
+                                  }`}>
+                                    {step.status}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                   
@@ -2227,6 +2819,342 @@ const EmployeeSelfService = () => {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Profile Edit Modal */}
+        {showEditProfileModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Edit Personal Information</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowEditProfileModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <form onSubmit={handleUpdateProfile}>
+                    <div className="mb-3">
+                      <label className="form-label">Phone</label>
+                      <input 
+                        type="text" 
+                        className="form-control"
+                        value={profileForm.phone}
+                        onChange={(e) => setProfileForm({...profileForm, phone: e.target.value})}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Address</label>
+                      <textarea 
+                        className="form-control" 
+                        rows="3"
+                        value={profileForm.address}
+                        onChange={(e) => setProfileForm({...profileForm, address: e.target.value})}
+                      ></textarea>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Emergency Contact Name</label>
+                      <input 
+                        type="text" 
+                        className="form-control"
+                        value={profileForm.emergencyContact.name}
+                        onChange={(e) => setProfileForm({
+                          ...profileForm, 
+                          emergencyContact: {...profileForm.emergencyContact, name: e.target.value}
+                        })}
+                      />
+                    </div>
+                    <div className="row mb-3">
+                      <div className="col-md-6">
+                        <label className="form-label">Emergency Contact Phone</label>
+                        <input 
+                          type="text" 
+                          className="form-control"
+                          value={profileForm.emergencyContact.phone}
+                          onChange={(e) => setProfileForm({
+                            ...profileForm, 
+                            emergencyContact: {...profileForm.emergencyContact, phone: e.target.value}
+                          })}
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Relationship</label>
+                        <input 
+                          type="text" 
+                          className="form-control"
+                          value={profileForm.emergencyContact.relationship}
+                          onChange={(e) => setProfileForm({
+                            ...profileForm, 
+                            emergencyContact: {...profileForm.emergencyContact, relationship: e.target.value}
+                          })}
+                        />
+                      </div>
+                    </div>
+                    <div className="modal-footer">
+                      <button type="button" className="btn btn-secondary" onClick={() => setShowEditProfileModal(false)}>Cancel</button>
+                      <button type="submit" className="btn btn-primary">Submit for Review</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Bank Details Edit Modal */}
+        {showEditBankModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Update Bank Account Details</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowEditBankModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="alert alert-info">
+                    <Icon icon="heroicons:information-circle" className="me-2" />
+                    Bank details require HR approval before being updated in the system.
+                  </div>
+                  <form onSubmit={handleUpdateBankDetails}>
+                    <div className="mb-3">
+                      <label className="form-label">Account Number</label>
+                      <input 
+                        type="text" 
+                        className="form-control"
+                        value={bankForm.accountNumber}
+                        onChange={(e) => setBankForm({...bankForm, accountNumber: e.target.value})}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Bank Name</label>
+                      <input 
+                        type="text" 
+                        className="form-control"
+                        value={bankForm.bankName}
+                        onChange={(e) => setBankForm({...bankForm, bankName: e.target.value})}
+                      />
+                    </div>
+                    <div className="row mb-3">
+                      <div className="col-md-6">
+                        <label className="form-label">IFSC Code</label>
+                        <input 
+                          type="text" 
+                          className="form-control"
+                          value={bankForm.ifscCode}
+                          onChange={(e) => setBankForm({...bankForm, ifscCode: e.target.value})}
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Account Type</label>
+                        <select 
+                          className="form-select"
+                          value={bankForm.accountType}
+                          onChange={(e) => setBankForm({...bankForm, accountType: e.target.value})}
+                        >
+                          <option value="Checking">Checking</option>
+                          <option value="Savings">Savings</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="modal-footer">
+                      <button type="button" className="btn btn-secondary" onClick={() => setShowEditBankModal(false)}>Cancel</button>
+                      <button type="submit" className="btn btn-primary">Submit for Approval</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Document Upload Modal */}
+        {showUploadDocModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Upload Document</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowUploadDocModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <form onSubmit={handleUploadDocument}>
+                    <div className="mb-3">
+                      <label className="form-label">Select Document</label>
+                      <input type="file" className="form-control" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required />
+                    </div>
+                    <div className="modal-footer">
+                      <button type="button" className="btn btn-secondary" onClick={() => setShowUploadDocModal(false)}>Cancel</button>
+                      <button type="submit" className="btn btn-primary">Upload</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Ticket Creation Modal */}
+        {showTicketModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Create Support Ticket</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowTicketModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <form onSubmit={handleCreateTicket}>
+                    <div className="mb-3">
+                      <label className="form-label">Subject</label>
+                      <input 
+                        type="text" 
+                        className="form-control"
+                        value={newTicket.subject}
+                        onChange={(e) => setNewTicket({...newTicket, subject: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div className="row mb-3">
+                      <div className="col-md-6">
+                        <label className="form-label">Category</label>
+                        <select 
+                          className="form-select"
+                          value={newTicket.category}
+                          onChange={(e) => setNewTicket({...newTicket, category: e.target.value})}
+                        >
+                          <option value="technical">Technical</option>
+                          <option value="access">Access</option>
+                          <option value="software">Software</option>
+                          <option value="hardware">Hardware</option>
+                        </select>
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Priority</label>
+                        <select 
+                          className="form-select"
+                          value={newTicket.priority}
+                          onChange={(e) => setNewTicket({...newTicket, priority: e.target.value})}
+                        >
+                          <option value="low">Low</option>
+                          <option value="medium">Medium</option>
+                          <option value="high">High</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Description</label>
+                      <textarea 
+                        className="form-control" 
+                        rows="5"
+                        value={newTicket.description}
+                        onChange={(e) => setNewTicket({...newTicket, description: e.target.value})}
+                        required
+                      ></textarea>
+                    </div>
+                    <div className="modal-footer">
+                      <button type="button" className="btn btn-secondary" onClick={() => setShowTicketModal(false)}>Cancel</button>
+                      <button type="submit" className="btn btn-primary">Create Ticket</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Policy Documents Modal */}
+        {showPolicyModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Policy Documents & Handbooks</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowPolicyModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="list-group">
+                    {policyDocuments.map(doc => (
+                      <div key={doc.id} className="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                          <h6 className="mb-1">{doc.name}</h6>
+                          <small className="text-muted">{doc.category} • {doc.size} • {doc.uploadDate}</small>
+                        </div>
+                        <button className="btn btn-sm btn-outline-primary">
+                          <Icon icon="heroicons:arrow-down-tray" className="me-1" />
+                          Download
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowPolicyModal(false)}>Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Calendar Modal */}
+        {showCalendarModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Team Calendar</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowCalendarModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="table-responsive">
+                    <table className="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Event</th>
+                          <th>Date</th>
+                          <th>Time</th>
+                          <th>Type</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {teamCalendar.map(event => (
+                          <tr key={event.id}>
+                            <td className="fw-semibold">{event.title}</td>
+                            <td>{event.date}</td>
+                            <td>{event.time}</td>
+                            <td>
+                              <span className={`badge ${
+                                event.type === 'meeting' ? 'bg-primary-subtle text-primary' :
+                                'bg-success-subtle text-success'
+                              }`}>
+                                {event.type}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowCalendarModal(false)}>Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Notifications Display */}
+        {notifications.filter(n => !n.read).length > 0 && (
+          <div className="position-fixed top-0 end-0 m-3" style={{ zIndex: 1050 }}>
+            {notifications.filter(n => !n.read).slice(0, 3).map(notification => (
+              <div key={notification.id} className={`alert alert-${notification.type === 'success' ? 'success' : notification.type === 'warning' ? 'warning' : 'info'} alert-dismissible fade show mb-2`}>
+                {notification.message}
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={() => handleMarkNotificationRead(notification.id)}
+                ></button>
+              </div>
+            ))}
           </div>
         )}
       </div>

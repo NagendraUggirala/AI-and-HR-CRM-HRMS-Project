@@ -6,7 +6,7 @@ import {
   Download, Upload, RefreshCw, Search, UserPlus, Mail, MessageSquare,
   ExternalLink, RotateCcw, Shield, Lock, Unlock, EyeOff,
   Database, CreditCard, FileText as FileTextIcon, AlertTriangle,
-  Cpu, Cloud, CheckSquare, X
+  Cpu, Cloud, CheckSquare, X, GitBranch
 } from "lucide-react";
 
 const WorkflowEngine = () => {
@@ -70,6 +70,23 @@ const WorkflowEngine = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showStageModal, setShowStageModal] = useState(false);
+  const [editingStage, setEditingStage] = useState(null);
+  const [conditionalRules, setConditionalRules] = useState([]);
+  const [workflowActions, setWorkflowActions] = useState({
+    requireApprovalComments: true,
+    requireRejectionReasons: true,
+    allowSendBack: true,
+    allowRequestInfo: true,
+    allowConditionalApproval: true,
+    enableBulkApproval: true
+  });
+  const [delegationSettings, setDelegationSettings] = useState({
+    allowDelegation: true,
+    requireManagerApproval: false,
+    limitDelegationDuration: true,
+    maxDelegationDays: 30
+  });
 
   // Add CSS for spin animation
   useEffect(() => {
@@ -123,9 +140,11 @@ const WorkflowEngine = () => {
   ];
 
   const conditions = [
-    { id: "amount", label: "Amount", operator: ">=", value: "" },
-    { id: "type", label: "Type", operator: "equals", value: "" },
-    { id: "frequency", label: "Frequency", operator: "<=", value: "" }
+    { id: "amount", label: "Amount", type: "number", operators: ["<=", ">=", "=", "<", ">"] },
+    { id: "type", label: "Request Type", type: "select", operators: ["equals", "not equals", "in", "not in"] },
+    { id: "department", label: "Department", type: "select", operators: ["equals", "not equals", "in", "not in"] },
+    { id: "frequency", label: "Frequency", type: "number", operators: ["<=", ">=", "=", "<", ">"] },
+    { id: "field_value", label: "Form Field Value", type: "text", operators: ["equals", "contains", "starts with", "ends with"] }
   ];
 
   // Button Functionality Handlers
@@ -152,9 +171,45 @@ const WorkflowEngine = () => {
   };
 
   const handleEditStage = (stageId) => {
-    console.log("Editing stage:", stageId);
     const stage = workflowStages.find(s => s.id === stageId);
-    alert(`Edit stage ${stageId}: ${stage.level}`);
+    if (stage) {
+      setEditingStage({ ...stage });
+      setShowStageModal(true);
+    }
+  };
+
+  const handleSaveStage = () => {
+    if (editingStage) {
+      const updatedStages = workflowStages.map(stage => 
+        stage.id === editingStage.id ? editingStage : stage
+      );
+      setWorkflowStages(updatedStages);
+      setShowStageModal(false);
+      setEditingStage(null);
+      console.log("Stage updated:", editingStage);
+    }
+  };
+
+  const handleAddConditionalRule = () => {
+    const newRule = {
+      id: conditionalRules.length + 1,
+      field: "",
+      operator: "equals",
+      value: "",
+      routeTo: "direct-manager",
+      isEnabled: true
+    };
+    setConditionalRules([...conditionalRules, newRule]);
+  };
+
+  const handleDeleteConditionalRule = (ruleId) => {
+    setConditionalRules(conditionalRules.filter(rule => rule.id !== ruleId));
+  };
+
+  const handleUpdateAutoApprovalRule = (ruleId, field, value) => {
+    setAutoApprovalRules(autoApprovalRules.map(rule => 
+      rule.id === ruleId ? { ...rule, [field]: value } : rule
+    ));
   };
 
   const handleAddAutoApprovalRule = () => {
@@ -209,11 +264,14 @@ const WorkflowEngine = () => {
     setIsSaving(true);
     console.log("Saving configuration...");
     
-    const config = {
+      const config = {
       workflowType,
       workflowStages,
       autoApprovalRules,
       escalationRules,
+      conditionalRules,
+      workflowActions,
+      delegationSettings,
       notifications,
       auditSettings,
       integrationSettings
@@ -236,6 +294,9 @@ const WorkflowEngine = () => {
         workflowStages,
         autoApprovalRules,
         escalationRules,
+        conditionalRules,
+        workflowActions,
+        delegationSettings,
         createdAt: new Date().toISOString()
       };
       console.log("Saved as template:", template);
@@ -254,6 +315,9 @@ const WorkflowEngine = () => {
       workflowStages,
       autoApprovalRules,
       escalationRules,
+      conditionalRules,
+      workflowActions,
+      delegationSettings,
       notifications,
       auditSettings,
       integrationSettings,
@@ -291,6 +355,9 @@ const WorkflowEngine = () => {
           if (config.workflowStages) setWorkflowStages(config.workflowStages);
           if (config.autoApprovalRules) setAutoApprovalRules(config.autoApprovalRules);
           if (config.escalationRules) setEscalationRules(config.escalationRules);
+          if (config.conditionalRules) setConditionalRules(config.conditionalRules);
+          if (config.workflowActions) setWorkflowActions(config.workflowActions);
+          if (config.delegationSettings) setDelegationSettings(config.delegationSettings);
           if (config.notifications) setNotifications(config.notifications);
           if (config.auditSettings) setAuditSettings(config.auditSettings);
           if (config.integrationSettings) setIntegrationSettings(config.integrationSettings);
@@ -334,6 +401,21 @@ const WorkflowEngine = () => {
           isEnabled: true 
         }
       ]);
+      setConditionalRules([]);
+      setWorkflowActions({
+        requireApprovalComments: true,
+        requireRejectionReasons: true,
+        allowSendBack: true,
+        allowRequestInfo: true,
+        allowConditionalApproval: true,
+        enableBulkApproval: true
+      });
+      setDelegationSettings({
+        allowDelegation: true,
+        requireManagerApproval: false,
+        limitDelegationDuration: true,
+        maxDelegationDays: 30
+      });
       setNotifications({ email: true, sms: false, push: true, slack: false, whatsapp: false });
       setAuditSettings({ logActions: true, trackModifications: true, recordIP: false, archive: true, retentionPeriod: 365 });
       setIntegrationSettings({
@@ -677,152 +759,402 @@ const WorkflowEngine = () => {
   };
 
   const renderWorkflowConfig = () => (
-    <div style={styles.sectionCard}>
-      <h4 style={styles.sectionTitle}><Settings size={20} />Workflow Configuration</h4>
-      
-      <div style={styles.grid2Col}>
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Workflow Type</label>
-          <select 
-            style={styles.select} 
-            value={workflowType}
-            onChange={(e) => setWorkflowType(e.target.value)}
-          >
-            <option value="linear">Linear Approval (Sequential)</option>
-            <option value="parallel">Parallel Approval (Simultaneous)</option>
-            <option value="conditional">Conditional Routing</option>
-            <option value="hybrid">Hybrid Workflow</option>
-          </select>
+    <>
+      <div style={styles.sectionCard}>
+        <h4 style={styles.sectionTitle}><Settings size={20} />Workflow Configuration</h4>
+        
+        <div style={styles.grid2Col}>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Workflow Type</label>
+            <select 
+              style={styles.select} 
+              value={workflowType}
+              onChange={(e) => setWorkflowType(e.target.value)}
+            >
+              <option value="linear">Linear Approval (Sequential)</option>
+              <option value="parallel">Parallel Approval (Simultaneous)</option>
+              <option value="conditional">Conditional Routing</option>
+              <option value="hybrid">Hybrid Workflow</option>
+            </select>
+            <small style={{ color: "#64748b", fontSize: "12px", display: "block", marginTop: "4px" }}>
+              {workflowType === "linear" && "Approvers review sequentially in order"}
+              {workflowType === "parallel" && "All approvers review simultaneously"}
+              {workflowType === "conditional" && "Route based on form field values"}
+              {workflowType === "hybrid" && "Mix of sequential and parallel stages"}
+            </small>
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Default Timeout</label>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <input 
+                type="number" 
+                style={styles.input} 
+                placeholder="Hours" 
+                defaultValue="24" 
+              />
+              <select style={styles.select}>
+                <option>Hours</option>
+                <option>Days</option>
+                <option>Business Days</option>
+              </select>
+            </div>
+          </div>
         </div>
 
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Default Timeout</label>
-          <div style={{ display: "flex", gap: "8px" }}>
-            <input 
-              type="number" 
-              style={styles.input} 
-              placeholder="Hours" 
-              defaultValue="24" 
-            />
-            <select style={styles.select}>
-              <option>Hours</option>
-              <option>Days</option>
-              <option>Business Days</option>
-            </select>
+        {workflowType === "conditional" && (
+          <div style={{ marginTop: "24px", padding: "16px", background: "#f0f9ff", borderRadius: "8px", border: "1px solid #bae6fd" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h5 style={{ ...styles.label, fontSize: "16px", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                <GitBranch size={16} /> Conditional Routing Rules
+              </h5>
+              <button 
+                style={{ ...styles.button, ...styles.primaryButton, ...styles.smallButton }}
+                onClick={handleAddConditionalRule}
+              >
+                <Plus size={14} /> Add Rule
+              </button>
+            </div>
+            
+            {conditionalRules.length === 0 ? (
+              <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>
+                No conditional rules configured. Add rules to route requests based on form field values.
+              </p>
+            ) : (
+              conditionalRules.map(rule => (
+                <div key={rule.id} style={{ ...styles.ruleCard, marginBottom: "12px", background: "white" }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1.5fr 2fr", gap: "12px", alignItems: "center" }}>
+                      <select 
+                        style={styles.select}
+                        value={rule.field}
+                        onChange={(e) => {
+                          const updatedRules = conditionalRules.map(r => 
+                            r.id === rule.id ? { ...r, field: e.target.value } : r
+                          );
+                          setConditionalRules(updatedRules);
+                        }}
+                      >
+                        <option value="">Select Field</option>
+                        <option value="amount">Amount</option>
+                        <option value="department">Department</option>
+                        <option value="request_type">Request Type</option>
+                        <option value="priority">Priority</option>
+                      </select>
+                      <select 
+                        style={styles.select}
+                        value={rule.operator}
+                        onChange={(e) => {
+                          const updatedRules = conditionalRules.map(r => 
+                            r.id === rule.id ? { ...r, operator: e.target.value } : r
+                          );
+                          setConditionalRules(updatedRules);
+                        }}
+                      >
+                        <option value="equals">equals</option>
+                        <option value="not equals">not equals</option>
+                        <option value=">">greater than</option>
+                        <option value="<">less than</option>
+                        <option value=">=">greater than or equal</option>
+                        <option value="<=">less than or equal</option>
+                        <option value="contains">contains</option>
+                      </select>
+                      <input 
+                        type="text"
+                        style={styles.input}
+                        placeholder="Value"
+                        value={rule.value}
+                        onChange={(e) => {
+                          const updatedRules = conditionalRules.map(r => 
+                            r.id === rule.id ? { ...r, value: e.target.value } : r
+                          );
+                          setConditionalRules(updatedRules);
+                        }}
+                      />
+                      <select 
+                        style={styles.select}
+                        value={rule.routeTo}
+                        onChange={(e) => {
+                          const updatedRules = conditionalRules.map(r => 
+                            r.id === rule.id ? { ...r, routeTo: e.target.value } : r
+                          );
+                          setConditionalRules(updatedRules);
+                        }}
+                      >
+                        {approvalLevels.map(level => (
+                          <option key={level.id} value={level.id}>{level.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <button 
+                    style={{ ...styles.button, ...styles.secondaryButton, ...styles.smallButton, marginLeft: "12px" }}
+                    onClick={() => handleDeleteConditionalRule(rule.id)}
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              ))
+            )}
           </div>
+        )}
+
+        <div style={{ marginTop: "24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <h5 style={{ ...styles.label, fontSize: "16px", margin: 0 }}>Workflow Stages</h5>
+            <div style={styles.buttonGroup}>
+              <button 
+                style={{ ...styles.button, ...styles.primaryButton, ...styles.smallButton }}
+                onClick={handleAddStage}
+              >
+                <Plus size={14} /> Add Stage
+              </button>
+              <button 
+                style={{ ...styles.button, ...styles.secondaryButton, ...styles.smallButton }}
+                onClick={handleCloneWorkflow}
+              >
+                <Copy size={14} /> Clone
+              </button>
+            </div>
+          </div>
+          
+          {workflowStages.map((stage, index) => (
+            <div key={stage.id} style={styles.stageCard}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ flex: 1 }}>
+                  <h6 style={{ margin: "0 0 8px 0", fontSize: "14px", fontWeight: "600" }}>
+                    Stage {index + 1}: {approvalLevels.find(l => l.id === stage.level)?.label}
+                  </h6>
+                  <div style={{ display: "flex", alignItems: "center", gap: "16px", fontSize: "12px", color: "#64748b" }}>
+                    <span>Timeout: {stage.timeout} hours</span>
+                    <span>Approvers: {stage.approvers?.length || 0}</span>
+                    <span style={{ 
+                      ...styles.statusBadge, 
+                      ...(stage.isEnabled ? styles.activeBadge : styles.inactiveBadge)
+                    }}>
+                      {stage.isEnabled ? "Enabled" : "Disabled"}
+                    </span>
+                  </div>
+                </div>
+                <div style={styles.buttonGroup}>
+                  <button 
+                    style={{ ...styles.button, ...styles.outlineButton, ...styles.smallButton }}
+                    onClick={() => handleEditStage(stage.id)}
+                  >
+                    <Edit size={14} /> Edit
+                  </button>
+                  <button 
+                    style={{ ...styles.button, ...styles.secondaryButton, ...styles.smallButton }}
+                    onClick={() => handleDeleteStage(stage.id)}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      <div style={{ marginTop: "24px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-          <h5 style={{ ...styles.label, fontSize: "16px", margin: 0 }}>Workflow Stages</h5>
-          <div style={styles.buttonGroup}>
-            <button 
-              style={{ ...styles.button, ...styles.primaryButton, ...styles.smallButton }}
-              onClick={handleAddStage}
-            >
-              <Plus size={14} /> Add Stage
-            </button>
-            <button 
-              style={{ ...styles.button, ...styles.secondaryButton, ...styles.smallButton }}
-              onClick={handleCloneWorkflow}
-            >
-              <Copy size={14} /> Clone
-            </button>
-          </div>
-        </div>
-        
-        {workflowStages.map((stage, index) => (
-          <div key={stage.id} style={styles.stageCard}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h6 style={{ margin: "0", fontSize: "14px", fontWeight: "600" }}>
-                Stage {index + 1}: {approvalLevels.find(l => l.id === stage.level)?.label}
-              </h6>
-              <div style={styles.buttonGroup}>
-                <button 
-                  style={{ ...styles.button, ...styles.outlineButton, ...styles.smallButton }}
-                  onClick={() => handleEditStage(stage.id)}
+      {/* Stage Configuration Modal */}
+      {showStageModal && editingStage && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: "white",
+            padding: "24px",
+            borderRadius: "12px",
+            maxWidth: "700px",
+            width: "90%",
+            maxHeight: "90vh",
+            overflow: "auto"
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h4 style={{ margin: 0 }}>Configure Stage</h4>
+              <button 
+                style={{ ...styles.button, ...styles.secondaryButton, ...styles.smallButton }}
+                onClick={() => {
+                  setShowStageModal(false);
+                  setEditingStage(null);
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Approval Level</label>
+              <select 
+                style={styles.select}
+                value={editingStage.level}
+                onChange={(e) => setEditingStage({ ...editingStage, level: e.target.value })}
+              >
+                {approvalLevels.map(level => (
+                  <option key={level.id} value={level.id}>{level.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={styles.grid2Col}>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Timeout (hours)</label>
+                <input 
+                  type="number"
+                  style={styles.input}
+                  value={editingStage.timeout}
+                  onChange={(e) => setEditingStage({ ...editingStage, timeout: parseInt(e.target.value) || 24 })}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Status</label>
+                <select 
+                  style={styles.select}
+                  value={editingStage.isEnabled ? "enabled" : "disabled"}
+                  onChange={(e) => setEditingStage({ ...editingStage, isEnabled: e.target.value === "enabled" })}
                 >
-                  <Edit size={14} /> Edit
-                </button>
-                <button 
-                  style={{ ...styles.button, ...styles.secondaryButton, ...styles.smallButton }}
-                  onClick={() => handleDeleteStage(stage.id)}
-                >
-                  <Trash2 size={14} />
+                  <option value="enabled">Enabled</option>
+                  <option value="disabled">Disabled</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Approvers</label>
+              <div style={{ padding: "12px", background: "#f8fafc", borderRadius: "6px", marginTop: "8px" }}>
+                <p style={{ margin: "0 0 12px 0", fontSize: "14px", color: "#64748b" }}>
+                  Approvers will be assigned based on the approval level selected. 
+                  You can add specific approvers or use role-based assignment.
+                </p>
+                <button style={{ ...styles.button, ...styles.secondaryButton, ...styles.smallButton }}>
+                  <UserPlus size={14} /> Add Approver
                 </button>
               </div>
             </div>
-            <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "12px", color: "#64748b" }}>Approvers:</span>
-              <span style={styles.chip}>To be assigned</span>
+
+            <div style={{ display: "flex", gap: "12px", marginTop: "24px", justifyContent: "flex-end" }}>
+              <button 
+                style={{ ...styles.button, ...styles.secondaryButton }}
+                onClick={() => {
+                  setShowStageModal(false);
+                  setEditingStage(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button 
+                style={{ ...styles.button, ...styles.primaryButton }}
+                onClick={handleSaveStage}
+              >
+                <Save size={16} /> Save Stage
+              </button>
             </div>
           </div>
-        ))}
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 
   const renderAutoApprovalRules = () => (
     <div style={styles.sectionCard}>
       <h4 style={styles.sectionTitle}><Zap size={20} />Auto-Approval Rules</h4>
-      
-      <div style={styles.grid3Col}>
-        {conditions.map(condition => (
-          <div key={condition.id} style={styles.formGroup}>
-            <label style={styles.label}>{condition.label}</label>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <select style={{ ...styles.select, flex: 1 }}>
-                <option>{condition.operator}</option>
-                <option>=</option>
-                <option>{"<"}</option>
-                <option>{">"}</option>
-                <option>{"<="}</option>
-                <option>{">="}</option>
-                <option>≠</option>
-              </select>
-              <input 
-                type="text" 
-                style={{ ...styles.input, flex: 2 }} 
-                placeholder={`Enter ${condition.label.toLowerCase()}`}
-              />
-            </div>
+      <p style={{ color: "#64748b", fontSize: "14px", margin: "0 0 24px 0" }}>
+        Configure rules to automatically approve or reject requests based on amount, type, frequency, or other field values.
+      </p>
+
+      <div style={{ marginBottom: "24px", padding: "16px", background: "#fef3c7", borderRadius: "8px", border: "1px solid #fcd34d" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+          <h5 style={{ ...styles.label, fontSize: "16px", margin: 0 }}>Create New Rule</h5>
+        </div>
+        <div style={styles.grid2Col}>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Condition Field</label>
+            <select style={styles.select}>
+              <option value="">Select field</option>
+              {conditions.map(cond => (
+                <option key={cond.id} value={cond.id}>{cond.label}</option>
+              ))}
+            </select>
           </div>
-        ))}
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Operator</label>
+            <select style={styles.select}>
+              <option value="<=">Less than or equal (≤)</option>
+              <option value=">=">Greater than or equal (≥)</option>
+              <option value="=">Equals (=)</option>
+              <option value="<">Less than (&lt;)</option>
+              <option value=">">Greater than (&gt;)</option>
+              <option value="≠">Not equals (≠)</option>
+              <option value="contains">Contains</option>
+              <option value="equals">Equals</option>
+            </select>
+          </div>
+        </div>
+        <div style={styles.grid2Col}>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Value</label>
+            <input type="text" style={styles.input} placeholder="Enter condition value" />
+          </div>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Action</label>
+            <select style={styles.select}>
+              <option value="auto-approve">Auto-approve</option>
+              <option value="auto-reject">Auto-reject</option>
+              <option value="route">Route to specific approver</option>
+              <option value="skip">Skip certain levels</option>
+            </select>
+          </div>
+        </div>
+        <button 
+          style={{ ...styles.button, ...styles.primaryButton, marginTop: "8px" }}
+          onClick={handleAddAutoApprovalRule}
+        >
+          <Plus size={16} /> Add Rule
+        </button>
       </div>
-
-      <div style={styles.formGroup}>
-        <label style={styles.label}>Approval Action</label>
-        <select style={styles.select}>
-          <option>Auto-approve</option>
-          <option>Auto-reject</option>
-          <option>Route to specific approver</option>
-          <option>Skip certain levels</option>
-        </select>
-      </div>
-
-      <button 
-        style={{ ...styles.button, ...styles.primaryButton, marginTop: "16px" }}
-        onClick={handleAddAutoApprovalRule}
-      >
-        <Plus size={16} /> Add Rule
-      </button>
 
       <div style={{ marginTop: "24px" }}>
-        <h5 style={{ ...styles.label, fontSize: "16px", marginBottom: "16px" }}>Existing Rules</h5>
-        {autoApprovalRules.map(rule => (
-          <div key={rule.id} style={styles.ruleCard}>
-            <div>
-              <strong>Rule #{rule.id}:</strong> {rule.condition} {rule.operator} {rule.value} → {rule.action}
+        <h5 style={{ ...styles.label, fontSize: "16px", marginBottom: "16px" }}>Active Auto-Approval Rules</h5>
+        {autoApprovalRules.length === 0 ? (
+          <p style={{ color: "#64748b", fontSize: "14px", padding: "16px", background: "#f8fafc", borderRadius: "8px" }}>
+            No auto-approval rules configured. Create rules above to enable automatic processing.
+          </p>
+        ) : (
+          autoApprovalRules.map(rule => (
+            <div key={rule.id} style={styles.ruleCard}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
+                  <strong style={{ fontSize: "14px" }}>Rule #{rule.id}:</strong>
+                  <span style={{
+                    ...styles.statusBadge,
+                    background: rule.action === "auto-approve" ? "#d1fae5" : "#fee2e2",
+                    color: rule.action === "auto-approve" ? "#065f46" : "#991b1b"
+                  }}>
+                    {rule.action === "auto-approve" ? "Auto-Approve" : rule.action}
+                  </span>
+                </div>
+                <div style={{ fontSize: "13px", color: "#6b7280" }}>
+                  {rule.condition} {rule.operator} {rule.value || "[Not set]"}
+                </div>
+              </div>
+              <button 
+                style={{ ...styles.button, ...styles.secondaryButton, ...styles.smallButton }}
+                onClick={() => handleDeleteAutoApprovalRule(rule.id)}
+              >
+                <Trash2 size={12} />
+              </button>
             </div>
-            <button 
-              style={{ ...styles.button, ...styles.secondaryButton, ...styles.smallButton }}
-              onClick={() => handleDeleteAutoApprovalRule(rule.id)}
-            >
-              <Trash2 size={12} />
-            </button>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
@@ -879,18 +1211,41 @@ const WorkflowEngine = () => {
           <label style={styles.label}>Delegation Rules</label>
           <div style={styles.checkboxGroup}>
             <label style={styles.checkboxLabel}>
-              <input type="checkbox" defaultChecked />
+              <input 
+                type="checkbox" 
+                checked={delegationSettings.allowDelegation}
+                onChange={(e) => setDelegationSettings({...delegationSettings, allowDelegation: e.target.checked})}
+              />
               <span>Allow approvers to delegate</span>
             </label>
             <label style={styles.checkboxLabel}>
-              <input type="checkbox" />
+              <input 
+                type="checkbox" 
+                checked={delegationSettings.requireManagerApproval}
+                onChange={(e) => setDelegationSettings({...delegationSettings, requireManagerApproval: e.target.checked})}
+              />
               <span>Require manager approval for delegation</span>
             </label>
             <label style={styles.checkboxLabel}>
-              <input type="checkbox" defaultChecked />
+              <input 
+                type="checkbox" 
+                checked={delegationSettings.limitDelegationDuration}
+                onChange={(e) => setDelegationSettings({...delegationSettings, limitDelegationDuration: e.target.checked})}
+              />
               <span>Limit delegation duration</span>
             </label>
           </div>
+          {delegationSettings.limitDelegationDuration && (
+            <div style={{ marginTop: "12px" }}>
+              <label style={styles.label}>Maximum Delegation Duration (days)</label>
+              <input 
+                type="number"
+                style={styles.input}
+                value={delegationSettings.maxDelegationDays}
+                onChange={(e) => setDelegationSettings({...delegationSettings, maxDelegationDays: parseInt(e.target.value) || 30})}
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -958,32 +1313,50 @@ const WorkflowEngine = () => {
             <label style={styles.checkboxLabel}>
               <input 
                 type="checkbox" 
-                defaultChecked 
-                onChange={(e) => console.log("Require comments:", e.target.checked)}
+                checked={workflowActions.requireApprovalComments}
+                onChange={(e) => setWorkflowActions({...workflowActions, requireApprovalComments: e.target.checked})}
               />
               <span>Require comments on approval</span>
             </label>
             <label style={styles.checkboxLabel}>
               <input 
                 type="checkbox" 
-                defaultChecked 
-                onChange={(e) => console.log("Require reasons:", e.target.checked)}
+                checked={workflowActions.requireRejectionReasons}
+                onChange={(e) => setWorkflowActions({...workflowActions, requireRejectionReasons: e.target.checked})}
               />
-              <span>Require reasons on rejection</span>
+              <span>Require reasons on rejection (mandatory)</span>
             </label>
             <label style={styles.checkboxLabel}>
               <input 
                 type="checkbox" 
-                defaultChecked 
+                checked={workflowActions.allowSendBack}
+                onChange={(e) => setWorkflowActions({...workflowActions, allowSendBack: e.target.checked})}
               />
               <span>Allow send back for modification</span>
             </label>
             <label style={styles.checkboxLabel}>
               <input 
                 type="checkbox" 
-                defaultChecked 
+                checked={workflowActions.allowRequestInfo}
+                onChange={(e) => setWorkflowActions({...workflowActions, allowRequestInfo: e.target.checked})}
               />
-              <span>Enable bulk approval</span>
+              <span>Request additional information</span>
+            </label>
+            <label style={styles.checkboxLabel}>
+              <input 
+                type="checkbox" 
+                checked={workflowActions.allowConditionalApproval}
+                onChange={(e) => setWorkflowActions({...workflowActions, allowConditionalApproval: e.target.checked})}
+              />
+              <span>Conditional approval (with modifications)</span>
+            </label>
+            <label style={styles.checkboxLabel}>
+              <input 
+                type="checkbox" 
+                checked={workflowActions.enableBulkApproval}
+                onChange={(e) => setWorkflowActions({...workflowActions, enableBulkApproval: e.target.checked})}
+              />
+              <span>Enable bulk approval capability</span>
             </label>
           </div>
         </div>
@@ -1023,11 +1396,19 @@ const WorkflowEngine = () => {
               />
               <span>Slack/Teams notifications</span>
             </label>
+            <label style={styles.checkboxLabel}>
+              <input 
+                type="checkbox" 
+                checked={notifications.whatsapp}
+                onChange={(e) => setNotifications({...notifications, whatsapp: e.target.checked})}
+              />
+              <span>WhatsApp notifications</span>
+            </label>
           </div>
         </div>
 
         <div style={styles.formGroup}>
-          <label style={styles.label}>Audit Settings</label>
+          <label style={styles.label}>Audit & History</label>
           <div style={styles.checkboxGroup}>
             <label style={styles.checkboxLabel}>
               <input 
@@ -1061,7 +1442,25 @@ const WorkflowEngine = () => {
               />
               <span>Archive completed workflows</span>
             </label>
+            <label style={styles.checkboxLabel}>
+              <input 
+                type="checkbox" 
+                defaultChecked
+              />
+              <span>Approval history and audit trail</span>
+            </label>
           </div>
+          {auditSettings.archive && (
+            <div style={{ marginTop: "12px" }}>
+              <label style={styles.label}>Retention Period (days)</label>
+              <input 
+                type="number"
+                style={styles.input}
+                value={auditSettings.retentionPeriod}
+                onChange={(e) => setAuditSettings({...auditSettings, retentionPeriod: parseInt(e.target.value) || 365})}
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -1375,6 +1774,9 @@ const WorkflowEngine = () => {
                 workflowStages,
                 autoApprovalRules,
                 escalationRules,
+                conditionalRules,
+                workflowActions,
+                delegationSettings,
                 notifications,
                 auditSettings,
                 integrationSettings

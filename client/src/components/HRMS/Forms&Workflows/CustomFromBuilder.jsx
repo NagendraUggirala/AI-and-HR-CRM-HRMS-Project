@@ -52,6 +52,8 @@ const CustomFormBuilder = () => {
   const [importJson, setImportJson] = useState("");
   const [saveStatus, setSaveStatus] = useState("");
   const [importError, setImportError] = useState("");
+  const [draggedField, setDraggedField] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
 
   // File input ref
   const fileInputRef = useRef(null);
@@ -196,6 +198,59 @@ const CustomFormBuilder = () => {
       }));
       addHistoryEntry("Duplicated field");
     }
+  };
+
+  // Move field (for drag and drop reordering within current page)
+  const moveField = (fieldId, newIndex) => {
+    setFormData((prev) => {
+      const currentPageFields = prev.fields.filter((f) => f.page === currentPage);
+      const otherPageFields = prev.fields.filter((f) => f.page !== currentPage);
+      
+      const oldIndex = currentPageFields.findIndex((f) => f.id === fieldId);
+      if (oldIndex === -1 || oldIndex === newIndex) return prev;
+
+      const reorderedFields = [...currentPageFields];
+      const [movedField] = reorderedFields.splice(oldIndex, 1);
+      reorderedFields.splice(newIndex, 0, movedField);
+
+      // Maintain original order: other page fields first, then current page fields
+      // This preserves the overall structure while reordering within the page
+      return {
+        ...prev,
+        fields: [...otherPageFields, ...reorderedFields],
+      };
+    });
+    addHistoryEntry("Reordered fields");
+  };
+
+  // Handle drag start
+  const handleDragStart = (e, fieldId) => {
+    setDraggedField(fieldId);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/html", e.target);
+  };
+
+  // Handle drag over
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverIndex(index);
+  };
+
+  // Handle drop
+  const handleDrop = (e, targetIndex) => {
+    e.preventDefault();
+    if (draggedField !== null) {
+      moveField(draggedField, targetIndex);
+    }
+    setDraggedField(null);
+    setDragOverIndex(null);
+  };
+
+  // Handle drag end
+  const handleDragEnd = () => {
+    setDraggedField(null);
+    setDragOverIndex(null);
   };
 
   // Add section
@@ -701,23 +756,111 @@ const CustomFormBuilder = () => {
           </div>
         </div>
 
-        {/* CHARACTER LIMIT */}
-        <div>
-          <label className="form-label small fw-medium">Character Limit</label>
-          <input
-            type="number"
-            className="form-control form-control-sm"
-            placeholder="Max characters"
-            value={field.validation?.maxLength || ""}
-            onChange={(e) =>
-              updateField(field.id, {
-                validation: {
-                  ...field.validation,
-                  maxLength: e.target.value ? parseInt(e.target.value) : null,
-                },
-              })
-            }
-          />
+        {/* VALIDATION RULES */}
+        <div className="border rounded p-2">
+          <label className="form-label small fw-medium mb-2">Validation Rules</label>
+          
+          {/* Character Limit */}
+          <div className="mb-2">
+            <label className="form-label x-small text-muted">Max Length</label>
+            <input
+              type="number"
+              className="form-control form-control-sm"
+              placeholder="Max characters"
+              value={field.validation?.maxLength || ""}
+              onChange={(e) =>
+                updateField(field.id, {
+                  validation: {
+                    ...field.validation,
+                    maxLength: e.target.value ? parseInt(e.target.value) : null,
+                  },
+                })
+              }
+            />
+          </div>
+
+          {/* Min Length */}
+          {(field.type === "text" || field.type === "email" || field.type === "phone") && (
+            <div className="mb-2">
+              <label className="form-label x-small text-muted">Min Length</label>
+              <input
+                type="number"
+                className="form-control form-control-sm"
+                placeholder="Min characters"
+                value={field.validation?.minLength || ""}
+                onChange={(e) =>
+                  updateField(field.id, {
+                    validation: {
+                      ...field.validation,
+                      minLength: e.target.value ? parseInt(e.target.value) : null,
+                    },
+                  })
+                }
+              />
+            </div>
+          )}
+
+          {/* Pattern/Regex for text fields */}
+          {(field.type === "text" || field.type === "email" || field.type === "phone") && (
+            <div className="mb-2">
+              <label className="form-label x-small text-muted">Pattern (Regex)</label>
+              <input
+                type="text"
+                className="form-control form-control-sm"
+                placeholder="e.g., [A-Za-z0-9]+"
+                value={field.validation?.pattern || ""}
+                onChange={(e) =>
+                  updateField(field.id, {
+                    validation: {
+                      ...field.validation,
+                      pattern: e.target.value || "",
+                    },
+                  })
+                }
+              />
+              <small className="text-muted x-small">Optional: Enter regex pattern for validation</small>
+            </div>
+          )}
+
+          {/* Min/Max for number fields */}
+          {field.type === "number" && (
+            <div className="row g-2 mb-2">
+              <div className="col-6">
+                <label className="form-label x-small text-muted">Min Value</label>
+                <input
+                  type="number"
+                  className="form-control form-control-sm"
+                  placeholder="Min"
+                  value={field.validation?.min || ""}
+                  onChange={(e) =>
+                    updateField(field.id, {
+                      validation: {
+                        ...field.validation,
+                        min: e.target.value ? parseFloat(e.target.value) : null,
+                      },
+                    })
+                  }
+                />
+              </div>
+              <div className="col-6">
+                <label className="form-label x-small text-muted">Max Value</label>
+                <input
+                  type="number"
+                  className="form-control form-control-sm"
+                  placeholder="Max"
+                  value={field.validation?.max || ""}
+                  onChange={(e) =>
+                    updateField(field.id, {
+                      validation: {
+                        ...field.validation,
+                        max: e.target.value ? parseFloat(e.target.value) : null,
+                      },
+                    })
+                  }
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* OPTIONS PANEL FOR DROPDOWN/RADIO/MULTI-SELECT */}
@@ -1235,11 +1378,14 @@ const CustomFormBuilder = () => {
                             e.currentTarget.style.borderColor = field.color;
                             e.currentTarget.style.boxShadow =
                               "0 4px 6px -1px rgba(0,0,0,0.1)";
+                            e.currentTarget.style.transform = "translateY(-2px)";
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.borderColor = "";
                             e.currentTarget.style.boxShadow = "";
+                            e.currentTarget.style.transform = "";
                           }}
+                          title={`Add ${field.label} field`}
                         >
                           <i
                             className={`bi ${field.icon} fs-4`}
@@ -1360,6 +1506,12 @@ const CustomFormBuilder = () => {
                       className="form-control-plaintext text-muted border-0 p-0 resize-none"
                       rows="2"
                     />
+                    
+                    {/* Drag and Drop Hint */}
+                    <div className="alert alert-info py-2 px-3 mt-2 mb-0 small">
+                      <i className="bi-info-circle me-2"></i>
+                      <strong>Tip:</strong> Drag fields by the grip icon (<i className="bi-grip-vertical"></i>) to reorder them
+                    </div>
                   </div>
 
                   {/* MULTI-PAGE PROGRESS */}
@@ -1431,26 +1583,66 @@ const CustomFormBuilder = () => {
 
                   {/* FIELD LIST */}
                   {currentPageFields.length === 0 ? (
-                    <div className="text-center border-2 border-dashed p-5 bg-light">
+                    <div 
+                      className="text-center border-2 border-dashed p-5 bg-light"
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = "move";
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        handleDragEnd();
+                      }}
+                    >
                       <i className="bi-arrow-down fs-1 text-muted mb-3 d-block"></i>
                       <p className="fw-medium mb-2">Click a field to add it</p>
                       <p className="text-muted small">
-                        Use the left panel to add form fields
+                        Use the left panel to add form fields or drag fields to reorder
                       </p>
                     </div>
                   ) : (
                     <div className="d-flex flex-column gap-3">
-                      {currentPageFields.map((field) => (
+                      {currentPageFields.map((field, index) => (
                         <div
                           key={field.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, field.id)}
+                          onDragOver={(e) => handleDragOver(e, index)}
+                          onDrop={(e) => handleDrop(e, index)}
+                          onDragEnd={handleDragEnd}
                           onClick={() => setSelectedField(field.id)}
-                          className={`card cursor-pointer ${
+                          className={`card cursor-pointer position-relative ${
                             selectedField === field.id
                               ? "border-primary bg-primary-subtle"
                               : ""
+                          } ${
+                            draggedField === field.id ? "opacity-50" : ""
+                          } ${
+                            dragOverIndex === index && draggedField !== field.id
+                              ? "border-warning border-2"
+                              : ""
                           }`}
+                          style={{
+                            cursor: draggedField === field.id ? "grabbing" : "grab",
+                            transition: "all 0.2s ease",
+                          }}
                         >
-                          <div className="card-body">
+                          {/* DRAG HANDLE */}
+                          <div
+                            className="position-absolute"
+                            style={{
+                              left: "8px",
+                              top: "50%",
+                              transform: "translateY(-50%)",
+                              cursor: "grab",
+                              zIndex: 10,
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <i className="bi-grip-vertical text-muted fs-5"></i>
+                          </div>
+
+                          <div className="card-body" style={{ paddingLeft: "40px" }}>
                             {/* TOP ROW */}
                             <div className="d-flex justify-content-between align-items-center mb-2">
                               <div className="d-flex align-items-center gap-2">
@@ -1492,6 +1684,7 @@ const CustomFormBuilder = () => {
                                     duplicateField(field.id);
                                   }}
                                   className="btn btn-sm btn-outline-secondary"
+                                  title="Duplicate"
                                 >
                                   <i className="bi-copy"></i>
                                 </button>
@@ -1502,6 +1695,7 @@ const CustomFormBuilder = () => {
                                     deleteField(field.id);
                                   }}
                                   className="btn btn-sm btn-outline-danger"
+                                  title="Delete"
                                 >
                                   <i className="bi-trash"></i>
                                 </button>

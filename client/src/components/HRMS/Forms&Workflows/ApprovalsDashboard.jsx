@@ -1559,18 +1559,28 @@ const ApprovalsDashboard = () => {
         </div>
 
         <div className="col-md-3 mb-3">
-          <div className="card shadow-sm h-100">
+          <div className={`card shadow-sm h-100 ${userRole === "approver" && stats.pending > 0 && stats.highPriority > 0 ? "border-warning border-2" : ""}`}>
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center">
                 <div>
                   <h6 className="text-muted fw-normal mb-1">Pending</h6>
-                  <h3 className="fw-bold mb-0">{stats.pending}</h3>
+                  <h3 className="fw-bold mb-0">
+                    {stats.pending}
+                    {userRole === "approver" && stats.pending > 0 && (
+                      <span className="badge bg-danger ms-2" style={{ fontSize: "0.6rem" }}>
+                        Action Required
+                      </span>
+                    )}
+                  </h3>
                   {userRole === "approver" && stats.pending > 0 && (
                     <div className="mt-2">
                       <small className="text-muted d-block mb-1">
-                        <span className="text-danger me-2">
-                          <i className="bi-circle-fill"></i> High:{" "}
+                        <span className={`me-2 ${stats.highPriority > 0 ? "text-danger fw-bold" : "text-danger"}`}>
+                          <i className="bi-flag-fill"></i> High:{" "}
                           {stats.highPriority}
+                          {stats.highPriority > 0 && (
+                            <i className="bi-exclamation-triangle-fill ms-1"></i>
+                          )}
                         </span>
                       </small>
                       <small className="text-muted d-block">
@@ -1586,7 +1596,7 @@ const ApprovalsDashboard = () => {
                     </div>
                   )}
                 </div>
-                <div className="bg-warning bg-opacity-10 p-3 rounded">
+                <div className={`bg-warning bg-opacity-10 p-3 rounded ${userRole === "approver" && stats.highPriority > 0 ? "border border-warning" : ""}`}>
                   <i className="bi-clock text-warning fs-4"></i>
                 </div>
               </div>
@@ -1652,7 +1662,7 @@ const ApprovalsDashboard = () => {
           delegationStats.delegatedByMe > 0) && (
           <div className="row mb-4">
             <div className="col-md-6">
-              <div className="card bg-info bg-opacity-10">
+              <div className="card bg-info bg-opacity-10 border-info">
                 <div className="card-body">
                   <div className="d-flex justify-content-between align-items-center">
                     <div>
@@ -1662,6 +1672,28 @@ const ApprovalsDashboard = () => {
                       <h4 className="fw-bold mb-0">
                         {delegationStats.delegatedToMe}
                       </h4>
+                      <small className="text-muted">
+                        {delegationStats.delegatedToMe > 0 && (
+                          <button
+                            className="btn btn-link btn-sm p-0 text-info text-decoration-none"
+                            onClick={() => {
+                              setFilters(prev => ({ ...prev, status: "pending" }));
+                              setActiveTab("pending");
+                              const delegatedReqs = requests.filter(req => 
+                                req.approverId === userId && 
+                                req.originalApproverId && 
+                                req.originalApproverId !== userId &&
+                                req.status === STATUS_TYPES.PENDING
+                              );
+                              if (delegatedReqs.length > 0) {
+                                setShowRequestDetail(delegatedReqs[0]);
+                              }
+                            }}
+                          >
+                            View Delegated Requests →
+                          </button>
+                        )}
+                      </small>
                     </div>
                     <div className="bg-info bg-opacity-25 p-3 rounded">
                       <i className="bi-arrow-right-circle text-info fs-4"></i>
@@ -1671,7 +1703,7 @@ const ApprovalsDashboard = () => {
               </div>
             </div>
             <div className="col-md-6">
-              <div className="card bg-warning bg-opacity-10">
+              <div className="card bg-warning bg-opacity-10 border-warning">
                 <div className="card-body">
                   <div className="d-flex justify-content-between align-items-center">
                     <div>
@@ -1681,6 +1713,9 @@ const ApprovalsDashboard = () => {
                       <h4 className="fw-bold mb-0">
                         {delegationStats.delegatedByMe}
                       </h4>
+                      <small className="text-muted">
+                        Requests you've delegated to others
+                      </small>
                     </div>
                     <div className="bg-warning bg-opacity-25 p-3 rounded">
                       <i className="bi-arrow-left-circle text-warning fs-4"></i>
@@ -1692,21 +1727,67 @@ const ApprovalsDashboard = () => {
           </div>
         )}
 
+      {/* High Priority Pending Alerts for Approvers */}
+      {userRole === "approver" && stats.highPriority > 0 && (
+        <div className="alert alert-warning alert-dismissible fade show mb-3 border-warning">
+          <div className="d-flex align-items-center">
+            <i className="bi-flag-fill fs-4 me-3 text-danger"></i>
+            <div className="flex-grow-1">
+              <strong>High Priority Requests Pending!</strong>
+              <p className="mb-0">
+                You have <strong>{stats.highPriority}</strong> high-priority request(s) requiring immediate attention.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="btn btn-sm btn-warning"
+              onClick={() => {
+                setFilters(prev => ({ ...prev, priority: PRIORITY_TYPES.HIGH }));
+                setActiveTab("pending");
+              }}
+            >
+              View High Priority
+            </button>
+            <button
+              type="button"
+              className="btn-close ms-2"
+              data-bs-dismiss="alert"
+            ></button>
+          </div>
+        </div>
+      )}
+
       {/* SLA Breach Warning */}
       {userRole === "approver" && stats.slaBreaches > 0 && (
-        <div className="alert alert-danger alert-dismissible fade show mb-4">
+        <div className="alert alert-danger alert-dismissible fade show mb-4 border-danger">
           <div className="d-flex align-items-center">
             <i className="bi-exclamation-triangle-fill fs-4 me-3"></i>
             <div className="flex-grow-1">
               <strong>SLA Breach Alert!</strong>
               <p className="mb-0">
-                You have {stats.slaBreaches} pending request(s) that have
-                exceeded their SLA deadline.
+                You have <strong>{stats.slaBreaches}</strong> pending request(s) that have exceeded their SLA deadline. Please review immediately.
               </p>
             </div>
             <button
               type="button"
-              className="btn-close"
+              className="btn btn-sm btn-danger"
+              onClick={() => {
+                const breachedRequests = requests.filter(req => {
+                  if (req.status !== STATUS_TYPES.PENDING) return false;
+                  if (req.approverId !== userId && req.originalApproverId !== userId) return false;
+                  if (!req.slaDeadline) return false;
+                  return req.slaDeadline < new Date().toISOString().split("T")[0];
+                });
+                if (breachedRequests.length > 0) {
+                  setShowRequestDetail(breachedRequests[0]);
+                }
+              }}
+            >
+              View Breached
+            </button>
+            <button
+              type="button"
+              className="btn-close ms-2"
               data-bs-dismiss="alert"
             ></button>
           </div>
@@ -1784,6 +1865,41 @@ const ApprovalsDashboard = () => {
                 >
                   <i className="bi-arrow-return-left me-2 text-muted"></i>
                   Withdrawn
+                </button>
+              </li>
+            )}
+
+            {userRole === "approver" && delegationStats.delegatedToMe > 0 && (
+              <li>
+                <hr className="dropdown-divider" />
+              </li>
+            )}
+
+            {userRole === "approver" && delegationStats.delegatedToMe > 0 && (
+              <li>
+                <button
+                  className="dropdown-item d-flex align-items-center"
+                  onClick={() => {
+                    setFilters(prev => ({ ...prev, status: "pending" }));
+                    setActiveTab("pending");
+                    // Filter to show only delegated requests
+                    const delegatedReqs = requests.filter(req => 
+                      req.approverId === userId && 
+                      req.originalApproverId && 
+                      req.originalApproverId !== userId
+                    );
+                    if (delegatedReqs.length > 0) {
+                      setShowRequestDetail(delegatedReqs[0]);
+                    }
+                  }}
+                >
+                  <i className="bi-arrow-right-circle me-2 text-info"></i>
+                  Delegated to Me
+                  {delegationStats.delegatedToMe > 0 && (
+                    <span className="badge bg-info ms-auto">
+                      {delegationStats.delegatedToMe}
+                    </span>
+                  )}
                 </button>
               </li>
             )}
@@ -2107,10 +2223,10 @@ const ApprovalsDashboard = () => {
                             )}
                           {isDelegated && (
                             <div className="mt-1">
-                              <small className="text-warning d-block">
+                              <span className="badge bg-info">
                                 <i className="bi-arrow-right me-1"></i>
-                                Delegated
-                              </small>
+                                Delegated from {request.originalApproverName || "Original Approver"}
+                              </span>
                             </div>
                           )}
                         </td>
@@ -2710,9 +2826,17 @@ const ApprovalsDashboard = () => {
                               <span>
                                 {formatDate(showRequestDetail.slaDeadline)}
                               </span>
-                              {getSLAStatus(showRequestDetail.slaDeadline)
-                                .class === "danger" && (
-                                <i className="bi-exclamation-triangle-fill text-danger ms-2"></i>
+                              {getSLAStatus(showRequestDetail.slaDeadline).class === "danger" && (
+                                <span className="badge bg-danger ms-2">
+                                  <i className="bi-exclamation-triangle-fill me-1"></i>
+                                  SLA Breached
+                                </span>
+                              )}
+                              {getSLAStatus(showRequestDetail.slaDeadline).class === "warning" && (
+                                <span className="badge bg-warning text-dark ms-2">
+                                  <i className="bi-clock me-1"></i>
+                                  Due Soon
+                                </span>
                               )}
                             </div>
                           </div>

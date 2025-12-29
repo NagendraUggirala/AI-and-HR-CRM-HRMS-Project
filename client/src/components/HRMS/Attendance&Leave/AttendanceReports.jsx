@@ -908,6 +908,8 @@ const AttendanceReports = () => {
   const [analyticsData, setAnalyticsData] = useState({});
   const [reports, setReports] = useState([]);
   const [alerts, setAlerts] = useState([]);
+  const [reportCategory, setReportCategory] = useState('all');
+  const [exceptionType, setExceptionType] = useState('all');
 
   /* -----------------------
      MOCK DATA GENERATION
@@ -1045,6 +1047,24 @@ const AttendanceReports = () => {
         description: 'Overtime trends and department-wise analysis with cost impact',
         lastGenerated: '2024-01-10',
         columns: ['Department', 'Total Overtime', 'Avg Overtime', 'Cost Impact', 'Trend']
+      },
+      {
+        id: 11,
+        name: 'Overtime Summary Report',
+        type: 'standard',
+        frequency: 'weekly',
+        description: 'Weekly overtime summary with employee details and approval status',
+        lastGenerated: '2024-01-19',
+        columns: ['Employee', 'Department', 'Date', 'Overtime Hours', 'Approval Status', 'Cost']
+      },
+      {
+        id: 12,
+        name: 'Overtime Cost Analysis',
+        type: 'analytics',
+        frequency: 'monthly',
+        description: 'Detailed overtime cost analysis by department and employee level',
+        lastGenerated: '2024-01-15',
+        columns: ['Department', 'Total Hours', 'Total Cost', 'Avg Cost/Employee', 'Budget Impact']
       },
       {
         id: 5,
@@ -1322,67 +1342,188 @@ const AttendanceReports = () => {
     </>
   );
 
-  const renderReports = () => (
-    <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2 style={{ fontSize: 20, fontWeight: 600, color: '#1e293b' }}>
-          Standard Reports Library
-        </h2>
-        <div className="action-buttons">
-          <button className="btn-primary">
-            <Download size={16} />
-            Export All
+  const renderReports = () => {
+    const filteredReports = reportCategory === 'all' 
+      ? reports 
+      : reports.filter(r => r.type === reportCategory);
+
+    return (
+      <>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: '#1e293b' }}>
+            Standard Reports Library
+          </h2>
+          <div className="action-buttons">
+            <button className="btn-primary">
+              <Download size={16} />
+              Export All
+            </button>
+            <button className="btn-secondary">
+              <Printer size={16} />
+              Print
+            </button>
+          </div>
+        </div>
+
+        {/* Report Category Filter */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '10px', 
+          marginBottom: '20px',
+          padding: '12px',
+          backgroundColor: '#f8fafc',
+          borderRadius: '8px',
+          border: '1px solid #e2e8f0'
+        }}>
+          <button
+            onClick={() => setReportCategory('all')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '6px',
+              border: 'none',
+              background: reportCategory === 'all' ? '#3b82f6' : 'white',
+              color: reportCategory === 'all' ? 'white' : '#475569',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: 500,
+              border: '1px solid #e2e8f0'
+            }}
+          >
+            All Reports ({reports.length})
           </button>
-          <button className="btn-secondary">
-            <Printer size={16} />
-            Print
+          <button
+            onClick={() => setReportCategory('standard')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '6px',
+              border: 'none',
+              background: reportCategory === 'standard' ? '#3b82f6' : 'white',
+              color: reportCategory === 'standard' ? 'white' : '#475569',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: 500,
+              border: '1px solid #e2e8f0'
+            }}
+          >
+            Standard ({reports.filter(r => r.type === 'standard').length})
+          </button>
+          <button
+            onClick={() => setReportCategory('exception')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '6px',
+              border: 'none',
+              background: reportCategory === 'exception' ? '#3b82f6' : 'white',
+              color: reportCategory === 'exception' ? 'white' : '#475569',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: 500,
+              border: '1px solid #e2e8f0'
+            }}
+          >
+            Exception ({reports.filter(r => r.type === 'exception').length})
+          </button>
+          <button
+            onClick={() => setReportCategory('analytics')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '6px',
+              border: 'none',
+              background: reportCategory === 'analytics' ? '#3b82f6' : 'white',
+              color: reportCategory === 'analytics' ? 'white' : '#475569',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: 500,
+              border: '1px solid #e2e8f0'
+            }}
+          >
+            Analytics ({reports.filter(r => r.type === 'analytics').length})
           </button>
         </div>
-      </div>
 
-      <div className="reports-grid">
-        {reports.map(report => (
-          <div key={report.id} className="report-card" onClick={() => setSelectedReport(report)}>
-            <div className="report-header">
-              <div className={`report-icon ${report.type}`}>
-                {report.type === 'standard' ? <FileText size={20} /> :
-                 report.type === 'exception' ? <AlertCircle size={20} /> :
-                 <BarChart3 size={20} />}
-              </div>
-              <div>
-                <div className="report-title">{report.name}</div>
-                <span className={`report-type ${report.type}`}>
-                  {report.type.toUpperCase()}
-                </span>
-              </div>
+        <div className="reports-grid">
+          {filteredReports.length === 0 ? (
+            <div style={{ 
+              gridColumn: '1 / -1', 
+              textAlign: 'center', 
+              padding: '40px',
+              color: '#64748b'
+            }}>
+              <FileText size={48} style={{ opacity: 0.3, marginBottom: '16px' }} />
+              <div>No reports found in this category</div>
             </div>
-            <div className="report-desc">
-              {report.description}
-            </div>
-            <div className="report-footer">
-              <div>
-                <div style={{ fontSize: '11px', color: '#64748b' }}>
-                  Frequency: {report.frequency}
+          ) : (
+            filteredReports.map(report => (
+              <div key={report.id} className="report-card" onClick={() => setSelectedReport(report)}>
+                <div className="report-header">
+                  <div className={`report-icon ${report.type}`}>
+                    {report.type === 'standard' ? <FileText size={20} /> :
+                     report.type === 'exception' ? <AlertCircle size={20} /> :
+                     <BarChart3 size={20} />}
+                  </div>
+                  <div>
+                    <div className="report-title">{report.name}</div>
+                    <span className={`report-type ${report.type}`}>
+                      {report.type.toUpperCase()}
+                    </span>
+                  </div>
                 </div>
-                <div style={{ fontSize: '11px', color: '#64748b' }}>
-                  Last Generated: {report.lastGenerated}
+                <div className="report-desc">
+                  {report.description}
+                </div>
+                <div className="report-footer">
+                  <div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>
+                      Frequency: {report.frequency}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>
+                      Last Generated: {report.lastGenerated}
+                    </div>
+                  </div>
+                  <button 
+                    className="btn-icon" 
+                    style={{ padding: '6px' }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedReport(report);
+                    }}
+                  >
+                    <Download size={14} />
+                  </button>
                 </div>
               </div>
-              <button className="btn-icon" style={{ padding: '6px' }}>
-                <Download size={14} />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </>
-  );
+            ))
+          )}
+        </div>
+      </>
+    );
+  };
 
-  const renderAnalytics = () => (
-    <>
-      <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 20, color: '#1e293b' }}>
-        Analytics & Insights
-      </h2>
+  // Calculate leave pattern analysis
+  const leavePatterns = useMemo(() => {
+    const leaveData = filteredData.filter(x => x.status === 'leave');
+    const dayOfWeekCounts = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
+    const monthlyCounts = {};
+    
+    leaveData.forEach(record => {
+      const date = new Date(record.date);
+      const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
+      const month = date.toLocaleString('default', { month: 'short' });
+      
+      dayOfWeekCounts[dayOfWeek]++;
+      monthlyCounts[month] = (monthlyCounts[month] || 0) + 1;
+    });
+    
+    return { dayOfWeekCounts, monthlyCounts };
+  }, [filteredData]);
+
+  const renderAnalytics = () => {
+
+    return (
+      <>
+        <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 20, color: '#1e293b' }}>
+          Analytics & Insights
+        </h2>
 
       <div className="analytics-grid">
         <div className="metric-card">
@@ -1475,72 +1616,382 @@ const AttendanceReports = () => {
         </div>
       </div>
 
-      <div className="chart-card" style={{ marginTop: '24px' }}>
-        <div className="chart-title">
-          Peak Absence Analysis
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginTop: '16px' }}>
-          <div>
-            <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '12px' }}>Peak Absence Days</div>
+        {/* Leave Pattern Analysis */}
+        <div className="chart-card" style={{ marginTop: '24px' }}>
+          <div className="chart-title">
+            <Calendar size={18} />
+            Leave Pattern Analysis
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginTop: '16px' }}>
             <div>
-              {(analyticsData.metrics?.peakAbsenceDays || ['Monday', 'Friday']).map((day, index) => (
-                <div key={index} style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between',
-                  padding: '8px 0',
-                  borderBottom: index < 1 ? '1px solid #f1f5f9' : 'none'
-                }}>
-                  <span style={{ color: '#475569' }}>{day}</span>
-                  <span style={{ fontWeight: 600, color: '#dc2626' }}>
-                    {day === 'Monday' ? '68%' : day === 'Friday' ? '72%' : '60%'} absence
-                  </span>
-                </div>
-              ))}
+              <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '12px', color: '#475569' }}>
+                Leave by Day of Week
+              </div>
+              <div>
+                {Object.entries(leavePatterns.dayOfWeekCounts)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([day, count], index) => (
+                    <div key={day} style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '10px 0',
+                      borderBottom: index < 6 ? '1px solid #f1f5f9' : 'none'
+                    }}>
+                      <span style={{ color: '#475569', fontWeight: 500 }}>{day}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ 
+                          width: '120px', 
+                          height: '8px', 
+                          backgroundColor: '#e2e8f0', 
+                          borderRadius: '4px',
+                          overflow: 'hidden'
+                        }}>
+                          <div style={{ 
+                            width: `${(count / Math.max(...Object.values(leavePatterns.dayOfWeekCounts))) * 100}%`,
+                            height: '100%',
+                            background: 'linear-gradient(90deg, #8b5cf6, #a78bfa)',
+                            borderRadius: '4px'
+                          }} />
+                        </div>
+                        <span style={{ fontWeight: 600, color: '#8b5cf6', minWidth: '40px', textAlign: 'right' }}>
+                          {count}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '12px', color: '#475569' }}>
+                Leave by Month
+              </div>
+              <div>
+                {Object.entries(leavePatterns.monthlyCounts)
+                  .sort((a, b) => b[1] - a[1])
+                  .slice(0, 6)
+                  .map(([month, count], index) => (
+                    <div key={month} style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '10px 0',
+                      borderBottom: index < 5 ? '1px solid #f1f5f9' : 'none'
+                    }}>
+                      <span style={{ color: '#475569', fontWeight: 500 }}>{month}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ 
+                          width: '120px', 
+                          height: '8px', 
+                          backgroundColor: '#e2e8f0', 
+                          borderRadius: '4px',
+                          overflow: 'hidden'
+                        }}>
+                          <div style={{ 
+                            width: `${(count / Math.max(...Object.values(leavePatterns.monthlyCounts))) * 100}%`,
+                            height: '100%',
+                            background: 'linear-gradient(90deg, #f59e0b, #fbbf24)',
+                            borderRadius: '4px'
+                          }} />
+                        </div>
+                        <span style={{ fontWeight: 600, color: '#f59e0b', minWidth: '40px', textAlign: 'right' }}>
+                          {count}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
             </div>
           </div>
-          <div>
-            <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '12px' }}>High Absence Periods</div>
-            <div>
-              {(analyticsData.metrics?.peakAbsencePeriods || ['January', 'December']).map((period, index) => (
-                <div key={index} style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between',
-                  padding: '8px 0',
-                  borderBottom: index < 1 ? '1px solid #f1f5f9' : 'none'
-                }}>
-                  <span style={{ color: '#475569' }}>{period}</span>
-                  <span style={{ fontWeight: 600, color: '#d97706' }}>
-                    {period === 'January' ? '85%' : '82%'} higher than average
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
-      </div>
-    </>
-  );
 
-  const renderExceptions = () => (
-    <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2 style={{ fontSize: 20, fontWeight: 600, color: '#1e293b' }}>
-          Attendance Exception Reports
-        </h2>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <select style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px' }}>
-            <option>All Exception Types</option>
-            <option>Late Arrivals</option>
-            <option>Early Departures</option>
-            <option>Absent Without Leave</option>
-            <option>Overtime Violations</option>
-          </select>
-          <button className="btn-primary">
-            <Filter size={16} />
-            Filter
-          </button>
+        {/* Overtime Analysis */}
+        <div className="chart-card" style={{ marginTop: '24px' }}>
+          <div className="chart-title">
+            <Zap size={18} />
+            Overtime Analysis
+          </div>
+          <div style={{ marginTop: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
+              <div style={{ 
+                padding: '16px', 
+                backgroundColor: '#f0f9ff', 
+                borderRadius: '8px',
+                border: '1px solid #bae6fd'
+              }}>
+                <div style={{ fontSize: '12px', color: '#0369a1', marginBottom: '8px' }}>Total Overtime Hours</div>
+                <div style={{ fontSize: '24px', fontWeight: 700, color: '#0c4a6e' }}>
+                  {statistics.totalOvertime || 0}h
+                </div>
+              </div>
+              <div style={{ 
+                padding: '16px', 
+                backgroundColor: '#fef3c7', 
+                borderRadius: '8px',
+                border: '1px solid #fde68a'
+              }}>
+                <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '8px' }}>Average per Employee</div>
+                <div style={{ fontSize: '24px', fontWeight: 700, color: '#78350f' }}>
+                  {statistics.avgOvertime || 0}h
+                </div>
+              </div>
+              <div style={{ 
+                padding: '16px', 
+                backgroundColor: '#f3e8ff', 
+                borderRadius: '8px',
+                border: '1px solid #c4b5fd'
+              }}>
+                <div style={{ fontSize: '12px', color: '#6b21a8', marginBottom: '8px' }}>Employees with OT</div>
+                <div style={{ fontSize: '24px', fontWeight: 700, color: '#581c87' }}>
+                  {new Set(filteredData.filter(x => x.overtime > 0).map(x => x.employeeId)).size}
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '12px', color: '#475569' }}>
+              Department-wise Overtime Distribution
+            </div>
+            <div>
+              {analyticsData.trends?.department
+                .sort((a, b) => b.overtime - a.overtime)
+                .map((dept, index) => (
+                  <div key={index} style={{ marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '6px' }}>
+                      <span style={{ fontWeight: 500 }}>{dept.name}</span>
+                      <span style={{ color: '#475569', fontWeight: 600 }}>{dept.overtime} hours</span>
+                    </div>
+                    <div style={{ height: '8px', backgroundColor: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div 
+                        style={{ 
+                          height: '100%', 
+                          width: `${(dept.overtime / Math.max(...analyticsData.trends.department.map(d => d.overtime))) * 100}%`,
+                          background: 'linear-gradient(90deg, #3b82f6, #60a5fa)',
+                          borderRadius: '4px'
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
         </div>
-      </div>
+
+        <div className="chart-card" style={{ marginTop: '24px' }}>
+          <div className="chart-title">
+            Peak Absence Analysis
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginTop: '16px' }}>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '12px' }}>Peak Absence Days</div>
+              <div>
+                {(analyticsData.metrics?.peakAbsenceDays || ['Monday', 'Friday']).map((day, index) => (
+                  <div key={index} style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    padding: '8px 0',
+                    borderBottom: index < 1 ? '1px solid #f1f5f9' : 'none'
+                  }}>
+                    <span style={{ color: '#475569' }}>{day}</span>
+                    <span style={{ fontWeight: 600, color: '#dc2626' }}>
+                      {day === 'Monday' ? '68%' : day === 'Friday' ? '72%' : '60%'} absence
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '12px' }}>High Absence Periods</div>
+              <div>
+                {(analyticsData.metrics?.peakAbsencePeriods || ['January', 'December']).map((period, index) => (
+                  <div key={index} style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    padding: '8px 0',
+                    borderBottom: index < 1 ? '1px solid #f1f5f9' : 'none'
+                  }}>
+                    <span style={{ color: '#475569' }}>{period}</span>
+                    <span style={{ fontWeight: 600, color: '#d97706' }}>
+                      {period === 'January' ? '85%' : '82%'} higher than average
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Department Comparison */}
+        <div className="chart-card" style={{ marginTop: '24px' }}>
+          <div className="chart-title">
+            <Building size={18} />
+            Department-wise Attendance Comparison
+          </div>
+          <div style={{ marginTop: '16px', overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                  <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Department</th>
+                  <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Present %</th>
+                  <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Absent %</th>
+                  <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Late %</th>
+                  <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Overtime</th>
+                  <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analyticsData.trends?.department.map((dept, index) => {
+                  const score = dept.present - (dept.absent * 2) - (dept.late * 0.5) + (dept.overtime * 0.1);
+                  return (
+                    <tr key={index} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '14px', fontWeight: 500, color: '#1e293b' }}>{dept.name}</td>
+                      <td style={{ padding: '14px', textAlign: 'center' }}>
+                        <span style={{ 
+                          padding: '4px 8px', 
+                          backgroundColor: '#d1fae5', 
+                          color: '#065f46',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: 600
+                        }}>
+                          {dept.present}%
+                        </span>
+                      </td>
+                      <td style={{ padding: '14px', textAlign: 'center' }}>
+                        <span style={{ 
+                          padding: '4px 8px', 
+                          backgroundColor: '#fee2e2', 
+                          color: '#991b1b',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: 600
+                        }}>
+                          {dept.absent}%
+                        </span>
+                      </td>
+                      <td style={{ padding: '14px', textAlign: 'center' }}>
+                        <span style={{ 
+                          padding: '4px 8px', 
+                          backgroundColor: '#fef3c7', 
+                          color: '#92400e',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: 600
+                        }}>
+                          {dept.late}%
+                        </span>
+                      </td>
+                      <td style={{ padding: '14px', textAlign: 'center', color: '#475569' }}>{dept.overtime}h</td>
+                      <td style={{ padding: '14px', textAlign: 'center' }}>
+                        <span style={{ 
+                          padding: '4px 8px', 
+                          backgroundColor: score >= 90 ? '#d1fae5' : score >= 80 ? '#fef3c7' : '#fee2e2',
+                          color: score >= 90 ? '#065f46' : score >= 80 ? '#92400e' : '#991b1b',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: 700
+                        }}>
+                          {score.toFixed(1)}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  // Calculate exception data based on selected type
+  const exceptionData = useMemo(() => {
+    return filteredData.filter(record => {
+      if (exceptionType === 'all') {
+        return record.status === 'absent' || record.late > 15 || record.overtime > 8;
+      } else if (exceptionType === 'late') {
+        return record.late > 15;
+      } else if (exceptionType === 'absent') {
+        return record.status === 'absent';
+      } else if (exceptionType === 'overtime') {
+        return record.overtime > 8;
+      }
+      return false;
+    });
+  }, [filteredData, exceptionType]);
+
+  const renderExceptions = () => {
+    return (
+      <>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: '#1e293b' }}>
+            Attendance Exception Reports
+          </h2>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <select 
+              value={exceptionType}
+              onChange={(e) => setExceptionType(e.target.value)}
+              style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px' }}
+            >
+              <option value="all">All Exception Types</option>
+              <option value="late">Late Arrivals (&gt;15 mins)</option>
+              <option value="absent">Absent Without Leave</option>
+              <option value="overtime">Excessive Overtime (&gt;8h)</option>
+            </select>
+            <button className="btn-primary">
+              <Download size={16} />
+              Export
+            </button>
+          </div>
+        </div>
+
+        {/* Exception Summary Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+          <div style={{ 
+            padding: '16px', 
+            backgroundColor: '#fee2e2', 
+            borderRadius: '8px',
+            border: '1px solid #fca5a5'
+          }}>
+            <div style={{ fontSize: '12px', color: '#991b1b', marginBottom: '8px' }}>Total Exceptions</div>
+            <div style={{ fontSize: '24px', fontWeight: 700, color: '#7f1d1d' }}>
+              {exceptionData.length}
+            </div>
+          </div>
+          <div style={{ 
+            padding: '16px', 
+            backgroundColor: '#fef3c7', 
+            borderRadius: '8px',
+            border: '1px solid #fde68a'
+          }}>
+            <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '8px' }}>Late Arrivals</div>
+            <div style={{ fontSize: '24px', fontWeight: 700, color: '#78350f' }}>
+              {exceptionData.filter(r => r.late > 15).length}
+            </div>
+          </div>
+          <div style={{ 
+            padding: '16px', 
+            backgroundColor: '#fee2e2', 
+            borderRadius: '8px',
+            border: '1px solid #fca5a5'
+          }}>
+            <div style={{ fontSize: '12px', color: '#991b1b', marginBottom: '8px' }}>Absent Records</div>
+            <div style={{ fontSize: '24px', fontWeight: 700, color: '#7f1d1d' }}>
+              {exceptionData.filter(r => r.status === 'absent').length}
+            </div>
+          </div>
+          <div style={{ 
+            padding: '16px', 
+            backgroundColor: '#dbeafe', 
+            borderRadius: '8px',
+            border: '1px solid #93c5fd'
+          }}>
+            <div style={{ fontSize: '12px', color: '#1e40af', marginBottom: '8px' }}>Overtime Violations</div>
+            <div style={{ fontSize: '24px', fontWeight: 700, color: '#1e3a8a' }}>
+              {exceptionData.filter(r => r.overtime > 8).length}
+            </div>
+          </div>
+        </div>
 
       <div style={{ overflowX: 'auto' }}>
         <table className="data-table">
@@ -1556,9 +2007,16 @@ const AttendanceReports = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredData
-              .filter(record => record.status === 'absent' || record.late > 15)
-              .slice(0, 10)
+            {exceptionData.length === 0 ? (
+              <tr>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                  <AlertCircle size={32} style={{ opacity: 0.3, marginBottom: '12px' }} />
+                  <div>No exceptions found for the selected criteria</div>
+                </td>
+              </tr>
+            ) : (
+              exceptionData
+              .slice(0, 20)
               .map((record, index) => (
                 <tr key={index}>
                   <td>
@@ -1640,12 +2098,14 @@ const AttendanceReports = () => {
                     </button>
                   </td>
                 </tr>
-              ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>
     </>
-  );
+    );
+  };
 
   const renderAlerts = () => (
     <>

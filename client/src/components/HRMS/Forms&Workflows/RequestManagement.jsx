@@ -228,6 +228,75 @@ const EmployeeSelfServicePortal = () => {
         { name: 'alternatePhone', label: 'Alternate Phone', type: 'tel', required: false, maxLength: 15 }
       ]
     },
+    { 
+      id: 4, 
+      name: 'Phone Number Update', 
+      category: 'personal', 
+      description: 'Update personal or work phone number', 
+      icon: 'bi-phone-fill', 
+      priority: 'low', 
+      sla: '1 business day',
+      autoDescription: (data) => {
+        const phoneType = data?.phoneType || '[Phone Type]';
+        const oldPhone = data?.oldPhoneNumber || '[Old Number]';
+        const newPhone = data?.newPhoneNumber || '[New Number]';
+        
+        return `Update ${phoneType} phone number from ${oldPhone} to ${newPhone}.`;
+      },
+      fields: [
+        { name: 'phoneType', label: 'Phone Type', type: 'select', options: ['Personal', 'Work', 'Both'], required: true },
+        { name: 'oldPhoneNumber', label: 'Current Phone Number', type: 'tel', required: true, maxLength: 15 },
+        { name: 'newPhoneNumber', label: 'New Phone Number', type: 'tel', required: true, maxLength: 15 },
+        { name: 'reason', label: 'Reason for Change', type: 'textarea', required: false, maxLength: 200 }
+      ]
+    },
+    { 
+      id: 5, 
+      name: 'Family Details Update', 
+      category: 'personal', 
+      description: 'Update family member information', 
+      icon: 'bi-people-fill', 
+      priority: 'low', 
+      sla: '2-3 business days',
+      autoDescription: (data) => {
+        const updateType = data?.updateType || '[Update Type]';
+        const familyMember = data?.familyMemberName || '[Member Name]';
+        const relationship = data?.relationship || '[Relationship]';
+        
+        return `Update family details: ${updateType} for ${familyMember} (${relationship}).`;
+      },
+      fields: [
+        { name: 'updateType', label: 'Update Type', type: 'select', options: ['Add Member', 'Update Details', 'Remove Member'], required: true },
+        { name: 'familyMemberName', label: 'Family Member Name', type: 'text', required: true, maxLength: 50 },
+        { name: 'relationship', label: 'Relationship', type: 'select', options: ['Spouse', 'Child', 'Father', 'Mother', 'Sibling', 'Other'], required: true },
+        { name: 'dateOfBirth', label: 'Date of Birth', type: 'date', required: false },
+        { name: 'aadharNumber', label: 'Aadhar Number', type: 'text', required: false, maxLength: 12 }
+      ]
+    },
+    { 
+      id: 6, 
+      name: 'Nominee Change Request', 
+      category: 'personal', 
+      description: 'Update nominee details for benefits', 
+      icon: 'bi-person-check-fill', 
+      priority: 'medium', 
+      sla: '3-5 business days',
+      autoDescription: (data) => {
+        const nomineeName = data?.nomineeName || '[Nominee Name]';
+        const relationship = data?.relationship || '[Relationship]';
+        const percentage = data?.nominationPercentage || '[Percentage]';
+        
+        return `Update nominee: ${nomineeName} (${relationship}) with ${percentage}% nomination.`;
+      },
+      fields: [
+        { name: 'nomineeName', label: 'Nominee Name', type: 'text', required: true, maxLength: 50 },
+        { name: 'relationship', label: 'Relationship', type: 'select', options: ['Spouse', 'Child', 'Parent', 'Sibling', 'Other'], required: true },
+        { name: 'nominationPercentage', label: 'Nomination Percentage', type: 'number', required: true, min: 1, max: 100 },
+        { name: 'nomineeDateOfBirth', label: 'Nominee Date of Birth', type: 'date', required: true },
+        { name: 'nomineeContact', label: 'Nominee Contact Number', type: 'tel', required: true, maxLength: 15 },
+        { name: 'supportingDocuments', label: 'Supporting Documents', type: 'file', required: true }
+      ]
+    },
     
     // Work-Related Requests
     { 
@@ -299,6 +368,74 @@ const EmployeeSelfServicePortal = () => {
         { name: 'reason', label: 'Reason', type: 'textarea', required: true, maxLength: 200 }
       ]
     },
+    { 
+      id: 10, 
+      name: 'Department Transfer Request', 
+      category: 'work', 
+      description: 'Request transfer to another department', 
+      icon: 'bi-arrow-left-right', 
+      priority: 'high', 
+      sla: '7-10 business days',
+      autoDescription: (data) => {
+        const currentDepartment = data?.currentDepartment || '[Current Dept]';
+        const targetDepartment = data?.targetDepartment || '[Target Dept]';
+        const reason = data?.reason || '[Reason]';
+        const effectiveDate = data?.effectiveDate || '[Date]';
+        
+        return `Department transfer request from ${currentDepartment} to ${targetDepartment} effective ${effectiveDate}. Reason: ${reason}.`;
+      },
+      fields: [
+        { name: 'currentDepartment', label: 'Current Department', type: 'text', required: true, maxLength: 50 },
+        { name: 'targetDepartment', label: 'Target Department', type: 'text', required: true, maxLength: 50 },
+        { name: 'effectiveDate', label: 'Effective Date', type: 'date', required: true },
+        { name: 'reason', label: 'Reason for Transfer', type: 'textarea', required: true, maxLength: 500 },
+        { name: 'skillMatch', label: 'Skills Relevant to Target Department', type: 'textarea', required: true, maxLength: 300 }
+      ]
+    },
+    { 
+      id: 11, 
+      name: 'Reporting Manager Change Request', 
+      category: 'work', 
+      description: 'Request change in reporting manager', 
+      icon: 'bi-diagram-3-fill', 
+      priority: 'high', 
+      sla: '5-7 business days',
+      autoDescription: (data) => {
+        const currentManager = data?.currentManager || '[Current Manager]';
+        const newManager = data?.newManager || '[New Manager]';
+        const reason = data?.reason || '[Reason]';
+        
+        return `Reporting manager change request from ${currentManager} to ${newManager}. Reason: ${reason}.`;
+      },
+      fields: [
+        { name: 'currentManager', label: 'Current Reporting Manager', type: 'text', required: true, maxLength: 50 },
+        { name: 'newManager', label: 'New Reporting Manager', type: 'text', required: true, maxLength: 50 },
+        { name: 'reason', label: 'Reason for Change', type: 'textarea', required: true, maxLength: 300 },
+        { name: 'effectiveDate', label: 'Effective Date', type: 'date', required: true }
+      ]
+    },
+    { 
+      id: 12, 
+      name: 'Desk/Seat Change Request', 
+      category: 'work', 
+      description: 'Request change in workstation location', 
+      icon: 'bi-layout-text-window', 
+      priority: 'low', 
+      sla: '2-3 business days',
+      autoDescription: (data) => {
+        const currentLocation = data?.currentLocation || '[Current Location]';
+        const preferredLocation = data?.preferredLocation || '[Preferred Location]';
+        const reason = data?.reason || '[Reason]';
+        
+        return `Desk/seat change request from ${currentLocation} to ${preferredLocation}. Reason: ${reason}.`;
+      },
+      fields: [
+        { name: 'currentLocation', label: 'Current Location', type: 'text', required: true, maxLength: 50 },
+        { name: 'preferredLocation', label: 'Preferred Location', type: 'text', required: true, maxLength: 50 },
+        { name: 'reason', label: 'Reason', type: 'textarea', required: true, maxLength: 200 },
+        { name: 'preferredDate', label: 'Preferred Date', type: 'date', required: false }
+      ]
+    },
     
     // Administrative Requests
     { 
@@ -346,6 +483,96 @@ const EmployeeSelfServicePortal = () => {
         { name: 'accessAreas', label: 'Access Areas', type: 'multiselect', options: ['Main Gate', 'Parking', 'Floor Access', 'Server Room', 'Lab'], required: true },
         { name: 'validity', label: 'Validity', type: 'select', options: ['Permanent', 'Temporary'], required: true },
         { name: 'endDate', label: 'End Date (if temporary)', type: 'date', required: false }
+      ]
+    },
+    { 
+      id: 15, 
+      name: 'Parking Slot Request', 
+      category: 'administrative', 
+      description: 'Request parking slot assignment', 
+      icon: 'bi-car-front-fill', 
+      priority: 'medium', 
+      sla: '3-5 business days',
+      autoDescription: (data) => {
+        const vehicleType = data?.vehicleType || '[Vehicle Type]';
+        const vehicleNumber = data?.vehicleNumber || '[Vehicle Number]';
+        const preferredLocation = data?.preferredLocation || '[Location]';
+        
+        return `Parking slot request for ${vehicleType} (${vehicleNumber}) at ${preferredLocation}.`;
+      },
+      fields: [
+        { name: 'vehicleType', label: 'Vehicle Type', type: 'select', options: ['Car', 'Motorcycle', 'Bicycle', 'Other'], required: true },
+        { name: 'vehicleNumber', label: 'Vehicle Number', type: 'text', required: true, maxLength: 20 },
+        { name: 'preferredLocation', label: 'Preferred Location', type: 'text', required: true, maxLength: 50 },
+        { name: 'validity', label: 'Validity', type: 'select', options: ['Permanent', 'Temporary'], required: true },
+        { name: 'endDate', label: 'End Date (if temporary)', type: 'date', required: false }
+      ]
+    },
+    { 
+      id: 16, 
+      name: 'Locker Assignment Request', 
+      category: 'administrative', 
+      description: 'Request locker assignment', 
+      icon: 'bi-box-seam-fill', 
+      priority: 'low', 
+      sla: '2-3 business days',
+      autoDescription: (data) => {
+        const lockerType = data?.lockerType || '[Locker Type]';
+        const preferredFloor = data?.preferredFloor || '[Floor]';
+        const reason = data?.reason || '[Reason]';
+        
+        return `Locker assignment request for ${lockerType} locker on ${preferredFloor} floor. Reason: ${reason}.`;
+      },
+      fields: [
+        { name: 'lockerType', label: 'Locker Type', type: 'select', options: ['Small', 'Medium', 'Large'], required: true },
+        { name: 'preferredFloor', label: 'Preferred Floor', type: 'text', required: true, maxLength: 20 },
+        { name: 'reason', label: 'Reason', type: 'textarea', required: true, maxLength: 200 },
+        { name: 'duration', label: 'Duration', type: 'select', options: ['Permanent', 'Temporary'], required: true },
+        { name: 'endDate', label: 'End Date (if temporary)', type: 'date', required: false }
+      ]
+    },
+    { 
+      id: 17, 
+      name: 'Stationery Requisition', 
+      category: 'administrative', 
+      description: 'Request office stationery items', 
+      icon: 'bi-pencil-square', 
+      priority: 'low', 
+      sla: '1-2 business days',
+      autoDescription: (data) => {
+        const items = data?.items || '[Items]';
+        const quantity = data?.quantity || '[Quantity]';
+        const purpose = data?.purpose || '[Purpose]';
+        
+        return `Stationery requisition: ${items} (Quantity: ${quantity}). Purpose: ${purpose}.`;
+      },
+      fields: [
+        { name: 'items', label: 'Stationery Items', type: 'textarea', required: true, maxLength: 300 },
+        { name: 'quantity', label: 'Quantity', type: 'text', required: true, maxLength: 50 },
+        { name: 'purpose', label: 'Purpose', type: 'textarea', required: true, maxLength: 200 },
+        { name: 'urgency', label: 'Urgency', type: 'select', options: ['Normal', 'Urgent'], required: true }
+      ]
+    },
+    { 
+      id: 18, 
+      name: 'Business Card Request', 
+      category: 'administrative', 
+      description: 'Request business cards', 
+      icon: 'bi-card-heading', 
+      priority: 'low', 
+      sla: '5-7 business days',
+      autoDescription: (data) => {
+        const quantity = data?.quantity || '[Quantity]';
+        const designType = data?.designType || '[Design]';
+        const language = data?.language || '[Language]';
+        
+        return `Business card request: ${quantity} cards, ${designType} design, ${language} language.`;
+      },
+      fields: [
+        { name: 'quantity', label: 'Quantity', type: 'number', required: true, min: 50, max: 1000 },
+        { name: 'designType', label: 'Design Type', type: 'select', options: ['Standard', 'Premium', 'Custom'], required: true },
+        { name: 'language', label: 'Language', type: 'select', options: ['English', 'Hindi', 'Bilingual'], required: true },
+        { name: 'specialInstructions', label: 'Special Instructions', type: 'textarea', required: false, maxLength: 200 }
       ]
     },
     
@@ -398,10 +625,101 @@ const EmployeeSelfServicePortal = () => {
         { name: 'supportingBills', label: 'Supporting Bills', type: 'file', required: true }
       ]
     },
+    { 
+      id: 22, 
+      name: 'Loan Application', 
+      category: 'financial', 
+      description: 'Apply for employee loan', 
+      icon: 'bi-bank2', 
+      priority: 'high', 
+      sla: '7-10 business days',
+      autoDescription: (data) => {
+        const loanType = data?.loanType || '[Loan Type]';
+        const loanAmount = data?.loanAmount || '[Amount]';
+        const numberOfInstallments = data?.numberOfInstallments || '[Installments]';
+        const purpose = data?.purpose || '[Purpose]';
+        
+        return `Loan application for ${loanType}: ₹${loanAmount} in ${numberOfInstallments} installments. Purpose: ${purpose}.`;
+      },
+      fields: [
+        { name: 'loanType', label: 'Loan Type', type: 'select', options: ['Personal', 'Medical', 'Home', 'Education'], required: true },
+        { name: 'loanAmount', label: 'Loan Amount (₹)', type: 'number', required: true, min: 10000, max: 500000 },
+        { name: 'numberOfInstallments', label: 'Number of Installments', type: 'select', options: ['12', '24', '36', '48', '60'], required: true },
+        { name: 'purpose', label: 'Purpose', type: 'textarea', required: true, maxLength: 300 },
+        { name: 'supportingDocuments', label: 'Supporting Documents', type: 'file', required: true }
+      ]
+    },
+    { 
+      id: 23, 
+      name: 'Investment Declaration (80C)', 
+      category: 'financial', 
+      description: 'Submit investment declaration for tax savings', 
+      icon: 'bi-file-earmark-text-fill', 
+      priority: 'medium', 
+      sla: '5-7 business days',
+      autoDescription: (data) => {
+        const investmentType = data?.investmentType || '[Investment Type]';
+        const amount = data?.amount || '[Amount]';
+        const financialYear = data?.financialYear || '[FY]';
+        
+        return `Investment declaration under Section 80C: ${investmentType} of ₹${amount} for FY ${financialYear}.`;
+      },
+      fields: [
+        { name: 'investmentType', label: 'Investment Type', type: 'select', options: ['PPF', 'ELSS', 'NSC', 'Life Insurance', 'Home Loan Principal', 'Other'], required: true },
+        { name: 'amount', label: 'Investment Amount (₹)', type: 'number', required: true, max: 150000 },
+        { name: 'financialYear', label: 'Financial Year', type: 'text', required: true, maxLength: 10 },
+        { name: 'investmentDate', label: 'Investment Date', type: 'date', required: true },
+        { name: 'proofOfInvestment', label: 'Proof of Investment', type: 'file', required: true }
+      ]
+    },
+    { 
+      id: 24, 
+      name: 'Tax Regime Change Request', 
+      category: 'financial', 
+      description: 'Change income tax regime preference', 
+      icon: 'bi-file-earmark-check-fill', 
+      priority: 'medium', 
+      sla: '3-5 business days',
+      autoDescription: (data) => {
+        const currentRegime = data?.currentRegime || '[Current]';
+        const newRegime = data?.newRegime || '[New]';
+        const effectiveFrom = data?.effectiveFrom || '[Date]';
+        
+        return `Tax regime change from ${currentRegime} to ${newRegime} effective from ${effectiveFrom}.`;
+      },
+      fields: [
+        { name: 'currentRegime', label: 'Current Tax Regime', type: 'select', options: ['Old Regime', 'New Regime'], required: true },
+        { name: 'newRegime', label: 'New Tax Regime', type: 'select', options: ['Old Regime', 'New Regime'], required: true },
+        { name: 'effectiveFrom', label: 'Effective From (Financial Year)', type: 'text', required: true, maxLength: 10 },
+        { name: 'reason', label: 'Reason for Change', type: 'textarea', required: true, maxLength: 200 }
+      ]
+    },
+    { 
+      id: 25, 
+      name: 'Salary Certificate Request', 
+      category: 'financial', 
+      description: 'Request salary certificate/statement', 
+      icon: 'bi-file-earmark-medical-fill', 
+      priority: 'low', 
+      sla: '2-3 business days',
+      autoDescription: (data) => {
+        const certificateType = data?.certificateType || '[Type]';
+        const period = data?.period || '[Period]';
+        const purpose = data?.purpose || '[Purpose]';
+        
+        return `Salary certificate request: ${certificateType} for period ${period}. Purpose: ${purpose}.`;
+      },
+      fields: [
+        { name: 'certificateType', label: 'Certificate Type', type: 'select', options: ['Current Month', 'Last 3 Months', 'Last 6 Months', 'Current Financial Year', 'Last Financial Year'], required: true },
+        { name: 'period', label: 'Period', type: 'text', required: true, maxLength: 50 },
+        { name: 'purpose', label: 'Purpose', type: 'select', options: ['Bank Loan', 'Visa Application', 'Rental Agreement', 'Personal Use', 'Other'], required: true },
+        { name: 'language', label: 'Language', type: 'select', options: ['English', 'Hindi', 'Bilingual'], required: true }
+      ]
+    },
     
     // Travel & Expense
     { 
-      id: 25, 
+      id: 26, 
       name: 'Business Travel Request', 
       category: 'travel', 
       description: 'Request approval for business travel', 
@@ -450,10 +768,83 @@ const EmployeeSelfServicePortal = () => {
         { name: 'billsReceipts', label: 'Bills/Receipts', type: 'file', required: true }
       ]
     },
+    { 
+      id: 28, 
+      name: 'Travel Advance Request', 
+      category: 'travel', 
+      description: 'Request advance payment for business travel', 
+      icon: 'bi-wallet2', 
+      priority: 'high', 
+      sla: '3-5 business days',
+      autoDescription: (data) => {
+        const advanceAmount = data?.advanceAmount || '[Amount]';
+        const destination = data?.destination || '[Destination]';
+        const travelDates = data?.travelStartDate && data?.travelEndDate 
+          ? `from ${data.travelStartDate} to ${data.travelEndDate}`
+          : '[Travel Dates]';
+        
+        return `Travel advance request of ₹${advanceAmount} for travel to ${destination} ${travelDates}.`;
+      },
+      fields: [
+        { name: 'destination', label: 'Destination', type: 'text', required: true, maxLength: 50 },
+        { name: 'travelStartDate', label: 'Travel Start Date', type: 'date', required: true },
+        { name: 'travelEndDate', label: 'Travel End Date', type: 'date', required: true },
+        { name: 'advanceAmount', label: 'Advance Amount (₹)', type: 'number', required: true, max: 100000 },
+        { name: 'purpose', label: 'Purpose of Travel', type: 'textarea', required: true, maxLength: 300 }
+      ]
+    },
+    { 
+      id: 29, 
+      name: 'Mileage Claim', 
+      category: 'travel', 
+      description: 'Submit mileage reimbursement claim', 
+      icon: 'bi-speedometer2', 
+      priority: 'medium', 
+      sla: '3-5 business days',
+      autoDescription: (data) => {
+        const totalDistance = data?.totalDistance || '[Distance]';
+        const vehicleType = data?.vehicleType || '[Vehicle]';
+        const totalAmount = data?.totalAmount || '[Amount]';
+        const travelDates = data?.travelDates || '[Dates]';
+        
+        return `Mileage claim: ${totalDistance} km using ${vehicleType} for travel on ${travelDates}. Total: ₹${totalAmount}.`;
+      },
+      fields: [
+        { name: 'vehicleType', label: 'Vehicle Type', type: 'select', options: ['Car', 'Motorcycle', 'Bicycle'], required: true },
+        { name: 'totalDistance', label: 'Total Distance (km)', type: 'number', required: true, max: 10000 },
+        { name: 'travelDates', label: 'Travel Dates', type: 'text', required: true, maxLength: 50 },
+        { name: 'totalAmount', label: 'Total Claim Amount (₹)', type: 'number', required: true, max: 50000 },
+        { name: 'routeDetails', label: 'Route Details', type: 'textarea', required: true, maxLength: 300 }
+      ]
+    },
+    { 
+      id: 30, 
+      name: 'Per Diem Claim', 
+      category: 'travel', 
+      description: 'Submit per diem allowance claim', 
+      icon: 'bi-calendar-check', 
+      priority: 'medium', 
+      sla: '3-5 business days',
+      autoDescription: (data) => {
+        const numberOfDays = data?.numberOfDays || '[Days]';
+        const location = data?.location || '[Location]';
+        const totalAmount = data?.totalAmount || '[Amount]';
+        const travelDates = data?.travelDates || '[Dates]';
+        
+        return `Per diem claim: ${numberOfDays} days at ${location} (${travelDates}). Total: ₹${totalAmount}.`;
+      },
+      fields: [
+        { name: 'location', label: 'Location', type: 'text', required: true, maxLength: 50 },
+        { name: 'travelDates', label: 'Travel Dates', type: 'text', required: true, maxLength: 50 },
+        { name: 'numberOfDays', label: 'Number of Days', type: 'number', required: true, min: 1, max: 365 },
+        { name: 'perDiemRate', label: 'Per Diem Rate (₹/day)', type: 'number', required: true, max: 10000 },
+        { name: 'totalAmount', label: 'Total Claim Amount (₹)', type: 'number', required: true, max: 500000 }
+      ]
+    },
     
     // IT & Systems
     { 
-      id: 30, 
+      id: 31, 
       name: 'Software Access', 
       category: 'it', 
       description: 'Request access to software/tools', 
@@ -478,7 +869,7 @@ const EmployeeSelfServicePortal = () => {
       ]
     },
     { 
-      id: 31, 
+      id: 32, 
       name: 'VPN Access Request', 
       category: 'it', 
       description: 'Request for VPN access', 
@@ -501,10 +892,78 @@ const EmployeeSelfServicePortal = () => {
         { name: 'deviceDetails', label: 'Device Details', type: 'textarea', required: true, maxLength: 200 }
       ]
     },
+    { 
+      id: 33, 
+      name: 'Email Distribution List Request', 
+      category: 'it', 
+      description: 'Request email distribution list access', 
+      icon: 'bi-envelope-at-fill', 
+      priority: 'low', 
+      sla: '1-2 business days',
+      autoDescription: (data) => {
+        const listName = data?.listName || '[List Name]';
+        const accessType = data?.accessType || '[Access Type]';
+        const purpose = data?.purpose || '[Purpose]';
+        
+        return `Email distribution list request: ${listName} (${accessType} access). Purpose: ${purpose}.`;
+      },
+      fields: [
+        { name: 'listName', label: 'Distribution List Name', type: 'text', required: true, maxLength: 50 },
+        { name: 'accessType', label: 'Access Type', type: 'select', options: ['Subscribe', 'Unsubscribe', 'Admin Access'], required: true },
+        { name: 'purpose', label: 'Purpose', type: 'textarea', required: true, maxLength: 200 }
+      ]
+    },
+    { 
+      id: 34, 
+      name: 'System/Application Access', 
+      category: 'it', 
+      description: 'Request access to system or application', 
+      icon: 'bi-app-indicator', 
+      priority: 'medium', 
+      sla: '2-3 business days',
+      autoDescription: (data) => {
+        const systemName = data?.systemName || '[System]';
+        const accessLevel = data?.accessLevel || '[Access Level]';
+        const projectTeam = data?.projectTeam || '[Project/Team]';
+        
+        return `System access request for ${systemName} with ${accessLevel} access level for ${projectTeam}.`;
+      },
+      fields: [
+        { name: 'systemName', label: 'System/Application Name', type: 'text', required: true, maxLength: 50 },
+        { name: 'accessLevel', label: 'Access Level', type: 'select', options: ['View Only', 'Read-Write', 'Admin'], required: true },
+        { name: 'projectTeam', label: 'Project/Team', type: 'text', required: true, maxLength: 50 },
+        { name: 'purpose', label: 'Purpose of Access', type: 'textarea', required: true, maxLength: 300 },
+        { name: 'justification', label: 'Business Justification', type: 'textarea', required: true, maxLength: 300 }
+      ]
+    },
+    { 
+      id: 35, 
+      name: 'Hardware Request', 
+      category: 'it', 
+      description: 'Request IT hardware equipment', 
+      icon: 'bi-pc-display-horizontal', 
+      priority: 'medium', 
+      sla: '5-7 business days',
+      autoDescription: (data) => {
+        const hardwareType = data?.hardwareType || '[Hardware Type]';
+        const quantity = data?.quantity || '[Quantity]';
+        const specifications = data?.specifications || '[Specifications]';
+        const reason = data?.reason || '[Reason]';
+        
+        return `Hardware request: ${quantity} ${hardwareType} (${specifications}). Reason: ${reason}.`;
+      },
+      fields: [
+        { name: 'hardwareType', label: 'Hardware Type', type: 'select', options: ['Laptop', 'Desktop', 'Monitor', 'Keyboard', 'Mouse', 'Headset', 'Webcam', 'Other'], required: true },
+        { name: 'quantity', label: 'Quantity', type: 'number', required: true, min: 1, max: 10 },
+        { name: 'specifications', label: 'Specifications', type: 'textarea', required: true, maxLength: 300 },
+        { name: 'reason', label: 'Reason for Request', type: 'textarea', required: true, maxLength: 300 },
+        { name: 'urgency', label: 'Urgency', type: 'select', options: ['Normal', 'Urgent'], required: true }
+      ]
+    },
     
     // Feedback & Grievances
     { 
-      id: 35, 
+      id: 36, 
       name: 'General Feedback', 
       category: 'feedback', 
       description: 'Share workplace feedback', 
@@ -547,6 +1006,80 @@ const EmployeeSelfServicePortal = () => {
         { name: 'dateOfIncident', label: 'Date of Incident', type: 'date', required: false },
         { name: 'expectedOutcome', label: 'Expected Outcome', type: 'textarea', required: true, maxLength: 300 },
         { name: 'confidentiality', label: 'Confidentiality', type: 'select', options: ['Standard', 'Confidential'], required: true }
+      ]
+    },
+    { 
+      id: 38, 
+      name: 'Suggestion Box', 
+      category: 'feedback', 
+      description: 'Submit suggestions for improvement', 
+      icon: 'bi-lightbulb-fill', 
+      priority: 'low', 
+      sla: 'Review within 5 business days',
+      autoDescription: (data) => {
+        const category = data?.category || '[Category]';
+        const suggestion = data?.suggestion || '[Suggestion]';
+        const anonymous = data?.anonymous === true || data?.anonymous === 'true' ? '(Submitted anonymously)' : '';
+        
+        return `Suggestion for ${category}: ${suggestion.substring(0, 100)}... ${anonymous}`;
+      },
+      fields: [
+        { name: 'category', label: 'Category', type: 'select', options: ['Process Improvement', 'Work Environment', 'Technology', 'Policies', 'Training', 'Other'], required: true },
+        { name: 'suggestion', label: 'Suggestion', type: 'textarea', required: true, maxLength: 1000 },
+        { name: 'expectedImpact', label: 'Expected Impact', type: 'textarea', required: false, maxLength: 300 },
+        { name: 'anonymous', label: 'Submit Anonymously', type: 'checkbox', required: false }
+      ]
+    },
+    { 
+      id: 39, 
+      name: 'POSH Complaint', 
+      category: 'feedback', 
+      description: 'Submit POSH (Prevention of Sexual Harassment) complaint', 
+      icon: 'bi-shield-shaded', 
+      priority: 'high', 
+      sla: 'Immediate response within 24 hours',
+      autoDescription: (data) => {
+        const complaintType = data?.complaintType || '[Type]';
+        const dateOfIncident = data?.dateOfIncident || '[Date]';
+        const confidentiality = 'Highly Confidential';
+        
+        return `POSH complaint: ${complaintType} incident on ${dateOfIncident}. Status: ${confidentiality}.`;
+      },
+      fields: [
+        { name: 'complaintType', label: 'Complaint Type', type: 'select', options: ['Sexual Harassment', 'Inappropriate Behavior', 'Discrimination', 'Other'], required: true },
+        { name: 'dateOfIncident', label: 'Date of Incident', type: 'date', required: true },
+        { name: 'timeOfIncident', label: 'Time of Incident', type: 'time', required: false },
+        { name: 'location', label: 'Location of Incident', type: 'text', required: true, maxLength: 100 },
+        { name: 'description', label: 'Detailed Description', type: 'textarea', required: true, maxLength: 2000 },
+        { name: 'witnesses', label: 'Witnesses (if any)', type: 'textarea', required: false, maxLength: 300 },
+        { name: 'supportingDocuments', label: 'Supporting Documents', type: 'file', required: false },
+        { name: 'preferredContact', label: 'Preferred Contact Method', type: 'select', options: ['Email', 'Phone', 'In-person'], required: true }
+      ]
+    },
+    { 
+      id: 40, 
+      name: 'Ethics Violation Reporting', 
+      category: 'feedback', 
+      description: 'Whistleblower - Report ethics violations', 
+      icon: 'bi-megaphone-fill', 
+      priority: 'high', 
+      sla: 'Immediate investigation initiation',
+      autoDescription: (data) => {
+        const violationType = data?.violationType || '[Type]';
+        const dateOfIncident = data?.dateOfIncident || '[Date]';
+        const confidentiality = 'Whistleblower - Highly Confidential';
+        
+        return `Ethics violation report: ${violationType} on ${dateOfIncident}. Status: ${confidentiality}.`;
+      },
+      fields: [
+        { name: 'violationType', label: 'Violation Type', type: 'select', options: ['Fraud', 'Corruption', 'Policy Violation', 'Unethical Behavior', 'Financial Misconduct', 'Data Breach', 'Other'], required: true },
+        { name: 'dateOfIncident', label: 'Date of Incident', type: 'date', required: true },
+        { name: 'involvedParties', label: 'Involved Parties', type: 'textarea', required: true, maxLength: 300 },
+        { name: 'description', label: 'Detailed Description', type: 'textarea', required: true, maxLength: 2000 },
+        { name: 'evidence', label: 'Evidence Available', type: 'textarea', required: false, maxLength: 500 },
+        { name: 'supportingDocuments', label: 'Supporting Documents', type: 'file', required: false },
+        { name: 'anonymous', label: 'Submit Anonymously (Whistleblower Protection)', type: 'checkbox', required: false },
+        { name: 'preferredContact', label: 'Preferred Contact Method', type: 'select', options: ['Email', 'Phone', 'Secure Channel'], required: true }
       ]
     }
   ];

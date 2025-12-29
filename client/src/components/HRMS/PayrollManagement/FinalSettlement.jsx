@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Icon } from '@iconify/react/dist/iconify.js';
-import RecruiterDashboardLayout from '../../recruiterDashboard/RecruiterDashboardLayout';
 
 const FinalSettlement = () => {
     const [activeSection, setActiveSection] = useState('overview');
@@ -9,6 +8,9 @@ const FinalSettlement = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [showFormModal, setShowFormModal] = useState(false);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [showAssetModal, setShowAssetModal] = useState(false);
+    const [showLastWorkingDayModal, setShowLastWorkingDayModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
     const [filterType, setFilterType] = useState('All');
     const [selectedForm, setSelectedForm] = useState(null);
@@ -97,7 +99,28 @@ const FinalSettlement = () => {
             otherDeductions: 1500,
             idCardDeduction: 500,
             uniformDeduction: 1000,
+            assetPenalty: 0,
             totalDeductions: 0
+        },
+        assets: {
+            allocatedAssets: [
+                { id: 1, assetId: 'AST001', assetName: 'Dell Laptop', assetTag: 'LAP-2024-001', category: 'Laptop', returnStatus: 'pending', returnDate: null, condition: 'Good', penalty: 0 },
+                { id: 2, assetId: 'AST002', assetName: 'Access Card', assetTag: 'CARD-001', category: 'Access Card', returnStatus: 'returned', returnDate: '2024-06-25', condition: 'Good', penalty: 0 },
+                { id: 3, assetId: 'AST003', assetName: 'Company Uniform', assetTag: 'UNIFORM-001', category: 'Uniform', returnStatus: 'pending', returnDate: null, condition: null, penalty: 0 }
+            ],
+            totalAssets: 3,
+            returnedAssets: 1,
+            pendingAssets: 2,
+            totalPenalty: 0
+        },
+        lastWorkingDay: {
+            confirmed: false,
+            confirmedDate: null,
+            confirmedBy: null,
+            actualLastWorkingDay: '2024-06-30',
+            noticeServedFrom: '2024-04-01',
+            noticeServedTo: '2024-06-30',
+            confirmationDate: null
         },
         netSettlement: 0,
         approval: {
@@ -120,9 +143,51 @@ const FinalSettlement = () => {
             method: 'Bank Transfer',
             accountNumber: 'XXXXXX1234',
             ifscCode: 'HDFC0001234',
+            bankName: 'HDFC Bank',
             paymentDate: '2024-07-07',
             status: 'pending',
-            referenceNumber: ''
+            referenceNumber: '',
+            processedBy: null,
+            processedDate: null,
+            paymentProof: null,
+            paymentMode: 'NEFT',
+            utrNumber: null
+        },
+        forms: {
+            form16: {
+                generated: false,
+                generatedDate: null,
+                financialYear: '2023-24',
+                issued: false,
+                issuedDate: null,
+                downloadUrl: null
+            },
+            form19: {
+                generated: false,
+                generatedDate: null,
+                pfAccountNumber: 'MH/12345/1234567',
+                downloadUrl: null
+            },
+            form10C: {
+                generated: false,
+                generatedDate: null,
+                pfAccountNumber: 'MH/12345/1234567',
+                downloadUrl: null
+            },
+            experienceLetter: {
+                generated: false,
+                generatedDate: null,
+                issued: false,
+                issuedDate: null,
+                downloadUrl: null
+            },
+            relievingLetter: {
+                generated: false,
+                generatedDate: null,
+                issued: false,
+                issuedDate: null,
+                downloadUrl: null
+            }
         }
     });
 
@@ -143,17 +208,37 @@ const FinalSettlement = () => {
         const shortfallDays = Math.max(0, settlementData.noticePeriod.requiredDays - settlementData.noticePeriod.daysServed);
         const dailyRate = (settlementData.salary.basic + settlementData.salary.hra + settlementData.salary.specialAllowance) / 30;
         const salaryForDays = dailyRate * settlementData.salary.daysWorked;
+        
+        // Leave encashment - only earned leave
         const leaveEncashment = settlementData.leave.earnedLeaveBalance * settlementData.leave.encashmentRate;
+        
+        // Bonus pro-rata calculation
         const proRataBonus = (settlementData.bonus.annualBonus / 365) * settlementData.bonus.proRataDays;
+        
+        // Gratuity calculation (15 days salary for each completed year)
         const gratuityAmount = settlementData.gratuity.completedYears >= 5
             ? (settlementData.gratuity.lastDrawnSalary / 26) * 15 * Math.floor(settlementData.gratuity.completedYears)
             : 0;
+        
+        // Notice period recovery
         const noticeRecovery = shortfallDays * dailyRate;
+        
+        // Asset penalty calculation
+        const assetPenalty = settlementData.assets.allocatedAssets
+            .filter(asset => asset.returnStatus === 'pending' || asset.condition === 'Damaged' || asset.condition === 'Lost')
+            .reduce((sum, asset) => {
+                if (asset.condition === 'Lost') return sum + (asset.category === 'Laptop' ? 50000 : asset.category === 'Mobile' ? 20000 : 5000);
+                if (asset.condition === 'Damaged') return sum + (asset.category === 'Laptop' ? 10000 : asset.category === 'Mobile' ? 5000 : 2000);
+                if (asset.returnStatus === 'pending') return sum + (asset.category === 'Laptop' ? 5000 : asset.category === 'Mobile' ? 2000 : 1000);
+                return sum;
+            }, 0);
+        
         const totalAdditions = salaryForDays + leaveEncashment + proRataBonus + gratuityAmount + settlementData.reimbursements.approvedClaims;
         const totalDeductions = settlementData.deductions.loanOutstanding +
             settlementData.deductions.advanceAmount +
             settlementData.deductions.penaltyAmount +
             noticeRecovery +
+            assetPenalty +
             settlementData.deductions.otherDeductions;
         const netSettlement = totalAdditions - totalDeductions;
 
@@ -184,12 +269,167 @@ const FinalSettlement = () => {
             deductions: {
                 ...prev.deductions,
                 noticePeriodRecovery: noticeRecovery,
+                assetPenalty: assetPenalty,
                 totalDeductions: totalDeductions
+            },
+            assets: {
+                ...prev.assets,
+                totalPenalty: assetPenalty
             },
             netSettlement: netSettlement > 0 ? netSettlement : 0
         }));
 
         setIsCalculating(false);
+    };
+
+    // Confirm Last Working Day
+    const handleConfirmLastWorkingDay = () => {
+        setSettlementData(prev => ({
+            ...prev,
+            lastWorkingDay: {
+                ...prev.lastWorkingDay,
+                confirmed: true,
+                confirmedDate: new Date().toISOString().split('T')[0],
+                confirmedBy: 'HR Manager',
+                confirmationDate: new Date().toISOString().split('T')[0]
+            }
+        }));
+        setShowLastWorkingDayModal(false);
+        alert('Last working day confirmed successfully!');
+    };
+
+    // Handle Asset Return
+    const handleAssetReturn = (assetId, returnDate, condition) => {
+        setSettlementData(prev => ({
+            ...prev,
+            assets: {
+                ...prev.assets,
+                allocatedAssets: prev.assets.allocatedAssets.map(asset => 
+                    asset.id === assetId 
+                        ? { 
+                            ...asset, 
+                            returnStatus: 'returned', 
+                            returnDate: returnDate || new Date().toISOString().split('T')[0],
+                            condition: condition || 'Good',
+                            penalty: condition === 'Damaged' ? (asset.category === 'Laptop' ? 10000 : asset.category === 'Mobile' ? 5000 : 2000) :
+                                     condition === 'Lost' ? (asset.category === 'Laptop' ? 50000 : asset.category === 'Mobile' ? 20000 : 5000) : 0
+                        }
+                        : asset
+                ),
+                returnedAssets: prev.assets.allocatedAssets.filter(a => a.id === assetId || a.returnStatus === 'returned').length,
+                pendingAssets: prev.assets.allocatedAssets.filter(a => a.id !== assetId ? a.returnStatus === 'pending' : false).length
+            }
+        }));
+        calculateSettlement();
+        alert('Asset return recorded successfully!');
+    };
+
+    // Process Payment
+    const handleProcessPayment = (paymentDetails) => {
+        setSettlementData(prev => ({
+            ...prev,
+            payment: {
+                ...prev.payment,
+                ...paymentDetails,
+                status: 'processed',
+                processedBy: 'Finance Manager',
+                processedDate: new Date().toISOString().split('T')[0]
+            },
+            approval: {
+                ...prev.approval,
+                status: 'approved',
+                approvedBy: 'Finance Manager',
+                approvedDate: new Date().toISOString().split('T')[0]
+            }
+        }));
+        setShowPaymentModal(false);
+        alert('Payment processed successfully!');
+    };
+
+    // Generate Form
+    const handleGenerateForm = (formType) => {
+        const today = new Date().toISOString().split('T')[0];
+        
+        setSettlementData(prev => {
+            const forms = { ...prev.forms };
+            
+            if (formType === 'Form16') {
+                forms.form16 = {
+                    ...forms.form16,
+                    generated: true,
+                    generatedDate: today
+                };
+            } else if (formType === 'Form19') {
+                forms.form19 = {
+                    ...forms.form19,
+                    generated: true,
+                    generatedDate: today
+                };
+            } else if (formType === 'Form10C') {
+                forms.form10C = {
+                    ...forms.form10C,
+                    generated: true,
+                    generatedDate: today
+                };
+            } else if (formType === 'Experience') {
+                forms.experienceLetter = {
+                    ...forms.experienceLetter,
+                    generated: true,
+                    generatedDate: today
+                };
+            } else if (formType === 'Relieving') {
+                forms.relievingLetter = {
+                    ...forms.relievingLetter,
+                    generated: true,
+                    generatedDate: today
+                };
+            }
+            
+            return {
+                ...prev,
+                forms: forms
+            };
+        });
+        
+        setSelectedForm(formType);
+        setShowFormModal(true);
+        alert(`${formType} generated successfully!`);
+    };
+
+    // Issue Form
+    const handleIssueForm = (formType) => {
+        const today = new Date().toISOString().split('T')[0];
+        
+        setSettlementData(prev => {
+            const forms = { ...prev.forms };
+            
+            if (formType === 'Form16') {
+                forms.form16 = {
+                    ...forms.form16,
+                    issued: true,
+                    issuedDate: today
+                };
+            } else if (formType === 'Experience') {
+                forms.experienceLetter = {
+                    ...forms.experienceLetter,
+                    issued: true,
+                    issuedDate: today
+                };
+            } else if (formType === 'Relieving') {
+                forms.relievingLetter = {
+                    ...forms.relievingLetter,
+                    issued: true,
+                    issuedDate: today
+                };
+            }
+            
+            return {
+                ...prev,
+                forms: forms
+            };
+        });
+        
+        alert(`${formType} issued successfully!`);
     };
 
     // Calculate KPIs
@@ -206,6 +446,7 @@ const FinalSettlement = () => {
             settlementData.deductions.advanceAmount +
             settlementData.deductions.penaltyAmount +
             settlementData.deductions.noticePeriodRecovery +
+            settlementData.deductions.assetPenalty +
             settlementData.deductions.otherDeductions;
 
         const netSettlement = totalAdditions - totalDeductions;
@@ -517,11 +758,6 @@ const FinalSettlement = () => {
     const handleViewDetails = (item) => {
         setSelectedItem(item);
         setShowModal(true);
-    };
-
-    const handleGenerateForm = (formType) => {
-        setSelectedForm(formType);
-        setShowFormModal(true);
     };
 
     const handleUpdateConfig = (section, key, value) => {
@@ -1501,6 +1737,62 @@ const FinalSettlement = () => {
                                 </div>
                             </div>
 
+                            {/* Asset Return & Penalty */}
+                            <div className="col-12 col-md-6 col-lg-6">
+                                <div className="card border h-100">
+                                    <div className="card-header p-3 d-flex justify-content-between align-items-center">
+                                        <h6 className="mb-0 fs-5">Asset Return & Penalty</h6>
+                                        <button
+                                            className="btn btn-sm btn-outline-primary"
+                                            onClick={() => setShowAssetModal(true)}
+                                        >
+                                            <Icon icon="heroicons:cog-6-tooth" className="me-1" />
+                                            Manage
+                                        </button>
+                                    </div>
+                                    <div className="card-body p-3">
+                                        <div className="mb-3">
+                                            <div className="d-flex justify-content-between mb-2">
+                                                <span className="small">Total Assets:</span>
+                                                <span className="fw-bold">{settlementData.assets.totalAssets}</span>
+                                            </div>
+                                            <div className="d-flex justify-content-between mb-2">
+                                                <span className="small text-success">Returned:</span>
+                                                <span className="fw-bold text-success">{settlementData.assets.returnedAssets}</span>
+                                            </div>
+                                            <div className="d-flex justify-content-between mb-2">
+                                                <span className="small text-warning">Pending:</span>
+                                                <span className="fw-bold text-warning">{settlementData.assets.pendingAssets}</span>
+                                            </div>
+                                            <div className="d-flex justify-content-between">
+                                                <span className="small text-danger">Total Penalty:</span>
+                                                <span className="fw-bold text-danger">{formatCurrency(settlementData.assets.totalPenalty)}</span>
+                                            </div>
+                                        </div>
+                                        <div className="list-group list-group-flush">
+                                            {settlementData.assets.allocatedAssets.map(asset => (
+                                                <div key={asset.id} className="list-group-item px-0 py-2">
+                                                    <div className="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <div className="fw-semibold small">{asset.assetName}</div>
+                                                            <div className="text-muted small">{asset.assetTag}</div>
+                                                        </div>
+                                                        <div className="text-end">
+                                                            <span className={`badge ${asset.returnStatus === 'returned' ? 'bg-success' : 'bg-warning'} small`}>
+                                                                {asset.returnStatus}
+                                                            </span>
+                                                            {asset.penalty > 0 && (
+                                                                <div className="text-danger small mt-1">₹{asset.penalty.toLocaleString()}</div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Other Deductions */}
                             <div className="col-12 col-md-6 col-lg-6">
                                 <div className="card border h-100">
@@ -1510,15 +1802,24 @@ const FinalSettlement = () => {
                                     <div className="card-body p-3">
                                         <div className="row g-2 g-md-3">
                                             <div className="col-12 col-sm-6">
-                                                <label className="form-label">Asset Penalty</label>
+                                                <label className="form-label">ID Card Deduction</label>
                                                 <input
                                                     type="number"
                                                     className="form-control form-control-sm form-control-md"
-                                                    value={settlementData.deductions.penaltyAmount}
-                                                    onChange={(e) => handleUpdateConfig('deductions', 'penaltyAmount', parseFloat(e.target.value) || 0)}
+                                                    value={settlementData.deductions.idCardDeduction}
+                                                    onChange={(e) => handleUpdateConfig('deductions', 'idCardDeduction', parseFloat(e.target.value) || 0)}
                                                 />
                                             </div>
                                             <div className="col-12 col-sm-6">
+                                                <label className="form-label">Uniform Deduction</label>
+                                                <input
+                                                    type="number"
+                                                    className="form-control form-control-sm form-control-md"
+                                                    value={settlementData.deductions.uniformDeduction}
+                                                    onChange={(e) => handleUpdateConfig('deductions', 'uniformDeduction', parseFloat(e.target.value) || 0)}
+                                                />
+                                            </div>
+                                            <div className="col-12">
                                                 <label className="form-label">Other Deductions</label>
                                                 <input
                                                     type="number"
@@ -1589,6 +1890,15 @@ const FinalSettlement = () => {
                         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
                             <h5 className="mb-0 fs-5 fs-md-4">Approval Workflow</h5>
                             <div className="d-flex gap-2">
+                                {settlementData.approval.status === 'approved' && (
+                                    <button
+                                        className="btn btn-success btn-sm btn-md-normal"
+                                        onClick={() => setShowPaymentModal(true)}
+                                    >
+                                        <Icon icon="heroicons:banknotes" className="me-1 me-md-2" />
+                                        Process Payment
+                                    </button>
+                                )}
                                 <button
                                     className="btn btn-success btn-sm btn-md-normal"
                                     onClick={() => handleApproval('approved')}
@@ -3149,6 +3459,327 @@ const FinalSettlement = () => {
                                     }}
                                 >
                                     Take Action
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Payment Processing Modal */}
+            {showPaymentModal && (
+                <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+                    <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title d-flex align-items-center gap-2 fs-5">
+                                    <Icon icon="heroicons:banknotes" />
+                                    Process Payment
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={() => setShowPaymentModal(false)}
+                                ></button>
+                            </div>
+                            <div className="modal-body">
+                                <div className="alert alert-info mb-3">
+                                    <strong>Net Settlement Amount:</strong> {formatCurrency(kpis.netSettlement)}
+                                </div>
+                                <div className="row g-3">
+                                    <div className="col-12 col-md-6">
+                                        <label className="form-label">Payment Method</label>
+                                        <select 
+                                            className="form-select"
+                                            value={settlementData.payment.method}
+                                            onChange={(e) => handleUpdateConfig('payment', 'method', e.target.value)}
+                                        >
+                                            <option value="Bank Transfer">Bank Transfer</option>
+                                            <option value="NEFT">NEFT</option>
+                                            <option value="RTGS">RTGS</option>
+                                            <option value="IMPS">IMPS</option>
+                                            <option value="Cheque">Cheque</option>
+                                        </select>
+                                    </div>
+                                    <div className="col-12 col-md-6">
+                                        <label className="form-label">Payment Mode</label>
+                                        <select 
+                                            className="form-select"
+                                            value={settlementData.payment.paymentMode}
+                                            onChange={(e) => handleUpdateConfig('payment', 'paymentMode', e.target.value)}
+                                        >
+                                            <option value="NEFT">NEFT</option>
+                                            <option value="RTGS">RTGS</option>
+                                            <option value="IMPS">IMPS</option>
+                                            <option value="Cheque">Cheque</option>
+                                        </select>
+                                    </div>
+                                    <div className="col-12 col-md-6">
+                                        <label className="form-label">Bank Name</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            value={settlementData.payment.bankName}
+                                            onChange={(e) => handleUpdateConfig('payment', 'bankName', e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="col-12 col-md-6">
+                                        <label className="form-label">Account Number</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            value={settlementData.payment.accountNumber}
+                                            onChange={(e) => handleUpdateConfig('payment', 'accountNumber', e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="col-12 col-md-6">
+                                        <label className="form-label">IFSC Code</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            value={settlementData.payment.ifscCode}
+                                            onChange={(e) => handleUpdateConfig('payment', 'ifscCode', e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="col-12 col-md-6">
+                                        <label className="form-label">Payment Date</label>
+                                        <input
+                                            type="date"
+                                            className="form-control"
+                                            value={settlementData.payment.paymentDate}
+                                            onChange={(e) => handleUpdateConfig('payment', 'paymentDate', e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="col-12 col-md-6">
+                                        <label className="form-label">UTR/Reference Number</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            value={settlementData.payment.utrNumber || ''}
+                                            onChange={(e) => handleUpdateConfig('payment', 'utrNumber', e.target.value)}
+                                            placeholder="Enter UTR/Reference number"
+                                        />
+                                    </div>
+                                    <div className="col-12">
+                                        <label className="form-label">Payment Remarks</label>
+                                        <textarea
+                                            className="form-control"
+                                            rows="3"
+                                            placeholder="Add any payment remarks or notes"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    onClick={() => setShowPaymentModal(false)}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-success"
+                                    onClick={() => {
+                                        handleProcessPayment({
+                                            status: 'processed',
+                                            processedBy: 'Finance Manager',
+                                            processedDate: new Date().toISOString().split('T')[0]
+                                        });
+                                    }}
+                                >
+                                    <Icon icon="heroicons:check-circle" className="me-2" />
+                                    Process Payment
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Asset Management Modal */}
+            {showAssetModal && (
+                <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+                    <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title d-flex align-items-center gap-2 fs-5">
+                                    <Icon icon="heroicons:cube" />
+                                    Asset Return Management
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={() => setShowAssetModal(false)}
+                                ></button>
+                            </div>
+                            <div className="modal-body">
+                                <div className="table-responsive">
+                                    <table className="table table-hover">
+                                        <thead className="table-light">
+                                            <tr>
+                                                <th>Asset Name</th>
+                                                <th>Asset Tag</th>
+                                                <th>Category</th>
+                                                <th>Return Status</th>
+                                                <th>Condition</th>
+                                                <th>Penalty</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {settlementData.assets.allocatedAssets.map(asset => (
+                                                <tr key={asset.id}>
+                                                    <td className="fw-medium">{asset.assetName}</td>
+                                                    <td><code>{asset.assetTag}</code></td>
+                                                    <td>{asset.category}</td>
+                                                    <td>
+                                                        <span className={`badge ${asset.returnStatus === 'returned' ? 'bg-success' : 'bg-warning'}`}>
+                                                            {asset.returnStatus}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        {asset.returnStatus === 'returned' ? (
+                                                            <select
+                                                                className="form-select form-select-sm"
+                                                                value={asset.condition || 'Good'}
+                                                                onChange={(e) => {
+                                                                    const newCondition = e.target.value;
+                                                                    const penalty = newCondition === 'Lost' ? (asset.category === 'Laptop' ? 50000 : asset.category === 'Mobile' ? 20000 : 5000) :
+                                                                                    newCondition === 'Damaged' ? (asset.category === 'Laptop' ? 10000 : asset.category === 'Mobile' ? 5000 : 2000) : 0;
+                                                                    handleAssetReturn(asset.id, asset.returnDate, newCondition);
+                                                                }}
+                                                            >
+                                                                <option value="Good">Good</option>
+                                                                <option value="Damaged">Damaged</option>
+                                                                <option value="Lost">Lost</option>
+                                                            </select>
+                                                        ) : (
+                                                            <span className="text-muted">-</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="fw-bold text-danger">
+                                                        {asset.penalty > 0 ? formatCurrency(asset.penalty) : '-'}
+                                                    </td>
+                                                    <td>
+                                                        {asset.returnStatus === 'pending' && (
+                                                            <button
+                                                                className="btn btn-sm btn-success"
+                                                                onClick={() => handleAssetReturn(asset.id, new Date().toISOString().split('T')[0], 'Good')}
+                                                            >
+                                                                <Icon icon="heroicons:check" className="me-1" />
+                                                                Mark Returned
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div className="alert alert-warning mt-3">
+                                    <strong>Note:</strong> Penalties are automatically calculated based on asset condition:
+                                    <ul className="mb-0 mt-2">
+                                        <li>Lost: ₹50,000 (Laptop), ₹20,000 (Mobile), ₹5,000 (Others)</li>
+                                        <li>Damaged: ₹10,000 (Laptop), ₹5,000 (Mobile), ₹2,000 (Others)</li>
+                                        <li>Pending Return: ₹5,000 (Laptop), ₹2,000 (Mobile), ₹1,000 (Others)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    onClick={() => setShowAssetModal(false)}
+                                >
+                                    Close
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-primary"
+                                    onClick={() => {
+                                        calculateSettlement();
+                                        setShowAssetModal(false);
+                                    }}
+                                >
+                                    <Icon icon="heroicons:calculator" className="me-2" />
+                                    Recalculate Settlement
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Last Working Day Confirmation Modal */}
+            {showLastWorkingDayModal && (
+                <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title d-flex align-items-center gap-2 fs-5">
+                                    <Icon icon="heroicons:calendar-check" />
+                                    Confirm Last Working Day
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={() => setShowLastWorkingDayModal(false)}
+                                ></button>
+                            </div>
+                            <div className="modal-body">
+                                <div className="row g-3">
+                                    <div className="col-12">
+                                        <label className="form-label">Actual Last Working Day</label>
+                                        <input
+                                            type="date"
+                                            className="form-control"
+                                            value={settlementData.lastWorkingDay.actualLastWorkingDay}
+                                            onChange={(e) => handleUpdateConfig('lastWorkingDay', 'actualLastWorkingDay', e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="col-12 col-md-6">
+                                        <label className="form-label">Notice Served From</label>
+                                        <input
+                                            type="date"
+                                            className="form-control"
+                                            value={settlementData.lastWorkingDay.noticeServedFrom}
+                                            onChange={(e) => handleUpdateConfig('lastWorkingDay', 'noticeServedFrom', e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="col-12 col-md-6">
+                                        <label className="form-label">Notice Served To</label>
+                                        <input
+                                            type="date"
+                                            className="form-control"
+                                            value={settlementData.lastWorkingDay.noticeServedTo}
+                                            onChange={(e) => handleUpdateConfig('lastWorkingDay', 'noticeServedTo', e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="col-12">
+                                        <div className="alert alert-info">
+                                            <Icon icon="heroicons:information-circle" className="me-2" />
+                                            Confirming the last working day will lock the settlement calculation dates.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    onClick={() => setShowLastWorkingDayModal(false)}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-primary"
+                                    onClick={handleConfirmLastWorkingDay}
+                                >
+                                    <Icon icon="heroicons:check-circle" className="me-2" />
+                                    Confirm Last Working Day
                                 </button>
                             </div>
                         </div>

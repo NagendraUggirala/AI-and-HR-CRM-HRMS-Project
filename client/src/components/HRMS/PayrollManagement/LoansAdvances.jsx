@@ -3,6 +3,48 @@ import { Icon } from '@iconify/react/dist/iconify.js';
 import RecruiterDashboardLayout from '../../recruiterDashboard/RecruiterDashboardLayout';
 
 const LoansAdvances = () => {
+  const [activeTab, setActiveTab] = useState('loans');
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const [showEMIScheduleModal, setShowEMIScheduleModal] = useState(false);
+  const [showPrepaymentModal, setShowPrepaymentModal] = useState(false);
+  const [showAgreementModal, setShowAgreementModal] = useState(false);
+  const [showCertificateModal, setShowCertificateModal] = useState(false);
+  const [showDisbursementModal, setShowDisbursementModal] = useState(false);
+  
+  // Mock employee data for eligibility check
+  const [employees] = useState([
+    { employeeId: 'EMP001', employeeName: 'Sarah Johnson', dateOfJoining: '2020-01-15', currentCTC: 500000, department: 'IT' },
+    { employeeId: 'EMP002', employeeName: 'Mike Chen', dateOfJoining: '2019-03-20', currentCTC: 450000, department: 'Technology' },
+    { employeeId: 'EMP003', employeeName: 'Alex Rivera', dateOfJoining: '2021-06-10', currentCTC: 400000, department: 'Finance' },
+    { employeeId: 'EMP004', employeeName: 'Emily Davis', dateOfJoining: '2022-01-15', currentCTC: 350000, department: 'Sales' },
+    { employeeId: 'EMP005', employeeName: 'David Wilson', dateOfJoining: '2020-08-01', currentCTC: 420000, department: 'HR' },
+    { employeeId: 'EMP006', employeeName: 'Lisa Anderson', dateOfJoining: '2023-02-01', currentCTC: 300000, department: 'Marketing' },
+    { employeeId: 'EMP007', employeeName: 'Robert Brown', dateOfJoining: '2018-05-20', currentCTC: 550000, department: 'Operations' },
+    { employeeId: 'EMP008', employeeName: 'Jennifer Lee', dateOfJoining: '2021-02-10', currentCTC: 380000, department: 'Finance' }
+  ]);
+
+  // Loan applications (pending approval)
+  const [loanApplications, setLoanApplications] = useState([
+    {
+      id: 1,
+      applicationId: 'LA001',
+      employeeId: 'EMP009',
+      employeeName: 'John Smith',
+      loanType: 'Personal loan',
+      requestedAmount: 20000,
+      purpose: 'Home renovation',
+      dateOfApplication: '2024-11-01',
+      status: 'Pending Approval',
+      managerApproval: { status: 'Pending', date: null, approver: null },
+      hrApproval: { status: 'Pending', date: null, approver: null },
+      financeApproval: { status: 'Pending', date: null, approver: null },
+      eligibilityStatus: 'Eligible',
+      eligibilityMessage: 'Employee meets all eligibility criteria',
+      serviceTenure: 24, // months
+      currentSalary: 400000
+    }
+  ]);
+
   const [loans, setLoans] = useState([
     {
       id: 1,
@@ -19,7 +61,21 @@ const LoansAdvances = () => {
       amountPaid: 6784.50,
       amountPending: 8215.50,
       status: 'Active',
-      nextDueDate: '2024-11-15'
+      nextDueDate: '2024-11-15',
+      applicationId: 'LA001',
+      approvalWorkflow: {
+        managerApproval: { status: 'Approved', date: '2024-01-10', approver: 'Manager A' },
+        hrApproval: { status: 'Approved', date: '2024-01-12', approver: 'HR Manager' },
+        financeApproval: { status: 'Approved', date: '2024-01-14', approver: 'Finance Head' }
+      },
+      disbursementDate: '2024-01-15',
+      disbursementStatus: 'Disbursed',
+      autoDeduction: true,
+      agreementGenerated: true,
+      agreementDate: '2024-01-14',
+      prepayments: [],
+      foreclosureAmount: 0,
+      emiSchedule: []
     },
     {
       id: 2,
@@ -36,7 +92,21 @@ const LoansAdvances = () => {
       amountPaid: 8512.68,
       amountPending: 16487.32,
       status: 'Active',
-      nextDueDate: '2024-11-10'
+      nextDueDate: '2024-11-10',
+      applicationId: 'LA002',
+      approvalWorkflow: {
+        managerApproval: { status: 'Approved', date: '2023-11-05', approver: 'Manager B' },
+        hrApproval: { status: 'Approved', date: '2023-11-07', approver: 'HR Manager' },
+        financeApproval: { status: 'Approved', date: '2023-11-09', approver: 'Finance Head' }
+      },
+      disbursementDate: '2023-11-10',
+      disbursementStatus: 'Disbursed',
+      autoDeduction: true,
+      agreementGenerated: true,
+      agreementDate: '2023-11-09',
+      prepayments: [{ date: '2024-06-10', amount: 5000, type: 'Partial' }],
+      foreclosureAmount: 0,
+      emiSchedule: []
     },
     {
       id: 3,
@@ -159,6 +229,23 @@ const LoansAdvances = () => {
     tenureMonths: '12',
     startDate: new Date().toISOString().split('T')[0]
   });
+
+  const [newApplication, setNewApplication] = useState({
+    employeeId: '',
+    loanType: 'Personal loan',
+    requestedAmount: '',
+    purpose: '',
+    tenureMonths: '12'
+  });
+
+  const [eligibilityCriteria, setEligibilityCriteria] = useState({
+    minServiceTenure: 12, // months
+    minSalary: 300000,
+    maxLoanAmount: { 'Personal loan': 500000, 'Vehicle loan': 1000000, 'Educational loan': 300000, 'Festival advance': 50000, 'Emergency loan': 200000, 'Salary advance': 50000 },
+    maxLoanToSalaryRatio: 10, // 10x salary
+    activeLoansLimit: 3
+  });
+
   const itemsPerPage = 6;
 
   // Loan types from your specification
@@ -285,11 +372,11 @@ const LoansAdvances = () => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(amount);
   };
 
@@ -309,6 +396,318 @@ const LoansAdvances = () => {
     const emi = principal * monthlyRate * Math.pow(1 + monthlyRate, months) / 
                 (Math.pow(1 + monthlyRate, months) - 1);
     return parseFloat(emi.toFixed(2));
+  };
+
+  const generateEMISchedule = (loan) => {
+    const schedule = [];
+    const startDate = new Date(loan.startDate);
+    let remainingPrincipal = loan.amount;
+    const monthlyRate = loan.interestRate / 12 / 100;
+    const emi = loan.monthlyEMI;
+
+    for (let i = 0; i < loan.tenureMonths; i++) {
+      const interest = remainingPrincipal * monthlyRate;
+      const principal = emi - interest;
+      remainingPrincipal -= principal;
+
+      const dueDate = new Date(startDate);
+      dueDate.setMonth(dueDate.getMonth() + i + 1);
+
+      schedule.push({
+        installment: i + 1,
+        dueDate: dueDate.toISOString().split('T')[0],
+        emi: emi,
+        principal: parseFloat(principal.toFixed(2)),
+        interest: parseFloat(interest.toFixed(2)),
+        balance: parseFloat(Math.max(0, remainingPrincipal).toFixed(2)),
+        status: i < Math.floor(loan.amountPaid / emi) ? 'Paid' : i === Math.floor(loan.amountPaid / emi) ? 'Due' : 'Pending'
+      });
+    }
+
+    return schedule;
+  };
+
+  const checkEligibility = (employeeId, loanType, requestedAmount) => {
+    const employee = employees.find(emp => emp.employeeId === employeeId);
+    if (!employee) {
+      return { eligible: false, message: 'Employee not found' };
+    }
+
+    // Calculate service tenure
+    const doj = new Date(employee.dateOfJoining);
+    const today = new Date();
+    const serviceTenure = (today.getFullYear() - doj.getFullYear()) * 12 + (today.getMonth() - doj.getMonth());
+
+    // Check service tenure
+    if (serviceTenure < eligibilityCriteria.minServiceTenure) {
+      return { 
+        eligible: false, 
+        message: `Minimum service tenure of ${eligibilityCriteria.minServiceTenure} months required. Current: ${serviceTenure} months` 
+      };
+    }
+
+    // Check salary level
+    if (employee.currentCTC < eligibilityCriteria.minSalary) {
+      return { 
+        eligible: false, 
+        message: `Minimum salary of ₹${eligibilityCriteria.minSalary.toLocaleString()} required. Current: ₹${employee.currentCTC.toLocaleString()}` 
+      };
+    }
+
+    // Check loan amount limit
+    const maxAmount = eligibilityCriteria.maxLoanAmount[loanType] || 100000;
+    if (requestedAmount > maxAmount) {
+      return { 
+        eligible: false, 
+        message: `Maximum loan amount for ${loanType} is ₹${maxAmount.toLocaleString()}` 
+      };
+    }
+
+    // Check loan to salary ratio
+    const maxLoanBySalary = employee.currentCTC * eligibilityCriteria.maxLoanToSalaryRatio;
+    if (requestedAmount > maxLoanBySalary) {
+      return { 
+        eligible: false, 
+        message: `Loan amount cannot exceed ${eligibilityCriteria.maxLoanToSalaryRatio}x of salary (₹${maxLoanBySalary.toLocaleString()})` 
+      };
+    }
+
+    // Check active loans limit
+    const activeLoans = loans.filter(l => l.employeeId === employeeId && l.status === 'Active').length;
+    if (activeLoans >= eligibilityCriteria.activeLoansLimit) {
+      return { 
+        eligible: false, 
+        message: `Maximum ${eligibilityCriteria.activeLoansLimit} active loans allowed. Current active loans: ${activeLoans}` 
+      };
+    }
+
+    return { 
+      eligible: true, 
+      message: 'Employee is eligible for the loan',
+      serviceTenure: serviceTenure,
+      currentSalary: employee.currentCTC
+    };
+  };
+
+  const handleLoanApplication = () => {
+    if (!newApplication.employeeId || !newApplication.loanType || !newApplication.requestedAmount) {
+      alert('Please fill all required fields');
+      return;
+    }
+
+    const amount = parseFloat(newApplication.requestedAmount);
+    const eligibility = checkEligibility(newApplication.employeeId, newApplication.loanType, amount);
+
+    const employee = employees.find(emp => emp.employeeId === newApplication.employeeId);
+
+    const application = {
+      id: loanApplications.length + 1,
+      applicationId: `LA${String(loanApplications.length + 1).padStart(3, '0')}`,
+      employeeId: newApplication.employeeId,
+      employeeName: employee?.employeeName || 'Unknown',
+      loanType: newApplication.loanType,
+      requestedAmount: amount,
+      purpose: newApplication.purpose || 'Not specified',
+      dateOfApplication: new Date().toISOString().split('T')[0],
+      status: eligibility.eligible ? 'Pending Approval' : 'Rejected',
+      managerApproval: { status: 'Pending', date: null, approver: null },
+      hrApproval: { status: 'Pending', date: null, approver: null },
+      financeApproval: { status: 'Pending', date: null, approver: null },
+      eligibilityStatus: eligibility.eligible ? 'Eligible' : 'Not Eligible',
+      eligibilityMessage: eligibility.message,
+      serviceTenure: eligibility.serviceTenure || 0,
+      currentSalary: eligibility.currentSalary || 0
+    };
+
+    setLoanApplications([...loanApplications, application]);
+    setShowApplicationModal(false);
+    setNewApplication({ employeeId: '', loanType: 'Personal loan', requestedAmount: '', purpose: '', tenureMonths: '12' });
+    alert(eligibility.eligible ? 'Loan application submitted successfully!' : `Application rejected: ${eligibility.message}`);
+  };
+
+  const handleApproveApplication = (applicationId, level) => {
+    const application = loanApplications.find(app => app.applicationId === applicationId);
+    if (!application) return;
+
+    const updatedApplication = { ...application };
+    const today = new Date().toISOString().split('T')[0];
+
+    if (level === 'manager') {
+      updatedApplication.managerApproval = { status: 'Approved', date: today, approver: 'Manager Name' };
+    } else if (level === 'hr') {
+      updatedApplication.hrApproval = { status: 'Approved', date: today, approver: 'HR Manager' };
+    } else if (level === 'finance') {
+      updatedApplication.financeApproval = { status: 'Approved', date: today, approver: 'Finance Head' };
+      updatedApplication.status = 'Approved';
+      
+      // Auto-create loan from approved application
+      const interestRate = application.loanType === 'Festival advance' || application.loanType === 'Salary advance' ? 0 : 8.5;
+      const monthlyEMI = calculateEMI(application.requestedAmount, interestRate, parseInt(application.tenureMonths));
+      const startDate = new Date();
+      const endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + parseInt(application.tenureMonths));
+
+      const newLoanRecord = {
+        id: loans.length + 1,
+        loanId: `LN${String(loans.length + 1).padStart(3, '0')}`,
+        employeeId: application.employeeId,
+        employeeName: application.employeeName,
+        loanType: application.loanType,
+        amount: application.requestedAmount,
+        interestRate: interestRate,
+        tenureMonths: parseInt(application.tenureMonths),
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+        monthlyEMI: monthlyEMI,
+        amountPaid: 0,
+        amountPending: application.requestedAmount,
+        status: 'Active',
+        nextDueDate: new Date(startDate.setMonth(startDate.getMonth() + 1)).toISOString().split('T')[0],
+        applicationId: application.applicationId,
+        approvalWorkflow: {
+          managerApproval: application.managerApproval,
+          hrApproval: application.hrApproval,
+          financeApproval: updatedApplication.financeApproval
+        },
+        disbursementDate: null,
+        disbursementStatus: 'Pending',
+        autoDeduction: true,
+        agreementGenerated: false,
+        agreementDate: null,
+        prepayments: [],
+        foreclosureAmount: 0,
+        emiSchedule: []
+      };
+
+      setLoans([...loans, newLoanRecord]);
+    }
+
+    setLoanApplications(loanApplications.map(app => 
+      app.applicationId === applicationId ? updatedApplication : app
+    ));
+  };
+
+  const handleRejectApplication = (applicationId, level) => {
+    const application = loanApplications.find(app => app.applicationId === applicationId);
+    if (!application) return;
+
+    const updatedApplication = { ...application };
+    const today = new Date().toISOString().split('T')[0];
+
+    if (level === 'manager') {
+      updatedApplication.managerApproval = { status: 'Rejected', date: today, approver: 'Manager Name' };
+      updatedApplication.status = 'Rejected';
+    } else if (level === 'hr') {
+      updatedApplication.hrApproval = { status: 'Rejected', date: today, approver: 'HR Manager' };
+      updatedApplication.status = 'Rejected';
+    } else if (level === 'finance') {
+      updatedApplication.financeApproval = { status: 'Rejected', date: today, approver: 'Finance Head' };
+      updatedApplication.status = 'Rejected';
+    }
+
+    setLoanApplications(loanApplications.map(app => 
+      app.applicationId === applicationId ? updatedApplication : app
+    ));
+  };
+
+  const handleGenerateAgreement = (loanId) => {
+    const loan = loans.find(l => l.id === loanId);
+    if (!loan) return;
+
+    setLoans(loans.map(l => 
+      l.id === loanId ? { ...l, agreementGenerated: true, agreementDate: new Date().toISOString().split('T')[0] } : l
+    ));
+
+    setSelectedLoan(loan);
+    setShowAgreementModal(true);
+    alert('Loan agreement generated successfully!');
+  };
+
+  const handleDisburseLoan = (loanId) => {
+    const loan = loans.find(l => l.id === loanId);
+    if (!loan) return;
+
+    if (!loan.agreementGenerated) {
+      alert('Please generate loan agreement first');
+      return;
+    }
+
+    setLoans(loans.map(l => 
+      l.id === loanId ? { 
+        ...l, 
+        disbursementStatus: 'Disbursed', 
+        disbursementDate: new Date().toISOString().split('T')[0],
+        status: 'Active'
+      } : l
+    ));
+
+    alert('Loan disbursed successfully!');
+  };
+
+  const handlePrepayment = (loanId, prepaymentAmount, prepaymentType) => {
+    const loan = loans.find(l => l.id === loanId);
+    if (!loan) return;
+
+    if (prepaymentAmount > loan.amountPending) {
+      alert('Prepayment amount cannot exceed pending amount');
+      return;
+    }
+
+    const prepayment = {
+      date: new Date().toISOString().split('T')[0],
+      amount: parseFloat(prepaymentAmount),
+      type: prepaymentType
+    };
+
+    const updatedLoan = {
+      ...loan,
+      amountPaid: loan.amountPaid + parseFloat(prepaymentAmount),
+      amountPending: loan.amountPending - parseFloat(prepaymentAmount),
+      prepayments: [...(loan.prepayments || []), prepayment]
+    };
+
+    if (updatedLoan.amountPending <= 0) {
+      updatedLoan.status = 'Completed';
+      updatedLoan.amountPending = 0;
+    }
+
+    setLoans(loans.map(l => l.id === loanId ? updatedLoan : l));
+    setShowPrepaymentModal(false);
+    alert('Prepayment processed successfully!');
+  };
+
+  const handleForeclosure = (loanId, foreclosureAmount) => {
+    const loan = loans.find(l => l.id === loanId);
+    if (!loan) return;
+
+    if (foreclosureAmount < loan.amountPending) {
+      alert('Foreclosure amount must cover the entire pending amount');
+      return;
+    }
+
+    const updatedLoan = {
+      ...loan,
+      amountPaid: loan.amountPaid + loan.amountPending,
+      amountPending: 0,
+      status: 'Completed',
+      foreclosureAmount: parseFloat(foreclosureAmount),
+      foreclosureDate: new Date().toISOString().split('T')[0]
+    };
+
+    setLoans(loans.map(l => l.id === loanId ? updatedLoan : l));
+    setShowPrepaymentModal(false);
+    alert('Loan foreclosed successfully!');
+  };
+
+  const handleGenerateCertificate = (loanId) => {
+    const loan = loans.find(l => l.id === loanId);
+    if (!loan || loan.status !== 'Completed') {
+      alert('Certificate can only be generated for completed loans');
+      return;
+    }
+
+    setSelectedLoan(loan);
+    setShowCertificateModal(true);
   };
 
   const handleViewDetails = (loan) => {
@@ -471,6 +870,214 @@ const LoansAdvances = () => {
             Manage employee loans, advances, EMI schedules, and repayment tracking.
           </p>
         </div>
+
+        {/* Tabs */}
+        <ul className="nav nav-tabs mb-4">
+          <li className="nav-item">
+            <button 
+              className={`nav-link ${activeTab === 'loans' ? 'active' : ''}`}
+              onClick={() => setActiveTab('loans')}
+            >
+              <Icon icon="heroicons:banknotes" className="me-2" />
+              Loans
+            </button>
+          </li>
+          <li className="nav-item">
+            <button 
+              className={`nav-link ${activeTab === 'applications' ? 'active' : ''}`}
+              onClick={() => setActiveTab('applications')}
+            >
+              <Icon icon="heroicons:document-text" className="me-2" />
+              Applications ({loanApplications.filter(app => app.status === 'Pending Approval').length})
+            </button>
+          </li>
+          <li className="nav-item">
+            <button 
+              className={`nav-link ${activeTab === 'eligibility' ? 'active' : ''}`}
+              onClick={() => setActiveTab('eligibility')}
+            >
+              <Icon icon="heroicons:check-circle" className="me-2" />
+              Eligibility Criteria
+            </button>
+          </li>
+        </ul>
+
+        {/* APPLICATIONS TAB */}
+        {activeTab === 'applications' && (
+          <div className="card border shadow-none mb-4">
+            <div className="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+              <h5 className="mb-0">Loan Applications</h5>
+              <button className="btn btn-primary" onClick={() => setShowApplicationModal(true)}>
+                <Icon icon="heroicons:plus-circle" className="me-2" />
+                New Application
+              </button>
+            </div>
+            <div className="card-body">
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Application ID</th>
+                      <th>Employee</th>
+                      <th>Loan Type</th>
+                      <th>Amount</th>
+                      <th>Purpose</th>
+                      <th>Eligibility</th>
+                      <th>Approval Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loanApplications.map(app => (
+                      <tr key={app.id}>
+                        <td>{app.applicationId}</td>
+                        <td>
+                          <div className="fw-semibold">{app.employeeName}</div>
+                          <small className="text-muted">{app.employeeId}</small>
+                        </td>
+                        <td>{app.loanType}</td>
+                        <td className="fw-bold">₹{app.requestedAmount.toLocaleString()}</td>
+                        <td>{app.purpose}</td>
+                        <td>
+                          <span className={`badge ${app.eligibilityStatus === 'Eligible' ? 'bg-success' : 'bg-danger'}`}>
+                            {app.eligibilityStatus}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="small">
+                            <div>Manager: <span className={`badge ${app.managerApproval.status === 'Approved' ? 'bg-success' : app.managerApproval.status === 'Rejected' ? 'bg-danger' : 'bg-secondary'}`}>{app.managerApproval.status}</span></div>
+                            <div>HR: <span className={`badge ${app.hrApproval.status === 'Approved' ? 'bg-success' : app.hrApproval.status === 'Rejected' ? 'bg-danger' : 'bg-secondary'}`}>{app.hrApproval.status}</span></div>
+                            <div>Finance: <span className={`badge ${app.financeApproval.status === 'Approved' ? 'bg-success' : app.financeApproval.status === 'Rejected' ? 'bg-danger' : 'bg-secondary'}`}>{app.financeApproval.status}</span></div>
+                          </div>
+                        </td>
+                        <td>
+                          {app.eligibilityStatus === 'Eligible' && app.status === 'Pending Approval' && (
+                            <div className="d-flex gap-1">
+                              {app.managerApproval.status === 'Pending' && (
+                                <>
+                                  <button className="btn btn-sm btn-success" onClick={() => handleApproveApplication(app.applicationId, 'manager')}>
+                                    Approve (M)
+                                  </button>
+                                  <button className="btn btn-sm btn-danger" onClick={() => handleRejectApplication(app.applicationId, 'manager')}>
+                                    Reject
+                                  </button>
+                                </>
+                              )}
+                              {app.managerApproval.status === 'Approved' && app.hrApproval.status === 'Pending' && (
+                                <>
+                                  <button className="btn btn-sm btn-success" onClick={() => handleApproveApplication(app.applicationId, 'hr')}>
+                                    Approve (HR)
+                                  </button>
+                                  <button className="btn btn-sm btn-danger" onClick={() => handleRejectApplication(app.applicationId, 'hr')}>
+                                    Reject
+                                  </button>
+                                </>
+                              )}
+                              {app.hrApproval.status === 'Approved' && app.financeApproval.status === 'Pending' && (
+                                <>
+                                  <button className="btn btn-sm btn-success" onClick={() => handleApproveApplication(app.applicationId, 'finance')}>
+                                    Approve (F)
+                                  </button>
+                                  <button className="btn btn-sm btn-danger" onClick={() => handleRejectApplication(app.applicationId, 'finance')}>
+                                    Reject
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ELIGIBILITY CRITERIA TAB */}
+        {activeTab === 'eligibility' && (
+          <div className="card border shadow-none mb-4">
+            <div className="card-header bg-transparent border-0">
+              <h5 className="mb-0">Loan Eligibility Criteria</h5>
+            </div>
+            <div className="card-body">
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label className="form-label">Minimum Service Tenure (months)</label>
+                  <input 
+                    type="number" 
+                    className="form-control"
+                    value={eligibilityCriteria.minServiceTenure}
+                    onChange={(e) => setEligibilityCriteria({...eligibilityCriteria, minServiceTenure: parseInt(e.target.value)})}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">Minimum Salary (₹)</label>
+                  <input 
+                    type="number" 
+                    className="form-control"
+                    value={eligibilityCriteria.minSalary}
+                    onChange={(e) => setEligibilityCriteria({...eligibilityCriteria, minSalary: parseInt(e.target.value)})}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">Maximum Loan to Salary Ratio</label>
+                  <input 
+                    type="number" 
+                    className="form-control"
+                    value={eligibilityCriteria.maxLoanToSalaryRatio}
+                    onChange={(e) => setEligibilityCriteria({...eligibilityCriteria, maxLoanToSalaryRatio: parseInt(e.target.value)})}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">Maximum Active Loans</label>
+                  <input 
+                    type="number" 
+                    className="form-control"
+                    value={eligibilityCriteria.activeLoansLimit}
+                    onChange={(e) => setEligibilityCriteria({...eligibilityCriteria, activeLoansLimit: parseInt(e.target.value)})}
+                  />
+                </div>
+                <div className="col-12">
+                  <h6 className="mt-3 mb-3">Maximum Loan Amount by Type</h6>
+                  <div className="table-responsive">
+                    <table className="table table-bordered">
+                      <thead>
+                        <tr>
+                          <th>Loan Type</th>
+                          <th>Maximum Amount (₹)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.entries(eligibilityCriteria.maxLoanAmount).map(([type, amount]) => (
+                          <tr key={type}>
+                            <td>{type}</td>
+                            <td>
+                              <input 
+                                type="number" 
+                                className="form-control form-control-sm"
+                                value={amount}
+                                onChange={(e) => setEligibilityCriteria({
+                                  ...eligibilityCriteria, 
+                                  maxLoanAmount: {...eligibilityCriteria.maxLoanAmount, [type]: parseInt(e.target.value)}
+                                })}
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* LOANS TAB - Existing content */}
+        {activeTab === 'loans' && (
+          <>
 
         {/* KPI Cards */}
         <div className="row g-4 mb-4">
@@ -703,17 +1310,46 @@ const LoansAdvances = () => {
                         {getStatusBadge(loan.status)}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="d-flex gap-2">
+                        <div className="d-flex gap-1 flex-wrap">
                           <button
                             onClick={() => handleViewDetails(loan)}
                             className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+                            title="View Details"
                           >
                             <Icon icon="heroicons:eye" />
                             View
                           </button>
+                          {loan.status === 'Active' && (
+                            <>
+                              <button
+                                onClick={() => { setSelectedLoan(loan); setShowEMIScheduleModal(true); }}
+                                className="btn btn-sm btn-outline-info d-flex align-items-center gap-1"
+                                title="EMI Schedule"
+                              >
+                                <Icon icon="heroicons:calendar" />
+                              </button>
+                              <button
+                                onClick={() => { setSelectedLoan(loan); setShowPrepaymentModal(true); }}
+                                className="btn btn-sm btn-outline-success d-flex align-items-center gap-1"
+                                title="Prepayment/Foreclosure"
+                              >
+                                <Icon icon="heroicons:currency-dollar" />
+                              </button>
+                            </>
+                          )}
+                          {loan.status === 'Completed' && (
+                            <button
+                              onClick={() => handleGenerateCertificate(loan.id)}
+                              className="btn btn-sm btn-outline-warning d-flex align-items-center gap-1"
+                              title="Generate Certificate"
+                            >
+                              <Icon icon="heroicons:document-check" />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleDeleteLoan(loan.id)}
                             className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1"
+                            title="Delete"
                           >
                             <Icon icon="heroicons:trash" />
                           </button>
@@ -856,6 +1492,98 @@ const LoansAdvances = () => {
                       <p className="form-control-plaintext">{formatDate(selectedLoan.nextDueDate)}</p>
                     </div>
                   </div>
+                  
+                  {/* Approval Workflow */}
+                  {selectedLoan.approvalWorkflow && (
+                    <div className="row g-3 mt-3">
+                      <div className="col-12">
+                        <h6 className="fw-semibold mb-3">Approval Workflow</h6>
+                        <div className="row">
+                          <div className="col-md-4">
+                            <div className="card border">
+                              <div className="card-body">
+                                <h6 className="small">Manager Approval</h6>
+                                <div className={`badge ${selectedLoan.approvalWorkflow.managerApproval.status === 'Approved' ? 'bg-success' : 'bg-secondary'}`}>
+                                  {selectedLoan.approvalWorkflow.managerApproval.status}
+                                </div>
+                                {selectedLoan.approvalWorkflow.managerApproval.date && (
+                                  <div className="small text-muted mt-1">
+                                    {selectedLoan.approvalWorkflow.managerApproval.date}<br/>
+                                    {selectedLoan.approvalWorkflow.managerApproval.approver}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="col-md-4">
+                            <div className="card border">
+                              <div className="card-body">
+                                <h6 className="small">HR Approval</h6>
+                                <div className={`badge ${selectedLoan.approvalWorkflow.hrApproval?.status === 'Approved' ? 'bg-success' : 'bg-secondary'}`}>
+                                  {selectedLoan.approvalWorkflow.hrApproval?.status || 'Pending'}
+                                </div>
+                                {selectedLoan.approvalWorkflow.hrApproval?.date && (
+                                  <div className="small text-muted mt-1">
+                                    {selectedLoan.approvalWorkflow.hrApproval.date}<br/>
+                                    {selectedLoan.approvalWorkflow.hrApproval.approver}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="col-md-4">
+                            <div className="card border">
+                              <div className="card-body">
+                                <h6 className="small">Finance Approval</h6>
+                                <div className={`badge ${selectedLoan.approvalWorkflow.financeApproval?.status === 'Approved' ? 'bg-success' : 'bg-secondary'}`}>
+                                  {selectedLoan.approvalWorkflow.financeApproval?.status || 'Pending'}
+                                </div>
+                                {selectedLoan.approvalWorkflow.financeApproval?.date && (
+                                  <div className="small text-muted mt-1">
+                                    {selectedLoan.approvalWorkflow.financeApproval.date}<br/>
+                                    {selectedLoan.approvalWorkflow.financeApproval.approver}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Disbursement & Agreement */}
+                  <div className="row g-3 mt-3">
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">Disbursement Status</label>
+                      <p className="form-control-plaintext">
+                        <span className={`badge ${selectedLoan.disbursementStatus === 'Disbursed' ? 'bg-success' : 'bg-warning'}`}>
+                          {selectedLoan.disbursementStatus || 'Pending'}
+                        </span>
+                        {selectedLoan.disbursementDate && (
+                          <span className="ms-2 text-muted">({selectedLoan.disbursementDate})</span>
+                        )}
+                      </p>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">Auto-Deduction</label>
+                      <p className="form-control-plaintext">
+                        <span className={`badge ${selectedLoan.autoDeduction ? 'bg-success' : 'bg-secondary'}`}>
+                          {selectedLoan.autoDeduction ? 'Enabled' : 'Disabled'}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">Agreement Generated</label>
+                      <p className="form-control-plaintext">
+                        {selectedLoan.agreementGenerated ? (
+                          <span className="badge bg-success">Yes ({selectedLoan.agreementDate})</span>
+                        ) : (
+                          <span className="badge bg-warning">No</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
                 </div>
                 <div className="modal-footer">
                   <button
@@ -865,6 +1593,26 @@ const LoansAdvances = () => {
                   >
                     Close
                   </button>
+                  {!selectedLoan.agreementGenerated && (
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => handleGenerateAgreement(selectedLoan.id)}
+                    >
+                      <Icon icon="heroicons:document-text" className="me-2" />
+                      Generate Agreement
+                    </button>
+                  )}
+                  {selectedLoan.agreementGenerated && selectedLoan.disbursementStatus !== 'Disbursed' && (
+                    <button
+                      type="button"
+                      className="btn btn-success"
+                      onClick={() => handleDisburseLoan(selectedLoan.id)}
+                    >
+                      <Icon icon="heroicons:banknotes" className="me-2" />
+                      Disburse Loan
+                    </button>
+                  )}
                   <button 
                     type="button" 
                     className="btn btn-danger"
@@ -932,7 +1680,7 @@ const LoansAdvances = () => {
                     <div className="col-md-6">
                       <label className="form-label">Loan Amount</label>
                       <div className="input-group">
-                        <span className="input-group-text">$</span>
+                        <span className="input-group-text">₹</span>
                         <input
                           type="number"
                           className="form-control"
@@ -1006,6 +1754,419 @@ const LoansAdvances = () => {
                   >
                     <Icon icon="heroicons:check-circle" className="me-2" />
                     Create Loan
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+          </>
+        )}
+
+        {/* LOAN APPLICATION MODAL */}
+        {showApplicationModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">New Loan Application</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowApplicationModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label">Employee</label>
+                      <select 
+                        className="form-select"
+                        value={newApplication.employeeId}
+                        onChange={(e) => {
+                          const emp = employees.find(emp => emp.employeeId === e.target.value);
+                          setNewApplication({...newApplication, employeeId: e.target.value});
+                          if (emp) {
+                            const eligibility = checkEligibility(emp.employeeId, newApplication.loanType, parseFloat(newApplication.requestedAmount || 0));
+                            alert(eligibility.message);
+                          }
+                        }}
+                      >
+                        <option value="">Select Employee</option>
+                        {employees.map(emp => (
+                          <option key={emp.employeeId} value={emp.employeeId}>
+                            {emp.employeeName} ({emp.employeeId})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Loan Type</label>
+                      <select 
+                        className="form-select"
+                        value={newApplication.loanType}
+                        onChange={(e) => setNewApplication({...newApplication, loanType: e.target.value})}
+                      >
+                        {loanTypes.map(type => (
+                          <option key={type} value={type}>{type}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Requested Amount (₹)</label>
+                      <input 
+                        type="number" 
+                        className="form-control"
+                        value={newApplication.requestedAmount}
+                        onChange={(e) => {
+                          setNewApplication({...newApplication, requestedAmount: e.target.value});
+                          if (newApplication.employeeId) {
+                            const eligibility = checkEligibility(newApplication.employeeId, newApplication.loanType, parseFloat(e.target.value || 0));
+                            // Show eligibility in real-time
+                          }
+                        }}
+                        placeholder="Enter amount"
+                      />
+                      <small className="text-muted">
+                        Max: ₹{eligibilityCriteria.maxLoanAmount[newApplication.loanType]?.toLocaleString() || 'N/A'}
+                      </small>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Tenure (Months)</label>
+                      <input 
+                        type="number" 
+                        className="form-control"
+                        value={newApplication.tenureMonths}
+                        onChange={(e) => setNewApplication({...newApplication, tenureMonths: e.target.value})}
+                      />
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label">Purpose</label>
+                      <textarea 
+                        className="form-control"
+                        rows="3"
+                        value={newApplication.purpose}
+                        onChange={(e) => setNewApplication({...newApplication, purpose: e.target.value})}
+                        placeholder="Describe the purpose of the loan"
+                      />
+                    </div>
+                    {newApplication.employeeId && (
+                      <div className="col-12">
+                        <div className="alert alert-info">
+                          <strong>Eligibility Check:</strong>
+                          {(() => {
+                            const emp = employees.find(e => e.employeeId === newApplication.employeeId);
+                            if (!emp) return 'Select an employee';
+                            const eligibility = checkEligibility(newApplication.employeeId, newApplication.loanType, parseFloat(newApplication.requestedAmount || 0));
+                            return (
+                              <div>
+                                <div className={eligibility.eligible ? 'text-success' : 'text-danger'}>
+                                  {eligibility.message}
+                                </div>
+                                {eligibility.eligible && (
+                                  <div className="mt-2 small">
+                                    Service Tenure: {eligibility.serviceTenure} months<br/>
+                                    Current Salary: ₹{eligibility.currentSalary.toLocaleString()}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowApplicationModal(false)}>Cancel</button>
+                  <button 
+                    type="button" 
+                    className="btn btn-primary"
+                    onClick={handleLoanApplication}
+                    disabled={!newApplication.employeeId || !newApplication.requestedAmount}
+                  >
+                    Submit Application
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* EMI SCHEDULE MODAL */}
+        {showEMIScheduleModal && selectedLoan && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-xl">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">EMI Schedule - {selectedLoan.loanId}</h5>
+                  <button type="button" className="btn-close" onClick={() => { setShowEMIScheduleModal(false); setSelectedLoan(null); }}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="table-responsive">
+                    <table className="table table-hover">
+                      <thead className="table-light">
+                        <tr>
+                          <th>Installment</th>
+                          <th>Due Date</th>
+                          <th>EMI Amount</th>
+                          <th>Principal</th>
+                          <th>Interest</th>
+                          <th>Outstanding Balance</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {generateEMISchedule(selectedLoan).map((emi, index) => (
+                          <tr key={index}>
+                            <td>{emi.installment}</td>
+                            <td>{formatDate(emi.dueDate)}</td>
+                            <td className="fw-bold">₹{emi.emi.toLocaleString()}</td>
+                            <td>₹{emi.principal.toLocaleString()}</td>
+                            <td>₹{emi.interest.toLocaleString()}</td>
+                            <td>₹{emi.balance.toLocaleString()}</td>
+                            <td>
+                              <span className={`badge ${
+                                emi.status === 'Paid' ? 'bg-success' :
+                                emi.status === 'Due' ? 'bg-warning' :
+                                'bg-secondary'
+                              }`}>
+                                {emi.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => { setShowEMIScheduleModal(false); setSelectedLoan(null); }}>Close</button>
+                  <button type="button" className="btn btn-primary" onClick={() => alert('EMI Schedule exported!')}>
+                    <Icon icon="heroicons:document-arrow-down" className="me-2" />
+                    Export Schedule
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PREPAYMENT/FORECLOSURE MODAL */}
+        {showPrepaymentModal && selectedLoan && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Prepayment / Foreclosure - {selectedLoan.loanId}</h5>
+                  <button type="button" className="btn-close" onClick={() => { setShowPrepaymentModal(false); setSelectedLoan(null); }}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="alert alert-info mb-3">
+                    <strong>Outstanding Balance:</strong> ₹{selectedLoan.amountPending.toLocaleString()}
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Transaction Type</label>
+                    <select className="form-select" id="prepaymentType">
+                      <option value="Partial">Partial Prepayment</option>
+                      <option value="Full">Full Foreclosure</option>
+                    </select>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Amount (₹)</label>
+                    <input 
+                      type="number" 
+                      className="form-control"
+                      id="prepaymentAmount"
+                      placeholder="Enter amount"
+                      max={selectedLoan.amountPending}
+                    />
+                  </div>
+                  {selectedLoan.prepayments && selectedLoan.prepayments.length > 0 && (
+                    <div className="mb-3">
+                      <h6>Previous Prepayments</h6>
+                      <div className="table-responsive">
+                        <table className="table table-sm">
+                          <thead>
+                            <tr>
+                              <th>Date</th>
+                              <th>Amount</th>
+                              <th>Type</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedLoan.prepayments.map((prepay, idx) => (
+                              <tr key={idx}>
+                                <td>{prepay.date}</td>
+                                <td>₹{prepay.amount.toLocaleString()}</td>
+                                <td>{prepay.type}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => { setShowPrepaymentModal(false); setSelectedLoan(null); }}>Cancel</button>
+                  <button 
+                    type="button" 
+                    className="btn btn-success"
+                    onClick={() => {
+                      const amount = parseFloat(document.getElementById('prepaymentAmount').value);
+                      const type = document.getElementById('prepaymentType').value;
+                      if (type === 'Full') {
+                        handleForeclosure(selectedLoan.id, amount);
+                      } else {
+                        handlePrepayment(selectedLoan.id, amount, type);
+                      }
+                    }}
+                  >
+                    Process
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* LOAN AGREEMENT MODAL */}
+        {showAgreementModal && selectedLoan && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Loan Agreement - {selectedLoan.loanId}</h5>
+                  <button type="button" className="btn-close" onClick={() => { setShowAgreementModal(false); setSelectedLoan(null); }}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="border p-4" style={{ minHeight: '400px' }}>
+                    <div className="text-center mb-4">
+                      <h4>LOAN AGREEMENT</h4>
+                      <p className="text-muted">Loan ID: {selectedLoan.loanId}</p>
+                    </div>
+                    <div className="mb-3">
+                      <p><strong>This Loan Agreement</strong> is entered into on {formatDate(selectedLoan.agreementDate || selectedLoan.startDate)} between:</p>
+                      <p><strong>Lender:</strong> Company Name<br/>
+                      <strong>Borrower:</strong> {selectedLoan.employeeName} (ID: {selectedLoan.employeeId})</p>
+                    </div>
+                    <div className="mb-3">
+                      <h6>Loan Details:</h6>
+                      <ul>
+                        <li>Loan Type: {selectedLoan.loanType}</li>
+                        <li>Principal Amount: ₹{selectedLoan.amount.toLocaleString()}</li>
+                        <li>Interest Rate: {selectedLoan.interestRate}% per annum</li>
+                        <li>Tenure: {selectedLoan.tenureMonths} months</li>
+                        <li>Monthly EMI: ₹{selectedLoan.monthlyEMI.toLocaleString()}</li>
+                        <li>Start Date: {formatDate(selectedLoan.startDate)}</li>
+                        <li>End Date: {formatDate(selectedLoan.endDate)}</li>
+                      </ul>
+                    </div>
+                    <div className="mb-3">
+                      <h6>Terms and Conditions:</h6>
+                      <ol>
+                        <li>The borrower agrees to repay the loan in {selectedLoan.tenureMonths} equal monthly installments.</li>
+                        <li>EMI will be automatically deducted from salary each month.</li>
+                        <li>Prepayment and foreclosure options are available as per company policy.</li>
+                        <li>Default in payment may result in additional charges and legal action.</li>
+                      </ol>
+                    </div>
+                    <div className="mt-4">
+                      <div className="row">
+                        <div className="col-md-6">
+                          <div className="border-top pt-3">
+                            <strong>Borrower Signature</strong><br/>
+                            <div className="mt-3">_________________</div>
+                            <div>{selectedLoan.employeeName}</div>
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="border-top pt-3">
+                            <strong>Authorized Signatory</strong><br/>
+                            <div className="mt-3">_________________</div>
+                            <div>Finance Department</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => { setShowAgreementModal(false); setSelectedLoan(null); }}>Close</button>
+                  <button type="button" className="btn btn-primary" onClick={() => alert('Agreement downloaded!')}>
+                    <Icon icon="heroicons:document-arrow-down" className="me-2" />
+                    Download PDF
+                  </button>
+                  <button type="button" className="btn btn-success" onClick={() => alert('Agreement printed!')}>
+                    <Icon icon="heroicons:printer" className="me-2" />
+                    Print
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* LOAN COMPLETION CERTIFICATE MODAL */}
+        {showCertificateModal && selectedLoan && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Loan Repayment Completion Certificate</h5>
+                  <button type="button" className="btn-close" onClick={() => { setShowCertificateModal(false); setSelectedLoan(null); }}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="border p-4" style={{ minHeight: '400px' }}>
+                    <div className="text-center mb-4">
+                      <h4>LOAN REPAYMENT COMPLETION CERTIFICATE</h4>
+                      <p className="text-muted">Certificate No: CERT-{selectedLoan.loanId}</p>
+                    </div>
+                    <div className="mb-3">
+                      <p>This is to certify that <strong>{selectedLoan.employeeName}</strong> (Employee ID: {selectedLoan.employeeId}) has successfully completed the repayment of the loan with the following details:</p>
+                    </div>
+                    <div className="mb-3">
+                      <h6>Loan Details:</h6>
+                      <ul>
+                        <li>Loan ID: {selectedLoan.loanId}</li>
+                        <li>Loan Type: {selectedLoan.loanType}</li>
+                        <li>Principal Amount: ₹{selectedLoan.amount.toLocaleString()}</li>
+                        <li>Total Amount Paid: ₹{selectedLoan.amountPaid.toLocaleString()}</li>
+                        <li>Start Date: {formatDate(selectedLoan.startDate)}</li>
+                        <li>Completion Date: {new Date().toLocaleDateString()}</li>
+                        <li>Status: {selectedLoan.status}</li>
+                      </ul>
+                    </div>
+                    <div className="mb-3">
+                      <p className="text-success"><strong>All loan obligations have been fulfilled and the account is now closed.</strong></p>
+                    </div>
+                    <div className="mt-4">
+                      <div className="row">
+                        <div className="col-md-6">
+                          <div className="border-top pt-3">
+                            <strong>Issued By</strong><br/>
+                            <div className="mt-3">_________________</div>
+                            <div>Finance Department</div>
+                            <div className="small text-muted">{new Date().toLocaleDateString()}</div>
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="border-top pt-3">
+                            <strong>Authorized Signatory</strong><br/>
+                            <div className="mt-3">_________________</div>
+                            <div>Finance Head</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => { setShowCertificateModal(false); setSelectedLoan(null); }}>Close</button>
+                  <button type="button" className="btn btn-primary" onClick={() => alert('Certificate downloaded!')}>
+                    <Icon icon="heroicons:document-arrow-down" className="me-2" />
+                    Download PDF
+                  </button>
+                  <button type="button" className="btn btn-success" onClick={() => alert('Certificate printed!')}>
+                    <Icon icon="heroicons:printer" className="me-2" />
+                    Print
                   </button>
                 </div>
               </div>

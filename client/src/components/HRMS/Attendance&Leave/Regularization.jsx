@@ -1,1227 +1,1271 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useReducer } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
+import {
+  Clock,
+  Calendar,
+  FileText,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Download,
+  Upload,
+  Search,
+  Filter,
+  Plus,
+  Edit,
+  Eye,
+  Send,
+  RefreshCw,
+  Settings,
+  User,
+  Building,
+  ClockIn,
+  ClockOut,
+  Home,
+  Briefcase,
+  Mail,
+  Bell,
+  AlertTriangle,
+  Check,
+  X,
+  FileCheck,
+  CalendarDays,
+  BarChart3,
+} from "lucide-react";
 
-// Card style definition
-const cardStyle = {
-  padding: 20,
-  background: "#fff",
-  borderRadius: 8,
-  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-  height: "100%",
-  display: "flex",
-  flexDirection: "column",
-  border: "1px solid #e9ecef",
-  minHeight: "600px", // Add minimum height for consistency
-};
-
-// Reusable Card Component
-const RegularizationCard = ({ children, title, style = {} }) => (
-  <div style={{ ...cardStyle, ...style }}>
-    {title && (
-      <div className="mb-3">
-        <h6 className="fw-bold mb-0" style={{ color: "#2d3e50", fontSize: "16px" }}>
-          {title}
-        </h6>
-      </div>
-    )}
-    <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-      {children}
-    </div>
-  </div>
-);
-
-// Reusable Form Field Component
-const FormField = ({ label, type = "text", value, onChange, placeholder, required = false, options, ...props }) => (
-  <div className="mb-3">
-    {label && (
-      <label className="form-label" style={{ fontSize: "14px", fontWeight: "500", color: "#495057" }}>
-        {label} {required && <span className="text-danger">*</span>}
-      </label>
-    )}
-    {type === "select" ? (
-      <select
-        className="form-control"
-        value={value}
-        onChange={onChange}
-        required={required}
-        style={{ fontSize: "14px", padding: "8px 12px" }}
-        {...props}
-      >
-        {options.map((option) => (
-          <option key={option.value || option} value={option.value || option}>
-            {option.label || option}
-          </option>
-        ))}
-      </select>
-    ) : type === "textarea" ? (
-      <textarea
-        className="form-control"
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        rows={3}
-        style={{ fontSize: "14px", padding: "8px 12px" }}
-        {...props}
-      />
-    ) : type === "file" ? (
-      <div>
-        <input
-          type="file"
-          className="form-control"
-          onChange={onChange}
-          style={{ fontSize: "14px", padding: "6px 12px" }}
-          {...props}
-        />
-      </div>
-    ) : (
-      <input
-        type={type}
-        className="form-control"
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        style={{ fontSize: "14px", padding: "8px 12px" }}
-        {...props}
-      />
-    )}
-  </div>
-);
-
-// Button Styles
-const buttonStyles = {
-  primary: {
-    backgroundColor: "#007bff",
-    color: "#fff",
-    border: "none",
-    padding: "10px 16px",
-    borderRadius: "6px",
-    fontSize: "14px",
-    fontWeight: "500",
-    cursor: "pointer",
-    transition: "all 0.2s ease",
-    width: "100%",
-    textAlign: "center",
-    display: "block",
-    textDecoration: "none",
-  },
-  secondary: {
-    backgroundColor: "#6c757d",
-    color: "#fff",
-    border: "none",
-    padding: "10px 16px",
-    borderRadius: "6px",
-    fontSize: "14px",
-    fontWeight: "500",
-    cursor: "pointer",
-    transition: "all 0.2s ease",
-    width: "100%",
-    textAlign: "center",
-    display: "block",
-    textDecoration: "none",
-  },
-  outline: {
-    backgroundColor: "transparent",
-    color: "#007bff",
-    border: "1px solid #007bff",
-    padding: "8px 16px",
-    borderRadius: "6px",
-    fontSize: "14px",
-    fontWeight: "500",
-    cursor: "pointer",
-    transition: "all 0.2s ease",
-    width: "100%",
-    textAlign: "center",
-    display: "block",
-    textDecoration: "none",
+// ==================== REDUCER FOR STATE MANAGEMENT ====================
+const regularizationReducer = (state, action) => {
+  switch (action.type) {
+    case "SET_REQUESTS":
+      return { ...state, requests: action.payload };
+    case "ADD_REQUEST":
+      return { ...state, requests: [...state.requests, action.payload] };
+    case "UPDATE_REQUEST":
+      return {
+        ...state,
+        requests: state.requests.map((r) =>
+          r.id === action.payload.id ? action.payload : r
+        ),
+      };
+    case "DELETE_REQUEST":
+      return {
+        ...state,
+        requests: state.requests.filter((r) => r.id !== action.payload),
+      };
+    case "SET_AUTO_REJECT_RULES":
+      return { ...state, autoRejectRules: action.payload };
+    case "ADD_AUTO_REJECT_RULE":
+      return {
+        ...state,
+        autoRejectRules: [...state.autoRejectRules, action.payload],
+      };
+    case "SET_BULK_PROCESSING":
+      return { ...state, bulkProcessing: action.payload };
+    default:
+      return state;
   }
 };
 
-// Button Container Style
-const buttonContainerStyle = {
-  marginTop: "auto",
-  paddingTop: "20px",
-  borderTop: "1px solid #e9ecef",
-};
+// ==================== INITIAL DATA ====================
+const initialEmployees = [
+  { id: "EMP001", name: "Khuswanth Rao", department: "IT", position: "Developer" },
+  { id: "EMP002", name: "John Smith", department: "HR", position: "Manager" },
+  { id: "EMP003", name: "Sarah Johnson", department: "Finance", position: "Analyst" },
+  { id: "EMP004", name: "Mike Brown", department: "Sales", position: "Executive" },
+  { id: "EMP005", name: "Emma Wilson", department: "IT", position: "Tester" },
+];
 
-export default function Regularization() {
-  const [activeSection, setActiveSection] = useState("Employee Requests");
+const Regularization = () => {
+  const [activeTab, setActiveTab] = useState("requests");
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [requestType, setRequestType] = useState("missing");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("All");
+  const [filterType, setFilterType] = useState("All");
 
-  // Form States
-  const [missingPunch, setMissingPunch] = useState({
+  // Form states
+  const [requestForm, setRequestForm] = useState({
+    employeeId: "",
+    requestType: "missing",
     dateTime: "",
-    reason: "",
-    remarks: "",
-  });
-
-  const [incorrectTime, setIncorrectTime] = useState({
     originalTime: "",
     correctedTime: "",
-    reason: "",
-    remarks: "",
-  });
-
-  const [forgotPunch, setForgotPunch] = useState({
     date: "",
     punchType: "IN",
     approxTime: "",
-    reason: "",
-    remarks: "",
-    attachment: null,
-    submitting: false,
-  });
-
-  const [wfhRegularization, setWfhRegularization] = useState({
-    date: "",
     location: "",
-    reason: "",
-    summary: "",
-    attachment: null,
-  });
-
-  // Duty & Remarks States
-  const [onDuty, setOnDuty] = useState({
-    date: "",
     fromTime: "",
     toTime: "",
     dutyType: "",
     purpose: "",
+    reason: "",
     remarks: "",
+    summary: "",
     attachment: null,
   });
 
-  const [remarksEntry, setRemarksEntry] = useState({
-    title: "",
+  const [approvalForm, setApprovalForm] = useState({
+    action: "",
     remarks: "",
-    attachment: null,
   });
 
-  // Attachments & Workflow States
-  const [attachedFiles, setAttachedFiles] = useState([]);
-  const [approvalAction, setApprovalAction] = useState("");
-  const [approvalRemarks, setApprovalRemarks] = useState("");
-  const fileInputRef = useRef(null);
+  const [bulkForm, setBulkForm] = useState({
+    fromDate: "",
+    toDate: "",
+    issueType: "",
+    employees: [],
+    file: null,
+  });
 
-  // Reports & Settings States
-  const [autoRejectDays, setAutoRejectDays] = useState("");
-  const [autoRejectType, setAutoRejectType] = useState("");
-  const [bulkFromDate, setBulkFromDate] = useState("");
-  const [bulkToDate, setBulkToDate] = useState("");
-  const [bulkIssueType, setBulkIssueType] = useState("");
-  const [reportFromDate, setReportFromDate] = useState("");
-  const [reportToDate, setReportToDate] = useState("");
-  const [reportType, setReportType] = useState("");
-  const [reportFormat, setReportFormat] = useState("pdf");
-
-  // Container style
-  const containerStyle = {
-    background: "#fff",
-    padding: 24,
-    borderRadius: 8,
-    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-    marginBottom: 24,
-    border: "1px solid #e9ecef",
+  // Load from localStorage
+  const loadFromStorage = (key, defaultValue) => {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : defaultValue;
   };
 
-  // Navigation Sections
-  const sections = [
-    { id: "Employee Requests" },
-    { id: "Duty & Remarks" },
-    { id: "Attachments & Workflow" },
-    { id: "Reports & Settings" },
-  ];
-
-  // Handlers
-  const handleMissingPunchSubmit = (e) => {
-    e.preventDefault();
-    if (!missingPunch.dateTime || !missingPunch.reason || !missingPunch.remarks) {
-      alert("Please fill all required fields");
-      return;
-    }
-    alert("Missing punch request submitted");
-    setMissingPunch({ dateTime: "", reason: "", remarks: "" });
+  const initialState = {
+    requests: loadFromStorage("regularizationRequests", []),
+    autoRejectRules: loadFromStorage("autoRejectRules", [
+      { id: 1, requestType: "missing", days: 7, enabled: true },
+      { id: 2, requestType: "forgot", days: 5, enabled: true },
+    ]),
+    bulkProcessing: loadFromStorage("bulkProcessing", []),
   };
 
-  const handleIncorrectTimeSubmit = (e) => {
-    e.preventDefault();
-    if (!incorrectTime.originalTime || !incorrectTime.correctedTime || !incorrectTime.reason || !incorrectTime.remarks) {
-      alert("Please fill all required fields");
-      return;
-    }
-    alert("Incorrect time request submitted");
-    setIncorrectTime({ originalTime: "", correctedTime: "", reason: "", remarks: "" });
-  };
+  const [state, dispatch] = useReducer(regularizationReducer, initialState);
+  const { requests, autoRejectRules, bulkProcessing } = state;
 
-  const handleForgotPunchSubmit = (e) => {
-    e.preventDefault();
-    if (!forgotPunch.date || !forgotPunch.approxTime || !forgotPunch.reason || !forgotPunch.remarks) {
-      alert("Please fill all required fields");
-      return;
-    }
-    
-    setForgotPunch(prev => ({ ...prev, submitting: true }));
-    
-    setTimeout(() => {
-      alert("Forgot punch request submitted successfully");
-      setForgotPunch({
-        date: "",
-        punchType: "IN",
-        approxTime: "",
-        reason: "",
-        remarks: "",
-        attachment: null,
-        submitting: false,
+  // Save to localStorage
+  useEffect(() => {
+    localStorage.setItem("regularizationRequests", JSON.stringify(requests));
+    localStorage.setItem("autoRejectRules", JSON.stringify(autoRejectRules));
+    localStorage.setItem("bulkProcessing", JSON.stringify(bulkProcessing));
+  }, [state]);
+
+  // Auto-reject processing
+  useEffect(() => {
+    const processAutoReject = () => {
+      const today = new Date();
+      let rejectedCount = 0;
+
+      requests.forEach((request) => {
+        if (request.status === "pending") {
+          const rule = autoRejectRules.find(
+            (r) => r.requestType === request.requestType && r.enabled
+          );
+          if (rule) {
+            const requestDate = new Date(request.submittedAt);
+            const daysDiff = Math.floor((today - requestDate) / (1000 * 60 * 60 * 24));
+
+            if (daysDiff >= rule.days) {
+              const updatedRequest = {
+                ...request,
+                status: "auto-rejected",
+                rejectedAt: today.toISOString(),
+                rejectedBy: "System",
+                rejectionReason: `Auto-rejected after ${rule.days} days`,
+                isAutoRejected: true,
+              };
+              dispatch({ type: "UPDATE_REQUEST", payload: updatedRequest });
+              rejectedCount++;
+            }
+          }
+        }
       });
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }, 800);
-  };
 
-  const handleWfhSubmit = (e) => {
-    e.preventDefault();
-    if (!wfhRegularization.date || !wfhRegularization.location || !wfhRegularization.reason || !wfhRegularization.summary) {
-      alert("Please fill all required fields");
+      if (rejectedCount > 0) {
+        console.log(`Auto-rejected ${rejectedCount} request(s)`);
+      }
+    };
+
+    // Check every hour
+    const interval = setInterval(processAutoReject, 3600000);
+    processAutoReject(); // Run immediately
+
+    return () => clearInterval(interval);
+  }, [requests, autoRejectRules]);
+
+  // ==================== REQUEST FUNCTIONS ====================
+  const handleSubmitRequest = () => {
+    if (!requestForm.employeeId || !requestForm.reason || !requestForm.remarks) {
+      alert("Please fill all required fields (Employee, Reason, Remarks)");
       return;
     }
-    alert("WFH Regularization request submitted");
-    setWfhRegularization({
+
+    const employee = initialEmployees.find((e) => e.id === requestForm.employeeId);
+    const request = {
+      id: Date.now(),
+      ...requestForm,
+      employeeName: employee?.name || requestForm.employeeId,
+      department: employee?.department || "Unknown",
+      status: "pending",
+      submittedAt: new Date().toISOString(),
+      submittedBy: employee?.name || requestForm.employeeId,
+      approvalWorkflow: [
+        { level: 1, approver: "Manager", status: "pending", required: true },
+        { level: 2, approver: "HR", status: "pending", required: true },
+      ],
+      attachments: requestForm.attachment ? [requestForm.attachment.name] : [],
+    };
+
+    dispatch({ type: "ADD_REQUEST", payload: request });
+    setShowRequestModal(false);
+    setRequestForm({
+      employeeId: "",
+      requestType: "missing",
+      dateTime: "",
+      originalTime: "",
+      correctedTime: "",
       date: "",
+      punchType: "IN",
+      approxTime: "",
       location: "",
-      reason: "",
-      summary: "",
-      attachment: null,
-    });
-  };
-
-  const handleOnDutySubmit = (e) => {
-    e.preventDefault();
-    if (!onDuty.date || !onDuty.fromTime || !onDuty.toTime || !onDuty.dutyType || !onDuty.purpose || !onDuty.remarks) {
-      alert("Please fill all required fields");
-      return;
-    }
-    alert("On-Duty request submitted");
-    setOnDuty({
-      date: "",
       fromTime: "",
       toTime: "",
       dutyType: "",
       purpose: "",
+      reason: "",
       remarks: "",
+      summary: "",
       attachment: null,
     });
+    alert("Regularization request submitted successfully");
   };
 
-  const handleRemarksSubmit = (e) => {
-    e.preventDefault();
-    if (!remarksEntry.title || !remarksEntry.remarks) {
+  const handleApproveRequest = (requestId, approved) => {
+    const request = requests.find((r) => r.id === requestId);
+    if (!request) return;
+
+    const updatedRequest = {
+      ...request,
+      status: approved ? "approved" : "rejected",
+      [approved ? "approvedAt" : "rejectedAt"]: new Date().toISOString(),
+      [approved ? "approvedBy" : "rejectedBy"]: "Manager",
+      rejectionReason: approved ? null : approvalForm.remarks || "Not approved",
+      approvalWorkflow: request.approvalWorkflow.map((w) =>
+        w.status === "pending"
+          ? { ...w, status: approved ? "approved" : "rejected" }
+          : w
+      ),
+    };
+
+    dispatch({ type: "UPDATE_REQUEST", payload: updatedRequest });
+    setShowApprovalModal(false);
+    setApprovalForm({ action: "", remarks: "" });
+    alert(`Request ${approved ? "approved" : "rejected"} successfully`);
+  };
+
+  const handleBulkProcess = () => {
+    if (!bulkForm.fromDate || !bulkForm.toDate || !bulkForm.issueType) {
       alert("Please fill all required fields");
       return;
     }
-    alert("Remarks saved successfully");
-    setRemarksEntry({
-      title: "",
-      remarks: "",
-      attachment: null,
+
+    // Simulate bulk processing
+    const processedCount = bulkForm.employees.length || 10;
+    const bulkProcess = {
+      id: Date.now(),
+      ...bulkForm,
+      processedCount,
+      status: "completed",
+      processedAt: new Date().toISOString(),
+      processedBy: "HR Admin",
+    };
+
+    dispatch({ type: "SET_BULK_PROCESSING", payload: [...bulkProcessing, bulkProcess] });
+    setShowBulkModal(false);
+    setBulkForm({
+      fromDate: "",
+      toDate: "",
+      issueType: "",
+      employees: [],
+      file: null,
     });
+    alert(`Bulk regularization processed for ${processedCount} employees`);
   };
 
-  const handleFileUpload = (e) => {
-    const files = Array.from(e.target.files);
-    setAttachedFiles(prev => [...prev, ...files]);
-  };
+  // ==================== FILTERED DATA ====================
+  const filteredRequests = requests.filter((req) => {
+    const matchesSearch =
+      req.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      req.reason.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      filterStatus === "All" || req.status === filterStatus.toLowerCase();
+    const matchesType =
+      filterType === "All" || req.requestType === filterType.toLowerCase();
+    return matchesSearch && matchesStatus && matchesType;
+  });
 
-  const handleApprovalSubmit = (e) => {
-    e.preventDefault();
-    if (!approvalAction) {
-      alert("Please select an action");
-      return;
-    }
-    alert(`Request ${approvalAction} submitted with remarks: ${approvalRemarks}`);
-    setApprovalAction("");
-    setApprovalRemarks("");
-  };
-
-  return (
-    <div style={{ padding: "20px", fontFamily: "'Inter', 'Segoe UI', sans-serif", backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
-      <div className="mb-4">
-        <h4 className="fw-bold mb-0" style={{ color: "#2d3e50" }}>
-          Regularization Dashboard
-        </h4>
-        <p className="text-muted mb-0" style={{ fontSize: "14px" }}>
-          Manage attendance regularization requests and approvals
-        </p>
-      </div>
-
-      {/* Navigation Tabs with consistent styling */}
-      <div className="d-flex gap-2 mb-4 flex-wrap">
-        {sections.map((section) => (
-          <button
-            key={section.id}
-            onClick={() => setActiveSection(section.id)}
-            className="btn"
-            style={{
-              whiteSpace: "nowrap",
-              padding: "8px 20px",
-              borderRadius: "4px",
-              background: activeSection === section.id ? "#007bff" : "#fff",
-              color: activeSection === section.id ? "#fff" : "#495057",
-              fontWeight: "500",
-              border: `1px solid ${activeSection === section.id ? "#007bff" : "#ced4da"}`,
-              transition: "all 0.2s ease",
-              fontSize: "14px",
-            }}
-            onMouseEnter={(e) => {
-              if (activeSection !== section.id) {
-                e.currentTarget.style.backgroundColor = "#e7f1ff";
-                e.currentTarget.style.borderColor = "#007bff";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (activeSection !== section.id) {
-                e.currentTarget.style.backgroundColor = "#fff";
-                e.currentTarget.style.borderColor = "#ced4da";
-              }
-            }}
-          >
-            {section.id}
-          </button>
-        ))}
-      </div>
-
-      {/* Employee Requests Section - 2x2 Layout */}
-      {activeSection === "Employee Requests" && (
-        <div style={containerStyle}>
-          <h5 className="fw-bold mb-4" style={{ color: "#2d3e50", fontSize: "18px" }}>
-            Employee Requests
-          </h5>
-          
-          <div className="row g-4">
-            {/* Row 1 - 2 cards */}
-            <div className="col-12 col-lg-6">
-              <RegularizationCard title="Missing Punch">
-                <form onSubmit={handleMissingPunchSubmit} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                  <div style={{ flex: 1 }}>
-                    <FormField
-                      label="Date & Time"
-                      type="datetime-local"
-                      value={missingPunch.dateTime}
-                      onChange={(e) => setMissingPunch(prev => ({ ...prev, dateTime: e.target.value }))}
-                      required
-                    />
-                    <FormField
-                      label="Reason"
-                      type="text"
-                      value={missingPunch.reason}
-                      onChange={(e) => setMissingPunch(prev => ({ ...prev, reason: e.target.value }))}
-                      placeholder="Enter reason"
-                      required
-                    />
-                    <FormField
-                      label="Remarks"
-                      type="textarea"
-                      value={missingPunch.remarks}
-                      onChange={(e) => setMissingPunch(prev => ({ ...prev, remarks: e.target.value }))}
-                      placeholder="Enter remarks"
-                      required
-                    />
-                  </div>
-                  
-                  <div style={buttonContainerStyle}>
-                    <button 
-                      type="submit" 
-                      className="btn w-100"
-                      style={{
-                        ...buttonStyles.primary,
-                        padding: "10px 16px",
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#0056b3"}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#007bff"}
-                    >
-                      Submit Request
-                    </button>
-                  </div>
-                </form>
-              </RegularizationCard>
+  // ==================== RENDER FUNCTIONS ====================
+  const renderRequests = () => (
+    <div className="row g-4">
+      <div className="col-12">
+        <div className="card border-0 shadow-sm">
+          <div className="card-header bg-white py-3">
+            <div className="d-flex justify-content-between align-items-center">
+              <h5 className="mb-0 d-flex align-items-center">
+                <FileText size={20} className="me-2 text-primary" />
+                Regularization Requests
+              </h5>
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => {
+                  setRequestType("missing");
+                  setRequestForm({ ...requestForm, requestType: "missing" });
+                  setShowRequestModal(true);
+                }}
+              >
+                <Plus size={16} className="me-2" />
+                New Request
+              </button>
+            </div>
+          </div>
+          <div className="card-body">
+            <div className="row g-3 mb-3">
+              <div className="col-md-4">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search requests..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <div className="col-md-4">
+                <select
+                  className="form-select"
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                >
+                  <option value="All">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                  <option value="auto-rejected">Auto-Rejected</option>
+                </select>
+              </div>
+              <div className="col-md-4">
+                <select
+                  className="form-select"
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                >
+                  <option value="All">All Types</option>
+                  <option value="missing">Missing Punch</option>
+                  <option value="incorrect">Incorrect Time</option>
+                  <option value="forgot">Forgot Punch</option>
+                  <option value="wfh">WFH</option>
+                  <option value="on_duty">On-Duty</option>
+                </select>
+              </div>
             </div>
 
-            <div className="col-12 col-lg-6">
-              <RegularizationCard title="Incorrect Time">
-                <form onSubmit={handleIncorrectTimeSubmit} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                  <div style={{ flex: 1 }}>
-                    <FormField
-                      label="Original Time"
-                      type="datetime-local"
-                      value={incorrectTime.originalTime}
-                      onChange={(e) => setIncorrectTime(prev => ({ ...prev, originalTime: e.target.value }))}
-                      required
-                    />
-                    <FormField
-                      label="Corrected Time"
-                      type="datetime-local"
-                      value={incorrectTime.correctedTime}
-                      onChange={(e) => setIncorrectTime(prev => ({ ...prev, correctedTime: e.target.value }))}
-                      required
-                    />
-                    <FormField
-                      label="Reason"
-                      type="text"
-                      value={incorrectTime.reason}
-                      onChange={(e) => setIncorrectTime(prev => ({ ...prev, reason: e.target.value }))}
-                      placeholder="Enter reason"
-                      required
-                    />
-                    <FormField
-                      label="Remarks"
-                      type="textarea"
-                      value={incorrectTime.remarks}
-                      onChange={(e) => setIncorrectTime(prev => ({ ...prev, remarks: e.target.value }))}
-                      placeholder="Enter remarks"
-                      required
-                    />
-                  </div>
-                  
-                  <div style={buttonContainerStyle}>
-                    <button 
-                      type="submit" 
-                      className="btn w-100"
-                      style={{
-                        ...buttonStyles.primary,
-                        padding: "10px 16px",
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#0056b3"}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#007bff"}
-                    >
-                      Update Time
-                    </button>
-                  </div>
-                </form>
-              </RegularizationCard>
-            </div>
-
-            {/* Row 2 - 2 cards */}
-            <div className="col-12 col-lg-6">
-              <RegularizationCard title="Forgot Punch">
-                <form onSubmit={handleForgotPunchSubmit} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                  <div style={{ flex: 1 }}>
-                    <FormField
-                      label="Date"
-                      type="date"
-                      value={forgotPunch.date}
-                      onChange={(e) => setForgotPunch(prev => ({ ...prev, date: e.target.value }))}
-                      required
-                    />
-                    <FormField
-                      label="Punch Type"
-                      type="select"
-                      value={forgotPunch.punchType}
-                      onChange={(e) => setForgotPunch(prev => ({ ...prev, punchType: e.target.value }))}
-                      options={[
-                        { value: "IN", label: "IN" },
-                        { value: "OUT", label: "OUT" },
-                      ]}
-                    />
-                    <FormField
-                      label="Approx Time"
-                      type="time"
-                      value={forgotPunch.approxTime}
-                      onChange={(e) => setForgotPunch(prev => ({ ...prev, approxTime: e.target.value }))}
-                      required
-                    />
-                    <FormField
-                      label="Reason"
-                      type="text"
-                      value={forgotPunch.reason}
-                      onChange={(e) => setForgotPunch(prev => ({ ...prev, reason: e.target.value }))}
-                      placeholder="Enter reason"
-                      required
-                    />
-                    <FormField
-                      label="Remarks"
-                      type="textarea"
-                      value={forgotPunch.remarks}
-                      onChange={(e) => setForgotPunch(prev => ({ ...prev, remarks: e.target.value }))}
-                      placeholder="Enter remarks"
-                      required
-                    />
-                    <FormField
-                      label="Attachment"
-                      type="file"
-                      onChange={(e) => setForgotPunch(prev => ({ ...prev, attachment: e.target.files[0] }))}
-                    />
-                  </div>
-                  
-                  <div style={buttonContainerStyle}>
-                    <button
-                      type="submit"
-                      className="btn w-100"
-                      style={{
-                        ...buttonStyles.primary,
-                        padding: "10px 16px",
-                        opacity: forgotPunch.submitting ? 0.7 : 1,
-                      }}
-                      disabled={forgotPunch.submitting}
-                      onMouseEnter={(e) => {
-                        if (!forgotPunch.submitting) {
-                          e.currentTarget.style.backgroundColor = "#0056b3";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!forgotPunch.submitting) {
-                          e.currentTarget.style.backgroundColor = "#007bff";
-                        }
-                      }}
-                    >
-                      {forgotPunch.submitting ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2"></span>
-                          Submitting...
-                        </>
-                      ) : (
-                        "Submit Request"
-                      )}
-                    </button>
-                  </div>
-                </form>
-              </RegularizationCard>
-            </div>
-
-            <div className="col-12 col-lg-6">
-              <RegularizationCard title="WFH Regularization">
-                <form onSubmit={handleWfhSubmit} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                  <div style={{ flex: 1 }}>
-                    <FormField
-                      label="Date"
-                      type="date"
-                      value={wfhRegularization.date}
-                      onChange={(e) => setWfhRegularization(prev => ({ ...prev, date: e.target.value }))}
-                      required
-                    />
-                    <FormField
-                      label="Location"
-                      type="text"
-                      value={wfhRegularization.location}
-                      onChange={(e) => setWfhRegularization(prev => ({ ...prev, location: e.target.value }))}
-                      placeholder="Enter location"
-                      required
-                    />
-                    <FormField
-                      label="Reason"
-                      type="select"
-                      value={wfhRegularization.reason}
-                      onChange={(e) => setWfhRegularization(prev => ({ ...prev, reason: e.target.value }))}
-                      options={[
-                        { value: "", label: "Select Reason" },
-                        { value: "Health Issue", label: "Health Issue" },
-                        { value: "Personal Work", label: "Personal Work" },
-                        { value: "Family Emergency", label: "Family Emergency" },
-                        { value: "Other", label: "Other" },
-                      ]}
-                      required
-                    />
-                    <FormField
-                      label="Work Summary"
-                      type="textarea"
-                      value={wfhRegularization.summary}
-                      onChange={(e) => setWfhRegularization(prev => ({ ...prev, summary: e.target.value }))}
-                      placeholder="Enter work summary"
-                      required
-                    />
-                    <FormField
-                      label="Attachment"
-                      type="file"
-                      onChange={(e) => setWfhRegularization(prev => ({ ...prev, attachment: e.target.files[0] }))}
-                    />
-                  </div>
-                  
-                  <div style={buttonContainerStyle}>
-                    <button 
-                      type="submit" 
-                      className="btn w-100"
-                      style={{
-                        ...buttonStyles.primary,
-                        padding: "10px 16px",
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#0056b3"}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#007bff"}
-                    >
-                      Submit Request
-                    </button>
-                  </div>
-                </form>
-              </RegularizationCard>
+            <div className="table-responsive">
+              <table className="table table-hover">
+                <thead className="table-light">
+                  <tr>
+                    <th>Employee</th>
+                    <th>Type</th>
+                    <th>Date/Time</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRequests.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" className="text-center py-4">
+                        <p className="text-muted mb-0">No regularization requests</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredRequests.map((req) => (
+                      <tr key={req.id}>
+                        <td>
+                          <div className="fw-medium">{req.employeeName}</div>
+                          <small className="text-muted">{req.department}</small>
+                        </td>
+                        <td>
+                          <span className="badge bg-info">
+                            {req.requestType === "missing"
+                              ? "Missing Punch"
+                              : req.requestType === "incorrect"
+                              ? "Incorrect Time"
+                              : req.requestType === "forgot"
+                              ? "Forgot Punch"
+                              : req.requestType === "wfh"
+                              ? "WFH"
+                              : "On-Duty"}
+                          </span>
+                        </td>
+                        <td>
+                          <small>
+                            {req.dateTime || req.date || req.originalTime || "N/A"}
+                          </small>
+                        </td>
+                        <td>
+                          <small className="text-truncate d-inline-block" style={{ maxWidth: "200px" }}>
+                            {req.reason}
+                          </small>
+                        </td>
+                        <td>
+                          <span
+                            className={`badge bg-${
+                              req.status === "approved"
+                                ? "success"
+                                : req.status === "rejected" || req.status === "auto-rejected"
+                                ? "danger"
+                                : "warning"
+                            }`}
+                          >
+                            {req.status === "auto-rejected" ? "Auto-Rejected" : req.status}
+                          </span>
+                        </td>
+                        <td>
+                          <small>
+                            {new Date(req.submittedAt).toLocaleDateString()}
+                          </small>
+                        </td>
+                        <td>
+                          <div className="d-flex gap-2">
+                            {req.status === "pending" && (
+                              <>
+                                <button
+                                  className="btn btn-sm btn-outline-success"
+                                  onClick={() => handleApproveRequest(req.id, true)}
+                                  title="Approve"
+                                >
+                                  <Check size={14} />
+                                </button>
+                                <button
+                                  className="btn btn-sm btn-outline-danger"
+                                  onClick={() => {
+                                    setSelectedRequest(req);
+                                    setShowApprovalModal(true);
+                                  }}
+                                  title="Reject"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </>
+                            )}
+                            <button
+                              className="btn btn-sm btn-outline-primary"
+                              onClick={() => {
+                                setSelectedRequest(req);
+                                setShowApprovalModal(true);
+                              }}
+                              title="View Details"
+                            >
+                              <Eye size={14} />
+                            </button>
+                            {req.attachments && req.attachments.length > 0 && (
+                              <button
+                                className="btn btn-sm btn-outline-info"
+                                title="View Attachments"
+                              >
+                                <FileText size={14} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
-      )}
+      </div>
+    </div>
+  );
 
-      {/* Duty & Remarks Section */}
-      {activeSection === "Duty & Remarks" && (
-        <div style={containerStyle}>
-          <h5 className="fw-bold mb-4" style={{ color: "#2d3e50", fontSize: "18px" }}>
-            Duty & Remarks
-          </h5>
-          
-          <div className="row g-4">
-            {/* On-Duty Request */}
-            <div className="col-12 col-md-6">
-              <RegularizationCard title="On-Duty Request">
-                <form onSubmit={handleOnDutySubmit} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                  <div style={{ flex: 1 }}>
-                    <FormField
-                      label="Date"
-                      type="date"
-                      value={onDuty.date}
-                      onChange={(e) => setOnDuty(prev => ({ ...prev, date: e.target.value }))}
-                      required
-                    />
-                    
-                    <div className="row g-2">
-                      <div className="col-6">
-                        <FormField
-                          label="From Time"
-                          type="time"
-                          value={onDuty.fromTime}
-                          onChange={(e) => setOnDuty(prev => ({ ...prev, fromTime: e.target.value }))}
-                          required
-                        />
-                      </div>
-                      <div className="col-6">
-                        <FormField
-                          label="To Time"
-                          type="time"
-                          value={onDuty.toTime}
-                          onChange={(e) => setOnDuty(prev => ({ ...prev, toTime: e.target.value }))}
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <FormField
-                      label="Duty Type"
-                      type="select"
-                      value={onDuty.dutyType}
-                      onChange={(e) => setOnDuty(prev => ({ ...prev, dutyType: e.target.value }))}
-                      options={[
-                        { value: "", label: "Select Duty Type" },
-                        { value: "client_visit", label: "Client Visit" },
-                        { value: "training", label: "Training" },
-                        { value: "business_travel", label: "Business Travel" },
-                        { value: "other", label: "Other" },
-                      ]}
-                      required
-                    />
-                    
-                    <FormField
-                      label="Purpose/Location"
-                      type="text"
-                      value={onDuty.purpose}
-                      onChange={(e) => setOnDuty(prev => ({ ...prev, purpose: e.target.value }))}
-                      placeholder="Enter purpose/location"
-                      required
-                    />
-                    
-                    <FormField
-                      label="Remarks"
-                      type="textarea"
-                      value={onDuty.remarks}
-                      onChange={(e) => setOnDuty(prev => ({ ...prev, remarks: e.target.value }))}
-                      placeholder="Enter remarks"
-                      required
-                    />
-                    
-                    <FormField
-                      label="Attachment"
-                      type="file"
-                      onChange={(e) => setOnDuty(prev => ({ ...prev, attachment: e.target.files[0] }))}
-                    />
-                  </div>
-                  
-                  <div style={buttonContainerStyle}>
-                    <button 
-                      type="submit" 
-                      className="btn w-100"
-                      style={{
-                        ...buttonStyles.primary,
-                        padding: "10px 16px",
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#0056b3"}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#007bff"}
-                    >
-                      Submit Request
-                    </button>
-                  </div>
-                </form>
-              </RegularizationCard>
-            </div>
-
-            {/* Remarks Entry */}
-            <div className="col-12 col-md-6">
-              <RegularizationCard title="Remarks Entry">
-                <form onSubmit={handleRemarksSubmit} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                  <div style={{ flex: 1 }}>
-                    <FormField
-                      label="Remarks Title"
-                      type="text"
-                      value={remarksEntry.title}
-                      onChange={(e) => setRemarksEntry(prev => ({ ...prev, title: e.target.value }))}
-                      placeholder="Enter title"
-                      required
-                    />
-                    
-                    <FormField
-                      label="Remarks"
-                      type="textarea"
-                      value={remarksEntry.remarks}
-                      onChange={(e) => setRemarksEntry(prev => ({ ...prev, remarks: e.target.value }))}
-                      placeholder="Enter remarks"
-                      rows={4}
-                      required
-                    />
-                    
-                    <FormField
-                      label="Attachment"
-                      type="file"
-                      onChange={(e) => setRemarksEntry(prev => ({ ...prev, attachment: e.target.files[0] }))}
-                    />
-                  </div>
-                  
-                  <div style={buttonContainerStyle}>
-                    <button 
-                      type="submit" 
-                      className="btn w-100"
-                      style={{
-                        ...buttonStyles.primary,
-                        padding: "10px 16px",
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#0056b3"}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#007bff"}
-                    >
-                      Save Remarks
-                    </button>
-                  </div>
-                </form>
-              </RegularizationCard>
-            </div>
+  const renderSettings = () => (
+    <div className="row g-4">
+      <div className="col-12 col-md-6">
+        <div className="card border-0 shadow-sm">
+          <div className="card-header bg-white py-3">
+            <h5 className="mb-0 d-flex align-items-center">
+              <Settings size={20} className="me-2 text-primary" />
+              Auto-Reject Rules
+            </h5>
           </div>
-        </div>
-      )}
-
-      {/* Attachments & Workflow Section */}
-      {activeSection === "Attachments & Workflow" && (
-        <div style={containerStyle}>
-          <h5 className="fw-bold mb-4" style={{ color: "#2d3e50", fontSize: "18px" }}>
-            Attachments & Workflow
-          </h5>
-          
-          <div className="row g-4">
-            {/* Document Upload */}
-            <div className="col-12 col-md-6">
-              <RegularizationCard title="Document Upload">
-                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                  <div style={{ flex: 1 }}>
-                    <div className="mb-3">
-                      <label className="form-label" style={{ fontSize: "14px", fontWeight: "500", color: "#495057" }}>
-                        Upload Supporting Documents
-                      </label>
-                      <div className="input-group">
-                        <input
-                          type="file"
-                          className="form-control"
-                          multiple
-                          onChange={handleFileUpload}
-                          style={{ fontSize: "14px", padding: "8px 12px" }}
-                          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                        />
+          <div className="card-body">
+            <div className="table-responsive">
+              <table className="table table-hover">
+                <thead className="table-light">
+                  <tr>
+                    <th>Request Type</th>
+                    <th>Days</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {autoRejectRules.map((rule) => (
+                    <tr key={rule.id}>
+                      <td>
+                        {rule.requestType === "missing"
+                          ? "Missing Punch"
+                          : rule.requestType === "forgot"
+                          ? "Forgot Punch"
+                          : rule.requestType}
+                      </td>
+                      <td>{rule.days} days</td>
+                      <td>
+                        <span className={`badge bg-${rule.enabled ? "success" : "secondary"}`}>
+                          {rule.enabled ? "Enabled" : "Disabled"}
+                        </span>
+                      </td>
+                      <td>
                         <button
-                          className="btn"
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          style={{
-                            ...buttonStyles.outline,
-                            width: "auto",
-                            padding: "8px 16px",
-                            borderColor: "#ced4da",
-                            color: "#495057",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = "#e7f1ff";
-                            e.currentTarget.style.borderColor = "#007bff";
-                            e.currentTarget.style.color = "#007bff";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "transparent";
-                            e.currentTarget.style.borderColor = "#ced4da";
-                            e.currentTarget.style.color = "#495057";
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => {
+                            const updated = {
+                              ...rule,
+                              enabled: !rule.enabled,
+                            };
+                            dispatch({
+                              type: "SET_AUTO_REJECT_RULES",
+                              payload: autoRejectRules.map((r) =>
+                                r.id === rule.id ? updated : r
+                              ),
+                            });
                           }}
                         >
-                          Browse
+                          {rule.enabled ? "Disable" : "Enable"}
                         </button>
-                      </div>
-                      <small className="text-muted" style={{ fontSize: "12px" }}>
-                        Supported formats: PDF, DOC, DOCX, JPG, PNG (Max: 10MB each)
-                      </small>
-                    </div>
-
-                    <FormField
-                      label="Document Type"
-                      type="select"
-                      options={[
-                        { value: "", label: "Select Document Type" },
-                        { value: "medical", label: "Medical Certificate" },
-                        { value: "travel", label: "Travel Document" },
-                        { value: "client", label: "Client Communication" },
-                        { value: "other", label: "Other" },
-                      ]}
-                    />
-
-                    <FormField
-                      label="Description"
-                      type="textarea"
-                      placeholder="Enter document description"
-                      rows={2}
-                    />
-
-                    {attachedFiles.length > 0 && (
-                      <div className="mt-3">
-                        <label className="form-label" style={{ fontSize: "14px", fontWeight: "500", color: "#495057" }}>
-                          Uploaded Files ({attachedFiles.length})
-                        </label>
-                        <div style={{ maxHeight: "150px", overflowY: "auto", border: "1px solid #e9ecef", borderRadius: "4px", padding: "10px" }}>
-                          {attachedFiles.map((file, index) => (
-                            <div
-                              key={index}
-                              className="d-flex justify-content-between align-items-center p-1 mb-1"
-                              style={{
-                                backgroundColor: "#f8f9fa",
-                                borderRadius: "4px",
-                              }}
-                            >
-                              <span style={{ fontSize: "13px", wordBreak: "break-all" }}>{file.name}</span>
-                              <button
-                                type="button"
-                                className="btn btn-sm"
-                                onClick={() => {
-                                  setAttachedFiles(prev => prev.filter((_, i) => i !== index));
-                                }}
-                                style={{
-                                  ...buttonStyles.outline,
-                                  width: "auto",
-                                  padding: "2px 8px",
-                                  fontSize: "12px",
-                                  borderColor: "#dc3545",
-                                  color: "#dc3545",
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = "#dc3545";
-                                  e.currentTarget.style.color = "#fff";
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = "transparent";
-                                  e.currentTarget.style.color = "#dc3545";
-                                }}
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div style={buttonContainerStyle}>
-                    <button
-                      type="button"
-                      className="btn w-100"
-                      disabled={attachedFiles.length === 0}
-                      onClick={() => {
-                        alert(`${attachedFiles.length} file(s) uploaded successfully!`);
-                        setAttachedFiles([]);
-                      }}
-                      style={{
-                        ...buttonStyles.primary,
-                        padding: "10px 16px",
-                        opacity: attachedFiles.length === 0 ? 0.6 : 1,
-                      }}
-                      onMouseEnter={(e) => {
-                        if (attachedFiles.length > 0) {
-                          e.currentTarget.style.backgroundColor = "#0056b3";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (attachedFiles.length > 0) {
-                          e.currentTarget.style.backgroundColor = "#007bff";
-                        }
-                      }}
-                    >
-                      {attachedFiles.length > 0 ? `Upload ${attachedFiles.length} File(s)` : "No Files Selected"}
-                    </button>
-                  </div>
-                </div>
-              </RegularizationCard>
-            </div>
-
-            {/* Approval Workflow */}
-            <div className="col-12 col-md-6">
-              <RegularizationCard title="Approval Workflow">
-                <form onSubmit={handleApprovalSubmit} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                  <div style={{ flex: 1 }}>
-                    <div className="mb-3">
-                      <label className="form-label" style={{ fontSize: "14px", fontWeight: "500", color: "#495057" }}>
-                        Current Status
-                      </label>
-                      <div style={{ padding: "15px", backgroundColor: "#f8f9fa", borderRadius: "6px", border: "1px solid #e9ecef" }}>
-                        <div className="mb-2">
-                          <div className="d-flex justify-content-between align-items-center">
-                            <span style={{ fontSize: "14px", fontWeight: "500" }}>Employee Submission</span>
-                            <span className="badge" style={{ fontSize: "12px", backgroundColor: "#28a745", color: "#fff" }}>Completed</span>
-                          </div>
-                          <small className="text-muted" style={{ fontSize: "12px" }}>Request & documents submitted</small>
-                        </div>
-                        
-                        <div className="mb-2">
-                          <div className="d-flex justify-content-between align-items-center">
-                            <span style={{ fontSize: "14px", fontWeight: "500" }}>Manager Validation</span>
-                            <span className="badge" style={{ fontSize: "12px", backgroundColor: "#ffc107", color: "#212529" }}>Pending</span>
-                          </div>
-                          <small className="text-muted" style={{ fontSize: "12px" }}>Awaiting manager review</small>
-                        </div>
-                        
-                        <div>
-                          <div className="d-flex justify-content-between align-items-center">
-                            <span style={{ fontSize: "14px", fontWeight: "500" }}>HR Final Approval</span>
-                            <span className="badge" style={{ fontSize: "12px", backgroundColor: "#6c757d", color: "#fff" }}>Not Started</span>
-                          </div>
-                          <small className="text-muted" style={{ fontSize: "12px" }}>Pending manager approval</small>
-                        </div>
-                      </div>
-                    </div>
-
-                    <FormField
-                      label="Action"
-                      type="select"
-                      value={approvalAction}
-                      onChange={(e) => setApprovalAction(e.target.value)}
-                      options={[
-                        { value: "", label: "Select Action" },
-                        { value: "approve", label: "Approve" },
-                        { value: "reject", label: "Reject" },
-                        { value: "request_changes", label: "Request Changes" },
-                      ]}
-                    />
-                    
-                    <FormField
-                      label="Remarks"
-                      type="textarea"
-                      value={approvalRemarks}
-                      onChange={(e) => setApprovalRemarks(e.target.value)}
-                      placeholder="Enter approval remarks"
-                      rows={2}
-                    />
-                  </div>
-                  
-                  <div style={buttonContainerStyle}>
-                    <button 
-                      type="submit" 
-                      className="btn w-100"
-                      style={{
-                        ...buttonStyles.primary,
-                        padding: "10px 16px",
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#0056b3"}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#007bff"}
-                    >
-                      Submit Approval
-                    </button>
-                  </div>
-                </form>
-              </RegularizationCard>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Reports & Settings Section */}
-      {activeSection === "Reports & Settings" && (
-        <div style={containerStyle}>
-          <h5 className="fw-bold mb-4" style={{ color: "#2d3e50", fontSize: "18px" }}>
-            Reports & Settings
-          </h5>
-          
-          <div className="row g-4">
-            <div className="col-12 col-md-6 col-lg-4">
-              <RegularizationCard title="Auto-Reject Rule">
-                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                  <div style={{ flex: 1 }}>
-                    <FormField
-                      label="Number of Days"
-                      type="number"
-                      value={autoRejectDays}
-                      onChange={(e) => setAutoRejectDays(e.target.value)}
-                      placeholder="Enter days"
-                      min="1"
-                      max="30"
-                    />
-                    <FormField
-                      label="Request Type"
-                      type="select"
-                      value={autoRejectType}
-                      onChange={(e) => setAutoRejectType(e.target.value)}
-                      options={[
-                        { value: "", label: "Select Type" },
-                        { value: "missing", label: "Missing Punch" },
-                        { value: "incorrect", label: "Incorrect Time" },
-                        { value: "forgot", label: "Forgot Punch" },
-                        { value: "wfh", label: "WFH Regularization" },
-                        { value: "on_duty", label: "On-Duty" },
-                      ]}
-                    />
-                  </div>
-                  
-                  <div style={buttonContainerStyle}>
-                    <button 
-                      type="button" 
-                      className="btn w-100"
-                      style={{
-                        ...buttonStyles.primary,
-                        padding: "10px 16px",
-                      }}
-                      onClick={() => {
-                        if (autoRejectDays && autoRejectType) {
-                          alert(`Auto-reject rule set: ${autoRejectDays} days for ${autoRejectType}`);
-                          setAutoRejectDays("");
-                          setAutoRejectType("");
-                        } else {
-                          alert("Please fill all fields");
-                        }
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#0056b3"}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#007bff"}
-                    >
-                      Set Rule
-                    </button>
-                  </div>
+      <div className="col-12 col-md-6">
+        <div className="card border-0 shadow-sm">
+          <div className="card-header bg-white py-3">
+            <h5 className="mb-0 d-flex align-items-center">
+              <BarChart3 size={20} className="me-2 text-primary" />
+              Request Statistics
+            </h5>
+          </div>
+          <div className="card-body">
+            <div className="row g-3">
+              <div className="col-6">
+                <div className="text-center p-3 border rounded">
+                  <div className="h4 mb-0 text-primary">{requests.length}</div>
+                  <small className="text-muted">Total Requests</small>
                 </div>
-              </RegularizationCard>
-            </div>
-            
-            <div className="col-12 col-md-6 col-lg-4">
-              <RegularizationCard title="Bulk Regularization">
-                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                  <div style={{ flex: 1 }}>
-                    <FormField
-                      label="From Date"
-                      type="date"
-                      value={bulkFromDate}
-                      onChange={(e) => setBulkFromDate(e.target.value)}
-                    />
-                    <FormField
-                      label="To Date"
-                      type="date"
-                      value={bulkToDate}
-                      onChange={(e) => setBulkToDate(e.target.value)}
-                    />
-                    <FormField
-                      label="Issue Type"
-                      type="select"
-                      value={bulkIssueType}
-                      onChange={(e) => setBulkIssueType(e.target.value)}
-                      options={[
-                        { value: "", label: "Select Issue" },
-                        { value: "system", label: "System Failure" },
-                        { value: "device", label: "Device Malfunction" },
-                        { value: "sync", label: "Sync Error" },
-                        { value: "other", label: "Other" },
-                      ]}
-                    />
-                    <FormField
-                      label="Upload File"
-                      type="file"
-                      accept=".csv,.xlsx,.xls"
-                    />
+              </div>
+              <div className="col-6">
+                <div className="text-center p-3 border rounded">
+                  <div className="h4 mb-0 text-warning">
+                    {requests.filter((r) => r.status === "pending").length}
                   </div>
-                  
-                  <div style={buttonContainerStyle}>
-                    <button 
-                      type="button" 
-                      className="btn w-100"
-                      style={{
-                        ...buttonStyles.primary,
-                        padding: "10px 16px",
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#0056b3"}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#007bff"}
+                  <small className="text-muted">Pending</small>
+                </div>
+              </div>
+              <div className="col-6">
+                <div className="text-center p-3 border rounded">
+                  <div className="h4 mb-0 text-success">
+                    {requests.filter((r) => r.status === "approved").length}
+                  </div>
+                  <small className="text-muted">Approved</small>
+                </div>
+              </div>
+              <div className="col-6">
+                <div className="text-center p-3 border rounded">
+                  <div className="h4 mb-0 text-danger">
+                    {requests.filter((r) => r.status === "rejected" || r.status === "auto-rejected").length}
+                  </div>
+                  <small className="text-muted">Rejected</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="container-fluid py-4">
+      <div className="row mb-4">
+        <div className="col-12">
+          <h4 className="mb-2">Regularization Workflow</h4>
+          <p className="text-muted">
+            Manage attendance regularization requests, approvals, and settings
+          </p>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <ul className="nav nav-tabs mb-4">
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === "requests" ? "active" : ""}`}
+            onClick={() => setActiveTab("requests")}
+          >
+            <FileText size={16} className="me-2" />
+            Requests
+          </button>
+        </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === "settings" ? "active" : ""}`}
+            onClick={() => setActiveTab("settings")}
+          >
+            <Settings size={16} className="me-2" />
+            Settings
+          </button>
+        </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === "bulk" ? "active" : ""}`}
+            onClick={() => setActiveTab("bulk")}
+          >
+            <Upload size={16} className="me-2" />
+            Bulk Processing
+          </button>
+        </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === "reports" ? "active" : ""}`}
+            onClick={() => setActiveTab("reports")}
+          >
+            <BarChart3 size={16} className="me-2" />
+            Reports
+          </button>
+        </li>
+      </ul>
+
+      {/* Tab Content */}
+      <div className="tab-content">
+        {activeTab === "requests" && renderRequests()}
+        {activeTab === "settings" && renderSettings()}
+        {activeTab === "bulk" && (
+          <div className="row g-4">
+            <div className="col-12">
+              <div className="card border-0 shadow-sm">
+                <div className="card-header bg-white py-3">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <h5 className="mb-0 d-flex align-items-center">
+                      <Upload size={20} className="me-2 text-primary" />
+                      Bulk Regularization Processing
+                    </h5>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => setShowBulkModal(true)}
                     >
+                      <Plus size={16} className="me-2" />
                       Process Bulk
                     </button>
                   </div>
                 </div>
-              </RegularizationCard>
+                <div className="card-body">
+                  <p className="text-muted">
+                    Use bulk processing for system-wide issues like device malfunctions,
+                    sync errors, or network failures affecting multiple employees.
+                  </p>
+                  {bulkProcessing.length > 0 && (
+                    <div className="table-responsive mt-3">
+                      <table className="table table-hover">
+                        <thead className="table-light">
+                          <tr>
+                            <th>Date Range</th>
+                            <th>Issue Type</th>
+                            <th>Processed</th>
+                            <th>Status</th>
+                            <th>Processed By</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {bulkProcessing.map((process) => (
+                            <tr key={process.id}>
+                              <td>
+                                {process.fromDate} to {process.toDate}
+                              </td>
+                              <td>{process.issueType}</td>
+                              <td>{process.processedCount} employees</td>
+                              <td>
+                                <span className="badge bg-success">{process.status}</span>
+                              </td>
+                              <td>{process.processedBy}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-            
-            <div className="col-12 col-md-6 col-lg-4">
-              <RegularizationCard title="Request Reports">
-                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                  <div style={{ flex: 1 }}>
-                    <FormField
-                      label="From Date"
-                      type="date"
-                      value={reportFromDate}
-                      onChange={(e) => setReportFromDate(e.target.value)}
-                    />
-                    <FormField
-                      label="To Date"
-                      type="date"
-                      value={reportToDate}
-                      onChange={(e) => setReportToDate(e.target.value)}
-                    />
-                    <FormField
-                      label="Request Type"
-                      type="select"
-                      value={reportType}
-                      onChange={(e) => setReportType(e.target.value)}
-                      options={[
-                        { value: "", label: "All Types" },
-                        { value: "missing", label: "Missing Punch" },
-                        { value: "incorrect", label: "Incorrect Time" },
-                        { value: "forgot", label: "Forgot Punch" },
-                        { value: "wfh", label: "WFH" },
-                        { value: "on_duty", label: "On-Duty" },
-                      ]}
-                    />
-                    <FormField
-                      label="Format"
-                      type="select"
-                      value={reportFormat}
-                      onChange={(e) => setReportFormat(e.target.value)}
-                      options={[
-                        { value: "pdf", label: "PDF" },
-                        { value: "excel", label: "Excel" },
-                        { value: "csv", label: "CSV" },
-                      ]}
+          </div>
+        )}
+        {activeTab === "reports" && (
+          <div className="row g-4">
+            <div className="col-12">
+              <div className="card border-0 shadow-sm">
+                <div className="card-header bg-white py-3">
+                  <h5 className="mb-0 d-flex align-items-center">
+                    <BarChart3 size={20} className="me-2 text-primary" />
+                    Regularization Reports
+                  </h5>
+                </div>
+                <div className="card-body">
+                  <div className="row g-3 mb-3">
+                    <div className="col-md-3">
+                      <label className="form-label">From Date</label>
+                      <input type="date" className="form-control" />
+                    </div>
+                    <div className="col-md-3">
+                      <label className="form-label">To Date</label>
+                      <input type="date" className="form-control" />
+                    </div>
+                    <div className="col-md-3">
+                      <label className="form-label">Request Type</label>
+                      <select className="form-select">
+                        <option value="">All Types</option>
+                        <option value="missing">Missing Punch</option>
+                        <option value="incorrect">Incorrect Time</option>
+                        <option value="forgot">Forgot Punch</option>
+                        <option value="wfh">WFH</option>
+                        <option value="on_duty">On-Duty</option>
+                      </select>
+                    </div>
+                    <div className="col-md-3">
+                      <label className="form-label">Format</label>
+                      <select className="form-select">
+                        <option value="pdf">PDF</option>
+                        <option value="excel">Excel</option>
+                        <option value="csv">CSV</option>
+                      </select>
+                    </div>
+                  </div>
+                  <button className="btn btn-primary">
+                    <Download size={16} className="me-2" />
+                    Generate Report
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Request Modal */}
+      {showRequestModal && (
+        <div
+          className="modal show d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-lg modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">New Regularization Request</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowRequestModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label">Request Type *</label>
+                    <select
+                      className="form-select"
+                      value={requestForm.requestType}
+                      onChange={(e) => {
+                        setRequestType(e.target.value);
+                        setRequestForm({ ...requestForm, requestType: e.target.value });
+                      }}
+                    >
+                      <option value="missing">Missing Punch</option>
+                      <option value="incorrect">Incorrect Time</option>
+                      <option value="forgot">Forgot Punch</option>
+                      <option value="wfh">WFH Regularization</option>
+                      <option value="on_duty">On-Duty</option>
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Employee *</label>
+                    <select
+                      className="form-select"
+                      value={requestForm.employeeId}
+                      onChange={(e) =>
+                        setRequestForm({ ...requestForm, employeeId: e.target.value })
+                      }
+                    >
+                      <option value="">Select employee...</option>
+                      {initialEmployees.map((emp) => (
+                        <option key={emp.id} value={emp.id}>
+                          {emp.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {requestType === "missing" && (
+                    <>
+                      <div className="col-md-6">
+                        <label className="form-label">Date & Time *</label>
+                        <input
+                          type="datetime-local"
+                          className="form-control"
+                          value={requestForm.dateTime}
+                          onChange={(e) =>
+                            setRequestForm({ ...requestForm, dateTime: e.target.value })
+                          }
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {requestType === "incorrect" && (
+                    <>
+                      <div className="col-md-6">
+                        <label className="form-label">Original Time *</label>
+                        <input
+                          type="datetime-local"
+                          className="form-control"
+                          value={requestForm.originalTime}
+                          onChange={(e) =>
+                            setRequestForm({ ...requestForm, originalTime: e.target.value })
+                          }
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Corrected Time *</label>
+                        <input
+                          type="datetime-local"
+                          className="form-control"
+                          value={requestForm.correctedTime}
+                          onChange={(e) =>
+                            setRequestForm({ ...requestForm, correctedTime: e.target.value })
+                          }
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {requestType === "forgot" && (
+                    <>
+                      <div className="col-md-6">
+                        <label className="form-label">Date *</label>
+                        <input
+                          type="date"
+                          className="form-control"
+                          value={requestForm.date}
+                          onChange={(e) =>
+                            setRequestForm({ ...requestForm, date: e.target.value })
+                          }
+                        />
+                      </div>
+                      <div className="col-md-3">
+                        <label className="form-label">Punch Type</label>
+                        <select
+                          className="form-select"
+                          value={requestForm.punchType}
+                          onChange={(e) =>
+                            setRequestForm({ ...requestForm, punchType: e.target.value })
+                          }
+                        >
+                          <option value="IN">IN</option>
+                          <option value="OUT">OUT</option>
+                        </select>
+                      </div>
+                      <div className="col-md-3">
+                        <label className="form-label">Approx Time *</label>
+                        <input
+                          type="time"
+                          className="form-control"
+                          value={requestForm.approxTime}
+                          onChange={(e) =>
+                            setRequestForm({ ...requestForm, approxTime: e.target.value })
+                          }
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {requestType === "wfh" && (
+                    <>
+                      <div className="col-md-6">
+                        <label className="form-label">Date *</label>
+                        <input
+                          type="date"
+                          className="form-control"
+                          value={requestForm.date}
+                          onChange={(e) =>
+                            setRequestForm({ ...requestForm, date: e.target.value })
+                          }
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Location *</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={requestForm.location}
+                          onChange={(e) =>
+                            setRequestForm({ ...requestForm, location: e.target.value })
+                          }
+                          placeholder="Work location"
+                        />
+                      </div>
+                      <div className="col-12">
+                        <label className="form-label">Work Summary *</label>
+                        <textarea
+                          className="form-control"
+                          rows="3"
+                          value={requestForm.summary}
+                          onChange={(e) =>
+                            setRequestForm({ ...requestForm, summary: e.target.value })
+                          }
+                          placeholder="Enter work summary"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {requestType === "on_duty" && (
+                    <>
+                      <div className="col-md-6">
+                        <label className="form-label">Date *</label>
+                        <input
+                          type="date"
+                          className="form-control"
+                          value={requestForm.date}
+                          onChange={(e) =>
+                            setRequestForm({ ...requestForm, date: e.target.value })
+                          }
+                        />
+                      </div>
+                      <div className="col-md-3">
+                        <label className="form-label">From Time *</label>
+                        <input
+                          type="time"
+                          className="form-control"
+                          value={requestForm.fromTime}
+                          onChange={(e) =>
+                            setRequestForm({ ...requestForm, fromTime: e.target.value })
+                          }
+                        />
+                      </div>
+                      <div className="col-md-3">
+                        <label className="form-label">To Time *</label>
+                        <input
+                          type="time"
+                          className="form-control"
+                          value={requestForm.toTime}
+                          onChange={(e) =>
+                            setRequestForm({ ...requestForm, toTime: e.target.value })
+                          }
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Duty Type *</label>
+                        <select
+                          className="form-select"
+                          value={requestForm.dutyType}
+                          onChange={(e) =>
+                            setRequestForm({ ...requestForm, dutyType: e.target.value })
+                          }
+                        >
+                          <option value="">Select...</option>
+                          <option value="client_visit">Client Visit</option>
+                          <option value="training">Training</option>
+                          <option value="business_travel">Business Travel</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Purpose/Location *</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={requestForm.purpose}
+                          onChange={(e) =>
+                            setRequestForm({ ...requestForm, purpose: e.target.value })
+                          }
+                          placeholder="Enter purpose/location"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <div className="col-12">
+                    <label className="form-label">Reason *</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={requestForm.reason}
+                      onChange={(e) =>
+                        setRequestForm({ ...requestForm, reason: e.target.value })
+                      }
+                      placeholder="Enter reason"
+                      required
                     />
                   </div>
-                  
-                  <div style={buttonContainerStyle}>
-                    <button 
-                      type="button" 
-                      className="btn w-100"
-                      style={{
-                        ...buttonStyles.primary,
-                        padding: "10px 16px",
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#0056b3"}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#007bff"}
-                    >
-                      Generate Report
-                    </button>
+                  <div className="col-12">
+                    <label className="form-label">Remarks *</label>
+                    <textarea
+                      className="form-control"
+                      rows="3"
+                      value={requestForm.remarks}
+                      onChange={(e) =>
+                        setRequestForm({ ...requestForm, remarks: e.target.value })
+                      }
+                      placeholder="Enter remarks"
+                      required
+                    />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label">Attachment (Travel bills, Client emails, etc.)</label>
+                    <input
+                      type="file"
+                      className="form-control"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      onChange={(e) =>
+                        setRequestForm({
+                          ...requestForm,
+                          attachment: e.target.files[0],
+                        })
+                      }
+                    />
                   </div>
                 </div>
-              </RegularizationCard>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowRequestModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleSubmitRequest}
+                >
+                  <Send size={16} className="me-2" />
+                  Submit Request
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Approval Modal */}
+      {showApprovalModal && selectedRequest && (
+        <div
+          className="modal show d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Request Details & Approval</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => {
+                    setShowApprovalModal(false);
+                    setSelectedRequest(null);
+                  }}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="mb-3">
+                  <strong>Employee:</strong> {selectedRequest.employeeName}
+                </div>
+                <div className="mb-3">
+                  <strong>Type:</strong> {selectedRequest.requestType}
+                </div>
+                <div className="mb-3">
+                  <strong>Reason:</strong> {selectedRequest.reason}
+                </div>
+                <div className="mb-3">
+                  <strong>Remarks:</strong> {selectedRequest.remarks}
+                </div>
+                {selectedRequest.status === "pending" && (
+                  <>
+                    <div className="mb-3">
+                      <label className="form-label">Action *</label>
+                      <select
+                        className="form-select"
+                        value={approvalForm.action}
+                        onChange={(e) =>
+                          setApprovalForm({ ...approvalForm, action: e.target.value })
+                        }
+                      >
+                        <option value="">Select action...</option>
+                        <option value="approve">Approve</option>
+                        <option value="reject">Reject</option>
+                        <option value="request_changes">Request Changes</option>
+                      </select>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Remarks</label>
+                      <textarea
+                        className="form-control"
+                        rows="3"
+                        value={approvalForm.remarks}
+                        onChange={(e) =>
+                          setApprovalForm({ ...approvalForm, remarks: e.target.value })
+                        }
+                        placeholder="Enter approval remarks"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setShowApprovalModal(false);
+                    setSelectedRequest(null);
+                  }}
+                >
+                  Close
+                </button>
+                {selectedRequest.status === "pending" && (
+                  <>
+                    <button
+                      type="button"
+                      className="btn btn-success"
+                      onClick={() => handleApproveRequest(selectedRequest.id, true)}
+                    >
+                      <Check size={16} className="me-2" />
+                      Approve
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      onClick={() => handleApproveRequest(selectedRequest.id, false)}
+                    >
+                      <X size={16} className="me-2" />
+                      Reject
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Processing Modal */}
+      {showBulkModal && (
+        <div
+          className="modal show d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Bulk Regularization Processing</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowBulkModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label">From Date *</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={bulkForm.fromDate}
+                      onChange={(e) =>
+                        setBulkForm({ ...bulkForm, fromDate: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">To Date *</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={bulkForm.toDate}
+                      onChange={(e) =>
+                        setBulkForm({ ...bulkForm, toDate: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label">Issue Type *</label>
+                    <select
+                      className="form-select"
+                      value={bulkForm.issueType}
+                      onChange={(e) =>
+                        setBulkForm({ ...bulkForm, issueType: e.target.value })
+                      }
+                    >
+                      <option value="">Select issue type...</option>
+                      <option value="system">System Failure</option>
+                      <option value="device">Device Malfunction</option>
+                      <option value="sync">Sync Error</option>
+                      <option value="network">Network Failure</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label">Upload Employee List (CSV/Excel)</label>
+                    <input
+                      type="file"
+                      className="form-control"
+                      accept=".csv,.xlsx,.xls"
+                      onChange={(e) =>
+                        setBulkForm({ ...bulkForm, file: e.target.files[0] })
+                      }
+                    />
+                    <small className="text-muted">
+                      Upload file with employee IDs or process all employees for the date range
+                    </small>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowBulkModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleBulkProcess}
+                >
+                  <Upload size={16} className="me-2" />
+                  Process Bulk
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
     </div>
   );
-}
+};
+
+export default Regularization;

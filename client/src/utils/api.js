@@ -692,6 +692,40 @@ export const contactsAPI = {
   deleteMultiple: (ids) => {
     // Backend doesn't have delete-multiple endpoint, so delete one by one
     return Promise.all(ids.map(id => apiCall(`/contacts/${id}`, { method: 'DELETE' })));
+  },
+
+  // Upload profile photo
+  uploadProfilePhoto: async (contactId, file) => {
+    const token = getToken();
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const config = {
+      method: 'PUT',
+      headers: {
+        ...(token && { 'Authorization': `Bearer ${token}` })
+        // Don't set Content-Type, let browser set it with boundary for FormData
+      },
+      body: formData
+    };
+
+    try {
+      const response = await fetch(`${BASE_URL}/contacts/${contactId}/profile-photo`, config);
+      
+      if (response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          return await response.json();
+        }
+        return null;
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `API Error: ${response.status}`);
+      }
+    } catch (err) {
+      console.error('API Call Error:', err);
+      throw err;
+    }
   }
 };
 
@@ -877,7 +911,41 @@ export const companiesAPI = {
   delete: (id) =>
     apiCall(`/companies/${id}`, {
       method: 'DELETE'
-    })
+    }),
+
+  // Upload company logo
+  uploadLogo: async (companyId, file) => {
+    const token = getToken();
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const config = {
+      method: 'PUT',
+      headers: {
+        ...(token && { 'Authorization': `Bearer ${token}` })
+        // Don't set Content-Type, let browser set it with boundary for FormData
+      },
+      body: formData
+    };
+
+    try {
+      const response = await fetch(`${BASE_URL}/companies/${companyId}/logo`, config);
+      
+      if (response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          return await response.json();
+        }
+        return null;
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `API Error: ${response.status}`);
+      }
+    } catch (err) {
+      console.error('API Call Error:', err);
+      throw err;
+    }
+  }
 };
 
 // ==========================================

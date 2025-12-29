@@ -33,22 +33,41 @@ const AttendanceReports = () => {
     { id: 3, type: 'Exception Report', from: '2024-01-08', to: '2024-01-08', generatedBy: 'System', status: 'Generated', size: '1.8 MB' },
   ]);
 
+  // Real-time Attendance Dashboard Data
+  const realTimeDashboard = {
+    totalEmployees: 1480,
+    present: 1420,
+    absent: 45,
+    onLeave: 35,
+    lateArrivals: 12,
+    earlyDepartures: 8,
+    wfh: 28,
+    onTime: 1408,
+    attendancePercentage: 95.9,
+    lastUpdated: new Date().toLocaleTimeString()
+  };
+
+  // Enhanced Attendance Reports with Categories
   const [attendanceReports, setAttendanceReports] = useState([
+    // Daily Reports
     {
       id: 1,
       reportName: 'Daily Attendance Summary',
+      category: 'daily',
       date: '2024-01-15',
       generated: '09:00 AM',
       totalEmployees: 1480,
       present: 1420,
       absent: 45,
       onLeave: 35,
+      holiday: 0,
       status: 'generated',
       department: 'All'
     },
     {
       id: 2,
       reportName: 'Late Arrivals List',
+      category: 'daily',
       date: '2024-01-15',
       generated: '10:30 AM',
       lateArrivals: 12,
@@ -58,8 +77,56 @@ const AttendanceReports = () => {
       location: 'Bangalore'
     },
     {
+      id: 21,
+      reportName: 'Early Departures List',
+      category: 'daily',
+      date: '2024-01-15',
+      generated: '11:00 AM',
+      earlyDepartures: 8,
+      avgEarlyTime: '45 mins',
+      department: 'All',
+      status: 'generated'
+    },
+    {
+      id: 22,
+      reportName: 'Missing Punch Report',
+      category: 'daily',
+      date: '2024-01-15',
+      generated: '12:00 PM',
+      missingPunches: 15,
+      pendingRegularization: 8,
+      department: 'All',
+      status: 'generated'
+    },
+    {
+      id: 23,
+      reportName: 'Shift-wise Attendance',
+      category: 'daily',
+      date: '2024-01-15',
+      generated: '09:30 AM',
+      generalShift: 950,
+      nightShift: 380,
+      morningShift: 150,
+      department: 'All',
+      status: 'generated'
+    },
+    {
+      id: 24,
+      reportName: 'Location-wise Attendance',
+      category: 'daily',
+      date: '2024-01-15',
+      generated: '10:00 AM',
+      bangalore: 850,
+      mumbai: 420,
+      delhi: 150,
+      chennai: 60,
+      status: 'generated'
+    },
+    // Monthly Reports
+    {
       id: 3,
       reportName: 'Monthly Attendance Register',
+      category: 'monthly',
       date: '2024-01-01',
       generated: '08:45 AM',
       totalEmployees: 1480,
@@ -69,22 +136,212 @@ const AttendanceReports = () => {
       month: 'January 2024'
     },
     {
+      id: 31,
+      reportName: 'Department-wise Attendance Summary',
+      category: 'monthly',
+      date: '2024-01-31',
+      generated: '09:00 AM',
+      engineering: { present: 135, absent: 15, percentage: 90.0 },
+      sales: { present: 78, absent: 7, percentage: 91.8 },
+      marketing: { present: 42, absent: 3, percentage: 93.3 },
+      department: 'All',
+      status: 'generated',
+      month: 'January 2024'
+    },
+    {
+      id: 32,
+      reportName: 'Consolidated Monthly Report',
+      category: 'monthly',
+      date: '2024-01-31',
+      generated: '06:00 PM',
+      totalDays: 31,
+      totalPresent: 44200,
+      totalAbsent: 1480,
+      avgAttendance: '94.2%',
+      status: 'generated',
+      month: 'January 2024'
+    },
+    {
+      id: 33,
+      reportName: 'Loss of Pay Calculation',
+      category: 'monthly',
+      date: '2024-01-31',
+      generated: '05:00 PM',
+      lossOfPayEmployees: 25,
+      totalLossOfPay: 156250,
+      department: 'All',
+      status: 'generated',
+      month: 'January 2024'
+    },
+    {
+      id: 8,
+      reportName: 'Overtime Summary',
+      category: 'monthly',
+      date: '2024-01-31',
+      generated: '04:00 PM',
+      totalOvertimeHours: 1250,
+      employeesWithOT: 180,
+      department: 'All',
+      status: 'generated',
+      month: 'January 2024'
+    },
+    {
+      id: 7,
+      reportName: 'WFH Tracking Report',
+      category: 'monthly',
+      date: '2024-01-31',
+      generated: '03:00 PM',
+      totalWFHDays: 420,
+      employeesWFH: 85,
+      avgWFHDays: 4.9,
+      department: 'All',
+      status: 'generated',
+      month: 'January 2024'
+    },
+    {
+      id: 34,
+      reportName: 'Attendance Percentage by Department/Location',
+      category: 'monthly',
+      date: '2024-01-31',
+      generated: '02:00 PM',
+      departmentPercentages: { Engineering: 90.0, Sales: 91.8, Marketing: 93.3 },
+      locationPercentages: { Bangalore: 94.2, Mumbai: 92.8, Delhi: 95.1 },
+      status: 'generated',
+      month: 'January 2024'
+    },
+    // Exception Reports
+    {
       id: 4,
       reportName: 'Exception Report',
+      category: 'exception',
       date: '2024-01-15',
       generated: '11:15 AM',
       exceptions: 18,
       pendingCases: 8,
       department: 'All',
-      status: 'pending',
+      status: 'generated',
       location: 'All'
     },
     {
+      id: 41,
+      reportName: 'Continuous Absence Report',
+      category: 'exception',
+      date: '2024-01-15',
+      generated: '10:00 AM',
+      continuousAbsence: 12,
+      moreThan3Days: 8,
+      moreThan7Days: 4,
+      department: 'All',
+      status: 'generated'
+    },
+    {
+      id: 42,
+      reportName: 'Frequent Late Arrivals',
+      category: 'exception',
+      date: '2024-01-15',
+      generated: '10:30 AM',
+      frequentLate: 25,
+      moreThan5Times: 15,
+      moreThan10Times: 10,
+      department: 'All',
+      status: 'generated'
+    },
+    {
+      id: 43,
+      reportName: 'Pattern-based Anomalies',
+      category: 'exception',
+      date: '2024-01-15',
+      generated: '11:00 AM',
+      anomalies: 18,
+      suspiciousPatterns: 12,
+      department: 'All',
+      status: 'generated'
+    },
+    {
+      id: 44,
+      reportName: 'Biometric vs Applied Leave Mismatch',
+      category: 'exception',
+      date: '2024-01-15',
+      generated: '11:30 AM',
+      mismatches: 15,
+      pendingResolution: 8,
+      department: 'All',
+      status: 'generated'
+    },
+    {
+      id: 45,
+      reportName: 'Pending Regularization Requests',
+      category: 'exception',
+      date: '2024-01-15',
+      generated: '12:00 PM',
+      pendingRequests: 22,
+      overdue: 8,
+      department: 'All',
+      status: 'generated'
+    },
+    {
+      id: 46,
+      reportName: 'Unapproved Overtime',
+      category: 'exception',
+      date: '2024-01-15',
+      generated: '12:30 PM',
+      unapprovedOT: 15,
+      totalHours: 120,
+      department: 'All',
+      status: 'generated'
+    },
+    {
+      id: 47,
+      reportName: 'Weekend Working without Approval',
+      category: 'exception',
+      date: '2024-01-15',
+      generated: '01:00 PM',
+      weekendWork: 8,
+      withoutApproval: 5,
+      department: 'All',
+      status: 'generated'
+    },
+    // Compliance Reports
+    {
       id: 5,
       reportName: 'Compliance Muster Roll',
+      category: 'compliance',
       date: '2024-01-31',
       generated: '06:00 PM',
       format: 'Factory Act',
+      department: 'All',
+      status: 'generated',
+      period: 'January 2024'
+    },
+    {
+      id: 51,
+      reportName: 'Attendance Register for Labor Department',
+      category: 'compliance',
+      date: '2024-01-31',
+      generated: '05:30 PM',
+      format: 'Labor Department',
+      department: 'All',
+      status: 'generated',
+      period: 'January 2024'
+    },
+    {
+      id: 52,
+      reportName: 'Factory Attendance Register',
+      category: 'compliance',
+      date: '2024-01-31',
+      generated: '06:30 PM',
+      format: 'Factory Act',
+      department: 'Operations',
+      status: 'generated',
+      period: 'January 2024'
+    },
+    {
+      id: 53,
+      reportName: 'Shops & Establishment Act Report',
+      category: 'compliance',
+      date: '2024-01-31',
+      generated: '07:00 PM',
+      format: 'Shops & Establishment Act',
       department: 'All',
       status: 'generated',
       period: 'January 2024'
@@ -93,8 +350,12 @@ const AttendanceReports = () => {
 
   const [selectedDate, setSelectedDate] = useState('2024-01-15');
   const [filterDepartment, setFilterDepartment] = useState('all');
+  const [selectedReportCategory, setSelectedReportCategory] = useState('all'); // all, daily, monthly, exception, compliance
+  const [showRealTimeDashboard, setShowRealTimeDashboard] = useState(false);
 
   const departments = ['all', 'Engineering', 'Sales', 'Marketing', 'HR', 'Finance', 'Operations', 'All'];
+  const locations = ['all', 'Bangalore', 'Mumbai', 'Delhi', 'Chennai', 'Hyderabad'];
+  const shifts = ['all', 'General', 'Night', 'Morning', 'Evening'];
 
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
@@ -203,10 +464,20 @@ const AttendanceReports = () => {
   };
 
   const filteredReports = attendanceReports.filter(report => {
-    const matchesDate = report.date === selectedDate;
-    const matchesDepartment = filterDepartment === 'all' || report.department === filterDepartment;
-    return matchesDate && matchesDepartment;
+    const matchesCategory = selectedReportCategory === 'all' || report.category === selectedReportCategory;
+    const matchesDepartment = filterDepartment === 'all' || report.department === filterDepartment || report.department === 'All';
+    // For daily reports, match by date; for others, show if category matches
+    const matchesDate = selectedReportCategory === 'daily' ? report.date === selectedDate : true;
+    return matchesCategory && matchesDepartment && matchesDate;
   });
+
+  const reportCategories = [
+    { id: 'all', name: 'All Reports', icon: 'heroicons:document-text' },
+    { id: 'daily', name: 'Daily Reports', icon: 'heroicons:calendar' },
+    { id: 'monthly', name: 'Monthly Reports', icon: 'heroicons:calendar-days' },
+    { id: 'exception', name: 'Exception Reports', icon: 'heroicons:exclamation-triangle' },
+    { id: 'compliance', name: 'Compliance Reports', icon: 'heroicons:shield-check' }
+  ];
 
   const reportStats = {
     total: filteredReports.length,
@@ -384,7 +655,7 @@ const AttendanceReports = () => {
                     <Icon icon="heroicons:calendar" className="text-primary fs-4" />
                   </div>
                   <div>
-                    <h6 className="small text-muted fw-medium mb-1">Today's Reports and  Analytics</h6>
+                    <h6 className="small text-muted fw-medium mb-1">Today's Reports</h6>
                     <p className="h5 text-dark mb-0">{reportStats.total}</p>
                   </div>
                 </div>
@@ -400,12 +671,89 @@ const AttendanceReports = () => {
                   </div>
                   <div>
                     <h6 className="small text-muted fw-medium mb-1">Compliance Ready</h6>
-                    <p className="h5 text-dark mb-0">5</p>
+                    <p className="h5 text-dark mb-0">
+                      {attendanceReports.filter(r => r.category === 'compliance' && r.status === 'generated').length}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Real-time Attendance Dashboard */}
+        <div className="card border shadow-none mb-4">
+          <div className="card-header d-flex justify-content-between align-items-center">
+            <h5 className="h5 fw-bold text-dark mb-0">Real-time Attendance Dashboard</h5>
+            <div className="d-flex align-items-center gap-2">
+              <small className="text-muted">Last updated: {realTimeDashboard.lastUpdated}</small>
+              <button 
+                className="btn btn-sm btn-outline-primary"
+                onClick={() => setShowRealTimeDashboard(!showRealTimeDashboard)}
+              >
+                <Icon icon={showRealTimeDashboard ? 'heroicons:chevron-up' : 'heroicons:chevron-down'} />
+              </button>
+            </div>
+          </div>
+          {showRealTimeDashboard && (
+            <div className="card-body">
+              <div className="row g-4">
+                <div className="col-md-2">
+                  <div className="text-center">
+                    <div className="h3 fw-bold text-primary">{realTimeDashboard.totalEmployees}</div>
+                    <div className="small text-muted">Total Employees</div>
+                  </div>
+                </div>
+                <div className="col-md-2">
+                  <div className="text-center">
+                    <div className="h3 fw-bold text-success">{realTimeDashboard.present}</div>
+                    <div className="small text-muted">Present</div>
+                    <div className="small text-success">
+                      ({((realTimeDashboard.present / realTimeDashboard.totalEmployees) * 100).toFixed(1)}%)
+                    </div>
+                  </div>
+                </div>
+                <div className="col-md-2">
+                  <div className="text-center">
+                    <div className="h3 fw-bold text-danger">{realTimeDashboard.absent}</div>
+                    <div className="small text-muted">Absent</div>
+                  </div>
+                </div>
+                <div className="col-md-2">
+                  <div className="text-center">
+                    <div className="h3 fw-bold text-warning">{realTimeDashboard.onLeave}</div>
+                    <div className="small text-muted">On Leave</div>
+                  </div>
+                </div>
+                <div className="col-md-2">
+                  <div className="text-center">
+                    <div className="h3 fw-bold text-info">{realTimeDashboard.lateArrivals}</div>
+                    <div className="small text-muted">Late Arrivals</div>
+                  </div>
+                </div>
+                <div className="col-md-2">
+                  <div className="text-center">
+                    <div className="h3 fw-bold text-secondary">{realTimeDashboard.wfh}</div>
+                    <div className="small text-muted">Work from Home</div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <span className="fw-medium">Overall Attendance Rate</span>
+                  <span className="fw-bold text-success">{realTimeDashboard.attendancePercentage}%</span>
+                </div>
+                <div className="progress" style={{ height: '25px' }}>
+                  <div 
+                    className="progress-bar bg-success" 
+                    style={{ width: `${realTimeDashboard.attendancePercentage}%` }}
+                  >
+                    {realTimeDashboard.attendancePercentage}%
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Calendar View */}
@@ -464,14 +812,39 @@ const AttendanceReports = () => {
                 <div className="mb-3">
                   <label className="form-label fw-semibold">Report Type</label>
                   <select className="form-select">
-                    <option>Daily Attendance Summary</option>
-                    <option>Monthly Attendance Register</option>
-                    <option>Late Arrivals List</option>
-                    <option>Exception Report</option>
-                    <option>Compliance Muster Roll</option>
-                    <option>WFH Tracking Report</option>
-                    <option>Overtime Summary</option>
-                    <option>Department-wise Summary</option>
+                    <optgroup label="Daily Reports">
+                      <option>Daily Attendance Summary</option>
+                      <option>Late Arrivals List</option>
+                      <option>Early Departures List</option>
+                      <option>Missing Punch Report</option>
+                      <option>Shift-wise Attendance</option>
+                      <option>Location-wise Attendance</option>
+                    </optgroup>
+                    <optgroup label="Monthly Reports">
+                      <option>Monthly Attendance Register</option>
+                      <option>Department-wise Attendance Summary</option>
+                      <option>Consolidated Monthly Report</option>
+                      <option>Loss of Pay Calculation</option>
+                      <option>Overtime Summary</option>
+                      <option>WFH Tracking Report</option>
+                      <option>Attendance Percentage by Department/Location</option>
+                    </optgroup>
+                    <optgroup label="Exception Reports">
+                      <option>Exception Report</option>
+                      <option>Continuous Absence Report</option>
+                      <option>Frequent Late Arrivals</option>
+                      <option>Pattern-based Anomalies</option>
+                      <option>Biometric vs Applied Leave Mismatch</option>
+                      <option>Pending Regularization Requests</option>
+                      <option>Unapproved Overtime</option>
+                      <option>Weekend Working without Approval</option>
+                    </optgroup>
+                    <optgroup label="Compliance Reports">
+                      <option>Compliance Muster Roll</option>
+                      <option>Attendance Register for Labor Department</option>
+                      <option>Factory Attendance Register</option>
+                      <option>Shops & Establishment Act Report</option>
+                    </optgroup>
                   </select>
                 </div>
 
@@ -522,14 +895,21 @@ const AttendanceReports = () => {
                     <div className="card-body">
                       <div className="d-flex justify-content-between align-items-center mb-2">
                         <span className="fw-medium text-muted">Daily Reports</span>
-                        <span className="h4 fw-bold text-dark">3</span>
+                        <span className="h4 fw-bold text-dark">
+                          {attendanceReports.filter(r => r.category === 'daily').length}
+                        </span>
                       </div>
                       <div className="progress mb-2" style={{ height: '8px' }}>
-                        <div className="progress-bar bg-primary" style={{width: '100%'}}></div>
+                        <div 
+                          className="progress-bar bg-primary" 
+                          style={{
+                            width: `${(attendanceReports.filter(r => r.category === 'daily' && r.status === 'generated').length / attendanceReports.filter(r => r.category === 'daily').length) * 100}%`
+                          }}
+                        ></div>
                       </div>
                       <div className="d-flex justify-content-between small text-muted">
-                        <span>Generated: 3</span>
-                        <span>Total: 3</span>
+                        <span>Generated: {attendanceReports.filter(r => r.category === 'daily' && r.status === 'generated').length}</span>
+                        <span>Total: {attendanceReports.filter(r => r.category === 'daily').length}</span>
                       </div>
                     </div>
                   </div>
@@ -540,14 +920,46 @@ const AttendanceReports = () => {
                     <div className="card-body">
                       <div className="d-flex justify-content-between align-items-center mb-2">
                         <span className="fw-medium text-muted">Monthly Reports</span>
-                        <span className="h4 fw-bold text-dark">1</span>
+                        <span className="h4 fw-bold text-dark">
+                          {attendanceReports.filter(r => r.category === 'monthly').length}
+                        </span>
                       </div>
                       <div className="progress mb-2" style={{ height: '8px' }}>
-                        <div className="progress-bar bg-success" style={{width: '50%'}}></div>
+                        <div 
+                          className="progress-bar bg-success" 
+                          style={{
+                            width: `${(attendanceReports.filter(r => r.category === 'monthly' && r.status === 'generated').length / attendanceReports.filter(r => r.category === 'monthly').length) * 100}%`
+                          }}
+                        ></div>
                       </div>
                       <div className="d-flex justify-content-between small text-muted">
-                        <span>Generated: 1</span>
-                        <span>Total: 2</span>
+                        <span>Generated: {attendanceReports.filter(r => r.category === 'monthly' && r.status === 'generated').length}</span>
+                        <span>Total: {attendanceReports.filter(r => r.category === 'monthly').length}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <div className="card border">
+                    <div className="card-body">
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <span className="fw-medium text-muted">Exception Reports</span>
+                        <span className="h4 fw-bold text-dark">
+                          {attendanceReports.filter(r => r.category === 'exception').length}
+                        </span>
+                      </div>
+                      <div className="progress mb-2" style={{ height: '8px' }}>
+                        <div 
+                          className="progress-bar bg-warning" 
+                          style={{
+                            width: `${(attendanceReports.filter(r => r.category === 'exception' && r.status === 'generated').length / attendanceReports.filter(r => r.category === 'exception').length) * 100}%`
+                          }}
+                        ></div>
+                      </div>
+                      <div className="d-flex justify-content-between small text-muted">
+                        <span>Generated: {attendanceReports.filter(r => r.category === 'exception' && r.status === 'generated').length}</span>
+                        <span>Total: {attendanceReports.filter(r => r.category === 'exception').length}</span>
                       </div>
                     </div>
                   </div>
@@ -558,14 +970,21 @@ const AttendanceReports = () => {
                     <div className="card-body">
                       <div className="d-flex justify-content-between align-items-center mb-2">
                         <span className="fw-medium text-muted">Compliance Reports</span>
-                        <span className="h4 fw-bold text-dark">1</span>
+                        <span className="h4 fw-bold text-dark">
+                          {attendanceReports.filter(r => r.category === 'compliance').length}
+                        </span>
                       </div>
                       <div className="progress mb-2" style={{ height: '8px' }}>
-                        <div className="progress-bar bg-warning" style={{width: '100%'}}></div>
+                        <div 
+                          className="progress-bar bg-info" 
+                          style={{
+                            width: `${(attendanceReports.filter(r => r.category === 'compliance' && r.status === 'generated').length / attendanceReports.filter(r => r.category === 'compliance').length) * 100}%`
+                          }}
+                        ></div>
                       </div>
                       <div className="d-flex justify-content-between small text-muted">
-                        <span>Generated: 1</span>
-                        <span>Total: 1</span>
+                        <span>Generated: {attendanceReports.filter(r => r.category === 'compliance' && r.status === 'generated').length}</span>
+                        <span>Total: {attendanceReports.filter(r => r.category === 'compliance').length}</span>
                       </div>
                     </div>
                   </div>
@@ -575,11 +994,36 @@ const AttendanceReports = () => {
           </div>
         </div>
 
+        {/* Report Category Filter */}
+        <div className="card border shadow-none mb-4">
+          <div className="card-body">
+            <h6 className="mb-3 fw-bold">Report Categories</h6>
+            <div className="d-flex flex-wrap gap-2">
+              {reportCategories.map((category) => (
+                <button
+                  key={category.id}
+                  className={`btn ${selectedReportCategory === category.id ? 'btn-primary' : 'btn-outline-primary'}`}
+                  onClick={() => setSelectedReportCategory(category.id)}
+                >
+                  <Icon icon={category.icon} className="me-2" />
+                  {category.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* Reports Table */}
         <div className="card border shadow-none mt-4">
           <div className="card-body">
             <div className="d-flex justify-content-between align-items-center mb-4">
-              <h2 className="h5 fw-bold text-dark">Today's Attendance Reports</h2>
+              <h2 className="h5 fw-bold text-dark">
+                {selectedReportCategory === 'all' ? 'All Attendance Reports' :
+                 selectedReportCategory === 'daily' ? 'Daily Reports' :
+                 selectedReportCategory === 'monthly' ? 'Monthly Reports' :
+                 selectedReportCategory === 'exception' ? 'Exception Reports' :
+                 'Compliance Reports'}
+              </h2>
               <div className="d-flex align-items-center gap-3">
                 <select 
                   className="form-select w-auto"
@@ -608,6 +1052,7 @@ const AttendanceReports = () => {
                 <thead className="bg-light">
                   <tr>
                     <th className="border-0 px-4 py-3 text-uppercase small fw-semibold text-muted">Report Name</th>
+                    <th className="border-0 px-4 py-3 text-uppercase small fw-semibold text-muted">Category</th>
                     <th className="border-0 px-4 py-3 text-uppercase small fw-semibold text-muted">Date</th>
                     <th className="border-0 px-4 py-3 text-uppercase small fw-semibold text-muted">Generated At</th>
                     <th className="border-0 px-4 py-3 text-uppercase small fw-semibold text-muted">Department</th>
@@ -623,6 +1068,16 @@ const AttendanceReports = () => {
                         <div className="fw-medium text-dark">{report.reportName}</div>
                       </td>
                       <td className="px-4 py-3">
+                        <span className={`badge bg-${
+                          report.category === 'daily' ? 'primary' :
+                          report.category === 'monthly' ? 'success' :
+                          report.category === 'exception' ? 'warning' :
+                          'info'
+                        }`}>
+                          {report.category?.charAt(0).toUpperCase() + report.category?.slice(1)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
                         <div className="text-muted">{report.date}</div>
                       </td>
                       <td className="px-4 py-3">
@@ -632,11 +1087,15 @@ const AttendanceReports = () => {
                         <div className="text-muted">{report.department}</div>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="text-muted">
+                        <div className="text-muted small">
                           {report.totalEmployees && `${report.totalEmployees} employees`}
-                          {report.lateArrivals && `${report.lateArrivals} late arrivals`}
-                          {report.exceptions && `${report.exceptions} exceptions`}
-                          {report.format && `${report.format} format`}
+                          {report.lateArrivals && ` • ${report.lateArrivals} late arrivals`}
+                          {report.earlyDepartures && ` • ${report.earlyDepartures} early departures`}
+                          {report.missingPunches && ` • ${report.missingPunches} missing punches`}
+                          {report.exceptions && ` • ${report.exceptions} exceptions`}
+                          {report.format && ` • ${report.format} format`}
+                          {report.totalOvertimeHours && ` • ${report.totalOvertimeHours} OT hours`}
+                          {report.totalWFHDays && ` • ${report.totalWFHDays} WFH days`}
                         </div>
                       </td>
                       <td className="px-4 py-3" style={{width:"30px"}}>
@@ -778,14 +1237,39 @@ const AttendanceReports = () => {
                         className="form-select"
                         required
                       >
-                        <option>Daily Attendance Summary</option>
-                        <option>Monthly Attendance Register</option>
-                        <option>Late Arrivals List</option>
-                        <option>Exception Report</option>
-                        <option>Compliance Muster Roll</option>
-                        <option>WFH Tracking Report</option>
-                        <option>Overtime Summary</option>
-                        <option>Department-wise Summary</option>
+                        <optgroup label="Daily Reports">
+                          <option>Daily Attendance Summary</option>
+                          <option>Late Arrivals List</option>
+                          <option>Early Departures List</option>
+                          <option>Missing Punch Report</option>
+                          <option>Shift-wise Attendance</option>
+                          <option>Location-wise Attendance</option>
+                        </optgroup>
+                        <optgroup label="Monthly Reports">
+                          <option>Monthly Attendance Register</option>
+                          <option>Department-wise Attendance Summary</option>
+                          <option>Consolidated Monthly Report</option>
+                          <option>Loss of Pay Calculation</option>
+                          <option>Overtime Summary</option>
+                          <option>WFH Tracking Report</option>
+                          <option>Attendance Percentage by Department/Location</option>
+                        </optgroup>
+                        <optgroup label="Exception Reports">
+                          <option>Exception Report</option>
+                          <option>Continuous Absence Report</option>
+                          <option>Frequent Late Arrivals</option>
+                          <option>Pattern-based Anomalies</option>
+                          <option>Biometric vs Applied Leave Mismatch</option>
+                          <option>Pending Regularization Requests</option>
+                          <option>Unapproved Overtime</option>
+                          <option>Weekend Working without Approval</option>
+                        </optgroup>
+                        <optgroup label="Compliance Reports">
+                          <option>Compliance Muster Roll</option>
+                          <option>Attendance Register for Labor Department</option>
+                          <option>Factory Attendance Register</option>
+                          <option>Shops & Establishment Act Report</option>
+                        </optgroup>
                       </select>
                     </div>
 
@@ -994,6 +1478,46 @@ const AttendanceReports = () => {
                                 <div className="card-body">
                                   <div className="text-secondary fw-bold fs-4">{selectedReport.avgDelay}</div>
                                   <div className="text-muted small">Avg Delay</div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          {selectedReport.earlyDepartures && (
+                            <div className="col-md-3">
+                              <div className="card border text-center">
+                                <div className="card-body">
+                                  <div className="text-info fw-bold fs-4">{selectedReport.earlyDepartures}</div>
+                                  <div className="text-muted small">Early Departures</div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          {selectedReport.missingPunches && (
+                            <div className="col-md-3">
+                              <div className="card border text-center">
+                                <div className="card-body">
+                                  <div className="text-warning fw-bold fs-4">{selectedReport.missingPunches}</div>
+                                  <div className="text-muted small">Missing Punches</div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          {selectedReport.totalOvertimeHours && (
+                            <div className="col-md-3">
+                              <div className="card border text-center">
+                                <div className="card-body">
+                                  <div className="text-success fw-bold fs-4">{selectedReport.totalOvertimeHours}</div>
+                                  <div className="text-muted small">OT Hours</div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          {selectedReport.totalWFHDays && (
+                            <div className="col-md-3">
+                              <div className="card border text-center">
+                                <div className="card-body">
+                                  <div className="text-primary fw-bold fs-4">{selectedReport.totalWFHDays}</div>
+                                  <div className="text-muted small">WFH Days</div>
                                 </div>
                               </div>
                             </div>

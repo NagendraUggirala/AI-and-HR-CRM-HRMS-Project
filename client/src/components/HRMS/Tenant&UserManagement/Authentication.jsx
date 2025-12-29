@@ -41,8 +41,41 @@ const Authentication = () => {
       requireMfa: true,
       allowSocialLogin: true,
       maxLoginAttempts: 5,
-      passwordMinLength: 8
+      passwordMinLength: 8,
+      enableCaptcha: true,
+      captchaThreshold: 3, // Show CAPTCHA after 3 failed attempts
+      enableRateLimiting: true,
+      rateLimitWindow: 15, // minutes
+      rateLimitMaxAttempts: 5,
+      enableDeviceManagement: true,
+      enableTrustedDevices: true,
+      trustedDeviceExpiry: 90, // days
+      jwtRefreshTokenEnabled: true,
+      jwtTokenExpiry: 15, // minutes
+      jwtRefreshTokenExpiry: 7, // days
+      passwordEncryption: 'bcrypt', // bcrypt or argon2
+      passwordSaltRounds: 10,
+      enableAuditLogging: true,
+      auditLogRetention: 365 // days
     };
+  });
+
+  // ---------------- CAPTCHA STATE ----------------  
+  const [showCaptcha, setShowCaptcha] = useState(false);
+  const [captchaCode, setCaptchaCode] = useState('');
+  const [generatedCaptcha, setGeneratedCaptcha] = useState('');
+  const [failedAttempts, setFailedAttempts] = useState(0);
+
+  // ---------------- DEVICE MANAGEMENT STATE ----------------  
+  const [trustedDevices, setTrustedDevices] = useState(() => {
+    const saved = localStorage.getItem('trustedDevices');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // ---------------- SESSION MANAGEMENT STATE ----------------  
+  const [activeSessions, setActiveSessions] = useState(() => {
+    const saved = localStorage.getItem('activeSessions');
+    return saved ? JSON.parse(saved) : [];
   });
   
   // Login Form State
@@ -245,6 +278,36 @@ const Authentication = () => {
     localStorage.setItem('authSettings', JSON.stringify(settings));
   }, [settings]);
 
+  // Generate CAPTCHA
+  const generateCaptcha = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let result = '';
+    for (let i = 0; i < 5; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setGeneratedCaptcha(result);
+    return result;
+  };
+
+  // Check if CAPTCHA should be shown
+  const shouldShowCaptcha = () => {
+    return settings.enableCaptcha && failedAttempts >= settings.captchaThreshold;
+  };
+
+  // Get device fingerprint
+  const getDeviceFingerprint = () => {
+    const ua = navigator.userAgent;
+    const screenSize = `${window.screen.width}x${window.screen.height}`;
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const language = navigator.language;
+    return btoa(`${ua}-${screenSize}-${timezone}-${language}`).substring(0, 32);
+  };
+
+  // Get IP address (mock - in production, get from backend)
+  const getClientIP = () => {
+    return '192.168.1.' + Math.floor(Math.random() * 255);
+  };
+
   const handleLogin = (e) => {
     e.preventDefault();
 
@@ -253,7 +316,37 @@ const Authentication = () => {
       return;
     }
 
-    // Add to audit logs
+    // Check rate limiting
+    if (settings.enableRateLimiting && failedAttempts >= settings.rateLimitMaxAttempts) {
+      alert(`Too many failed login attempts. Please try again after ${settings.rateLimitWindow} minutes.`);
+      return;
+    }
+
+    // Check CAPTCHA if required
+    if (shouldShowCaptcha()) {
+      if (!captchaCode || captchaCode.toUpperCase() !== generatedCaptcha.toUpperCase()) {
+        setFailedAttempts(prev => prev + 1);
+        alert('Invalid CAPTCHA code. Please try again.');
+        generateCaptcha();
+        return;
+      }
+    }
+
+    // Get device information
+    const deviceInfo = {
+      fingerprint: getDeviceFingerprint(),
+      userAgent: navigator.userAgent,
+      platform: navigator.platform,
+      language: navigator.language,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      screenResolution: `${window.screen.width}x${window.screen.height}`
+    };
+
+    // Check if device is trusted
+    const isTrustedDevice = trustedDevices.some(d => d.fingerprint === deviceInfo.fingerprint);
+    const deviceId = isTrustedDevice ? trustedDevices.find(d => d.fingerprint === deviceInfo.fingerprint).id : Date.now();
+
+    // Add to audit logs with full details
     const newLog = {
       id: Date.now(),
       timestamp: new Date().toISOString(),
@@ -261,18 +354,64 @@ const Authentication = () => {
       userEmail: loginForm.email,
       tenant: selectedTenant?.name || loginForm.tenantId || 'Unknown',
       status: 'SUCCESS',
-      ip: '192.168.1.1',
-      userAgent: navigator.userAgent
+      ip: getClientIP(),
+      userAgent: navigator.userAgent,
+      deviceInfo: deviceInfo,
+      deviceId: deviceId,
+      isTrustedDevice: isTrustedDevice,
+      mfaUsed: settings.requireMfa,
+      location: 'Unknown',
+      sessionId: 'session_' + Date.now()
     };
     
-    const updatedLogs = [newLog, ...auditLogs.slice(0, 49)]; // Keep last 50 logs
+    const updatedLogs = [newLog, ...auditLogs.slice(0, 99)];
     setAuditLogs(updatedLogs);
     localStorage.setItem('auditLogs', JSON.stringify(updatedLogs));
 
-    // Show MFA modal for demonstration
-    setShowMfaModal(true);
+    // Create session
+    const newSession = {
+      id: newLog.sessionId,
+      userId: loginForm.email,
+      tenantId: selectedTenant?.id || loginForm.tenantId,
+      deviceInfo: deviceInfo,
+      loginTime: new Date().toISOString(),
+      lastActivity: new Date().toISOString(),
+      ip: getClientIP(),
+      expiresAt: new Date(Date.now() + (settings.sessionTimeout * 60 * 1000)).toISOString(),
+      jwtToken: 'jwt_token_' + Date.now(),
+      refreshToken: 'refresh_token_' + Date.now()
+    };
+
+    setActiveSessions([...activeSessions, newSession]);
+    localStorage.setItem('activeSessions', JSON.stringify([...activeSessions, newSession]));
+
+    // Add trusted device if checked
+    if (trustedDevice && !isTrustedDevice) {
+      const newTrustedDevice = {
+        id: deviceId,
+        ...deviceInfo,
+        addedAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + (settings.trustedDeviceExpiry * 24 * 60 * 60 * 1000)).toISOString()
+      };
+      setTrustedDevices([...trustedDevices, newTrustedDevice]);
+      localStorage.setItem('trustedDevices', JSON.stringify([...trustedDevices, newTrustedDevice]));
+    }
+
+    // Reset failed attempts
+    setFailedAttempts(0);
+    setCaptchaCode('');
+    setShowCaptcha(false);
+
+    // Show MFA modal if required
+    if (settings.requireMfa) {
+      setShowMfaModal(true);
+    } else {
+      alert(`Login successful! Welcome to ${selectedTenant?.name || loginForm.tenantId || 'your tenant'}`);
+      setLoginForm({ email: '', password: '', tenantId: '' });
+      setSelectedTenant(null);
+    }
     
-    console.log('Login attempt:', { ...loginForm, tenantId: selectedTenant?.id || loginForm.tenantId });
+    console.log('Login attempt:', { ...loginForm, tenantId: selectedTenant?.id || loginForm.tenantId, deviceInfo });
   };
 
   // Handle Registration
@@ -939,6 +1078,39 @@ const Authentication = () => {
                             </div>
                           </div>
                         </div>
+
+                        {/* CAPTCHA */}
+                        {shouldShowCaptcha() && (
+                          <div className="mb-3">
+                            <label className="form-label">
+                              Security Verification <span className="text-danger">*</span>
+                            </label>
+                            <div className="d-flex align-items-center gap-3">
+                              <div className="border rounded p-2 bg-light text-center" style={{ minWidth: '120px', fontFamily: 'monospace', fontSize: '20px', letterSpacing: '5px' }}>
+                                {generatedCaptcha || generateCaptcha()}
+                              </div>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={() => generateCaptcha()}
+                                title="Refresh CAPTCHA"
+                              >
+                                <Icon icon="heroicons:arrow-path" />
+                              </button>
+                              <input
+                                type="text"
+                                className="form-control flex-grow-1"
+                                placeholder="Enter CAPTCHA"
+                                value={captchaCode}
+                                onChange={(e) => setCaptchaCode(e.target.value)}
+                                maxLength="5"
+                                style={{ textTransform: 'uppercase' }}
+                                required
+                              />
+                            </div>
+                            <small className="text-muted">Please enter the code shown above</small>
+                          </div>
+                        )}
 
                         <div className="d-grid gap-2">
                           <button type="submit" className="btn btn-primary">

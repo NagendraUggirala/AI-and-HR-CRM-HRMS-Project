@@ -21,7 +21,13 @@ const MultiTenantSetup = () => {
       createdAt: '2024-01-15',
       trialEndsAt: '2024-12-31',
       dataUsage: '85%',
-      lastActive: '2024-12-01 14:30:00'
+      lastActive: '2024-12-01 14:30:00',
+      tenantContext: 'tenant_techcorp_hrms_com',
+      schemaType: 'shared',
+      dataRetentionPeriod: 7,
+      performanceTier: 'enterprise',
+      billingEnabled: true,
+      ssoEnabled: true
     },
     {
       id: 2,
@@ -128,7 +134,7 @@ const MultiTenantSetup = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // ---------------- ADD TENANT STATE ----------------
+  // ---------------- ADD TENANT STATE ----------------  
   const [newTenant, setNewTenant] = useState({
     name: '',
     domain: '',
@@ -136,7 +142,24 @@ const MultiTenantSetup = () => {
     subscriptionPlan: 'Starter',
     contactEmail: '',
     contactPhone: '',
-    primaryColor: '#1890ff'
+    primaryColor: '#1890ff',
+    dataRetentionPeriod: 7, // Years
+    schemaType: 'shared', // 'shared' or 'separate'
+    billingEnabled: false,
+    customConfig: {}
+  });
+
+  // ---------------- TENANT PROVISIONING STATE ----------------  
+  const [showProvisioningModal, setShowProvisioningModal] = useState(false);
+  const [showDeprovisioningModal, setShowDeprovisioningModal] = useState(false);
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [provisioningConfig, setProvisioningConfig] = useState({
+    setupType: 'standard', // standard, custom, template
+    enableBilling: false,
+    enableSSO: false,
+    dataRetentionYears: 7,
+    performanceTier: 'standard', // standard, premium, enterprise
+    customSettings: {}
   });
 
   // ---------------- STATISTICS ----------------
@@ -191,10 +214,11 @@ const MultiTenantSetup = () => {
     currentPage * itemsPerPage
   );
 
-  // ---------------- CRUD HANDLERS ----------------
-  const handleAddTenant = (e) => {
+  // ---------------- TENANT PROVISIONING HANDLER ----------------
+  const handleProvisionTenant = (e) => {
     e.preventDefault();
-
+    
+    // Simulate tenant provisioning workflow
     const newEntry = {
       ...newTenant,
       id: tenants.length + 1,
@@ -205,11 +229,19 @@ const MultiTenantSetup = () => {
       lastActive: new Date().toISOString(),
       trialEndsAt: "2025-03-31",
       logoUrl: "https://via.placeholder.com/40",
+      schemaType: provisioningConfig.setupType === 'custom' ? 'separate' : 'shared',
+      dataRetentionPeriod: provisioningConfig.dataRetentionYears,
+      performanceTier: provisioningConfig.performanceTier,
+      billingEnabled: provisioningConfig.enableBilling,
+      ssoEnabled: provisioningConfig.enableSSO,
+      tenantContext: `tenant_${newTenant.domain.replace(/[^a-zA-Z0-9]/g, '_')}` // Tenant context for API calls
     };
 
     setTenants([...tenants, newEntry]);
     setShowAddModal(false);
-
+    setShowProvisioningModal(false);
+    
+    // Reset forms
     setNewTenant({
       name: "",
       domain: "",
@@ -218,7 +250,45 @@ const MultiTenantSetup = () => {
       contactEmail: "",
       contactPhone: "",
       primaryColor: "#1890ff",
+      dataRetentionPeriod: 7,
+      schemaType: 'shared',
+      billingEnabled: false,
+      customConfig: {}
     });
+    
+    setProvisioningConfig({
+      setupType: 'standard',
+      enableBilling: false,
+      enableSSO: false,
+      dataRetentionYears: 7,
+      performanceTier: 'standard',
+      customSettings: {}
+    });
+    
+    alert(`Tenant "${newEntry.name}" provisioned successfully! Tenant context: ${newEntry.tenantContext}`);
+  };
+
+  // ---------------- CRUD HANDLERS ----------------
+  const handleAddTenant = (e) => {
+    e.preventDefault();
+    setShowProvisioningModal(true);
+  };
+
+  // ---------------- TENANT DE-PROVISIONING HANDLER ----------------
+  const handleDeprovisionTenant = () => {
+    if (!selectedTenant) return;
+    
+    // Simulate de-provisioning workflow
+    console.log(`De-provisioning tenant: ${selectedTenant.name}`);
+    console.log(`Tenant context: ${selectedTenant.tenantContext || 'N/A'}`);
+    console.log(`Data retention policy: ${selectedTenant.dataRetentionPeriod || 7} years`);
+    
+    // Remove tenant
+    setTenants(tenants.filter((t) => t.id !== selectedTenant.id));
+    setShowDeprovisioningModal(false);
+    setShowDeleteModal(false);
+    
+    alert(`Tenant "${selectedTenant.name}" has been de-provisioned. Data will be retained for ${selectedTenant.dataRetentionPeriod || 7} years per retention policy.`);
   };
 
   const handleUpdateTenant = (e) => {
@@ -234,8 +304,7 @@ const MultiTenantSetup = () => {
   };
 
   const handleDeleteTenant = () => {
-    setTenants(tenants.filter((t) => t.id !== selectedTenant.id));
-    setShowDeleteModal(false);
+    setShowDeprovisioningModal(true);
   };
 
   // ---------------- BADGES ----------------
@@ -568,6 +637,17 @@ const MultiTenantSetup = () => {
                   title="Edit"
                 >
                   <Icon icon="heroicons:pencil-square" width="16" />
+                </button>
+
+                <button
+                  className="btn btn-outline-info"
+                  onClick={() => {
+                    setSelectedTenant(t);
+                    setShowConfigModal(true);
+                  }}
+                  title="Configuration"
+                >
+                  <Icon icon="heroicons:cog-6-tooth" width="16" />
                 </button>
 
                 <button
@@ -937,7 +1017,7 @@ const MultiTenantSetup = () => {
         {/* ---------------- VIEW MODAL ---------------- */}
         {showViewModal && selectedTenant && (
           <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-md">
+            <div className="modal-dialog modal-lg">
               <div className="modal-content">
 
                 <div className="modal-header">
@@ -958,32 +1038,177 @@ const MultiTenantSetup = () => {
                     <small className="text-muted">{selectedTenant.domain}</small>
                   </div>
 
-                  <ul className="list-group">
-                    <li className="list-group-item d-flex justify-content-between">
-                      <strong>Status:</strong> {getStatusBadge(selectedTenant.status)}
-                    </li>
-                    <li className="list-group-item d-flex justify-content-between">
-                      <strong>Employees:</strong> {selectedTenant.employeeCount}
-                    </li>
-                    <li className="list-group-item d-flex justify-content-between">
-                      <strong>Created:</strong> {formatDate(selectedTenant.createdAt)}
-                    </li>
-                    <li className="list-group-item d-flex justify-content-between">
-                      <strong>Last Active:</strong> {formatDateTime(selectedTenant.lastActive)}
-                    </li>
-                    <li className="list-group-item d-flex justify-content-between">
-                      <strong>Data Usage:</strong> {selectedTenant.dataUsage}
-                    </li>
-                  </ul>
+                  <div className="row g-3">
+                    <div className="col-12 col-md-6">
+                      <ul className="list-group">
+                        <li className="list-group-item d-flex justify-content-between">
+                          <strong>Status:</strong> {getStatusBadge(selectedTenant.status)}
+                        </li>
+                        <li className="list-group-item d-flex justify-content-between">
+                          <strong>Employees:</strong> {selectedTenant.employeeCount}
+                        </li>
+                        <li className="list-group-item d-flex justify-content-between">
+                          <strong>Created:</strong> {formatDate(selectedTenant.createdAt)}
+                        </li>
+                        <li className="list-group-item d-flex justify-content-between">
+                          <strong>Last Active:</strong> {formatDateTime(selectedTenant.lastActive)}
+                        </li>
+                        <li className="list-group-item d-flex justify-content-between">
+                          <strong>Data Usage:</strong> {selectedTenant.dataUsage}
+                        </li>
+                      </ul>
+                    </div>
+                    <div className="col-12 col-md-6">
+                      <ul className="list-group">
+                        <li className="list-group-item d-flex justify-content-between">
+                          <strong>Tenant Context:</strong> 
+                          <code className="small">{selectedTenant.tenantContext || 'N/A'}</code>
+                        </li>
+                        <li className="list-group-item d-flex justify-content-between">
+                          <strong>Schema Type:</strong> 
+                          <span className="badge bg-info">
+                            {selectedTenant.schemaType || 'shared'}
+                          </span>
+                        </li>
+                        <li className="list-group-item d-flex justify-content-between">
+                          <strong>Performance Tier:</strong> 
+                          <span className="badge bg-success">
+                            {selectedTenant.performanceTier || 'standard'}
+                          </span>
+                        </li>
+                        <li className="list-group-item d-flex justify-content-between">
+                          <strong>Data Retention:</strong> 
+                          {selectedTenant.dataRetentionPeriod || 7} years
+                        </li>
+                        <li className="list-group-item d-flex justify-content-between">
+                          <strong>Billing:</strong> 
+                          <span className={`badge bg-${selectedTenant.billingEnabled ? 'success' : 'secondary'}`}>
+                            {selectedTenant.billingEnabled ? 'Enabled' : 'Disabled'}
+                          </span>
+                        </li>
+                        <li className="list-group-item d-flex justify-content-between">
+                          <strong>SSO:</strong> 
+                          <span className={`badge bg-${selectedTenant.ssoEnabled ? 'success' : 'secondary'}`}>
+                            {selectedTenant.ssoEnabled ? 'Enabled' : 'Disabled'}
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
 
                 </div>
 
                 <div className="modal-footer">
+                  <button className="btn btn-outline-info" onClick={() => {
+                    setShowViewModal(false);
+                    setShowConfigModal(true);
+                  }}>
+                    <Icon icon="heroicons:cog-6-tooth" className="me-2" />
+                    Configuration
+                  </button>
                   <button className="btn btn-secondary" onClick={() => setShowViewModal(false)}>
                     Close
                   </button>
                 </div>
 
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ---------------- TENANT CONFIGURATION MODAL ---------------- */}
+        {showConfigModal && selectedTenant && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    <Icon icon="heroicons:cog-6-tooth" className="me-2" />
+                    Tenant Configuration: {selectedTenant.name}
+                  </h5>
+                  <button className="btn-close" onClick={() => setShowConfigModal(false)}></button>
+                </div>
+
+                <div className="modal-body">
+                  <div className="alert alert-info">
+                    <Icon icon="heroicons:information-circle" className="me-2" />
+                    Tenant-level configuration and customization settings. Changes inherit from global defaults.
+                  </div>
+
+                  <div className="row g-3">
+                    <div className="col-12">
+                      <label className="form-label">Tenant Context ID</label>
+                      <input
+                        type="text"
+                        className="form-control font-monospace"
+                        value={selectedTenant.tenantContext || `tenant_${selectedTenant.domain.replace(/[^a-zA-Z0-9]/g, '_')}`}
+                        readOnly
+                      />
+                      <small className="text-muted">Used for tenant context injection in all API calls</small>
+                    </div>
+
+                    <div className="col-12 col-md-6">
+                      <label className="form-label">Data Isolation Type</label>
+                      <select className="form-select" value={selectedTenant.schemaType || 'shared'}>
+                        <option value="shared">Shared Schema (Tenant ID based)</option>
+                        <option value="separate">Separate Schema (Full Isolation)</option>
+                      </select>
+                    </div>
+
+                    <div className="col-12 col-md-6">
+                      <label className="form-label">Performance Tier</label>
+                      <select className="form-select" value={selectedTenant.performanceTier || 'standard'}>
+                        <option value="standard">Standard</option>
+                        <option value="premium">Premium</option>
+                        <option value="enterprise">Enterprise</option>
+                      </select>
+                      <small className="text-muted">Ensures performance isolation</small>
+                    </div>
+
+                    <div className="col-12 col-md-6">
+                      <label className="form-label">Data Retention Period (Years)</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        min="1"
+                        max="10"
+                        value={selectedTenant.dataRetentionPeriod || 7}
+                      />
+                    </div>
+
+                    <div className="col-12 col-md-6">
+                      <label className="form-label">Billing Integration</label>
+                      <div className="form-check form-switch">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          checked={selectedTenant.billingEnabled || false}
+                        />
+                        <label className="form-check-label">Enable Billing & Subscription Management</label>
+                      </div>
+                    </div>
+
+                    <div className="col-12">
+                      <label className="form-label">Cross-Tenant User Management</label>
+                      <div className="alert alert-warning">
+                        <Icon icon="heroicons:users" className="me-2" />
+                        Service providers/consultants can access multiple tenants. Configure access permissions per user.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={() => setShowConfigModal(false)}>
+                    Cancel
+                  </button>
+                  <button className="btn btn-primary" onClick={() => {
+                    alert('Tenant configuration updated successfully!');
+                    setShowConfigModal(false);
+                  }}>
+                    Save Configuration
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1014,6 +1239,192 @@ const MultiTenantSetup = () => {
                   </button>
                 </div>
 
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ---------------- TENANT PROVISIONING MODAL ---------------- */}
+        {showProvisioningModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    <Icon icon="heroicons:rocket-launch" className="me-2" />
+                    Tenant Provisioning Configuration
+                  </h5>
+                  <button className="btn-close" onClick={() => setShowProvisioningModal(false)}></button>
+                </div>
+
+                <form onSubmit={handleProvisionTenant}>
+                  <div className="modal-body">
+                    <div className="alert alert-info">
+                      <Icon icon="heroicons:information-circle" className="me-2" />
+                      Configure tenant provisioning settings including data isolation, performance tier, and billing integration.
+                    </div>
+
+                    <div className="row g-3 mb-3">
+                      <div className="col-12">
+                        <label className="form-label">Setup Type *</label>
+                        <select
+                          className="form-select"
+                          value={provisioningConfig.setupType}
+                          onChange={(e) => setProvisioningConfig({...provisioningConfig, setupType: e.target.value})}
+                          required
+                        >
+                          <option value="standard">Standard (Shared Schema)</option>
+                          <option value="custom">Custom (Separate Schema)</option>
+                          <option value="template">Template-based</option>
+                        </select>
+                        <small className="text-muted">
+                          {provisioningConfig.setupType === 'custom' 
+                            ? 'Separate database schema for complete isolation'
+                            : 'Shared infrastructure with tenant context isolation'}
+                        </small>
+                      </div>
+
+                      <div className="col-12 col-md-6">
+                        <label className="form-label">Performance Tier *</label>
+                        <select
+                          className="form-select"
+                          value={provisioningConfig.performanceTier}
+                          onChange={(e) => setProvisioningConfig({...provisioningConfig, performanceTier: e.target.value})}
+                          required
+                        >
+                          <option value="standard">Standard</option>
+                          <option value="premium">Premium</option>
+                          <option value="enterprise">Enterprise</option>
+                        </select>
+                        <small className="text-muted">Ensures performance isolation</small>
+                      </div>
+
+                      <div className="col-12 col-md-6">
+                        <label className="form-label">Data Retention Period (Years) *</label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          min="1"
+                          max="10"
+                          value={provisioningConfig.dataRetentionYears}
+                          onChange={(e) => setProvisioningConfig({...provisioningConfig, dataRetentionYears: parseInt(e.target.value)})}
+                          required
+                        />
+                      </div>
+
+                      <div className="col-12">
+                        <div className="form-check form-switch">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id="enableBilling"
+                            checked={provisioningConfig.enableBilling}
+                            onChange={(e) => setProvisioningConfig({...provisioningConfig, enableBilling: e.target.checked})}
+                          />
+                          <label className="form-check-label" htmlFor="enableBilling">
+                            Enable Billing & Subscription Management Integration
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="col-12">
+                        <div className="form-check form-switch">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id="enableSSO"
+                            checked={provisioningConfig.enableSSO}
+                            onChange={(e) => setProvisioningConfig({...provisioningConfig, enableSSO: e.target.checked})}
+                          />
+                          <label className="form-check-label" htmlFor="enableSSO">
+                            Enable SSO (SAML 2.0 / OAuth 2.0)
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" onClick={() => setShowProvisioningModal(false)}>
+                      Cancel
+                    </button>
+                    <button type="submit" className="btn btn-primary">
+                      <Icon icon="heroicons:rocket-launch" className="me-2" />
+                      Provision Tenant
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ---------------- TENANT DE-PROVISIONING MODAL ---------------- */}
+        {showDeprovisioningModal && selectedTenant && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header bg-warning text-dark">
+                  <h5 className="modal-title">
+                    <Icon icon="heroicons:exclamation-triangle" className="me-2" />
+                    Tenant De-Provisioning
+                  </h5>
+                  <button className="btn-close" onClick={() => setShowDeprovisioningModal(false)}></button>
+                </div>
+
+                <div className="modal-body">
+                  <div className="alert alert-warning">
+                    <Icon icon="heroicons:exclamation-triangle" className="me-2" />
+                    <strong>Warning:</strong> This will initiate the de-provisioning workflow for <strong>{selectedTenant.name}</strong>
+                  </div>
+
+                  <div className="mb-3">
+                    <h6>De-Provisioning Checklist:</h6>
+                    <ul>
+                      <li>All active user sessions will be terminated</li>
+                      <li>Data will be archived according to retention policy ({selectedTenant.dataRetentionPeriod || 7} years)</li>
+                      <li>Billing subscriptions will be cancelled</li>
+                      <li>Tenant-specific configurations will be removed</li>
+                      <li>Cross-tenant access will be revoked</li>
+                    </ul>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label">Tenant Context:</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={selectedTenant.tenantContext || `tenant_${selectedTenant.domain.replace(/[^a-zA-Z0-9]/g, '_')}`}
+                      readOnly
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label">Data Retention Policy:</label>
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="confirmRetention"
+                        defaultChecked
+                        readOnly
+                      />
+                      <label className="form-check-label" htmlFor="confirmRetention">
+                        Data will be retained for {selectedTenant.dataRetentionPeriod || 7} years per company policy
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={() => setShowDeprovisioningModal(false)}>
+                    Cancel
+                  </button>
+                  <button className="btn btn-danger" onClick={handleDeprovisionTenant}>
+                    <Icon icon="heroicons:trash" className="me-2" />
+                    Confirm De-Provisioning
+                  </button>
+                </div>
               </div>
             </div>
           </div>

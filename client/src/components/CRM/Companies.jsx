@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { companiesAPI } from '../../utils/api';
+import { BASE_URL } from '../../config/api.config';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -11,6 +12,8 @@ function Companies() {
   const [error, setError] = useState(null);
   const [Crmcompanies, setCrmcompanies] = useState([]);
   const [displayedCompanies, setDisplayedCompanies] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   // Sample companies data for fallback/export
   const sampleCompanies = [
@@ -144,7 +147,10 @@ function Companies() {
           phone2: company.phone_number2 || company.phone2 || '',
           location: company.location || company.country || '',
           rating: company.rating || 0,
-          logo: company.logo || '🏢', // Use logo from backend if available
+          logo: company.logo || null, // Use logo path from backend
+          logoPath: company.logo 
+            ? (company.logo.startsWith('http') ? company.logo : `${BASE_URL}${company.logo}`)
+            : null,
           ...company // Keep all original fields
         }));
         setCrmcompanies(transformedCompanies);
@@ -273,6 +279,37 @@ function Companies() {
     }));
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select an image file');
+        toast.error('Please select an image file');
+        return;
+      }
+      // Validate file size (4MB)
+      if (file.size > 4 * 1024 * 1024) {
+        setError('Image size should be below 4MB');
+        toast.error('Image size should be below 4MB');
+        return;
+      }
+      setSelectedFile(file);
+      setError(null);
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedFile(null);
+    setImagePreview(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -321,7 +358,7 @@ function Companies() {
         }
       });
 
-      await companiesAPI.create(companyData);
+      await companiesAPI.create(companyData, selectedFile);
       toast.success('Company created successfully!');
       
       // Reload companies
@@ -330,6 +367,8 @@ function Companies() {
       // Close modal and reset form
       setShowModal(false);
       setActiveTab('basic-info');
+      setSelectedFile(null);
+      setImagePreview(null);
       setFormData({
         companyName: '',
         email: '',
@@ -374,6 +413,8 @@ function Companies() {
   const handleCloseModal = () => {
     setShowModal(false);
     setActiveTab('basic-info'); // Reset to first tab when closing
+    setSelectedFile(null);
+    setImagePreview(null);
   };
 
   const handleBackdropClick = (e) => {
@@ -565,13 +606,26 @@ function Companies() {
 
         <div style={styles.grid}>
           {displayedCompanies.map((company, index) => (
-            <div key={index} style={styles.card}>
-              <div style={styles.logo}>{company.logo}</div>
+            <div key={company.id || index} style={styles.card}>
+              <div style={styles.logo}>
+                {company.logoPath ? (
+                  <img 
+                    src={company.logoPath} 
+                    alt={company.name}
+                    style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'block';
+                    }}
+                  />
+                ) : null}
+                <span style={{ display: company.logoPath ? 'none' : 'block', fontSize: '40px' }}>🏢</span>
+              </div>
               <h5><b>{company.name}</b></h5>
-              <p><strong>Email:</strong> {company.email}</p>
-              <p><strong>Phone:</strong> {company.phone}</p>
-              <p><strong>Location:</strong> {company.location}</p>
-              <p><strong>Rating:</strong> ⭐ {company.rating}</p>
+              <p><strong>Email:</strong> {company.email || 'N/A'}</p>
+              <p><strong>Phone:</strong> {company.phone || 'N/A'}</p>
+              <p><strong>Location:</strong> {company.location || 'N/A'}</p>
+              <p><strong>Rating:</strong> ⭐ {company.rating || 0}</p>
 
             </div>
           ))}
@@ -667,20 +721,45 @@ function Companies() {
                         <div className="row">
                           <div className="col-md-12">
                             <div className="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
-                              <div className="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames">
-                                <i className="ti ti-photo text-gray-2 fs-16"></i>
+                              <div className="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames" style={{ position: 'relative', overflow: 'hidden' }}>
+                                {imagePreview ? (
+                                  <img 
+                                    src={imagePreview} 
+                                    alt="Logo preview" 
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                    }}
+                                  />
+                                ) : (
+                                  <i className="ti ti-photo text-gray-2 fs-16"></i>
+                                )}
                               </div>
                               <div className="profile-upload">
                                 <div className="mb-2">
-                                  <h6 className="mb-1">Upload Profile Image</h6>
+                                  <h6 className="mb-1">Upload Company Logo</h6>
                                   <p className="fs-12">Image should be below 4 mb</p>
                                 </div>
                                 <div className="profile-uploader d-flex align-items-center">
-                                  <div className="drag-upload-btn btn btn-sm btn-primary me-2">
+                                  <label className="drag-upload-btn btn btn-sm btn-primary me-2" style={{ cursor: 'pointer', position: 'relative' }}>
                                     Upload
-                                    <input type="file" className="form-control image-sign" multiple="" />
-                                  </div>
-                                  <a href="javascript:void(0);" className="btn btn-light btn-sm">Cancel</a>
+                                    <input 
+                                      type="file" 
+                                      className="form-control image-sign" 
+                                      accept="image/*"
+                                      onChange={handleFileChange}
+                                      style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer', left: 0, top: 0 }}
+                                    />
+                                  </label>
+                                  {(selectedFile || imagePreview) && (
+                                    <button 
+                                      type="button"
+                                      onClick={handleRemoveImage}
+                                      className="btn btn-light btn-sm"
+                                    >
+                                      Remove
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                             </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import RecruiterDashboardLayout from '../../recruiterDashboard/RecruiterDashboardLayout';
+
 
 const EmployeeConfirmation = () => {
   // ---------------- INITIAL DATA ----------------
@@ -395,9 +395,11 @@ const EmployeeConfirmation = () => {
   const [bulkAction, setBulkAction] = useState({
     action: 'confirm',
     date: new Date().toISOString().split('T')[0],
+    extensionDays: '30',
     templateId: '',
     notifyEmployees: true,
     notifyManagers: true,
+    generateLetters: true,
     message: ''
   });
   
@@ -418,6 +420,10 @@ const EmployeeConfirmation = () => {
   const [sortOrder, setSortOrder] = useState('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+  
+  // Auto-trigger states
+  const [autoTriggerEnabled, setAutoTriggerEnabled] = useState(true);
+  const [reminderDays, setReminderDays] = useState([7, 3, 1]); // Days before due date to send reminders
   
   // ---------------- STATISTICS ----------------
   const stats = {
@@ -493,6 +499,53 @@ const EmployeeConfirmation = () => {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+  
+  // ---------------- AUTO-TRIGGER FUNCTIONALITY ----------------
+  useEffect(() => {
+    if (!autoTriggerEnabled) return;
+    
+    // Check for employees due for confirmation and auto-trigger reviews
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const employeesToReview = employees.filter(emp => {
+      if (emp.status === 'confirmed' || emp.status === 'terminated' || emp.status === 'extended') {
+        return false;
+      }
+      
+      const dueDate = new Date(emp.confirmationDueDate);
+      dueDate.setHours(0, 0, 0, 0);
+      const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+      
+      // Auto-trigger review if due date is within 7 days and no review initiated
+      return daysUntilDue <= 7 && daysUntilDue >= 0 && 
+             (emp.status === 'in_progress' || emp.status === 'pending_review');
+    });
+    
+    // Auto-trigger reminders based on reminder days
+    reminderDays.forEach(reminderDay => {
+      const reminderDate = new Date(today);
+      reminderDate.setDate(reminderDate.getDate() + reminderDay);
+      
+      const employeesToRemind = employees.filter(emp => {
+        if (emp.status === 'confirmed' || emp.status === 'terminated') {
+          return false;
+        }
+        
+        const dueDate = new Date(emp.confirmationDueDate);
+        dueDate.setHours(0, 0, 0, 0);
+        
+        return dueDate.getTime() === reminderDate.getTime() && 
+               (emp.status === 'in_progress' || emp.status === 'pending_review');
+      });
+      
+      if (employeesToRemind.length > 0) {
+        // In a real application, this would send emails/notifications
+        console.log(`Auto-reminder: ${employeesToRemind.length} employees due in ${reminderDay} days`);
+      }
+    });
+    
+  }, [employees, autoTriggerEnabled, reminderDays]);
   
   // ---------------- EVENT HANDLERS ----------------
   
@@ -736,7 +789,7 @@ const EmployeeConfirmation = () => {
               status: 'confirmed',
               confirmationDate: bulkAction.date,
               confirmationEffectiveDate: bulkAction.date,
-              confirmationLetterGenerated: true,
+              confirmationLetterGenerated: bulkAction.generateLetters || false,
               departmentHeadApproval: 'approved',
               confirmationAuthority: 'approved',
               confirmationStatus: 'confirmed'
@@ -745,7 +798,9 @@ const EmployeeConfirmation = () => {
           return emp;
         });
         setEmployees(confirmedEmployees);
-        alert(`${selectedEmployees.length} employees confirmed`);
+        const letterText = bulkAction.generateLetters ? ' with confirmation letters' : '';
+        const notificationText = bulkAction.notifyEmployees ? ' and notifications sent' : '';
+        alert(`${selectedEmployees.length} employees confirmed${letterText}${notificationText}`);
         break;
         
       case 'extend':
@@ -836,6 +891,32 @@ const EmployeeConfirmation = () => {
     setShowDetailModal(true);
   };
   
+  // Auto-trigger review for employees due soon
+  const handleAutoTriggerReviews = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const employeesToReview = employees.filter(emp => {
+      if (emp.status === 'confirmed' || emp.status === 'terminated' || emp.status === 'extended') {
+        return false;
+      }
+      
+      const dueDate = new Date(emp.confirmationDueDate);
+      dueDate.setHours(0, 0, 0, 0);
+      const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+      
+      return daysUntilDue <= 7 && daysUntilDue >= 0 && 
+             (emp.status === 'in_progress' || emp.status === 'pending_review');
+    });
+    
+    if (employeesToReview.length === 0) {
+      alert('No employees require auto-triggered reviews at this time');
+      return;
+    }
+    
+    alert(`Auto-triggered reviews for ${employeesToReview.length} employees due within 7 days`);
+  };
+  
   // ---------------- UI COMPONENTS ----------------
   const getStatusBadge = (status) => {
     const config = {
@@ -895,33 +976,55 @@ const EmployeeConfirmation = () => {
   
   const ApprovalWorkflow = ({ employee }) => {
     const steps = [
-      { key: 'managerRecommendation', label: 'Manager', value: employee.managerRecommendation },
-      { key: 'hrRecommendation', label: 'HR', value: employee.hrRecommendation },
-      { key: 'departmentHeadApproval', label: 'Dept Head', value: employee.departmentHeadApproval },
-      { key: 'confirmationAuthority', label: 'Authority', value: employee.confirmationAuthority }
+      { key: 'managerRecommendation', label: 'Manager', value: employee.managerRecommendation, icon: 'heroicons-solid:user-circle' },
+      { key: 'hrRecommendation', label: 'HR', value: employee.hrRecommendation, icon: 'heroicons-solid:briefcase' },
+      { key: 'departmentHeadApproval', label: 'Dept Head', value: employee.departmentHeadApproval, icon: 'heroicons-solid:user-group' },
+      { key: 'confirmationAuthority', label: 'Authority', value: employee.confirmationAuthority, icon: 'heroicons-solid:check-circle' }
     ];
     
+    const getStepStatus = (value) => {
+      if (value === 'approved' || value === 'recommended' || value === 'approved_extension') {
+        return 'completed';
+      } else if (value === 'pending') {
+        return 'pending';
+      } else if (value === 'recommended_with_conditions') {
+        return 'conditional';
+      } else {
+        return 'rejected';
+      }
+    };
+    
     return (
-      <div className="d-flex gap-1 align-items-center">
-        {steps.map((step, index) => (
-          <div key={step.key} className="d-flex align-items-center">
-            <span 
-              className={`badge ${
-                step.value === 'approved' || step.value === 'recommended' || step.value === 'approved_extension' 
-                  ? 'bg-success' 
-                  : step.value === 'pending' 
-                  ? 'bg-light text-muted' 
-                  : step.value === 'recommended_with_conditions'
-                  ? 'bg-warning'
-                  : 'bg-danger'
-              }`}
-              title={`${step.label}: ${step.value.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}`}
-            >
-              {step.label.charAt(0)}
-            </span>
-            {index < steps.length - 1 && <small className="mx-1 text-muted">→</small>}
-          </div>
-        ))}
+      <div className="d-flex gap-2 align-items-center flex-wrap">
+        {steps.map((step, index) => {
+          const status = getStepStatus(step.value);
+          return (
+            <div key={step.key} className="d-flex align-items-center">
+              <div className="text-center">
+                <div 
+                  className={`rounded-circle d-inline-flex align-items-center justify-content-center ${
+                    status === 'completed' ? 'bg-success text-white' :
+                    status === 'conditional' ? 'bg-warning text-white' :
+                    status === 'rejected' ? 'bg-danger text-white' :
+                    'bg-light text-muted'
+                  }`}
+                  style={{ width: '32px', height: '32px', fontSize: '14px' }}
+                  title={`${step.label}: ${step.value.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}`}
+                >
+                  {status === 'completed' ? '✓' : status === 'rejected' ? '✗' : step.label.charAt(0)}
+                </div>
+                <small className="d-block text-muted mt-1" style={{ fontSize: '10px' }}>
+                  {step.label}
+                </small>
+              </div>
+              {index < steps.length - 1 && (
+                <div className="mx-1">
+                  <Icon icon="heroicons-solid:arrow-right" width={16} height={16} className="text-muted" />
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   };
@@ -979,11 +1082,7 @@ const EmployeeConfirmation = () => {
   };
   
   return (
-    <div
-      menuItems={menuItems} 
-      userInfo={userInfo}
-      appName="HRMS - Employee Confirmation"
-    >
+    <>
       <div className="container-fluid p-3 p-md-4">
         
         {/* HEADER */}
@@ -1095,6 +1194,13 @@ const EmployeeConfirmation = () => {
                 onClick={handleExportData}
               >
                 Export Data
+              </button>
+              <button 
+                className="btn btn-sm btn-outline-success"
+                onClick={handleAutoTriggerReviews}
+              >
+                <Icon icon="heroicons-solid:clock" className="me-1" />
+                Auto-Trigger Reviews
               </button>
             </div>
           </div>
@@ -1822,16 +1928,51 @@ const EmployeeConfirmation = () => {
                     </div>
                     
                     {bulkAction.action === 'confirm' && (
-                      <div className="mb-3">
-                        <label className="form-label">Confirmation Date *</label>
-                        <input
-                          type="date"
-                          className="form-control"
-                          value={bulkAction.date}
-                          onChange={(e) => setBulkAction({...bulkAction, date: e.target.value})}
-                          required
-                        />
-                      </div>
+                      <>
+                        <div className="mb-3">
+                          <label className="form-label">Confirmation Date *</label>
+                          <input
+                            type="date"
+                            className="form-control"
+                            value={bulkAction.date}
+                            onChange={(e) => setBulkAction({...bulkAction, date: e.target.value})}
+                            required
+                          />
+                        </div>
+                        <div className="form-check mb-3">
+                          <input 
+                            className="form-check-input" 
+                            type="checkbox"
+                            checked={bulkAction.generateLetters}
+                            onChange={(e) => setBulkAction({...bulkAction, generateLetters: e.target.checked})}
+                          />
+                          <label className="form-check-label">
+                            Generate confirmation letters for all
+                          </label>
+                        </div>
+                        <div className="form-check mb-3">
+                          <input 
+                            className="form-check-input" 
+                            type="checkbox"
+                            checked={bulkAction.notifyEmployees}
+                            onChange={(e) => setBulkAction({...bulkAction, notifyEmployees: e.target.checked})}
+                          />
+                          <label className="form-check-label">
+                            Notify all employees via email
+                          </label>
+                        </div>
+                        <div className="form-check">
+                          <input 
+                            className="form-check-input" 
+                            type="checkbox"
+                            checked={bulkAction.notifyManagers}
+                            onChange={(e) => setBulkAction({...bulkAction, notifyManagers: e.target.checked})}
+                          />
+                          <label className="form-check-label">
+                            Notify all managers
+                          </label>
+                        </div>
+                      </>
                     )}
                     
                     {bulkAction.action === 'extend' && (
@@ -1872,31 +2013,173 @@ const EmployeeConfirmation = () => {
         {/* LETTER GENERATION MODAL */}
         {showLetterModal && selectedEmployee && (
           <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog">
+            <div className="modal-dialog modal-lg">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title">Generate Confirmation Letter</h5>
+                  <h5 className="modal-title">Generate Confirmation Letter - {selectedEmployee.name}</h5>
                   <button className="btn-close" onClick={() => setShowLetterModal(false)}></button>
                 </div>
                 
-                <div className="modal-body text-center">
-                  <div className="mb-4">
-                    <div className="rounded-circle bg-primary d-inline-flex p-3 mb-3">
-                      <Icon icon="heroicons-solid:document-text" width={24} height={24} />
-                    </div>
-                    <h4>Confirmation Letter</h4>
-                    <p className="text-muted">
-                      Generate confirmation letter for <strong>{selectedEmployee.name}</strong>?
-                    </p>
+                <div className="modal-body">
+                  <div className="alert alert-success mb-3">
+                    Generating confirmation letter for <strong>{selectedEmployee.name}</strong> ({selectedEmployee.employeeId})
                   </div>
                   
-                  <div className="alert alert-info text-start">
-                    <strong>Information:</strong> The letter will include:
-                    <ul className="mb-0 mt-1">
+                  <div className="card mb-3">
+                    <div className="card-header bg-light">
+                      <strong>Letter Details</strong>
+                    </div>
+                    <div className="card-body">
+                      <div className="row mb-3">
+                        <div className="col-md-6">
+                          <label className="form-label">Confirmation Date</label>
+                          <input
+                            type="date"
+                            className="form-control"
+                            value={selectedEmployee.confirmationDate || new Date().toISOString().split('T')[0]}
+                            readOnly
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label">Effective Date</label>
+                          <input
+                            type="date"
+                            className="form-control"
+                            value={selectedEmployee.confirmationEffectiveDate || new Date().toISOString().split('T')[0]}
+                            readOnly
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="row mb-3">
+                        <div className="col-md-6">
+                          <label className="form-label">Employee Name</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={selectedEmployee.name}
+                            readOnly
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label">Employee ID</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={selectedEmployee.employeeId}
+                            readOnly
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="row mb-3">
+                        <div className="col-md-6">
+                          <label className="form-label">Designation</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={selectedEmployee.designation}
+                            readOnly
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label">Department</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={selectedEmployee.department}
+                            readOnly
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="row">
+                        <div className="col-md-6">
+                          <label className="form-label">Joining Date</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={formatDate(selectedEmployee.joiningDate)}
+                            readOnly
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label">Salary</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={selectedEmployee.salary}
+                            readOnly
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="card mb-3">
+                    <div className="card-header bg-light">
+                      <strong>Letter Options</strong>
+                    </div>
+                    <div className="card-body">
+                      <div className="form-check mb-2">
+                        <input 
+                          className="form-check-input" 
+                          type="checkbox"
+                          defaultChecked
+                          id="includeSalary"
+                        />
+                        <label className="form-check-label" htmlFor="includeSalary">
+                          Include salary details
+                        </label>
+                      </div>
+                      
+                      <div className="form-check mb-2">
+                        <input 
+                          className="form-check-input" 
+                          type="checkbox"
+                          defaultChecked
+                          id="includeTerms"
+                        />
+                        <label className="form-check-label" htmlFor="includeTerms">
+                          Include terms and conditions
+                        </label>
+                      </div>
+                      
+                      <div className="form-check mb-2">
+                        <input 
+                          className="form-check-input" 
+                          type="checkbox"
+                          defaultChecked
+                          id="sendEmail"
+                        />
+                        <label className="form-check-label" htmlFor="sendEmail">
+                          Send letter via email to employee
+                        </label>
+                      </div>
+                      
+                      <div className="form-check">
+                        <input 
+                          className="form-check-input" 
+                          type="checkbox"
+                          defaultChecked
+                          id="ccManager"
+                        />
+                        <label className="form-check-label" htmlFor="ccManager">
+                          CC Manager ({selectedEmployee.manager})
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="alert alert-info">
+                    <strong>Letter Preview:</strong> The confirmation letter will be generated in PDF format and include:
+                    <ul className="mb-0 mt-2">
+                      <li>Official confirmation of permanent employment</li>
                       <li>Employee details and confirmation date</li>
-                      <li>Designation and department</li>
-                      <li>Salary details (if applicable)</li>
-                      <li>Terms and conditions of employment</li>
+                      <li>Designation, department, and work location</li>
+                      <li>Salary details (if selected)</li>
+                      <li>Terms and conditions of permanent employment</li>
+                      <li>Company letterhead and authorized signatures</li>
                     </ul>
                   </div>
                 </div>
@@ -1914,7 +2197,8 @@ const EmployeeConfirmation = () => {
                     className="btn btn-primary"
                     onClick={handleSubmitLetter}
                   >
-                    Generate Letter
+                    <Icon icon="heroicons-solid:document-download" className="me-1" />
+                    Generate & Download Letter
                   </button>
                 </div>
               </div>
@@ -2132,6 +2416,21 @@ const EmployeeConfirmation = () => {
                     </div>
                   </div>
                   
+                  <div className="card mb-3">
+                    <div className="card-header bg-light">
+                      <strong>Confirmation Workflow Status</strong>
+                    </div>
+                    <div className="card-body">
+                      <ApprovalWorkflow employee={selectedEmployee} />
+                      {selectedEmployee.confirmationEffectiveDate && (
+                        <div className="mt-3 p-2 bg-light rounded">
+                          <small className="text-muted d-block">Effective Date:</small>
+                          <strong className="text-success">{formatDate(selectedEmployee.confirmationEffectiveDate)}</strong>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
                   <div className="card">
                     <div className="card-header bg-light">
                       <strong>Review History</strong>
@@ -2171,6 +2470,41 @@ const EmployeeConfirmation = () => {
                       </div>
                     </div>
                   </div>
+                  
+                  {selectedEmployee.confirmationDate && (
+                    <div className="card mt-3">
+                      <div className="card-header bg-success text-white">
+                        <strong>Confirmation Details</strong>
+                      </div>
+                      <div className="card-body">
+                        <div className="row">
+                          <div className="col-md-6">
+                            <small className="text-muted d-block">Confirmation Date</small>
+                            <strong>{formatDate(selectedEmployee.confirmationDate)}</strong>
+                          </div>
+                          <div className="col-md-6">
+                            <small className="text-muted d-block">Effective Date</small>
+                            <strong className="text-success">
+                              {selectedEmployee.confirmationEffectiveDate ? formatDate(selectedEmployee.confirmationEffectiveDate) : 'N/A'}
+                            </strong>
+                          </div>
+                          <div className="col-md-6 mt-3">
+                            <small className="text-muted d-block">Letter Generated</small>
+                            <span className={selectedEmployee.confirmationLetterGenerated ? 'badge bg-success' : 'badge bg-warning'}>
+                              {selectedEmployee.confirmationLetterGenerated ? 'Yes' : 'Pending'}
+                            </span>
+                          </div>
+                          <div className="col-md-6 mt-3">
+                            <small className="text-muted d-block">Days Since Confirmation</small>
+                            <strong>
+                              {selectedEmployee.confirmationDate ? 
+                                Math.ceil((new Date() - new Date(selectedEmployee.confirmationDate)) / (1000 * 60 * 60 * 24)) : 0} days
+                            </strong>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="modal-footer">
@@ -2188,7 +2522,7 @@ const EmployeeConfirmation = () => {
         )}
         
       </div>
-    </div>
+    </>
   );
 };
 

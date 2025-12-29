@@ -72,7 +72,6 @@ import {
   Menu, X
 } from 'lucide-react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import RecruiterDashboardLayout from '../../recruiterDashboard/RecruiterDashboardLayout';
 
 const LetterGeneration = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -2985,17 +2984,7 @@ const LetterGeneration = () => {
     </div>
   );
 
-  return (
-    <div
-      menuItems={menuItems}
-      userInfo={userInfo}
-      appName="HR Letter Generation System"
-      isMobileMenuOpen={isMobileMenuOpen}
-      setIsMobileMenuOpen={setIsMobileMenuOpen}
-    >
-      {mainContent}
-    </div>
-  );
+  return mainContent;
 };
 
 export default LetterGeneration;

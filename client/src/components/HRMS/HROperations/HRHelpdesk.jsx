@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import RecruiterDashboardLayout from '../../recruiterDashboard/RecruiterDashboardLayout';
+
 
 const HRHelpdesk = () => {
   // States
@@ -796,11 +796,7 @@ const HRHelpdesk = () => {
   };
 
   return (
-    <div
-      menuItems={menuItems} 
-      userInfo={userInfo}
-      appName="HRMS - Helpdesk"
-    >
+    <>
       <div style={styles.container}>
         {/* Header */}
      <div>
@@ -1278,7 +1274,7 @@ const HRHelpdesk = () => {
           />
         )}
       </div>
-    </div>
+    </>
   );
 };
 

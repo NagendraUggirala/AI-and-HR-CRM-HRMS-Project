@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import RecruiterDashboardLayout from '../../recruiterDashboard/RecruiterDashboardLayout';
+
 
 import {
   Grid,
@@ -204,6 +204,7 @@ const TransferMovement = () => {
   // Form State
   const [newTransfer, setNewTransfer] = useState({
     employeeId: '',
+    requestInitiator: 'employee', // 'employee', 'manager', 'hr'
     requestType: 'Internal Transfer',
     newDepartment: '',
     newLocation: '',
@@ -219,6 +220,32 @@ const TransferMovement = () => {
     familyRelocation: false,
     estimatedCost: '',
     attachments: []
+  });
+  
+  // Checklist States
+  const [showTransferLetterModal, setShowTransferLetterModal] = useState(false);
+  const [showRelievingChecklistModal, setShowRelievingChecklistModal] = useState(false);
+  const [showJoiningChecklistModal, setShowJoiningChecklistModal] = useState(false);
+  const [showHandoverModal, setShowHandoverModal] = useState(false);
+  const [showAssetTransferModal, setShowAssetTransferModal] = useState(false);
+  const [showRelocationSupportModal, setShowRelocationSupportModal] = useState(false);
+  
+  // Checklist data
+  const [relievingChecklist, setRelievingChecklist] = useState([]);
+  const [joiningChecklist, setJoiningChecklist] = useState([]);
+  const [handoverDocuments, setHandoverDocuments] = useState([]);
+  const [assetTransferList, setAssetTransferList] = useState([]);
+  const [relocationChecklist, setRelocationChecklist] = useState([]);
+  
+  // Travel expense reimbursement state
+  const [travelExpenses, setTravelExpenses] = useState({
+    eligible: false,
+    expenseType: 'reimbursement', // 'reimbursement', 'company_arranged'
+    estimatedAmount: '',
+    approvedAmount: '',
+    expenses: [],
+    receipts: [],
+    reimbursementStatus: 'pending'
   });
 
   // Reminders State
@@ -482,6 +509,66 @@ const TransferMovement = () => {
     fetchData();
   }, []);
 
+  // Default checklists - Helper functions (must be defined before useEffect)
+  const getDefaultRelievingChecklist = () => [
+    { id: 1, task: 'Complete pending work assignments', status: 'pending', assignedTo: 'Employee', dueDate: '', priority: 'High' },
+    { id: 2, task: 'Knowledge transfer to team members', status: 'pending', assignedTo: 'Employee', dueDate: '', priority: 'High' },
+    { id: 3, task: 'Return company assets (laptop, phone, etc.)', status: 'pending', assignedTo: 'Employee', dueDate: '', priority: 'High' },
+    { id: 4, task: 'Clear IT access and system permissions', status: 'pending', assignedTo: 'IT', dueDate: '', priority: 'High' },
+    { id: 5, task: 'Submit expense reports and clear dues', status: 'pending', assignedTo: 'Finance', dueDate: '', priority: 'Medium' },
+    { id: 6, task: 'Return access cards and keys', status: 'pending', assignedTo: 'Admin', dueDate: '', priority: 'Medium' },
+    { id: 7, task: 'Update project documentation', status: 'pending', assignedTo: 'Employee', dueDate: '', priority: 'Medium' },
+    { id: 8, task: 'Exit interview completion', status: 'pending', assignedTo: 'HR', dueDate: '', priority: 'Low' }
+  ];
+  
+  const getDefaultJoiningChecklist = () => [
+    { id: 1, task: 'Update employee profile with new department/location', status: 'pending', assignedTo: 'HR', dueDate: '', priority: 'High' },
+    { id: 2, task: 'System access provisioning for new role', status: 'pending', assignedTo: 'IT', dueDate: '', priority: 'High' },
+    { id: 3, task: 'Allocate workspace/desk in new location', status: 'pending', assignedTo: 'Admin', dueDate: '', priority: 'High' },
+    { id: 4, task: 'Issue new access cards/keys', status: 'pending', assignedTo: 'Admin', dueDate: '', priority: 'High' },
+    { id: 5, task: 'Provide department-specific training/onboarding', status: 'pending', assignedTo: 'New Manager', dueDate: '', priority: 'Medium' },
+    { id: 6, task: 'Team introduction and orientation', status: 'pending', assignedTo: 'New Manager', dueDate: '', priority: 'Medium' },
+    { id: 7, task: 'Update payroll with new designation/salary', status: 'pending', assignedTo: 'Finance', dueDate: '', priority: 'Medium' },
+    { id: 8, task: 'Update organization chart and reporting structure', status: 'pending', assignedTo: 'HR', dueDate: '', priority: 'Low' }
+  ];
+  
+  const getDefaultHandoverItems = () => [
+    { id: 1, item: 'Project documentation and files', status: 'pending', assignedTo: 'Employee', dueDate: '', category: 'Documents' },
+    { id: 2, item: 'Client contact information and relationships', status: 'pending', assignedTo: 'Employee', dueDate: '', category: 'Contacts' },
+    { id: 3, item: 'Ongoing projects and their status', status: 'pending', assignedTo: 'Employee', dueDate: '', category: 'Projects' },
+    { id: 4, item: 'Process documentation and procedures', status: 'pending', assignedTo: 'Employee', dueDate: '', category: 'Processes' },
+    { id: 5, item: 'Important passwords and access credentials', status: 'pending', assignedTo: 'Employee', dueDate: '', category: 'Access' }
+  ];
+  
+  const getDefaultAssetList = () => [
+    { id: 1, asset: 'Laptop', assetId: 'LAP001', type: 'IT Equipment', status: 'transfer', condition: 'Good', assignedTo: 'Employee' },
+    { id: 2, asset: 'Mobile Phone', assetId: 'MOB001', type: 'IT Equipment', status: 'return', condition: 'Good', assignedTo: 'IT' },
+    { id: 3, asset: 'Access Card', assetId: 'ACC001', type: 'Access Card', status: 'return', condition: 'Good', assignedTo: 'Admin' },
+    { id: 4, asset: 'Office Keys', assetId: 'KEY001', type: 'Access Card', status: 'return', condition: 'Good', assignedTo: 'Admin' }
+  ];
+  
+  const getDefaultRelocationChecklist = () => [
+    { id: 1, task: 'Travel arrangements booking', status: 'pending', assignedTo: 'HR', dueDate: '', priority: 'High' },
+    { id: 2, task: 'Temporary accommodation arrangement', status: 'pending', assignedTo: 'HR', dueDate: '', priority: 'High' },
+    { id: 3, task: 'Family relocation planning and coordination', status: 'pending', assignedTo: 'HR', dueDate: '', priority: 'Medium' },
+    { id: 4, task: 'School admission support (if applicable)', status: 'pending', assignedTo: 'HR', dueDate: '', priority: 'Medium' },
+    { id: 5, task: 'Relocation expense reimbursement processing', status: 'pending', assignedTo: 'Finance', dueDate: '', priority: 'High' },
+    { id: 6, task: 'Moving company coordination', status: 'pending', assignedTo: 'HR', dueDate: '', priority: 'Medium' },
+    { id: 7, task: 'Travel insurance and health coverage transfer', status: 'pending', assignedTo: 'HR', dueDate: '', priority: 'Medium' },
+    { id: 8, task: 'Local area orientation and support', status: 'pending', assignedTo: 'New Manager', dueDate: '', priority: 'Low' }
+  ];
+
+  // Initialize checklists when transfer is selected
+  useEffect(() => {
+    if (selectedRequest) {
+      setRelievingChecklist(getDefaultRelievingChecklist());
+      setJoiningChecklist(getDefaultJoiningChecklist());
+      setHandoverDocuments(getDefaultHandoverItems());
+      setAssetTransferList(getDefaultAssetList());
+      setRelocationChecklist(getDefaultRelocationChecklist());
+    }
+  }, [selectedRequest]);
+
   // Notification Handler
   const showNotification = (message, severity = 'success') => {
     setSnackbar({
@@ -545,6 +632,7 @@ const TransferMovement = () => {
         const employee = employees.find(e => e.employeeId === request.employeeId);
         setNewTransfer({
           employeeId: request.employeeId,
+          requestInitiator: request.requestInitiator || 'employee',
           requestType: request.requestType,
           newDepartment: request.newDepartment,
           newLocation: request.newLocation,
@@ -616,6 +704,7 @@ const TransferMovement = () => {
       id: newId,
       employeeId: newTransfer.employeeId,
       employeeName: employee.name,
+      requestInitiator: newTransfer.requestInitiator || 'employee',
       requestType: newTransfer.requestType,
       currentDepartment: employee.currentDepartment,
       newDepartment: newTransfer.newDepartment,
@@ -644,7 +733,9 @@ const TransferMovement = () => {
         estimatedCost: newTransfer.estimatedCost ? parseInt(newTransfer.estimatedCost) : 0
       } : null,
       documents: [],
-      createdBy: 'Current User',
+      requestInitiator: newTransfer.requestInitiator || 'employee',
+      createdBy: newTransfer.requestInitiator === 'employee' ? employee.name : 
+                 newTransfer.requestInitiator === 'manager' ? employee.currentReportingManager : 'HR Department',
       lastModified: new Date()
     };
 
@@ -1666,6 +1757,84 @@ const TransferMovement = () => {
                                 <EditIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
+                            {request.status === 'Approved' && (
+                              <>
+                                <Tooltip title="Generate Transfer Letter">
+                                  <IconButton 
+                                    size="small" 
+                                    onClick={() => {
+                                      setSelectedRequest(request);
+                                      setShowTransferLetterModal(true);
+                                    }}
+                                    sx={{ color: 'secondary.main' }}
+                                  >
+                                    <AttachFileIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Relieving Checklist">
+                                  <IconButton 
+                                    size="small" 
+                                    onClick={() => {
+                                      setSelectedRequest(request);
+                                      setShowRelievingChecklistModal(true);
+                                    }}
+                                    sx={{ color: 'warning.main' }}
+                                  >
+                                    <CheckIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Joining Checklist">
+                                  <IconButton 
+                                    size="small" 
+                                    onClick={() => {
+                                      setSelectedRequest(request);
+                                      setShowJoiningChecklistModal(true);
+                                    }}
+                                    sx={{ color: 'info.main' }}
+                                  >
+                                    <CheckIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Handover Documentation">
+                                  <IconButton 
+                                    size="small" 
+                                    onClick={() => {
+                                      setSelectedRequest(request);
+                                      setShowHandoverModal(true);
+                                    }}
+                                    sx={{ color: 'primary.main' }}
+                                  >
+                                    <AttachFileIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Asset Transfer">
+                                  <IconButton 
+                                    size="small" 
+                                    onClick={() => {
+                                      setSelectedRequest(request);
+                                      setShowAssetTransferModal(true);
+                                    }}
+                                    sx={{ color: 'success.main' }}
+                                  >
+                                    <BusinessIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                                {request.requestType === 'Location Transfer' && (
+                                  <Tooltip title="Relocation Support">
+                                    <IconButton 
+                                      size="small" 
+                                      onClick={() => {
+                                        setSelectedRequest(request);
+                                        setShowRelocationSupportModal(true);
+                                      }}
+                                      sx={{ color: 'info.main' }}
+                                    >
+                                      <LocationIcon fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                )}
+                              </>
+                            )}
                             <Tooltip title="Approve">
                               <IconButton 
                                 size="small" 
@@ -1935,9 +2104,115 @@ const TransferMovement = () => {
                 </CardContent>
               </Card>
             </Grid>
+            
+            {selectedRequest.status === 'Approved' && (
+              <Grid item xs={12}>
+                <Card variant="outlined" sx={{ borderRadius: 2, bgcolor: 'action.hover' }}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Post-Approval Actions
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6} md={4}>
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          startIcon={<AttachFileIcon />}
+                          onClick={() => {
+                            setShowTransferLetterModal(true);
+                          }}
+                        >
+                          Generate Transfer Letter
+                        </Button>
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={4}>
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          startIcon={<CheckIcon />}
+                          onClick={() => {
+                            setShowRelievingChecklistModal(true);
+                          }}
+                        >
+                          Relieving Checklist
+                        </Button>
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={4}>
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          startIcon={<CheckIcon />}
+                          onClick={() => {
+                            setShowJoiningChecklistModal(true);
+                          }}
+                        >
+                          Joining Checklist
+                        </Button>
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={4}>
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          startIcon={<AttachFileIcon />}
+                          onClick={() => {
+                            setShowHandoverModal(true);
+                          }}
+                        >
+                          Handover Documentation
+                        </Button>
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={4}>
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          startIcon={<BusinessIcon />}
+                          onClick={() => {
+                            setShowAssetTransferModal(true);
+                          }}
+                        >
+                          Asset Transfer/Return
+                        </Button>
+                      </Grid>
+                      {selectedRequest.requestType === 'Location Transfer' && (
+                        <Grid item xs={12} sm={6} md={4}>
+                          <Button
+                            fullWidth
+                            variant="outlined"
+                            startIcon={<LocationIcon />}
+                            onClick={() => {
+                              setShowRelocationSupportModal(true);
+                            }}
+                          >
+                            Relocation Support
+                          </Button>
+                        </Grid>
+                      )}
+                    </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
+            )}
           </Grid>
         ) : (
           <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <FormControl fullWidth size="small" required>
+                <InputLabel>Request Initiated By *</InputLabel>
+                <Select
+                  value={newTransfer.requestInitiator}
+                  label="Request Initiated By *"
+                  onChange={(e) => setNewTransfer({...newTransfer, requestInitiator: e.target.value})}
+                >
+                  <MenuItem value="employee">Employee-Initiated</MenuItem>
+                  <MenuItem value="manager">Manager-Initiated</MenuItem>
+                  <MenuItem value="hr">HR-Initiated (Organizational Needs)</MenuItem>
+                </Select>
+                <FormHelperText>
+                  Select who is initiating this transfer request
+                </FormHelperText>
+              </FormControl>
+            </Grid>
+            
             <Grid item xs={12}>
               <FormControl fullWidth size="small" required>
                 <InputLabel>Select Employee</InputLabel>
@@ -2138,7 +2413,7 @@ const TransferMovement = () => {
                               onChange={(e) => setNewTransfer({...newTransfer, travelAssistance: e.target.checked})}
                             />
                           }
-                          label="Travel Assistance"
+                          label="Travel Assistance / Expense Reimbursement"
                         />
                       </Grid>
                       <Grid item xs={12} sm={6} md={4}>
@@ -2149,7 +2424,7 @@ const TransferMovement = () => {
                               onChange={(e) => setNewTransfer({...newTransfer, accommodationSupport: e.target.checked})}
                             />
                           }
-                          label="Accommodation Support"
+                          label="Temporary Accommodation Support"
                         />
                       </Grid>
                       <Grid item xs={12} sm={6} md={4}>
@@ -2161,6 +2436,17 @@ const TransferMovement = () => {
                             />
                           }
                           label="Family Relocation Support"
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          label="Estimated Relocation Cost (₹)"
+                          type="number"
+                          value={newTransfer.estimatedCost}
+                          onChange={(e) => setNewTransfer({...newTransfer, estimatedCost: e.target.value})}
+                          size="small"
+                          fullWidth
+                          InputLabelProps={{ shrink: true }}
                         />
                       </Grid>
                     </Grid>
@@ -2822,6 +3108,7 @@ const TransferMovement = () => {
     );
   };
 
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
@@ -2831,7 +3118,7 @@ const TransferMovement = () => {
   }
 
   return (
-    <div>
+    <>
       <Box sx={{ p: isMobile ? 1 : 3 }}>
           {/* Header */}
           <Box sx={{ mb: 3 }}>
@@ -3174,6 +3461,739 @@ const TransferMovement = () => {
           {/* Dialogs and Modals */}
           <TransferRequestDialog />
           
+          {/* Transfer Letter Generation Modal */}
+          <Dialog 
+            open={showTransferLetterModal} 
+            onClose={() => setShowTransferLetterModal(false)}
+            maxWidth="md"
+            fullWidth
+            PaperProps={{ sx: { borderRadius: 2 } }}
+          >
+            <DialogTitle>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <AttachFileIcon />
+                  Generate Transfer Letter
+                </Box>
+                <IconButton onClick={() => setShowTransferLetterModal(false)} size="small">
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+            </DialogTitle>
+            <DialogContent dividers>
+              {selectedRequest && (
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <Alert severity="info" sx={{ mb: 2, borderRadius: 2 }}>
+                      Generating transfer letter for <strong>{selectedRequest.employeeName}</strong>
+                    </Alert>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      label="Transfer Letter Date"
+                      type="date"
+                      defaultValue={new Date().toISOString().split('T')[0]}
+                      size="small"
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      label="Effective Date"
+                      type="date"
+                      value={selectedRequest.effectiveDate ? new Date(selectedRequest.effectiveDate).toISOString().split('T')[0] : ''}
+                      size="small"
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <FormControlLabel
+                      control={<Checkbox defaultChecked />}
+                      label="Include salary details (if applicable)"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <FormControlLabel
+                      control={<Checkbox defaultChecked />}
+                      label="Include relocation support details"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <FormControlLabel
+                      control={<Checkbox defaultChecked />}
+                      label="Send copy via email to employee"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <FormControlLabel
+                      control={<Checkbox />}
+                      label="CC Current Manager and New Manager"
+                    />
+                  </Grid>
+                </Grid>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setShowTransferLetterModal(false)} startIcon={<CloseIcon />}>
+                Cancel
+              </Button>
+              <Button 
+                variant="contained" 
+                onClick={() => {
+                  showNotification('Transfer letter generated successfully!', 'success');
+                  setShowTransferLetterModal(false);
+                }}
+                startIcon={<DownloadIcon />}
+              >
+                Generate & Download Letter
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Relieving Checklist Modal */}
+          <Dialog 
+            open={showRelievingChecklistModal} 
+            onClose={() => setShowRelievingChecklistModal(false)}
+            maxWidth="lg"
+            fullWidth
+            PaperProps={{ sx: { borderRadius: 2 } }}
+          >
+            <DialogTitle>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CheckIcon />
+                  Relieving Checklist - {selectedRequest?.employeeName}
+                </Box>
+                <IconButton onClick={() => setShowRelievingChecklistModal(false)} size="small">
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+            </DialogTitle>
+            <DialogContent dividers>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Task</TableCell>
+                      <TableCell>Assigned To</TableCell>
+                      <TableCell>Priority</TableCell>
+                      <TableCell>Due Date</TableCell>
+                      <TableCell align="center">Status</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {relievingChecklist.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>{item.task}</TableCell>
+                        <TableCell>
+                          <Chip label={item.assignedTo} size="small" variant="outlined" />
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={item.priority} 
+                            size="small" 
+                            color={item.priority === 'High' ? 'error' : item.priority === 'Medium' ? 'warning' : 'default'}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <TextField
+                            type="date"
+                            size="small"
+                            value={item.dueDate}
+                            onChange={(e) => {
+                              const updated = relievingChecklist.map(i => 
+                                i.id === item.id ? {...i, dueDate: e.target.value} : i
+                              );
+                              setRelievingChecklist(updated);
+                            }}
+                            InputLabelProps={{ shrink: true }}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Select
+                            value={item.status}
+                            size="small"
+                            onChange={(e) => {
+                              const updated = relievingChecklist.map(i => 
+                                i.id === item.id ? {...i, status: e.target.value} : i
+                              );
+                              setRelievingChecklist(updated);
+                            }}
+                            sx={{ minWidth: 120 }}
+                          >
+                            <MenuItem value="pending">Pending</MenuItem>
+                            <MenuItem value="in-progress">In Progress</MenuItem>
+                            <MenuItem value="completed">Completed</MenuItem>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setShowRelievingChecklistModal(false)}>Close</Button>
+              <Button variant="contained" onClick={() => {
+                showNotification('Relieving checklist updated successfully!', 'success');
+                setShowRelievingChecklistModal(false);
+              }}>
+                Save Checklist
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Joining Checklist Modal */}
+          <Dialog 
+            open={showJoiningChecklistModal} 
+            onClose={() => setShowJoiningChecklistModal(false)}
+            maxWidth="lg"
+            fullWidth
+            PaperProps={{ sx: { borderRadius: 2 } }}
+          >
+            <DialogTitle>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CheckIcon />
+                  Joining Checklist - {selectedRequest?.employeeName}
+                </Box>
+                <IconButton onClick={() => setShowJoiningChecklistModal(false)} size="small">
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+            </DialogTitle>
+            <DialogContent dividers>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Task</TableCell>
+                      <TableCell>Assigned To</TableCell>
+                      <TableCell>Priority</TableCell>
+                      <TableCell>Due Date</TableCell>
+                      <TableCell align="center">Status</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {joiningChecklist.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>{item.task}</TableCell>
+                        <TableCell>
+                          <Chip label={item.assignedTo} size="small" variant="outlined" />
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={item.priority} 
+                            size="small" 
+                            color={item.priority === 'High' ? 'error' : item.priority === 'Medium' ? 'warning' : 'default'}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <TextField
+                            type="date"
+                            size="small"
+                            value={item.dueDate}
+                            onChange={(e) => {
+                              const updated = joiningChecklist.map(i => 
+                                i.id === item.id ? {...i, dueDate: e.target.value} : i
+                              );
+                              setJoiningChecklist(updated);
+                            }}
+                            InputLabelProps={{ shrink: true }}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Select
+                            value={item.status}
+                            size="small"
+                            onChange={(e) => {
+                              const updated = joiningChecklist.map(i => 
+                                i.id === item.id ? {...i, status: e.target.value} : i
+                              );
+                              setJoiningChecklist(updated);
+                            }}
+                            sx={{ minWidth: 120 }}
+                          >
+                            <MenuItem value="pending">Pending</MenuItem>
+                            <MenuItem value="in-progress">In Progress</MenuItem>
+                            <MenuItem value="completed">Completed</MenuItem>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setShowJoiningChecklistModal(false)}>Close</Button>
+              <Button variant="contained" onClick={() => {
+                showNotification('Joining checklist updated successfully!', 'success');
+                setShowJoiningChecklistModal(false);
+              }}>
+                Save Checklist
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Handover Documentation Modal */}
+          <Dialog 
+            open={showHandoverModal} 
+            onClose={() => setShowHandoverModal(false)}
+            maxWidth="lg"
+            fullWidth
+            PaperProps={{ sx: { borderRadius: 2 } }}
+          >
+            <DialogTitle>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <AttachFileIcon />
+                  Handover Documentation - {selectedRequest?.employeeName}
+                </Box>
+                <IconButton onClick={() => setShowHandoverModal(false)} size="small">
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+            </DialogTitle>
+            <DialogContent dividers>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Handover Item</TableCell>
+                      <TableCell>Category</TableCell>
+                      <TableCell>Assigned To</TableCell>
+                      <TableCell>Due Date</TableCell>
+                      <TableCell align="center">Status</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {handoverDocuments.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>{item.item}</TableCell>
+                        <TableCell>
+                          <Chip label={item.category} size="small" color="primary" variant="outlined" />
+                        </TableCell>
+                        <TableCell>{item.assignedTo}</TableCell>
+                        <TableCell>
+                          <TextField
+                            type="date"
+                            size="small"
+                            value={item.dueDate}
+                            onChange={(e) => {
+                              const updated = handoverDocuments.map(i => 
+                                i.id === item.id ? {...i, dueDate: e.target.value} : i
+                              );
+                              setHandoverDocuments(updated);
+                            }}
+                            InputLabelProps={{ shrink: true }}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Select
+                            value={item.status}
+                            size="small"
+                            onChange={(e) => {
+                              const updated = handoverDocuments.map(i => 
+                                i.id === item.id ? {...i, status: e.target.value} : i
+                              );
+                              setHandoverDocuments(updated);
+                            }}
+                            sx={{ minWidth: 120 }}
+                          >
+                            <MenuItem value="pending">Pending</MenuItem>
+                            <MenuItem value="in-progress">In Progress</MenuItem>
+                            <MenuItem value="completed">Completed</MenuItem>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <Box sx={{ mt: 2 }}>
+                <Button
+                  variant="outlined"
+                  startIcon={<AttachFileIcon />}
+                  onClick={() => showNotification('Upload handover document feature', 'info')}
+                >
+                  Upload Handover Documents
+                </Button>
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setShowHandoverModal(false)}>Close</Button>
+              <Button variant="contained" onClick={() => {
+                showNotification('Handover documentation updated successfully!', 'success');
+                setShowHandoverModal(false);
+              }}>
+                Save Documentation
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Asset Transfer/Return Modal */}
+          <Dialog 
+            open={showAssetTransferModal} 
+            onClose={() => setShowAssetTransferModal(false)}
+            maxWidth="lg"
+            fullWidth
+            PaperProps={{ sx: { borderRadius: 2 } }}
+          >
+            <DialogTitle>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <BusinessIcon />
+                  Asset Transfer/Return - {selectedRequest?.employeeName}
+                </Box>
+                <IconButton onClick={() => setShowAssetTransferModal(false)} size="small">
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+            </DialogTitle>
+            <DialogContent dividers>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Asset Name</TableCell>
+                      <TableCell>Asset ID</TableCell>
+                      <TableCell>Type</TableCell>
+                      <TableCell>Action</TableCell>
+                      <TableCell>Condition</TableCell>
+                      <TableCell>Assigned To</TableCell>
+                      <TableCell align="center">Status</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {assetTransferList.map((asset) => (
+                      <TableRow key={asset.id}>
+                        <TableCell>{asset.asset}</TableCell>
+                        <TableCell>{asset.assetId}</TableCell>
+                        <TableCell>
+                          <Chip label={asset.type} size="small" variant="outlined" />
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={asset.status === 'transfer' ? 'Transfer to New Dept' : 'Return to Company'} 
+                            size="small" 
+                            color={asset.status === 'transfer' ? 'primary' : 'secondary'}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={asset.condition}
+                            size="small"
+                            onChange={(e) => {
+                              const updated = assetTransferList.map(a => 
+                                a.id === asset.id ? {...a, condition: e.target.value} : a
+                              );
+                              setAssetTransferList(updated);
+                            }}
+                            sx={{ minWidth: 100 }}
+                          >
+                            <MenuItem value="Excellent">Excellent</MenuItem>
+                            <MenuItem value="Good">Good</MenuItem>
+                            <MenuItem value="Fair">Fair</MenuItem>
+                            <MenuItem value="Poor">Poor</MenuItem>
+                          </Select>
+                        </TableCell>
+                        <TableCell>{asset.assignedTo}</TableCell>
+                        <TableCell align="center">
+                          <Select
+                            value={asset.status}
+                            size="small"
+                            onChange={(e) => {
+                              const updated = assetTransferList.map(a => 
+                                a.id === asset.id ? {...a, status: e.target.value} : a
+                              );
+                              setAssetTransferList(updated);
+                            }}
+                            sx={{ minWidth: 120 }}
+                          >
+                            <MenuItem value="pending">Pending</MenuItem>
+                            <MenuItem value="in-progress">In Progress</MenuItem>
+                            <MenuItem value="completed">Completed</MenuItem>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setShowAssetTransferModal(false)}>Close</Button>
+              <Button variant="contained" onClick={() => {
+                showNotification('Asset transfer/return updated successfully!', 'success');
+                setShowAssetTransferModal(false);
+              }}>
+                Save Asset Status
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Relocation Support Modal */}
+          <Dialog 
+            open={showRelocationSupportModal} 
+            onClose={() => setShowRelocationSupportModal(false)}
+            maxWidth="md"
+            fullWidth
+            PaperProps={{ sx: { borderRadius: 2 } }}
+          >
+            <DialogTitle>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <LocationIcon />
+                  Relocation Support - {selectedRequest?.employeeName}
+                </Box>
+                <IconButton onClick={() => setShowRelocationSupportModal(false)} size="small">
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+            </DialogTitle>
+            <DialogContent dividers>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <Alert severity="info" sx={{ mb: 2, borderRadius: 2 }}>
+                    Track relocation support for location transfers
+                  </Alert>
+                </Grid>
+                
+                <Grid item xs={12}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Travel Expense Reimbursement
+                  </Typography>
+                  <Card variant="outlined" sx={{ mb: 2 }}>
+                    <CardContent>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} sm={6}>
+                          <FormControlLabel
+                            control={<Checkbox checked={travelExpenses.eligible} onChange={(e) => setTravelExpenses({...travelExpenses, eligible: e.target.checked})} />}
+                            label="Eligible for Travel Expense Reimbursement"
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <FormControl fullWidth size="small">
+                            <InputLabel>Expense Type</InputLabel>
+                            <Select
+                              value={travelExpenses.expenseType}
+                              label="Expense Type"
+                              onChange={(e) => setTravelExpenses({...travelExpenses, expenseType: e.target.value})}
+                              disabled={!travelExpenses.eligible}
+                            >
+                              <MenuItem value="reimbursement">Employee Reimbursement</MenuItem>
+                              <MenuItem value="company_arranged">Company Arranged Travel</MenuItem>
+                            </Select>
+                          </FormControl>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <TextField
+                            label="Estimated Amount (₹)"
+                            type="number"
+                            value={travelExpenses.estimatedAmount}
+                            onChange={(e) => setTravelExpenses({...travelExpenses, estimatedAmount: e.target.value})}
+                            size="small"
+                            fullWidth
+                            disabled={!travelExpenses.eligible}
+                            InputLabelProps={{ shrink: true }}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <TextField
+                            label="Approved Amount (₹)"
+                            type="number"
+                            value={travelExpenses.approvedAmount}
+                            onChange={(e) => setTravelExpenses({...travelExpenses, approvedAmount: e.target.value})}
+                            size="small"
+                            fullWidth
+                            disabled={!travelExpenses.eligible}
+                            InputLabelProps={{ shrink: true }}
+                          />
+                        </Grid>
+                        <Grid item xs={12}>
+                          <Button
+                            variant="outlined"
+                            startIcon={<AttachFileIcon />}
+                            onClick={() => showNotification('Upload expense receipts feature', 'info')}
+                            disabled={!travelExpenses.eligible}
+                          >
+                            Upload Expense Receipts
+                          </Button>
+                        </Grid>
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                
+                <Grid item xs={12}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Accommodation Support
+                  </Typography>
+                  <Card variant="outlined" sx={{ mb: 2 }}>
+                    <CardContent>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12}>
+                          <FormControlLabel
+                            control={<Checkbox checked={newTransfer.accommodationSupport} onChange={(e) => setNewTransfer({...newTransfer, accommodationSupport: e.target.checked})} />}
+                            label="Temporary Accommodation Support Required"
+                          />
+                        </Grid>
+                        {newTransfer.accommodationSupport && (
+                          <>
+                            <Grid item xs={12} sm={6}>
+                              <TextField
+                                label="Accommodation Start Date"
+                                type="date"
+                                size="small"
+                                fullWidth
+                                InputLabelProps={{ shrink: true }}
+                              />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                              <TextField
+                                label="Accommodation End Date"
+                                type="date"
+                                size="small"
+                                fullWidth
+                                InputLabelProps={{ shrink: true }}
+                              />
+                            </Grid>
+                            <Grid item xs={12}>
+                              <TextField
+                                label="Accommodation Type"
+                                select
+                                size="small"
+                                fullWidth
+                                defaultValue=""
+                              >
+                                <MenuItem value="">Select type</MenuItem>
+                                <MenuItem value="hotel">Hotel</MenuItem>
+                                <MenuItem value="serviced_apartment">Serviced Apartment</MenuItem>
+                                <MenuItem value="company_guest_house">Company Guest House</MenuItem>
+                                <MenuItem value="temporary_rental">Temporary Rental</MenuItem>
+                              </TextField>
+                            </Grid>
+                          </>
+                        )}
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                
+                <Grid item xs={12}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Family Relocation Support
+                  </Typography>
+                  <Card variant="outlined" sx={{ mb: 2 }}>
+                    <CardContent>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12}>
+                          <FormControlLabel
+                            control={<Checkbox checked={newTransfer.familyRelocation} onChange={(e) => setNewTransfer({...newTransfer, familyRelocation: e.target.checked})} />}
+                            label="Family Relocation Support Required"
+                          />
+                        </Grid>
+                        {newTransfer.familyRelocation && (
+                          <>
+                            <Grid item xs={12} sm={6}>
+                              <TextField
+                                label="Number of Family Members"
+                                type="number"
+                                size="small"
+                                fullWidth
+                                InputLabelProps={{ shrink: true }}
+                              />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                              <FormControlLabel
+                                control={<Checkbox />}
+                                label="School Admission Support Required"
+                              />
+                            </Grid>
+                            <Grid item xs={12}>
+                              <TextField
+                                label="Additional Support Requirements"
+                                multiline
+                                rows={2}
+                                size="small"
+                                fullWidth
+                                placeholder="Specify any additional family relocation support needed..."
+                              />
+                            </Grid>
+                          </>
+                        )}
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                
+                <Grid item xs={12}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Relocation Checklist
+                  </Typography>
+                  <TableContainer>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Task</TableCell>
+                          <TableCell>Assigned To</TableCell>
+                          <TableCell>Priority</TableCell>
+                          <TableCell align="center">Status</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {relocationChecklist.map((item) => (
+                          <TableRow key={item.id}>
+                            <TableCell>{item.task}</TableCell>
+                            <TableCell>
+                              <Chip label={item.assignedTo} size="small" variant="outlined" />
+                            </TableCell>
+                            <TableCell>
+                              <Chip 
+                                label={item.priority} 
+                                size="small" 
+                                color={item.priority === 'High' ? 'error' : item.priority === 'Medium' ? 'warning' : 'default'}
+                              />
+                            </TableCell>
+                            <TableCell align="center">
+                              <Select
+                                value={item.status}
+                                size="small"
+                                onChange={(e) => {
+                                  const updated = relocationChecklist.map(i => 
+                                    i.id === item.id ? {...i, status: e.target.value} : i
+                                  );
+                                  setRelocationChecklist(updated);
+                                }}
+                                sx={{ minWidth: 120 }}
+                              >
+                                <MenuItem value="pending">Pending</MenuItem>
+                                <MenuItem value="in-progress">In Progress</MenuItem>
+                                <MenuItem value="completed">Completed</MenuItem>
+                              </Select>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Grid>
+              </Grid>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setShowRelocationSupportModal(false)}>Close</Button>
+              <Button variant="contained" onClick={() => {
+                showNotification('Relocation support details updated successfully!', 'success');
+                setShowRelocationSupportModal(false);
+              }}>
+                Save Relocation Support
+              </Button>
+            </DialogActions>
+          </Dialog>
+          
           {/* Snackbar for notifications */}
           <Snackbar 
             open={snackbar.open} 
@@ -3190,7 +4210,7 @@ const TransferMovement = () => {
             </Alert>
           </Snackbar>
         </Box>
-    </div>
+    </>
   );
 };
 

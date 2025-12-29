@@ -270,7 +270,14 @@ const initialSettings = {
   workStartTime: "09:00",
   workEndTime: "18:00",
   breakDuration: 60,
+  minWorkHours: 8,
   overtimeRate: 1.5,
+  weekendOvertimeRate: 2.0,
+  holidayOvertimeRate: 2.5,
+  nightShiftBonus: 0.25,
+  overtimeDailyCap: 4,
+  overtimeWeeklyCap: 20,
+  overtimeMonthlyCap: 80,
   nightShiftStart: "22:00",
   nightShiftEnd: "06:00",
   weekendWorking: false,
@@ -278,6 +285,8 @@ const initialSettings = {
   duplicatePunchWindow: 5,
   offlineMode: true,
   autoCalculateWorkHours: true,
+  autoFirstInLastOut: true,
+  multiplePunchHandling: true,
   lateThreshold: 15,
   earlyCheckoutThreshold: 30,
   halfDayThreshold: 4,
@@ -566,15 +575,301 @@ const AttendanceCapture = () => {
     return `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
   };
 
-  const calculateAttendanceStatus = (workHours, record) => {
-    if (record.onLeave) return "On Leave";
-    if (record.holiday) return "Holiday";
-    if (record.weekOff) return "Week Off";
+  // ==================== ENHANCED ATTENDANCE PROCESSING ====================
+  
+  // Check if date is a weekend
+  const isWeekend = (date) => {
+    const day = new Date(date).getDay();
+    return day === 0 || day === 6; // Sunday = 0, Saturday = 6
+  };
 
+  // Check if date is a holiday
+  const isHoliday = (date) => {
+    const dateStr = new Date(date).toISOString().split("T")[0];
+    return holidays.some((h) => h.date === dateStr);
+  };
+
+  // Check if date is a week-off (customizable per employee)
+  const isWeekOff = (date, employeeId) => {
+    // In production, this would check employee-specific week-off settings
+    // For now, using default weekend check
+    return isWeekend(date);
+  };
+
+  // Get holiday name if date is a holiday
+  const getHolidayName = (date) => {
+    const dateStr = new Date(date).toISOString().split("T")[0];
+    const holiday = holidays.find((h) => h.date === dateStr);
+    return holiday ? holiday.name : null;
+  };
+
+  // Calculate first-in and last-out from multiple punches
+  const calculateFirstInLastOut = (employeeId, date) => {
+    const dateStr = typeof date === 'string' ? date : new Date(date).toISOString().split("T")[0];
+    
+    // Get all punches for the employee on this date
+    const dayPunches = punches
+      .filter((p) => {
+        const punchDate = new Date(p.timestamp).toISOString().split("T")[0];
+        return p.employeeId === employeeId && punchDate === dateStr;
+      })
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+    if (dayPunches.length === 0) return null;
+
+    const firstIn = dayPunches.find((p) => 
+      p.type === "checkin" || p.type === "breakend"
+    );
+    const lastOut = [...dayPunches]
+      .reverse()
+      .find((p) => p.type === "checkout" || p.type === "breakstart");
+
+    return {
+      firstIn: firstIn ? firstIn.timestamp : null,
+      lastOut: lastOut ? lastOut.timestamp : null,
+      allPunches: dayPunches,
+      punchCount: dayPunches.length,
+    };
+  };
+
+  // Calculate work hours from multiple punches with break deduction
+  const calculateWorkHoursFromPunches = (employeeId, date) => {
+    const punchData = calculateFirstInLastOut(employeeId, date);
+    if (!punchData || !punchData.firstIn) return 0;
+
+    const punches = punchData.allPunches;
+    let totalWorkTime = 0;
+    let breakTime = 0;
+    let lastCheckIn = null;
+    let lastBreakStart = null;
+
+    punches.forEach((punch) => {
+      const punchTime = new Date(punch.timestamp);
+
+      if (punch.type === "checkin" || punch.type === "breakend") {
+        if (lastBreakStart) {
+          // Calculate break duration
+          const breakDuration = (punchTime - new Date(lastBreakStart)) / (1000 * 60); // minutes
+          breakTime += breakDuration;
+          lastBreakStart = null;
+        }
+        lastCheckIn = punchTime;
+      } else if (punch.type === "checkout" || punch.type === "breakstart") {
+        if (lastCheckIn) {
+          // Calculate work duration before break/checkout
+          const workDuration = (punchTime - lastCheckIn) / (1000 * 60 * 60); // hours
+          totalWorkTime += workDuration;
+        }
+        if (punch.type === "breakstart") {
+          lastBreakStart = punchTime;
+        }
+        lastCheckIn = null;
+      }
+    });
+
+    // If still checked in, calculate until now or scheduled end time
+    if (lastCheckIn) {
+      const endTime = punchData.lastOut 
+        ? new Date(punchData.lastOut)
+        : new Date();
+      const workDuration = (endTime - lastCheckIn) / (1000 * 60 * 60);
+      totalWorkTime += workDuration;
+    }
+
+    // Convert break time to hours and deduct
+    const breakHours = breakTime / 60;
+    const netWorkHours = Math.max(0, totalWorkTime - breakHours);
+
+    return {
+      totalWorkHours: totalWorkTime.toFixed(2),
+      breakHours: breakHours.toFixed(2),
+      netWorkHours: parseFloat(netWorkHours.toFixed(2)),
+      punchCount: punches.length,
+    };
+  };
+
+  // Enhanced overtime calculation with rules
+  const calculateOvertimeWithRules = (workHours, date, isNightShift = false) => {
+    const standardHours = settings.minWorkHours || 8;
+    const baseOvertime = Math.max(0, workHours - standardHours);
+
+    if (baseOvertime <= 0) return { hours: 0, rate: 0, amount: 0 };
+
+    let rate = settings.overtimeRate || 1.5;
+    let overtimeHours = baseOvertime;
+
+    // Weekend overtime rate
+    if (isWeekend(date)) {
+      rate = settings.weekendOvertimeRate || 2.0;
+    }
+
+    // Holiday overtime rate
+    if (isHoliday(date)) {
+      rate = settings.holidayOvertimeRate || 2.5;
+    }
+
+    // Night shift bonus
+    if (isNightShift) {
+      rate += settings.nightShiftBonus || 0.25;
+    }
+
+    // Apply daily cap if configured
+    const dailyCap = settings.overtimeDailyCap || 4;
+    overtimeHours = Math.min(overtimeHours, dailyCap);
+
+    return {
+      hours: parseFloat(overtimeHours.toFixed(2)),
+      rate: parseFloat(rate.toFixed(2)),
+      amount: parseFloat((overtimeHours * rate).toFixed(2)),
+      isWeekend: isWeekend(date),
+      isHoliday: isHoliday(date),
+      isNightShift,
+      holidayName: getHolidayName(date),
+    };
+  };
+
+  // Enhanced attendance status calculation
+  const calculateAttendanceStatus = (workHours, record, date = null) => {
+    const recordDate = date || record.date || new Date();
+    const dateObj = typeof recordDate === 'string' ? new Date(recordDate) : recordDate;
+
+    // Check leave status first
+    if (record.onLeave) return "On Leave";
+    
+    // Check holiday status
+    if (isHoliday(dateObj)) {
+      // If working on holiday, mark as "Holiday Working"
+      if (workHours > 0) return "Holiday Working";
+      return "Holiday";
+    }
+    
+    // Check week-off status
+    if (isWeekOff(dateObj, record.employeeId)) {
+      // If working on week-off, mark as "Weekend Working"
+      if (workHours > 0) return "Weekend Working";
+      return "Week Off";
+    }
+
+    // Calculate status based on work hours
     if (workHours >= 7) return "Present";
     if (workHours >= settings.halfDayThreshold) return "Half Day";
     if (workHours >= settings.shortLeaveThreshold) return "Short Leave";
     return "Absent";
+  };
+
+  // Process attendance record with all calculations
+  const processAttendanceRecord = (employeeId, date) => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    const dateStr = dateObj.toISOString().split("T")[0];
+    
+    // Get punch data
+    const punchData = calculateFirstInLastOut(employeeId, dateStr);
+    if (!punchData || !punchData.firstIn) {
+      return {
+        status: "Absent",
+        workHours: 0,
+        overtime: 0,
+        firstIn: null,
+        lastOut: null,
+        punchCount: 0,
+      };
+    }
+
+    // Calculate work hours
+    const workHoursData = calculateWorkHoursFromPunches(employeeId, dateStr);
+    
+    // Check for night shift
+    const firstInTime = new Date(punchData.firstIn);
+    const isNightShiftDay = isNightShiftTime(firstInTime);
+
+    // Calculate overtime
+    const overtimeData = calculateOvertimeWithRules(
+      workHoursData.netWorkHours,
+      dateObj,
+      isNightShiftDay
+    );
+
+    // Get existing record or create base
+    const existingRecord = attendanceRecords.find(
+      (r) => r.employeeId === employeeId && r.date === dateStr
+    );
+
+    // Determine status
+    const status = calculateAttendanceStatus(
+      workHoursData.netWorkHours,
+      existingRecord || { employeeId, date: dateStr },
+      dateObj
+    );
+
+    return {
+      status,
+      workHours: workHoursData.netWorkHours,
+      totalWorkHours: parseFloat(workHoursData.totalWorkHours),
+      breakHours: parseFloat(workHoursData.breakHours),
+      overtime: overtimeData.hours,
+      overtimeRate: overtimeData.rate,
+      overtimeAmount: overtimeData.amount,
+      firstIn: punchData.firstIn,
+      lastOut: punchData.lastOut,
+      punchCount: workHoursData.punchCount,
+      allPunches: punchData.allPunches,
+      isWeekend: isWeekend(dateObj),
+      isHoliday: isHoliday(dateObj),
+      isNightShift: isNightShiftDay,
+      holidayName: getHolidayName(dateObj),
+      weekOff: isWeekOff(dateObj, employeeId),
+    };
+  };
+
+  // Get device-wise attendance reports
+  const getDeviceWiseReports = (deviceId = null, startDate = null, endDate = null) => {
+    const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const end = endDate || new Date();
+
+    // Filter punches by device and date range
+    let devicePunches = punches.filter((p) => {
+      const punchDate = new Date(p.timestamp);
+      return (
+        punchDate >= start &&
+        punchDate <= end &&
+        (deviceId ? p.deviceId === deviceId : true) &&
+        p.method === "biometric"
+      );
+    });
+
+    // Group by device
+    const deviceGroups = {};
+    devicePunches.forEach((punch) => {
+      const deviceKey = punch.deviceId || "unknown";
+      if (!deviceGroups[deviceKey]) {
+        const device = biometricDevices.find((d) => d.id === deviceKey);
+        deviceGroups[deviceKey] = {
+          deviceId: deviceKey,
+          deviceName: device?.model || "Unknown Device",
+          vendor: device?.vendor || "Unknown",
+          punches: [],
+          employees: new Set(),
+          checkIns: 0,
+          checkOuts: 0,
+        };
+      }
+      deviceGroups[deviceKey].punches.push(punch);
+      deviceGroups[deviceKey].employees.add(punch.employeeId);
+      if (punch.type === "checkin") deviceGroups[deviceKey].checkIns++;
+      if (punch.type === "checkout") deviceGroups[deviceKey].checkOuts++;
+    });
+
+    // Convert to array and calculate statistics
+    return Object.values(deviceGroups).map((group) => ({
+      ...group,
+      employees: Array.from(group.employees),
+      employeeCount: group.employees.size,
+      totalPunches: group.punches.length,
+      dateRange: {
+        start: start.toISOString().split("T")[0],
+        end: end.toISOString().split("T")[0],
+      },
+    }));
   };
 
   // ==================== BIOMETRIC FUNCTIONS ====================
@@ -1335,28 +1630,63 @@ const AttendanceCapture = () => {
 
     const checkOutTime = new Date();
     const checkInTime = new Date(record.checkIn);
-    const workHoursMs = checkOutTime - checkInTime;
-    const workHours = workHoursMs / (1000 * 60 * 60);
-    const breakHours = (record.breakTime || settings.breakDuration) / 60;
-    const netWorkHours = Math.max(0, workHours - breakHours);
+    
+    // Use enhanced processing if auto calculation is enabled
+    if (settings.autoCalculateWorkHours && settings.autoFirstInLastOut) {
+      const processedData = processAttendanceRecord(record.employeeId, record.date);
+      
+      const updatedRecord = {
+        ...record,
+        checkOut: checkOutTime.toISOString(),
+        workHours: processedData.workHours,
+        totalWorkHours: processedData.totalWorkHours,
+        breakHours: processedData.breakHours,
+        overtime: processedData.overtime,
+        overtimeRate: processedData.overtimeRate,
+        overtimeAmount: processedData.overtimeAmount,
+        status: processedData.status,
+        firstIn: processedData.firstIn,
+        lastOut: processedData.lastOut || checkOutTime.toISOString(),
+        punchCount: processedData.punchCount,
+        isWeekend: processedData.isWeekend,
+        isHoliday: processedData.isHoliday,
+        isNightShift: processedData.isNightShift,
+        holidayName: processedData.holidayName,
+        weekOff: processedData.weekOff,
+      };
 
-    let overtime = 0;
-    const standardHours = 8;
+      dispatch({ type: "UPDATE_ATTENDANCE", payload: updatedRecord });
+    } else {
+      // Legacy calculation
+      const workHoursMs = checkOutTime - checkInTime;
+      const workHours = workHoursMs / (1000 * 60 * 60);
+      const breakHours = (record.breakTime || settings.breakDuration) / 60;
+      const netWorkHours = Math.max(0, workHours - breakHours);
 
-    if (netWorkHours > standardHours) {
-      overtime = (netWorkHours - standardHours) * settings.overtimeRate;
+      const overtimeData = calculateOvertimeWithRules(
+        netWorkHours,
+        new Date(record.date),
+        record.nightShift || false
+      );
+
+      const updatedRecord = {
+        ...record,
+        checkOut: checkOutTime.toISOString(),
+        workHours: netWorkHours.toFixed(2),
+        overtime: overtimeData.hours,
+        overtimeRate: overtimeData.rate,
+        overtimeAmount: overtimeData.amount,
+        status: calculateAttendanceStatus(netWorkHours, record, new Date(record.date)),
+        isWeekend: isWeekend(new Date(record.date)),
+        isHoliday: isHoliday(new Date(record.date)),
+        isNightShift: record.nightShift || false,
+        holidayName: getHolidayName(new Date(record.date)),
+      };
+
+      dispatch({ type: "UPDATE_ATTENDANCE", payload: updatedRecord });
     }
 
-    const updatedRecord = {
-      ...record,
-      checkOut: checkOutTime.toISOString(),
-      workHours: netWorkHours.toFixed(2),
-      overtime: overtime.toFixed(2),
-      status: calculateAttendanceStatus(netWorkHours, record),
-    };
-
-    dispatch({ type: "UPDATE_ATTENDANCE", payload: updatedRecord });
-
+    // Add checkout punch
     const punch = {
       id: Date.now(),
       employeeId: record.employeeId,
@@ -1496,13 +1826,23 @@ const AttendanceCapture = () => {
     const breakHours = (manualEntryData.breakTime || 60) / 60;
     const netWorkHours = Math.max(0, workHours - breakHours);
 
-    // Calculate overtime
-    let overtime = 0;
-    const standardHours = 8;
-    if (netWorkHours > standardHours) {
-      overtime =
-        (netWorkHours - standardHours) * (settings.overtimeRate || 1.5);
-    }
+    // Enhanced overtime calculation with rules
+    const dateObj = new Date(manualEntryData.date);
+    const overtimeData = calculateOvertimeWithRules(
+      netWorkHours,
+      dateObj,
+      manualEntryData.nightShift || false
+    );
+    
+    // Determine status with enhanced calculation
+    const baseRecord = {
+      employeeId: manualEntryData.employeeId,
+      date: manualEntryData.date,
+      onLeave: manualEntryData.status === "On Leave",
+      holiday: isHoliday(dateObj),
+      weekOff: isWeekOff(dateObj, manualEntryData.employeeId),
+    };
+    const calculatedStatus = calculateAttendanceStatus(netWorkHours, baseRecord, dateObj);
 
     const manualRecord = {
       id: Date.now(),
@@ -1512,9 +1852,13 @@ const AttendanceCapture = () => {
       checkIn: `${manualEntryData.date}T${manualEntryData.checkIn}:00`,
       checkOut: `${manualEntryData.date}T${manualEntryData.checkOut}:00`,
       method: "manual",
-      status: manualEntryData.status,
+      status: calculatedStatus || manualEntryData.status,
       workHours: netWorkHours.toFixed(2),
-      overtime: overtime.toFixed(2),
+      totalWorkHours: workHours.toFixed(2),
+      breakHours: breakHours.toFixed(2),
+      overtime: overtimeData.hours,
+      overtimeRate: overtimeData.rate,
+      overtimeAmount: overtimeData.amount,
       breakTime: manualEntryData.breakTime || 60,
       reason: manualEntryData.reason,
       approvedBy: "Admin",
@@ -1524,6 +1868,12 @@ const AttendanceCapture = () => {
       verifiedBy: "HR",
       verificationDate: now.toISOString(),
       notes: manualEntryData.reason,
+      // Enhanced tracking
+      isWeekend: isWeekend(dateObj),
+      isHoliday: isHoliday(dateObj),
+      isNightShift: manualEntryData.nightShift || false,
+      holidayName: getHolidayName(dateObj),
+      weekOff: isWeekOff(dateObj, manualEntryData.employeeId),
       // Audit trail
       createdBy: "Admin",
       createdAt: now.toISOString(),
@@ -2283,25 +2633,71 @@ const AttendanceCapture = () => {
 
                       // If it's a checkin/checkout, also add attendance record
                       if (punchType === "checkin" || punchType === "checkout") {
-                        const attendanceRecord = {
-                          id: Date.now(),
-                          employeeId: selectedEmployee,
-                          employeeName: selectedEmp?.name || "Unknown",
-                          date: now.toISOString().split("T")[0],
-                          timestamp: now.toISOString(),
-                          type: punchType,
-                          method: "biometric",
-                          deviceId: biometricDevices[0]?.id,
-                          deviceModel: biometricDevices[0]?.model,
-                          status:
-                            punchType === "checkin" ? "Present" : "Checked Out",
-                          syncStatus: "synced",
-                        };
-
-                        dispatch({
-                          type: "ADD_ATTENDANCE",
-                          payload: attendanceRecord,
-                        });
+                        const today = now.toISOString().split("T")[0];
+                        
+                        // Use enhanced processing if enabled
+                        let attendanceRecord;
+                        if (settings.autoCalculateWorkHours && settings.autoFirstInLastOut) {
+                          // Process after adding punch to get accurate calculations
+                          setTimeout(() => {
+                            const processedData = processAttendanceRecord(selectedEmployee, today);
+                            const existingRecord = attendanceRecords.find(
+                              (r) => r.employeeId === selectedEmployee && r.date === today
+                            );
+                            
+                            if (existingRecord) {
+                              const updatedRecord = {
+                                ...existingRecord,
+                                ...processedData,
+                                method: "biometric",
+                                deviceId: biometricDevices[0]?.id,
+                                deviceModel: biometricDevices[0]?.model,
+                                syncStatus: "synced",
+                              };
+                              dispatch({ type: "UPDATE_ATTENDANCE", payload: updatedRecord });
+                            } else {
+                              attendanceRecord = {
+                                id: Date.now(),
+                                employeeId: selectedEmployee,
+                                employeeName: selectedEmp?.name || "Unknown",
+                                date: today,
+                                timestamp: now.toISOString(),
+                                type: punchType,
+                                method: "biometric",
+                                deviceId: biometricDevices[0]?.id,
+                                deviceModel: biometricDevices[0]?.model,
+                                status: processedData.status,
+                                workHours: processedData.workHours,
+                                firstIn: processedData.firstIn,
+                                lastOut: processedData.lastOut,
+                                punchCount: processedData.punchCount,
+                                isWeekend: processedData.isWeekend,
+                                isHoliday: processedData.isHoliday,
+                                isNightShift: processedData.isNightShift,
+                                holidayName: processedData.holidayName,
+                                syncStatus: "synced",
+                              };
+                              dispatch({ type: "ADD_ATTENDANCE", payload: attendanceRecord });
+                            }
+                          }, 100);
+                        } else {
+                          // Legacy simple record
+                          attendanceRecord = {
+                            id: Date.now(),
+                            employeeId: selectedEmployee,
+                            employeeName: selectedEmp?.name || "Unknown",
+                            date: today,
+                            timestamp: now.toISOString(),
+                            type: punchType,
+                            method: "biometric",
+                            deviceId: biometricDevices[0]?.id,
+                            deviceModel: biometricDevices[0]?.model,
+                            status:
+                              punchType === "checkin" ? "Present" : "Checked Out",
+                            syncStatus: "synced",
+                          };
+                          dispatch({ type: "ADD_ATTENDANCE", payload: attendanceRecord });
+                        }
 
                         // Add to sync log
                         const syncLog = {
@@ -2608,6 +3004,144 @@ const AttendanceCapture = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+
+        {/* Device-wise Attendance Reports */}
+        <div className="card border-0 shadow-sm mb-4">
+          <div className="card-header bg-white py-3">
+            <div className="d-flex justify-content-between align-items-center">
+              <h5 className="mb-0 d-flex align-items-center">
+                <BarChart3 size={20} className="me-2 text-primary" />
+                Device-wise Reports
+              </h5>
+              <button
+                className="btn btn-sm btn-outline-primary"
+                onClick={() => {
+                  const reports = getDeviceWiseReports();
+                  if (reports.length === 0) {
+                    alert("No device attendance data available");
+                    return;
+                  }
+                  
+                  let reportText = "Device-wise Attendance Reports\n";
+                  reportText += "=".repeat(50) + "\n\n";
+                  
+                  reports.forEach((report, index) => {
+                    reportText += `${index + 1}. ${report.deviceName} (${report.vendor})\n`;
+                    reportText += `   Total Punches: ${report.totalPunches}\n`;
+                    reportText += `   Check-ins: ${report.checkIns}\n`;
+                    reportText += `   Check-outs: ${report.checkOuts}\n`;
+                    reportText += `   Employees: ${report.employeeCount}\n`;
+                    reportText += `   Date Range: ${report.dateRange.start} to ${report.dateRange.end}\n\n`;
+                  });
+                  
+                  alert(reportText);
+                }}
+              >
+                <Download size={14} className="me-1" />
+                Generate Report
+              </button>
+            </div>
+          </div>
+          <div className="card-body">
+            {biometricDevices.length === 0 ? (
+              <div className="text-center py-3">
+                <p className="text-muted small mb-0">
+                  No devices configured. Add devices to view reports.
+                </p>
+              </div>
+            ) : (
+              <div className="row g-3">
+                {biometricDevices.map((device) => {
+                  const deviceReports = getDeviceWiseReports(device.id);
+                  const report = deviceReports[0] || {
+                    totalPunches: 0,
+                    checkIns: 0,
+                    checkOuts: 0,
+                    employeeCount: 0,
+                  };
+                  
+                  return (
+                    <div key={device.id} className="col-12">
+                      <div className="border rounded p-3">
+                        <div className="d-flex justify-content-between align-items-start mb-2">
+                          <div>
+                            <h6 className="mb-1">{device.model}</h6>
+                            <small className="text-muted d-block">
+                              {device.vendor} • {device.ipAddress}
+                            </small>
+                          </div>
+                          <span className={`badge bg-${device.health >= 80 ? 'success' : device.health >= 60 ? 'warning' : 'danger'}`}>
+                            {device.health}%
+                          </span>
+                        </div>
+                        <div className="row g-2 mt-2">
+                          <div className="col-6">
+                            <div className="text-center p-2 bg-light rounded">
+                              <div className="fw-bold text-primary">{report.totalPunches}</div>
+                              <small className="text-muted">Total Punches</small>
+                            </div>
+                          </div>
+                          <div className="col-6">
+                            <div className="text-center p-2 bg-light rounded">
+                              <div className="fw-bold text-success">{report.checkIns}</div>
+                              <small className="text-muted">Check-ins</small>
+                            </div>
+                          </div>
+                          <div className="col-6">
+                            <div className="text-center p-2 bg-light rounded">
+                              <div className="fw-bold text-info">{report.checkOuts}</div>
+                              <small className="text-muted">Check-outs</small>
+                            </div>
+                          </div>
+                          <div className="col-6">
+                            <div className="text-center p-2 bg-light rounded">
+                              <div className="fw-bold text-warning">{report.employeeCount}</div>
+                              <small className="text-muted">Employees</small>
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          className="btn btn-sm btn-outline-primary w-100 mt-2"
+                          onClick={() => {
+                            const deviceReport = getDeviceWiseReports(device.id);
+                            if (deviceReport.length > 0) {
+                              const report = deviceReport[0];
+                              const csv = [
+                                ["Employee ID", "Employee Name", "Timestamp", "Type", "Method"],
+                                ...report.punches.map(p => [
+                                  p.employeeId,
+                                  p.employeeName,
+                                  new Date(p.timestamp).toLocaleString(),
+                                  p.type,
+                                  p.method
+                                ])
+                              ].map(row => row.join(",")).join("\n");
+                              
+                              const blob = new Blob([csv], { type: "text/csv" });
+                              const url = window.URL.createObjectURL(blob);
+                              const a = document.createElement("a");
+                              a.href = url;
+                              a.download = `${device.model.replace(/\s+/g, '_')}_attendance_${new Date().toISOString().split('T')[0]}.csv`;
+                              document.body.appendChild(a);
+                              a.click();
+                              document.body.removeChild(a);
+                              window.URL.revokeObjectURL(url);
+                            } else {
+                              alert(`No attendance data available for ${device.model}`);
+                            }
+                          }}
+                        >
+                          <Download size={14} className="me-1" />
+                          Export Device Report
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 

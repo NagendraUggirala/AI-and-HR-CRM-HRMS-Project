@@ -10,10 +10,19 @@ import {
   ArrowUp,
   CheckCircle,
   Printer,
-  AlertCircle
+  AlertCircle,
+  Calendar,
+  FileText,
+  Users,
+  TrendingUp,
+  Clock,
+  XCircle,
+  CheckCircle2,
+  FileCheck,
+  Upload
 } from 'lucide-react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import RecruiterDashboardLayout from '../../recruiterDashboard/RecruiterDashboardLayout';
+
 
 const ExitManagement = () => {
   const [selectedExits, setSelectedExits] = useState([]);
@@ -30,36 +39,90 @@ const ExitManagement = () => {
   const [selectedExit, setSelectedExit] = useState(null);
   const [viewMode, setViewMode] = useState('exitCases');
   const [showFilters, setShowFilters] = useState(false);
+  const [activeModalTab, setActiveModalTab] = useState('clearance');
+  const [showExitInterviewModal, setShowExitInterviewModal] = useState(false);
+  const [showKnowledgeTransferModal, setShowKnowledgeTransferModal] = useState(false);
+  const [showAlumniModal, setShowAlumniModal] = useState(false);
+  const [showTrendsModal, setShowTrendsModal] = useState(false);
+  const [showCertificateModal, setShowCertificateModal] = useState(false);
+  const [exitInterviewData, setExitInterviewData] = useState({});
+  const [knowledgeTransferData, setKnowledgeTransferData] = useState({});
+  const [clearanceDetails, setClearanceDetails] = useState({});
 
-  const menuItems = [
-    { title: 'Dashboard', link: '/recruiter/dashboard', active: false },
-    { title: 'Job Openings', link: '/recruiter/jobs', active: false },
-    { title: 'Candidates', link: '/recruiter/candidates' },
-    { title: 'Interviews', link: '/recruiter/interviews' },
-    { title: 'Pre-Joining', link: '/recruiter/pre-joining' },
-    { title: 'Onboarding', link: '/recruiter/onboarding' },
-    { title: 'Reports', link: '/recruiter/reports' },
-    { title: 'Exit Management', link: '/recruiter/exit-management', active: true }
-  ];
+  // Helper function to get default clearance structure
+  const getDefaultClearanceStructure = () => ({
+    IT: {
+      status: 'Pending',
+      items: {
+        laptop: { status: 'Pending', assetId: 'LAP001', condition: '', remarks: '' },
+        mobile: { status: 'Pending', assetId: 'MOB001', condition: '', remarks: '' },
+        accessCards: { status: 'Pending', cardIds: [], remarks: '' },
+        softwareLicenses: { status: 'Pending', licenses: [], remarks: '' }
+      },
+      clearedBy: '',
+      clearedDate: '',
+      remarks: ''
+    },
+    Admin: {
+      status: 'Pending',
+      items: {
+        idCard: { status: 'Pending', cardNumber: '', remarks: '' },
+        accessCard: { status: 'Pending', cardNumber: '', remarks: '' },
+        parkingSticker: { status: 'Pending', stickerId: '', remarks: '' },
+        lockerKeys: { status: 'Pending', lockerNumber: '', remarks: '' }
+      },
+      clearedBy: '',
+      clearedDate: '',
+      remarks: ''
+    },
+    Finance: {
+      status: 'Pending',
+      items: {
+        advanceSettlement: { status: 'Pending', amount: 0, remarks: '' },
+        expenseClaims: { status: 'Pending', claims: [], remarks: '' },
+        loanOutstanding: { status: 'Pending', amount: 0, remarks: '' }
+      },
+      clearedBy: '',
+      clearedDate: '',
+      remarks: ''
+    },
+    HR: {
+      status: 'Pending',
+      items: {
+        documentation: { status: 'Pending', documents: [], remarks: '' },
+        exitInterview: { status: 'Pending', scheduledDate: '', remarks: '' },
+        policyViolations: { status: 'Pending', violations: [], remarks: '' }
+      },
+      clearedBy: '',
+      clearedDate: '',
+      remarks: ''
+    },
+    Department: {
+      status: 'Pending',
+      items: {
+        projectHandover: { status: 'Pending', projects: [], remarks: '' },
+        knowledgeTransfer: { status: 'Pending', ktStatus: '', remarks: '' },
+        filesDocuments: { status: 'Pending', files: [], remarks: '' }
+      },
+      clearedBy: '',
+      clearedDate: '',
+      remarks: ''
+    }
+  });
 
-  const userInfo = {
-    name: 'Sarah Johnson',
-    role: 'HR Head',
-    email: 'sarah.johnson@company.com',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah'
-  };
+  // Sample data with enhanced clearance structure
+  const [exitCasesData, setExitCasesData] = useState([
+    { id: 1, employeeId: 'EMP001', employeeName: 'Rahul Sharma', department: 'Engineering', role: 'Senior Software Engineer', resignationDate: '2024-03-01', lastWorkingDay: '2024-04-15', noticePeriod: '45 days', exitType: 'Resignation', exitReason: 'Better opportunity', clearanceProgress: 40, pendingClearances: ['IT', 'Finance', 'HR'], status: 'In Progress', escalationLevel: 0, knowledgeTransfer: 'In Progress', exitInterview: 'Scheduled', settlement: 'Pending', clearanceDetails: { ...getDefaultClearanceStructure(), IT: { ...getDefaultClearanceStructure().IT, status: 'Pending' }, Finance: { ...getDefaultClearanceStructure().Finance, status: 'Pending' }, HR: { ...getDefaultClearanceStructure().HR, status: 'Pending' }, Admin: { ...getDefaultClearanceStructure().Admin, status: 'Completed' }, Department: { ...getDefaultClearanceStructure().Department, status: 'Completed' } } },
+    { id: 2, employeeId: 'EMP002', employeeName: 'Priya Patel', department: 'Marketing', role: 'Marketing Manager', resignationDate: '2024-02-15', lastWorkingDay: '2024-03-30', noticePeriod: '45 days', exitType: 'Resignation', exitReason: 'Career growth', clearanceProgress: 75, pendingClearances: ['Admin'], status: 'In Progress', escalationLevel: 0, knowledgeTransfer: 'Completed', exitInterview: 'Completed', settlement: 'In Progress', clearanceDetails: { ...getDefaultClearanceStructure(), Admin: { ...getDefaultClearanceStructure().Admin, status: 'Pending' } } },
+    { id: 3, employeeId: 'EMP003', employeeName: 'Amit Kumar', department: 'Sales', role: 'Sales Executive', resignationDate: '2024-01-20', lastWorkingDay: '2024-02-29', noticePeriod: '30 days', exitType: 'Termination', exitReason: 'Performance', clearanceProgress: 100, pendingClearances: [], status: 'Completed', escalationLevel: 0, knowledgeTransfer: 'Completed', exitInterview: 'Completed', settlement: 'Completed', clearanceDetails: getDefaultClearanceStructure() },
+    { id: 4, employeeId: 'EMP004', employeeName: 'Sneha Reddy', department: 'HR', role: 'HR Executive', resignationDate: '2024-03-10', lastWorkingDay: '2024-04-25', noticePeriod: '45 days', exitType: 'Resignation', exitReason: 'Higher studies', clearanceProgress: 25, pendingClearances: ['IT', 'Admin', 'Finance', 'HR', 'Department'], status: 'Pending', escalationLevel: 1, knowledgeTransfer: 'Pending', exitInterview: 'Pending', settlement: 'Pending', clearanceDetails: getDefaultClearanceStructure() },
+    { id: 5, employeeId: 'EMP005', employeeName: 'Rajesh Verma', department: 'Finance', role: 'Finance Analyst', resignationDate: '2024-02-28', lastWorkingDay: '2024-04-12', noticePeriod: '45 days', exitType: 'Retirement', exitReason: 'Retirement', clearanceProgress: 90, pendingClearances: ['IT'], status: 'In Progress', escalationLevel: 0, knowledgeTransfer: 'In Progress', exitInterview: 'Scheduled', settlement: 'In Progress', clearanceDetails: { ...getDefaultClearanceStructure(), IT: { ...getDefaultClearanceStructure().IT, status: 'Pending' } } },
+    { id: 6, employeeId: 'EMP006', employeeName: 'Meera Joshi', department: 'Engineering', role: 'Frontend Developer', resignationDate: '2024-03-05', lastWorkingDay: '2024-04-19', noticePeriod: '45 days', exitType: 'Resignation', exitReason: 'Relocation', clearanceProgress: 60, pendingClearances: ['Finance', 'Admin'], status: 'In Progress', escalationLevel: 0, knowledgeTransfer: 'In Progress', exitInterview: 'Scheduled', settlement: 'Pending', clearanceDetails: { ...getDefaultClearanceStructure(), Finance: { ...getDefaultClearanceStructure().Finance, status: 'Pending' }, Admin: { ...getDefaultClearanceStructure().Admin, status: 'Pending' } } },
+    { id: 7, employeeId: 'EMP007', employeeName: 'Vikram Singh', department: 'Operations', role: 'Operations Manager', resignationDate: '2024-01-15', lastWorkingDay: '2024-01-31', noticePeriod: 'Immediate', exitType: 'Termination', exitReason: 'Policy violation', clearanceProgress: 100, pendingClearances: [], status: 'Completed', escalationLevel: 2, knowledgeTransfer: 'Not Required', exitInterview: 'Not Conducted', settlement: 'Completed', clearanceDetails: getDefaultClearanceStructure() },
+    { id: 8, employeeId: 'EMP008', employeeName: 'Anjali Gupta', department: 'Marketing', role: 'Content Writer', resignationDate: '2024-03-12', lastWorkingDay: '2024-04-26', noticePeriod: '45 days', exitType: 'Resignation', exitReason: 'Better opportunity', clearanceProgress: 30, pendingClearances: ['IT', 'Admin', 'HR'], status: 'Pending', escalationLevel: 0, knowledgeTransfer: 'Pending', exitInterview: 'Pending', settlement: 'Pending', clearanceDetails: { ...getDefaultClearanceStructure(), IT: { ...getDefaultClearanceStructure().IT, status: 'Pending' }, Admin: { ...getDefaultClearanceStructure().Admin, status: 'Pending' }, HR: { ...getDefaultClearanceStructure().HR, status: 'Pending' } } }
+  ]);
 
-  // Sample data (same as before)
-  const exitCases = [
-    { id: 1, employeeId: 'EMP001', employeeName: 'Rahul Sharma', department: 'Engineering', role: 'Senior Software Engineer', resignationDate: '2024-03-01', lastWorkingDay: '2024-04-15', noticePeriod: '45 days', exitType: 'Resignation', exitReason: 'Better opportunity', clearanceProgress: 40, pendingClearances: ['IT', 'Finance', 'HR'], status: 'In Progress', escalationLevel: 0, knowledgeTransfer: 'In Progress', exitInterview: 'Scheduled', settlement: 'Pending' },
-    { id: 2, employeeId: 'EMP002', employeeName: 'Priya Patel', department: 'Marketing', role: 'Marketing Manager', resignationDate: '2024-02-15', lastWorkingDay: '2024-03-30', noticePeriod: '45 days', exitType: 'Resignation', exitReason: 'Career growth', clearanceProgress: 75, pendingClearances: ['Admin'], status: 'In Progress', escalationLevel: 0, knowledgeTransfer: 'Completed', exitInterview: 'Completed', settlement: 'In Progress' },
-    { id: 3, employeeId: 'EMP003', employeeName: 'Amit Kumar', department: 'Sales', role: 'Sales Executive', resignationDate: '2024-01-20', lastWorkingDay: '2024-02-29', noticePeriod: '30 days', exitType: 'Termination', exitReason: 'Performance', clearanceProgress: 100, pendingClearances: [], status: 'Completed', escalationLevel: 0, knowledgeTransfer: 'Completed', exitInterview: 'Completed', settlement: 'Completed' },
-    { id: 4, employeeId: 'EMP004', employeeName: 'Sneha Reddy', department: 'HR', role: 'HR Executive', resignationDate: '2024-03-10', lastWorkingDay: '2024-04-25', noticePeriod: '45 days', exitType: 'Resignation', exitReason: 'Higher studies', clearanceProgress: 25, pendingClearances: ['IT', 'Admin', 'Finance', 'HR', 'Department'], status: 'Pending', escalationLevel: 1, knowledgeTransfer: 'Pending', exitInterview: 'Pending', settlement: 'Pending' },
-    { id: 5, employeeId: 'EMP005', employeeName: 'Rajesh Verma', department: 'Finance', role: 'Finance Analyst', resignationDate: '2024-02-28', lastWorkingDay: '2024-04-12', noticePeriod: '45 days', exitType: 'Retirement', exitReason: 'Retirement', clearanceProgress: 90, pendingClearances: ['IT'], status: 'In Progress', escalationLevel: 0, knowledgeTransfer: 'In Progress', exitInterview: 'Scheduled', settlement: 'In Progress' },
-    { id: 6, employeeId: 'EMP006', employeeName: 'Meera Joshi', department: 'Engineering', role: 'Frontend Developer', resignationDate: '2024-03-05', lastWorkingDay: '2024-04-19', noticePeriod: '45 days', exitType: 'Resignation', exitReason: 'Relocation', clearanceProgress: 60, pendingClearances: ['Finance', 'Admin'], status: 'In Progress', escalationLevel: 0, knowledgeTransfer: 'In Progress', exitInterview: 'Scheduled', settlement: 'Pending' },
-    { id: 7, employeeId: 'EMP007', employeeName: 'Vikram Singh', department: 'Operations', role: 'Operations Manager', resignationDate: '2024-01-15', lastWorkingDay: '2024-01-31', noticePeriod: 'Immediate', exitType: 'Termination', exitReason: 'Policy violation', clearanceProgress: 100, pendingClearances: [], status: 'Completed', escalationLevel: 2, knowledgeTransfer: 'Not Required', exitInterview: 'Not Conducted', settlement: 'Completed' },
-    { id: 8, employeeId: 'EMP008', employeeName: 'Anjali Gupta', department: 'Marketing', role: 'Content Writer', resignationDate: '2024-03-12', lastWorkingDay: '2024-04-26', noticePeriod: '45 days', exitType: 'Resignation', exitReason: 'Better opportunity', clearanceProgress: 30, pendingClearances: ['IT', 'Admin', 'HR'], status: 'Pending', escalationLevel: 0, knowledgeTransfer: 'Pending', exitInterview: 'Pending', settlement: 'Pending' }
-  ];
+  const exitCases = exitCasesData;
 
   const alumniNetwork = [
     { id: 1, alumniId: 'ALM001', employeeId: 'EMP101', name: 'Rohit Verma', department: 'Engineering', lastRole: 'Tech Lead', exitDate: '2023-12-15', exitReason: 'Higher studies', rehireEligibility: 'Eligible', boomerangStatus: 'Interested', engagementLevel: 'High', totalReferrals: 3, successfulHires: 2 },
@@ -198,6 +261,12 @@ const ExitManagement = () => {
       const exit = exitCases.find(e => e.id === exitId);
       if (exit) {
         setSelectedExit(exit);
+        if (exit.clearanceDetails) {
+          setClearanceDetails(exit.clearanceDetails);
+        } else {
+          setClearanceDetails(getDefaultClearanceStructure());
+        }
+        setActiveModalTab('IT');
         setShowClearanceModal(true);
       }
     }
@@ -205,7 +274,37 @@ const ExitManagement = () => {
 
   const handleCloseModal = () => {
     setShowClearanceModal(false);
+    setShowExitInterviewModal(false);
+    setShowKnowledgeTransferModal(false);
+    setShowAlumniModal(false);
+    setShowTrendsModal(false);
+    setShowCertificateModal(false);
     setSelectedExit(null);
+    setActiveModalTab('clearance');
+  };
+
+  const handleOpenExitInterview = (exitId) => {
+    const exit = exitCases.find(e => e.id === exitId);
+    if (exit) {
+      setSelectedExit(exit);
+      setExitInterviewData(exit.exitInterviewData || {});
+      setShowExitInterviewModal(true);
+    }
+  };
+
+  const handleOpenKnowledgeTransfer = (exitId) => {
+    const exit = exitCases.find(e => e.id === exitId);
+    if (exit) {
+      setSelectedExit(exit);
+      setKnowledgeTransferData(exit.knowledgeTransferData || {});
+      setShowKnowledgeTransferModal(true);
+    }
+  };
+
+  const handleGenerateCertificate = () => {
+    if (selectedExit) {
+      setShowCertificateModal(true);
+    }
   };
 
   // Responsive table rendering functions
@@ -320,10 +419,20 @@ const ExitManagement = () => {
                   >
                     <Eye size={14} />
                   </button>
-                  <button type="button" className="btn btn-icon btn-light p-1 d-none d-md-inline" title="Interview">
+                  <button 
+                    type="button" 
+                    className="btn btn-icon btn-light p-1 d-none d-md-inline" 
+                    title="Interview"
+                    onClick={() => handleOpenExitInterview(exit.id)}
+                  >
                     <MessageSquare size={14} />
                   </button>
-                  <button type="button" className="btn btn-icon btn-light p-1 d-none d-md-inline" title="Transfer">
+                  <button 
+                    type="button" 
+                    className="btn btn-icon btn-light p-1 d-none d-md-inline" 
+                    title="Knowledge Transfer"
+                    onClick={() => handleOpenKnowledgeTransfer(exit.id)}
+                  >
                     <Share2 size={14} />
                   </button>
                 </div>
@@ -409,10 +518,20 @@ const ExitManagement = () => {
               </td>
               <td className="text-center">
                 <div className="btn-group btn-group-sm" role="group">
-                  <button type="button" className="btn btn-icon btn-light p-1" title="View">
+                  <button 
+                    type="button" 
+                    className="btn btn-icon btn-light p-1" 
+                    title="View"
+                    onClick={() => { setSelectedExit(alumni); setShowAlumniModal(true); }}
+                  >
                     <Eye size={14} />
                   </button>
-                  <button type="button" className="btn btn-icon btn-light p-1 d-none d-md-inline" title="Message">
+                  <button 
+                    type="button" 
+                    className="btn btn-icon btn-light p-1 d-none d-md-inline" 
+                    title="Message"
+                    onClick={() => { setSelectedExit(alumni); setShowAlumniModal(true); }}
+                  >
                     <Send size={14} />
                   </button>
                 </div>
@@ -576,7 +695,7 @@ const ExitManagement = () => {
             </button>
             <button
               className="btn btn-outline-primary btn-sm d-none d-md-inline-flex flex-grow-1 flex-lg-grow-0"
-              onClick={() => alert('Exit Trends Analysis')}
+              onClick={() => setShowTrendsModal(true)}
             >
               <i className="bi bi-graph-up me-1"></i>
               <span>Trends</span>
@@ -883,37 +1002,36 @@ const ExitManagement = () => {
         </div>
       </div>
 
-      {/* Clearance Details Modal - Responsive */}
+      {/* Comprehensive Clearance Details Modal */}
       {showClearanceModal && selectedExit && (
-        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
-          <div className="modal-dialog modal-dialog-centered modal-lg">
+        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050}}>
+          <div className="modal-dialog modal-dialog-centered modal-xl">
             <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Clearance Details - {selectedExit.employeeName}</h5>
-                <button type="button" className="btn-close" onClick={handleCloseModal}></button>
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title">Exit Clearance - {selectedExit.employeeName}</h5>
+                <button type="button" className="btn-close btn-close-white" onClick={handleCloseModal}></button>
               </div>
-              <div className="modal-body">
+              <div className="modal-body" style={{maxHeight: '70vh', overflowY: 'auto'}}>
+                {/* Employee Info & Progress */}
                 <div className="row g-3 mb-4">
                   <div className="col-12 col-md-6">
                     <div className="card border">
                       <div className="card-body">
                         <h6 className="card-title">Employee Info</h6>
                         <div className="row">
-                          <div className="col-6">
+                          <div className="col-6 mb-2">
                             <small className="text-muted">Employee ID</small>
                             <div className="fw-bold small">{selectedExit.employeeId}</div>
                           </div>
-                          <div className="col-6">
+                          <div className="col-6 mb-2">
                             <small className="text-muted">Department</small>
                             <div className="fw-bold small">{selectedExit.department}</div>
                           </div>
-                        </div>
-                        <div className="row mt-2">
-                          <div className="col-6">
+                          <div className="col-6 mb-2">
                             <small className="text-muted">Role</small>
                             <div className="fw-bold small">{selectedExit.role}</div>
                           </div>
-                          <div className="col-6">
+                          <div className="col-6 mb-2">
                             <small className="text-muted">Last Day</small>
                             <div className="fw-bold small">{selectedExit.lastWorkingDay}</div>
                           </div>
@@ -927,7 +1045,7 @@ const ExitManagement = () => {
                         <h6 className="card-title">Clearance Progress</h6>
                         <div className="d-flex align-items-center gap-3">
                           <div className="flex-grow-1">
-                            <div className="progress" style={{height: '8px'}}>
+                            <div className="progress" style={{height: '12px'}}>
                               <div 
                                 className={`progress-bar ${getProgressColor(selectedExit.clearanceProgress)}`} 
                                 style={{width: `${selectedExit.clearanceProgress}%`}}
@@ -945,78 +1063,317 @@ const ExitManagement = () => {
                   </div>
                 </div>
 
-                <div className="card border mb-4">
-                  <div className="card-header">
-                    <h6 className="mb-0">Department Clearance</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="row g-2">
-                      {['IT', 'Admin', 'Finance', 'HR', 'Department'].map((dept, index) => (
-                        <div key={index} className="col-12 col-md-6">
-                          <div className="card border">
-                            <div className="card-body p-2">
-                              <div className="d-flex justify-content-between align-items-center">
-                                <h6 className="mb-0 small">{dept}</h6>
-                                <span className={`badge ${selectedExit.pendingClearances.includes(dept) ? 'bg-warning-subtle text-warning' : 'bg-success-subtle text-success'}`}>
-                                  {selectedExit.pendingClearances.includes(dept) ? 'Pending' : 'Completed'}
-                                </span>
-                              </div>
+                {/* Tab Navigation */}
+                <ul className="nav nav-tabs mb-3" role="tablist">
+                  {['IT', 'Admin', 'Finance', 'HR', 'Department'].map((dept) => {
+                    const deptStatus = clearanceDetails[dept]?.status || 'Pending';
+                    return (
+                      <li key={dept} className="nav-item" role="presentation">
+                        <button
+                          className={`nav-link ${activeModalTab === dept ? 'active' : ''}`}
+                          onClick={() => setActiveModalTab(dept)}
+                        >
+                          {dept}
+                          {deptStatus === 'Completed' && <CheckCircle2 size={14} className="ms-1 text-success" />}
+                          {deptStatus === 'Pending' && <Clock size={14} className="ms-1 text-warning" />}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+
+                {/* Department Clearance Details */}
+                {activeModalTab === 'IT' && (
+                  <div className="card border">
+                    <div className="card-header bg-info-subtle">
+                      <h6 className="mb-0">IT Clearance</h6>
+                    </div>
+                    <div className="card-body">
+                      <div className="row g-3">
+                        <div className="col-12 col-md-6">
+                          <label className="form-label fw-medium">Laptop</label>
+                          <div className="input-group input-group-sm">
+                            <input type="text" className="form-control" placeholder="Asset ID" defaultValue={clearanceDetails.IT?.items?.laptop?.assetId || ''} />
+                            <select className="form-select" style={{maxWidth: '120px'}}>
+                              <option>Pending</option>
+                              <option>Completed</option>
+                            </select>
+                          </div>
+                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
+                        </div>
+                        <div className="col-12 col-md-6">
+                          <label className="form-label fw-medium">Mobile Device</label>
+                          <div className="input-group input-group-sm">
+                            <input type="text" className="form-control" placeholder="Asset ID" defaultValue={clearanceDetails.IT?.items?.mobile?.assetId || ''} />
+                            <select className="form-select" style={{maxWidth: '120px'}}>
+                              <option>Pending</option>
+                              <option>Completed</option>
+                            </select>
+                          </div>
+                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
+                        </div>
+                        <div className="col-12 col-md-6">
+                          <label className="form-label fw-medium">Access Cards</label>
+                          <input type="text" className="form-control form-control-sm" placeholder="Card IDs (comma separated)" />
+                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
+                        </div>
+                        <div className="col-12 col-md-6">
+                          <label className="form-label fw-medium">Software Licenses</label>
+                          <input type="text" className="form-control form-control-sm" placeholder="License IDs (comma separated)" />
+                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
+                        </div>
+                        <div className="col-12">
+                          <div className="row">
+                            <div className="col-md-6">
+                              <label className="form-label fw-medium">Cleared By</label>
+                              <input type="text" className="form-control form-control-sm" />
+                            </div>
+                            <div className="col-md-6">
+                              <label className="form-label fw-medium">Cleared Date</label>
+                              <input type="date" className="form-control form-control-sm" />
                             </div>
                           </div>
                         </div>
-                      ))}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
-                <div className="row g-2">
-                  <div className="col-12 col-md-4">
-                    <div className="card border">
-                      <div className="card-body text-center p-2">
-                        <div className="mb-1">
-                          <i className="bi bi-chat-dots text-primary fs-5"></i>
+                {activeModalTab === 'Admin' && (
+                  <div className="card border">
+                    <div className="card-header bg-warning-subtle">
+                      <h6 className="mb-0">Admin Clearance</h6>
+                    </div>
+                    <div className="card-body">
+                      <div className="row g-3">
+                        <div className="col-12 col-md-6">
+                          <label className="form-label fw-medium">ID Card</label>
+                          <div className="input-group input-group-sm">
+                            <input type="text" className="form-control" placeholder="Card Number" />
+                            <select className="form-select" style={{maxWidth: '120px'}}>
+                              <option>Pending</option>
+                              <option>Completed</option>
+                            </select>
+                          </div>
+                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
                         </div>
-                        <h6 className="small">Exit Interview</h6>
-                        <span className={`badge ${getStatusBadge(selectedExit.exitInterview)} small`}>
-                          {selectedExit.exitInterview}
-                        </span>
-                        <button className="btn btn-sm btn-outline-primary w-100 mt-2">
-                          {selectedExit.exitInterview === 'Pending' ? 'Schedule' : 'View'}
-                        </button>
+                        <div className="col-12 col-md-6">
+                          <label className="form-label fw-medium">Access Card</label>
+                          <div className="input-group input-group-sm">
+                            <input type="text" className="form-control" placeholder="Card Number" />
+                            <select className="form-select" style={{maxWidth: '120px'}}>
+                              <option>Pending</option>
+                              <option>Completed</option>
+                            </select>
+                          </div>
+                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
+                        </div>
+                        <div className="col-12 col-md-6">
+                          <label className="form-label fw-medium">Parking Sticker</label>
+                          <div className="input-group input-group-sm">
+                            <input type="text" className="form-control" placeholder="Sticker ID" />
+                            <select className="form-select" style={{maxWidth: '120px'}}>
+                              <option>Pending</option>
+                              <option>Completed</option>
+                            </select>
+                          </div>
+                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
+                        </div>
+                        <div className="col-12 col-md-6">
+                          <label className="form-label fw-medium">Locker Keys</label>
+                          <div className="input-group input-group-sm">
+                            <input type="text" className="form-control" placeholder="Locker Number" />
+                            <select className="form-select" style={{maxWidth: '120px'}}>
+                              <option>Pending</option>
+                              <option>Completed</option>
+                            </select>
+                          </div>
+                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
+                        </div>
+                        <div className="col-12">
+                          <div className="row">
+                            <div className="col-md-6">
+                              <label className="form-label fw-medium">Cleared By</label>
+                              <input type="text" className="form-control form-control-sm" />
+                            </div>
+                            <div className="col-md-6">
+                              <label className="form-label fw-medium">Cleared Date</label>
+                              <input type="date" className="form-control form-control-sm" />
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div className="col-12 col-md-4">
-                    <div className="card border">
-                      <div className="card-body text-center p-2">
-                        <div className="mb-1">
-                          <i className="bi bi-share text-warning fs-5"></i>
+                )}
+
+                {activeModalTab === 'Finance' && (
+                  <div className="card border">
+                    <div className="card-header bg-success-subtle">
+                      <h6 className="mb-0">Finance Clearance</h6>
+                    </div>
+                    <div className="card-body">
+                      <div className="row g-3">
+                        <div className="col-12">
+                          <label className="form-label fw-medium">Advance Settlement</label>
+                          <div className="input-group input-group-sm">
+                            <span className="input-group-text">₹</span>
+                            <input type="number" className="form-control" placeholder="Amount" />
+                            <select className="form-select" style={{maxWidth: '120px'}}>
+                              <option>Pending</option>
+                              <option>Completed</option>
+                            </select>
+                          </div>
+                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
                         </div>
-                        <h6 className="small">Knowledge Transfer</h6>
-                        <span className={`badge ${getStatusBadge(selectedExit.knowledgeTransfer)} small`}>
-                          {selectedExit.knowledgeTransfer}
-                        </span>
-                        <button className="btn btn-sm btn-outline-primary w-100 mt-2">
-                          {selectedExit.knowledgeTransfer === 'Pending' ? 'Initiate' : 'View'}
-                        </button>
+                        <div className="col-12">
+                          <label className="form-label fw-medium">Expense Claims</label>
+                          <input type="text" className="form-control form-control-sm" placeholder="Claim IDs (comma separated)" />
+                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
+                        </div>
+                        <div className="col-12">
+                          <label className="form-label fw-medium">Loan Outstanding</label>
+                          <div className="input-group input-group-sm">
+                            <span className="input-group-text">₹</span>
+                            <input type="number" className="form-control" placeholder="Amount" />
+                            <select className="form-select" style={{maxWidth: '120px'}}>
+                              <option>Pending</option>
+                              <option>Completed</option>
+                            </select>
+                          </div>
+                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
+                        </div>
+                        <div className="col-12">
+                          <div className="row">
+                            <div className="col-md-6">
+                              <label className="form-label fw-medium">Cleared By</label>
+                              <input type="text" className="form-control form-control-sm" />
+                            </div>
+                            <div className="col-md-6">
+                              <label className="form-label fw-medium">Cleared Date</label>
+                              <input type="date" className="form-control form-control-sm" />
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div className="col-12 col-md-4">
-                    <div className="card border">
-                      <div className="card-body text-center p-2">
-                        <div className="mb-1">
-                          <i className="bi bi-cash text-success fs-5"></i>
+                )}
+
+                {activeModalTab === 'HR' && (
+                  <div className="card border">
+                    <div className="card-header bg-primary-subtle">
+                      <h6 className="mb-0">HR Clearance</h6>
+                    </div>
+                    <div className="card-body">
+                      <div className="row g-3">
+                        <div className="col-12">
+                          <label className="form-label fw-medium">Documentation</label>
+                          <input type="text" className="form-control form-control-sm" placeholder="Documents (comma separated)" />
+                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
                         </div>
-                        <h6 className="small">Settlement</h6>
-                        <span className={`badge ${getStatusBadge(selectedExit.settlement)} small`}>
-                          {selectedExit.settlement}
-                        </span>
-                        <button className="btn btn-sm btn-outline-primary w-100 mt-2">
-                          {selectedExit.settlement === 'Pending' ? 'Calculate' : 'View'}
-                        </button>
+                        <div className="col-12">
+                          <label className="form-label fw-medium">Exit Interview</label>
+                          <div className="input-group input-group-sm">
+                            <input type="date" className="form-control" placeholder="Scheduled Date" />
+                            <select className="form-select" style={{maxWidth: '120px'}}>
+                              <option>Pending</option>
+                              <option>Scheduled</option>
+                              <option>Completed</option>
+                            </select>
+                          </div>
+                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
+                        </div>
+                        <div className="col-12">
+                          <label className="form-label fw-medium">Policy Violations Check</label>
+                          <input type="text" className="form-control form-control-sm" placeholder="Violations (if any)" />
+                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
+                        </div>
+                        <div className="col-12">
+                          <div className="row">
+                            <div className="col-md-6">
+                              <label className="form-label fw-medium">Cleared By</label>
+                              <input type="text" className="form-control form-control-sm" />
+                            </div>
+                            <div className="col-md-6">
+                              <label className="form-label fw-medium">Cleared Date</label>
+                              <input type="date" className="form-control form-control-sm" />
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {activeModalTab === 'Department' && (
+                  <div className="card border">
+                    <div className="card-header bg-secondary-subtle">
+                      <h6 className="mb-0">Department Clearance</h6>
+                    </div>
+                    <div className="card-body">
+                      <div className="row g-3">
+                        <div className="col-12">
+                          <label className="form-label fw-medium">Project Handover</label>
+                          <input type="text" className="form-control form-control-sm" placeholder="Project IDs (comma separated)" />
+                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
+                        </div>
+                        <div className="col-12">
+                          <label className="form-label fw-medium">Knowledge Transfer</label>
+                          <select className="form-select form-select-sm">
+                            <option>Pending</option>
+                            <option>In Progress</option>
+                            <option>Completed</option>
+                          </select>
+                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
+                        </div>
+                        <div className="col-12">
+                          <label className="form-label fw-medium">Files & Documents</label>
+                          <input type="text" className="form-control form-control-sm" placeholder="Files/Documents (comma separated)" />
+                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
+                        </div>
+                        <div className="col-12">
+                          <div className="row">
+                            <div className="col-md-6">
+                              <label className="form-label fw-medium">Cleared By</label>
+                              <input type="text" className="form-control form-control-sm" />
+                            </div>
+                            <div className="col-md-6">
+                              <label className="form-label fw-medium">Cleared Date</label>
+                              <input type="date" className="form-control form-control-sm" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Quick Actions */}
+                <div className="row g-2 mt-4">
+                  <div className="col-12 col-md-4">
+                    <button 
+                      className="btn btn-outline-primary w-100 btn-sm"
+                      onClick={() => { setShowClearanceModal(false); handleOpenExitInterview(selectedExit.id); }}
+                    >
+                      <MessageSquare size={14} className="me-2" />
+                      Exit Interview
+                    </button>
+                  </div>
+                  <div className="col-12 col-md-4">
+                    <button 
+                      className="btn btn-outline-warning w-100 btn-sm"
+                      onClick={() => { setShowClearanceModal(false); handleOpenKnowledgeTransfer(selectedExit.id); }}
+                    >
+                      <Share2 size={14} className="me-2" />
+                      Knowledge Transfer
+                    </button>
+                  </div>
+                  <div className="col-12 col-md-4">
+                    <button className="btn btn-outline-success w-100 btn-sm">
+                      <CreditCard size={14} className="me-2" />
+                      Settlement
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1024,9 +1381,439 @@ const ExitManagement = () => {
                 <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>
                   Close
                 </button>
-                <button type="button" className="btn btn-success" disabled={selectedExit.status !== 'Completed'}>
-                  <i className="bi bi-file-earmark-check me-1"></i>
+                <button type="button" className="btn btn-primary">
+                  Save Changes
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-success" 
+                  disabled={selectedExit.status !== 'Completed'}
+                  onClick={handleGenerateCertificate}
+                >
+                  <FileCheck size={14} className="me-1" />
                   Generate Certificate
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Exit Interview Modal */}
+      {showExitInterviewModal && selectedExit && (
+        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1051}}>
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-content">
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title">Exit Interview - {selectedExit.employeeName}</h5>
+                <button type="button" className="btn-close btn-close-white" onClick={handleCloseModal}></button>
+              </div>
+              <div className="modal-body" style={{maxHeight: '70vh', overflowY: 'auto'}}>
+                <div className="row g-3 mb-4">
+                  <div className="col-12 col-md-6">
+                    <label className="form-label fw-medium">Interview Date & Time</label>
+                    <input type="datetime-local" className="form-control form-control-sm" />
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <label className="form-label fw-medium">Interviewer</label>
+                    <input type="text" className="form-control form-control-sm" placeholder="Interviewer Name" />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label fw-medium">Exit Reason Category</label>
+                    <select className="form-select form-select-sm">
+                      <option>Better Opportunity</option>
+                      <option>Career Growth</option>
+                      <option>Higher Studies</option>
+                      <option>Relocation</option>
+                      <option>Personal Reasons</option>
+                      <option>Health Issues</option>
+                      <option>Other</option>
+                    </select>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label fw-medium">Feedback on Manager</label>
+                    <textarea className="form-control" rows="3" placeholder="Provide feedback on your manager..."></textarea>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label fw-medium">Feedback on Team</label>
+                    <textarea className="form-control" rows="3" placeholder="Provide feedback on your team..."></textarea>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label fw-medium">Feedback on Company</label>
+                    <textarea className="form-control" rows="3" placeholder="Provide feedback on the company..."></textarea>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label fw-medium">Feedback on Role</label>
+                    <textarea className="form-control" rows="3" placeholder="Provide feedback on your role..."></textarea>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label fw-medium">Suggestions for Improvement</label>
+                    <textarea className="form-control" rows="3" placeholder="Any suggestions to improve the organization..."></textarea>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label fw-medium">Rehire Eligibility Assessment</label>
+                    <div className="row g-2">
+                      <div className="col-12 col-md-6">
+                        <select className="form-select form-select-sm">
+                          <option>Eligible</option>
+                          <option>Not Eligible</option>
+                          <option>Conditional</option>
+                        </select>
+                      </div>
+                      <div className="col-12 col-md-6">
+                        <textarea className="form-control form-control-sm" rows="2" placeholder="Assessment Notes"></textarea>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label fw-medium">Confidential Notes (Management Only)</label>
+                    <textarea className="form-control" rows="3" placeholder="Confidential feedback for management..."></textarea>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>Close</button>
+                <button type="button" className="btn btn-primary">Save Draft</button>
+                <button type="button" className="btn btn-success">Complete Interview</button>
+                <button type="button" className="btn btn-info">Generate Report</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Knowledge Transfer Modal */}
+      {showKnowledgeTransferModal && selectedExit && (
+        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1051}}>
+          <div className="modal-dialog modal-dialog-centered modal-xl">
+            <div className="modal-content">
+              <div className="modal-header bg-warning text-white">
+                <h5 className="modal-title">Knowledge Transfer - {selectedExit.employeeName}</h5>
+                <button type="button" className="btn-close btn-close-white" onClick={handleCloseModal}></button>
+              </div>
+              <div className="modal-body" style={{maxHeight: '70vh', overflowY: 'auto'}}>
+                <div className="row g-3 mb-4">
+                  <div className="col-12">
+                    <h6 className="fw-bold mb-3">KT Checklist</h6>
+                    <div className="card border">
+                      <div className="card-body">
+                        <div className="form-check mb-2">
+                          <input className="form-check-input" type="checkbox" id="kt1" />
+                          <label className="form-check-label" htmlFor="kt1">Ongoing work documentation completed</label>
+                        </div>
+                        <div className="form-check mb-2">
+                          <input className="form-check-input" type="checkbox" id="kt2" />
+                          <label className="form-check-label" htmlFor="kt2">Critical contacts and stakeholders list shared</label>
+                        </div>
+                        <div className="form-check mb-2">
+                          <input className="form-check-input" type="checkbox" id="kt3" />
+                          <label className="form-check-label" htmlFor="kt3">System access and password documentation provided</label>
+                        </div>
+                        <div className="form-check mb-2">
+                          <input className="form-check-input" type="checkbox" id="kt4" />
+                          <label className="form-check-label" htmlFor="kt4">Project status summary updated</label>
+                        </div>
+                        <div className="form-check mb-2">
+                          <input className="form-check-input" type="checkbox" id="kt5" />
+                          <label className="form-check-label" htmlFor="kt5">KT session scheduled and conducted</label>
+                        </div>
+                        <div className="form-check mb-2">
+                          <input className="form-check-input" type="checkbox" id="kt6" />
+                          <label className="form-check-label" htmlFor="kt6">Documentation uploaded to repository</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label fw-medium">Ongoing Work Documentation</label>
+                    <textarea className="form-control" rows="4" placeholder="Document all ongoing work, projects, and responsibilities..."></textarea>
+                    <button className="btn btn-sm btn-outline-primary mt-2">
+                      <Upload size={14} className="me-1" />
+                      Upload Document
+                    </button>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label fw-medium">Critical Contacts & Stakeholders</label>
+                    <textarea className="form-control" rows="4" placeholder="List all critical contacts and stakeholders with their roles..."></textarea>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label fw-medium">System Access & Passwords</label>
+                    <textarea className="form-control" rows="4" placeholder="Document all system accesses, credentials (use secure format)..."></textarea>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label fw-medium">Project Status Summary</label>
+                    <textarea className="form-control" rows="4" placeholder="Summary of all projects, their status, and next steps..."></textarea>
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <label className="form-label fw-medium">KT Session Date & Time</label>
+                    <input type="datetime-local" className="form-control form-control-sm" />
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <label className="form-label fw-medium">KT Session Attendees</label>
+                    <input type="text" className="form-control form-control-sm" placeholder="Attendee names (comma separated)" />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label fw-medium">KT Completion Sign-off</label>
+                    <div className="row g-2">
+                      <div className="col-md-6">
+                        <input type="text" className="form-control form-control-sm" placeholder="Signed by" />
+                      </div>
+                      <div className="col-md-6">
+                        <input type="date" className="form-control form-control-sm" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label fw-medium">Documentation Repository</label>
+                    <div className="input-group">
+                      <input type="text" className="form-control" placeholder="Repository URL or path" />
+                      <button className="btn btn-outline-primary">
+                        <Upload size={14} className="me-1" />
+                        Upload Files
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>Close</button>
+                <button type="button" className="btn btn-primary">Save Progress</button>
+                <button type="button" className="btn btn-success">Complete KT</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Alumni Network Modal */}
+      {showAlumniModal && (
+        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1051}}>
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-content">
+              <div className="modal-header bg-success text-white">
+                <h5 className="modal-title">Alumni Network Management</h5>
+                <button type="button" className="btn-close btn-close-white" onClick={handleCloseModal}></button>
+              </div>
+              <div className="modal-body" style={{maxHeight: '70vh', overflowY: 'auto'}}>
+                <div className="row g-3">
+                  <div className="col-12">
+                    <h6 className="fw-bold mb-3">Alumni Engagement</h6>
+                    <div className="card border mb-3">
+                      <div className="card-body">
+                        <div className="row g-3">
+                          <div className="col-12 col-md-6">
+                            <label className="form-label fw-medium">Rehire Eligibility</label>
+                            <select className="form-select form-select-sm">
+                              <option>Eligible</option>
+                              <option>Not Eligible</option>
+                              <option>Conditional</option>
+                            </select>
+                          </div>
+                          <div className="col-12 col-md-6">
+                            <label className="form-label fw-medium">Boomerang Status</label>
+                            <select className="form-select form-select-sm">
+                              <option>Interested</option>
+                              <option>Not Interested</option>
+                              <option>Open to Discussion</option>
+                            </select>
+                          </div>
+                          <div className="col-12">
+                            <label className="form-label fw-medium">Engagement Level</label>
+                            <select className="form-select form-select-sm">
+                              <option>High</option>
+                              <option>Medium</option>
+                              <option>Low</option>
+                            </select>
+                          </div>
+                          <div className="col-12">
+                            <label className="form-label fw-medium">Alumni Referral Program</label>
+                            <div className="input-group input-group-sm">
+                              <input type="number" className="form-control" placeholder="Total Referrals" />
+                              <input type="number" className="form-control" placeholder="Successful Hires" />
+                            </div>
+                          </div>
+                          <div className="col-12">
+                            <label className="form-label fw-medium">Communication Notes</label>
+                            <textarea className="form-control" rows="3" placeholder="Notes from alumni communication..."></textarea>
+                          </div>
+                          <div className="col-12">
+                            <label className="form-label fw-medium">Alumni Events Participation</label>
+                            <input type="text" className="form-control form-control-sm" placeholder="Events attended (comma separated)" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>Close</button>
+                <button type="button" className="btn btn-primary">Save Changes</button>
+                <button type="button" className="btn btn-info">Send Communication</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Exit Trends Analysis Modal */}
+      {showTrendsModal && (
+        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1051}}>
+          <div className="modal-dialog modal-dialog-centered modal-xl">
+            <div className="modal-content">
+              <div className="modal-header bg-info text-white">
+                <h5 className="modal-title">Exit Trend Analysis</h5>
+                <button type="button" className="btn-close btn-close-white" onClick={handleCloseModal}></button>
+              </div>
+              <div className="modal-body" style={{maxHeight: '70vh', overflowY: 'auto'}}>
+                <div className="row g-3 mb-4">
+                  <div className="col-12 col-md-6">
+                    <label className="form-label fw-medium">Analysis Period</label>
+                    <select className="form-select form-select-sm">
+                      <option>Last 3 Months</option>
+                      <option>Last 6 Months</option>
+                      <option>Last Year</option>
+                      <option>Custom Range</option>
+                    </select>
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <label className="form-label fw-medium">Filter By Department</label>
+                    <select className="form-select form-select-sm">
+                      <option>All Departments</option>
+                      <option>Engineering</option>
+                      <option>Marketing</option>
+                      <option>Sales</option>
+                      <option>HR</option>
+                      <option>Finance</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="row g-3">
+                  <div className="col-12 col-md-4">
+                    <div className="card border">
+                      <div className="card-body text-center">
+                        <TrendingUp size={24} className="text-primary mb-2" />
+                        <h6 className="text-muted small">Exit Rate</h6>
+                        <h4 className="fw-bold text-primary">8.5%</h4>
+                        <small className="text-muted">↗ +2.1% from last period</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-12 col-md-4">
+                    <div className="card border">
+                      <div className="card-body text-center">
+                        <Users size={24} className="text-warning mb-2" />
+                        <h6 className="text-muted small">Top Exit Reason</h6>
+                        <h4 className="fw-bold text-warning">Better Opportunity</h4>
+                        <small className="text-muted">45% of exits</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-12 col-md-4">
+                    <div className="card border">
+                      <div className="card-body text-center">
+                        <Clock size={24} className="text-danger mb-2" />
+                        <h6 className="text-muted small">Avg. Notice Period</h6>
+                        <h4 className="fw-bold text-danger">38 days</h4>
+                        <small className="text-muted">↓ -5 days from last period</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-12">
+                    <div className="card border">
+                      <div className="card-header">
+                        <h6 className="mb-0">Exit Reasons Breakdown</h6>
+                      </div>
+                      <div className="card-body">
+                        <div className="row g-2">
+                          {['Better Opportunity', 'Career Growth', 'Higher Studies', 'Relocation', 'Personal Reasons'].map((reason, idx) => (
+                            <div key={idx} className="col-12 col-md-6">
+                              <div className="d-flex justify-content-between align-items-center mb-2">
+                                <span className="small">{reason}</span>
+                                <span className="badge bg-primary">{idx + 1}8%</span>
+                              </div>
+                              <div className="progress" style={{height: '6px'}}>
+                                <div className="progress-bar bg-primary" style={{width: `${(idx + 1) * 15}%`}}></div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-12">
+                    <div className="card border">
+                      <div className="card-header">
+                        <h6 className="mb-0">Department-wise Exit Distribution</h6>
+                      </div>
+                      <div className="card-body">
+                        <div className="row g-2">
+                          {['Engineering', 'Marketing', 'Sales', 'HR', 'Finance'].map((dept, idx) => (
+                            <div key={idx} className="col-12 col-md-6">
+                              <div className="d-flex justify-content-between align-items-center mb-2">
+                                <span className="small">{dept}</span>
+                                <span className="badge bg-info">{idx + 2} exits</span>
+                              </div>
+                              <div className="progress" style={{height: '6px'}}>
+                                <div className="progress-bar bg-info" style={{width: `${(idx + 2) * 12}%`}}></div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>Close</button>
+                <button type="button" className="btn btn-primary">
+                  <Download size={14} className="me-1" />
+                  Export Report
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clearance Certificate Modal */}
+      {showCertificateModal && selectedExit && (
+        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1051}}>
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-content">
+              <div className="modal-header bg-success text-white">
+                <h5 className="modal-title">Generate Clearance Certificate</h5>
+                <button type="button" className="btn-close btn-close-white" onClick={handleCloseModal}></button>
+              </div>
+              <div className="modal-body">
+                <div className="card border mb-3">
+                  <div className="card-body text-center py-5">
+                    <FileCheck size={64} className="text-success mb-3" />
+                    <h4>Clearance Certificate</h4>
+                    <p className="text-muted mb-4">This certifies that all clearance formalities have been completed</p>
+                    <div className="text-start">
+                      <div className="mb-2"><strong>Employee:</strong> {selectedExit.employeeName}</div>
+                      <div className="mb-2"><strong>Employee ID:</strong> {selectedExit.employeeId}</div>
+                      <div className="mb-2"><strong>Department:</strong> {selectedExit.department}</div>
+                      <div className="mb-2"><strong>Last Working Day:</strong> {selectedExit.lastWorkingDay}</div>
+                      <div className="mb-2"><strong>Certificate Date:</strong> {new Date().toLocaleDateString()}</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="alert alert-info">
+                  <small>All departments have been cleared. The certificate is ready for generation.</small>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>Cancel</button>
+                <button type="button" className="btn btn-primary">
+                  <Printer size={14} className="me-1" />
+                  Print
+                </button>
+                <button type="button" className="btn btn-success">
+                  <Download size={14} className="me-1" />
+                  Download PDF
                 </button>
               </div>
             </div>
@@ -1037,13 +1824,9 @@ const ExitManagement = () => {
   );
 
   return (
-    <div
-      menuItems={menuItems}
-      userInfo={userInfo}
-      appName="Exit Management & Clearance"
-    >
+    <>
       {mainContent}
-    </div>
+    </>
   );
 };
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { contactsAPI } from "../../utils/api";
+import { BASE_URL } from "../../config/api.config";
 
 const Contacts = () => {
   const [contacts, setContacts] = useState([]);
@@ -11,6 +12,8 @@ const Contacts = () => {
   const [activeTab, setActiveTab] = useState('basic');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [contactToDelete, setContactToDelete] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   // Load contacts from API
   useEffect(() => {
@@ -32,56 +35,96 @@ const Contacts = () => {
   };
 
   const [formData, setFormData] = useState({
+    // Basic Information
     name: '',
     lastName: '',
     role: '',
     phone: '',
     phone2: '',
-    location: 'India',
-    rating: '0',
+    fax: '',
     email: '',
     company: '',
     dateOfBirth: '',
+    rating: '0',
+    owner: '',
+    deals: '',
     industry: '',
     currency: 'Dollar',
     language: 'English',
-    owner: '',
-    deals: '',
     source: '',
     tags: [],
-    img: '/assets/img/users/user-49.jpg'
+    img: '/assets/img/users/user-49.jpg',
+    // Address Information
+    location: '',
+    city: '',
+    state: '',
+    country: '',
+    postalCode: '',
+    // Social Profiles
+    facebook: '',
+    twitter: '',
+    linkedin: '',
+    instagram: '',
+    skype: '',
+    website: '',
+    // Access Information
+    accessLevel: '',
+    department: '',
+    allowEmailAccess: false,
+    allowPhoneAccess: false,
+    allowDataExport: false
   });
 
   const resetForm = () => {
     setFormData({
+      // Basic Information
       name: '',
       lastName: '',
       role: '',
       phone: '',
       phone2: '',
-      location: 'India',
-      rating: '0',
+      fax: '',
       email: '',
       company: '',
       dateOfBirth: '',
-      industry: '',
-      currency: 'Rupees',
-      language: 'English',
+      rating: '0',
       owner: '',
       deals: '',
+      industry: '',
+      currency: 'Dollar',
+      language: 'English',
       source: '',
       tags: [],
-      img: '/assets/img/users/user-49.jpg',
-      visibility: 'private',
-      status: 'Active'
+      img: '/assets/images/users/user1.png',
+      // Address Information
+      location: '',
+      city: '',
+      state: '',
+      country: '',
+      postalCode: '',
+      // Social Profiles
+      facebook: '',
+      twitter: '',
+      linkedin: '',
+      instagram: '',
+      skype: '',
+      website: '',
+      // Access Information
+      accessLevel: '',
+      department: '',
+      allowEmailAccess: false,
+      allowPhoneAccess: false,
+      allowDataExport: false
     });
+    setSelectedFile(null);
+    setImagePreview(null);
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
@@ -89,6 +132,8 @@ const Contacts = () => {
     setModalType('add');
     resetForm();
     setSelectedContact(null);
+    setSelectedFile(null);
+    setImagePreview(null);
     setActiveTab('basic');
     setShowModal(true);
   };
@@ -96,28 +141,52 @@ const Contacts = () => {
   const handleEditContact = (contact) => {
     setModalType('edit');
     setSelectedContact(contact);
+    setSelectedFile(null);
+    // Set image preview from existing profile photo
+    const profilePhotoUrl = contact.profile_photo 
+      ? (contact.profile_photo.startsWith('http') ? contact.profile_photo : `${BASE_URL}${contact.profile_photo}`)
+      : '/assets/img/users/user-49.jpg';
+    setImagePreview(profilePhotoUrl);
     // Map API response (backend field names) to form data format (frontend field names)
     setFormData({
+      // Basic Information
       name: contact.name || '',
       lastName: contact.last_name || '',
-      role: contact.job_title || '', // Backend sends 'job_title', not 'role'
-      phone: contact.phone_number || '', // Backend sends 'phone_number', not 'phone'
-      phone2: contact.phone_number2 || '', // Backend sends 'phone_number2', not 'phone2'
-      location: contact.location || 'India',
-      rating: contact.ratings?.toString() || '0', // Backend sends 'ratings' (plural), not 'rating'
+      role: contact.job_title || '',
+      phone: contact.phone_number || '',
+      phone2: contact.phone_number2 || '',
+      fax: contact.fax || '',
       email: contact.email || '',
-      company: contact.company_name || '', // Backend sends 'company_name', not 'company'
-      dateOfBirth: contact.dob || '', // Backend sends 'dob', not 'date_of_birth'
+      company: contact.company_name || '',
+      dateOfBirth: contact.dob ? (typeof contact.dob === 'string' ? contact.dob.split('T')[0] : contact.dob) : '',
+      rating: contact.ratings?.toString() || '0',
+      owner: contact.owner || '',
+      deals: contact.deals || '',
       industry: contact.industry || '',
       currency: contact.currency || 'Dollar',
       language: contact.language || 'English',
-      owner: contact.owner || '',
-      deals: contact.deals || '',
       source: contact.source || '',
-      tags: Array.isArray(contact.tags) ? contact.tags : (contact.tags ? contact.tags.split(',') : []), // Handle both array and comma-separated string
-      img: contact.profile_photo || '/assets/img/users/user-49.jpg', // Backend sends 'profile_photo', not 'img'
-      visibility: contact.visibility || 'private',
-      status: contact.status || 'Active'
+      tags: Array.isArray(contact.tags) ? contact.tags : (contact.tags ? contact.tags.split(',') : []),
+      img: contact.profile_photo || '/assets/img/users/user-49.jpg',
+      // Address Information
+      location: contact.location || '',
+      city: contact.city || '',
+      state: contact.state || '',
+      country: contact.country || '',
+      postalCode: contact.postal_code || '',
+      // Social Profiles
+      facebook: contact.facebook || '',
+      twitter: contact.twitter || '',
+      linkedin: contact.linkedin || '',
+      instagram: contact.instagram || '',
+      skype: contact.skype || '',
+      website: contact.website || '',
+      // Access Information
+      accessLevel: contact.access_level || '',
+      department: contact.department || '',
+      allowEmailAccess: contact.allow_email_access || false,
+      allowPhoneAccess: contact.allow_phone_access || false,
+      allowDataExport: contact.allow_data_export || false
     });
     setActiveTab('basic');
     setShowModal(true);
@@ -152,31 +221,78 @@ const Contacts = () => {
     try {
       setError(null);
       
+      let profilePhotoPath = formData.img || null;
+      
+      // Upload profile photo if a new file is selected
+      if (selectedFile && selectedContact) {
+        try {
+          const uploadResult = await contactsAPI.uploadProfilePhoto(selectedContact.id, selectedFile);
+          profilePhotoPath = uploadResult.profile_photo;
+        } catch (uploadErr) {
+          console.error("Error uploading profile photo:", uploadErr);
+          setError("Failed to upload profile photo. Please try again.");
+          return;
+        }
+      } else if (selectedFile && modalType === 'add') {
+        // For new contacts, we'll create the contact first, then upload the photo
+        // This will be handled after contact creation
+      }
+      
       // Prepare contact data for API - map frontend fields to backend schema
       const contactData = {
+        // Basic Information
         name: formData.name || '',
         last_name: formData.lastName || null,
-        job_title: formData.role || '', // Backend expects 'job_title', not 'role'
-        phone_number: formData.phone || '', // Backend expects 'phone_number', not 'phone'
-        phone_number2: formData.phone2 || null, // Backend expects 'phone_number2', not 'phone2'
+        job_title: formData.role || '',
+        phone_number: formData.phone || '',
+        phone_number2: formData.phone2 || null,
+        fax: formData.fax || null,
         email: formData.email || null,
-        company_name: formData.company || '', // Backend expects 'company_name', not 'company'
-        location: formData.location || null,
-        ratings: formData.rating || null, // Backend expects 'ratings' (plural), not 'rating'
-        dob: formData.dateOfBirth || null, // Backend expects 'dob', not 'date_of_birth'
+        company_name: formData.company || '',
+        dob: formData.dateOfBirth || null,
+        ratings: formData.rating || null,
+        owner: formData.owner || null,
+        deals: formData.deals || null,
         industry: formData.industry || null,
         currency: formData.currency || null,
         language: formData.language || null,
-        owner: formData.owner || null,
-        deals: formData.deals || null,
         source: formData.source || null,
-        tags: formData.tags || [], // Backend expects array
-        profile_photo: formData.img || null, // Backend expects 'profile_photo', not 'img'
-        // Note: 'status' and 'visibility' are not in backend schema, so we don't send them
+        tags: Array.isArray(formData.tags) ? formData.tags : [],
+        profile_photo: profilePhotoPath,
+        // Address Information
+        location: formData.location || null,
+        city: formData.city || null,
+        state: formData.state || null,
+        country: formData.country || null,
+        postal_code: formData.postalCode || null,
+        // Social Profiles
+        facebook: formData.facebook || null,
+        twitter: formData.twitter || null,
+        linkedin: formData.linkedin || null,
+        instagram: formData.instagram || null,
+        skype: formData.skype || null,
+        website: formData.website || null,
+        // Access Information
+        access_level: formData.accessLevel || null,
+        department: formData.department || null,
+        allow_email_access: formData.allowEmailAccess || false,
+        allow_phone_access: formData.allowPhoneAccess || false,
+        allow_data_export: formData.allowDataExport || false
       };
 
+      let createdContactId = null;
       if (modalType === 'add') {
-        await contactsAPI.create(contactData);
+        const createdContact = await contactsAPI.create(contactData);
+        createdContactId = createdContact.id;
+        // Upload profile photo for newly created contact
+        if (selectedFile && createdContactId) {
+          try {
+            await contactsAPI.uploadProfilePhoto(createdContactId, selectedFile);
+          } catch (uploadErr) {
+            console.error("Error uploading profile photo:", uploadErr);
+            // Don't fail the whole operation, just log the error
+          }
+        }
       } else if (selectedContact) {
         await contactsAPI.update(selectedContact.id, contactData);
       }
@@ -185,6 +301,8 @@ const Contacts = () => {
       setShowModal(false);
       resetForm();
       setSelectedContact(null);
+      setSelectedFile(null);
+      setImagePreview(null);
     } catch (err) {
       console.error("Error saving contact:", err);
       setError("Failed to save contact. Please try again.");
@@ -195,6 +313,41 @@ const Contacts = () => {
     setShowModal(false);
     resetForm();
     setSelectedContact(null);
+    setSelectedFile(null);
+    setImagePreview(null);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select an image file');
+        return;
+      }
+      // Validate file size (4MB)
+      if (file.size > 4 * 1024 * 1024) {
+        setError('Image size should be below 4MB');
+        return;
+      }
+      setSelectedFile(file);
+      setError(null);
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedFile(null);
+    setImagePreview(null);
+    setFormData(prev => ({
+      ...prev,
+      img: '/assets/img/users/user-49.jpg'
+    }));
   };
 
   const addTag = (tagName) => {
@@ -310,7 +463,18 @@ const Contacts = () => {
                   </div>
                   <div>
                     <a className="avatar avatar-xl avatar-rounded online border p-1 border-primary rounded-circle">
-                      <img src={c.profile_photo || '/assets/img/users/user-49.jpg'} alt="user" className="img-fluid h-auto w-auto" />
+                      <img 
+                        src={
+                          c.profile_photo 
+                            ? (c.profile_photo.startsWith('http') ? c.profile_photo : `${BASE_URL}${c.profile_photo}`)
+                            : '/assets/images/users/user1.png'
+                        } 
+                        alt="user" 
+                        className="img-fluid h-auto w-auto" 
+                        onError={(e) => {
+                          e.target.src = '/assets/images/users/user1.png';
+                        }}
+                      />
                     </a>
                   </div>
                   <div className="dropdown">
@@ -354,10 +518,47 @@ const Contacts = () => {
                     <i className="ti ti-phone text-gray-5 me-2"></i>
                     {c.phone_number || 'N/A'}
                   </p>
-                  <p className="text-dark d-inline-flex align-items-center">
+                  {c.phone_number2 && (
+                    <p className="text-dark d-inline-flex align-items-center mb-2">
+                      <i className="ti ti-phone text-gray-5 me-2"></i>
+                      {c.phone_number2}
+                    </p>
+                  )}
+                  {c.email && (
+                    <p className="text-dark d-inline-flex align-items-center mb-2">
+                      <i className="ti ti-mail text-gray-5 me-2"></i>
+                      {c.email}
+                    </p>
+                  )}
+                  <p className="text-dark d-inline-flex align-items-center mb-2">
+                    <i className="ti ti-building text-gray-5 me-2"></i>
+                    {c.company_name || 'N/A'}
+                  </p>
+                  <p className="text-dark d-inline-flex align-items-center mb-2">
                     <i className="ti ti-map-pin text-gray-5 me-2"></i>
                     {c.location || 'N/A'}
+                    {c.city && `, ${c.city}`}
+                    {c.state && `, ${c.state}`}
+                    {c.country && `, ${c.country}`}
                   </p>
+                  {c.industry && (
+                    <p className="text-dark d-inline-flex align-items-center mb-2">
+                      <i className="ti ti-briefcase text-gray-5 me-2"></i>
+                      {c.industry}
+                    </p>
+                  )}
+                  {c.ratings && (
+                    <p className="text-dark d-inline-flex align-items-center mb-2">
+                      <i className="ti ti-star text-gray-5 me-2"></i>
+                      {c.ratings} Stars
+                    </p>
+                  )}
+                  {c.owner && (
+                    <p className="text-dark d-inline-flex align-items-center mb-2">
+                      <i className="ti ti-user text-gray-5 me-2"></i>
+                      {c.owner}
+                    </p>
+                  )}
                 </div>
                 <div className="d-flex align-items-center justify-content-between border-top pt-3 mt-3">
                   <div className="icons-social d-flex align-items-center">
@@ -428,12 +629,23 @@ const Contacts = () => {
 
                 {/* Tab Content */}
                 {activeTab === 'basic' && (
-                  <div>
+                  <form onSubmit={handleSave}>
                    
                     <div className="col-md-12">
                             <div className="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
-                              <div className="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames">
-                                <i className="ti ti-photo text-gray-2 fs-16"></i>
+                              <div className="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames" style={{ position: 'relative', overflow: 'hidden' }}>
+                                {imagePreview ? (
+                                  <img 
+                                    src={imagePreview} 
+                                    alt="Profile preview" 
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    onError={(e) => {
+                                      e.target.src = '/assets/images/users/user1.png';
+                                    }}
+                                  />
+                                ) : (
+                                  <i className="ti ti-photo text-gray-2 fs-16"></i>
+                                )}
                               </div>
                               <div className="profile-upload">
                                 <div className="mb-2">
@@ -441,11 +653,25 @@ const Contacts = () => {
                                   <p className="fs-12">Image should be below 4 mb</p>
                                 </div>
                                 <div className="profile-uploader d-flex align-items-center">
-                                  <div className="drag-upload-btn btn btn-sm btn-primary me-2">
+                                  <label className="drag-upload-btn btn btn-sm btn-primary me-2" style={{ cursor: 'pointer', position: 'relative' }}>
                                     Upload
-                                    <input type="file" className="form-control image-sign" multiple="" />
-                                  </div>
-                                  <a href="javascript:void(0);" className="btn btn-light btn-sm">Cancel</a>
+                                    <input 
+                                      type="file" 
+                                      className="form-control image-sign" 
+                                      accept="image/*"
+                                      onChange={handleFileChange}
+                                      style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer', left: 0, top: 0 }}
+                                    />
+                                  </label>
+                                  {(selectedFile || imagePreview) && (
+                                    <button 
+                                      type="button"
+                                      onClick={handleRemoveImage}
+                                      className="btn btn-light btn-sm"
+                                    >
+                                      Remove
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -536,7 +762,7 @@ const Contacts = () => {
                     <div className="row">
                       <div className="col-md-4">
                         <div className="mb-3">
-                          <label className="form-label">Phone Number 2 <span className="text-danger">*</span></label>
+                          <label className="form-label">Phone Number 2</label>
                           <input
                             type="text"
                             className="form-control"
@@ -549,12 +775,18 @@ const Contacts = () => {
                       <div className="col-md-4">
                         <div className="mb-3">
                           <label className="form-label">Fax</label>
-                          <input type="text" className="form-control" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="fax"
+                            value={formData.fax}
+                            onChange={handleInputChange}
+                          />
                         </div>
                       </div>
                       <div className="col-md-4">
                         <div className="mb-3">
-                          <label className="form-label">Deals <span className="text-danger">*</span></label>
+                          <label className="form-label">Deals</label>
                           <select
                             className="form-select"
                             name="deals"
@@ -574,7 +806,7 @@ const Contacts = () => {
                     <div className="row">
                       <div className="col-md-4">
                         <div className="mb-3">
-                          <label className="form-label">Date of Birth <span className="text-danger">*</span></label>
+                          <label className="form-label">Date of Birth</label>
                           <input
                             type="date"
                             className="form-control"
@@ -586,13 +818,14 @@ const Contacts = () => {
                       </div>
                       <div className="col-md-4">
                         <div className="mb-3">
-                          <label className="form-label">Ratings <span className="text-danger">*</span></label>
+                          <label className="form-label">Ratings</label>
                           <select
                             className="form-select"
                             name="rating"
                             value={formData.rating}
                             onChange={handleInputChange}
                           >
+                            <option value="0">No Rating</option>
                             <option value="1">1 Star</option>
                             <option value="2">2 Stars</option>
                             <option value="3">3 Stars</option>
@@ -603,7 +836,7 @@ const Contacts = () => {
                       </div>
                       <div className="col-md-4">
                         <div className="mb-3">
-                          <label className="form-label">Owner <span className="text-danger">*</span></label>
+                          <label className="form-label">Owner</label>
                           <select
                             className="form-select"
                             name="owner"
@@ -623,7 +856,7 @@ const Contacts = () => {
                     <div className="row">
                       <div className="col-md-4">
                         <div className="mb-3">
-                          <label className="form-label">Industry <span className="text-danger">*</span></label>
+                          <label className="form-label">Industry</label>
                           <select
                             className="form-select"
                             name="industry"
@@ -642,7 +875,7 @@ const Contacts = () => {
                       </div>
                       <div className="col-md-4">
                         <div className="mb-3">
-                          <label className="form-label">Currency <span className="text-danger">*</span></label>
+                          <label className="form-label">Currency</label>
                           <select
                             className="form-select"
                             name="currency"
@@ -658,7 +891,7 @@ const Contacts = () => {
                       </div>
                       <div className="col-md-4">
                         <div className="mb-3">
-                          <label className="form-label">Language <span className="text-danger">*</span></label>
+                          <label className="form-label">Language</label>
                           <select
                             className="form-select"
                             name="language"
@@ -677,7 +910,7 @@ const Contacts = () => {
                     <div className="row">
                       <div className="col-md-6">
                         <div className="mb-3">
-                          <label className="form-label">Tags <span className="text-danger">*</span></label>
+                          <label className="form-label">Tags</label>
                           <div className="d-flex flex-wrap gap-2 mb-2">
                             {formData.tags.map((tag, index) => (
                               <span key={index} className="badge bg-light text-dark">
@@ -705,7 +938,7 @@ const Contacts = () => {
                       </div>
                       <div className="col-md-6">
                         <div className="mb-3">
-                          <label className="form-label">Source <span className="text-danger">*</span></label>
+                          <label className="form-label">Source</label>
                           <select
                             className="form-select"
                             name="source"
@@ -734,7 +967,7 @@ const Contacts = () => {
                         </button>
                         <button type="submit" className="btn btn-primary">Save</button>
                       </div>
-                  </div>
+                  </form>
                 )}
  
                 {activeTab === 'address' && (
@@ -749,13 +982,21 @@ const Contacts = () => {
                             name="location"
                             value={formData.location}
                             onChange={handleInputChange}
+                            placeholder="Street address"
                           />
                         </div>
                       </div>
                       <div className="col-md-6">
                         <div className="mb-3">
                           <label className="form-label">City</label>
-                          <input type="text" className="form-control" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="city"
+                            value={formData.city}
+                            onChange={handleInputChange}
+                            placeholder="City"
+                          />
                         </div>
                       </div>
                     </div>
@@ -763,13 +1004,27 @@ const Contacts = () => {
                       <div className="col-md-6">
                         <div className="mb-3">
                           <label className="form-label">State</label>
-                          <input type="text" className="form-control" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="state"
+                            value={formData.state}
+                            onChange={handleInputChange}
+                            placeholder="State/Province"
+                          />
                         </div>
                       </div>
                       <div className="col-md-6">
                         <div className="mb-3">
                           <label className="form-label">Country</label>
-                          <input type="text" className="form-control" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="country"
+                            value={formData.country}
+                            onChange={handleInputChange}
+                            placeholder="Country"
+                          />
                         </div>
                       </div>
                     </div>
@@ -777,7 +1032,14 @@ const Contacts = () => {
                       <div className="col-md-12">
                         <div className="mb-3">
                           <label className="form-label">Postal Code</label>
-                          <input type="text" className="form-control" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="postalCode"
+                            value={formData.postalCode}
+                            onChange={handleInputChange}
+                            placeholder="Postal/ZIP code"
+                          />
                         </div>
                       </div>
                     </div>
@@ -796,19 +1058,32 @@ const Contacts = () => {
                  
 
                 {activeTab === 'social' && (
-
                   <div>
                     <div className="row">
                       <div className="col-md-6">
                         <div className="mb-3">
                           <label className="form-label">Facebook</label>
-                          <input type="url" className="form-control" placeholder="https://facebook.com/username" />
+                          <input
+                            type="url"
+                            className="form-control"
+                            name="facebook"
+                            value={formData.facebook}
+                            onChange={handleInputChange}
+                            placeholder="https://facebook.com/username"
+                          />
                         </div>
                       </div>
                       <div className="col-md-6">
                         <div className="mb-3">
                           <label className="form-label">Twitter</label>
-                          <input type="url" className="form-control" placeholder="https://twitter.com/username" />
+                          <input
+                            type="url"
+                            className="form-control"
+                            name="twitter"
+                            value={formData.twitter}
+                            onChange={handleInputChange}
+                            placeholder="https://twitter.com/username"
+                          />
                         </div>
                       </div>
                     </div>
@@ -816,13 +1091,27 @@ const Contacts = () => {
                       <div className="col-md-6">
                         <div className="mb-3">
                           <label className="form-label">LinkedIn</label>
-                          <input type="url" className="form-control" placeholder="https://linkedin.com/in/username" />
+                          <input
+                            type="url"
+                            className="form-control"
+                            name="linkedin"
+                            value={formData.linkedin}
+                            onChange={handleInputChange}
+                            placeholder="https://linkedin.com/in/username"
+                          />
                         </div>
                       </div>
                       <div className="col-md-6">
                         <div className="mb-3">
                           <label className="form-label">Instagram</label>
-                          <input type="url" className="form-control" placeholder="https://instagram.com/username" />
+                          <input
+                            type="url"
+                            className="form-control"
+                            name="instagram"
+                            value={formData.instagram}
+                            onChange={handleInputChange}
+                            placeholder="https://instagram.com/username"
+                          />
                         </div>
                       </div>
                     </div>
@@ -830,13 +1119,27 @@ const Contacts = () => {
                       <div className="col-md-6">
                         <div className="mb-3">
                           <label className="form-label">Skype</label>
-                          <input type="text" className="form-control" placeholder="skype:username" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="skype"
+                            value={formData.skype}
+                            onChange={handleInputChange}
+                            placeholder="skype:username"
+                          />
                         </div>
                       </div>
                       <div className="col-md-6">
                         <div className="mb-3">
                           <label className="form-label">Website</label>
-                          <input type="url" className="form-control" placeholder="https://website.com" />
+                          <input
+                            type="url"
+                            className="form-control"
+                            name="website"
+                            value={formData.website}
+                            onChange={handleInputChange}
+                            placeholder="https://website.com"
+                          />
                         </div>
                       </div>
                     </div>
@@ -857,127 +1160,83 @@ const Contacts = () => {
 
                
                  {activeTab === 'access' && (
-                    <div className="tab-pane fade show active" id="access" role="tabpanel" aria-labelledby="access-tab" tabIndex="0">
-                      <div className="modal-body pb-0">
-                        <div className="mb-4">
-                          <h6 className="fs-14 fw-medium mb-1">Visibility</h6>
-                          <div className="d-flex align-items-center">
-                            <div className="form-check me-3">
-                              <input
-                                className="form-check-input"
-                                type="radio"
-                                name="visibility"
-                                id="flexRadioDefault01"
-                                value="public"
-                                checked={formData.visibility === 'public'}
-                                onChange={handleInputChange}
-                              />
-                              <label className="form-check-label text-dark" htmlFor="flexRadioDefault01">
-                                Public
-                              </label>
-                            </div>
-                            <div className="form-check me-3">
-                              <input
-                                className="form-check-input"
-                                type="radio"
-                                name="visibility"
-                                id="flexRadioDefault02"
-                                value="private"
-                                checked={formData.visibility === 'private'}
-                                onChange={handleInputChange}
-                              />
-                              <label className="form-check-label text-dark" htmlFor="flexRadioDefault02">
-                                Private
-                              </label>
-                            </div>
-                            <div className="form-check">
-                              <input
-                                className="form-check-input"
-                                type="radio"
-                                name="visibility"
-                                id="flexRadioDefault03"
-                                value="selectPeople"
-                                checked={formData.visibility === 'selectPeople'}
-                                onChange={handleInputChange}
-                              />
-                              <label className="form-check-label text-dark" htmlFor="flexRadioDefault03">
-                                Select People
-                              </label>
-                            </div>
+                    <div>
+                      <div className="row">
+                        <div className="col-md-6">
+                          <div className="mb-3">
+                            <label className="form-label">Access Level</label>
+                            <select
+                              className="form-select"
+                              name="accessLevel"
+                              value={formData.accessLevel}
+                              onChange={handleInputChange}
+                            >
+                              <option value="">Select Access Level</option>
+                              <option value="Public">Public</option>
+                              <option value="Private">Private</option>
+                              <option value="Restricted">Restricted</option>
+                              <option value="Internal">Internal</option>
+                            </select>
                           </div>
                         </div>
-                        <div className="p-3 bg-gray br-5 mb-4">
-                          <div className="d-flex align-items-center mb-3">
-                            <input className="form-check-input me-1" type="checkbox" value="" id="user-06" />
-                            <div className="d-flex align-items-center file-name-icon">
-                              <a href="#" className="avatar avatar-md border avatar-rounded">
-                                <img src="/assets/img/users/user-37.jpg" className="img-fluid" alt="img" />
-                              </a>
-                              <div className="ms-2">
-                                <h6 className="fw-normal"><a href="#">Michael Walker</a></h6>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="d-flex align-items-center mb-3">
-                            <input className="form-check-input me-1" type="checkbox" value="" id="user-07" />
-                            <div className="d-flex align-items-center file-name-icon">
-                              <a href="#" className="avatar avatar-md border avatar-rounded">
-                                <img src="/assets/img/users/user-09.jpg" className="img-fluid" alt="img" />
-                              </a>
-                              <div className="ms-2">
-                                <h6 className="fw-normal"><a href="#">Sophie Headrick</a></h6>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="d-flex align-items-center mb-3">
-                            <input className="form-check-input me-1" type="checkbox" value="" id="user-08" />
-                            <div className="d-flex align-items-center file-name-icon">
-                              <a href="#" className="avatar avatar-md border avatar-rounded">
-                                <img src="/assets/img/users/user-01.jpg" className="img-fluid" alt="img" />
-                              </a>
-                              <div className="ms-2">
-                                <h6 className="fw-normal"><a href="#">Cameron Drake</a></h6>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="d-flex align-items-center mb-3">
-                            <input className="form-check-input me-1" type="checkbox" value="" id="user-09" />
-                            <div className="d-flex align-items-center file-name-icon">
-                              <a href="#" className="avatar avatar-md border avatar-rounded">
-                                <img src="/assets/img/users/user-08.jpg" className="img-fluid" alt="img" />
-                              </a>
-                              <div className="ms-2">
-                                <h6 className="fw-normal"><a href="#">Doris Crowley</a></h6>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="d-flex align-items-center mb-3">
-                            <input className="form-check-input me-1" type="checkbox" value="" id="user-11" />
-                            <div className="d-flex align-items-center file-name-icon">
-                              <a href="#" className="avatar avatar-md border avatar-rounded">
-                                <img src="/assets/img/users/user-32.jpg" className="img-fluid" alt="img" />
-                              </a>
-                              <div className="ms-2">
-                                <h6 className="fw-normal"><a href="#">Thomas Bordelon</a></h6>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="d-flex align-items-center justify-content-center">
-                            <a href="#" className="btn btn-primary">Confirm</a>
+                        <div className="col-md-6">
+                          <div className="mb-3">
+                            <label className="form-label">Department</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="department"
+                              value={formData.department}
+                              onChange={handleInputChange}
+                              placeholder="Department"
+                            />
                           </div>
                         </div>
-                        <div className="mb-3">
-                          <label className="form-label">Status</label>
-                          <select
-                            className="form-select"
-                            name="status"
-                            value={formData.status}
-                            onChange={handleInputChange}
-                          >
-                            <option value="">Select</option>
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
-                          </select>
+                      </div>
+                      <div className="row">
+                        <div className="col-md-12">
+                          <div className="mb-3">
+                            <h6 className="fs-14 fw-medium mb-3">Permissions</h6>
+                            <div className="form-check mb-2">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                name="allowEmailAccess"
+                                id="allowEmailAccess"
+                                checked={formData.allowEmailAccess}
+                                onChange={handleInputChange}
+                              />
+                              <label className="form-check-label" htmlFor="allowEmailAccess">
+                                Allow Email Access
+                              </label>
+                            </div>
+                            <div className="form-check mb-2">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                name="allowPhoneAccess"
+                                id="allowPhoneAccess"
+                                checked={formData.allowPhoneAccess}
+                                onChange={handleInputChange}
+                              />
+                              <label className="form-check-label" htmlFor="allowPhoneAccess">
+                                Allow Phone Access
+                              </label>
+                            </div>
+                            <div className="form-check mb-2">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                name="allowDataExport"
+                                id="allowDataExport"
+                                checked={formData.allowDataExport}
+                                onChange={handleInputChange}
+                              />
+                              <label className="form-check-label" htmlFor="allowDataExport">
+                                Allow Data Export
+                              </label>
+                            </div>
+                          </div>
                         </div>
                       </div>
                       <div className="modal-footer">

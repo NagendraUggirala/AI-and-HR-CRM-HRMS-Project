@@ -1247,7 +1247,8 @@ const BuddyMentorAssignment = () => {
       if (buddy && newJoiner && program) {
         calculateMatchScore();
       }
-    }, [buddy, newJoiner, program]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [assignmentForm.buddyId, assignmentForm.newJoinerId, assignmentForm.programId]);
     
     return (
       <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -1504,7 +1505,11 @@ const BuddyMentorAssignment = () => {
 
   // 3. Feedback Modal
   const FeedbackModal = () => {
-    const assignment = selectedAssignment;
+    const assignment = selectedAssignment || (
+      feedbackForm.assignmentId ? 
+        buddyPrograms.flatMap(p => p.assignments).find(a => a.id === feedbackForm.assignmentId) 
+        : null
+    );
     
     return (
       <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -1516,6 +1521,29 @@ const BuddyMentorAssignment = () => {
             </div>
             
             <div className="modal-body pt-0">
+              {!assignment && (
+                <div className="mb-3">
+                  <label className="form-label">Select Assignment *</label>
+                  <select 
+                    className="form-select"
+                    value={feedbackForm.assignmentId || ''}
+                    onChange={(e) => setFeedbackForm({
+                      ...feedbackForm,
+                      assignmentId: parseInt(e.target.value)
+                    })}
+                  >
+                    <option value="">Choose assignment...</option>
+                    {buddyPrograms.flatMap(program => 
+                      program.assignments.map(assignment => (
+                        <option key={assignment.id} value={assignment.id}>
+                          {assignment.buddy.name} - {assignment.newJoiner.name} ({program.name})
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+              )}
+              
               {assignment && (
                 <div className="alert alert-info mb-3">
                   <div className="row">
@@ -1660,7 +1688,7 @@ const BuddyMentorAssignment = () => {
               <button 
                 className="btn btn-success" 
                 onClick={handleSubmitFeedback}
-                disabled={!feedbackForm.submittedBy || !feedbackForm.overallRating}
+                disabled={!feedbackForm.assignmentId || !feedbackForm.submittedBy || !feedbackForm.overallRating}
               >
                 Submit Feedback
               </button>
@@ -1953,6 +1981,475 @@ const BuddyMentorAssignment = () => {
     </div>
   );
 
+  // 6. Rules Modal
+  const RulesModal = () => {
+    const program = selectedProgram;
+    
+    if (!program) return null;
+    
+    return (
+      <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <div className="modal-dialog modal-dialog-centered modal-lg">
+          <div className="modal-content border-0 shadow-lg">
+            <div className="modal-header border-0 pb-0">
+              <h5 className="modal-title fw-bold">Assignment Rules - {program.name}</h5>
+              <button className="btn-close" onClick={() => setShowRulesModal(false)}></button>
+            </div>
+            
+            <div className="modal-body pt-0">
+              <div className="alert alert-info">
+                <i className="bi bi-info-circle me-2"></i>
+                These rules are used to automatically match buddies with new joiners. Mandatory rules must be satisfied, while preferred rules enhance match quality.
+              </div>
+              
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Rule</th>
+                      <th>Type</th>
+                      <th>Weight</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {program.assignmentRules.map(rule => (
+                      <tr key={rule.id}>
+                        <td>{rule.rule}</td>
+                        <td>
+                          {rule.mandatory ? (
+                            <span className="badge bg-danger">Mandatory</span>
+                          ) : (
+                            <span className="badge bg-warning">Preferred</span>
+                          )}
+                        </td>
+                        <td>
+                          <span className="fw-bold">{rule.weight}pts</span>
+                        </td>
+                        <td>
+                          <span className="badge bg-success">Active</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {program.assignmentRules.length === 0 && (
+                <div className="alert alert-warning text-center">
+                  No assignment rules defined for this program.
+                </div>
+              )}
+            </div>
+            
+            <div className="modal-footer border-0">
+              <button className="btn btn-secondary" onClick={() => setShowRulesModal(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 7. Checklist Modal
+  const ChecklistModal = () => {
+    const program = selectedProgram;
+    
+    if (!program) return null;
+    
+    return (
+      <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <div className="modal-dialog modal-dialog-centered modal-xl">
+          <div className="modal-content border-0 shadow-lg">
+            <div className="modal-header border-0 pb-0">
+              <h5 className="modal-title fw-bold">Buddy Responsibilities Checklist - {program.name}</h5>
+              <button className="btn-close" onClick={() => setShowChecklistModal(false)}></button>
+            </div>
+            
+            <div className="modal-body pt-0">
+              {program.buddyResponsibilities.map(category => (
+                <div key={category.id} className="card border mb-3">
+                  <div className="card-header bg-light">
+                    <h6 className="mb-0 fw-bold">{category.category}</h6>
+                  </div>
+                  <div className="card-body">
+                    <div className="list-group list-group-flush">
+                      {category.tasks.map(task => (
+                        <div key={task.id} className="list-group-item d-flex justify-content-between align-items-center">
+                          <div className="flex-grow-1">
+                            <div className="fw-medium">{task.task}</div>
+                            <small className="text-muted">{task.description}</small>
+                            <div className="mt-1">
+                              <small className="text-muted">
+                                <i className="bi bi-calendar me-1"></i>
+                                Deadline: {task.deadline}
+                              </small>
+                            </div>
+                          </div>
+                          <div>
+                            {getTaskStatusBadge(task.status)}
+                            <button
+                              className="btn btn-sm btn-outline-primary ms-2"
+                              onClick={() => {
+                                const newStatus = task.status === 'completed' ? 'pending' : 
+                                                  task.status === 'pending' ? 'in-progress' : 'completed';
+                                handleUpdateTaskStatus(program.id, task.id, newStatus);
+                              }}
+                            >
+                              {task.status === 'completed' ? 'Undo' : 'Complete'}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {program.buddyResponsibilities.length === 0 && (
+                <div className="alert alert-warning text-center">
+                  No responsibilities checklist defined for this program.
+                </div>
+              )}
+            </div>
+            
+            <div className="modal-footer border-0">
+              <button className="btn btn-secondary" onClick={() => setShowChecklistModal(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 8. Buddy Profile Modal
+  const BuddyProfileModal = () => {
+    const buddy = selectedBuddy;
+    
+    if (!buddy) return null;
+    
+    // Get assignments for this buddy
+    const buddyAssignments = buddyPrograms.flatMap(program => 
+      program.assignments.filter(a => a.buddy.id === buddy.id)
+    );
+    
+    return (
+      <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <div className="modal-dialog modal-dialog-centered modal-xl">
+          <div className="modal-content border-0 shadow-lg">
+            <div className="modal-header border-0 pb-0">
+              <h5 className="modal-title fw-bold">Buddy Profile - {buddy.name}</h5>
+              <button className="btn-close" onClick={() => setShowBuddyProfile(false)}></button>
+            </div>
+            
+            <div className="modal-body pt-0">
+              <div className="row mb-4">
+                <div className="col-md-3 text-center">
+                  <div className="bg-primary rounded-circle p-4 d-inline-block mb-3">
+                    <i className="bi bi-person-fill text-white fs-1"></i>
+                  </div>
+                  <h5 className="fw-bold">{buddy.name}</h5>
+                  <p className="text-muted">{buddy.role}</p>
+                </div>
+                <div className="col-md-9">
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
+                      <div className="card border h-100">
+                        <div className="card-body">
+                          <h6 className="text-muted mb-2">Contact Information</h6>
+                          <p className="mb-1"><i className="bi bi-envelope me-2"></i>{buddy.email}</p>
+                          <p className="mb-0"><i className="bi bi-telephone me-2"></i>{buddy.phone}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-md-6 mb-3">
+                      <div className="card border h-100">
+                        <div className="card-body">
+                          <h6 className="text-muted mb-2">Assignment Status</h6>
+                          <p className="mb-1">Current: <span className="fw-bold">{buddy.currentAssignments}/{buddy.maxAssignments}</span></p>
+                          <p className="mb-0">Total Mentees: <span className="fw-bold">{buddy.totalMentees}</span></p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="row">
+                    <div className="col-md-4 mb-3">
+                      <div className="card border h-100">
+                        <div className="card-body text-center">
+                          <h6 className="text-muted mb-2">Rating</h6>
+                          <div className="display-6 fw-bold text-warning">{buddy.rating}/5</div>
+                          <div className="text-warning">
+                            {'★'.repeat(Math.floor(buddy.rating))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-md-4 mb-3">
+                      <div className="card border h-100">
+                        <div className="card-body">
+                          <h6 className="text-muted mb-2">Department</h6>
+                          <p className="fw-bold mb-0">{buddy.department}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-md-4 mb-3">
+                      <div className="card border h-100">
+                        <div className="card-body">
+                          <h6 className="text-muted mb-2">Location</h6>
+                          <p className="fw-bold mb-0">{buddy.officeLocation}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {buddy.skills && buddy.skills.length > 0 && (
+                <div className="mb-4">
+                  <h6 className="fw-bold mb-3">Skills</h6>
+                  <div className="d-flex flex-wrap gap-2">
+                    {buddy.skills.map((skill, index) => (
+                      <span key={index} className="badge bg-primary">{skill}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <div className="mb-4">
+                <h6 className="fw-bold mb-3">Current Assignments ({buddyAssignments.length})</h6>
+                {buddyAssignments.length > 0 ? (
+                  <div className="table-responsive">
+                    <table className="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>New Joiner</th>
+                          <th>Department</th>
+                          <th>Assignment Date</th>
+                          <th>Match Score</th>
+                          <th>Status</th>
+                          <th>Progress</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {buddyAssignments.map(assignment => (
+                          <tr key={assignment.id}>
+                            <td className="fw-bold">{assignment.newJoiner.name}</td>
+                            <td>{assignment.newJoiner.department}</td>
+                            <td>{assignment.assignmentDate}</td>
+                            <td>
+                              <span className="badge bg-info">{assignment.matchScore}/100</span>
+                            </td>
+                            <td>{getStatusBadge(assignment.status)}</td>
+                            <td>
+                              <div className="progress" style={{ height: '20px' }}>
+                                <div 
+                                  className="progress-bar" 
+                                  style={{ width: `${assignment.completionPercentage}%` }}
+                                >
+                                  {assignment.completionPercentage}%
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="alert alert-info">No current assignments</div>
+                )}
+              </div>
+            </div>
+            
+            <div className="modal-footer border-0">
+              <button className="btn btn-secondary" onClick={() => setShowBuddyProfile(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 9. New Joiner Profile Modal
+  const NewJoinerProfileModal = () => {
+    const newJoiner = selectedNewJoiner;
+    
+    if (!newJoiner) return null;
+    
+    // Get assignment for this new joiner
+    const assignment = buddyPrograms.flatMap(program => 
+      program.assignments.filter(a => a.newJoiner.id === newJoiner.id)
+    )[0];
+    
+    return (
+      <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <div className="modal-dialog modal-dialog-centered modal-xl">
+          <div className="modal-content border-0 shadow-lg">
+            <div className="modal-header border-0 pb-0">
+              <h5 className="modal-title fw-bold">New Joiner Profile - {newJoiner.name}</h5>
+              <button className="btn-close" onClick={() => setShowNewJoinerProfile(false)}></button>
+            </div>
+            
+            <div className="modal-body pt-0">
+              <div className="row mb-4">
+                <div className="col-md-3 text-center">
+                  <div className="bg-success rounded-circle p-4 d-inline-block mb-3">
+                    <i className="bi bi-person-plus-fill text-white fs-1"></i>
+                  </div>
+                  <h5 className="fw-bold">{newJoiner.name}</h5>
+                  <p className="text-muted">{newJoiner.role}</p>
+                </div>
+                <div className="col-md-9">
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
+                      <div className="card border h-100">
+                        <div className="card-body">
+                          <h6 className="text-muted mb-2">Contact Information</h6>
+                          <p className="mb-1"><i className="bi bi-envelope me-2"></i>{newJoiner.email}</p>
+                          <p className="mb-0"><i className="bi bi-telephone me-2"></i>{newJoiner.phone}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-md-6 mb-3">
+                      <div className="card border h-100">
+                        <div className="card-body">
+                          <h6 className="text-muted mb-2">Onboarding Details</h6>
+                          <p className="mb-1">Join Date: <span className="fw-bold">{newJoiner.joinDate}</span></p>
+                          <p className="mb-0">Stage: <span className="badge bg-info">{newJoiner.onboardingStage}</span></p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="row">
+                    <div className="col-md-4 mb-3">
+                      <div className="card border h-100">
+                        <div className="card-body">
+                          <h6 className="text-muted mb-2">Department</h6>
+                          <p className="fw-bold mb-0">{newJoiner.department}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-md-4 mb-3">
+                      <div className="card border h-100">
+                        <div className="card-body">
+                          <h6 className="text-muted mb-2">Location</h6>
+                          <p className="fw-bold mb-0">{newJoiner.location}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-md-4 mb-3">
+                      <div className="card border h-100">
+                        <div className="card-body">
+                          <h6 className="text-muted mb-2">Buddy Status</h6>
+                          {newJoiner.assignedBuddy ? (
+                            <span className="badge bg-success">Assigned</span>
+                          ) : (
+                            <span className="badge bg-warning">Unassigned</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {newJoiner.background && (
+                <div className="mb-4">
+                  <h6 className="fw-bold mb-2">Background</h6>
+                  <p className="text-muted">{newJoiner.background}</p>
+                </div>
+              )}
+              
+              {newJoiner.skills && newJoiner.skills.length > 0 && (
+                <div className="mb-4">
+                  <h6 className="fw-bold mb-3">Skills</h6>
+                  <div className="d-flex flex-wrap gap-2">
+                    {newJoiner.skills.map((skill, index) => (
+                      <span key={index} className="badge bg-success">{skill}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {assignment && (
+                <div className="mb-4">
+                  <h6 className="fw-bold mb-3">Buddy Assignment</h6>
+                  <div className="card border">
+                    <div className="card-body">
+                      <div className="row">
+                        <div className="col-md-6">
+                          <p><strong>Buddy:</strong> {assignment.buddy.name}</p>
+                          <p><strong>Department:</strong> {assignment.buddy.department}</p>
+                          <p><strong>Match Score:</strong> <span className="badge bg-info">{assignment.matchScore}/100</span></p>
+                        </div>
+                        <div className="col-md-6">
+                          <p><strong>Assignment Date:</strong> {assignment.assignmentDate}</p>
+                          <p><strong>Status:</strong> {getStatusBadge(assignment.status)}</p>
+                          <p><strong>Progress:</strong> {assignment.completionPercentage}%</p>
+                        </div>
+                      </div>
+                      
+                      {assignment.communicationRecords && assignment.communicationRecords.length > 0 && (
+                        <div className="mt-3">
+                          <h6 className="fw-bold mb-2">Communication Records</h6>
+                          <div className="list-group">
+                            {assignment.communicationRecords.map(comm => (
+                              <div key={comm.id} className="list-group-item">
+                                <div className="d-flex justify-content-between">
+                                  <div>
+                                    <span className="fw-bold">{getCommunicationTypeBadge(comm.type)}</span>
+                                    <span className="ms-2 text-muted">{comm.date}</span>
+                                    {comm.duration && <span className="ms-2 text-muted">({comm.duration})</span>}
+                                  </div>
+                                </div>
+                                {comm.topics && comm.topics.length > 0 && (
+                                  <div className="mt-2">
+                                    <small className="text-muted">Topics: {comm.topics.join(', ')}</small>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="modal-footer border-0">
+              <button className="btn btn-secondary" onClick={() => setShowNewJoinerProfile(false)}>
+                Close
+              </button>
+              {!newJoiner.assignedBuddy && (
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setAssignmentForm(prev => ({
+                      ...prev,
+                      newJoinerId: newJoiner.id
+                    }));
+                    setShowNewJoinerProfile(false);
+                    setShowAssignmentModal(true);
+                  }}
+                >
+                  Assign Buddy
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // ==================== RENDER ====================
   if (loading) {
     return (
@@ -2202,7 +2699,12 @@ const BuddyMentorAssignment = () => {
                     </thead>
                     <tbody>
                       {buddyPrograms.map(program => (
-                        <tr key={program.id}>
+                        <tr 
+                          key={program.id}
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => setSelectedProgram(program)}
+                          className={selectedProgram?.id === program.id ? 'table-active' : ''}
+                        >
                           <td>
                             <div className="fw-bold">{program.name}</div>
                             <small className="text-muted">{program.department} • {program.location}</small>
@@ -2242,6 +2744,10 @@ const BuddyMentorAssignment = () => {
                                 className="btn btn-outline-success"
                                 onClick={() => {
                                   setSelectedProgram(program);
+                                  setAssignmentForm(prev => ({
+                                    ...prev,
+                                    programId: program.id
+                                  }));
                                   setShowAssignmentModal(true);
                                 }}
                                 title="Create Pairing"
@@ -2279,36 +2785,60 @@ const BuddyMentorAssignment = () => {
             {selectedProgram && (
               <div className="row mt-4">
                 <div className="col-12">
-                  <div className="card border">
-                    <div className="card-header bg-light">
+                  <div className="card border mb-4">
+                    <div className="card-header bg-light d-flex justify-content-between align-items-center">
                       <h6 className="mb-0 fw-bold">Program Details: {selectedProgram.name}</h6>
+                      <div className="btn-group btn-group-sm">
+                        <button 
+                          className="btn btn-outline-primary"
+                          onClick={() => setShowRulesModal(true)}
+                          title="View Rules"
+                        >
+                          <i className="bi bi-list-check me-1"></i>Rules
+                        </button>
+                        <button 
+                          className="btn btn-outline-info"
+                          onClick={() => setShowChecklistModal(true)}
+                          title="View Checklist"
+                        >
+                          <i className="bi bi-check-square me-1"></i>Checklist
+                        </button>
+                      </div>
                     </div>
                     <div className="card-body">
                       <div className="row">
-                        <div className="col-md-4">
-                          <h6 className="fw-bold">Assignment Rules</h6>
+                        <div className="col-md-4 mb-4">
+                          <h6 className="fw-bold mb-3">Assignment Rules</h6>
                           <div className="list-group list-group-flush">
-                            {selectedProgram.assignmentRules.map(rule => (
+                            {selectedProgram.assignmentRules.slice(0, 5).map(rule => (
                               <div key={rule.id} className="list-group-item d-flex justify-content-between align-items-center">
-                                <span>{rule.rule}</span>
+                                <span className="small">{rule.rule}</span>
                                 <span className={`badge ${rule.mandatory ? 'bg-danger' : 'bg-warning'}`}>
-                                  {rule.mandatory ? 'Mandatory' : 'Preferred'} ({rule.weight}pts)
+                                  {rule.mandatory ? 'M' : 'P'} ({rule.weight}pts)
                                 </span>
                               </div>
                             ))}
                           </div>
+                          {selectedProgram.assignmentRules.length > 5 && (
+                            <button 
+                              className="btn btn-sm btn-link mt-2"
+                              onClick={() => setShowRulesModal(true)}
+                            >
+                              View all {selectedProgram.assignmentRules.length} rules →
+                            </button>
+                          )}
                         </div>
                         
-                        <div className="col-md-4">
-                          <h6 className="fw-bold">Buddy Responsibilities</h6>
+                        <div className="col-md-4 mb-4">
+                          <h6 className="fw-bold mb-3">Buddy Responsibilities</h6>
                           <div className="list-group list-group-flush">
                             {selectedProgram.buddyResponsibilities.map(category => (
                               <div key={category.id} className="list-group-item">
-                                <div className="fw-bold">{category.category}</div>
-                                <div className="small">
-                                  {category.tasks.map(task => (
-                                    <div key={task.id} className="d-flex justify-content-between">
-                                      <span>{task.task}</span>
+                                <div className="fw-bold small">{category.category}</div>
+                                <div className="small mt-1">
+                                  {category.tasks.slice(0, 2).map(task => (
+                                    <div key={task.id} className="d-flex justify-content-between mt-1">
+                                      <span className="text-muted">{task.task}</span>
                                       {getTaskStatusBadge(task.status)}
                                     </div>
                                   ))}
@@ -2316,27 +2846,143 @@ const BuddyMentorAssignment = () => {
                               </div>
                             ))}
                           </div>
+                          <button 
+                            className="btn btn-sm btn-link mt-2"
+                            onClick={() => setShowChecklistModal(true)}
+                          >
+                            View full checklist →
+                          </button>
                         </div>
                         
-                        <div className="col-md-4">
-                          <h6 className="fw-bold">Recent Feedback</h6>
+                        <div className="col-md-4 mb-4">
+                          <h6 className="fw-bold mb-3">Recent Feedback</h6>
                           {selectedProgram.feedback.length > 0 ? (
                             <div className="list-group list-group-flush">
                               {selectedProgram.feedback.slice(0, 3).map(fb => (
                                 <div key={fb.id} className="list-group-item">
                                   <div className="d-flex justify-content-between">
-                                    <span className="fw-bold">{fb.submittedBy}</span>
+                                    <span className="fw-bold small">{fb.submittedBy}</span>
                                     <span className="text-warning">{fb.overallRating}/5</span>
                                   </div>
-                                  <div className="small text-muted">{fb.overallComment.substring(0, 60)}...</div>
+                                  <div className="small text-muted mt-1">{fb.overallComment.substring(0, 50)}...</div>
                                 </div>
                               ))}
                             </div>
                           ) : (
-                            <div className="alert alert-info">No feedback yet</div>
+                            <div className="alert alert-info small">No feedback yet</div>
                           )}
                         </div>
                       </div>
+                    </div>
+                  </div>
+                  
+                  {/* Assignments Section */}
+                  <div className="card border">
+                    <div className="card-header bg-light d-flex justify-content-between align-items-center">
+                      <h6 className="mb-0 fw-bold">Assignments ({selectedProgram.assignments.length})</h6>
+                      <button 
+                        className="btn btn-sm btn-primary"
+                        onClick={() => {
+                          setAssignmentForm(prev => ({ ...prev, programId: selectedProgram.id }));
+                          setShowAssignmentModal(true);
+                        }}
+                      >
+                        <i className="bi bi-person-plus me-1"></i>Add Assignment
+                      </button>
+                    </div>
+                    <div className="card-body">
+                      {selectedProgram.assignments.length > 0 ? (
+                        <div className="table-responsive">
+                          <table className="table table-hover">
+                            <thead>
+                              <tr>
+                                <th>Buddy</th>
+                                <th>New Joiner</th>
+                                <th>Match Score</th>
+                                <th>Assignment Date</th>
+                                <th>Last Check-in</th>
+                                <th>Progress</th>
+                                <th>Feedback Score</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {selectedProgram.assignments.map(assignment => (
+                                <tr key={assignment.id}>
+                                  <td>
+                                    <div className="fw-bold">{assignment.buddy.name}</div>
+                                    <small className="text-muted">{assignment.buddy.department}</small>
+                                  </td>
+                                  <td>
+                                    <div className="fw-bold">{assignment.newJoiner.name}</div>
+                                    <small className="text-muted">{assignment.newJoiner.department}</small>
+                                  </td>
+                                  <td>
+                                    <span className="badge bg-info">{assignment.matchScore}/100</span>
+                                  </td>
+                                  <td>{assignment.assignmentDate}</td>
+                                  <td>{assignment.lastCheckIn || 'N/A'}</td>
+                                  <td>
+                                    <div className="progress" style={{ height: '20px', minWidth: '100px' }}>
+                                      <div 
+                                        className="progress-bar" 
+                                        style={{ width: `${assignment.completionPercentage}%` }}
+                                      >
+                                        {assignment.completionPercentage}%
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td>
+                                    {assignment.feedbackScore > 0 ? (
+                                      <span className="badge bg-warning">{assignment.feedbackScore}/5</span>
+                                    ) : (
+                                      <span className="text-muted">-</span>
+                                    )}
+                                  </td>
+                                  <td>{getStatusBadge(assignment.status)}</td>
+                                  <td>
+                                    <div className="btn-group btn-group-sm">
+                                      <button
+                                        className="btn btn-outline-info"
+                                        onClick={() => {
+                                          setSelectedAssignment(assignment);
+                                          setCommunicationForm(prev => ({
+                                            ...prev,
+                                            assignmentId: assignment.id
+                                          }));
+                                          setShowCommunicationModal(true);
+                                        }}
+                                        title="Record Communication"
+                                      >
+                                        <i className="bi bi-chat-left-text"></i>
+                                      </button>
+                                      <button
+                                        className="btn btn-outline-warning"
+                                        onClick={() => {
+                                          setSelectedAssignment(assignment);
+                                          setFeedbackForm(prev => ({
+                                            ...prev,
+                                            assignmentId: assignment.id
+                                          }));
+                                          setShowFeedbackModal(true);
+                                        }}
+                                        title="Submit Feedback"
+                                      >
+                                        <i className="bi bi-star"></i>
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="alert alert-info text-center">
+                          No assignments yet. Click "Add Assignment" to create a buddy-new joiner pairing.
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -2410,8 +3056,9 @@ const BuddyMentorAssignment = () => {
                                   setSelectedBuddy(buddy);
                                   setShowBuddyProfile(true);
                                 }}
+                                title="View Profile"
                               >
-                                View
+                                <i className="bi bi-eye me-1"></i>View
                               </button>
                             </td>
                           </tr>
@@ -2483,21 +3130,34 @@ const BuddyMentorAssignment = () => {
                               )}
                             </td>
                             <td>
-                              {!newJoiner.assignedBuddy && (
+                              <div className="btn-group btn-group-sm">
                                 <button 
-                                  className="btn btn-outline-success btn-sm"
+                                  className="btn btn-outline-primary"
                                   onClick={() => {
                                     setSelectedNewJoiner(newJoiner);
-                                    setAssignmentForm(prev => ({
-                                      ...prev,
-                                      newJoinerId: newJoiner.id
-                                    }));
-                                    setShowAssignmentModal(true);
+                                    setShowNewJoinerProfile(true);
                                   }}
+                                  title="View Profile"
                                 >
-                                  Assign Buddy
+                                  <i className="bi bi-eye"></i>
                                 </button>
-                              )}
+                                {!newJoiner.assignedBuddy && (
+                                  <button 
+                                    className="btn btn-outline-success"
+                                    onClick={() => {
+                                      setSelectedNewJoiner(newJoiner);
+                                      setAssignmentForm(prev => ({
+                                        ...prev,
+                                        newJoinerId: newJoiner.id
+                                      }));
+                                      setShowAssignmentModal(true);
+                                    }}
+                                    title="Assign Buddy"
+                                  >
+                                    <i className="bi bi-person-plus"></i>
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -2592,8 +3252,11 @@ const BuddyMentorAssignment = () => {
         {showFeedbackModal && <FeedbackModal />}
         {showAnalyticsModal && <AnalyticsModal />}
         {showCommunicationModal && <CommunicationModal />}
+        {showRulesModal && <RulesModal />}
+        {showChecklistModal && <ChecklistModal />}
+        {showBuddyProfile && <BuddyProfileModal />}
+        {showNewJoinerProfile && <NewJoinerProfileModal />}
       </div>
-    
   );
 };
 

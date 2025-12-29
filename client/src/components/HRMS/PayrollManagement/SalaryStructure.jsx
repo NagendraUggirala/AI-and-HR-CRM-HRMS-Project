@@ -19,6 +19,13 @@ const SalaryStructure = () => {
     const [showComponentModal, setShowComponentModal] = useState(false);
     const [showBulkAssignModal, setShowBulkAssignModal] = useState(false);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [showIndividualCustomizeModal, setShowIndividualCustomizeModal] = useState(false);
+    const [selectedEmployee, setSelectedEmployee] = useState(null);
+    const [bulkAssignFilters, setBulkAssignFilters] = useState({
+        department: 'all',
+        grade: 'all',
+        location: 'all'
+    });
 
     // State for new structure form
     const [newStructure, setNewStructure] = useState({
@@ -38,35 +45,35 @@ const SalaryStructure = () => {
         taxDeduction: 50000
     });
 
-    // Mock data for components
+    // Mock data for components with enhanced fields
     const [components, setComponents] = useState({
         earnings: [
-            { id: 1, name: 'Basic Salary', type: 'fixed', taxable: true, statutory: false, calculation: 'percentage', value: 40, base: 'CTC' },
-            { id: 2, name: 'House Rent Allowance', type: 'fixed', taxable: true, statutory: false, calculation: 'percentage', value: 20, base: 'Basic' },
-            { id: 3, name: 'Conveyance Allowance', type: 'fixed', taxable: true, statutory: false, calculation: 'flat', value: 19200, base: 'fixed' },
-            { id: 4, name: 'Special Allowance', type: 'fixed', taxable: true, statutory: false, calculation: 'percentage', value: 20, base: 'CTC' },
-            { id: 5, name: 'Performance Bonus', type: 'variable', taxable: true, statutory: false, calculation: 'percentage', value: 10, base: 'CTC' },
+            { id: 1, name: 'Basic Salary', type: 'fixed', taxable: true, statutory: false, calculation: 'percentage', value: 40, base: 'CTC', proRata: true, rounding: 'nearest', roundingUnit: 1, maxLimit: null, minLimit: null, formula: null },
+            { id: 2, name: 'House Rent Allowance', type: 'fixed', taxable: true, statutory: false, calculation: 'percentage', value: 20, base: 'Basic', proRata: true, rounding: 'nearest', roundingUnit: 1, maxLimit: null, minLimit: null, formula: null },
+            { id: 3, name: 'Conveyance Allowance', type: 'fixed', taxable: true, statutory: false, calculation: 'flat', value: 19200, base: 'fixed', proRata: true, rounding: 'nearest', roundingUnit: 1, maxLimit: 19200, minLimit: 0, formula: null },
+            { id: 4, name: 'Special Allowance', type: 'fixed', taxable: true, statutory: false, calculation: 'percentage', value: 20, base: 'CTC', proRata: true, rounding: 'nearest', roundingUnit: 1, maxLimit: null, minLimit: null, formula: null },
+            { id: 5, name: 'Performance Bonus', type: 'variable', taxable: true, statutory: false, calculation: 'percentage', value: 10, base: 'CTC', proRata: false, rounding: 'up', roundingUnit: 100, maxLimit: null, minLimit: 0, formula: null },
         ],
         deductions: [
-            { id: 6, name: 'Provident Fund (PF)', type: 'fixed', taxable: false, statutory: true, calculation: 'percentage', value: 12, base: 'Basic' },
-            { id: 7, name: 'ESI Contribution', type: 'fixed', taxable: false, statutory: true, calculation: 'percentage', value: 0.75, base: 'Gross' },
-            { id: 8, name: 'Professional Tax', type: 'fixed', taxable: false, statutory: true, calculation: 'flat', value: 200, base: 'fixed' },
-            { id: 9, name: 'TDS', type: 'variable', taxable: false, statutory: true, calculation: 'percentage', value: 10, base: 'Taxable' },
-            { id: 10, name: 'Loan EMI', type: 'fixed', taxable: false, statutory: false, calculation: 'flat', value: 5000, base: 'fixed' },
+            { id: 6, name: 'Provident Fund (PF)', type: 'fixed', taxable: false, statutory: true, calculation: 'percentage', value: 12, base: 'Basic', proRata: true, rounding: 'nearest', roundingUnit: 1, maxLimit: 1800, minLimit: 0, formula: null },
+            { id: 7, name: 'ESI Contribution', type: 'fixed', taxable: false, statutory: true, calculation: 'percentage', value: 0.75, base: 'Gross', proRata: true, rounding: 'nearest', roundingUnit: 1, maxLimit: null, minLimit: 0, formula: null },
+            { id: 8, name: 'Professional Tax', type: 'fixed', taxable: false, statutory: true, calculation: 'flat', value: 200, base: 'fixed', proRata: true, rounding: 'nearest', roundingUnit: 1, maxLimit: 200, minLimit: 0, formula: null },
+            { id: 9, name: 'TDS', type: 'variable', taxable: false, statutory: true, calculation: 'formula', value: null, base: 'Taxable', proRata: false, rounding: 'nearest', roundingUnit: 1, maxLimit: null, minLimit: 0, formula: 'IF(Taxable > 250000, (Taxable - 250000) * 0.1, 0)' },
+            { id: 10, name: 'Loan EMI', type: 'fixed', taxable: false, statutory: false, calculation: 'flat', value: 5000, base: 'fixed', proRata: false, rounding: 'nearest', roundingUnit: 1, maxLimit: null, minLimit: 0, formula: null },
         ],
         employerContributions: [
-            { id: 11, name: 'Employer PF', type: 'fixed', taxable: false, statutory: true, calculation: 'percentage', value: 12, base: 'Basic' },
-            { id: 12, name: 'Employer ESI', type: 'fixed', taxable: false, statutory: true, calculation: 'percentage', value: 3.25, base: 'Gross' },
+            { id: 11, name: 'Employer PF', type: 'fixed', taxable: false, statutory: true, calculation: 'percentage', value: 12, base: 'Basic', proRata: true, rounding: 'nearest', roundingUnit: 1, maxLimit: 1800, minLimit: 0, formula: null },
+            { id: 12, name: 'Employer ESI', type: 'fixed', taxable: false, statutory: true, calculation: 'percentage', value: 3.25, base: 'Gross', proRata: true, rounding: 'nearest', roundingUnit: 1, maxLimit: null, minLimit: 0, formula: null },
         ],
         reimbursements: [
-            { id: 13, name: 'Medical Reimbursement', type: 'fixed', taxable: false, statutory: false, calculation: 'flat', value: 15000, base: 'fixed' },
-            { id: 14, name: 'LTA', type: 'fixed', taxable: false, statutory: false, calculation: 'percentage', value: 8, base: 'Basic' },
-            { id: 15, name: 'Telephone Allowance', type: 'fixed', taxable: true, statutory: false, calculation: 'flat', value: 1000, base: 'fixed' },
-            { id: 16, name: 'Fuel Allowance', type: 'fixed', taxable: true, statutory: false, calculation: 'percentage', value: 5, base: 'Basic' },
+            { id: 13, name: 'Medical Reimbursement', type: 'fixed', taxable: false, statutory: false, calculation: 'flat', value: 15000, base: 'fixed', proRata: true, rounding: 'nearest', roundingUnit: 1, maxLimit: 15000, minLimit: 0, formula: null },
+            { id: 14, name: 'LTA', type: 'fixed', taxable: false, statutory: false, calculation: 'percentage', value: 8, base: 'Basic', proRata: true, rounding: 'nearest', roundingUnit: 1, maxLimit: null, minLimit: 0, formula: null },
+            { id: 15, name: 'Telephone Allowance', type: 'fixed', taxable: true, statutory: false, calculation: 'flat', value: 1000, base: 'fixed', proRata: true, rounding: 'nearest', roundingUnit: 1, maxLimit: 1000, minLimit: 0, formula: null },
+            { id: 16, name: 'Fuel Allowance', type: 'fixed', taxable: true, statutory: false, calculation: 'percentage', value: 5, base: 'Basic', proRata: true, rounding: 'nearest', roundingUnit: 1, maxLimit: null, minLimit: 0, formula: null },
         ]
     });
 
-    // Mock data for salary structures
+    // Mock data for salary structures with version control
     const [structures, setStructures] = useState([
         {
             id: 1,
@@ -78,7 +85,15 @@ const SalaryStructure = () => {
             employeeCount: 45,
             createdAt: '2023-12-15',
             createdBy: 'HR Admin',
-            components: [1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14]
+            components: [1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14],
+            version: 'v1.2',
+            category: 'Management',
+            description: 'Salary structure for management level employees',
+            revisionHistory: [
+                { version: 'v1.0', date: '2023-12-15', changes: 'Initial structure created', changedBy: 'HR Admin' },
+                { version: 'v1.1', date: '2024-03-01', changes: 'Updated PF percentage from 10% to 12%', changedBy: 'HR Manager' },
+                { version: 'v1.2', date: '2024-06-15', changes: 'Added performance bonus component', changedBy: 'HR Admin' }
+            ]
         },
         {
             id: 2,
@@ -90,7 +105,14 @@ const SalaryStructure = () => {
             employeeCount: 120,
             createdAt: '2023-12-10',
             createdBy: 'HR Manager',
-            components: [1, 2, 3, 4, 5, 6, 8, 11, 13]
+            components: [1, 2, 3, 4, 5, 6, 8, 11, 13],
+            version: 'v1.1',
+            category: 'Senior',
+            description: 'Salary structure for senior level employees',
+            revisionHistory: [
+                { version: 'v1.0', date: '2023-12-10', changes: 'Initial structure created', changedBy: 'HR Manager' },
+                { version: 'v1.1', date: '2024-04-01', changes: 'Updated conveyance allowance', changedBy: 'HR Manager' }
+            ]
         },
         {
             id: 3,
@@ -102,7 +124,13 @@ const SalaryStructure = () => {
             employeeCount: 250,
             createdAt: '2023-12-05',
             createdBy: 'HR Executive',
-            components: [1, 2, 3, 4, 6, 8, 11]
+            components: [1, 2, 3, 4, 6, 8, 11],
+            version: 'v1.0',
+            category: 'Junior',
+            description: 'Salary structure for junior level employees',
+            revisionHistory: [
+                { version: 'v1.0', date: '2023-12-05', changes: 'Initial structure created', changedBy: 'HR Executive' }
+            ]
         },
         {
             id: 4,
@@ -114,17 +142,99 @@ const SalaryStructure = () => {
             employeeCount: 80,
             createdAt: '2023-11-30',
             createdBy: 'HR Admin',
-            components: [1, 2, 3, 6, 8, 11]
+            components: [1, 2, 3, 6, 8, 11],
+            version: 'v1.0',
+            category: 'Trainee',
+            description: 'Salary structure for trainee level employees',
+            revisionHistory: [
+                { version: 'v1.0', date: '2023-11-30', changes: 'Initial structure created', changedBy: 'HR Admin' }
+            ]
         }
     ]);
 
-    // Mock data for assignments
+    // Mock data for assignments with history
     const [assignments, setAssignments] = useState([
-        { id: 1, employeeId: 'EMP001', name: 'Nagendra Uggirala', department: 'Engineering', grade: 'A', currentStructure: 'Grade A - Management', effectiveDate: '2024-01-01', ctc: 1500000, takeHome: 105000 },
-        { id: 2, employeeId: 'EMP002', name: 'Ravi Kumar', department: 'Engineering', grade: 'B', currentStructure: 'Grade B - Senior', effectiveDate: '2024-01-01', ctc: 1000000, takeHome: 70000 },
-        { id: 3, employeeId: 'EMP003', name: 'Sita Rani', department: 'Design', grade: 'B', currentStructure: 'Grade B - Senior', effectiveDate: '2024-01-01', ctc: 1000000, takeHome: 70000 },
-        { id: 4, employeeId: 'EMP004', name: 'Priya Sharma', department: 'Engineering', grade: 'C', currentStructure: 'Grade C - Junior', effectiveDate: '2024-01-01', ctc: 600000, takeHome: 42000 },
-        { id: 5, employeeId: 'EMP005', name: 'Amit Patel', department: 'Sales', grade: 'A', currentStructure: 'Grade A - Management', effectiveDate: '2024-01-01', ctc: 1500000, takeHome: 105000 },
+        { 
+            id: 1, 
+            employeeId: 'EMP001', 
+            name: 'Nagendra Uggirala', 
+            department: 'Engineering', 
+            grade: 'A', 
+            currentStructure: 'Grade A - Management', 
+            structureId: 1,
+            effectiveDate: '2024-01-01', 
+            ctc: 1500000, 
+            takeHome: 105000,
+            customizations: [],
+            history: [
+                { structure: 'Grade A - Management', effectiveDate: '2024-01-01', ctc: 1500000, changedBy: 'HR Admin', reason: 'Initial assignment' },
+                { structure: 'Grade B - Senior', effectiveDate: '2023-07-01', ctc: 1000000, changedBy: 'HR Manager', reason: 'Promotion' }
+            ]
+        },
+        { 
+            id: 2, 
+            employeeId: 'EMP002', 
+            name: 'Ravi Kumar', 
+            department: 'Engineering', 
+            grade: 'B', 
+            currentStructure: 'Grade B - Senior', 
+            structureId: 2,
+            effectiveDate: '2024-01-01', 
+            ctc: 1000000, 
+            takeHome: 70000,
+            customizations: [{ componentId: 5, customValue: 12, reason: 'Performance adjustment' }],
+            history: [
+                { structure: 'Grade B - Senior', effectiveDate: '2024-01-01', ctc: 1000000, changedBy: 'HR Manager', reason: 'Initial assignment' }
+            ]
+        },
+        { 
+            id: 3, 
+            employeeId: 'EMP003', 
+            name: 'Sita Rani', 
+            department: 'Design', 
+            grade: 'B', 
+            currentStructure: 'Grade B - Senior', 
+            structureId: 2,
+            effectiveDate: '2024-01-01', 
+            ctc: 1000000, 
+            takeHome: 70000,
+            customizations: [],
+            history: [
+                { structure: 'Grade B - Senior', effectiveDate: '2024-01-01', ctc: 1000000, changedBy: 'HR Manager', reason: 'Initial assignment' }
+            ]
+        },
+        { 
+            id: 4, 
+            employeeId: 'EMP004', 
+            name: 'Priya Sharma', 
+            department: 'Engineering', 
+            grade: 'C', 
+            currentStructure: 'Grade C - Junior', 
+            structureId: 3,
+            effectiveDate: '2024-01-01', 
+            ctc: 600000, 
+            takeHome: 42000,
+            customizations: [],
+            history: [
+                { structure: 'Grade C - Junior', effectiveDate: '2024-01-01', ctc: 600000, changedBy: 'HR Executive', reason: 'Initial assignment' }
+            ]
+        },
+        { 
+            id: 5, 
+            employeeId: 'EMP005', 
+            name: 'Amit Patel', 
+            department: 'Sales', 
+            grade: 'A', 
+            currentStructure: 'Grade A - Management', 
+            structureId: 1,
+            effectiveDate: '2024-01-01', 
+            ctc: 1500000, 
+            takeHome: 105000,
+            customizations: [{ componentId: 13, customValue: 20000, reason: 'Medical requirement' }],
+            history: [
+                { structure: 'Grade A - Management', effectiveDate: '2024-01-01', ctc: 1500000, changedBy: 'HR Admin', reason: 'Promotion from Grade B' }
+            ]
+        },
     ]);
 
     // Mock data for versions
@@ -238,9 +348,12 @@ const SalaryStructure = () => {
                                     <th>Component Name</th>
                                     <th>Type</th>
                                     <th>Taxable</th>
+                                    <th>Statutory</th>
                                     <th>Calculation</th>
                                     <th>Value</th>
                                     <th>Base</th>
+                                    <th>Pro-Rata</th>
+                                    <th>Rounding</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -250,15 +363,26 @@ const SalaryStructure = () => {
                                         <td className="fw-medium">{comp.name}</td>
                                         <td>{getComponentTypeBadge(comp.type)}</td>
                                         <td>{getTaxableBadge(comp.taxable)}</td>
+                                        <td>{getTaxableBadge(comp.statutory)}</td>
                                         <td>
                                             <span className="badge bg-light border text-dark small">
                                                 {comp.calculation}
                                             </span>
                                         </td>
                                         <td>
-                                            {comp.calculation === 'percentage' ? `${comp.value}%` : `₹${comp.value.toLocaleString()}`}
+                                            {comp.calculation === 'percentage' ? `${comp.value || 0}%` : comp.calculation === 'formula' ? 'Formula' : comp.value ? `₹${comp.value.toLocaleString()}` : 'N/A'}
                                         </td>
                                         <td>{comp.base}</td>
+                                        <td>
+                                            <span className={`badge small ${comp.proRata ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}`}>
+                                                {comp.proRata ? 'Yes' : 'No'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small className="text-muted">
+                                                {comp.rounding || 'nearest'} ({comp.roundingUnit || 1})
+                                            </small>
+                                        </td>
                                         <td>
                                             <div className="d-flex gap-1">
                                                 <button
@@ -302,9 +426,12 @@ const SalaryStructure = () => {
                                     <th>Component Name</th>
                                     <th>Type</th>
                                     <th>Statutory</th>
+                                    <th>Taxable</th>
                                     <th>Calculation</th>
                                     <th>Value</th>
                                     <th>Base</th>
+                                    <th>Pro-Rata</th>
+                                    <th>Rounding</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -314,15 +441,26 @@ const SalaryStructure = () => {
                                         <td className="fw-medium">{comp.name}</td>
                                         <td>{getComponentTypeBadge(comp.type)}</td>
                                         <td>{getTaxableBadge(comp.statutory)}</td>
+                                        <td>{getTaxableBadge(comp.taxable)}</td>
                                         <td>
                                             <span className="badge bg-light border text-dark small">
                                                 {comp.calculation}
                                             </span>
                                         </td>
                                         <td>
-                                            {comp.calculation === 'percentage' ? `${comp.value}%` : `₹${comp.value.toLocaleString()}`}
+                                            {comp.calculation === 'percentage' ? `${comp.value || 0}%` : comp.calculation === 'formula' ? 'Formula' : comp.value ? `₹${comp.value.toLocaleString()}` : 'N/A'}
                                         </td>
                                         <td>{comp.base}</td>
+                                        <td>
+                                            <span className={`badge small ${comp.proRata ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}`}>
+                                                {comp.proRata ? 'Yes' : 'No'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small className="text-muted">
+                                                {comp.rounding || 'nearest'} ({comp.roundingUnit || 1})
+                                            </small>
+                                        </td>
                                         <td>
                                             <div className="d-flex gap-1">
                                                 <button
@@ -365,7 +503,10 @@ const SalaryStructure = () => {
                                 <div key={comp.id} className="list-group-item d-flex justify-content-between align-items-center">
                                     <div>
                                         <div className="fw-medium">{comp.name}</div>
-                                        <small className="text-muted">{comp.calculation === 'percentage' ? `${comp.value}% of ${comp.base}` : `₹${comp.value}`}</small>
+                                        <small className="text-muted">
+                                            {comp.calculation === 'percentage' ? `${comp.value || 0}% of ${comp.base}` : comp.calculation === 'formula' ? 'Custom Formula' : comp.value ? `₹${comp.value.toLocaleString()}` : 'N/A'}
+                                            {comp.proRata && <span className="badge bg-success-subtle text-success ms-2 small">Pro-Rata</span>}
+                                        </small>
                                     </div>
                                     <div className="d-flex gap-1">
                                         <button
@@ -390,7 +531,11 @@ const SalaryStructure = () => {
                                 <div key={comp.id} className="list-group-item d-flex justify-content-between align-items-center">
                                     <div>
                                         <div className="fw-medium">{comp.name}</div>
-                                        <small className="text-muted">{comp.calculation === 'percentage' ? `${comp.value}% of ${comp.base}` : `₹${comp.value}`} • {comp.taxable ? 'Taxable' : 'Non-Taxable'}</small>
+                                        <small className="text-muted">
+                                            {comp.calculation === 'percentage' ? `${comp.value || 0}% of ${comp.base}` : comp.calculation === 'formula' ? 'Custom Formula' : comp.value ? `₹${comp.value.toLocaleString()}` : 'N/A'}
+                                            • {comp.taxable ? 'Taxable' : 'Non-Taxable'}
+                                            {comp.proRata && <span className="badge bg-success-subtle text-success ms-2 small">Pro-Rata</span>}
+                                        </small>
                                     </div>
                                     <div className="d-flex gap-1">
                                         <button
@@ -456,7 +601,13 @@ const SalaryStructure = () => {
                                         <div className="d-flex justify-content-between align-items-start mb-3">
                                             <div>
                                                 <h6 className="card-title mb-1">{structure.name}</h6>
-                                                <span className="badge bg-light text-dark border">Grade {structure.grade}</span>
+                                                <div className="d-flex gap-1 align-items-center">
+                                                    <span className="badge bg-light text-dark border">Grade {structure.grade}</span>
+                                                    <span className="badge bg-info-subtle text-info border">{structure.version || 'v1.0'}</span>
+                                                    {structure.category && (
+                                                        <span className="badge bg-secondary-subtle text-secondary border">{structure.category}</span>
+                                                    )}
+                                                </div>
                                             </div>
                                             {getStatusBadge(structure.status)}
                                         </div>
@@ -498,12 +649,29 @@ const SalaryStructure = () => {
                                             <button
                                                 className="btn btn-sm btn-outline-secondary flex-fill"
                                                 onClick={() => {
-                                                    const newStructure = { ...structure, id: structures.length + 1, name: `${structure.name} (Copy)` };
+                                                    const newStructure = { 
+                                                        ...structure, 
+                                                        id: structures.length + 1, 
+                                                        name: `${structure.name} (Copy)`,
+                                                        version: 'v1.0',
+                                                        status: 'Draft',
+                                                        employeeCount: 0
+                                                    };
                                                     setStructures([...structures, newStructure]);
                                                 }}
                                             >
                                                 <Copy size={14} className="me-1" />
                                                 Duplicate
+                                            </button>
+                                            <button
+                                                className="btn btn-sm btn-outline-info"
+                                                onClick={() => {
+                                                    setSelectedStructure(structure);
+                                                    setShowVersionModal(true);
+                                                }}
+                                                title="Version History"
+                                            >
+                                                <History size={14} />
                                             </button>
                                         </div>
                                     </div>
@@ -644,10 +812,10 @@ const SalaryStructure = () => {
                         </button>
                         <button
                             className="btn btn-light border text-muted"
-                            onClick={() => alert('Individual assignment panel coming soon!')}
+                            onClick={() => setShowIndividualCustomizeModal(true)}
                         >
                             <User size={16} className="me-2" />
-                            Individual Assignment
+                            Individual Customization
                         </button>
                     </div>
                 </div>
@@ -695,19 +863,35 @@ const SalaryStructure = () => {
                                         <div className="d-flex gap-1">
                                             <button
                                                 className="btn btn-sm btn-outline-primary"
-                                                onClick={() => alert(`Change structure for ${assignment.name}`)}
-                                            >
-                                                Change
-                                            </button>
-                                            <button
-                                                className="btn btn-sm btn-outline-secondary"
                                                 onClick={() => {
-                                                    setSelectedStructure(structures.find(s => s.name === assignment.currentStructure));
-                                                    setShowHistoryModal(true);
+                                                    setSelectedEmployee(assignment);
+                                                    setShowIndividualCustomizeModal(true);
                                                 }}
                                             >
-                                                History
+                                                Customize
                                             </button>
+                                            <button
+                                                className="btn btn-sm btn-outline-info"
+                                                onClick={() => {
+                                                    setSelectedStructure(structures.find(s => s.id === assignment.structureId));
+                                                    setShowHistoryModal(true);
+                                                }}
+                                                title="View History"
+                                            >
+                                                <History size={14} />
+                                            </button>
+                                            {assignment.customizations && assignment.customizations.length > 0 && (
+                                                <button
+                                                    className="btn btn-sm btn-outline-warning"
+                                                    onClick={() => {
+                                                        setSelectedEmployee(assignment);
+                                                        setShowIndividualCustomizeModal(true);
+                                                    }}
+                                                    title={`Has ${assignment.customizations.length} Customization(s)`}
+                                                >
+                                                    <Edit2 size={14} />
+                                                </button>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>
@@ -1149,35 +1333,107 @@ const SalaryStructure = () => {
                                 <button type="button" className="btn-close" onClick={() => setShowBulkAssignModal(false)}></button>
                             </div>
                             <div className="modal-body">
+                                <div className="row mb-4">
+                                    <div className="col-md-6 mb-3">
+                                        <label className="form-label">Select Structure</label>
+                                        <select className="form-select">
+                                            <option value="">Choose a structure...</option>
+                                            {structures.map(structure => (
+                                                <option key={structure.id} value={structure.id}>
+                                                    {structure.name} (Grade {structure.grade}) - ₹{structure.ctc.toLocaleString()}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="col-md-6 mb-3">
+                                        <label className="form-label">Effective Date</label>
+                                        <input type="date" className="form-control" defaultValue={new Date().toISOString().split('T')[0]} />
+                                    </div>
+                                </div>
+
                                 <div className="mb-4">
-                                    <label className="form-label">Select Structure</label>
-                                    <select className="form-select">
-                                        <option value="">Choose a structure...</option>
-                                        {structures.map(structure => (
-                                            <option key={structure.id} value={structure.id}>
-                                                {structure.name} (Grade {structure.grade})
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <label className="form-label mb-3">Filter Employees</label>
+                                    <div className="row g-2 mb-3">
+                                        <div className="col-md-4">
+                                            <select 
+                                                className="form-select form-select-sm"
+                                                value={bulkAssignFilters.department}
+                                                onChange={(e) => setBulkAssignFilters({ ...bulkAssignFilters, department: e.target.value })}
+                                            >
+                                                <option value="all">All Departments</option>
+                                                <option value="Engineering">Engineering</option>
+                                                <option value="Design">Design</option>
+                                                <option value="Sales">Sales</option>
+                                            </select>
+                                        </div>
+                                        <div className="col-md-4">
+                                            <select 
+                                                className="form-select form-select-sm"
+                                                value={bulkAssignFilters.grade}
+                                                onChange={(e) => setBulkAssignFilters({ ...bulkAssignFilters, grade: e.target.value })}
+                                            >
+                                                <option value="all">All Grades</option>
+                                                <option value="A">Grade A</option>
+                                                <option value="B">Grade B</option>
+                                                <option value="C">Grade C</option>
+                                                <option value="D">Grade D</option>
+                                            </select>
+                                        </div>
+                                        <div className="col-md-4">
+                                            <button 
+                                                className="btn btn-sm btn-outline-secondary w-100"
+                                                onClick={() => setBulkAssignFilters({ department: 'all', grade: 'all', location: 'all' })}
+                                            >
+                                                Clear Filters
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div className="mb-4">
                                     <label className="form-label">Select Employees</label>
-                                    <div className="bg-light p-3 rounded" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                                        {assignments.map(assignment => (
-                                            <div key={assignment.id} className="form-check mb-2">
-                                                <input className="form-check-input" type="checkbox" id={`emp-${assignment.id}`} />
-                                                <label className="form-check-label" htmlFor={`emp-${assignment.id}`}>
-                                                    {assignment.name} ({assignment.employeeId}) - {assignment.department}
-                                                </label>
-                                            </div>
-                                        ))}
+                                    <div className="bg-light p-3 rounded" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                        <div className="form-check mb-2">
+                                            <input 
+                                                className="form-check-input" 
+                                                type="checkbox" 
+                                                id="select-all"
+                                                onChange={(e) => {
+                                                    const checkboxes = document.querySelectorAll('input[id^="emp-"]');
+                                                    checkboxes.forEach(cb => cb.checked = e.target.checked);
+                                                }}
+                                            />
+                                            <label className="form-check-label fw-bold" htmlFor="select-all">
+                                                Select All
+                                            </label>
+                                        </div>
+                                        {assignments
+                                            .filter(a => {
+                                                if (bulkAssignFilters.department !== 'all' && a.department !== bulkAssignFilters.department) return false;
+                                                if (bulkAssignFilters.grade !== 'all' && a.grade !== bulkAssignFilters.grade) return false;
+                                                return true;
+                                            })
+                                            .map(assignment => (
+                                                <div key={assignment.id} className="form-check mb-2">
+                                                    <input className="form-check-input" type="checkbox" id={`emp-${assignment.id}`} />
+                                                    <label className="form-check-label" htmlFor={`emp-${assignment.id}`}>
+                                                        {assignment.name} ({assignment.employeeId}) - {assignment.department} - Grade {assignment.grade}
+                                                    </label>
+                                                </div>
+                                            ))}
                                     </div>
+                                    <small className="text-muted">
+                                        {assignments.filter(a => {
+                                            if (bulkAssignFilters.department !== 'all' && a.department !== bulkAssignFilters.department) return false;
+                                            if (bulkAssignFilters.grade !== 'all' && a.grade !== bulkAssignFilters.grade) return false;
+                                            return true;
+                                        }).length} employees match the filters
+                                    </small>
                                 </div>
 
-                                <div className="mb-3">
-                                    <label className="form-label">Effective Date</label>
-                                    <input type="date" className="form-control" />
+                                <div className="alert alert-info">
+                                    <strong>Note:</strong> This will update the salary structure for all selected employees. 
+                                    The change will be effective from the specified date and will be recorded in their assignment history.
                                 </div>
                             </div>
                             <div className="modal-footer">
@@ -1185,11 +1441,159 @@ const SalaryStructure = () => {
                                     Cancel
                                 </button>
                                 <button className="btn btn-primary" onClick={() => {
-                                    alert('Bulk assignment completed successfully!');
+                                    const selected = Array.from(document.querySelectorAll('input[id^="emp-"]:checked')).map(cb => cb.id.replace('emp-', ''));
+                                    if (selected.length === 0) {
+                                        alert('Please select at least one employee');
+                                        return;
+                                    }
+                                    alert(`Bulk assignment completed successfully for ${selected.length} employees!`);
                                     setShowBulkAssignModal(false);
                                 }}>
-                                    Assign Structures
+                                    <Users size={16} className="me-2" />
+                                    Assign to Selected Employees
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Individual Customization Modal */}
+            {showIndividualCustomizeModal && (
+                <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }}>
+                    <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">
+                                    Individual Salary Customization - {selectedEmployee?.name || 'New Employee'}
+                                </h5>
+                                <button type="button" className="btn-close" onClick={() => {
+                                    setShowIndividualCustomizeModal(false);
+                                    setSelectedEmployee(null);
+                                }}></button>
+                            </div>
+                            <div className="modal-body">
+                                {selectedEmployee ? (
+                                    <>
+                                        <div className="row mb-4">
+                                            <div className="col-md-6">
+                                                <label className="form-label">Employee</label>
+                                                <input 
+                                                    type="text" 
+                                                    className="form-control" 
+                                                    value={`${selectedEmployee.name} (${selectedEmployee.employeeId})`}
+                                                    disabled
+                                                />
+                                            </div>
+                                            <div className="col-md-6">
+                                                <label className="form-label">Current Structure</label>
+                                                <input 
+                                                    type="text" 
+                                                    className="form-control" 
+                                                    value={selectedEmployee.currentStructure}
+                                                    disabled
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="mb-4">
+                                            <h6 className="mb-3">Component Customizations</h6>
+                                            <div className="table-responsive">
+                                                <table className="table table-sm">
+                                                    <thead className="table-light">
+                                                        <tr>
+                                                            <th>Component</th>
+                                                            <th>Standard Value</th>
+                                                            <th>Custom Value</th>
+                                                            <th>Reason</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {selectedEmployee.customizations.length > 0 ? (
+                                                            selectedEmployee.customizations.map((cust, idx) => {
+                                                                const comp = [...components.earnings, ...components.deductions, ...components.reimbursements].find(c => c.id === cust.componentId);
+                                                                return (
+                                                                    <tr key={idx}>
+                                                                        <td>{comp?.name || `Component ${cust.componentId}`}</td>
+                                                                        <td>
+                                                                            {comp?.calculation === 'percentage' ? `${comp.value || 0}%` : comp?.value ? `₹${comp.value.toLocaleString()}` : 'N/A'}
+                                                                        </td>
+                                                                        <td>
+                                                                            {comp?.calculation === 'percentage' ? `${cust.customValue}%` : cust.customValue ? `₹${cust.customValue.toLocaleString()}` : 'N/A'}
+                                                                        </td>
+                                                                        <td>{cust.reason}</td>
+                                                                        <td>
+                                                                            <button className="btn btn-sm btn-outline-danger">
+                                                                                <Trash2 size={12} />
+                                                                            </button>
+                                                                        </td>
+                                                                    </tr>
+                                                                );
+                                                            })
+                                                        ) : (
+                                                            <tr>
+                                                                <td colSpan="5" className="text-center text-muted py-3">
+                                                                    No customizations. Using standard structure values.
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <button 
+                                                className="btn btn-sm btn-outline-primary mt-2"
+                                                onClick={() => alert('Add customization feature')}
+                                            >
+                                                <Plus size={14} className="me-1" />
+                                                Add Customization
+                                            </button>
+                                        </div>
+
+                                        <div className="alert alert-warning">
+                                            <strong>Note:</strong> Customizations override the standard structure values for this employee only. 
+                                            Changes will be effective from the next payroll cycle.
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div>
+                                        <div className="mb-3">
+                                            <label className="form-label">Select Employee</label>
+                                            <select 
+                                                className="form-select"
+                                                onChange={(e) => {
+                                                    const emp = assignments.find(a => a.id === parseInt(e.target.value));
+                                                    setSelectedEmployee(emp);
+                                                }}
+                                            >
+                                                <option value="">Choose an employee...</option>
+                                                {assignments.map(assignment => (
+                                                    <option key={assignment.id} value={assignment.id}>
+                                                        {assignment.name} ({assignment.employeeId}) - {assignment.department}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="modal-footer">
+                                <button className="btn btn-secondary" onClick={() => {
+                                    setShowIndividualCustomizeModal(false);
+                                    setSelectedEmployee(null);
+                                }}>
+                                    Cancel
+                                </button>
+                                {selectedEmployee && (
+                                    <button className="btn btn-primary" onClick={() => {
+                                        alert('Customizations saved successfully!');
+                                        setShowIndividualCustomizeModal(false);
+                                        setSelectedEmployee(null);
+                                    }}>
+                                        <Save size={16} className="me-2" />
+                                        Save Customizations
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -1202,44 +1606,147 @@ const SalaryStructure = () => {
                     <div className="modal-dialog modal-lg modal-dialog-centered">
                         <div className="modal-content">
                             <div className="modal-header">
-                                <h5 className="modal-title">Version History</h5>
-                                <button type="button" className="btn-close" onClick={() => setShowVersionModal(false)}></button>
+                                <h5 className="modal-title">
+                                    Version History - {selectedStructure?.name || 'All Structures'}
+                                </h5>
+                                <button type="button" className="btn-close" onClick={() => {
+                                    setShowVersionModal(false);
+                                    setSelectedStructure(null);
+                                }}></button>
+                            </div>
+                            <div className="modal-body">
+                                {selectedStructure ? (
+                                    <div>
+                                        <div className="mb-3">
+                                            <h6>Structure: {selectedStructure.name}</h6>
+                                            <p className="text-muted small">Current Version: {selectedStructure.version}</p>
+                                        </div>
+                                        <div className="table-responsive">
+                                            <table className="table table-hover">
+                                                <thead className="table-light">
+                                                    <tr>
+                                                        <th>Version</th>
+                                                        <th>Changes</th>
+                                                        <th>Date</th>
+                                                        <th>Changed By</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {selectedStructure.revisionHistory?.map((rev, idx) => (
+                                                        <tr key={idx}>
+                                                            <td className="fw-medium">{rev.version}</td>
+                                                            <td>{rev.changes}</td>
+                                                            <td>{rev.date}</td>
+                                                            <td>{rev.changedBy}</td>
+                                                            <td>
+                                                                <button 
+                                                                    className="btn btn-sm btn-outline-primary"
+                                                                    onClick={() => alert(`Restore to version ${rev.version}?`)}
+                                                                >
+                                                                    Restore
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="table-responsive">
+                                        <table className="table table-hover">
+                                            <thead className="table-light">
+                                                <tr>
+                                                    <th>Version</th>
+                                                    <th>Structure</th>
+                                                    <th>Changes</th>
+                                                    <th>Date</th>
+                                                    <th>Changed By</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {versions.map(version => (
+                                                    <tr key={version.id}>
+                                                        <td className="fw-medium">{version.version}</td>
+                                                        <td>{structures.find(s => s.id === version.structureId)?.name}</td>
+                                                        <td>{version.changes}</td>
+                                                        <td>{version.date}</td>
+                                                        <td>{version.changedBy}</td>
+                                                        <td>{getStatusBadge(version.status)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="modal-footer">
+                                <button className="btn btn-secondary" onClick={() => {
+                                    setShowVersionModal(false);
+                                    setSelectedStructure(null);
+                                }}>
+                                    Close
+                                </button>
+                                <button className="btn btn-primary" onClick={() => alert('Export version history')}>
+                                    <Download size={16} className="me-2" />
+                                    Export History
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Assignment History Modal */}
+            {showHistoryModal && selectedStructure && (
+                <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }}>
+                    <div className="modal-dialog modal-lg modal-dialog-centered">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">Assignment History</h5>
+                                <button type="button" className="btn-close" onClick={() => {
+                                    setShowHistoryModal(false);
+                                    setSelectedStructure(null);
+                                }}></button>
                             </div>
                             <div className="modal-body">
                                 <div className="table-responsive">
                                     <table className="table table-hover">
                                         <thead className="table-light">
                                             <tr>
-                                                <th>Version</th>
+                                                <th>Employee</th>
                                                 <th>Structure</th>
-                                                <th>Changes</th>
-                                                <th>Date</th>
+                                                <th>CTC</th>
+                                                <th>Effective Date</th>
+                                                <th>Reason</th>
                                                 <th>Changed By</th>
-                                                <th>Status</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {versions.map(version => (
-                                                <tr key={version.id}>
-                                                    <td className="fw-medium">{version.version}</td>
-                                                    <td>{structures.find(s => s.id === version.structureId)?.name}</td>
-                                                    <td>{version.changes}</td>
-                                                    <td>{version.date}</td>
-                                                    <td>{version.changedBy}</td>
-                                                    <td>{getStatusBadge(version.status)}</td>
-                                                </tr>
-                                            ))}
+                                            {assignments
+                                                .filter(a => a.structureId === selectedStructure.id)
+                                                .flatMap(a => a.history.map((h, idx) => (
+                                                    <tr key={`${a.id}-${idx}`}>
+                                                        <td>{a.name} ({a.employeeId})</td>
+                                                        <td>{h.structure}</td>
+                                                        <td>₹{h.ctc.toLocaleString()}</td>
+                                                        <td>{h.effectiveDate}</td>
+                                                        <td>{h.reason}</td>
+                                                        <td>{h.changedBy}</td>
+                                                    </tr>
+                                                )))}
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
                             <div className="modal-footer">
-                                <button className="btn btn-secondary" onClick={() => setShowVersionModal(false)}>
+                                <button className="btn btn-secondary" onClick={() => {
+                                    setShowHistoryModal(false);
+                                    setSelectedStructure(null);
+                                }}>
                                     Close
-                                </button>
-                                <button className="btn btn-primary" onClick={() => alert('Export version history')}>
-                                    <Download size={16} className="me-2" />
-                                    Export History
                                 </button>
                             </div>
                         </div>
@@ -1287,7 +1794,9 @@ const SalaryStructure = () => {
                                         <select className="form-select" defaultValue={selectedComponent?.calculation || ''}>
                                             <option value="">Select Type</option>
                                             <option value="flat">Flat Amount</option>
-                                            <option value="percentage">Percentage</option>
+                                            <option value="percentage">Percentage of Base</option>
+                                            <option value="percentageOfGross">Percentage of Gross</option>
+                                            <option value="percentageOfCTC">Percentage of CTC</option>
                                             <option value="formula">Custom Formula</option>
                                         </select>
                                     </div>
@@ -1302,6 +1811,55 @@ const SalaryStructure = () => {
                                             <option value="fixed">Fixed Amount</option>
                                         </select>
                                     </div>
+                                    <div className="col-md-6 mb-3">
+                                        <label className="form-label">Rounding Method</label>
+                                        <select className="form-select" defaultValue={selectedComponent?.rounding || 'nearest'}>
+                                            <option value="nearest">Nearest</option>
+                                            <option value="up">Round Up</option>
+                                            <option value="down">Round Down</option>
+                                            <option value="none">No Rounding</option>
+                                        </select>
+                                    </div>
+                                    <div className="col-md-6 mb-3">
+                                        <label className="form-label">Rounding Unit</label>
+                                        <input
+                                            type="number"
+                                            className="form-control"
+                                            placeholder="e.g., 1, 10, 100"
+                                            defaultValue={selectedComponent?.roundingUnit || 1}
+                                        />
+                                        <small className="text-muted">Round to nearest multiple of this value</small>
+                                    </div>
+                                    <div className="col-md-6 mb-3">
+                                        <label className="form-label">Maximum Limit (Optional)</label>
+                                        <input
+                                            type="number"
+                                            className="form-control"
+                                            placeholder="e.g., 1800 for PF"
+                                            defaultValue={selectedComponent?.maxLimit || ''}
+                                        />
+                                    </div>
+                                    <div className="col-md-6 mb-3">
+                                        <label className="form-label">Minimum Limit (Optional)</label>
+                                        <input
+                                            type="number"
+                                            className="form-control"
+                                            placeholder="e.g., 0"
+                                            defaultValue={selectedComponent?.minLimit || ''}
+                                        />
+                                    </div>
+                                    {selectedComponent?.calculation === 'formula' && (
+                                        <div className="col-12 mb-3">
+                                            <label className="form-label">Custom Formula</label>
+                                            <textarea
+                                                className="form-control"
+                                                rows="3"
+                                                placeholder="e.g., IF(Taxable > 250000, (Taxable - 250000) * 0.1, 0)"
+                                                defaultValue={selectedComponent?.formula || ''}
+                                            />
+                                            <small className="text-muted">Use Excel-like formulas. Available variables: Basic, Gross, CTC, Taxable</small>
+                                        </div>
+                                    )}
                                     <div className="col-md-6 mb-3">
                                         <label className="form-label">
                                             {selectedComponent?.calculation === 'percentage' ? 'Percentage Value' : 'Amount (₹)'}
@@ -1332,8 +1890,12 @@ const SalaryStructure = () => {
                                             <label className="form-check-label" htmlFor="statutory">Statutory</label>
                                         </div>
                                         <div className="form-check form-check-inline">
-                                            <input className="form-check-input" type="checkbox" id="proRata" defaultChecked />
+                                            <input className="form-check-input" type="checkbox" id="proRata" defaultChecked={selectedComponent?.proRata !== false} />
                                             <label className="form-check-label" htmlFor="proRata">Pro-rata Calculation</label>
+                                        </div>
+                                        <div className="form-check form-check-inline">
+                                            <input className="form-check-input" type="checkbox" id="variable" defaultChecked={selectedComponent?.type === 'variable'} />
+                                            <label className="form-check-label" htmlFor="variable">Variable Component</label>
                                         </div>
                                     </div>
                                 </div>

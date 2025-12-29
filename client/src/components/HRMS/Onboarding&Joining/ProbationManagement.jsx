@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import RecruiterDashboardLayout from '../../recruiterDashboard/RecruiterDashboardLayout';
+
 const ProbationManagement = () => {
   // ---------------- INITIAL DATA ----------------
   const initialProbationEmployees = [
@@ -216,6 +216,10 @@ const ProbationManagement = () => {
   const [showTerminateModal, setShowTerminateModal] = useState(false);
   const [showSendReminderModal, setShowSendReminderModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showMeetingScheduleModal, setShowMeetingScheduleModal] = useState(false);
+  const [showConfirmationLetterModal, setShowConfirmationLetterModal] = useState(false);
+  const [showSelfAssessmentModal, setShowSelfAssessmentModal] = useState(false);
+  const [reviewStep, setReviewStep] = useState('self'); // self, manager, skip_level, hr
 
   // Selected items
   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -241,15 +245,55 @@ const ProbationManagement = () => {
     reviewDate: new Date().toISOString().split('T')[0],
     rating: 'meets_expectations',
     managerComments: '',
+    skipLevelManagerComments: '',
+    skipLevelManager: '',
     hrComments: '',
+    hrRecommendation: '',
     selfAssessment: '',
+    selfRating: '',
+    achievements: '',
+    challenges: '',
+    goals: '',
     recommendations: '',
     actionItems: [],
     attachments: [],
     sendToEmployee: false,
     notifyManager: true,
+    notifySkipLevelManager: false,
     scheduleFollowup: false,
-    followupDate: ''
+    followupDate: '',
+    meetingScheduled: false,
+    meetingDate: '',
+    meetingTime: '',
+    meetingLink: '',
+    meetingAttendees: []
+  });
+
+  const [meetingForm, setMeetingForm] = useState({
+    employeeId: null,
+    reviewType: '',
+    meetingDate: '',
+    meetingTime: '',
+    duration: '60',
+    meetingType: 'in_person',
+    meetingLink: '',
+    location: '',
+    attendees: [],
+    agenda: '',
+    sendCalendarInvite: true
+  });
+
+  const [confirmationLetterForm, setConfirmationLetterForm] = useState({
+    employeeId: null,
+    effectiveDate: '',
+    designation: '',
+    department: '',
+    salary: '',
+    reportingManager: '',
+    workLocation: '',
+    customMessage: '',
+    includeTerms: true,
+    digitalSignature: true
   });
 
   const [extensionForm, setExtensionForm] = useState({
@@ -446,23 +490,136 @@ const ProbationManagement = () => {
       reviewDate: new Date().toISOString().split('T')[0],
       rating: 'meets_expectations',
       managerComments: '',
+      skipLevelManagerComments: '',
+      skipLevelManager: '',
       hrComments: '',
+      hrRecommendation: '',
       selfAssessment: '',
+      selfRating: '',
+      achievements: '',
+      challenges: '',
+      goals: '',
       recommendations: '',
       actionItems: [],
       attachments: [],
       sendToEmployee: false,
       notifyManager: true,
+      notifySkipLevelManager: false,
       scheduleFollowup: false,
-      followupDate: ''
+      followupDate: '',
+      meetingScheduled: false,
+      meetingDate: '',
+      meetingTime: '',
+      meetingLink: '',
+      meetingAttendees: []
     });
     
+    setReviewStep('self');
     setShowReviewModal(true);
+  };
+
+  // Schedule Review Meeting
+  const handleScheduleMeeting = (employee, reviewType) => {
+    setSelectedEmployee(employee);
+    setMeetingForm({
+      employeeId: employee.id,
+      reviewType: reviewType,
+      meetingDate: '',
+      meetingTime: '',
+      duration: '60',
+      meetingType: 'in_person',
+      meetingLink: '',
+      location: '',
+      attendees: [employee.manager, 'HR Manager'],
+      agenda: `${reviewType.replace('_', ' ').toUpperCase()} Review Meeting`,
+      sendCalendarInvite: true
+    });
+    setShowMeetingScheduleModal(true);
+  };
+
+  const handleSubmitMeeting = (e) => {
+    e.preventDefault();
+    
+    setReviewForm(prev => ({
+      ...prev,
+      meetingScheduled: true,
+      meetingDate: meetingForm.meetingDate,
+      meetingTime: meetingForm.meetingTime,
+      meetingLink: meetingForm.meetingLink,
+      meetingAttendees: meetingForm.attendees
+    }));
+    
+    setShowMeetingScheduleModal(false);
+    alert('Review meeting scheduled successfully! Calendar invites will be sent to all attendees.');
+  };
+
+  // Generate Confirmation Letter
+  const handleGenerateConfirmationLetter = (employee) => {
+    setSelectedEmployee(employee);
+    const today = new Date();
+    today.setDate(today.getDate() + 1); // Effective from tomorrow
+    
+    setConfirmationLetterForm({
+      employeeId: employee.id,
+      effectiveDate: today.toISOString().split('T')[0],
+      designation: employee.designation,
+      department: employee.department,
+      salary: employee.salary,
+      reportingManager: employee.manager,
+      workLocation: employee.workLocation,
+      customMessage: `Congratulations! We are pleased to confirm your employment with the company effective from ${formatDate(today.toISOString().split('T')[0])}.`,
+      includeTerms: true,
+      digitalSignature: true
+    });
+    setShowConfirmationLetterModal(true);
+  };
+
+  const handleSubmitConfirmationLetter = (e) => {
+    e.preventDefault();
+    
+    const letterId = `CONF-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
+    
+    // Update employee status
+    const updatedEmployees = probationEmployees.map(emp => {
+      if (emp.id === selectedEmployee.id) {
+        return {
+          ...emp,
+          status: 'completed',
+          progress: 100,
+          confirmationDate: confirmationLetterForm.effectiveDate,
+          confirmationLetterId: letterId
+        };
+      }
+      return emp;
+    });
+    
+    setProbationEmployees(updatedEmployees);
+    setShowConfirmationLetterModal(false);
+    
+    alert(`Confirmation letter generated successfully! Letter ID: ${letterId}\nThe letter has been sent to the employee via email.`);
+    
+    // Generate the letter (in real implementation, this would call an API)
+    console.log('Confirmation Letter Generated:', {
+      letterId,
+      employee: selectedEmployee.name,
+      effectiveDate: confirmationLetterForm.effectiveDate,
+      ...confirmationLetterForm
+    });
+  };
+
+  // Submit Self Assessment
+  const handleSubmitSelfAssessment = () => {
+    if (!reviewForm.selfAssessment || !reviewForm.selfRating) {
+      alert('Please complete the self-assessment form');
+      return;
+    }
+    setReviewStep('manager');
+    alert('Self-assessment submitted. Proceeding to manager review.');
   };
 
   // Submit Review
   const handleSubmitReview = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     
     const updatedEmployees = probationEmployees.map(emp => {
       if (emp.id === selectedEmployee.id) {
@@ -522,16 +679,27 @@ const ProbationManagement = () => {
       reviewer: 'HR Manager',
       rating: reviewForm.rating.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
       managerComments: reviewForm.managerComments,
+      skipLevelManagerComments: reviewForm.skipLevelManagerComments,
+      skipLevelManager: reviewForm.skipLevelManager,
       hrComments: reviewForm.hrComments,
+      hrRecommendation: reviewForm.hrRecommendation,
       selfAssessment: reviewForm.selfAssessment,
+      selfRating: reviewForm.selfRating,
+      achievements: reviewForm.achievements,
+      challenges: reviewForm.challenges,
+      goals: reviewForm.goals,
       recommendations: reviewForm.recommendations,
       status: 'completed',
-      attachments: reviewForm.attachments.map(f => f.name),
-      actionItems: reviewForm.actionItems
+      attachments: reviewForm.attachments.map(f => f.name || f),
+      actionItems: reviewForm.actionItems,
+      meetingScheduled: reviewForm.meetingScheduled,
+      meetingDate: reviewForm.meetingDate,
+      meetingTime: reviewForm.meetingTime
     };
     
     setReviewHistory([newReview, ...reviewHistory]);
     setShowReviewModal(false);
+    setReviewStep('self');
     
     alert(`Review submitted successfully for ${selectedEmployee.name}`);
   };
@@ -583,22 +751,19 @@ const ProbationManagement = () => {
 
   // Confirm Employee
   const handleConfirmEmployee = () => {
-    const updatedEmployees = probationEmployees.map(emp => {
-      if (emp.id === selectedEmployee.id) {
-        return {
-          ...emp,
-          status: 'completed',
-          progress: 100,
-          currentRating: 'Meets Expectations',
-          confirmationDate: new Date().toISOString().split('T')[0]
-        };
-      }
-      return emp;
-    });
-    
-    setProbationEmployees(updatedEmployees);
+    // Generate confirmation letter first
+    handleGenerateConfirmationLetter(selectedEmployee);
     setShowConfirmModal(false);
-    alert(`${selectedEmployee.name} has been confirmed as a permanent employee`);
+  };
+
+  // Early Confirmation
+  const handleEarlyConfirmation = (employee) => {
+    setSelectedEmployee(employee);
+    if (employee.progress >= 80) {
+      setShowConfirmModal(true);
+    } else {
+      alert('Employee progress must be at least 80% for early confirmation. Current progress: ' + employee.progress + '%');
+    }
   };
 
   // Terminate Probation
@@ -720,9 +885,22 @@ const ProbationManagement = () => {
 
   // Quick Actions
   const handleSendReminders = () => {
-    const employeesNeedingReminder = probationEmployees.filter(
-      emp => emp.daysRemaining <= 14 && emp.status !== 'completed' && emp.status !== 'terminated'
-    );
+    // Calculate employees needing reminders based on review milestones
+    const employeesNeedingReminder = probationEmployees.filter(emp => {
+      if (emp.status === 'completed' || emp.status === 'terminated') return false;
+      
+      const today = new Date();
+      const joiningDate = new Date(emp.joiningDate);
+      const daysSinceJoining = Math.floor((today - joiningDate) / (1000 * 60 * 60 * 24));
+      
+      // Check for 30, 60, 90 day milestones
+      const needs30DayReminder = daysSinceJoining >= 25 && daysSinceJoining <= 35 && !emp.review30.completed;
+      const needs60DayReminder = daysSinceJoining >= 55 && daysSinceJoining <= 65 && !emp.review60.completed;
+      const needs90DayReminder = daysSinceJoining >= 85 && daysSinceJoining <= 95 && !emp.review90.completed;
+      const needsEndReminder = emp.daysRemaining <= 14 && emp.daysRemaining > 0;
+      
+      return needs30DayReminder || needs60DayReminder || needs90DayReminder || needsEndReminder;
+    });
     
     if (employeesNeedingReminder.length === 0) {
       alert('No employees need reminders at this time');
@@ -730,6 +908,27 @@ const ProbationManagement = () => {
     }
     
     setShowSendReminderModal(true);
+  };
+
+  // Get milestone reminder type for an employee
+  const getMilestoneReminderType = (employee) => {
+    const today = new Date();
+    const joiningDate = new Date(employee.joiningDate);
+    const daysSinceJoining = Math.floor((today - joiningDate) / (1000 * 60 * 60 * 24));
+    
+    if (daysSinceJoining >= 25 && daysSinceJoining <= 35 && !employee.review30.completed) {
+      return '30 Day Review Reminder';
+    }
+    if (daysSinceJoining >= 55 && daysSinceJoining <= 65 && !employee.review60.completed) {
+      return '60 Day Review Reminder';
+    }
+    if (daysSinceJoining >= 85 && daysSinceJoining <= 95 && !employee.review90.completed) {
+      return '90 Day Review Reminder';
+    }
+    if (employee.daysRemaining <= 14 && employee.daysRemaining > 0) {
+      return 'Probation End Reminder';
+    }
+    return 'General Reminder';
   };
 
   const handleSubmitReminders = () => {
@@ -952,7 +1151,7 @@ const ProbationManagement = () => {
   };
 
   return (
-    
+    <>
       <div className="container-fluid p-4">
         
         {/* HEADER */}
@@ -1345,13 +1544,17 @@ const ProbationManagement = () => {
                             <button
                               className="btn btn-outline-info"
                               onClick={() => {
-                                setSelectedEmployee(emp);
-                                setShowConfirmModal(true);
+                                if (emp.progress >= 80 && emp.daysRemaining > 30) {
+                                  handleEarlyConfirmation(emp);
+                                } else {
+                                  setSelectedEmployee(emp);
+                                  setShowConfirmModal(true);
+                                }
                               }}
-                              title="Confirm Employee"
+                              title={emp.progress >= 80 && emp.daysRemaining > 30 ? "Early Confirmation" : "Confirm Employee"}
                               disabled={emp.progress < 80}
                             >
-                              Confirm
+                              {emp.progress >= 80 && emp.daysRemaining > 30 ? 'Early Confirm' : 'Confirm'}
                             </button>
                             
                             <button
@@ -1593,124 +1796,352 @@ const ProbationManagement = () => {
         {/* REVIEW MODAL */}
         {showReviewModal && selectedEmployee && (
           <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-lg">
+            <div className="modal-dialog modal-xl">
               <div className="modal-content">
                 <div className="modal-header">
                   <h5 className="modal-title">
                     {reviewForm.reviewType.replace('_', ' ').toUpperCase()} Review - {selectedEmployee.name}
                   </h5>
-                  <button className="btn-close" onClick={() => setShowReviewModal(false)}></button>
+                  <button className="btn-close" onClick={() => {
+                    setShowReviewModal(false);
+                    setReviewStep('self');
+                  }}></button>
+                </div>
+                
+                {/* Review Steps Indicator */}
+                <div className="modal-body border-bottom">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <div className="d-flex gap-2">
+                      <span className={`badge ${reviewStep === 'self' ? 'bg-primary' : 'bg-secondary'}`}>1. Self-Assessment</span>
+                      <span className={`badge ${reviewStep === 'manager' ? 'bg-primary' : reviewStep === 'skip_level' || reviewStep === 'hr' ? 'bg-success' : 'bg-secondary'}`}>2. Manager Review</span>
+                      <span className={`badge ${reviewStep === 'skip_level' ? 'bg-primary' : reviewStep === 'hr' ? 'bg-success' : 'bg-secondary'}`}>3. Skip-Level Review</span>
+                      <span className={`badge ${reviewStep === 'hr' ? 'bg-primary' : 'bg-secondary'}`}>4. HR Review</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() => handleScheduleMeeting(selectedEmployee, reviewForm.reviewType)}
+                    >
+                      Schedule Meeting
+                    </button>
+                  </div>
                 </div>
                 
                 <form onSubmit={handleSubmitReview}>
                   <div className="modal-body">
-                    <div className="alert alert-info mb-3">
-                      Reviewing <strong>{selectedEmployee.name}</strong> ({selectedEmployee.employeeId}) - {selectedEmployee.designation}
-                    </div>
+                    {/* Step 1: Self-Assessment */}
+                    {reviewStep === 'self' && (
+                      <>
+                        <div className="alert alert-info mb-3">
+                          <strong>Step 1: Self-Assessment</strong> - Employee completes self-assessment
+                        </div>
+                        
+                        <div className="mb-3">
+                          <label className="form-label">Self Rating *</label>
+                          <select
+                            className="form-select"
+                            value={reviewForm.selfRating}
+                            onChange={(e) => setReviewForm({...reviewForm, selfRating: e.target.value})}
+                            required
+                          >
+                            <option value="">Select rating...</option>
+                            <option value="exceeds_expectations">Exceeds Expectations</option>
+                            <option value="meets_expectations">Meets Expectations</option>
+                            <option value="needs_improvement">Needs Improvement</option>
+                            <option value="unsatisfactory">Unsatisfactory</option>
+                          </select>
+                        </div>
+                        
+                        <div className="mb-3">
+                          <label className="form-label">Self Assessment *</label>
+                          <textarea
+                            className="form-control"
+                            rows="5"
+                            placeholder="Describe your performance, achievements, and areas of growth..."
+                            value={reviewForm.selfAssessment}
+                            onChange={(e) => setReviewForm({...reviewForm, selfAssessment: e.target.value})}
+                            required
+                          />
+                        </div>
+                        
+                        <div className="row g-3">
+                          <div className="col-md-6">
+                            <label className="form-label">Key Achievements</label>
+                            <textarea
+                              className="form-control"
+                              rows="3"
+                              placeholder="List your key achievements..."
+                              value={reviewForm.achievements}
+                              onChange={(e) => setReviewForm({...reviewForm, achievements: e.target.value})}
+                            />
+                          </div>
+                          <div className="col-md-6">
+                            <label className="form-label">Challenges Faced</label>
+                            <textarea
+                              className="form-control"
+                              rows="3"
+                              placeholder="Describe challenges and how you addressed them..."
+                              value={reviewForm.challenges}
+                              onChange={(e) => setReviewForm({...reviewForm, challenges: e.target.value})}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="mb-3 mt-3">
+                          <label className="form-label">Goals for Next Period</label>
+                          <textarea
+                            className="form-control"
+                            rows="3"
+                            placeholder="What are your goals for the next review period?"
+                            value={reviewForm.goals}
+                            onChange={(e) => setReviewForm({...reviewForm, goals: e.target.value})}
+                          />
+                        </div>
+                      </>
+                    )}
                     
-                    <div className="row g-3">
-                      <div className="col-md-4">
-                        <label className="form-label">Review Type</label>
-                        <select
-                          className="form-select"
-                          value={reviewForm.reviewType}
-                          onChange={(e) => setReviewForm({...reviewForm, reviewType: e.target.value})}
-                        >
-                          <option value="30_day">30 Day Review</option>
-                          <option value="60_day">60 Day Review</option>
-                          <option value="90_day">90 Day Review</option>
-                          <option value="final">Final Review</option>
-                        </select>
-                      </div>
-                      
-                      <div className="col-md-4">
-                        <label className="form-label">Review Date *</label>
-                        <input
-                          type="date"
-                          className="form-control"
-                          value={reviewForm.reviewDate}
-                          onChange={(e) => setReviewForm({...reviewForm, reviewDate: e.target.value})}
-                          required
-                        />
-                      </div>
-                      
-                      <div className="col-md-4">
-                        <label className="form-label">Performance Rating *</label>
-                        <select
-                          className="form-select"
-                          value={reviewForm.rating}
-                          onChange={(e) => setReviewForm({...reviewForm, rating: e.target.value})}
-                          required
-                        >
-                          <option value="exceeds_expectations">Exceeds Expectations</option>
-                          <option value="meets_expectations">Meets Expectations</option>
-                          <option value="needs_improvement">Needs Improvement</option>
-                          <option value="unsatisfactory">Unsatisfactory</option>
-                        </select>
-                      </div>
-                      
-                      <div className="col-12">
-                        <label className="form-label">Manager Assessment *</label>
-                        <textarea
-                          className="form-control"
-                          rows="3"
-                          placeholder="Enter detailed feedback from manager..."
-                          value={reviewForm.managerComments}
-                          onChange={(e) => setReviewForm({...reviewForm, managerComments: e.target.value})}
-                          required
-                        />
-                      </div>
-                      
-                      <div className="col-12">
-                        <label className="form-label">HR Assessment *</label>
-                        <textarea
-                          className="form-control"
-                          rows="3"
-                          placeholder="Enter HR's observations and feedback..."
-                          value={reviewForm.hrComments}
-                          onChange={(e) => setReviewForm({...reviewForm, hrComments: e.target.value})}
-                          required
-                        />
-                      </div>
-                      
-                      <div className="col-md-6">
-                        <label className="form-label">Recommendation *</label>
-                        <select
-                          className="form-select"
-                          value={reviewForm.recommendation}
-                          onChange={(e) => setReviewForm({...reviewForm, recommendation: e.target.value})}
-                          required
-                        >
-                          <option value="continue">Continue Probation</option>
-                          <option value="confirm">Confirm Employment</option>
-                          <option value="extend">Extend Probation</option>
-                          <option value="terminate">Terminate Probation</option>
-                        </select>
-                      </div>
-                      
-                      <div className="col-md-6">
-                        <label className="form-label">Attachments (Optional)</label>
-                        <input
-                          type="file"
-                          className="form-control"
-                          multiple
-                          onChange={(e) => setReviewForm({...reviewForm, attachments: Array.from(e.target.files)})}
-                        />
-                      </div>
-                    </div>
+                    {/* Step 2: Manager Review */}
+                    {reviewStep === 'manager' && (
+                      <>
+                        <div className="alert alert-info mb-3">
+                          <strong>Step 2: Manager Review</strong> - Direct manager assessment
+                        </div>
+                        
+                        {reviewForm.selfAssessment && (
+                          <div className="card mb-3 bg-light">
+                            <div className="card-body">
+                              <h6>Employee Self-Assessment</h6>
+                              <p className="mb-2"><strong>Self Rating:</strong> {reviewForm.selfRating.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
+                              <p className="mb-0"><strong>Assessment:</strong> {reviewForm.selfAssessment}</p>
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="row g-3">
+                          <div className="col-md-4">
+                            <label className="form-label">Review Date *</label>
+                            <input
+                              type="date"
+                              className="form-control"
+                              value={reviewForm.reviewDate}
+                              onChange={(e) => setReviewForm({...reviewForm, reviewDate: e.target.value})}
+                              required
+                            />
+                          </div>
+                          
+                          <div className="col-md-4">
+                            <label className="form-label">Performance Rating *</label>
+                            <select
+                              className="form-select"
+                              value={reviewForm.rating}
+                              onChange={(e) => setReviewForm({...reviewForm, rating: e.target.value})}
+                              required
+                            >
+                              <option value="exceeds_expectations">Exceeds Expectations</option>
+                              <option value="meets_expectations">Meets Expectations</option>
+                              <option value="needs_improvement">Needs Improvement</option>
+                              <option value="unsatisfactory">Unsatisfactory</option>
+                            </select>
+                          </div>
+                          
+                          <div className="col-md-4">
+                            <label className="form-label">Review Type</label>
+                            <select
+                              className="form-select"
+                              value={reviewForm.reviewType}
+                              onChange={(e) => setReviewForm({...reviewForm, reviewType: e.target.value})}
+                            >
+                              <option value="30_day">30 Day Review</option>
+                              <option value="60_day">60 Day Review</option>
+                              <option value="90_day">90 Day Review</option>
+                              <option value="final">Final Review</option>
+                            </select>
+                          </div>
+                        </div>
+                        
+                        <div className="mb-3 mt-3">
+                          <label className="form-label">Manager Assessment *</label>
+                          <textarea
+                            className="form-control"
+                            rows="4"
+                            placeholder="Enter detailed feedback from manager..."
+                            value={reviewForm.managerComments}
+                            onChange={(e) => setReviewForm({...reviewForm, managerComments: e.target.value})}
+                            required
+                          />
+                        </div>
+                      </>
+                    )}
+                    
+                    {/* Step 3: Skip-Level Manager Review */}
+                    {reviewStep === 'skip_level' && (
+                      <>
+                        <div className="alert alert-info mb-3">
+                          <strong>Step 3: Skip-Level Manager Review</strong> - Senior manager assessment
+                        </div>
+                        
+                        <div className="mb-3">
+                          <label className="form-label">Skip-Level Manager Name</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={reviewForm.skipLevelManager}
+                            onChange={(e) => setReviewForm({...reviewForm, skipLevelManager: e.target.value})}
+                            placeholder="Enter skip-level manager name"
+                          />
+                        </div>
+                        
+                        <div className="mb-3">
+                          <label className="form-label">Skip-Level Manager Comments</label>
+                          <textarea
+                            className="form-control"
+                            rows="4"
+                            placeholder="Enter skip-level manager's observations and feedback..."
+                            value={reviewForm.skipLevelManagerComments}
+                            onChange={(e) => setReviewForm({...reviewForm, skipLevelManagerComments: e.target.value})}
+                          />
+                        </div>
+                        
+                        <div className="form-check mb-3">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={reviewForm.notifySkipLevelManager}
+                            onChange={(e) => setReviewForm({...reviewForm, notifySkipLevelManager: e.target.checked})}
+                          />
+                          <label className="form-check-label">
+                            Notify skip-level manager about this review
+                          </label>
+                        </div>
+                      </>
+                    )}
+                    
+                    {/* Step 4: HR Review */}
+                    {reviewStep === 'hr' && (
+                      <>
+                        <div className="alert alert-info mb-3">
+                          <strong>Step 4: HR Review & Recommendation</strong> - Final review and decision
+                        </div>
+                        
+                        <div className="mb-3">
+                          <label className="form-label">HR Assessment *</label>
+                          <textarea
+                            className="form-control"
+                            rows="4"
+                            placeholder="Enter HR's observations and feedback..."
+                            value={reviewForm.hrComments}
+                            onChange={(e) => setReviewForm({...reviewForm, hrComments: e.target.value})}
+                            required
+                          />
+                        </div>
+                        
+                        <div className="mb-3">
+                          <label className="form-label">HR Recommendation *</label>
+                          <select
+                            className="form-select"
+                            value={reviewForm.recommendation}
+                            onChange={(e) => setReviewForm({...reviewForm, recommendation: e.target.value})}
+                            required
+                          >
+                            <option value="continue">Continue Probation</option>
+                            <option value="confirm">Confirm Employment</option>
+                            <option value="extend">Extend Probation</option>
+                            <option value="terminate">Terminate Probation</option>
+                          </select>
+                        </div>
+                        
+                        <div className="mb-3">
+                          <label className="form-label">Additional Recommendations</label>
+                          <textarea
+                            className="form-control"
+                            rows="3"
+                            placeholder="Any additional recommendations or action items..."
+                            value={reviewForm.recommendations}
+                            onChange={(e) => setReviewForm({...reviewForm, recommendations: e.target.value})}
+                          />
+                        </div>
+                        
+                        <div className="mb-3">
+                          <label className="form-label">Attachments (Optional)</label>
+                          <input
+                            type="file"
+                            className="form-control"
+                            multiple
+                            onChange={(e) => setReviewForm({...reviewForm, attachments: Array.from(e.target.files)})}
+                          />
+                        </div>
+                        
+                        {reviewForm.meetingScheduled && (
+                          <div className="alert alert-success">
+                            <strong>Meeting Scheduled:</strong> {reviewForm.meetingDate} at {reviewForm.meetingTime}
+                            {reviewForm.meetingLink && <div><a href={reviewForm.meetingLink} target="_blank" rel="noopener noreferrer">Join Meeting</a></div>}
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                   
                   <div className="modal-footer">
                     <button 
                       type="button" 
                       className="btn btn-secondary"
-                      onClick={() => setShowReviewModal(false)}
+                      onClick={() => {
+                        if (reviewStep === 'self') {
+                          setShowReviewModal(false);
+                          setReviewStep('self');
+                        } else if (reviewStep === 'manager') {
+                          setReviewStep('self');
+                        } else if (reviewStep === 'skip_level') {
+                          setReviewStep('manager');
+                        } else {
+                          setReviewStep('skip_level');
+                        }
+                      }}
                     >
-                      Cancel
+                      {reviewStep === 'self' ? 'Cancel' : 'Previous'}
                     </button>
-                    <button type="submit" className="btn btn-primary">
-                      Submit Review
-                    </button>
+                    
+                    {reviewStep === 'self' && (
+                      <button 
+                        type="button" 
+                        className="btn btn-primary"
+                        onClick={() => handleSubmitSelfAssessment()}
+                        disabled={!reviewForm.selfAssessment || !reviewForm.selfRating}
+                      >
+                        Next: Manager Review
+                      </button>
+                    )}
+                    
+                    {reviewStep === 'manager' && (
+                      <button 
+                        type="button" 
+                        className="btn btn-primary"
+                        onClick={() => setReviewStep('skip_level')}
+                        disabled={!reviewForm.managerComments || !reviewForm.rating}
+                      >
+                        Next: Skip-Level Review
+                      </button>
+                    )}
+                    
+                    {reviewStep === 'skip_level' && (
+                      <button 
+                        type="button" 
+                        className="btn btn-primary"
+                        onClick={() => setReviewStep('hr')}
+                      >
+                        Next: HR Review
+                      </button>
+                    )}
+                    
+                    {reviewStep === 'hr' && (
+                      <button 
+                        type="submit" 
+                        className="btn btn-success"
+                        disabled={!reviewForm.hrComments || !reviewForm.recommendation}
+                      >
+                        Submit Review
+                      </button>
+                    )}
                   </div>
                 </form>
               </div>
@@ -2012,49 +2443,103 @@ const ProbationManagement = () => {
         {/* SEND REMINDER MODAL */}
         {showSendReminderModal && (
           <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog">
+            <div className="modal-dialog modal-lg">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title">Send Reminders</h5>
+                  <h5 className="modal-title">Send Milestone Reminders</h5>
                   <button className="btn-close" onClick={() => setShowSendReminderModal(false)}></button>
                 </div>
                 
                 <div className="modal-body">
                   <div className="alert alert-info mb-3">
-                    Sending reminders to employees and managers about upcoming probation reviews
+                    <strong>Review Milestone Reminders (30-60-90 days)</strong>
+                    <p className="mb-0">Sending automated reminders for upcoming probation review milestones</p>
+                  </div>
+                  
+                  <div className="table-responsive mb-3">
+                    <table className="table table-sm">
+                      <thead>
+                        <tr>
+                          <th>Employee</th>
+                          <th>Milestone</th>
+                          <th>Days Since Joining</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {probationEmployees
+                          .filter(emp => {
+                            if (emp.status === 'completed' || emp.status === 'terminated') return false;
+                            const today = new Date();
+                            const joiningDate = new Date(emp.joiningDate);
+                            const daysSinceJoining = Math.floor((today - joiningDate) / (1000 * 60 * 60 * 24));
+                            return (daysSinceJoining >= 25 && daysSinceJoining <= 35 && !emp.review30.completed) ||
+                                   (daysSinceJoining >= 55 && daysSinceJoining <= 65 && !emp.review60.completed) ||
+                                   (daysSinceJoining >= 85 && daysSinceJoining <= 95 && !emp.review90.completed) ||
+                                   (emp.daysRemaining <= 14 && emp.daysRemaining > 0);
+                          })
+                          .map(emp => {
+                            const today = new Date();
+                            const joiningDate = new Date(emp.joiningDate);
+                            const daysSinceJoining = Math.floor((today - joiningDate) / (1000 * 60 * 60 * 24));
+                            return (
+                              <tr key={emp.id}>
+                                <td>{emp.name} ({emp.employeeId})</td>
+                                <td>{getMilestoneReminderType(emp)}</td>
+                                <td>{daysSinceJoining} days</td>
+                                <td>{getStatusBadge(emp.status)}</td>
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                    </table>
                   </div>
                   
                   <div className="mb-3">
-                    <label className="form-label">Reminder Type</label>
-                    <select className="form-select">
-                      <option>Upcoming Review Reminder</option>
+                    <label className="form-label">Reminder Message Template</label>
+                    <select className="form-select mb-2">
+                      <option>30 Day Review Reminder</option>
+                      <option>60 Day Review Reminder</option>
+                      <option>90 Day Review Reminder</option>
                       <option>Probation End Reminder</option>
-                      <option>Review Completion Reminder</option>
-                      <option>Extension Decision Reminder</option>
+                      <option>Custom Message</option>
                     </select>
-                  </div>
-                  
-                  <div className="mb-3">
-                    <label className="form-label">Message</label>
                     <textarea
                       className="form-control"
-                      rows="3"
-                      defaultValue="This is a reminder about your upcoming probation review. Please ensure all necessary documents and self-assessments are completed before the review date."
+                      rows="4"
+                      defaultValue="This is a reminder about your upcoming probation review milestone. Please ensure all necessary documents and self-assessments are completed before the review date. Contact your manager or HR if you have any questions."
                     />
                   </div>
                   
-                  <div className="form-check mb-3">
-                    <input className="form-check-input" type="checkbox" defaultChecked />
-                    <label className="form-check-label">
-                      Send to employees
-                    </label>
-                  </div>
-                  
-                  <div className="form-check mb-3">
-                    <input className="form-check-input" type="checkbox" defaultChecked />
-                    <label className="form-check-label">
-                      Send to managers
-                    </label>
+                  <div className="row">
+                    <div className="col-md-6">
+                      <div className="form-check mb-2">
+                        <input className="form-check-input" type="checkbox" defaultChecked />
+                        <label className="form-check-label">
+                          Send to employees
+                        </label>
+                      </div>
+                      <div className="form-check mb-2">
+                        <input className="form-check-input" type="checkbox" defaultChecked />
+                        <label className="form-check-label">
+                          Send to managers
+                        </label>
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="form-check mb-2">
+                        <input className="form-check-input" type="checkbox" />
+                        <label className="form-check-label">
+                          Send to HR Business Partners
+                        </label>
+                      </div>
+                      <div className="form-check mb-2">
+                        <input className="form-check-input" type="checkbox" defaultChecked />
+                        <label className="form-check-label">
+                          Include review checklist
+                        </label>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 
@@ -2071,7 +2556,16 @@ const ProbationManagement = () => {
                     className="btn btn-primary"
                     onClick={handleSubmitReminders}
                   >
-                    Send Reminders
+                    Send Reminders ({probationEmployees.filter(emp => {
+                      if (emp.status === 'completed' || emp.status === 'terminated') return false;
+                      const today = new Date();
+                      const joiningDate = new Date(emp.joiningDate);
+                      const daysSinceJoining = Math.floor((today - joiningDate) / (1000 * 60 * 60 * 24));
+                      return (daysSinceJoining >= 25 && daysSinceJoining <= 35 && !emp.review30.completed) ||
+                             (daysSinceJoining >= 55 && daysSinceJoining <= 65 && !emp.review60.completed) ||
+                             (daysSinceJoining >= 85 && daysSinceJoining <= 95 && !emp.review90.completed) ||
+                             (emp.daysRemaining <= 14 && emp.daysRemaining > 0);
+                    }).length})
                   </button>
                 </div>
               </div>
@@ -2256,6 +2750,397 @@ const ProbationManagement = () => {
           </div>
         )}
 
+        {/* SELF ASSESSMENT MODAL */}
+        {showSelfAssessmentModal && selectedEmployee && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Self-Assessment - {selectedEmployee.name}</h5>
+                  <button className="btn-close" onClick={() => setShowSelfAssessmentModal(false)}></button>
+                </div>
+                
+                <div className="modal-body">
+                  <div className="alert alert-info mb-3">
+                    Please complete your self-assessment for the probation review. This will be shared with your manager and HR.
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label className="form-label">Self Rating *</label>
+                    <select
+                      className="form-select"
+                      value={reviewForm.selfRating}
+                      onChange={(e) => setReviewForm({...reviewForm, selfRating: e.target.value})}
+                      required
+                    >
+                      <option value="">Select rating...</option>
+                      <option value="exceeds_expectations">Exceeds Expectations</option>
+                      <option value="meets_expectations">Meets Expectations</option>
+                      <option value="needs_improvement">Needs Improvement</option>
+                      <option value="unsatisfactory">Unsatisfactory</option>
+                    </select>
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label className="form-label">Self Assessment *</label>
+                    <textarea
+                      className="form-control"
+                      rows="5"
+                      placeholder="Describe your performance, achievements, and areas of growth..."
+                      value={reviewForm.selfAssessment}
+                      onChange={(e) => setReviewForm({...reviewForm, selfAssessment: e.target.value})}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label className="form-label">Key Achievements</label>
+                    <textarea
+                      className="form-control"
+                      rows="3"
+                      placeholder="List your key achievements during this period..."
+                      value={reviewForm.achievements}
+                      onChange={(e) => setReviewForm({...reviewForm, achievements: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label className="form-label">Challenges Faced</label>
+                    <textarea
+                      className="form-control"
+                      rows="3"
+                      placeholder="Describe any challenges you faced and how you addressed them..."
+                      value={reviewForm.challenges}
+                      onChange={(e) => setReviewForm({...reviewForm, challenges: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label className="form-label">Goals for Next Period</label>
+                    <textarea
+                      className="form-control"
+                      rows="3"
+                      placeholder="What are your goals for the next review period?"
+                      value={reviewForm.goals}
+                      onChange={(e) => setReviewForm({...reviewForm, goals: e.target.value})}
+                    />
+                  </div>
+                </div>
+                
+                <div className="modal-footer">
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary"
+                    onClick={() => setShowSelfAssessmentModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="button" 
+                    className="btn btn-primary"
+                    onClick={handleSubmitSelfAssessment}
+                    disabled={!reviewForm.selfAssessment || !reviewForm.selfRating}
+                  >
+                    Submit Self-Assessment
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* REVIEW MEETING SCHEDULE MODAL */}
+        {showMeetingScheduleModal && selectedEmployee && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Schedule Review Meeting - {selectedEmployee.name}</h5>
+                  <button className="btn-close" onClick={() => setShowMeetingScheduleModal(false)}></button>
+                </div>
+                
+                <form onSubmit={handleSubmitMeeting}>
+                  <div className="modal-body">
+                    <div className="row g-3">
+                      <div className="col-md-6">
+                        <label className="form-label">Meeting Date *</label>
+                        <input
+                          type="date"
+                          className="form-control"
+                          value={meetingForm.meetingDate}
+                          onChange={(e) => setMeetingForm({...meetingForm, meetingDate: e.target.value})}
+                          required
+                        />
+                      </div>
+                      
+                      <div className="col-md-6">
+                        <label className="form-label">Meeting Time *</label>
+                        <input
+                          type="time"
+                          className="form-control"
+                          value={meetingForm.meetingTime}
+                          onChange={(e) => setMeetingForm({...meetingForm, meetingTime: e.target.value})}
+                          required
+                        />
+                      </div>
+                      
+                      <div className="col-md-6">
+                        <label className="form-label">Duration (minutes) *</label>
+                        <select
+                          className="form-select"
+                          value={meetingForm.duration}
+                          onChange={(e) => setMeetingForm({...meetingForm, duration: e.target.value})}
+                          required
+                        >
+                          <option value="30">30 minutes</option>
+                          <option value="60">60 minutes</option>
+                          <option value="90">90 minutes</option>
+                          <option value="120">120 minutes</option>
+                        </select>
+                      </div>
+                      
+                      <div className="col-md-6">
+                        <label className="form-label">Meeting Type *</label>
+                        <select
+                          className="form-select"
+                          value={meetingForm.meetingType}
+                          onChange={(e) => setMeetingForm({...meetingForm, meetingType: e.target.value})}
+                          required
+                        >
+                          <option value="in_person">In Person</option>
+                          <option value="virtual">Virtual</option>
+                          <option value="hybrid">Hybrid</option>
+                        </select>
+                      </div>
+                      
+                      {meetingForm.meetingType === 'virtual' || meetingForm.meetingType === 'hybrid' ? (
+                        <div className="col-12">
+                          <label className="form-label">Meeting Link *</label>
+                          <input
+                            type="url"
+                            className="form-control"
+                            value={meetingForm.meetingLink}
+                            onChange={(e) => setMeetingForm({...meetingForm, meetingLink: e.target.value})}
+                            placeholder="https://zoom.us/j/..."
+                            required
+                          />
+                        </div>
+                      ) : (
+                        <div className="col-12">
+                          <label className="form-label">Location *</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={meetingForm.location}
+                            onChange={(e) => setMeetingForm({...meetingForm, location: e.target.value})}
+                            placeholder="Conference Room A, Building 2"
+                            required
+                          />
+                        </div>
+                      )}
+                      
+                      <div className="col-12">
+                        <label className="form-label">Attendees</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={meetingForm.attendees.join(', ')}
+                          onChange={(e) => setMeetingForm({
+                            ...meetingForm,
+                            attendees: e.target.value.split(',').map(a => a.trim())
+                          })}
+                          placeholder="Manager, HR Manager, Employee"
+                        />
+                        <small className="text-muted">Separate multiple attendees with commas</small>
+                      </div>
+                      
+                      <div className="col-12">
+                        <label className="form-label">Meeting Agenda</label>
+                        <textarea
+                          className="form-control"
+                          rows="3"
+                          value={meetingForm.agenda}
+                          onChange={(e) => setMeetingForm({...meetingForm, agenda: e.target.value})}
+                          placeholder="Review objectives, performance discussion, feedback..."
+                        />
+                      </div>
+                      
+                      <div className="col-12">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={meetingForm.sendCalendarInvite}
+                            onChange={(e) => setMeetingForm({...meetingForm, sendCalendarInvite: e.target.checked})}
+                          />
+                          <label className="form-check-label">
+                            Send calendar invites to all attendees
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="modal-footer">
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary"
+                      onClick={() => setShowMeetingScheduleModal(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button type="submit" className="btn btn-primary">
+                      Schedule Meeting
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CONFIRMATION LETTER MODAL */}
+        {showConfirmationLetterModal && selectedEmployee && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Generate Confirmation Letter - {selectedEmployee.name}</h5>
+                  <button className="btn-close" onClick={() => setShowConfirmationLetterModal(false)}></button>
+                </div>
+                
+                <form onSubmit={handleSubmitConfirmationLetter}>
+                  <div className="modal-body">
+                    <div className="alert alert-success mb-3">
+                      <strong>Congratulations!</strong> Generating confirmation letter for {selectedEmployee.name}
+                    </div>
+                    
+                    <div className="row g-3">
+                      <div className="col-md-6">
+                        <label className="form-label">Effective Date *</label>
+                        <input
+                          type="date"
+                          className="form-control"
+                          value={confirmationLetterForm.effectiveDate}
+                          onChange={(e) => setConfirmationLetterForm({...confirmationLetterForm, effectiveDate: e.target.value})}
+                          required
+                        />
+                      </div>
+                      
+                      <div className="col-md-6">
+                        <label className="form-label">Designation *</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={confirmationLetterForm.designation}
+                          onChange={(e) => setConfirmationLetterForm({...confirmationLetterForm, designation: e.target.value})}
+                          required
+                        />
+                      </div>
+                      
+                      <div className="col-md-6">
+                        <label className="form-label">Department *</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={confirmationLetterForm.department}
+                          onChange={(e) => setConfirmationLetterForm({...confirmationLetterForm, department: e.target.value})}
+                          required
+                        />
+                      </div>
+                      
+                      <div className="col-md-6">
+                        <label className="form-label">Salary</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={confirmationLetterForm.salary}
+                          onChange={(e) => setConfirmationLetterForm({...confirmationLetterForm, salary: e.target.value})}
+                          placeholder="₹X,XX,XXX"
+                        />
+                      </div>
+                      
+                      <div className="col-md-6">
+                        <label className="form-label">Reporting Manager *</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={confirmationLetterForm.reportingManager}
+                          onChange={(e) => setConfirmationLetterForm({...confirmationLetterForm, reportingManager: e.target.value})}
+                          required
+                        />
+                      </div>
+                      
+                      <div className="col-md-6">
+                        <label className="form-label">Work Location *</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={confirmationLetterForm.workLocation}
+                          onChange={(e) => setConfirmationLetterForm({...confirmationLetterForm, workLocation: e.target.value})}
+                          required
+                        />
+                      </div>
+                      
+                      <div className="col-12">
+                        <label className="form-label">Custom Message</label>
+                        <textarea
+                          className="form-control"
+                          rows="4"
+                          value={confirmationLetterForm.customMessage}
+                          onChange={(e) => setConfirmationLetterForm({...confirmationLetterForm, customMessage: e.target.value})}
+                          placeholder="Additional message to include in the confirmation letter..."
+                        />
+                      </div>
+                      
+                      <div className="col-12">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={confirmationLetterForm.includeTerms}
+                            onChange={(e) => setConfirmationLetterForm({...confirmationLetterForm, includeTerms: e.target.checked})}
+                          />
+                          <label className="form-check-label">
+                            Include terms and conditions
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div className="col-12">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={confirmationLetterForm.digitalSignature}
+                            onChange={(e) => setConfirmationLetterForm({...confirmationLetterForm, digitalSignature: e.target.checked})}
+                          />
+                          <label className="form-check-label">
+                            Apply digital signature
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="modal-footer">
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary"
+                      onClick={() => setShowConfirmationLetterModal(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button type="submit" className="btn btn-success">
+                      Generate & Send Letter
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* DETAILS MODAL */}
         {showDetailModal && selectedEmployee && (
           <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -2282,15 +3167,36 @@ const ProbationManagement = () => {
                     
                     <div className="col-md-4">
                       <div className="d-grid gap-2">
-                        <button 
-                          className="btn btn-primary"
-                          onClick={() => {
-                            setShowDetailModal(false);
-                            handleStartReview(selectedEmployee);
-                          }}
-                        >
-                          Conduct Review
-                        </button>
+                        <div className="d-grid gap-2">
+                          <button 
+                            className="btn btn-primary"
+                            onClick={() => {
+                              setShowDetailModal(false);
+                              handleStartReview(selectedEmployee);
+                            }}
+                          >
+                            Conduct Review
+                          </button>
+                          <button
+                            className="btn btn-outline-primary"
+                            onClick={() => {
+                              setShowDetailModal(false);
+                              handleScheduleMeeting(selectedEmployee, '30_day');
+                            }}
+                          >
+                            Schedule Meeting
+                          </button>
+                          {selectedEmployee.status === 'completed' && selectedEmployee.confirmationLetterId && (
+                            <button
+                              className="btn btn-outline-success"
+                              onClick={() => {
+                                alert(`Confirmation Letter ID: ${selectedEmployee.confirmationLetterId}\nLetter has been sent to employee.`);
+                              }}
+                            >
+                              View Confirmation Letter
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -2413,7 +3319,7 @@ const ProbationManagement = () => {
         )}
         
       </div>
-  
+    </>
   );
 };
 

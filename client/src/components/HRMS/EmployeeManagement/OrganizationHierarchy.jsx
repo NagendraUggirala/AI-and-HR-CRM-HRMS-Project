@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react/dist/iconify.js';
-import RecruiterDashboardLayout from '../../recruiterDashboard/RecruiterDashboardLayout';
 
 const OrganizationHierarchy = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -11,6 +10,12 @@ const OrganizationHierarchy = () => {
   const [selectedLocation, setSelectedLocation] = useState('all');
   const [selectedDate, setSelectedDate] = useState('current');
   const [hierarchyHistory, setHierarchyHistory] = useState([]);
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [drillDownPath, setDrillDownPath] = useState(['ceo']);
+  const [showDirectReports, setShowDirectReports] = useState(true);
+  const [showDottedLineReports, setShowDottedLineReports] = useState(true);
+  const [selectedVersion, setSelectedVersion] = useState('current');
+  const [isExporting, setIsExporting] = useState(false);
   
   // Mock data for organizational hierarchy
   const [orgHierarchy, setOrgHierarchy] = useState({
@@ -271,9 +276,125 @@ const OrganizationHierarchy = () => {
     );
   };
 
-  const handleExport = (format) => {
-    alert(`Exporting organizational hierarchy in ${format.toUpperCase()} format...`);
-    // In real app, this would trigger download
+  const handleExport = async (format) => {
+    setIsExporting(true);
+    try {
+      // Simulate export process
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Create export data
+      const exportData = {
+        format,
+        date: new Date().toISOString(),
+        hierarchy: orgHierarchy,
+        departments,
+        locations,
+        reportingRelationships,
+        matrixReports
+      };
+      
+      if (format === 'pdf') {
+        // In real implementation, this would generate a PDF
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `org-chart-${new Date().toISOString().split('T')[0]}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      } else if (format === 'png') {
+        // In real implementation, this would capture the org chart as PNG
+        alert('PNG export functionality would capture the visual org chart. In production, use html2canvas or similar library.');
+      } else if (format === 'excel') {
+        // Create CSV/Excel format
+        let csvContent = 'Organization Chart Export\n\n';
+        csvContent += 'Employee ID,Name,Title,Department,Location,Manager ID,Report Type\n';
+        
+        Object.values(orgHierarchy).forEach(emp => {
+          csvContent += `${emp.id},${emp.name},${emp.title},${emp.department},${emp.location},,direct\n`;
+        });
+        
+        reportingRelationships.forEach(rel => {
+          csvContent += `${rel.employeeId},${rel.employeeName},,${rel.type},${rel.type}\n`;
+        });
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `org-chart-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }
+      
+      alert(`Organization chart exported successfully in ${format.toUpperCase()} format!`);
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Failed to export organization chart. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleDrillDown = (nodeId) => {
+    setSelectedNode(nodeId);
+    setDrillDownPath([...drillDownPath, nodeId]);
+  };
+
+  const handleDrillUp = () => {
+    if (drillDownPath.length > 1) {
+      const newPath = [...drillDownPath];
+      newPath.pop();
+      setDrillDownPath(newPath);
+      setSelectedNode(newPath[newPath.length - 1]);
+    } else {
+      setDrillDownPath(['ceo']);
+      setSelectedNode(null);
+    }
+  };
+
+  const getCurrentNode = () => {
+    const currentNodeId = drillDownPath[drillDownPath.length - 1];
+    return orgHierarchy[currentNodeId] || orgHierarchy.ceo;
+  };
+
+  const getDirectReports = (nodeId) => {
+    const node = orgHierarchy[nodeId];
+    if (!node || !node.reports) return [];
+    return node.reports.map(id => {
+      // Find employee by ID in orgHierarchy
+      const emp = Object.values(orgHierarchy).find(e => e.id === id);
+      return emp;
+    }).filter(Boolean);
+  };
+
+  const getDottedLineReports = (nodeId) => {
+    const node = orgHierarchy[nodeId];
+    if (!node || !node.dottedLineReports) return [];
+    return node.dottedLineReports.map(id => {
+      const emp = Object.values(orgHierarchy).find(e => e.id === id);
+      return emp;
+    }).filter(Boolean);
+  };
+
+  const handleTimeTravel = (version) => {
+    setSelectedVersion(version);
+    if (version === 'current') {
+      // Load current structure
+      setSelectedDate('current');
+    } else {
+      // Load historical version
+      const historyItem = historicalData.find(h => h.version === version);
+      if (historyItem) {
+        setSelectedDate(historyItem.date);
+        // In real implementation, this would load the historical hierarchy data
+        alert(`Loading historical view: ${historyItem.version} from ${historyItem.date}`);
+      }
+    }
   };
 
   const renderDashboard = () => (
@@ -459,116 +580,292 @@ const OrganizationHierarchy = () => {
                   <div className="d-flex align-items-center gap-2">
                     <label className="form-check-label small">Direct Reports</label>
                     <div className="form-check form-switch">
-                      <input className="form-check-input" type="checkbox" defaultChecked />
+                      <input 
+                        className="form-check-input" 
+                        type="checkbox" 
+                        checked={showDirectReports}
+                        onChange={(e) => setShowDirectReports(e.target.checked)}
+                      />
                     </div>
                   </div>
                   <div className="d-flex align-items-center gap-2">
                     <label className="form-check-label small">Dotted-Line</label>
                     <div className="form-check form-switch">
-                      <input className="form-check-input" type="checkbox" defaultChecked />
+                      <input 
+                        className="form-check-input" 
+                        type="checkbox" 
+                        checked={showDottedLineReports}
+                        onChange={(e) => setShowDottedLineReports(e.target.checked)}
+                      />
                     </div>
                   </div>
                 </div>
               </div>
 
+              {/* Drill Down Breadcrumb */}
+              {drillDownPath.length > 1 && (
+                <div className="mb-3">
+                  <button 
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={handleDrillUp}
+                  >
+                    <Icon icon="heroicons:arrow-left" className="me-1" />
+                    Back to {drillDownPath.length === 2 ? 'CEO' : 'Previous Level'}
+                  </button>
+                  <div className="d-inline-flex align-items-center gap-2 ms-3">
+                    {drillDownPath.map((nodeId, index) => {
+                      const node = orgHierarchy[nodeId];
+                      return (
+                        <React.Fragment key={nodeId}>
+                          <span 
+                            className={index === drillDownPath.length - 1 ? 'fw-bold' : 'text-muted'}
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => {
+                              const newPath = drillDownPath.slice(0, index + 1);
+                              setDrillDownPath(newPath);
+                              setSelectedNode(nodeId);
+                            }}
+                          >
+                            {node?.name || nodeId}
+                          </span>
+                          {index < drillDownPath.length - 1 && <Icon icon="heroicons:chevron-right" className="text-muted" />}
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Org Chart Visualization */}
-              <div className="border rounded p-4 mb-4 bg-light" style={{ minHeight: '400px' }}>
+              <div className="border rounded p-4 mb-4 bg-light" style={{ minHeight: '500px', position: 'relative' }}>
                 <div className="text-center">
-                  {/* CEO Level */}
+                  {/* Current Node (CEO or drilled down node) */}
                   <div className="mb-5">
                     <div className="d-flex justify-content-center">
                       <div className="position-relative">
-                        <div className="card border-primary" style={{ width: '300px' }}>
+                        <div className={`card ${selectedNode ? 'border-info' : 'border-primary'}`} style={{ width: '300px', cursor: 'pointer' }}
+                          onClick={() => handleDrillDown(drillDownPath[drillDownPath.length - 1])}
+                        >
                           <div className="card-body text-center">
-                            <div className="w-60-px h-60-px bg-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3">
+                            <div className={`w-60-px h-60-px ${selectedNode ? 'bg-info' : 'bg-primary'} rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3`}>
                               <Icon icon="heroicons:user" className="text-white fs-4" />
                             </div>
-                            <h6 className="fw-bold mb-1">{orgHierarchy.ceo.name}</h6>
-                            <p className="text-muted small mb-1">{orgHierarchy.ceo.title}</p>
+                            <h6 className="fw-bold mb-1">{getCurrentNode().name}</h6>
+                            <p className="text-muted small mb-1">{getCurrentNode().title}</p>
                             <div className="d-flex justify-content-center gap-2">
-                              <span className="badge bg-primary">{orgHierarchy.ceo.department}</span>
-                              <span className="badge bg-secondary">{orgHierarchy.ceo.location}</span>
+                              <span className={`badge ${selectedNode ? 'bg-info' : 'bg-primary'}`}>{getCurrentNode().department}</span>
+                              <span className="badge bg-secondary">{getCurrentNode().location}</span>
                             </div>
                             <div className="mt-2">
-                              <span className="badge bg-info">Span: {orgHierarchy.ceo.spanOfControl}</span>
+                              <span className="badge bg-warning">Span: {getCurrentNode().spanOfControl}</span>
                             </div>
-                            <button className="btn btn-sm btn-outline-primary mt-2">
-                              <Icon icon="heroicons:chevron-down" className="me-1" />
-                              Drill Down
-                            </button>
+                            {getDirectReports(drillDownPath[drillDownPath.length - 1]).length > 0 && (
+                              <button 
+                                className="btn btn-sm btn-outline-primary mt-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDrillDown(drillDownPath[drillDownPath.length - 1]);
+                                }}
+                              >
+                                <Icon icon="heroicons:chevron-down" className="me-1" />
+                                Drill Down ({getDirectReports(drillDownPath[drillDownPath.length - 1]).length} reports)
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Connecting Lines */}
-                  <div className="mb-4">
-                    <div className="d-flex justify-content-center">
-                      <div className="text-center">
-                        <Icon icon="heroicons:arrow-long-down" className="text-muted fs-3" />
-                        <p className="text-muted small mt-2">Reports to</p>
+                  {/* Direct Reports Section */}
+                  {showDirectReports && getDirectReports(drillDownPath[drillDownPath.length - 1]).length > 0 && (
+                    <>
+                      <div className="mb-4">
+                        <div className="d-flex justify-content-center">
+                          <div className="text-center">
+                            <Icon icon="heroicons:arrow-long-down" className="text-primary fs-3" />
+                            <p className="text-muted small mt-2">Direct Reports ({getDirectReports(drillDownPath[drillDownPath.length - 1]).length})</p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
 
-                  {/* C-Level Executives */}
-                  <div className="row g-4 mb-4">
-                    <div className="col-md-4">
-                      <div className="card border">
-                        <div className="card-body text-center">
-                          <div className="w-50-px h-50-px bg-success rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2">
-                            <Icon icon="heroicons:computer-desktop" className="text-white" />
-                          </div>
-                          <h6 className="fw-bold mb-1">{orgHierarchy.cto.name}</h6>
-                          <p className="text-muted small mb-1">{orgHierarchy.cto.title}</p>
-                          <span className="badge bg-success">Technology</span>
-                          <div className="mt-2">
-                            <button className="btn btn-sm btn-outline-primary">
-                              <Icon icon="heroicons:eye" className="me-1" />
-                              View Team
-                            </button>
+                      {/* Direct Reports Grid */}
+                      <div className="row g-4 mb-4 justify-content-center">
+                        {getDirectReports(drillDownPath[drillDownPath.length - 1]).map((report, index) => {
+                          const reportKey = Object.keys(orgHierarchy).find(key => orgHierarchy[key].id === report.id);
+                          return (
+                            <div key={report.id} className="col-md-4 col-lg-3">
+                              <div 
+                                className="card border border-primary" 
+                                style={{ cursor: 'pointer', transition: 'all 0.3s' }}
+                                onMouseEnter={(e) => e.currentTarget.classList.add('shadow')}
+                                onMouseLeave={(e) => e.currentTarget.classList.remove('shadow')}
+                                onClick={() => handleDrillDown(reportKey)}
+                              >
+                                <div className="card-body text-center">
+                                  <div className="w-50-px h-50-px bg-success rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2">
+                                    <Icon icon="heroicons:user" className="text-white" />
+                                  </div>
+                                  <h6 className="fw-bold mb-1">{report.name}</h6>
+                                  <p className="text-muted small mb-1">{report.title}</p>
+                                  <span className="badge bg-primary">{report.department}</span>
+                                  {report.spanOfControl > 0 && (
+                                    <div className="mt-2">
+                                      <span className="badge bg-info">Reports: {report.spanOfControl}</span>
+                                    </div>
+                                  )}
+                                  <div className="mt-2">
+                                    <button 
+                                      className="btn btn-sm btn-outline-primary"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDrillDown(reportKey);
+                                      }}
+                                    >
+                                      <Icon icon="heroicons:eye" className="me-1" />
+                                      View Team
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Dotted-Line Reports Section */}
+                  {showDottedLineReports && getDottedLineReports(drillDownPath[drillDownPath.length - 1]).length > 0 && (
+                    <>
+                      <div className="mb-4 mt-5 pt-4 border-top">
+                        <div className="d-flex justify-content-center">
+                          <div className="text-center">
+                            <Icon icon="heroicons:arrow-long-down" className="text-warning fs-3" style={{ opacity: 0.5 }} />
+                            <p className="text-muted small mt-2">Dotted-Line Reports ({getDottedLineReports(drillDownPath[drillDownPath.length - 1]).length})</p>
                           </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="col-md-4">
-                      <div className="card border">
-                        <div className="card-body text-center">
-                          <div className="w-50-px h-50-px bg-warning rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2">
-                            <Icon icon="heroicons:banknotes" className="text-white" />
-                          </div>
-                          <h6 className="fw-bold mb-1">{orgHierarchy.cfo.name}</h6>
-                          <p className="text-muted small mb-1">{orgHierarchy.cfo.title}</p>
-                          <span className="badge bg-warning">Finance</span>
-                          <div className="mt-2">
-                            <button className="btn btn-sm btn-outline-primary">
-                              <Icon icon="heroicons:eye" className="me-1" />
-                              View Team
-                            </button>
+
+                      <div className="row g-4 mb-4 justify-content-center">
+                        {getDottedLineReports(drillDownPath[drillDownPath.length - 1]).map((report) => {
+                          const reportKey = Object.keys(orgHierarchy).find(key => orgHierarchy[key].id === report.id);
+                          return (
+                            <div key={report.id} className="col-md-4 col-lg-3">
+                              <div className="card border border-warning" style={{ borderStyle: 'dashed', opacity: 0.8 }}>
+                                <div className="card-body text-center">
+                                  <div className="w-50-px h-50-px bg-warning rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2">
+                                    <Icon icon="heroicons:user" className="text-white" />
+                                  </div>
+                                  <h6 className="fw-bold mb-1">{report.name}</h6>
+                                  <p className="text-muted small mb-1">{report.title}</p>
+                                  <span className="badge bg-warning">Dotted-Line</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Show C-Level if at CEO level */}
+                  {drillDownPath.length === 1 && (
+                    <>
+                      <div className="mb-4">
+                        <div className="d-flex justify-content-center">
+                          <div className="text-center">
+                            <Icon icon="heroicons:arrow-long-down" className="text-primary fs-3" />
+                            <p className="text-muted small mt-2">Reports to</p>
                           </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="col-md-4">
-                      <div className="card border">
-                        <div className="card-body text-center">
-                          <div className="w-50-px h-50-px bg-info rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2">
-                            <Icon icon="heroicons:cog-6-tooth" className="text-white" />
+
+                      {/* C-Level Executives */}
+                      <div className="row g-4 mb-4 justify-content-center">
+                        <div className="col-md-4">
+                          <div 
+                            className="card border border-success" 
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => handleDrillDown('cto')}
+                          >
+                            <div className="card-body text-center">
+                              <div className="w-50-px h-50-px bg-success rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2">
+                                <Icon icon="heroicons:computer-desktop" className="text-white" />
+                              </div>
+                              <h6 className="fw-bold mb-1">{orgHierarchy.cto.name}</h6>
+                              <p className="text-muted small mb-1">{orgHierarchy.cto.title}</p>
+                              <span className="badge bg-success">Technology</span>
+                              <div className="mt-2">
+                                <button 
+                                  className="btn btn-sm btn-outline-primary"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDrillDown('cto');
+                                  }}
+                                >
+                                  <Icon icon="heroicons:eye" className="me-1" />
+                                  View Team ({orgHierarchy.cto.spanOfControl})
+                                </button>
+                              </div>
+                            </div>
                           </div>
-                          <h6 className="fw-bold mb-1">{orgHierarchy.coo.name}</h6>
-                          <p className="text-muted small mb-1">{orgHierarchy.coo.title}</p>
-                          <span className="badge bg-info">Operations</span>
-                          <div className="mt-2">
-                            <button className="btn btn-sm btn-outline-primary">
-                              <Icon icon="heroicons:eye" className="me-1" />
-                              View Team
-                            </button>
+                        </div>
+                        <div className="col-md-4">
+                          <div className="card border border-warning" style={{ cursor: 'pointer' }}
+                            onClick={() => handleDrillDown('cfo')}
+                          >
+                            <div className="card-body text-center">
+                              <div className="w-50-px h-50-px bg-warning rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2">
+                                <Icon icon="heroicons:banknotes" className="text-white" />
+                              </div>
+                              <h6 className="fw-bold mb-1">{orgHierarchy.cfo.name}</h6>
+                              <p className="text-muted small mb-1">{orgHierarchy.cfo.title}</p>
+                              <span className="badge bg-warning">Finance</span>
+                              <div className="mt-2">
+                                <button 
+                                  className="btn btn-sm btn-outline-primary"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDrillDown('cfo');
+                                  }}
+                                >
+                                  <Icon icon="heroicons:eye" className="me-1" />
+                                  View Team ({orgHierarchy.cfo.spanOfControl})
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="col-md-4">
+                          <div className="card border border-info" style={{ cursor: 'pointer' }}
+                            onClick={() => handleDrillDown('coo')}
+                          >
+                            <div className="card-body text-center">
+                              <div className="w-50-px h-50-px bg-info rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2">
+                                <Icon icon="heroicons:cog-6-tooth" className="text-white" />
+                              </div>
+                              <h6 className="fw-bold mb-1">{orgHierarchy.coo.name}</h6>
+                              <p className="text-muted small mb-1">{orgHierarchy.coo.title}</p>
+                              <span className="badge bg-info">Operations</span>
+                              <div className="mt-2">
+                                <button 
+                                  className="btn btn-sm btn-outline-primary"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDrillDown('coo');
+                                  }}
+                                >
+                                  <Icon icon="heroicons:eye" className="me-1" />
+                                  View Team ({orgHierarchy.coo.spanOfControl})
+                                </button>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
+                    </>
+                  )}
 
                   {/* Legend */}
                   <div className="mt-4">
@@ -649,23 +946,26 @@ const OrganizationHierarchy = () => {
                   <button 
                     className="btn btn-outline-primary"
                     onClick={() => handleExport('pdf')}
+                    disabled={isExporting}
                   >
                     <Icon icon="heroicons:document-arrow-down" className="me-2" />
-                    Export PDF
+                    {isExporting ? 'Exporting...' : 'Export PDF'}
                   </button>
                   <button 
                     className="btn btn-outline-success"
                     onClick={() => handleExport('png')}
+                    disabled={isExporting}
                   >
                     <Icon icon="heroicons:photo" className="me-2" />
-                    Export PNG
+                    {isExporting ? 'Exporting...' : 'Export PNG'}
                   </button>
                   <button 
                     className="btn btn-outline-warning"
                     onClick={() => handleExport('excel')}
+                    disabled={isExporting}
                   >
                     <Icon icon="heroicons:table-cells" className="me-2" />
-                    Export Excel
+                    {isExporting ? 'Exporting...' : 'Export Excel'}
                   </button>
                 </div>
               </div>
@@ -1228,14 +1528,23 @@ const OrganizationHierarchy = () => {
                       </div>
                       <div className="mb-3">
                         <label className="form-label">Or Select Version</label>
-                        <select className="form-select">
-                          <option>Current Structure (v1.3)</option>
-                          <option>v1.2 - Mar 1, 2024</option>
-                          <option>v1.1 - Feb 15, 2024</option>
-                          <option>v1.0 - Jan 1, 2024</option>
+                        <select 
+                          className="form-select"
+                          value={selectedVersion}
+                          onChange={(e) => setSelectedVersion(e.target.value)}
+                        >
+                          <option value="current">Current Structure (v1.3)</option>
+                          {historicalData.map(history => (
+                            <option key={history.version} value={history.version}>
+                              {history.version} - {new Date(history.date).toLocaleDateString()}
+                            </option>
+                          ))}
                         </select>
                       </div>
-                      <button className="btn btn-primary w-100">
+                      <button 
+                        className="btn btn-primary w-100"
+                        onClick={() => handleTimeTravel(selectedVersion)}
+                      >
                         <Icon icon="heroicons:arrow-path" className="me-2" />
                         Load Historical View
                       </button>
@@ -1504,12 +1813,18 @@ const OrganizationHierarchy = () => {
   
 
   return (
-    <div
-      menuItems={menuItems} 
-      userInfo={userInfo}
-      appName="Organizational Hierarchy & Reporting Structure"
-    >
+    <>
       <div className="container-fluid px-3 px-md-4 py-3">
+        {/* Header */}
+        <div className="mb-4">
+          <h5 className="text-3xl fw-bold text-dark mb-2 mt-3 d-flex align-items-center gap-2">
+            <Icon icon="heroicons:building-office" />
+            Organizational Hierarchy & Reporting Structure
+          </h5>
+          <p className="text-muted">
+            Visualize and manage organizational structure, reporting relationships, and hierarchy analytics
+          </p>
+        </div>
         {/* Render all sections */}
         {renderDashboard()}
         {renderOrgChart()}
@@ -1544,7 +1859,7 @@ const OrganizationHierarchy = () => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

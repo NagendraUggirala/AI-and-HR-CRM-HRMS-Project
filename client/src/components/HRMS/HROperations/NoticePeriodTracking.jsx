@@ -68,7 +68,7 @@ import {
   CalendarDays
 } from 'lucide-react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import RecruiterDashboardLayout from '../../recruiterDashboard/RecruiterDashboardLayout';
+
 
 const NoticePeriodTracking = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -3202,15 +3202,7 @@ const NoticePeriodTracking = () => {
     </div>
   );
 
-  return (
-    <div
-      menuItems={menuItems}
-      userInfo={userInfo}
-      appName="AI Notice Period Manager"
-    >
-      {mainContent}
-    </div>
-  );
+  return mainContent;
 };
 
 export default NoticePeriodTracking;

@@ -10,6 +10,10 @@ const PayrollProcessingEngine = () => {
   const [showRunModal, setShowRunModal] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [showVarianceModal, setShowVarianceModal] = useState(false);
+  const [showInterventionModal, setShowInterventionModal] = useState(false);
+  const [showHoldSalaryModal, setShowHoldSalaryModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [filterType, setFilterType] = useState('All');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -29,9 +33,15 @@ const PayrollProcessingEngine = () => {
     payPeriod: 'standard_month',
     customStartDate: '',
     customEndDate: '',
+    salaryFreezeDate: '',
     payrollSchedule: {
       processingDay: 25,
       paymentDay: 30
+    },
+    payrollCalendar: [],
+    advanceScheduling: {
+      enabled: false,
+      advanceDays: 7
     },
     offCycleEnabled: true,
     salesConfig: {
@@ -61,6 +71,12 @@ const PayrollProcessingEngine = () => {
   const [leaveData, setLeaveData] = useState([]);
   const [loanData, setLoanData] = useState([]);
   const [reimbursements, setReimbursements] = useState([]);
+  const [arrearsData, setArrearsData] = useState([]);
+  const [heldEmployees, setHeldEmployees] = useState([]);
+  const [salaryRevisions, setSalaryRevisions] = useState([]);
+  const [previousMonthPayroll, setPreviousMonthPayroll] = useState(null);
+  const [varianceAlerts, setVarianceAlerts] = useState([]);
+  const [manualInterventions, setManualInterventions] = useState([]);
 
   // Review & Approval
   const [approvalWorkflow, setApprovalWorkflow] = useState([]);
@@ -68,17 +84,27 @@ const PayrollProcessingEngine = () => {
   // Settings for calculations
   const [calculationSettings, setCalculationSettings] = useState({
     daysCalculation: true,
+    daysCalculationMethod: 'days_worked', // 'days_worked' or 'days_in_month'
     prorateCalculation: true,
+    prorateForJoiners: true,
+    prorateForExits: true,
+    prorateForTransfers: true,
     leaveEncashment: false,
+    leaveEncashmentRate: 1.0,
     overtimeCalculation: true,
+    overtimeRate: 1.5,
+    lossOfPayCalculation: true,
+    lossOfPayThreshold: 0.5, // days
     arrearsCalculation: true,
+    arrearsInclusion: 'previous_month', // 'previous_month', 'all_pending', 'custom'
     reimbursementProcessing: true,
     loanRecovery: true,
     advanceRecovery: true,
     finalSettlement: true,
     componentDependencies: true,
     taxDependencies: true,
-    statutoryDependencies: true
+    statutoryDependencies: true,
+    salaryRevisionEffectuation: true
   });
 
   const itemsPerPage = 6;
@@ -401,26 +427,78 @@ const PayrollProcessingEngine = () => {
 
     setIsProcessing(true);
     
-    // Simulate payroll processing with actual calculations
+    // Simulate automated payroll processing
     setTimeout(() => {
+      // Step 1: Auto-fetch attendance data
+      console.log('Auto-fetching attendance data...');
+      // In real implementation, this would fetch from attendance system
+      
+      // Step 2: Auto-integrate leave data
+      console.log('Auto-integrating leave data...');
+      // In real implementation, this would fetch from leave management system
+      
+      // Step 3: Include previous month arrears
+      let arrearsTotal = 0;
+      if (calculationSettings.arrearsCalculation) {
+        arrearsTotal = arrearsData
+          .filter(a => a.status === 'pending')
+          .reduce((sum, a) => sum + a.amount, 0);
+      }
+      
+      // Step 4: Calculate loan EMI deductions
+      let loanEMITotal = 0;
+      if (calculationSettings.loanRecovery) {
+        loanEMITotal = loanData.reduce((sum, loan) => sum + loan.emi, 0);
+      }
+      
+      // Step 5: Calculate advance recovery
+      let advanceRecoveryTotal = 0;
+      if (calculationSettings.advanceRecovery) {
+        // Simulated advance recovery
+        advanceRecoveryTotal = employees.length * 1000; // Example
+      }
+      
+      // Step 6: Apply salary revisions
+      if (calculationSettings.salaryRevisionEffectuation) {
+        salaryRevisions
+          .filter(rev => rev.status === 'pending')
+          .forEach(rev => {
+            const emp = employees.find(e => e.id === rev.employeeId);
+            if (emp) {
+              emp.baseSalary = rev.newSalary;
+            }
+          });
+      }
+      
+      // Step 7: Exclude held employees
+      const activeEmployees = employees.filter(emp => 
+        !heldEmployees.some(held => held.employeeId === emp.id)
+      );
+      
       // Calculate total amount based on employees and type
       let totalAmount = 0;
-      let employeesCount = employees.length;
+      let employeesCount = activeEmployees.length;
       
       if (type === 'bonus') {
         // Calculate bonus based on sales config
-        totalAmount = employees.reduce((sum, emp) => {
+        totalAmount = activeEmployees.reduce((sum, emp) => {
           return sum + Math.floor(emp.baseSalary * (payrollConfig.salesConfig.commissionRate / 100));
         }, 0);
-        employeesCount = employees.filter(emp => emp.department === 'Sales').length;
+        employeesCount = activeEmployees.filter(emp => emp.department === 'Sales').length;
       } else if (type === 'regular') {
-        // Calculate regular payroll
-        totalAmount = employees.reduce((sum, emp) => {
-          return sum + emp.baseSalary;
+        // Calculate regular payroll with all components
+        totalAmount = activeEmployees.reduce((sum, emp) => {
+          let empTotal = emp.baseSalary;
+          // Add arrears if applicable
+          const empArrears = arrearsData
+            .filter(a => a.employeeId === emp.id && a.status === 'pending')
+            .reduce((s, a) => s + a.amount, 0);
+          empTotal += empArrears;
+          return sum + empTotal;
         }, 0);
       } else if (type === 'advance') {
         // Calculate advance (50% of base salary)
-        totalAmount = employees.reduce((sum, emp) => {
+        totalAmount = activeEmployees.reduce((sum, emp) => {
           return sum + Math.floor(emp.baseSalary * 0.5);
         }, 0);
       }
@@ -435,11 +513,15 @@ const PayrollProcessingEngine = () => {
         paidDate: '',
         type: type,
         details: {
-          totalEarnings: totalAmount,
-          totalDeductions: Math.floor(totalAmount * 0.15),
+          totalEarnings: totalAmount + arrearsTotal,
+          totalDeductions: Math.floor(totalAmount * 0.15) + loanEMITotal + advanceRecoveryTotal,
           taxAmount: Math.floor(totalAmount * 0.1),
           pfAmount: Math.floor(totalAmount * 0.12),
-          esiAmount: Math.floor(totalAmount * 0.03)
+          esiAmount: Math.floor(totalAmount * 0.03),
+          arrearsIncluded: arrearsTotal,
+          loanEMI: loanEMITotal,
+          advanceRecovery: advanceRecoveryTotal,
+          heldEmployeesCount: heldEmployees.length
         }
       };
       
@@ -461,8 +543,23 @@ const PayrollProcessingEngine = () => {
       
       setApprovalWorkflow([newApproval, ...approvalWorkflow]);
       
-      // Run validation
+      // Run pre-payroll validation
       runValidationChecks();
+      
+      // Compare with previous month and generate variance alerts
+      if (previousMonthPayroll) {
+        const variance = ((totalAmount - previousMonthPayroll.totalAmount) / previousMonthPayroll.totalAmount) * 100;
+        if (Math.abs(variance) > 5) {
+          setVarianceAlerts(prev => [...prev, {
+            employeeId: 'ALL',
+            type: variance > 0 ? 'increase' : 'decrease',
+            amount: totalAmount - previousMonthPayroll.totalAmount,
+            percentage: variance,
+            reason: 'Overall payroll variance',
+            severity: Math.abs(variance) > 10 ? 'high' : 'warning'
+          }]);
+        }
+      }
       
       alert(`Payroll ${type} run started successfully! Processing will complete shortly.`);
     }, 2000);
@@ -535,7 +632,7 @@ const PayrollProcessingEngine = () => {
     alert(`Payroll ${newLockedState ? 'locked' : 'unlocked'} successfully!`);
   };
 
-  const handleUpdateConfig = (key, value) => {
+  const handleUpdateConfig =   (key, value) => {
     if (payrollLocked) {
       alert('Payroll is locked. Please unlock to make changes.');
       return;
@@ -1059,7 +1156,17 @@ const PayrollProcessingEngine = () => {
       <div className="col-md-6">
         <div className="card border shadow-none h-100">
           <div className="card-header bg-transparent border-0">
-            <h6 className="mb-0">Payroll Schedule</h6>
+            <div className="d-flex justify-content-between align-items-center">
+              <h6 className="mb-0">Payroll Schedule</h6>
+              <button 
+                className="btn btn-sm btn-outline-primary"
+                onClick={() => setShowCalendarModal(true)}
+                disabled={payrollLocked}
+              >
+                <Icon icon="heroicons:calendar" className="me-1" />
+                View Calendar
+              </button>
+            </div>
           </div>
           <div className="card-body">
             <div className="row g-3">
@@ -1102,6 +1209,35 @@ const PayrollProcessingEngine = () => {
                     Enable Off-cycle Payroll (Bonuses, Advances, Exit Settlements)
                   </label>
                 </div>
+              </div>
+              <div className="col-12">
+                <div className="form-check">
+                  <input 
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={payrollConfig.advanceScheduling.enabled}
+                    onChange={(e) => handleUpdateConfig('advanceScheduling.enabled', e.target.checked)}
+                    disabled={payrollLocked}
+                  />
+                  <label className="form-check-label">
+                    Enable Advance Payroll Scheduling
+                  </label>
+                </div>
+                {payrollConfig.advanceScheduling.enabled && (
+                  <div className="mt-2">
+                    <label className="form-label small">Advance Days</label>
+                    <input 
+                      type="number" 
+                      className="form-control form-control-sm"
+                      value={payrollConfig.advanceScheduling.advanceDays}
+                      onChange={(e) => handleUpdateConfig('advanceScheduling.advanceDays', parseInt(e.target.value))}
+                      disabled={payrollLocked}
+                      min="1"
+                      max="30"
+                    />
+                    <small className="text-muted">Schedule payroll processing N days in advance</small>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1808,6 +1944,19 @@ const PayrollProcessingEngine = () => {
                         Calculate overtime pay
                       </label>
                     </div>
+                    {calculationSettings.overtimeCalculation && (
+                      <div className="ms-4 mb-2">
+                        <label className="form-label small">Overtime Rate (multiplier)</label>
+                        <input 
+                          type="number" 
+                          step="0.1"
+                          className="form-control form-control-sm"
+                          value={calculationSettings.overtimeRate}
+                          onChange={(e) => setCalculationSettings(prev => ({ ...prev, overtimeRate: parseFloat(e.target.value) }))}
+                          disabled={payrollLocked}
+                        />
+                      </div>
+                    )}
                     <div className="form-check mb-2">
                       <input 
                         className="form-check-input" 
@@ -1821,6 +1970,21 @@ const PayrollProcessingEngine = () => {
                         Calculate arrears payment
                       </label>
                     </div>
+                    {calculationSettings.arrearsCalculation && (
+                      <div className="ms-4 mb-2">
+                        <label className="form-label small">Arrears Inclusion</label>
+                        <select 
+                          className="form-select form-select-sm"
+                          value={calculationSettings.arrearsInclusion}
+                          onChange={(e) => setCalculationSettings(prev => ({ ...prev, arrearsInclusion: e.target.value }))}
+                          disabled={payrollLocked}
+                        >
+                          <option value="previous_month">Previous Month Only</option>
+                          <option value="all_pending">All Pending Arrears</option>
+                          <option value="custom">Custom Selection</option>
+                        </select>
+                      </div>
+                    )}
                     <div className="form-check">
                       <input 
                         className="form-check-input" 
@@ -1832,6 +1996,19 @@ const PayrollProcessingEngine = () => {
                       />
                       <label className="form-check-label" htmlFor="reimbursementProcessing">
                         Process reimbursements
+                      </label>
+                    </div>
+                    <div className="form-check mt-2">
+                      <input 
+                        className="form-check-input" 
+                        type="checkbox" 
+                        id="salaryRevisionEffectuation" 
+                        checked={calculationSettings.salaryRevisionEffectuation}
+                        onChange={() => handleToggleCalculationSetting('salaryRevisionEffectuation')}
+                        disabled={payrollLocked}
+                      />
+                      <label className="form-check-label" htmlFor="salaryRevisionEffectuation">
+                        Effectuate salary revisions during payroll
                       </label>
                     </div>
                   </div>
@@ -3049,6 +3226,264 @@ const PayrollProcessingEngine = () => {
                   >
                     Close
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Payroll Calendar Modal */}
+        {showCalendarModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Payroll Calendar</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowCalendarModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="table-responsive">
+                    <table className="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Month</th>
+                          <th>Processing Date</th>
+                          <th>Payment Date</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {payrollConfig.payrollCalendar && payrollConfig.payrollCalendar.length > 0 ? (
+                          payrollConfig.payrollCalendar.map((cal, idx) => (
+                            <tr key={idx}>
+                              <td>{cal.month}</td>
+                              <td>{cal.processingDate}</td>
+                              <td>{cal.paymentDate}</td>
+                              <td>
+                                <span className={`badge ${
+                                  cal.status === 'scheduled' ? 'bg-info-subtle text-info' :
+                                  cal.status === 'completed' ? 'bg-success-subtle text-success' :
+                                  'bg-warning-subtle text-warning'
+                                }`}>
+                                  {cal.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="4" className="text-center text-muted py-4">No calendar entries</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowCalendarModal(false)}>Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Variance Analysis Modal */}
+        {showVarianceModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-xl">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Salary Variance Analysis</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowVarianceModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  {previousMonthPayroll && (
+                    <div className="alert alert-info mb-4">
+                      <strong>Previous Month:</strong> {previousMonthPayroll.month} - Total: {formatCurrency(previousMonthPayroll.totalAmount)} | Employees: {previousMonthPayroll.employeeCount}
+                    </div>
+                  )}
+                  <div className="table-responsive">
+                    <table className="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Employee ID</th>
+                          <th>Type</th>
+                          <th>Amount Change</th>
+                          <th>Percentage</th>
+                          <th>Reason</th>
+                          <th>Severity</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {varianceAlerts.length > 0 ? (
+                          varianceAlerts.map((alert, idx) => (
+                            <tr key={idx}>
+                              <td>{alert.employeeId}</td>
+                              <td>
+                                <span className={`badge ${
+                                  alert.type === 'increase' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'
+                                }`}>
+                                  {alert.type}
+                                </span>
+                              </td>
+                              <td className={alert.type === 'increase' ? 'text-success' : 'text-danger'}>
+                                {alert.type === 'increase' ? '+' : ''}{formatCurrency(alert.amount)}
+                              </td>
+                              <td>{alert.percentage > 0 ? '+' : ''}{alert.percentage.toFixed(2)}%</td>
+                              <td>{alert.reason}</td>
+                              <td>
+                                <span className={`badge ${
+                                  alert.severity === 'high' ? 'bg-danger-subtle text-danger' :
+                                  alert.severity === 'warning' ? 'bg-warning-subtle text-warning' :
+                                  'bg-info-subtle text-info'
+                                }`}>
+                                  {alert.severity}
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="6" className="text-center text-muted py-4">No variance alerts</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowVarianceModal(false)}>Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Manual Intervention Modal */}
+        {showInterventionModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Manual Interventions Required</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowInterventionModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="table-responsive">
+                    <table className="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Employee ID</th>
+                          <th>Issue</th>
+                          <th>Action Required</th>
+                          <th>Assigned To</th>
+                          <th>Status</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {manualInterventions.length > 0 ? (
+                          manualInterventions.map((intervention, idx) => (
+                            <tr key={idx}>
+                              <td>{intervention.employeeId}</td>
+                              <td>{intervention.issue}</td>
+                              <td>{intervention.action}</td>
+                              <td>{intervention.assignedTo}</td>
+                              <td>
+                                <span className={`badge ${
+                                  intervention.status === 'pending' ? 'bg-warning-subtle text-warning' :
+                                  intervention.status === 'resolved' ? 'bg-success-subtle text-success' :
+                                  'bg-info-subtle text-info'
+                                }`}>
+                                  {intervention.status}
+                                </span>
+                              </td>
+                              <td>
+                                {intervention.status === 'pending' && (
+                                  <button 
+                                    className="btn btn-sm btn-success"
+                                    onClick={() => {
+                                      setManualInterventions(prev => 
+                                        prev.map((m, i) => i === idx ? { ...m, status: 'resolved' } : m)
+                                      );
+                                    }}
+                                  >
+                                    Mark Resolved
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="6" className="text-center text-muted py-4">No manual interventions required</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowInterventionModal(false)}>Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Hold Salary Modal */}
+        {showHoldSalaryModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Hold Salary Management</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowHoldSalaryModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="table-responsive">
+                    <table className="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Employee ID</th>
+                          <th>Reason</th>
+                          <th>Held By</th>
+                          <th>Held Date</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {heldEmployees.length > 0 ? (
+                          heldEmployees.map((held, idx) => (
+                            <tr key={idx}>
+                              <td>{held.employeeId}</td>
+                              <td>{held.reason}</td>
+                              <td>{held.heldBy}</td>
+                              <td>{held.heldDate}</td>
+                              <td>
+                                <button 
+                                  className="btn btn-sm btn-success"
+                                  onClick={() => {
+                                    setHeldEmployees(prev => prev.filter((h, i) => i !== idx));
+                                    alert('Salary hold released for ' + held.employeeId);
+                                  }}
+                                >
+                                  Release Hold
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="5" className="text-center text-muted py-4">No employees with held salary</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowHoldSalaryModal(false)}>Close</button>
                 </div>
               </div>
             </div>

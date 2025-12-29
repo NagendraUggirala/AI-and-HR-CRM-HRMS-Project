@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import RecruiterDashboardLayout from '../../recruiterDashboard/RecruiterDashboardLayout';
+
 
 const OfferManagement = () => {
   // State management
@@ -17,6 +17,29 @@ const OfferManagement = () => {
     offerType: 'all'
   });
   const [activeTab, setActiveTab] = useState('all');
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [showESignatureModal, setShowESignatureModal] = useState(false);
+  const [showVersionHistoryModal, setShowVersionHistoryModal] = useState(false);
+  const [showBGVModal, setShowBGVModal] = useState(false);
+  const [showReferenceCheckModal, setShowReferenceCheckModal] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [approvalWorkflowStatus, setApprovalWorkflowStatus] = useState([]);
+  const [declineReason, setDeclineReason] = useState('');
+  const [emailSettings, setEmailSettings] = useState({
+    sendEmail: true,
+    sendSMS: false,
+    ccRecipients: [],
+    emailTemplate: 'standard'
+  });
+  const [eSignatureData, setESignatureData] = useState({
+    candidateSignature: null,
+    signatureDate: null,
+    ipAddress: null,
+    deviceInfo: null
+  });
 
   // Offer status types
   const OFFER_STATUS = {
@@ -36,19 +59,92 @@ const OfferManagement = () => {
   // Offer types
   const OFFER_TYPES = ['Full-time', 'Contract', 'Internship', 'Consultant'];
 
-  // Templates
+  // Enhanced Templates with role/level configuration
   const TEMPLATES = [
-    { id: 'standard', name: 'Standard Offer Letter' },
-    { id: 'executive', name: 'Executive Offer Letter' },
-    { id: 'intern', name: 'Internship Offer Letter' },
-    { id: 'custom', name: 'Custom Template' }
+    { 
+      id: 'standard', 
+      name: 'Standard Offer Letter',
+      applicableTo: ['L1', 'L2'],
+      sections: ['header', 'candidate_info', 'position_details', 'ctc_breakup', 'terms', 'signatures'],
+      customizableFields: ['terms', 'probation_period', 'notice_period'],
+      defaultTerms: `1. This offer is subject to background verification.
+2. You will be on probation for 3 months.
+3. Standard company policies apply.
+4. Please acknowledge acceptance by the expiry date.`
+    },
+    { 
+      id: 'executive', 
+      name: 'Executive Offer Letter',
+      applicableTo: ['L3', 'L4', 'L5'],
+      sections: ['header', 'candidate_info', 'position_details', 'ctc_breakup', 'stock_options', 'terms', 'signatures'],
+      customizableFields: ['terms', 'probation_period', 'notice_period', 'stock_options', 'benefits'],
+      defaultTerms: `1. This offer is subject to background verification.
+2. You will be on probation for 6 months.
+3. Executive compensation package includes stock options.
+4. Standard company policies apply.
+5. Please acknowledge acceptance by the expiry date.`
+    },
+    { 
+      id: 'intern', 
+      name: 'Internship Offer Letter',
+      applicableTo: ['Intern'],
+      sections: ['header', 'candidate_info', 'position_details', 'stipend', 'terms', 'signatures'],
+      customizableFields: ['terms', 'duration', 'stipend'],
+      defaultTerms: `1. This is an internship position for a duration of 6 months.
+2. Stipend will be paid monthly.
+3. Performance will be evaluated at the end of internship.
+4. Conversion to full-time is subject to performance and business needs.`
+    },
+    { 
+      id: 'contract', 
+      name: 'Contract Offer Letter',
+      applicableTo: ['Contract'],
+      sections: ['header', 'candidate_info', 'position_details', 'ctc_breakup', 'contract_terms', 'signatures'],
+      customizableFields: ['terms', 'contract_duration', 'renewal_terms'],
+      defaultTerms: `1. This is a contract position for a specified duration.
+2. Contract terms and renewal are subject to project requirements.
+3. Standard company policies apply during contract period.`
+    },
+    { 
+      id: 'custom', 
+      name: 'Custom Template',
+      applicableTo: ['All'],
+      sections: ['header', 'candidate_info', 'position_details', 'ctc_breakup', 'terms', 'signatures'],
+      customizableFields: ['all'],
+      defaultTerms: `1. This offer is subject to background verification.
+2. Standard company policies apply.
+3. Please acknowledge acceptance by the expiry date.`
+    }
   ];
 
-  // Approval workflows
+  // Enhanced Approval workflows
   const APPROVAL_WORKFLOWS = [
-    { id: 'direct', name: 'Direct Manager → HR' },
-    { id: 'multi', name: 'Manager → HR Head → CEO' },
-    { id: 'auto', name: 'Auto-approval (Below ₹10L)' }
+    { 
+      id: 'direct', 
+      name: 'Direct Manager → HR',
+      steps: [
+        { level: 1, role: 'Direct Manager', required: true, autoApprove: false },
+        { level: 2, role: 'HR Manager', required: true, autoApprove: false }
+      ]
+    },
+    { 
+      id: 'multi', 
+      name: 'Manager → HR Head → CEO',
+      steps: [
+        { level: 1, role: 'Direct Manager', required: true, autoApprove: false },
+        { level: 2, role: 'HR Head', required: true, autoApprove: false },
+        { level: 3, role: 'CEO', required: true, autoApprove: false }
+      ]
+    },
+    { 
+      id: 'auto', 
+      name: 'Auto-approval (Below ₹10L)',
+      steps: [
+        { level: 1, role: 'Direct Manager', required: false, autoApprove: true },
+        { level: 2, role: 'HR Manager', required: true, autoApprove: false }
+      ],
+      conditions: { maxCTC: 1000000 }
+    }
   ];
 
   // Menu items and user info
@@ -143,15 +239,51 @@ const OfferManagement = () => {
         experience: '3 years',
         noticePeriod: '30 days',
         bgvStatus: 'pending',
+        bgvDetails: {
+          status: 'pending',
+          initiatedDate: null,
+          completedDate: null,
+          verifiedBy: null,
+          remarks: null
+        },
         offerType: 'Full-time',
         template: 'Standard',
+        templateId: 'standard',
         expiryDate: '2024-03-30',
         lastModified: '2024-03-15 14:30',
         notes: 'Strong backend skills in Node.js and Python',
         interviewSummary: 'Performed well in technical rounds',
         salaryNegotiation: 'Initial offer: ₹11,00,000 | Final: ₹12,00,000',
-        referenceCheck: 'Completed - Positive feedback',
+        salaryNegotiationHistory: [
+          { date: '2024-03-10', initialOffer: '₹11,00,000', candidateRequest: '₹13,00,000', finalOffer: '₹12,00,000', status: 'Accepted' }
+        ],
+        referenceCheck: {
+          status: 'completed',
+          checkedBy: 'HR Manager',
+          checkDate: '2024-03-12',
+          feedback: 'Positive feedback from previous employer',
+          references: [
+            { name: 'John Doe', company: 'Previous Company', designation: 'Manager', feedback: 'Excellent performer' }
+          ]
+        },
         attachments: ['resume.pdf', 'certificates.zip'],
+        emailSent: false,
+        emailSentDate: null,
+        smsSent: false,
+        smsSentDate: null,
+        acceptanceDate: null,
+        declineReason: null,
+        eSignature: null,
+        version: 1,
+        versionHistory: [],
+        approvalWorkflow: {
+          workflowId: 'direct',
+          currentStep: 1,
+          steps: [
+            { level: 1, role: 'Direct Manager', status: 'pending', approvedBy: null, approvedDate: null, comments: null },
+            { level: 2, role: 'HR Manager', status: 'pending', approvedBy: null, approvedDate: null, comments: null }
+          ]
+        },
         history: [
           { action: 'Offer Created', by: 'HR Admin', date: '2024-03-15 10:00', status: OFFER_STATUS.DRAFT },
           { action: 'Technical Approval', by: 'Tech Lead', date: '2024-03-15 11:30', status: OFFER_STATUS.PENDING_APPROVAL }
@@ -402,39 +534,150 @@ const OfferManagement = () => {
   };
 
   const handleSendOffer = (offer) => {
+    setSelectedOffer(offer);
+    setShowSendModal(true);
+  };
+
+  const handleConfirmSendOffer = () => {
+    if (!selectedOffer) return;
+
     const updatedOffers = offers.map(o =>
-      o.id === offer.id ? { 
+      o.id === selectedOffer.id ? { 
         ...o, 
         offerStatus: OFFER_STATUS.SENT,
+        emailSent: emailSettings.sendEmail,
+        emailSentDate: emailSettings.sendEmail ? new Date().toISOString() : null,
+        smsSent: emailSettings.sendSMS,
+        smsSentDate: emailSettings.sendSMS ? new Date().toISOString() : null,
         history: [...o.history, {
           action: 'Sent to Candidate',
           by: 'System',
           date: new Date().toISOString(),
-          status: OFFER_STATUS.SENT
+          status: OFFER_STATUS.SENT,
+          details: {
+            emailSent: emailSettings.sendEmail,
+            smsSent: emailSettings.sendSMS
+          }
         }]
       } : o
     );
     setOffers(updatedOffers);
-    alert(`Offer sent to ${offer.candidateName}`);
+    
+    // Simulate email/SMS sending
+    if (emailSettings.sendEmail) {
+      setTimeout(() => {
+        console.log(`Email sent to: ${selectedOffer.email}`);
+        console.log('Subject: Offer Letter - ' + selectedOffer.position);
+        console.log('Body: Please find attached your offer letter...');
+      }, 500);
+    }
+    
+    if (emailSettings.sendSMS) {
+      setTimeout(() => {
+        console.log(`SMS sent to: ${selectedOffer.phone}`);
+        console.log('Message: Your offer letter has been sent to your email. Please check and respond.');
+      }, 500);
+    }
+    
+    setShowSendModal(false);
+    setEmailSettings({ sendEmail: true, sendSMS: false, ccRecipients: [], emailTemplate: 'standard' });
+    alert(`Offer sent to ${selectedOffer.candidateName}${emailSettings.sendEmail ? ' via email' : ''}${emailSettings.sendSMS ? ' and SMS' : ''}`);
   };
 
   const handleAcceptOffer = (offer) => {
+    if (offer.requireDigitalSignature) {
+      setSelectedOffer(offer);
+      setShowESignatureModal(true);
+    } else {
+      const updatedOffers = offers.map(o =>
+        o.id === offer.id ? { 
+          ...o, 
+          offerStatus: OFFER_STATUS.ACCEPTED,
+          acceptanceDate: new Date().toISOString(),
+          history: [...o.history, {
+            action: 'Accepted by Candidate',
+            by: 'Candidate',
+            date: new Date().toISOString(),
+            status: OFFER_STATUS.ACCEPTED
+          }]
+        } : o
+      );
+      setOffers(updatedOffers);
+      alert(`Offer accepted by ${offer.candidateName}`);
+    }
+  };
+
+  const handleConfirmESignature = () => {
+    if (!selectedOffer) return;
+
+    const signatureData = {
+      candidateSignature: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', // Mock signature
+      signatureDate: new Date().toISOString(),
+      ipAddress: '192.168.1.1', // Mock IP
+      deviceInfo: navigator.userAgent
+    };
+
     const updatedOffers = offers.map(o =>
-      o.id === offer.id ? { 
+      o.id === selectedOffer.id ? { 
         ...o, 
         offerStatus: OFFER_STATUS.ACCEPTED,
+        acceptanceDate: new Date().toISOString(),
+        eSignature: signatureData,
         history: [...o.history, {
-          action: 'Accepted by Candidate',
+          action: 'Accepted by Candidate (E-Signed)',
           by: 'Candidate',
           date: new Date().toISOString(),
-          status: OFFER_STATUS.ACCEPTED
+          status: OFFER_STATUS.ACCEPTED,
+          details: {
+            signatureDate: signatureData.signatureDate,
+            ipAddress: signatureData.ipAddress
+          }
         }]
       } : o
     );
     setOffers(updatedOffers);
+    setShowESignatureModal(false);
+    setESignatureData({ candidateSignature: null, signatureDate: null, ipAddress: null, deviceInfo: null });
+    alert(`Offer accepted and digitally signed by ${selectedOffer.candidateName}`);
+  };
+
+  const handleDeclineOffer = (offer) => {
+    setSelectedOffer(offer);
+    setShowDeclineModal(true);
+  };
+
+  const handleConfirmDecline = () => {
+    if (!selectedOffer || !declineReason.trim()) {
+      alert('Please provide a reason for declining the offer');
+      return;
+    }
+
+    const updatedOffers = offers.map(o =>
+      o.id === selectedOffer.id ? { 
+        ...o, 
+        offerStatus: OFFER_STATUS.DECLINED,
+        declineReason: declineReason,
+        history: [...o.history, {
+          action: 'Declined by Candidate',
+          by: 'Candidate',
+          date: new Date().toISOString(),
+          status: OFFER_STATUS.DECLINED,
+          details: {
+            reason: declineReason
+          }
+        }]
+      } : o
+    );
+    setOffers(updatedOffers);
+    setShowDeclineModal(false);
+    setDeclineReason('');
+    alert(`Offer declined by ${selectedOffer.candidateName}. Reason: ${declineReason}`);
   };
 
   const handleWithdrawOffer = (offer) => {
+    const reason = window.prompt('Please provide a reason for withdrawing this offer:');
+    if (!reason) return;
+
     const updatedOffers = offers.map(o =>
       o.id === offer.id ? { 
         ...o, 
@@ -443,11 +686,98 @@ const OfferManagement = () => {
           action: 'Offer Withdrawn',
           by: 'HR Admin',
           date: new Date().toISOString(),
-          status: OFFER_STATUS.WITHDRAWN
+          status: OFFER_STATUS.WITHDRAWN,
+          details: {
+            reason: reason
+          }
         }]
       } : o
     );
     setOffers(updatedOffers);
+    alert(`Offer withdrawn. Reason: ${reason}`);
+  };
+
+  const handleCreateRevisedOffer = (offer) => {
+    const newVersion = offer.version + 1;
+    const revisedOffer = {
+      ...offer,
+      id: offers.length + 1,
+      version: newVersion,
+      offerStatus: OFFER_STATUS.DRAFT,
+      createdDate: new Date().toISOString().split('T')[0],
+      history: [
+        ...offer.history,
+        {
+          action: `Revised Offer Created (v${newVersion})`,
+          by: 'HR Admin',
+          date: new Date().toISOString(),
+          status: OFFER_STATUS.DRAFT,
+          details: {
+            previousVersion: offer.version,
+            reason: 'Offer revision requested'
+          }
+        }
+      ],
+      versionHistory: [
+        ...(offer.versionHistory || []),
+        {
+          version: offer.version,
+          date: offer.createdDate,
+          status: offer.offerStatus,
+          ctc: offer.ctc
+        }
+      ]
+    };
+    setOffers([revisedOffer, ...offers]);
+    setSelectedOffer(revisedOffer);
+    setShowForm(true);
+    alert(`Revised offer (v${newVersion}) created. You can now edit the details.`);
+  };
+
+  const handleApproveOffer = (offer, level) => {
+    const workflow = offer.approvalWorkflow || {
+      workflowId: 'direct',
+      currentStep: 1,
+      steps: [
+        { level: 1, role: 'Direct Manager', status: 'pending', approvedBy: null, approvedDate: null, comments: null },
+        { level: 2, role: 'HR Manager', status: 'pending', approvedBy: null, approvedDate: null, comments: null }
+      ]
+    };
+
+    const updatedSteps = workflow.steps.map(step => {
+      if (step.level === level) {
+        return {
+          ...step,
+          status: 'approved',
+          approvedBy: 'Current User',
+          approvedDate: new Date().toISOString()
+        };
+      }
+      return step;
+    });
+
+    const allApproved = updatedSteps.every(step => step.status === 'approved');
+    const newStatus = allApproved ? OFFER_STATUS.APPROVED : OFFER_STATUS.PENDING_APPROVAL;
+
+    const updatedOffers = offers.map(o =>
+      o.id === offer.id ? { 
+        ...o, 
+        offerStatus: newStatus,
+        approvalWorkflow: {
+          ...workflow,
+          currentStep: level + 1,
+          steps: updatedSteps
+        },
+        history: [...o.history, {
+          action: `Approved by ${workflow.steps.find(s => s.level === level)?.role}`,
+          by: 'Current User',
+          date: new Date().toISOString(),
+          status: newStatus
+        }]
+      } : o
+    );
+    setOffers(updatedOffers);
+    alert(`Offer approved at level ${level}. ${allApproved ? 'All approvals complete!' : 'Pending further approvals.'}`);
   };
 
   // Filter offers
@@ -549,10 +879,8 @@ const OfferManagement = () => {
   const acceptanceRate = calculateAcceptanceRate();
 
   return (
-    <div 
-      menuItems={menuItems} 
-      userInfo={userInfo}
-      appName="Offer Management System"
+    <
+      
     >
       <div className="container-fluid">
         {/* Header */}
@@ -767,9 +1095,21 @@ const OfferManagement = () => {
                               <div>
                                 <div className="fw-bold">{offer.candidateName}</div>
                                 <div className="small text-muted">
-                                  <div>📧 {offer.email}</div>
-                                  <div>📱 {offer.phone}</div>
-                                  <div className="mt-1">Source: {offer.candidateSource}</div>
+                                  <div><Icon icon="heroicons:envelope" className="me-1" /> {offer.email}</div>
+                                  <div><Icon icon="heroicons:device-phone-mobile" className="me-1" /> {offer.phone}</div>
+                                  <div className="mt-1"><Icon icon="heroicons:user-circle" className="me-1" /> Source: {offer.candidateSource}</div>
+                                  {offer.emailSent && (
+                                    <div className="mt-1 text-success">
+                                      <Icon icon="heroicons:check-circle" className="me-1" />
+                                      Email sent {offer.emailSentDate ? new Date(offer.emailSentDate).toLocaleDateString() : ''}
+                                    </div>
+                                  )}
+                                  {offer.smsSent && (
+                                    <div className="mt-1 text-info">
+                                      <Icon icon="heroicons:device-phone-mobile" className="me-1" />
+                                      SMS sent {offer.smsSentDate ? new Date(offer.smsSentDate).toLocaleDateString() : ''}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -801,6 +1141,30 @@ const OfferManagement = () => {
                                 <Icon icon={statusConfig.icon} />
                                 {statusConfig.text}
                               </span>
+                              {offer.acceptanceDate && (
+                                <div className="small text-success mt-1">
+                                  <Icon icon="heroicons:calendar" className="me-1" />
+                                  Accepted: {new Date(offer.acceptanceDate).toLocaleDateString()}
+                                </div>
+                              )}
+                              {offer.declineReason && (
+                                <div className="small text-danger mt-1">
+                                  <Icon icon="heroicons:information-circle" className="me-1" />
+                                  Reason: {offer.declineReason}
+                                </div>
+                              )}
+                              {offer.expiryDate && new Date(offer.expiryDate) < new Date() && offer.offerStatus === OFFER_STATUS.SENT && (
+                                <div className="small text-danger mt-1">
+                                  <Icon icon="heroicons:exclamation-triangle" className="me-1" />
+                                  Expired
+                                </div>
+                              )}
+                              {offer.version > 1 && (
+                                <div className="small text-info mt-1">
+                                  <Icon icon="heroicons:document-duplicate" className="me-1" />
+                                  Version {offer.version}
+                                </div>
+                              )}
                               {renderHistory(offer.history)}
                             </div>
                           </td>
@@ -817,6 +1181,30 @@ const OfferManagement = () => {
                               >
                                 <Icon icon="heroicons:eye" />
                               </button>
+                              {offer.bgvStatus && (
+                                <button 
+                                  className="btn btn-sm btn-outline-warning d-flex align-items-center justify-content-center"
+                                  onClick={() => {
+                                    setSelectedOffer(offer);
+                                    setShowBGVModal(true);
+                                  }}
+                                  title="Background Verification"
+                                >
+                                  <Icon icon="heroicons:shield-check" />
+                                </button>
+                              )}
+                              {offer.referenceCheck && (
+                                <button 
+                                  className="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center"
+                                  onClick={() => {
+                                    setSelectedOffer(offer);
+                                    setShowReferenceCheckModal(true);
+                                  }}
+                                  title="Reference Check"
+                                >
+                                  <Icon icon="heroicons:user-group" />
+                                </button>
+                              )}
                               <button 
                                 className="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center"
                                 onClick={() => handleEdit(offer)}
@@ -835,14 +1223,56 @@ const OfferManagement = () => {
                                 </button>
                               ) : null}
                               {offer.offerStatus === OFFER_STATUS.SENT ? (
-                                <button 
-                                  className="btn btn-sm btn-success d-flex align-items-center justify-content-center"
-                                  onClick={() => handleAcceptOffer(offer)}
-                                  title="Mark as Accepted"
-                                >
-                                  <Icon icon="heroicons:check-badge" />
-                                </button>
+                                <>
+                                  <button 
+                                    className="btn btn-sm btn-success d-flex align-items-center justify-content-center"
+                                    onClick={() => handleAcceptOffer(offer)}
+                                    title="Mark as Accepted"
+                                  >
+                                    <Icon icon="heroicons:check-badge" />
+                                  </button>
+                                  <button 
+                                    className="btn btn-sm btn-danger d-flex align-items-center justify-content-center"
+                                    onClick={() => handleDeclineOffer(offer)}
+                                    title="Mark as Declined"
+                                  >
+                                    <Icon icon="heroicons:x-circle" />
+                                  </button>
+                                </>
                               ) : null}
+                              {offer.offerStatus === OFFER_STATUS.PENDING_APPROVAL && (
+                                <button 
+                                  className="btn btn-sm btn-info d-flex align-items-center justify-content-center"
+                                  onClick={() => {
+                                    setSelectedOffer(offer);
+                                    setShowApprovalModal(true);
+                                  }}
+                                  title="View Approval Status"
+                                >
+                                  <Icon icon="heroicons:clipboard-document-check" />
+                                </button>
+                              )}
+                              {offer.offerStatus === OFFER_STATUS.APPROVED && offer.version > 1 && (
+                                <button 
+                                  className="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center"
+                                  onClick={() => {
+                                    setSelectedOffer(offer);
+                                    setShowVersionHistoryModal(true);
+                                  }}
+                                  title="View Version History"
+                                >
+                                  <Icon icon="heroicons:clock" />
+                                </button>
+                              )}
+                              {offer.offerStatus === OFFER_STATUS.DRAFT && (
+                                <button 
+                                  className="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center"
+                                  onClick={() => handleCreateRevisedOffer(offer)}
+                                  title="Create Revised Offer"
+                                >
+                                  <Icon icon="heroicons:document-duplicate" />
+                                </button>
+                              )}
                               {![OFFER_STATUS.ACCEPTED, OFFER_STATUS.WITHDRAWN].includes(offer.offerStatus) && (
                                 <button 
                                   className="btn btn-sm btn-warning d-flex align-items-center justify-content-center"
@@ -1140,16 +1570,39 @@ const OfferManagement = () => {
                         
                         <div className="col-md-6">
                           <label className="form-label">Template</label>
-                          <select
-                            className="form-select"
-                            name="template"
-                            value={formData.template}
-                            onChange={handleInputChange}
-                          >
-                            {TEMPLATES.map(template => (
-                              <option key={template.id} value={template.id}>{template.name}</option>
-                            ))}
-                          </select>
+                          <div className="input-group">
+                            <select
+                              className="form-select"
+                              name="template"
+                              value={formData.template}
+                              onChange={handleInputChange}
+                            >
+                              {TEMPLATES.filter(t => 
+                                t.applicableTo.includes(formData.grade) || 
+                                t.applicableTo.includes('All') ||
+                                (formData.offerType === 'Internship' && t.applicableTo.includes('Intern'))
+                              ).map(template => (
+                                <option key={template.id} value={template.id}>{template.name}</option>
+                              ))}
+                            </select>
+                            <button
+                              className="btn btn-outline-secondary"
+                              type="button"
+                              onClick={() => {
+                                const selectedTemplate = TEMPLATES.find(t => t.id === formData.template);
+                                if (selectedTemplate) {
+                                  setSelectedTemplate(selectedTemplate);
+                                  setShowTemplateModal(true);
+                                }
+                              }}
+                              title="Customize Template"
+                            >
+                              <Icon icon="heroicons:cog-6-tooth" />
+                            </button>
+                          </div>
+                          <small className="text-muted">
+                            Template automatically selected based on grade/level
+                          </small>
                         </div>
                         
                         <div className="col-md-6">
@@ -1246,28 +1699,67 @@ const OfferManagement = () => {
                       </div>
                       
                       {/* Additional Information */}
+                      {/* Step 3: Interview & Negotiation Details */}
                       <div className="mb-4">
-                        <label className="form-label">Interview Summary</label>
-                        <textarea
-                          className="form-control"
-                          name="interviewSummary"
-                          value={formData.interviewSummary}
-                          onChange={handleInputChange}
-                          rows="3"
-                          placeholder="Candidate performance in interviews..."
-                        />
+                        <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center">
+                          <span className="badge bg-primary me-2">3</span>
+                          <Icon icon="heroicons:clipboard-document-check" className="me-2" />
+                          Interview & Negotiation Details
+                        </h6>
+                        <div className="mb-4">
+                          <label className="form-label">Interview Summary</label>
+                          <textarea
+                            className="form-control"
+                            name="interviewSummary"
+                            value={formData.interviewSummary}
+                            onChange={handleInputChange}
+                            rows="4"
+                            placeholder="Candidate performance in interviews, technical skills, communication, etc..."
+                          />
+                        </div>
+                        
+                        <div className="mb-4">
+                          <label className="form-label">Salary Negotiation History</label>
+                          <textarea
+                            className="form-control"
+                            name="salaryNegotiationHistory"
+                            value={formData.salaryNegotiationHistory}
+                            onChange={handleInputChange}
+                            rows="3"
+                            placeholder="Initial offer: ₹X | Candidate request: ₹Y | Final: ₹Z | Status: Accepted/Rejected"
+                          />
+                          <small className="text-muted">Document all negotiation rounds and final agreed amount</small>
+                        </div>
                       </div>
-                      
+
+                      {/* Step 4: Background Verification & References */}
                       <div className="mb-4">
-                        <label className="form-label">Salary Negotiation History</label>
-                        <textarea
-                          className="form-control"
-                          name="salaryNegotiationHistory"
-                          value={formData.salaryNegotiationHistory}
-                          onChange={handleInputChange}
-                          rows="2"
-                          placeholder="Initial offer: ₹X | Final: ₹Y"
-                        />
+                        <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center">
+                          <span className="badge bg-primary me-2">4</span>
+                          <Icon icon="heroicons:shield-check" className="me-2" />
+                          Background Verification & References
+                        </h6>
+                        <div className="row g-3 mb-3">
+                          <div className="col-md-6">
+                            <label className="form-label">BGV Status</label>
+                            <select className="form-select" name="bgvStatus" value={formData.bgvStatus || 'pending'} onChange={handleInputChange}>
+                              <option value="not_started">Not Started</option>
+                              <option value="pending">Pending</option>
+                              <option value="in_progress">In Progress</option>
+                              <option value="completed">Completed</option>
+                              <option value="failed">Failed</option>
+                            </select>
+                          </div>
+                          <div className="col-md-6">
+                            <label className="form-label">Reference Check Status</label>
+                            <select className="form-select">
+                              <option value="pending">Pending</option>
+                              <option value="in_progress">In Progress</option>
+                              <option value="completed">Completed</option>
+                              <option value="not_required">Not Required</option>
+                            </select>
+                          </div>
+                        </div>
                       </div>
                       
                       <div className="mb-4">
@@ -1517,8 +2009,42 @@ const OfferManagement = () => {
             </div>
           </div>
         )}
+
+        {/* Expiry Date Alerts */}
+        {(() => {
+          const expiredOffers = offers.filter(o => 
+            o.offerStatus === OFFER_STATUS.SENT && 
+            o.expiryDate && 
+            new Date(o.expiryDate) < new Date()
+          );
+          const expiringSoon = offers.filter(o => 
+            o.offerStatus === OFFER_STATUS.SENT && 
+            o.expiryDate && 
+            new Date(o.expiryDate) >= new Date() &&
+            new Date(o.expiryDate) <= new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // Expiring in 3 days
+          );
+          
+          return (
+            <>
+              {expiredOffers.length > 0 && (
+                <div className="alert alert-danger alert-dismissible fade show" role="alert" style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999, minWidth: '400px' }}>
+                  <Icon icon="heroicons:exclamation-triangle" className="me-2" />
+                  <strong>Expired Offers:</strong> {expiredOffers.length} offer(s) have expired. Please follow up with candidates or withdraw offers.
+                  <button type="button" className="btn-close" onClick={(e) => e.target.closest('.alert').remove()}></button>
+                </div>
+              )}
+              {expiringSoon.length > 0 && (
+                <div className="alert alert-warning alert-dismissible fade show" role="alert" style={{ position: 'fixed', top: expiredOffers.length > 0 ? '100px' : '20px', right: '20px', zIndex: 9999, minWidth: '400px' }}>
+                  <Icon icon="heroicons:clock" className="me-2" />
+                  <strong>Expiring Soon:</strong> {expiringSoon.length} offer(s) will expire within 3 days. Please follow up with candidates.
+                  <button type="button" className="btn-close" onClick={(e) => e.target.closest('.alert').remove()}></button>
+                </div>
+              )}
+            </>
+          );
+        })()}
       </div>
-    </div>
+    </>
   );
 };
 

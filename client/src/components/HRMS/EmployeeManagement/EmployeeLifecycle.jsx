@@ -26,6 +26,13 @@ const EmployeeLifecycle = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [showConversionModal, setShowConversionModal] = useState(false);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [showResignationModal, setShowResignationModal] = useState(false);
+  const [showSettlementModal, setShowSettlementModal] = useState(false);
+  const [showJobPostingModal, setShowJobPostingModal] = useState(false);
+  const [showExitInterviewModal, setShowExitInterviewModal] = useState(false);
+  const [notification, setNotification] = useState(null);
 
   // ----- original mock data (kept unchanged) -----
   const [employees, setEmployees] = useState([
@@ -110,7 +117,7 @@ const EmployeeLifecycle = () => {
   // Transfers
   const [transferRequests, setTransferRequests] = useState([
     { id: 'TR001', employeeId: 'EMP003', employeeName: 'David Chen', fromDept: 'Sales', toDept: 'Business Development', type: 'Inter-department', status: 'pending', requestDate: '2024-03-01' },
-    { id: 'TR002', employeeId: 'EMP008', employeeName: 'James Wilson', fromLocation: 'New York', toLocation: 'San Francisco', type: 'Inter-location', status: 'approved', requestDate: '2024-02-15', effectiveDate: '2024-04-01' },
+    { id: 'TR002', employeeId: 'EMP008', employeeName: 'James Wilson', fromLocation: 'New York', toLocation: 'San Francisco', type: 'Inter-location', status: 'approved', requestDate: '2024-02-15', effectiveDate: '2024-04-01', relocationSupport: { housingAssistance: true, travelReimbursement: true, relocationAllowance: 5000, status: 'approved' } },
     { id: 'TR003', employeeId: 'EMP009', employeeName: 'Maria Garcia', fromDept: 'Marketing', toDept: 'Product', type: 'Internal Job Posting', status: 'in-review', requestDate: '2024-03-05' }
   ]);
 
@@ -126,6 +133,84 @@ const EmployeeLifecycle = () => {
     { id: 'CR001', employeeId: 'EMP005', employeeName: 'Alex Turner', contractType: 'Fixed Term', endDate: '2024-06-15', renewalStatus: 'pending', daysRemaining: 45 },
     { id: 'CR002', employeeId: 'EMP012', employeeName: 'Kevin Brown', contractType: 'Project Based', endDate: '2024-05-30', renewalStatus: 'in-progress', daysRemaining: 30 },
     { id: 'CR003', employeeId: 'EMP013', employeeName: 'Olivia Davis', contractType: 'Fixed Term', endDate: '2024-07-31', renewalStatus: 'pending', daysRemaining: 90 }
+  ]);
+
+  // Candidates for conversion
+  const [candidates, setCandidates] = useState([
+    { id: 'CAN001', name: 'Robert Kim', email: 'robert.kim@email.com', position: 'Software Engineer', offerStatus: 'accepted', offerDate: '2024-03-15', joiningDate: '2024-04-01' },
+    { id: 'CAN002', name: 'Sarah Lee', email: 'sarah.lee@email.com', position: 'Product Manager', offerStatus: 'pending', offerDate: '2024-03-20', joiningDate: '2024-04-15' },
+    { id: 'CAN003', name: 'Michael Park', email: 'michael.park@email.com', position: 'Data Analyst', offerStatus: 'accepted', offerDate: '2024-03-10', joiningDate: '2024-03-25' }
+  ]);
+
+  // Confirmation requests
+  const [confirmationRequests, setConfirmationRequests] = useState([
+    { id: 'CF001', employeeId: 'EMP002', employeeName: 'Emma Wilson', probationEndDate: '2024-07-10', eligibilityStatus: 'eligible', managerApproval: 'pending', hrApproval: 'pending', letterGenerated: false },
+    { id: 'CF002', employeeId: 'EMP006', employeeName: 'Ryan Cooper', probationEndDate: '2024-03-25', eligibilityStatus: 'eligible', managerApproval: 'approved', hrApproval: 'approved', letterGenerated: true }
+  ]);
+
+  // Background verification
+  const [backgroundVerifications, setBackgroundVerifications] = useState([
+    { id: 'BV001', employeeId: 'EMP002', employeeName: 'Emma Wilson', status: 'in-progress', initiatedDate: '2024-01-15', completionDate: null, agency: 'Verification Corp' },
+    { id: 'BV002', employeeId: 'EMP001', employeeName: 'John Smith', status: 'completed', initiatedDate: '2022-03-10', completionDate: '2022-03-25', agency: 'Verification Corp', result: 'Cleared' }
+  ]);
+
+  // Training and certifications
+  const [trainings, setTrainings] = useState([
+    { id: 'TR001', employeeId: 'EMP001', employeeName: 'John Smith', courseName: 'Advanced React', status: 'completed', completionDate: '2024-02-15', certification: 'Yes' },
+    { id: 'TR002', employeeId: 'EMP002', employeeName: 'Emma Wilson', courseName: 'Project Management', status: 'in-progress', completionDate: null, certification: 'Pending' }
+  ]);
+
+  // Internal job postings
+  const [internalJobPostings, setInternalJobPostings] = useState([
+    { id: 'IJP001', title: 'Senior Product Manager', department: 'Product', location: 'San Francisco', postedDate: '2024-03-01', closingDate: '2024-04-01', applicants: 5, status: 'open' },
+    { id: 'IJP002', title: 'Lead Software Engineer', department: 'Engineering', location: 'New York', postedDate: '2024-03-10', closingDate: '2024-04-10', applicants: 8, status: 'open' }
+  ]);
+
+  // Job applications
+  const [jobApplications, setJobApplications] = useState([
+    { id: 'APP001', jobId: 'IJP001', employeeId: 'EMP003', employeeName: 'David Chen', appliedDate: '2024-03-05', status: 'under-review' },
+    { id: 'APP002', jobId: 'IJP002', employeeId: 'EMP001', employeeName: 'John Smith', appliedDate: '2024-03-12', status: 'shortlisted' }
+  ]);
+
+  // Milestones (anniversaries, birthdays)
+  const [milestones, setMilestones] = useState([
+    { id: 'MS001', employeeId: 'EMP001', employeeName: 'John Smith', type: 'work-anniversary', date: '2024-03-15', years: 2, status: 'upcoming' },
+    { id: 'MS002', employeeId: 'EMP004', employeeName: 'Lisa Rodriguez', type: 'birthday', date: '2024-04-10', years: null, status: 'upcoming' }
+  ]);
+
+  // Annual verification campaigns
+  const [verificationCampaigns, setVerificationCampaigns] = useState([
+    { id: 'VC001', name: 'Q1 2024 Information Verification', startDate: '2024-01-01', endDate: '2024-03-31', status: 'active', employeesCount: 150, completedCount: 120 },
+    { id: 'VC002', name: 'Q2 2024 Information Verification', startDate: '2024-04-01', endDate: '2024-06-30', status: 'scheduled', employeesCount: 150, completedCount: 0 }
+  ]);
+
+  // Resignation requests
+  const [resignationRequests, setResignationRequests] = useState([
+    { id: 'RES001', employeeId: 'EMP004', employeeName: 'Lisa Rodriguez', submittedDate: '2024-04-01', lastWorkingDay: '2024-06-30', noticePeriod: 90, reason: 'Better opportunity', status: 'accepted', buyoutRequested: false },
+    { id: 'RES002', employeeId: 'EMP010', employeeName: 'Brian Taylor', submittedDate: '2024-03-15', lastWorkingDay: '2024-03-20', noticePeriod: 30, reason: 'Personal reasons', status: 'accepted', buyoutRequested: true, buyoutAmount: 5000 }
+  ]);
+
+  // Exit interviews
+  const [exitInterviews, setExitInterviews] = useState([
+    { id: 'EI001', employeeId: 'EMP004', employeeName: 'Lisa Rodriguez', scheduledDate: '2024-06-25', status: 'scheduled', interviewer: 'HR Manager', questionnaireCompleted: false },
+    { id: 'EI002', employeeId: 'EMP010', employeeName: 'Brian Taylor', scheduledDate: '2024-03-18', status: 'completed', interviewer: 'HR Manager', questionnaireCompleted: true }
+  ]);
+
+  // Asset returns
+  const [assetReturns, setAssetReturns] = useState([
+    { id: 'AR001', employeeId: 'EMP004', employeeName: 'Lisa Rodriguez', assetType: 'Laptop', assetId: 'LAP-001', returnDate: null, status: 'pending' },
+    { id: 'AR002', employeeId: 'EMP004', employeeName: 'Lisa Rodriguez', assetType: 'Access Card', assetId: 'CARD-001', returnDate: null, status: 'pending' }
+  ]);
+
+  // Final settlements
+  const [finalSettlements, setFinalSettlements] = useState([
+    { id: 'FS001', employeeId: 'EMP004', employeeName: 'Lisa Rodriguez', grossAmount: 50000, deductions: 5000, netAmount: 45000, status: 'pending-approval', approvedBy: null },
+    { id: 'FS002', employeeId: 'EMP010', employeeName: 'Brian Taylor', grossAmount: 30000, deductions: 2000, netAmount: 28000, status: 'approved', approvedBy: 'Finance Manager' }
+  ]);
+
+  // Transfer history
+  const [transferHistory, setTransferHistory] = useState([
+    { id: 'TH001', employeeId: 'EMP003', employeeName: 'David Chen', fromDept: 'Sales', toDept: 'Business Development', fromLocation: null, toLocation: null, transferDate: '2024-04-01', type: 'Inter-department' }
   ]);
 
   // Sidebar menu (kept)
@@ -288,6 +373,145 @@ const EmployeeLifecycle = () => {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+  };
+
+  // Notification helper
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  // Auto-trigger onboarding checklist when candidate is converted
+  const autoTriggerOnboarding = (employeeId, employeeName) => {
+    const defaultChecklist = [
+      { id: Date.now() + 1, task: 'Offer Letter Acceptance', status: 'completed', assignedTo: 'HR', dueDate: new Date().toISOString().split('T')[0], employeeId },
+      { id: Date.now() + 2, task: 'Background Verification', status: 'pending', assignedTo: 'HR', dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], employeeId },
+      { id: Date.now() + 3, task: 'IT Account Setup', status: 'pending', assignedTo: 'IT', dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], employeeId },
+      { id: Date.now() + 4, task: 'Equipment Allocation', status: 'pending', assignedTo: 'Admin', dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], employeeId },
+      { id: Date.now() + 5, task: 'First Day Orientation', status: 'pending', assignedTo: 'HR', dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], employeeId }
+    ];
+    setOnboardingChecklist(prev => [...defaultChecklist, ...prev]);
+    showNotification(`Onboarding checklist auto-triggered for ${employeeName}`);
+  };
+
+  // Convert candidate to employee
+  const convertCandidateToEmployee = (candidate) => {
+    const newEmployee = {
+      id: `EMP${String(employees.length + 1).padStart(3, '0')}`,
+      name: candidate.name,
+      email: candidate.email,
+      department: 'TBD',
+      position: candidate.position,
+      stage: 'probation',
+      hireDate: candidate.joiningDate,
+      probationEndDate: new Date(new Date(candidate.joiningDate).getTime() + 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      nextReviewDate: new Date(new Date(candidate.joiningDate).getTime() + 150 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      manager: 'TBD'
+    };
+    setEmployees([...employees, newEmployee]);
+    setCandidates(candidates.filter(c => c.id !== candidate.id));
+    autoTriggerOnboarding(newEmployee.id, newEmployee.name);
+    setShowConversionModal(false);
+    showNotification(`${candidate.name} converted to employee successfully`);
+  };
+
+  // Calculate notice period
+  const calculateNoticePeriod = (resignationDate, noticePeriodDays) => {
+    const start = new Date(resignationDate);
+    const end = new Date(start.getTime() + noticePeriodDays * 24 * 60 * 60 * 1000);
+    return end.toISOString().split('T')[0];
+  };
+
+  // Calculate notice period buyout
+  const calculateBuyout = (noticePeriodDays, dailySalary) => {
+    return noticePeriodDays * dailySalary;
+  };
+
+  // Generate confirmation letter
+  const generateConfirmationLetter = (confirmationId) => {
+    const confirmation = confirmationRequests.find(c => c.id === confirmationId);
+    if (confirmation) {
+      showNotification(`Confirmation letter generated for ${confirmation.employeeName}`);
+      setConfirmationRequests(prev => prev.map(c => c.id === confirmationId ? { ...c, letterGenerated: true } : c));
+    }
+  };
+
+  // Generate transfer letter
+  const generateTransferLetter = (transferId) => {
+    const transfer = transferRequests.find(t => t.id === transferId);
+    if (transfer) {
+      showNotification(`Transfer letter generated for ${transfer.employeeName}`);
+    }
+  };
+
+  // Generate relieving letter
+  const generateRelievingLetter = (exitId) => {
+    const exit = exitProcesses.find(e => e.id === exitId);
+    if (exit) {
+      showNotification(`Relieving letter generated for ${exit.employeeName}`);
+    }
+  };
+
+  // Generate experience certificate
+  const generateExperienceCertificate = (exitId) => {
+    const exit = exitProcesses.find(e => e.id === exitId);
+    if (exit) {
+      showNotification(`Experience certificate generated for ${exit.employeeName}`);
+    }
+  };
+
+  // Check probation eligibility
+  const checkProbationEligibility = (employeeId) => {
+    const employee = employees.find(e => e.id === employeeId);
+    if (!employee) return false;
+    const probationEnd = new Date(employee.probationEndDate);
+    const today = new Date();
+    return today >= probationEnd;
+  };
+
+  // Schedule exit interview
+  const scheduleExitInterview = (exitId, interviewDate) => {
+    const exit = exitProcesses.find(e => e.id === exitId);
+    if (exit) {
+      const newInterview = {
+        id: `EI${String(exitInterviews.length + 1).padStart(3, '0')}`,
+        employeeId: exit.employeeId,
+        employeeName: exit.employeeName,
+        scheduledDate: interviewDate,
+        status: 'scheduled',
+        interviewer: 'HR Manager',
+        questionnaireCompleted: false
+      };
+      setExitInterviews([...exitInterviews, newInterview]);
+      showNotification(`Exit interview scheduled for ${exit.employeeName}`);
+    }
+  };
+
+  // Calculate final settlement
+  const calculateFinalSettlement = (employeeId) => {
+    // Mock calculation - in real app, this would fetch salary data
+    const grossAmount = 50000;
+    const deductions = 5000;
+    const netAmount = grossAmount - deductions;
+    
+    const settlement = {
+      id: `FS${String(finalSettlements.length + 1).padStart(3, '0')}`,
+      employeeId,
+      employeeName: employees.find(e => e.id === employeeId)?.name || 'Unknown',
+      grossAmount,
+      deductions,
+      netAmount,
+      status: 'pending-approval',
+      approvedBy: null
+    };
+    setFinalSettlements([...finalSettlements, settlement]);
+    return settlement;
+  };
+
+  // Approve final settlement
+  const approveFinalSettlement = (settlementId, approver) => {
+    setFinalSettlements(prev => prev.map(s => s.id === settlementId ? { ...s, status: 'approved', approvedBy: approver } : s));
+    showNotification('Final settlement approved');
   };
 
   // ----- render helpers for each tab (kept content) -----
@@ -475,8 +699,99 @@ const EmployeeLifecycle = () => {
   const renderJoining = () => {
     const list = getFilteredList(onboardingChecklist, ['task', 'assignedTo', 'dueDate', 'status']);
     const { data, total, page } = paginate(list);
+    const candidatesList = getFilteredList(candidates, ['name', 'email', 'position', 'offerStatus']);
+    const { data: candidatesData } = paginate(candidatesList);
+    
     return (
       <div className="row g-4">
+        {/* Candidate to Employee Conversion */}
+        <div className="col-12">
+          <div className="card border">
+            <div className="card-header bg-light">
+              <div className="d-flex justify-content-between align-items-center">
+                <h6 className="mb-0">Candidate to Employee Conversion</h6>
+                <button className="btn btn-sm btn-primary" onClick={() => setShowConversionModal(true)}>
+                  <Icon icon="heroicons:user-plus" className="me-1" /> Convert Candidate
+                </button>
+              </div>
+            </div>
+            <div className="card-body">
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Candidate</th>
+                      <th>Position</th>
+                      <th>Offer Status</th>
+                      <th>Offer Date</th>
+                      <th>Joining Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {candidatesData.map(c => (
+                      <tr key={c.id}>
+                        <td>
+                          <div className="fw-semibold">{c.name}</div>
+                          <div className="text-muted small">{c.email}</div>
+                        </td>
+                        <td>{c.position}</td>
+                        <td>{getStatusBadge(c.offerStatus)}</td>
+                        <td>{c.offerDate}</td>
+                        <td>{c.joiningDate}</td>
+                        <td>
+                          {c.offerStatus === 'accepted' && (
+                            <button className="btn btn-sm btn-success" onClick={() => convertCandidateToEmployee(c)}>
+                              <Icon icon="heroicons:arrow-right" className="me-1" /> Convert to Employee
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Background Verification Status */}
+        <div className="col-12">
+          <div className="card border">
+            <div className="card-header bg-light">
+              <h6 className="mb-0">Background Verification Status</h6>
+            </div>
+            <div className="card-body">
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Employee</th>
+                      <th>Status</th>
+                      <th>Initiated Date</th>
+                      <th>Completion Date</th>
+                      <th>Agency</th>
+                      <th>Result</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {backgroundVerifications.map(bv => (
+                      <tr key={bv.id}>
+                        <td>{bv.employeeName}</td>
+                        <td>{getStatusBadge(bv.status)}</td>
+                        <td>{bv.initiatedDate}</td>
+                        <td>{bv.completionDate || '-'}</td>
+                        <td>{bv.agency}</td>
+                        <td>{bv.result || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="col-12">
           <div className="card border">
             <div className="card-body">
@@ -537,51 +852,149 @@ const EmployeeLifecycle = () => {
           </div>
         </div>
 
-        {/* small confirmation workflow card (kept content but cleaned) */}
+        {/* Confirmation Requests */}
         <div className="col-12">
           <div className="card border">
+            <div className="card-header bg-light">
+              <h6 className="mb-0">Confirmation Eligibility & Approval Workflow</h6>
+            </div>
             <div className="card-body">
-              <h6 className="card-title">Confirmation Approval Workflow</h6>
-              <div className="row g-3 mt-3">
-                <div className="col-md-4">
-                  <div className="card border text-center p-3">
-                    <div className="mb-3">
-                      <Icon icon="heroicons:user" className="fs-3 text-primary" />
-                    </div>
-                    <h6>Eligibility Check</h6>
-                    <p className="text-muted small">Verify probation completion</p>
-                    <div className="progress mb-2">
-                      <div className="progress-bar" style={{ width: '100%' }}></div>
-                    </div>
-                    <span className="badge bg-success">Completed</span>
-                  </div>
-                </div>
-                <div className="col-md-4">
-                  <div className="card border text-center p-3">
-                    <div className="mb-3">
-                      <Icon icon="heroicons:document-check" className="fs-3 text-warning" />
-                    </div>
-                    <h6>Manager Review</h6>
-                    <p className="text-muted small">Performance evaluation</p>
-                    <div className="progress mb-2">
-                      <div className="progress-bar" style={{ width: '75%' }}></div>
-                    </div>
-                    <span className="badge bg-warning">In Progress</span>
-                  </div>
-                </div>
-                <div className="col-md-4">
-                  <div className="card border text-center p-3">
-                    <div className="mb-3">
-                      <Icon icon="heroicons:envelope" className="fs-3 text-muted" />
-                    </div>
-                    <h6>Letter Generation</h6>
-                    <p className="text-muted small">Generate confirmation letter</p>
-                    <div className="progress mb-2">
-                      <div className="progress-bar" style={{ width: '0%' }}></div>
-                    </div>
-                    <span className="badge bg-secondary">Pending</span>
-                  </div>
-                </div>
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Employee</th>
+                      <th>Probation End Date</th>
+                      <th>Eligibility</th>
+                      <th>Manager Approval</th>
+                      <th>HR Approval</th>
+                      <th>Letter Generated</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {confirmationRequests.map(cf => {
+                      const eligible = checkProbationEligibility(cf.employeeId);
+                      return (
+                        <tr key={cf.id}>
+                          <td>{cf.employeeName}</td>
+                          <td>{cf.probationEndDate}</td>
+                          <td>
+                            {eligible ? (
+                              <span className="badge bg-success">Eligible</span>
+                            ) : (
+                              <span className="badge bg-warning">Not Yet Eligible</span>
+                            )}
+                          </td>
+                          <td>{getStatusBadge(cf.managerApproval)}</td>
+                          <td>{getStatusBadge(cf.hrApproval)}</td>
+                          <td>
+                            {cf.letterGenerated ? (
+                              <span className="badge bg-success">Yes</span>
+                            ) : (
+                              <span className="badge bg-secondary">No</span>
+                            )}
+                          </td>
+                          <td>
+                            <div className="d-flex gap-2">
+                              {eligible && cf.managerApproval === 'pending' && (
+                                <button className="btn btn-sm btn-primary" onClick={() => {
+                                  setConfirmationRequests(prev => prev.map(c => c.id === cf.id ? { ...c, managerApproval: 'approved' } : c));
+                                  showNotification('Manager approval granted');
+                                }}>
+                                  Approve (Manager)
+                                </button>
+                              )}
+                              {cf.managerApproval === 'approved' && cf.hrApproval === 'pending' && (
+                                <button className="btn btn-sm btn-success" onClick={() => {
+                                  setConfirmationRequests(prev => prev.map(c => c.id === cf.id ? { ...c, hrApproval: 'approved' } : c));
+                                  showNotification('HR approval granted');
+                                }}>
+                                  Approve (HR)
+                                </button>
+                              )}
+                              {cf.managerApproval === 'approved' && cf.hrApproval === 'approved' && !cf.letterGenerated && (
+                                <button className="btn btn-sm btn-info" onClick={() => generateConfirmationLetter(cf.id)}>
+                                  <Icon icon="heroicons:document-text" className="me-1" /> Generate Letter
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Probation Review Reminders */}
+        <div className="col-12">
+          <div className="card border">
+            <div className="card-header bg-light">
+              <h6 className="mb-0">Probation Review Reminders</h6>
+            </div>
+            <div className="card-body">
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Employee</th>
+                      <th>Review Date</th>
+                      <th>Status</th>
+                      <th>Manager</th>
+                      <th>Rating</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {probationReviews.map(review => {
+                      const reviewDate = new Date(review.reviewDate);
+                      const today = new Date();
+                      const daysUntil = Math.ceil((reviewDate - today) / (1000 * 60 * 60 * 24));
+                      const isOverdue = daysUntil < 0;
+                      const isUpcoming = daysUntil <= 7 && daysUntil >= 0;
+                      
+                      return (
+                        <tr key={review.id} className={isOverdue ? 'table-danger' : isUpcoming ? 'table-warning' : ''}>
+                          <td>{review.employeeName}</td>
+                          <td>
+                            {review.reviewDate}
+                            {isOverdue && <span className="badge bg-danger ms-2">Overdue</span>}
+                            {isUpcoming && <span className="badge bg-warning ms-2">Due Soon</span>}
+                          </td>
+                          <td>{getStatusBadge(review.status)}</td>
+                          <td>{review.manager || '-'}</td>
+                          <td>{review.rating || '-'}</td>
+                          <td>
+                            <div className="d-flex gap-2">
+                              {review.status === 'pending' && (
+                                <button className="btn btn-sm btn-primary" onClick={() => startProbationReview(review.id)}>
+                                  Start Review
+                                </button>
+                              )}
+                              {review.status === 'in-progress' && (
+                                <button className="btn btn-sm btn-success" onClick={() => {
+                                  const rating = prompt('Enter rating (e.g., Exceeds Expectations, Meets Expectations, Below Expectations):');
+                                  if (rating) completeProbationReview(review.id, rating);
+                                }}>
+                                  Complete Review
+                                </button>
+                              )}
+                              {review.status === 'scheduled' && (
+                                <button className="btn btn-sm btn-info" onClick={() => showNotification(`Reminder sent to ${review.manager}`)}>
+                                  <Icon icon="heroicons:bell" className="me-1" /> Send Reminder
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -595,9 +1008,108 @@ const EmployeeLifecycle = () => {
   const renderTransfers = () => {
     const list = getFilteredList(transferRequests, ['employeeName', 'fromDept', 'toDept', 'fromLocation', 'toLocation', 'type', 'status']);
     const { data, total, page } = paginate(list);
+    const jobPostingsList = getFilteredList(internalJobPostings, ['title', 'department', 'location', 'status']);
+    const { data: jobPostingsData } = paginate(jobPostingsList);
+    const applicationsList = getFilteredList(jobApplications, ['employeeName', 'status']);
+    const { data: applicationsData } = paginate(applicationsList);
 
     return (
       <div className="row g-4">
+        {/* Internal Job Postings */}
+        <div className="col-12">
+          <div className="card border">
+            <div className="card-header bg-light">
+              <div className="d-flex justify-content-between align-items-center">
+                <h6 className="mb-0">Internal Job Postings</h6>
+                <button className="btn btn-sm btn-primary" onClick={() => setShowJobPostingModal(true)}>
+                  <Icon icon="heroicons:plus" className="me-1" /> Create Job Posting
+                </button>
+              </div>
+            </div>
+            <div className="card-body">
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Job Title</th>
+                      <th>Department</th>
+                      <th>Location</th>
+                      <th>Posted Date</th>
+                      <th>Closing Date</th>
+                      <th>Applicants</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {jobPostingsData.map(job => (
+                      <tr key={job.id}>
+                        <td className="fw-semibold">{job.title}</td>
+                        <td>{job.department}</td>
+                        <td>{job.location}</td>
+                        <td>{job.postedDate}</td>
+                        <td>{job.closingDate}</td>
+                        <td><span className="badge bg-info">{job.applicants}</span></td>
+                        <td>{getStatusBadge(job.status)}</td>
+                        <td>
+                          <button className="btn btn-sm btn-outline-primary" onClick={() => { setSelectedItem(job); setShowDetailModal(true); }}>
+                            View Applications
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Job Applications */}
+        <div className="col-12">
+          <div className="card border">
+            <div className="card-header bg-light">
+              <h6 className="mb-0">Internal Job Applications</h6>
+            </div>
+            <div className="card-body">
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Employee</th>
+                      <th>Job Title</th>
+                      <th>Applied Date</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {applicationsData.map(app => (
+                      <tr key={app.id}>
+                        <td>{app.employeeName}</td>
+                        <td>{internalJobPostings.find(j => j.id === app.jobId)?.title || '-'}</td>
+                        <td>{app.appliedDate}</td>
+                        <td>{getStatusBadge(app.status)}</td>
+                        <td>
+                          <div className="d-flex gap-2">
+                            <button className="btn btn-sm btn-outline-primary">View</button>
+                            {app.status === 'under-review' && (
+                              <>
+                                <button className="btn btn-sm btn-success">Shortlist</button>
+                                <button className="btn btn-sm btn-danger">Reject</button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="col-md-8">
           <div className="card border">
             <div className="card-body">
@@ -628,6 +1140,14 @@ const EmployeeLifecycle = () => {
                         <td>
                           <div className="small text-muted">{r.fromDept || r.fromLocation}</div>
                           <div className="small text-muted"><Icon icon="heroicons:arrow-right" className="me-1" />{r.toDept || r.toLocation}</div>
+                          {r.type === 'Inter-location' && r.relocationSupport && (
+                            <div className="mt-1">
+                              <span className="badge bg-info-subtle text-info small">
+                                <Icon icon="heroicons:truck" className="me-1" />
+                                Relocation Support
+                              </span>
+                            </div>
+                          )}
                         </td>
                         <td>{r.requestDate}</td>
                         <td>{getStatusBadge(r.status)}</td>
@@ -635,11 +1155,41 @@ const EmployeeLifecycle = () => {
                           <div className="d-flex gap-2">
                             {r.status === 'pending' && (
                               <>
-                                <button className="btn btn-sm btn-success" onClick={() => approveTransfer(r.id)}>Approve</button>
+                                <button className="btn btn-sm btn-success" onClick={() => {
+                                  approveTransfer(r.id);
+                                  // Add to transfer history
+                                  const transfer = transferRequests.find(t => t.id === r.id);
+                                  if (transfer) {
+                                    setTransferHistory([{
+                                      id: `TH${String(transferHistory.length + 1).padStart(3, '0')}`,
+                                      employeeId: transfer.employeeId,
+                                      employeeName: transfer.employeeName,
+                                      fromDept: transfer.fromDept,
+                                      toDept: transfer.toDept,
+                                      fromLocation: transfer.fromLocation,
+                                      toLocation: transfer.toLocation,
+                                      transferDate: new Date().toISOString().split('T')[0],
+                                      type: transfer.type
+                                    }, ...transferHistory]);
+                                  }
+                                }}>Approve</button>
                                 <button className="btn btn-sm btn-danger" onClick={() => rejectTransfer(r.id)}>Reject</button>
                               </>
                             )}
+                            {r.status === 'approved' && (
+                              <button className="btn btn-sm btn-info" onClick={() => generateTransferLetter(r.id)}>
+                                <Icon icon="heroicons:document-text" className="me-1" /> Generate Letter
+                              </button>
+                            )}
                             <button className="btn btn-sm btn-outline-primary" onClick={() => { setSelectedItem(r); setShowDetailModal(true); }}>View</button>
+                            {r.type === 'Inter-location' && r.relocationSupport && (
+                              <button className="btn btn-sm btn-outline-info" onClick={() => {
+                                setSelectedItem({...r, showRelocation: true});
+                                setShowDetailModal(true);
+                              }}>
+                                <Icon icon="heroicons:truck" className="me-1" /> Relocation
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -701,6 +1251,36 @@ const EmployeeLifecycle = () => {
             </div>
           </div>
         </div>
+
+        {/* Transfer History */}
+        <div className="col-md-4">
+          <div className="card border">
+            <div className="card-header bg-light">
+              <h6 className="mb-0">Transfer History</h6>
+            </div>
+            <div className="card-body">
+              <div className="list-group list-group-flush">
+                {transferHistory.map(th => (
+                  <div key={th.id} className="list-group-item px-0">
+                    <div className="d-flex justify-content-between align-items-start mb-2">
+                      <div>
+                        <div className="fw-semibold">{th.employeeName}</div>
+                        <small className="text-muted">{th.transferDate}</small>
+                      </div>
+                    </div>
+                    <div className="small">
+                      <div>{th.fromDept || th.fromLocation} <Icon icon="heroicons:arrow-right" className="mx-1" /> {th.toDept || th.toLocation}</div>
+                      <span className="badge bg-secondary-subtle text-secondary">{th.type}</span>
+                    </div>
+                  </div>
+                ))}
+                {transferHistory.length === 0 && (
+                  <div className="text-center text-muted py-3">No transfer history</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   };
@@ -709,9 +1289,100 @@ const EmployeeLifecycle = () => {
   const renderExit = () => {
     const list = getFilteredList(exitProcesses, ['employeeName', 'employeeId', 'status']);
     const { data, total, page } = paginate(list);
+    const resignationList = getFilteredList(resignationRequests, ['employeeName', 'status', 'reason']);
+    const { data: resignationData } = paginate(resignationList);
 
     return (
       <div className="row g-4">
+        {/* Resignation Submission & Acceptance */}
+        <div className="col-12">
+          <div className="card border">
+            <div className="card-header bg-light">
+              <div className="d-flex justify-content-between align-items-center">
+                <h6 className="mb-0">Resignation Requests</h6>
+                <button className="btn btn-sm btn-primary" onClick={() => setShowResignationModal(true)}>
+                  <Icon icon="heroicons:plus" className="me-1" /> Submit Resignation
+                </button>
+              </div>
+            </div>
+            <div className="card-body">
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Employee</th>
+                      <th>Submitted Date</th>
+                      <th>Last Working Day</th>
+                      <th>Notice Period</th>
+                      <th>Reason</th>
+                      <th>Buyout Requested</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {resignationData.map(res => (
+                      <tr key={res.id}>
+                        <td>{res.employeeName}</td>
+                        <td>{res.submittedDate}</td>
+                        <td>{res.lastWorkingDay}</td>
+                        <td>{res.noticePeriod} days</td>
+                        <td>{res.reason}</td>
+                        <td>
+                          {res.buyoutRequested ? (
+                            <span className="badge bg-warning">Yes - ${res.buyoutAmount || 0}</span>
+                          ) : (
+                            <span className="badge bg-secondary">No</span>
+                          )}
+                        </td>
+                        <td>{getStatusBadge(res.status)}</td>
+                        <td>
+                          <div className="d-flex gap-2">
+                            {res.status === 'pending' && (
+                              <>
+                                <button className="btn btn-sm btn-success" onClick={() => {
+                                  setResignationRequests(prev => prev.map(r => r.id === res.id ? { ...r, status: 'accepted' } : r));
+                                  // Create exit process
+                                  const newExit = {
+                                    id: `EX${String(exitProcesses.length + 1).padStart(3, '0')}`,
+                                    employeeId: res.employeeId,
+                                    employeeName: res.employeeName,
+                                    noticePeriodStart: res.submittedDate,
+                                    lastWorkingDay: res.lastWorkingDay,
+                                    status: 'initiated',
+                                    clearancePending: 4
+                                  };
+                                  setExitProcesses([newExit, ...exitProcesses]);
+                                  showNotification('Resignation accepted and exit process initiated');
+                                }}>
+                                  Accept
+                                </button>
+                                <button className="btn btn-sm btn-danger" onClick={() => {
+                                  setResignationRequests(prev => prev.map(r => r.id === res.id ? { ...r, status: 'rejected' } : r));
+                                  showNotification('Resignation rejected');
+                                }}>
+                                  Reject
+                                </button>
+                              </>
+                            )}
+                            {res.buyoutRequested && res.status === 'accepted' && (
+                              <button className="btn btn-sm btn-info" onClick={() => {
+                                showNotification(`Buyout amount: $${res.buyoutAmount || 0}. Notice period reduced.`);
+                              }}>
+                                Process Buyout
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="col-md-8">
           <div className="card border">
             <div className="card-body">
@@ -743,9 +1414,36 @@ const EmployeeLifecycle = () => {
                         <td>{e.clearancePending ? <span className="badge bg-warning">{e.clearancePending} departments</span> : <span className="badge bg-success">Completed</span>}</td>
                         <td>{getStatusBadge(e.status)}</td>
                         <td>
-                          <div className="d-flex gap-2">
+                          <div className="d-flex gap-2 flex-wrap">
                             <button className="btn btn-sm btn-outline-primary" onClick={() => { setSelectedItem(e); setShowDetailModal(true); }}>View Details</button>
-                            {e.status === 'in-process' && <button className="btn btn-sm btn-warning" onClick={() => alert('Tracking clearance (demo)')}>Track Clearance</button>}
+                            {e.status === 'in-process' && (
+                              <>
+                                <button className="btn btn-sm btn-warning" onClick={() => alert('Tracking clearance (demo)')}>Track Clearance</button>
+                                <button className="btn btn-sm btn-info" onClick={() => {
+                                  const interviewDate = prompt('Enter exit interview date (YYYY-MM-DD):');
+                                  if (interviewDate) scheduleExitInterview(e.id, interviewDate);
+                                }}>
+                                  <Icon icon="heroicons:calendar" className="me-1" /> Schedule Interview
+                                </button>
+                                <button className="btn btn-sm btn-success" onClick={() => {
+                                  const settlement = calculateFinalSettlement(e.employeeId);
+                                  setShowSettlementModal(true);
+                                  setSelectedItem(settlement);
+                                }}>
+                                  Calculate Settlement
+                                </button>
+                              </>
+                            )}
+                            {e.status === 'in-process' && (
+                              <>
+                                <button className="btn btn-sm btn-primary" onClick={() => generateRelievingLetter(e.id)}>
+                                  <Icon icon="heroicons:document-text" className="me-1" /> Relieving Letter
+                                </button>
+                                <button className="btn btn-sm btn-secondary" onClick={() => generateExperienceCertificate(e.id)}>
+                                  <Icon icon="heroicons:academic-cap" className="me-1" /> Experience Cert
+                                </button>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -803,10 +1501,75 @@ const EmployeeLifecycle = () => {
                 </div>
               </div>
 
-              <button className="btn btn-primary w-100" onClick={() => alert('Relieving letter generated (demo)')}>
-                <Icon icon="heroicons:document-check" className="me-2" /> Generate Relieving Letter
-              </button>
+              {/* Asset Return Tracking */}
+              <h6 className="mb-3 mt-4">Asset Return Tracking</h6>
+              <div className="list-group list-group-flush mb-3">
+                {assetReturns.map(ar => (
+                  <div key={ar.id} className="list-group-item px-0 py-2">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <div className="fw-semibold small">{ar.assetType}</div>
+                        <div className="text-muted small">{ar.assetId}</div>
+                      </div>
+                      <div>
+                        {ar.status === 'pending' ? (
+                          <span className="badge bg-warning">Pending</span>
+                        ) : (
+                          <span className="badge bg-success">Returned</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
+              {/* Exit Interviews */}
+              <h6 className="mb-3 mt-4">Exit Interviews</h6>
+              <div className="list-group list-group-flush mb-3">
+                {exitInterviews.map(ei => (
+                  <div key={ei.id} className="list-group-item px-0 py-2">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <div className="fw-semibold small">{ei.employeeName}</div>
+                        <div className="text-muted small">Scheduled: {ei.scheduledDate}</div>
+                      </div>
+                      <div>
+                        {ei.questionnaireCompleted ? (
+                          <span className="badge bg-success">Completed</span>
+                        ) : (
+                          <button className="btn btn-sm btn-outline-primary" onClick={() => setShowExitInterviewModal(true)}>
+                            Complete
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Final Settlement */}
+              <h6 className="mb-3 mt-4">Final Settlement</h6>
+              <div className="list-group list-group-flush">
+                {finalSettlements.slice(0, 3).map(fs => (
+                  <div key={fs.id} className="list-group-item px-0 py-2">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <div className="fw-semibold small">{fs.employeeName}</div>
+                        <div className="text-muted small">Net: ${fs.netAmount.toLocaleString()}</div>
+                      </div>
+                      <div>
+                        {fs.status === 'pending-approval' ? (
+                          <button className="btn btn-sm btn-success" onClick={() => approveFinalSettlement(fs.id, 'Finance Manager')}>
+                            Approve
+                          </button>
+                        ) : (
+                          <span className="badge bg-success">Approved</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -992,11 +1755,12 @@ const EmployeeLifecycle = () => {
       case 'exit': return renderExit();
       case 'reports': return renderReports();
       case 'active': 
-        // keep original Active Employment section — simplified search & table here to match style
+        // Enhanced Active Employment section with milestones, verification, contracts, training
         const list = getFilteredList(employees, ['name','email','department','position','stage']);
         const { data, total, page } = paginate(list);
         return (
           <div className="row g-4">
+            {/* Active Employees */}
             <div className="col-12">
               <div className="card border">
                 <div className="card-body">
@@ -1055,7 +1819,174 @@ const EmployeeLifecycle = () => {
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
 
+            {/* Milestone Tracking */}
+            <div className="col-md-6">
+              <div className="card border">
+                <div className="card-header bg-light">
+                  <h6 className="mb-0">Milestone Tracking</h6>
+                </div>
+                <div className="card-body">
+                  <div className="table-responsive">
+                    <table className="table table-sm">
+                      <thead>
+                        <tr>
+                          <th>Employee</th>
+                          <th>Type</th>
+                          <th>Date</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {milestones.map(ms => (
+                          <tr key={ms.id}>
+                            <td>{ms.employeeName}</td>
+                            <td>
+                              {ms.type === 'work-anniversary' ? (
+                                <span className="badge bg-primary"><Icon icon="heroicons:cake" className="me-1" /> {ms.years} Year Anniversary</span>
+                              ) : (
+                                <span className="badge bg-info"><Icon icon="heroicons:gift" className="me-1" /> Birthday</span>
+                              )}
+                            </td>
+                            <td>{ms.date}</td>
+                            <td>{getStatusBadge(ms.status)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Contract Renewal Tracking */}
+            <div className="col-md-6">
+              <div className="card border">
+                <div className="card-header bg-light">
+                  <h6 className="mb-0">Contract Renewal Tracking</h6>
+                </div>
+                <div className="card-body">
+                  <div className="table-responsive">
+                    <table className="table table-sm">
+                      <thead>
+                        <tr>
+                          <th>Employee</th>
+                          <th>Contract Type</th>
+                          <th>End Date</th>
+                          <th>Days Remaining</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {contractRenewals.map(cr => (
+                          <tr key={cr.id} className={cr.daysRemaining <= 30 ? 'table-warning' : ''}>
+                            <td>{cr.employeeName}</td>
+                            <td>{cr.contractType}</td>
+                            <td>{cr.endDate}</td>
+                            <td>
+                              <span className={cr.daysRemaining <= 30 ? 'text-danger fw-bold' : ''}>
+                                {cr.daysRemaining} days
+                              </span>
+                            </td>
+                            <td>{getStatusBadge(cr.renewalStatus)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Annual Information Verification Campaigns */}
+            <div className="col-12">
+              <div className="card border">
+                <div className="card-header bg-light">
+                  <h6 className="mb-0">Annual Information Verification Campaigns</h6>
+                </div>
+                <div className="card-body">
+                  <div className="table-responsive">
+                    <table className="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Campaign Name</th>
+                          <th>Start Date</th>
+                          <th>End Date</th>
+                          <th>Status</th>
+                          <th>Progress</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {verificationCampaigns.map(vc => {
+                          const progress = (vc.completedCount / vc.employeesCount) * 100;
+                          return (
+                            <tr key={vc.id}>
+                              <td>{vc.name}</td>
+                              <td>{vc.startDate}</td>
+                              <td>{vc.endDate}</td>
+                              <td>{getStatusBadge(vc.status)}</td>
+                              <td>
+                                <div className="d-flex align-items-center gap-2">
+                                  <div className="progress flex-grow-1" style={{ height: '20px' }}>
+                                    <div className="progress-bar" style={{ width: `${progress}%` }}>{progress.toFixed(0)}%</div>
+                                  </div>
+                                  <small>{vc.completedCount}/{vc.employeesCount}</small>
+                                </div>
+                              </td>
+                              <td>
+                                <button className="btn btn-sm btn-outline-primary">View Details</button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Training & Certification Tracking */}
+            <div className="col-12">
+              <div className="card border">
+                <div className="card-header bg-light">
+                  <h6 className="mb-0">Training & Certification Tracking</h6>
+                </div>
+                <div className="card-body">
+                  <div className="table-responsive">
+                    <table className="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Employee</th>
+                          <th>Course/Certification</th>
+                          <th>Status</th>
+                          <th>Completion Date</th>
+                          <th>Certification</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {trainings.map(tr => (
+                          <tr key={tr.id}>
+                            <td>{tr.employeeName}</td>
+                            <td>{tr.courseName}</td>
+                            <td>{getStatusBadge(tr.status)}</td>
+                            <td>{tr.completionDate || '-'}</td>
+                            <td>
+                              {tr.certification === 'Yes' ? (
+                                <span className="badge bg-success"><Icon icon="heroicons:check-circle" className="me-1" /> Certified</span>
+                              ) : (
+                                <span className="badge bg-warning">Pending</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1069,12 +2000,19 @@ const EmployeeLifecycle = () => {
   
 
   return (
-    <div menuItems={menuItems} userInfo={userInfo} appName="Employee Lifecycle Management">
-      <div className="container-fluid px-3 px-md-4 py-3">
-        <div className="mb-4">
-          <h5 className="fw-bold text-dark mb-2 d-flex align-items-center gap-2"><Icon icon="heroicons:user-group" /> Employee Lifecycle Management</h5>
-          <p className="text-muted">Manage complete employee journey from onboarding, active employment, transfers to exit</p>
+    <div className="container-fluid px-3 px-md-4 py-3">
+      {/* Notification */}
+      {notification && (
+        <div className={`position-fixed top-0 end-0 m-3 z-50 alert alert-${notification.type === 'error' ? 'danger' : 'success'} alert-dismissible fade show`} role="alert">
+          {notification.message}
+          <button type="button" className="btn-close" onClick={() => setNotification(null)}></button>
         </div>
+      )}
+
+      <div className="mb-4">
+        <h5 className="fw-bold text-dark mb-2 d-flex align-items-center gap-2"><Icon icon="heroicons:user-group" /> Employee Lifecycle Management</h5>
+        <p className="text-muted">Manage complete employee journey from onboarding, active employment, transfers to exit</p>
+      </div>
 
         {/* Tabs */}
         <div className="card border shadow-none mb-4">
@@ -1116,7 +2054,7 @@ const EmployeeLifecycle = () => {
             className="modal show d-block"
             role="dialog"
             aria-modal="true"
-            style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+            style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}
             onClick={() => { setShowDetailModal(false); setSelectedItem(null); }}
           >
             <div className="modal-dialog modal-lg" onClick={(e) => e.stopPropagation()}>
@@ -1128,13 +2066,52 @@ const EmployeeLifecycle = () => {
                 <div className="modal-body">
                   {/* Generic details viewer - show available fields */}
                   <div className="row g-3">
-                    {Object.entries(selectedItem).map(([k, v]) => (
+                    {Object.entries(selectedItem).filter(([k, v]) => k !== 'showRelocation' && k !== 'relocationSupport' && typeof v !== 'object').map(([k, v]) => (
                       <div className="col-md-6" key={k}>
                         <label className="form-label small text-muted">{k}</label>
                         <div className="form-control-plaintext">{String(v)}</div>
                       </div>
                     ))}
                   </div>
+                  
+                  {/* Relocation Support Details */}
+                  {selectedItem.showRelocation && selectedItem.relocationSupport && (
+                    <div className="mt-4 p-3 bg-light rounded">
+                      <h6 className="mb-3">Relocation Support Details</h6>
+                      <div className="row g-3">
+                        <div className="col-md-6">
+                          <label className="form-label small text-muted">Housing Assistance</label>
+                          <div className="form-control-plaintext">
+                            {selectedItem.relocationSupport.housingAssistance ? (
+                              <span className="badge bg-success">Yes</span>
+                            ) : (
+                              <span className="badge bg-secondary">No</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label small text-muted">Travel Reimbursement</label>
+                          <div className="form-control-plaintext">
+                            {selectedItem.relocationSupport.travelReimbursement ? (
+                              <span className="badge bg-success">Yes</span>
+                            ) : (
+                              <span className="badge bg-secondary">No</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label small text-muted">Relocation Allowance</label>
+                          <div className="form-control-plaintext fw-bold">${selectedItem.relocationSupport.relocationAllowance?.toLocaleString() || 0}</div>
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label small text-muted">Status</label>
+                          <div className="form-control-plaintext">
+                            {getStatusBadge(selectedItem.relocationSupport.status)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="modal-footer">
                   <button type="button" className="btn btn-secondary" onClick={() => { setShowDetailModal(false); setSelectedItem(null); }}>Close</button>
@@ -1144,7 +2121,224 @@ const EmployeeLifecycle = () => {
           </div>
         )}
 
-      </div>
+        {/* Candidate Conversion Modal */}
+        {showConversionModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Convert Candidate to Employee</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowConversionModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <p>Select a candidate to convert to employee. This will auto-trigger the onboarding checklist.</p>
+                  <select className="form-select" onChange={(e) => {
+                    const candidate = candidates.find(c => c.id === e.target.value);
+                    if (candidate) convertCandidateToEmployee(candidate);
+                  }}>
+                    <option value="">Select Candidate</option>
+                    {candidates.filter(c => c.offerStatus === 'accepted').map(c => (
+                      <option key={c.id} value={c.id}>{c.name} - {c.position}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowConversionModal(false)}>Cancel</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Resignation Submission Modal */}
+        {showResignationModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Submit Resignation</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowResignationModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <label className="form-label">Employee</label>
+                    <select className="form-select">
+                      <option value="">Select Employee</option>
+                      {employees.map(emp => (
+                        <option key={emp.id} value={emp.id}>{emp.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Resignation Date</label>
+                    <input type="date" className="form-control" defaultValue={new Date().toISOString().split('T')[0]} />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Notice Period (days)</label>
+                    <input type="number" className="form-control" defaultValue="30" />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Reason</label>
+                    <textarea className="form-control" rows="3" placeholder="Enter resignation reason"></textarea>
+                  </div>
+                  <div className="form-check mb-3">
+                    <input className="form-check-input" type="checkbox" id="buyout-request" />
+                    <label className="form-check-label" htmlFor="buyout-request">Request Notice Period Buyout</label>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowResignationModal(false)}>Cancel</button>
+                  <button type="button" className="btn btn-primary" onClick={() => {
+                    showNotification('Resignation submitted successfully');
+                    setShowResignationModal(false);
+                  }}>Submit</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Final Settlement Modal */}
+        {showSettlementModal && selectedItem && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+            <div className="modal-dialog modal-lg modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Final Settlement - {selectedItem.employeeName}</h5>
+                  <button type="button" className="btn-close" onClick={() => { setShowSettlementModal(false); setSelectedItem(null); }}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label">Gross Amount</label>
+                      <div className="form-control-plaintext fw-bold">${selectedItem.grossAmount?.toLocaleString() || 0}</div>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Deductions</label>
+                      <div className="form-control-plaintext text-danger">-${selectedItem.deductions?.toLocaleString() || 0}</div>
+                    </div>
+                    <div className="col-12">
+                      <hr />
+                      <div className="d-flex justify-content-between align-items-center">
+                        <label className="form-label fw-bold">Net Amount</label>
+                        <div className="h4 text-success mb-0">${selectedItem.netAmount?.toLocaleString() || 0}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => { setShowSettlementModal(false); setSelectedItem(null); }}>Close</button>
+                  {selectedItem.status === 'pending-approval' && (
+                    <button type="button" className="btn btn-success" onClick={() => {
+                      approveFinalSettlement(selectedItem.id, 'Finance Manager');
+                      setShowSettlementModal(false);
+                      setSelectedItem(null);
+                    }}>Approve Settlement</button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Exit Interview Modal */}
+        {showExitInterviewModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+            <div className="modal-dialog modal-lg modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Exit Interview Questionnaire</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowExitInterviewModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <label className="form-label">1. What is your primary reason for leaving?</label>
+                    <textarea className="form-control" rows="2"></textarea>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">2. How would you rate your overall experience?</label>
+                    <select className="form-select">
+                      <option>Excellent</option>
+                      <option>Good</option>
+                      <option>Average</option>
+                      <option>Poor</option>
+                    </select>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">3. What could we have done better?</label>
+                    <textarea className="form-control" rows="2"></textarea>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">4. Would you consider returning in the future?</label>
+                    <select className="form-select">
+                      <option>Yes</option>
+                      <option>Maybe</option>
+                      <option>No</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowExitInterviewModal(false)}>Cancel</button>
+                  <button type="button" className="btn btn-primary" onClick={() => {
+                    showNotification('Exit interview questionnaire completed');
+                    setShowExitInterviewModal(false);
+                  }}>Submit</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Internal Job Posting Modal */}
+        {showJobPostingModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+            <div className="modal-dialog modal-lg modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Create Internal Job Posting</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowJobPostingModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="row g-3">
+                    <div className="col-12">
+                      <label className="form-label">Job Title</label>
+                      <input type="text" className="form-control" />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Department</label>
+                      <select className="form-select">
+                        <option>Engineering</option>
+                        <option>Product</option>
+                        <option>Sales</option>
+                        <option>Marketing</option>
+                      </select>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Location</label>
+                      <input type="text" className="form-control" />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Closing Date</label>
+                      <input type="date" className="form-control" />
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label">Job Description</label>
+                      <textarea className="form-control" rows="4"></textarea>
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowJobPostingModal(false)}>Cancel</button>
+                  <button type="button" className="btn btn-primary" onClick={() => {
+                    showNotification('Internal job posting created');
+                    setShowJobPostingModal(false);
+                  }}>Create Posting</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
     </div>
   );
 };

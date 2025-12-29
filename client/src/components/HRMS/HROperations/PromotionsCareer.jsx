@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import RecruiterDashboardLayout from '../../recruiterDashboard/RecruiterDashboardLayout';
+
 
 const PromotionsCareer = () => {
   // ---------------- INITIAL DATA ----------------
@@ -173,7 +173,7 @@ const PromotionsCareer = () => {
   ];
 
   // ---------------- STATE VARIABLES ----------------
-  const [activeTab, setActiveTab] = useState('probation');
+  const [activeTab, setActiveTab] = useState('promotions');
   const [probationEmployees, setProbationEmployees] = useState(initialProbationEmployees);
   const [confirmationEmployees, setConfirmationEmployees] = useState(initialConfirmationEmployees);
   const [promotionEmployees, setPromotionEmployees] = useState(initialPromotionEmployees);
@@ -188,12 +188,78 @@ const PromotionsCareer = () => {
   const [showConfirmationWorkflowModal, setShowConfirmationWorkflowModal] = useState(false);
   const [showPromotionNominationModal, setShowPromotionNominationModal] = useState(false);
   const [showPromotionReviewModal, setShowPromotionReviewModal] = useState(false);
+  const [showPromotionCycleModal, setShowPromotionCycleModal] = useState(false);
+  const [showPromotionLetterModal, setShowPromotionLetterModal] = useState(false);
+  const [showPromotionAnnouncementModal, setShowPromotionAnnouncementModal] = useState(false);
+  const [showIDPModal, setShowIDPModal] = useState(false);
+  const [showSkillGapModal, setShowSkillGapModal] = useState(false);
+  const [showCareerPathModal, setShowCareerPathModal] = useState(false);
+  const [showSuccessionPlanningModal, setShowSuccessionPlanningModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
   // Selected items
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [selectedEmployees, setSelectedEmployees] = useState([]);
+  
+  // Promotion cycle and forms
+  const [promotionCycles, setPromotionCycles] = useState([
+    { id: 1, name: 'Annual 2024', type: 'annual', startDate: '2024-01-01', endDate: '2024-12-31', status: 'active', nominations: 15, approved: 8 },
+    { id: 2, name: 'Q1 2024', type: 'quarterly', startDate: '2024-01-01', endDate: '2024-03-31', status: 'completed', nominations: 5, approved: 4 },
+    { id: 3, name: 'Bi-Annual 2024', type: 'bi_annual', startDate: '2024-07-01', endDate: '2024-12-31', status: 'upcoming', nominations: 0, approved: 0 }
+  ]);
+  
+  const [promotionNominationForm, setPromotionNominationForm] = useState({
+    employeeId: '',
+    promotionCycle: '',
+    currentGrade: '',
+    proposedGrade: '',
+    currentDesignation: '',
+    proposedDesignation: '',
+    currentSalary: '',
+    proposedSalary: '',
+    justification: '',
+    eligibilityCheck: {
+      tenure: false,
+      performance: false,
+      grade: false,
+      skills: false,
+      training: false
+    }
+  });
+  
+  const [idpData, setIdpData] = useState({
+    employeeId: '',
+    currentRole: '',
+    targetRole: '',
+    skills: [],
+    skillGaps: [],
+    trainingRecommendations: [],
+    milestones: [],
+    timeline: ''
+  });
+  
+  const [careerPaths, setCareerPaths] = useState([
+    {
+      employeeId: 'EMP001',
+      name: 'Rajesh Kumar',
+      currentRole: 'Software Engineer',
+      possiblePaths: [
+        {
+          path: 'Technical Track',
+          roles: ['Senior Software Engineer', 'Tech Lead', 'Principal Engineer', 'Engineering Manager'],
+          estimatedTime: '3-5 years',
+          requiredSkills: ['Advanced Programming', 'System Design', 'Team Leadership']
+        },
+        {
+          path: 'Management Track',
+          roles: ['Senior Software Engineer', 'Engineering Manager', 'Senior Manager', 'Director'],
+          estimatedTime: '4-6 years',
+          requiredSkills: ['Team Management', 'Strategic Planning', 'Budget Management']
+        }
+      ]
+    }
+  ]);
 
   // ---------------- HELPER FUNCTIONS ----------------
   const formatDate = (date) => {
@@ -385,11 +451,7 @@ const PromotionsCareer = () => {
   };
 
   return (
-    <div
-      menuItems={menuItems} 
-      userInfo={userInfo}
-      appName="HRMS - HR Operations"
-    >
+    <>
       <div className="container-fluid p-4">
         
         {/* HEADER */}
@@ -424,11 +486,29 @@ const PromotionsCareer = () => {
         <ul className="nav nav-tabs mb-4">
           <li className="nav-item">
             <button 
+              className={`nav-link ${activeTab === 'promotions' ? 'active' : ''}`}
+              onClick={() => setActiveTab('promotions')}
+            >
+              <Icon icon="heroicons-solid:trophy" className="me-1" />
+              Promotions
+            </button>
+          </li>
+          <li className="nav-item">
+            <button 
+              className={`nav-link ${activeTab === 'career' ? 'active' : ''}`}
+              onClick={() => setActiveTab('career')}
+            >
+              <Icon icon="heroicons-solid:chart-bar" className="me-1" />
+              Career Progression
+            </button>
+          </li>
+          <li className="nav-item">
+            <button 
               className={`nav-link ${activeTab === 'probation' ? 'active' : ''}`}
               onClick={() => setActiveTab('probation')}
             >
               <Icon icon="heroicons-solid:document-search" className="me-1" />
-              Probation Management
+              Probation
             </button>
           </li>
           <li className="nav-item">
@@ -437,16 +517,7 @@ const PromotionsCareer = () => {
               onClick={() => setActiveTab('confirmation')}
             >
               <Icon icon="heroicons-solid:document-check" className="me-1" />
-              Employee Confirmation
-            </button>
-          </li>
-          <li className="nav-item">
-            <button 
-              className={`nav-link ${activeTab === 'promotions' ? 'active' : ''}`}
-              onClick={() => setActiveTab('promotions')}
-            >
-              <Icon icon="heroicons-solid:trophy" className="me-1" />
-              Promotions
+              Confirmation
             </button>
           </li>
           <li className="nav-item">
@@ -924,6 +995,192 @@ const PromotionsCareer = () => {
           </>
         )}
 
+        {/* CAREER PROGRESSION TAB */}
+        {activeTab === 'career' && (
+          <>
+            {/* STATISTICS */}
+            <div className="row g-3 mb-4">
+              <div className="col-md-2 col-6">
+                <div className="card border shadow-sm h-100">
+                  <div className="card-body text-center">
+                    <div className="fw-bold text-secondary-light small">Active IDPs</div>
+                    <div className="fw-bold fs-5 text-primary">24</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-2 col-6">
+                <div className="card border shadow-sm h-100">
+                  <div className="card-body text-center">
+                    <div className="fw-bold text-secondary-light small">Skill Gaps Identified</div>
+                    <div className="fw-bold fs-5 text-warning">18</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-2 col-6">
+                <div className="card border shadow-sm h-100">
+                  <div className="card-body text-center">
+                    <div className="fw-bold text-secondary-light small">Training Recommendations</div>
+                    <div className="fw-bold fs-5 text-info">32</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-2 col-6">
+                <div className="card border shadow-sm h-100">
+                  <div className="card-body text-center">
+                    <div className="fw-bold text-secondary-light small">Career Paths Mapped</div>
+                    <div className="fw-bold fs-5 text-success">15</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-2 col-6">
+                <div className="card border shadow-sm h-100">
+                  <div className="card-body text-center">
+                    <div className="fw-bold text-secondary-light small">Succession Plans</div>
+                    <div className="fw-bold fs-5 text-secondary">8</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-2 col-6">
+                <div className="card border shadow-sm h-100">
+                  <div className="card-body text-center">
+                    <div className="fw-bold text-secondary-light small">Ready for Promotion</div>
+                    <div className="fw-bold fs-5 text-success">12</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* QUICK ACTIONS */}
+            <div className="card p-3 mb-4">
+              <div className="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>Career Progression Quick Actions</strong>
+                  <p className="text-muted mb-0 small">Manage career development and progression</p>
+                </div>
+                <div className="d-flex gap-2 flex-wrap">
+                  <button 
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => setShowIDPModal(true)}
+                  >
+                    <Icon icon="heroicons-solid:document-text" className="me-1" />
+                    Create IDP
+                  </button>
+                  <button 
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => setShowSkillGapModal(true)}
+                  >
+                    <Icon icon="heroicons-solid:chart-bar" className="me-1" />
+                    Skill Gap Analysis
+                  </button>
+                  <button 
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => setShowCareerPathModal(true)}
+                  >
+                    <Icon icon="heroicons-solid:map" className="me-1" />
+                    Career Paths
+                  </button>
+                  <button 
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => setShowSuccessionPlanningModal(true)}
+                  >
+                    <Icon icon="heroicons-solid:user-group" className="me-1" />
+                    Succession Planning
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* CAREER PROGRESSION TABLE */}
+            <div className="card">
+              <div className="card-header bg-light">
+                <strong>Employee Career Progression</strong>
+              </div>
+              <div className="card-body">
+                <div className="alert alert-info">
+                  Career progression tracking helps employees plan their growth path and organizations identify high-potential talent.
+                  <br />
+                  <strong>Features:</strong> Individual Development Plans (IDP), Skill Gap Analysis, Training Recommendations, Career Path Visualization, Succession Planning
+                </div>
+                
+                <div className="row g-3 mt-3">
+                  <div className="col-md-6">
+                    <div className="card border h-100">
+                      <div className="card-header bg-light">
+                        <strong>IDP Tracking</strong>
+                      </div>
+                      <div className="card-body">
+                        <p className="small text-muted">Track individual development plans for employees</p>
+                        <button 
+                          className="btn btn-sm btn-primary w-100"
+                          onClick={() => setShowIDPModal(true)}
+                        >
+                          View/Manage IDPs
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="col-md-6">
+                    <div className="card border h-100">
+                      <div className="card-header bg-light">
+                        <strong>Skill Gap Analysis</strong>
+                      </div>
+                      <div className="card-body">
+                        <p className="small text-muted">Identify skill gaps and recommend training</p>
+                        <button 
+                          className="btn btn-sm btn-warning w-100"
+                          onClick={() => setShowSkillGapModal(true)}
+                        >
+                          Analyze Skill Gaps
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="col-md-6">
+                    <div className="card border h-100">
+                      <div className="card-header bg-light">
+                        <strong>Career Path Visualization</strong>
+                      </div>
+                      <div className="card-body">
+                        <p className="small text-muted">Visualize career progression paths for employees</p>
+                        <button 
+                          className="btn btn-sm btn-info w-100"
+                          onClick={() => setShowCareerPathModal(true)}
+                        >
+                          View Career Paths
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="col-md-6">
+                    <div className="card border h-100">
+                      <div className="card-header bg-light">
+                        <strong>Succession Planning</strong>
+                      </div>
+                      <div className="card-body">
+                        <p className="small text-muted">Plan for key role succession and talent pipeline</p>
+                        <button 
+                          className="btn btn-sm btn-success w-100"
+                          onClick={() => setShowSuccessionPlanningModal(true)}
+                        >
+                          Succession Planning
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
         {/* PROMOTIONS TAB */}
         {activeTab === 'promotions' && (
           <>
@@ -984,6 +1241,53 @@ const PromotionsCareer = () => {
               </div>
             </div>
 
+            {/* PROMOTION CYCLES */}
+            <div className="card p-3 mb-4">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <strong>Promotion Cycles</strong>
+                  <p className="text-muted mb-0 small">Manage promotion cycles and timelines</p>
+                </div>
+                <button 
+                  className="btn btn-sm btn-primary"
+                  onClick={() => setShowPromotionCycleModal(true)}
+                >
+                  <Icon icon="heroicons-solid:plus" className="me-1" />
+                  Create Cycle
+                </button>
+              </div>
+              <div className="row g-2">
+                {promotionCycles.map(cycle => (
+                  <div key={cycle.id} className="col-md-4">
+                    <div className="card border h-100">
+                      <div className="card-body p-2">
+                        <div className="d-flex justify-content-between align-items-start mb-2">
+                          <div>
+                            <strong className="d-block">{cycle.name}</strong>
+                            <small className="text-muted text-capitalize">{cycle.type.replace('_', '-')}</small>
+                          </div>
+                          <span className={`badge ${
+                            cycle.status === 'active' ? 'bg-success' :
+                            cycle.status === 'completed' ? 'bg-secondary' :
+                            'bg-warning'
+                          }`}>
+                            {cycle.status}
+                          </span>
+                        </div>
+                        <div className="small text-muted mb-2">
+                          {formatDate(cycle.startDate)} - {formatDate(cycle.endDate)}
+                        </div>
+                        <div className="d-flex justify-content-between small">
+                          <span>Nominations: <strong>{cycle.nominations}</strong></span>
+                          <span>Approved: <strong className="text-success">{cycle.approved}</strong></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* QUICK ACTIONS */}
             <div className="card p-3 mb-4">
               <div className="d-flex justify-content-between align-items-center">
@@ -996,24 +1300,35 @@ const PromotionsCareer = () => {
                     className="btn btn-sm btn-outline-primary"
                     onClick={() => setShowPromotionNominationModal(true)}
                   >
+                    <Icon icon="heroicons-solid:user-plus" className="me-1" />
                     New Nomination
                   </button>
                   <button 
                     className="btn btn-sm btn-outline-primary"
-                    onClick={() => alert('Run eligibility check')}
+                    onClick={() => setShowPromotionCycleModal(true)}
                   >
+                    <Icon icon="heroicons-solid:calendar" className="me-1" />
+                    Manage Cycles
+                  </button>
+                  <button 
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => alert('Run eligibility check for all nominations')}
+                  >
+                    <Icon icon="heroicons-solid:check-circle" className="me-1" />
                     Check Eligibility
                   </button>
                   <button 
                     className="btn btn-sm btn-outline-primary"
                     onClick={() => alert('Schedule committee review')}
                   >
+                    <Icon icon="heroicons-solid:clock" className="me-1" />
                     Schedule Review
                   </button>
                   <button 
                     className="btn btn-sm btn-outline-primary"
-                    onClick={() => alert('Generate promotion letters')}
+                    onClick={() => setShowPromotionLetterModal(true)}
                   >
+                    <Icon icon="heroicons-solid:document-text" className="me-1" />
                     Generate Letters
                   </button>
                 </div>
@@ -1127,11 +1442,24 @@ const PromotionsCareer = () => {
                                 className="btn btn-outline-secondary"
                                 onClick={() => {
                                   setSelectedEmployee(emp);
-                                  alert('Generate promotion letter');
+                                  setShowPromotionLetterModal(true);
                                 }}
                                 title="Generate Letter"
                               >
                                 Letter
+                              </button>
+                            )}
+                            
+                            {emp.promotionStatus === 'approved' && emp.promotionLetterGenerated && !emp.announcementDate && (
+                              <button
+                                className="btn btn-outline-info"
+                                onClick={() => {
+                                  setSelectedEmployee(emp);
+                                  setShowPromotionAnnouncementModal(true);
+                                }}
+                                title="Create Announcement"
+                              >
+                                Announce
                               </button>
                             )}
                           </div>
@@ -1920,10 +2248,107 @@ const PromotionsCareer = () => {
           </div>
         )}
 
+        {/* PROMOTION CYCLE SETUP MODAL */}
+        {showPromotionCycleModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Promotion Cycle Setup</h5>
+                  <button className="btn-close" onClick={() => setShowPromotionCycleModal(false)}></button>
+                </div>
+                
+                <div className="modal-body">
+                  <div className="alert alert-info mb-3">
+                    Create or manage promotion cycles for organizing nominations
+                  </div>
+                  
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label">Cycle Name *</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        placeholder="e.g., Annual 2024"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <label className="form-label">Cycle Type *</label>
+                      <select className="form-select" required>
+                        <option value="">Select type...</option>
+                        <option value="annual">Annual</option>
+                        <option value="bi_annual">Bi-Annual</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="ad_hoc">Ad-hoc</option>
+                      </select>
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <label className="form-label">Start Date *</label>
+                      <input type="date" className="form-control" required />
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <label className="form-label">End Date *</label>
+                      <input type="date" className="form-control" required />
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <label className="form-label">Nomination Deadline</label>
+                      <input type="date" className="form-control" />
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <label className="form-label">Status</label>
+                      <select className="form-select">
+                        <option value="upcoming">Upcoming</option>
+                        <option value="active">Active</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                    </div>
+                    
+                    <div className="col-12">
+                      <label className="form-label">Description</label>
+                      <textarea 
+                        className="form-control" 
+                        rows="3"
+                        placeholder="Describe the promotion cycle objectives and criteria..."
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="modal-footer">
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary"
+                    onClick={() => setShowPromotionCycleModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="button" 
+                    className="btn btn-primary"
+                    onClick={() => {
+                      alert('Promotion cycle created successfully');
+                      setShowPromotionCycleModal(false);
+                    }}
+                  >
+                    Create Cycle
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* PROMOTION NOMINATION MODAL */}
         {showPromotionNominationModal && (
           <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-lg">
+            <div className="modal-dialog modal-xl">
               <div className="modal-content">
                 <div className="modal-header">
                   <h5 className="modal-title">New Promotion Nomination</h5>
@@ -1932,111 +2357,360 @@ const PromotionsCareer = () => {
                 
                 <div className="modal-body">
                   <div className="alert alert-info mb-3">
-                    Create new promotion nomination
+                    Nominate employee for promotion with eligibility verification
                   </div>
                   
                   <div className="row g-3">
                     <div className="col-md-6">
-                      <label className="form-label">Promotion Cycle</label>
-                      <select className="form-select">
-                        <option>Annual</option>
-                        <option>Bi-Annual</option>
-                        <option>Quarterly</option>
-                        <option>Ad-hoc</option>
+                      <label className="form-label">Promotion Cycle *</label>
+                      <select 
+                        className="form-select"
+                        value={promotionNominationForm.promotionCycle}
+                        onChange={(e) => setPromotionNominationForm({
+                          ...promotionNominationForm,
+                          promotionCycle: e.target.value
+                        })}
+                        required
+                      >
+                        <option value="">Select cycle...</option>
+                        {promotionCycles.filter(c => c.status === 'active' || c.status === 'upcoming').map(cycle => (
+                          <option key={cycle.id} value={cycle.id}>{cycle.name}</option>
+                        ))}
                       </select>
                     </div>
                     
                     <div className="col-md-6">
-                      <label className="form-label">Nomination By</label>
-                      <input type="text" className="form-control" placeholder="Manager name" />
+                      <label className="form-label">Nomination By *</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        placeholder="Manager name"
+                        required
+                      />
                     </div>
                     
                     <div className="col-md-6">
-                      <label className="form-label">Select Employee</label>
-                      <select className="form-select">
-                        <option>Select employee...</option>
-                        <option>Rajesh Kumar (Software Engineer)</option>
-                        <option>Sneha Patel (HR Executive)</option>
-                        <option>Amit Singh (Sales Executive)</option>
+                      <label className="form-label">Select Employee *</label>
+                      <select 
+                        className="form-select"
+                        value={promotionNominationForm.employeeId}
+                        onChange={(e) => setPromotionNominationForm({
+                          ...promotionNominationForm,
+                          employeeId: e.target.value
+                        })}
+                        required
+                      >
+                        <option value="">Select employee...</option>
+                        <option value="EMP001">Rajesh Kumar (Software Engineer)</option>
+                        <option value="EMP002">Sneha Patel (HR Executive)</option>
+                        <option value="EMP003">Amit Singh (Sales Executive)</option>
                       </select>
                     </div>
                     
                     <div className="col-md-6">
-                      <label className="form-label">Nomination Date</label>
-                      <input type="date" className="form-control" />
+                      <label className="form-label">Nomination Date *</label>
+                      <input type="date" className="form-control" defaultValue={new Date().toISOString().split('T')[0]} required />
                     </div>
                     
-                    <div className="col-md-6">
-                      <label className="form-label">Eligibility Criteria Check</label>
-                      <div className="border rounded p-2">
-                        <div className="form-check">
-                          <input className="form-check-input" type="checkbox" defaultChecked />
-                          <label className="form-check-label">Minimum tenure: 1 year</label>
+                    <div className="col-12">
+                      <div className="card border">
+                        <div className="card-header bg-light">
+                          <strong>Eligibility Criteria Check</strong>
                         </div>
-                        <div className="form-check">
-                          <input className="form-check-input" type="checkbox" defaultChecked />
-                          <label className="form-check-label">Performance rating: Exceeds Expectations</label>
-                        </div>
-                        <div className="form-check">
-                          <input className="form-check-input" type="checkbox" />
-                          <label className="form-check-label">Skills assessment completed</label>
-                        </div>
-                        <div className="form-check">
-                          <input className="form-check-input" type="checkbox" />
-                          <label className="form-check-label">Training requirements met</label>
+                        <div className="card-body">
+                          <div className="row">
+                            <div className="col-md-6">
+                              <div className="form-check mb-2">
+                                <input 
+                                  className="form-check-input" 
+                                  type="checkbox"
+                                  checked={promotionNominationForm.eligibilityCheck.tenure}
+                                  onChange={(e) => setPromotionNominationForm({
+                                    ...promotionNominationForm,
+                                    eligibilityCheck: {
+                                      ...promotionNominationForm.eligibilityCheck,
+                                      tenure: e.target.checked
+                                    }
+                                  })}
+                                />
+                                <label className="form-check-label">
+                                  <strong>Minimum Tenure:</strong> 1 year in current role
+                                  <small className="d-block text-muted">Current tenure: 2.5 years ✓</small>
+                                </label>
+                              </div>
+                              
+                              <div className="form-check mb-2">
+                                <input 
+                                  className="form-check-input" 
+                                  type="checkbox"
+                                  checked={promotionNominationForm.eligibilityCheck.performance}
+                                  onChange={(e) => setPromotionNominationForm({
+                                    ...promotionNominationForm,
+                                    eligibilityCheck: {
+                                      ...promotionNominationForm.eligibilityCheck,
+                                      performance: e.target.checked
+                                    }
+                                  })}
+                                />
+                                <label className="form-check-label">
+                                  <strong>Performance Rating:</strong> Exceeds Expectations
+                                  <small className="d-block text-muted">Last rating: Exceeds Expectations ✓</small>
+                                </label>
+                              </div>
+                              
+                              <div className="form-check mb-2">
+                                <input 
+                                  className="form-check-input" 
+                                  type="checkbox"
+                                  checked={promotionNominationForm.eligibilityCheck.grade}
+                                  onChange={(e) => setPromotionNominationForm({
+                                    ...promotionNominationForm,
+                                    eligibilityCheck: {
+                                      ...promotionNominationForm.eligibilityCheck,
+                                      grade: e.target.checked
+                                    }
+                                  })}
+                                />
+                                <label className="form-check-label">
+                                  <strong>Grade Eligibility:</strong> Grade progression valid
+                                  <small className="d-block text-muted">P3 → P4 eligible ✓</small>
+                                </label>
+                              </div>
+                            </div>
+                            
+                            <div className="col-md-6">
+                              <div className="form-check mb-2">
+                                <input 
+                                  className="form-check-input" 
+                                  type="checkbox"
+                                  checked={promotionNominationForm.eligibilityCheck.skills}
+                                  onChange={(e) => setPromotionNominationForm({
+                                    ...promotionNominationForm,
+                                    eligibilityCheck: {
+                                      ...promotionNominationForm.eligibilityCheck,
+                                      skills: e.target.checked
+                                    }
+                                  })}
+                                />
+                                <label className="form-check-label">
+                                  <strong>Skills Assessment:</strong> Completed and passed
+                                  <small className="d-block text-muted">Assessment status: Completed ✓</small>
+                                </label>
+                              </div>
+                              
+                              <div className="form-check mb-2">
+                                <input 
+                                  className="form-check-input" 
+                                  type="checkbox"
+                                  checked={promotionNominationForm.eligibilityCheck.training}
+                                  onChange={(e) => setPromotionNominationForm({
+                                    ...promotionNominationForm,
+                                    eligibilityCheck: {
+                                      ...promotionNominationForm.eligibilityCheck,
+                                      training: e.target.checked
+                                    }
+                                  })}
+                                />
+                                <label className="form-check-label">
+                                  <strong>Training Requirements:</strong> All mandatory trainings completed
+                                  <small className="d-block text-muted">Training status: Completed ✓</small>
+                                </label>
+                              </div>
+                              
+                              <div className="alert alert-success mt-3">
+                                <strong>Eligibility Status:</strong> {
+                                  Object.values(promotionNominationForm.eligibilityCheck).every(v => v) 
+                                    ? 'All criteria met ✓' 
+                                    : 'Some criteria pending'
+                                }
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
                     
                     <div className="col-md-6">
-                      <label className="form-label">Proposed Changes</label>
+                      <label className="form-label">Current Grade & Designation</label>
                       <div className="border rounded p-2">
                         <div className="mb-2">
                           <small className="text-muted">Current Grade</small>
-                          <input type="text" className="form-control form-control-sm" placeholder="P3" />
-                        </div>
-                        <div className="mb-2">
-                          <small className="text-muted">Proposed Grade</small>
-                          <input type="text" className="form-control form-control-sm" placeholder="P4" />
-                        </div>
-                        <div className="mb-2">
-                          <small className="text-muted">Current Designation</small>
-                          <input type="text" className="form-control form-control-sm" placeholder="Senior Software Engineer" />
+                          <input 
+                            type="text" 
+                            className="form-control form-control-sm" 
+                            placeholder="P3"
+                            value={promotionNominationForm.currentGrade}
+                            onChange={(e) => setPromotionNominationForm({
+                              ...promotionNominationForm,
+                              currentGrade: e.target.value
+                            })}
+                          />
                         </div>
                         <div>
-                          <small className="text-muted">Proposed Designation</small>
-                          <input type="text" className="form-control form-control-sm" placeholder="Tech Lead" />
+                          <small className="text-muted">Current Designation</small>
+                          <input 
+                            type="text" 
+                            className="form-control form-control-sm" 
+                            placeholder="Senior Software Engineer"
+                            value={promotionNominationForm.currentDesignation}
+                            onChange={(e) => setPromotionNominationForm({
+                              ...promotionNominationForm,
+                              currentDesignation: e.target.value
+                            })}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <label className="form-label">Proposed Grade & Designation *</label>
+                      <div className="border rounded p-2">
+                        <div className="mb-2">
+                          <small className="text-muted">Proposed Grade *</small>
+                          <input 
+                            type="text" 
+                            className="form-control form-control-sm" 
+                            placeholder="P4"
+                            value={promotionNominationForm.proposedGrade}
+                            onChange={(e) => setPromotionNominationForm({
+                              ...promotionNominationForm,
+                              proposedGrade: e.target.value
+                            })}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <small className="text-muted">Proposed Designation *</small>
+                          <input 
+                            type="text" 
+                            className="form-control form-control-sm" 
+                            placeholder="Tech Lead"
+                            value={promotionNominationForm.proposedDesignation}
+                            onChange={(e) => setPromotionNominationForm({
+                              ...promotionNominationForm,
+                              proposedDesignation: e.target.value
+                            })}
+                            required
+                          />
                         </div>
                       </div>
                     </div>
                     
                     <div className="col-12">
-                      <label className="form-label">Salary Revision</label>
+                      <label className="form-label">Salary Revision *</label>
                       <div className="row g-2">
                         <div className="col-md-6">
-                          <input type="text" className="form-control" placeholder="Current Salary" />
+                          <label className="form-label small">Current Salary</label>
+                          <input 
+                            type="text" 
+                            className="form-control" 
+                            placeholder="₹12,00,000"
+                            value={promotionNominationForm.currentSalary}
+                            onChange={(e) => setPromotionNominationForm({
+                              ...promotionNominationForm,
+                              currentSalary: e.target.value
+                            })}
+                          />
                         </div>
                         <div className="col-md-6">
-                          <input type="text" className="form-control" placeholder="Proposed Salary" />
+                          <label className="form-label small">Proposed Salary *</label>
+                          <input 
+                            type="text" 
+                            className="form-control" 
+                            placeholder="₹14,50,000"
+                            value={promotionNominationForm.proposedSalary}
+                            onChange={(e) => setPromotionNominationForm({
+                              ...promotionNominationForm,
+                              proposedSalary: e.target.value
+                            })}
+                            required
+                          />
                         </div>
+                        {promotionNominationForm.currentSalary && promotionNominationForm.proposedSalary && (
+                          <div className="col-12">
+                            <div className="alert alert-info">
+                              <strong>Salary Increase:</strong> {
+                                Math.round((
+                                  (parseInt(promotionNominationForm.proposedSalary.replace(/[^0-9]/g, '')) - 
+                                   parseInt(promotionNominationForm.currentSalary.replace(/[^0-9]/g, ''))) / 
+                                  parseInt(promotionNominationForm.currentSalary.replace(/[^0-9]/g, '')) * 100
+                                ).toFixed(2))
+                              }% | 
+                              <strong> Annual Cost Impact:</strong> ₹{
+                                (parseInt(promotionNominationForm.proposedSalary.replace(/[^0-9]/g, '')) - 
+                                 parseInt(promotionNominationForm.currentSalary.replace(/[^0-9]/g, ''))).toLocaleString('en-IN')
+                              }
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                     
                     <div className="col-12">
-                      <label className="form-label">Justification for Promotion</label>
-                      <textarea className="form-control" rows="3" placeholder="Provide detailed justification..." />
+                      <label className="form-label">Justification for Promotion *</label>
+                      <textarea 
+                        className="form-control" 
+                        rows="4" 
+                        placeholder="Provide detailed justification including achievements, contributions, and readiness for the new role..."
+                        value={promotionNominationForm.justification}
+                        onChange={(e) => setPromotionNominationForm({
+                          ...promotionNominationForm,
+                          justification: e.target.value
+                        })}
+                        required
+                      />
                     </div>
                     
                     <div className="col-12">
-                      <label className="form-label">Approval Workflow Setup</label>
-                      <select className="form-select" multiple>
-                        <option>Manager Approval</option>
-                        <option>Department Head Approval</option>
-                        <option>HR Approval</option>
-                        <option>Promotion Committee Review</option>
-                        <option>Leadership Approval</option>
-                      </select>
-                      <small className="text-muted">Hold Ctrl/Cmd to select multiple</small>
+                      <div className="card border">
+                        <div className="card-header bg-light">
+                          <strong>Multi-Level Approval Workflow</strong>
+                        </div>
+                        <div className="card-body">
+                          <div className="row">
+                            <div className="col-md-6">
+                              <div className="form-check mb-2">
+                                <input className="form-check-input" type="checkbox" defaultChecked />
+                                <label className="form-check-label">
+                                  <strong>Manager Approval</strong> - Direct Manager
+                                </label>
+                              </div>
+                              <div className="form-check mb-2">
+                                <input className="form-check-input" type="checkbox" defaultChecked />
+                                <label className="form-check-label">
+                                  <strong>Department Head Approval</strong> - Department Head
+                                </label>
+                              </div>
+                              <div className="form-check mb-2">
+                                <input className="form-check-input" type="checkbox" defaultChecked />
+                                <label className="form-check-label">
+                                  <strong>HR Approval</strong> - HR Business Partner
+                                </label>
+                              </div>
+                            </div>
+                            <div className="col-md-6">
+                              <div className="form-check mb-2">
+                                <input className="form-check-input" type="checkbox" defaultChecked />
+                                <label className="form-check-label">
+                                  <strong>Promotion Committee Review</strong> - Committee Review
+                                </label>
+                              </div>
+                              <div className="form-check mb-2">
+                                <input className="form-check-input" type="checkbox" />
+                                <label className="form-check-label">
+                                  <strong>Leadership Approval</strong> - C-Suite/Leadership
+                                </label>
+                              </div>
+                              <div className="form-check">
+                                <input className="form-check-input" type="checkbox" />
+                                <label className="form-check-label">
+                                  <strong>Finance Approval</strong> - Budget Approval (if required)
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2059,6 +2733,435 @@ const PromotionsCareer = () => {
                   >
                     Create Nomination
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PROMOTION LETTER MODAL */}
+        {showPromotionLetterModal && selectedEmployee && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Generate Promotion Letter - {selectedEmployee.name}</h5>
+                  <button className="btn-close" onClick={() => setShowPromotionLetterModal(false)}></button>
+                </div>
+                
+                <div className="modal-body">
+                  <div className="alert alert-success mb-3">
+                    Generating promotion letter for <strong>{selectedEmployee.name}</strong>
+                  </div>
+                  
+                  <div className="card mb-3">
+                    <div className="card-header bg-light">
+                      <strong>Promotion Details</strong>
+                    </div>
+                    <div className="card-body">
+                      <div className="row mb-3">
+                        <div className="col-md-6">
+                          <label className="form-label">Current Role</label>
+                          <input type="text" className="form-control" value={selectedEmployee.currentDesignation} readOnly />
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label">New Role</label>
+                          <input type="text" className="form-control" value={selectedEmployee.proposedDesignation} readOnly />
+                        </div>
+                      </div>
+                      <div className="row mb-3">
+                        <div className="col-md-6">
+                          <label className="form-label">Current Grade</label>
+                          <input type="text" className="form-control" value={selectedEmployee.currentGrade} readOnly />
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label">New Grade</label>
+                          <input type="text" className="form-control" value={selectedEmployee.proposedGrade} readOnly />
+                        </div>
+                      </div>
+                      <div className="row">
+                        <div className="col-md-6">
+                          <label className="form-label">Current Salary</label>
+                          <input type="text" className="form-control" value={selectedEmployee.currentSalary} readOnly />
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label">New Salary</label>
+                          <input type="text" className="form-control" value={selectedEmployee.proposedSalary} readOnly />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="card mb-3">
+                    <div className="card-header bg-light">
+                      <strong>Letter Options</strong>
+                    </div>
+                    <div className="card-body">
+                      <div className="form-check mb-2">
+                        <input className="form-check-input" type="checkbox" defaultChecked />
+                        <label className="form-check-label">Include salary details</label>
+                      </div>
+                      <div className="form-check mb-2">
+                        <input className="form-check-input" type="checkbox" defaultChecked />
+                        <label className="form-check-label">Include effective date</label>
+                      </div>
+                      <div className="form-check mb-2">
+                        <input className="form-check-input" type="checkbox" defaultChecked />
+                        <label className="form-check-label">Send via email to employee</label>
+                      </div>
+                      <div className="form-check">
+                        <input className="form-check-input" type="checkbox" />
+                        <label className="form-check-label">CC Manager</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="modal-footer">
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary"
+                    onClick={() => setShowPromotionLetterModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="button" 
+                    className="btn btn-primary"
+                    onClick={() => {
+                      alert('Promotion letter generated successfully');
+                      setShowPromotionLetterModal(false);
+                    }}
+                  >
+                    <Icon icon="heroicons-solid:document-download" className="me-1" />
+                    Generate & Download Letter
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PROMOTION ANNOUNCEMENT MODAL */}
+        {showPromotionAnnouncementModal && selectedEmployee && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Create Promotion Announcement - {selectedEmployee.name}</h5>
+                  <button className="btn-close" onClick={() => setShowPromotionAnnouncementModal(false)}></button>
+                </div>
+                
+                <div className="modal-body">
+                  <div className="alert alert-info mb-3">
+                    Create announcement for <strong>{selectedEmployee.name}</strong>'s promotion
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label className="form-label">Announcement Date *</label>
+                    <input type="date" className="form-control" defaultValue={new Date().toISOString().split('T')[0]} required />
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label className="form-label">Announcement Message *</label>
+                    <textarea 
+                      className="form-control" 
+                      rows="5"
+                      placeholder="We are pleased to announce the promotion of..."
+                      defaultValue={`We are pleased to announce that ${selectedEmployee.name} has been promoted from ${selectedEmployee.currentDesignation} to ${selectedEmployee.proposedDesignation}, effective [date]. This promotion recognizes their outstanding contributions and continued commitment to excellence.`}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label className="form-label">Distribution Channels</label>
+                    <div className="form-check">
+                      <input className="form-check-input" type="checkbox" defaultChecked />
+                      <label className="form-check-label">Company-wide email</label>
+                    </div>
+                    <div className="form-check">
+                      <input className="form-check-input" type="checkbox" defaultChecked />
+                      <label className="form-check-label">Department notification</label>
+                    </div>
+                    <div className="form-check">
+                      <input className="form-check-input" type="checkbox" />
+                      <label className="form-check-label">Internal portal/newsletter</label>
+                    </div>
+                    <div className="form-check">
+                      <input className="form-check-input" type="checkbox" />
+                      <label className="form-check-label">Social media (internal)</label>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label className="form-label">Include Photo</label>
+                    <input type="file" className="form-control" accept="image/*" />
+                  </div>
+                </div>
+                
+                <div className="modal-footer">
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary"
+                    onClick={() => setShowPromotionAnnouncementModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="button" 
+                    className="btn btn-primary"
+                    onClick={() => {
+                      alert('Promotion announcement created and sent successfully');
+                      setShowPromotionAnnouncementModal(false);
+                    }}
+                  >
+                    Create & Send Announcement
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* IDP MODAL */}
+        {showIDPModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Individual Development Plan (IDP)</h5>
+                  <button className="btn-close" onClick={() => setShowIDPModal(false)}></button>
+                </div>
+                
+                <div className="modal-body">
+                  <div className="alert alert-info mb-3">
+                    Create and track Individual Development Plans for employee career growth
+                  </div>
+                  
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label">Employee *</label>
+                      <select className="form-select" required>
+                        <option value="">Select employee...</option>
+                        <option>Rajesh Kumar</option>
+                        <option>Sneha Patel</option>
+                      </select>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Current Role</label>
+                      <input type="text" className="form-control" placeholder="Software Engineer" />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Target Role *</label>
+                      <input type="text" className="form-control" placeholder="Senior Software Engineer" required />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Timeline</label>
+                      <input type="text" className="form-control" placeholder="6-12 months" />
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label">Development Areas</label>
+                      <textarea className="form-control" rows="3" placeholder="List key development areas..." />
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label">Training Recommendations</label>
+                      <textarea className="form-control" rows="2" placeholder="Recommended training programs..." />
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label">Milestones</label>
+                      <textarea className="form-control" rows="3" placeholder="Key milestones and timelines..." />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={() => setShowIDPModal(false)}>Cancel</button>
+                  <button className="btn btn-primary" onClick={() => { alert('IDP created successfully'); setShowIDPModal(false); }}>Save IDP</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SKILL GAP ANALYSIS MODAL */}
+        {showSkillGapModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Skill Gap Analysis</h5>
+                  <button className="btn-close" onClick={() => setShowSkillGapModal(false)}></button>
+                </div>
+                
+                <div className="modal-body">
+                  <div className="alert alert-warning mb-3">
+                    Analyze skill gaps and recommend training programs
+                  </div>
+                  
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label">Employee *</label>
+                      <select className="form-select" required>
+                        <option value="">Select employee...</option>
+                        <option>Rajesh Kumar</option>
+                      </select>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Target Role</label>
+                      <input type="text" className="form-control" placeholder="Senior Software Engineer" />
+                    </div>
+                    <div className="col-12">
+                      <div className="card border">
+                        <div className="card-header bg-light">
+                          <strong>Current Skills vs Required Skills</strong>
+                        </div>
+                        <div className="card-body">
+                          <div className="row">
+                            <div className="col-md-6">
+                              <strong>Current Skills:</strong>
+                              <ul>
+                                <li>React ✓</li>
+                                <li>Node.js ✓</li>
+                                <li>MongoDB ✓</li>
+                              </ul>
+                            </div>
+                            <div className="col-md-6">
+                              <strong>Required Skills:</strong>
+                              <ul>
+                                <li>React ✓</li>
+                                <li>Node.js ✓</li>
+                                <li>System Design ⚠️</li>
+                                <li>Team Leadership ⚠️</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label">Training Recommendations</label>
+                      <textarea className="form-control" rows="3" placeholder="Recommended training programs to bridge skill gaps..." />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={() => setShowSkillGapModal(false)}>Cancel</button>
+                  <button className="btn btn-primary" onClick={() => { alert('Skill gap analysis saved'); setShowSkillGapModal(false); }}>Save Analysis</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CAREER PATH MODAL */}
+        {showCareerPathModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-xl">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Career Path Visualization</h5>
+                  <button className="btn-close" onClick={() => setShowCareerPathModal(false)}></button>
+                </div>
+                
+                <div className="modal-body">
+                  <div className="alert alert-info mb-3">
+                    Visualize career progression paths for employees
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label className="form-label">Select Employee</label>
+                    <select className="form-select">
+                      <option>Rajesh Kumar (Software Engineer)</option>
+                    </select>
+                  </div>
+                  
+                  <div className="card border">
+                    <div className="card-body">
+                      <h6>Technical Track Path</h6>
+                      <div className="d-flex align-items-center gap-2 mb-3">
+                        <span className="badge bg-secondary">Software Engineer</span>
+                        <Icon icon="heroicons-solid:arrow-right" />
+                        <span className="badge bg-info">Senior Software Engineer</span>
+                        <Icon icon="heroicons-solid:arrow-right" />
+                        <span className="badge bg-primary">Tech Lead</span>
+                        <Icon icon="heroicons-solid:arrow-right" />
+                        <span className="badge bg-success">Principal Engineer</span>
+                      </div>
+                      
+                      <h6>Management Track Path</h6>
+                      <div className="d-flex align-items-center gap-2">
+                        <span className="badge bg-secondary">Software Engineer</span>
+                        <Icon icon="heroicons-solid:arrow-right" />
+                        <span className="badge bg-info">Senior Software Engineer</span>
+                        <Icon icon="heroicons-solid:arrow-right" />
+                        <span className="badge bg-primary">Engineering Manager</span>
+                        <Icon icon="heroicons-solid:arrow-right" />
+                        <span className="badge bg-success">Senior Manager</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={() => setShowCareerPathModal(false)}>Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SUCCESSION PLANNING MODAL */}
+        {showSuccessionPlanningModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Succession Planning</h5>
+                  <button className="btn-close" onClick={() => setShowSuccessionPlanningModal(false)}></button>
+                </div>
+                
+                <div className="modal-body">
+                  <div className="alert alert-info mb-3">
+                    Plan for key role succession and build talent pipeline
+                  </div>
+                  
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label">Key Role *</label>
+                      <select className="form-select" required>
+                        <option value="">Select role...</option>
+                        <option>Engineering Manager</option>
+                        <option>Department Head</option>
+                      </select>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Current Incumbent</label>
+                      <input type="text" className="form-control" placeholder="Current employee name" />
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label">Potential Successors</label>
+                      <div className="border rounded p-2" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        <div className="form-check">
+                          <input className="form-check-input" type="checkbox" />
+                          <label className="form-check-label">Rajesh Kumar - Ready in 6-12 months</label>
+                        </div>
+                        <div className="form-check">
+                          <input className="form-check-input" type="checkbox" />
+                          <label className="form-check-label">Priya Sharma - Ready in 12-18 months</label>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label">Development Plans</label>
+                      <textarea className="form-control" rows="3" placeholder="Development plans for potential successors..." />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={() => setShowSuccessionPlanningModal(false)}>Cancel</button>
+                  <button className="btn btn-primary" onClick={() => { alert('Succession plan saved'); setShowSuccessionPlanningModal(false); }}>Save Plan</button>
                 </div>
               </div>
             </div>
@@ -2358,7 +3461,7 @@ const PromotionsCareer = () => {
         )}
         
       </div>
-    </div>
+    </>
   );
 };
 

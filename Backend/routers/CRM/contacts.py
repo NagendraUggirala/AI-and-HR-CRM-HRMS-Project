@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List
 import os
+import uuid
 
 from schema import contact
 from core.database import get_db
@@ -32,7 +33,12 @@ def convert_contact_output(db_contact: ContactModel):
         contact_dict["tags"] = []
 
     if db_contact.profile_photo:
-        contact_dict["profile_photo"] = f"/{db_contact.profile_photo}"
+        # Normalize path separators and ensure it starts with /
+        normalized_path = db_contact.profile_photo.replace("\\", "/")
+        if not normalized_path.startswith("/"):
+            contact_dict["profile_photo"] = f"/{normalized_path}"
+        else:
+            contact_dict["profile_photo"] = normalized_path
     else:
         contact_dict["profile_photo"] = None
 
@@ -90,18 +96,26 @@ def update_profile_photo(
     if not db_contact:
         raise HTTPException(status_code=404, detail="Contact not found")
 
-    # Save file
-    file_path = f"{UPLOAD_FOLDER}/profile_{contact_id}_{file.filename}"
+    # Save file - normalize path separators
+    import uuid
+    file_extension = os.path.splitext(file.filename)[1] if file.filename else '.jpg'
+    unique_filename = f"profile_{contact_id}_{uuid.uuid4().hex[:8]}{file_extension}"
+    file_path = os.path.join(UPLOAD_FOLDER, unique_filename).replace("\\", "/")
 
     with open(file_path, "wb") as buffer:
         buffer.write(file.file.read())
 
-    # Update DB
+    # Update DB - store relative path
     db_contact.profile_photo = file_path
     db.commit()
     db.refresh(db_contact)
 
+    # Return normalized path for frontend
+    normalized_path = file_path.replace("\\", "/")
+    if not normalized_path.startswith("/"):
+        normalized_path = f"/{normalized_path}"
+
     return {
         "message": "Profile photo updated successfully",
-        "profile_photo": f"/{file_path}"
+        "profile_photo": normalized_path
     }
