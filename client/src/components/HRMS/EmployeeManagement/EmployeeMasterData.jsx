@@ -461,12 +461,18 @@ const EmployeeMasterData = () => {
       phonePrimary: '',
       phoneSecondary: '',
       phoneEmergency: '',
+      profilePhoto: '',
       currentAddress: { line1: '', line2: '', city: '', state: '', pincode: '', country: '' },
       permanentAddress: { line1: '', line2: '', city: '', state: '', pincode: '', country: '' },
       emergencyContacts: [],
       familyMembers: [],
       nominees: [],
-      identification: { aadhaar: { number: '' }, pan: { number: '' }, passport: { number: '', expiryDate: '' }, voterId: { number: '' } }
+      identification: { 
+        aadhaar: { number: '', document: '' }, 
+        pan: { number: '', document: '' }, 
+        passport: { number: '', expiryDate: '' }, 
+        voterId: { number: '' } 
+      }
     },
     // Employment Info
     employmentInfo: {
@@ -729,7 +735,17 @@ const EmployeeMasterData = () => {
         ...newEmployee.salaryInfo,
         currentCTC: parseInt(newEmployee.salaryInfo.currentCTC || newEmployee.salary) || 0
       },
-      statutoryInfo: newEmployee.statutoryInfo
+      statutoryInfo: {
+        ...newEmployee.statutoryInfo,
+        pan: {
+          ...newEmployee.statutoryInfo.pan,
+          number: newEmployee.personalInfo.identification.pan.number || newEmployee.statutoryInfo.pan.number
+        },
+        aadhaar: {
+          ...newEmployee.statutoryInfo.aadhaar,
+          number: newEmployee.personalInfo.identification.aadhaar.number || newEmployee.statutoryInfo.aadhaar.number
+        }
+      }
     });
     
     setEmployees([...employees, newEmp]);
@@ -755,12 +771,18 @@ const EmployeeMasterData = () => {
         phonePrimary: '',
         phoneSecondary: '',
         phoneEmergency: '',
+        profilePhoto: '',
         currentAddress: { line1: '', line2: '', city: '', state: '', pincode: '', country: '' },
         permanentAddress: { line1: '', line2: '', city: '', state: '', pincode: '', country: '' },
         emergencyContacts: [],
         familyMembers: [],
         nominees: [],
-        identification: { aadhaar: { number: '' }, pan: { number: '' }, passport: { number: '', expiryDate: '' }, voterId: { number: '' } }
+        identification: { 
+          aadhaar: { number: '', document: '' }, 
+          pan: { number: '', document: '' }, 
+          passport: { number: '', expiryDate: '' }, 
+          voterId: { number: '' } 
+        }
       },
       employmentInfo: {
         dateOfJoining: new Date().toISOString().split('T')[0],
@@ -1208,9 +1230,41 @@ const EmployeeMasterData = () => {
 
         {/* Employee Details Modal - Comprehensive Tabbed View */}
         {showModal && selectedEmployee && (
-          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
-            <div className="modal-dialog modal-xl" style={{ maxWidth: '95%' }}>
-              <div className="modal-content">
+          <div 
+            className="modal show d-block" 
+            style={{ 
+              backgroundColor: 'rgba(0,0,0,0.5)', 
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 1050,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '15px',
+              overflow: 'auto'
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowModal(false);
+                setActiveDetailTab('personal');
+              }
+            }}
+          >
+            <div 
+              className="modal-dialog modal-xl" 
+              style={{ 
+                maxWidth: '1400px', 
+                width: '90%', 
+                margin: 'auto',
+                maxHeight: '90vh',
+                position: 'relative',
+                transform: 'none'
+              }}
+            >
+              <div className="modal-content" style={{ maxHeight: '90vh',width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderRadius: '8px', boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}>
                 <div className="modal-header bg-primary text-white">
                   <div className="d-flex align-items-center gap-3">
                     {selectedEmployee.personalInfo?.profilePhoto ? (
@@ -1243,9 +1297,9 @@ const EmployeeMasterData = () => {
                     }}
                   ></button>
                 </div>
-                <div className="modal-body p-0">
+                <div className="modal-body p-0" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', flex: 1 }}>
                   {/* Tab Navigation */}
-                  <ul className="nav nav-tabs border-bottom px-3 pt-3">
+                  <ul className="nav nav-tabs border-bottom px-3 pt-3" style={{ flexShrink: 0 }}>
                     <li className="nav-item">
                       <button
                         className={`nav-link ${activeDetailTab === 'personal' ? 'active' : ''}`}
@@ -1294,7 +1348,7 @@ const EmployeeMasterData = () => {
                   </ul>
 
                   {/* Tab Content */}
-                  <div className="p-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                  <div className="p-4" style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
                     {/* Personal Information Tab */}
                     {activeDetailTab === 'personal' && (
                       <PersonalInfoTab employee={selectedEmployee} formatDate={formatDate} />
@@ -1326,7 +1380,7 @@ const EmployeeMasterData = () => {
                     )}
                   </div>
                 </div>
-                <div className="modal-footer">
+                <div className="modal-footer" style={{ flexShrink: 0 }}>
                   <button
                     type="button"
                     className="btn btn-secondary"
@@ -1364,9 +1418,41 @@ const EmployeeMasterData = () => {
 
         {/* Add Employee Modal - Comprehensive Tabbed Form */}
         {showAddModal && (
-          <div className="modal show d-block d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)'}}>
-            <div className="modal-dialog modal-xl" style={{ maxWidth: '100%', width: '1200px', margin: '0 auto' }}>
-              <div className="modal-content">
+          <div 
+            className="modal show d-block" 
+            style={{ 
+              backgroundColor: 'rgba(0,0,0,0.5)', 
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 1050,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '15px',
+              overflow: 'auto'
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowAddModal(false);
+                setActiveAddTab('personal');
+              }
+            }}
+          >
+            <div 
+              className="modal-dialog modal-xl" 
+              style={{ 
+                maxWidth: '1600px', 
+                width: '95%', 
+                margin: '0 auto',
+                maxHeight: '90vh',
+                position: 'relative',
+                transform: 'none'
+              }}
+            >
+              <div className="modal-content" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column', borderRadius: '8px', boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}>
                 <div className="modal-header bg-primary text-white">
                   <h5 className="modal-title d-flex align-items-center gap-2 text-white">
                     <Icon icon="heroicons:user-plus" />
@@ -1381,9 +1467,9 @@ const EmployeeMasterData = () => {
                     }}
                   ></button>
                 </div>
-                <div className="modal-body p-0">
+                <div className="modal-body p-0" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', flex: 1 }}>
                   {/* Tab Navigation */}
-                  <ul className="nav nav-tabs border-bottom px-3 pt-3">
+                  <ul className="nav nav-tabs border-bottom px-3 pt-3" style={{ flexShrink: 0 }}>
                     <li className="nav-item">
                       <button
                         className={`nav-link ${activeAddTab === 'personal' ? 'active' : ''}`}
@@ -1423,10 +1509,54 @@ const EmployeeMasterData = () => {
                   </ul>
 
                   {/* Tab Content */}
-                  <div className="p-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                  <div className="p-4" style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
                     {/* Personal Information Tab */}
                     {activeAddTab === 'personal' && (
                       <div className="row g-3">
+                        {/* Profile Photo Upload */}
+                        <div className="col-12 mb-3">
+                          <label className="form-label">Profile Photo</label>
+                          <div className="d-flex align-items-center gap-3">
+                            <div className="position-relative">
+                              {newEmployee.personalInfo.profilePhoto ? (
+                                <img 
+                                  src={newEmployee.personalInfo.profilePhoto} 
+                                  alt="Profile" 
+                                  className="rounded-circle border"
+                                  style={{ width: '100px', height: '100px', objectFit: 'cover' }}
+                                />
+                              ) : (
+                                <div className="rounded-circle border d-flex align-items-center justify-content-center bg-light" style={{ width: '100px', height: '100px' }}>
+                                  <Icon icon="heroicons:user" className="fs-1 text-muted" />
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <input
+                                type="file"
+                                className="form-control"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                      setNewEmployee({
+                                        ...newEmployee,
+                                        personalInfo: {
+                                          ...newEmployee.personalInfo,
+                                          profilePhoto: reader.result
+                                        }
+                                      });
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                              />
+                              <small className="text-muted">Upload employee profile photo (JPG, PNG, max 5MB)</small>
+                            </div>
+                          </div>
+                        </div>
                         <div className="col-md-6">
                           <label className="form-label">Full Name <span className="text-danger">*</span></label>
                           <input
@@ -1517,6 +1647,23 @@ const EmployeeMasterData = () => {
                           />
                         </div>
                         <div className="col-md-6">
+                          <label className="form-label">Languages</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={newEmployee.personalInfo.languages.join(', ')}
+                            onChange={(e) => setNewEmployee({
+                              ...newEmployee,
+                              personalInfo: {
+                                ...newEmployee.personalInfo,
+                                languages: e.target.value.split(',').map(lang => lang.trim()).filter(lang => lang)
+                              }
+                            })}
+                            placeholder="Enter languages (comma separated, e.g., English, Hindi, Spanish)"
+                          />
+                          <small className="text-muted">Separate multiple languages with commas</small>
+                        </div>
+                        <div className="col-md-6">
                           <label className="form-label">Personal Email</label>
                           <input
                             type="email"
@@ -1595,6 +1742,325 @@ const EmployeeMasterData = () => {
                             })}
                             placeholder="1234 5678 9012"
                           />
+                        </div>
+
+                        {/* Current Address Section */}
+                        <div className="col-12 mt-4">
+                          <h6 className="fw-bold mb-3 border-bottom pb-2">
+                            <Icon icon="heroicons:map-pin" className="me-2" />
+                            Current Address
+                          </h6>
+                        </div>
+                        <div className="col-md-12">
+                          <label className="form-label">Address Line 1</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={newEmployee.personalInfo.currentAddress.line1}
+                            onChange={(e) => setNewEmployee({
+                              ...newEmployee,
+                              personalInfo: {
+                                ...newEmployee.personalInfo,
+                                currentAddress: {...newEmployee.personalInfo.currentAddress, line1: e.target.value}
+                              }
+                            })}
+                            placeholder="Enter address line 1"
+                          />
+                        </div>
+                        <div className="col-md-12">
+                          <label className="form-label">Address Line 2</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={newEmployee.personalInfo.currentAddress.line2}
+                            onChange={(e) => setNewEmployee({
+                              ...newEmployee,
+                              personalInfo: {
+                                ...newEmployee.personalInfo,
+                                currentAddress: {...newEmployee.personalInfo.currentAddress, line2: e.target.value}
+                              }
+                            })}
+                            placeholder="Enter address line 2"
+                          />
+                        </div>
+                        <div className="col-md-4">
+                          <label className="form-label">City</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={newEmployee.personalInfo.currentAddress.city}
+                            onChange={(e) => setNewEmployee({
+                              ...newEmployee,
+                              personalInfo: {
+                                ...newEmployee.personalInfo,
+                                currentAddress: {...newEmployee.personalInfo.currentAddress, city: e.target.value}
+                              }
+                            })}
+                            placeholder="Enter city"
+                          />
+                        </div>
+                        <div className="col-md-4">
+                          <label className="form-label">State</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={newEmployee.personalInfo.currentAddress.state}
+                            onChange={(e) => setNewEmployee({
+                              ...newEmployee,
+                              personalInfo: {
+                                ...newEmployee.personalInfo,
+                                currentAddress: {...newEmployee.personalInfo.currentAddress, state: e.target.value}
+                              }
+                            })}
+                            placeholder="Enter state"
+                          />
+                        </div>
+                        <div className="col-md-4">
+                          <label className="form-label">Pincode</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={newEmployee.personalInfo.currentAddress.pincode}
+                            onChange={(e) => setNewEmployee({
+                              ...newEmployee,
+                              personalInfo: {
+                                ...newEmployee.personalInfo,
+                                currentAddress: {...newEmployee.personalInfo.currentAddress, pincode: e.target.value}
+                              }
+                            })}
+                            placeholder="Enter pincode"
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label">Country</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={newEmployee.personalInfo.currentAddress.country}
+                            onChange={(e) => setNewEmployee({
+                              ...newEmployee,
+                              personalInfo: {
+                                ...newEmployee.personalInfo,
+                                currentAddress: {...newEmployee.personalInfo.currentAddress, country: e.target.value}
+                              }
+                            })}
+                            placeholder="Enter country"
+                          />
+                        </div>
+
+                        {/* Permanent Address Section */}
+                        <div className="col-12 mt-4">
+                          <h6 className="fw-bold mb-3 border-bottom pb-2">
+                            <Icon icon="heroicons:home" className="me-2" />
+                            Permanent Address
+                          </h6>
+                        </div>
+                        <div className="col-md-12">
+                          <div className="form-check mb-3">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              id="sameAsCurrent"
+                              checked={JSON.stringify(newEmployee.personalInfo.currentAddress) === JSON.stringify(newEmployee.personalInfo.permanentAddress) && 
+                                       newEmployee.personalInfo.currentAddress.line1 !== ''}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setNewEmployee({
+                                    ...newEmployee,
+                                    personalInfo: {
+                                      ...newEmployee.personalInfo,
+                                      permanentAddress: {...newEmployee.personalInfo.currentAddress}
+                                    }
+                                  });
+                                }
+                              }}
+                            />
+                            <label className="form-check-label" htmlFor="sameAsCurrent">
+                              Same as Current Address
+                            </label>
+                          </div>
+                        </div>
+                        <div className="col-md-12">
+                          <label className="form-label">Address Line 1</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={newEmployee.personalInfo.permanentAddress.line1}
+                            onChange={(e) => setNewEmployee({
+                              ...newEmployee,
+                              personalInfo: {
+                                ...newEmployee.personalInfo,
+                                permanentAddress: {...newEmployee.personalInfo.permanentAddress, line1: e.target.value}
+                              }
+                            })}
+                            placeholder="Enter address line 1"
+                          />
+                        </div>
+                        <div className="col-md-12">
+                          <label className="form-label">Address Line 2</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={newEmployee.personalInfo.permanentAddress.line2}
+                            onChange={(e) => setNewEmployee({
+                              ...newEmployee,
+                              personalInfo: {
+                                ...newEmployee.personalInfo,
+                                permanentAddress: {...newEmployee.personalInfo.permanentAddress, line2: e.target.value}
+                              }
+                            })}
+                            placeholder="Enter address line 2"
+                          />
+                        </div>
+                        <div className="col-md-4">
+                          <label className="form-label">City</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={newEmployee.personalInfo.permanentAddress.city}
+                            onChange={(e) => setNewEmployee({
+                              ...newEmployee,
+                              personalInfo: {
+                                ...newEmployee.personalInfo,
+                                permanentAddress: {...newEmployee.personalInfo.permanentAddress, city: e.target.value}
+                              }
+                            })}
+                            placeholder="Enter city"
+                          />
+                        </div>
+                        <div className="col-md-4">
+                          <label className="form-label">State</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={newEmployee.personalInfo.permanentAddress.state}
+                            onChange={(e) => setNewEmployee({
+                              ...newEmployee,
+                              personalInfo: {
+                                ...newEmployee.personalInfo,
+                                permanentAddress: {...newEmployee.personalInfo.permanentAddress, state: e.target.value}
+                              }
+                            })}
+                            placeholder="Enter state"
+                          />
+                        </div>
+                        <div className="col-md-4">
+                          <label className="form-label">Pincode</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={newEmployee.personalInfo.permanentAddress.pincode}
+                            onChange={(e) => setNewEmployee({
+                              ...newEmployee,
+                              personalInfo: {
+                                ...newEmployee.personalInfo,
+                                permanentAddress: {...newEmployee.personalInfo.permanentAddress, pincode: e.target.value}
+                              }
+                            })}
+                            placeholder="Enter pincode"
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label">Country</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={newEmployee.personalInfo.permanentAddress.country}
+                            onChange={(e) => setNewEmployee({
+                              ...newEmployee,
+                              personalInfo: {
+                                ...newEmployee.personalInfo,
+                                permanentAddress: {...newEmployee.personalInfo.permanentAddress, country: e.target.value}
+                              }
+                            })}
+                            placeholder="Enter country"
+                          />
+                        </div>
+
+                        {/* Document Upload Section */}
+                        <div className="col-12 mt-4">
+                          <h6 className="fw-bold mb-3 border-bottom pb-2">
+                            <Icon icon="heroicons:document-text" className="me-2" />
+                            Document Proof Upload
+                          </h6>
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label">PAN Card Photo</label>
+                          <input
+                            type="file"
+                            className="form-control"
+                            accept="image/*,.pdf"
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  setNewEmployee({
+                                    ...newEmployee,
+                                    personalInfo: {
+                                      ...newEmployee.personalInfo,
+                                      identification: {
+                                        ...newEmployee.personalInfo.identification,
+                                        pan: {
+                                          ...newEmployee.personalInfo.identification.pan,
+                                          document: reader.result
+                                        }
+                                      }
+                                    }
+                                  });
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+                          <small className="text-muted">Upload PAN card photo (JPG, PNG, PDF, max 5MB)</small>
+                          {newEmployee.personalInfo.identification.pan.document && (
+                            <div className="mt-2">
+                              <a href={newEmployee.personalInfo.identification.pan.document} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary">
+                                <Icon icon="heroicons:eye" className="me-1" />
+                                View Uploaded
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label">Aadhaar Card Photo</label>
+                          <input
+                            type="file"
+                            className="form-control"
+                            accept="image/*,.pdf"
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  setNewEmployee({
+                                    ...newEmployee,
+                                    personalInfo: {
+                                      ...newEmployee.personalInfo,
+                                      identification: {
+                                        ...newEmployee.personalInfo.identification,
+                                        aadhaar: {
+                                          ...newEmployee.personalInfo.identification.aadhaar,
+                                          document: reader.result
+                                        }
+                                      }
+                                    }
+                                  });
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+                          <small className="text-muted">Upload Aadhaar card photo (JPG, PNG, PDF, max 5MB)</small>
+                          {newEmployee.personalInfo.identification.aadhaar.document && (
+                            <div className="mt-2">
+                              <a href={newEmployee.personalInfo.identification.aadhaar.document} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary">
+                                <Icon icon="heroicons:eye" className="me-1" />
+                                View Uploaded
+                              </a>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -1931,37 +2397,11 @@ const EmployeeMasterData = () => {
                     {/* Statutory & Compliance Tab */}
                     {activeAddTab === 'statutory' && (
                       <div className="row g-3">
-                        <div className="col-md-6">
-                          <label className="form-label">PAN Number</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.statutoryInfo.pan.number}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              statutoryInfo: {
-                                ...newEmployee.statutoryInfo,
-                                pan: {...newEmployee.statutoryInfo.pan, number: e.target.value}
-                              }
-                            })}
-                            placeholder="ABCDE1234F"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Aadhaar Number</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.statutoryInfo.aadhaar.number}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              statutoryInfo: {
-                                ...newEmployee.statutoryInfo,
-                                aadhaar: {...newEmployee.statutoryInfo.aadhaar, number: e.target.value}
-                              }
-                            })}
-                            placeholder="1234 5678 9012"
-                          />
+                        <div className="col-12 mb-3">
+                          <div className="alert alert-info">
+                            <Icon icon="heroicons:information-circle" className="me-2" />
+                            <strong>Note:</strong> PAN and Aadhaar numbers are managed in the Personal Info tab. This section is for statutory compliance and verification status.
+                          </div>
                         </div>
                         <div className="col-md-6">
                           <label className="form-label">PF Enrolled</label>
@@ -2035,7 +2475,7 @@ const EmployeeMasterData = () => {
                     )}
                   </div>
                 </div>
-                <div className="modal-footer">
+                <div className="modal-footer d-flex justify-content-end gap-2" style={{ flexShrink: 0 }}>
                   <button
                     type="button"
                     className="btn btn-secondary"
@@ -2048,7 +2488,7 @@ const EmployeeMasterData = () => {
                   </button>
                   <button 
                     type="button" 
-                    className="btn btn-success"
+                    className="btn btn-success d-flex align-items-center"
                     onClick={handleAddEmployee}
                     disabled={!newEmployee.name || !newEmployee.email || !newEmployee.employmentInfo.designation || !newEmployee.salary}
                   >

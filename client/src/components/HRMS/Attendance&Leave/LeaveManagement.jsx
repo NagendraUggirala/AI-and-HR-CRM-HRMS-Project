@@ -262,6 +262,31 @@ const LeaveManagement = () => {
   const [filterStatus, setFilterStatus] = useState("All");
   const [calendarView, setCalendarView] = useState("month");
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDept, setSelectedDept] = useState("All");
+  const [planningStartDate, setPlanningStartDate] = useState(new Date().toISOString().split("T")[0]);
+  const [planningEndDate, setPlanningEndDate] = useState(() => {
+    const date = new Date();
+    date.setMonth(date.getMonth() + 3);
+    return date.toISOString().split("T")[0];
+  });
+  const [showCampaignModal, setShowCampaignModal] = useState(false);
+  const [campaignForm, setCampaignForm] = useState({
+    name: "",
+    period: "quarterly",
+    startDate: "",
+    endDate: "",
+    targetDepartment: "All",
+    message: "",
+    status: "active",
+  });
+  const [showDelegationModal, setShowDelegationModal] = useState(false);
+  const [delegationForm, setDelegationForm] = useState({
+    fromApprover: "",
+    toApprover: "",
+    startDate: "",
+    endDate: "",
+    reason: "",
+  });
 
   // Form states
   const [leaveTypeForm, setLeaveTypeForm] = useState({
@@ -282,6 +307,8 @@ const LeaveManagement = () => {
     isOptional: false,
     usageLimit: null,
     description: "",
+    proration: { enabled: true, method: "proportional" }, // proportional, none, full
+    approvalWorkflow: { levels: 1, approvers: [{ level: 1, role: "Manager", required: true }] },
   });
 
   const [applicationForm, setApplicationForm] = useState({
@@ -314,6 +341,19 @@ const LeaveManagement = () => {
     expiryDate: "",
     source: "holiday", // holiday, weekend
     description: "",
+    policyType: "compOff", // compOff, overtime
+  });
+
+  // Approval delegation state
+  const [approvalDelegations, setApprovalDelegations] = useState(() => {
+    const stored = localStorage.getItem('approvalDelegations');
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  // Leave planning campaign state
+  const [leavePlanningCampaigns, setLeavePlanningCampaigns] = useState(() => {
+    const stored = localStorage.getItem('leavePlanningCampaigns');
+    return stored ? JSON.parse(stored) : [];
   });
 
   // Load from localStorage
@@ -347,6 +387,14 @@ const LeaveManagement = () => {
     localStorage.setItem("compOffs", JSON.stringify(compOffs));
     localStorage.setItem("leaveAdjustments", JSON.stringify(leaveAdjustments));
   }, [state]);
+
+  useEffect(() => {
+    localStorage.setItem("approvalDelegations", JSON.stringify(approvalDelegations));
+  }, [approvalDelegations]);
+
+  useEffect(() => {
+    localStorage.setItem("leavePlanningCampaigns", JSON.stringify(leavePlanningCampaigns));
+  }, [leavePlanningCampaigns]);
 
   // ==================== LEAVE TYPE FUNCTIONS ====================
   const handleAddLeaveType = () => {
@@ -388,6 +436,8 @@ const LeaveManagement = () => {
       isOptional: false,
       usageLimit: null,
       description: "",
+      proration: { enabled: true, method: "proportional" },
+      approvalWorkflow: { levels: 1, approvers: [{ level: 1, role: "Manager", required: true }] },
     });
   };
 
@@ -459,6 +509,35 @@ const LeaveManagement = () => {
       days,
     });
 
+    // Build multi-level approval workflow
+    const workflowLevels = leaveType?.approvalWorkflow?.levels || 1;
+    const approvalWorkflow = [];
+    for (let i = 1; i <= workflowLevels; i++) {
+      const workflowConfig = leaveType?.approvalWorkflow?.approvers?.find(a => a.level === i);
+      if (workflowConfig) {
+        const effectiveApprover = getEffectiveApprover(workflowConfig.role, applicationForm.startDate);
+        approvalWorkflow.push({
+          level: i,
+          approver: effectiveApprover,
+          originalApprover: workflowConfig.role,
+          status: shouldAutoApprove ? "approved" : "pending",
+          required: workflowConfig.required !== false,
+          delegated: effectiveApprover !== workflowConfig.role,
+        });
+      } else {
+        // Default single level workflow
+        approvalWorkflow.push({
+          level: 1,
+          approver: getEffectiveApprover("Manager", applicationForm.startDate),
+          originalApprover: "Manager",
+          status: shouldAutoApprove ? "approved" : "pending",
+          required: true,
+          delegated: false,
+        });
+        break;
+      }
+    }
+
     const application = {
       id: Date.now(),
       ...applicationForm,
@@ -468,9 +547,7 @@ const LeaveManagement = () => {
       appliedBy: employee?.name || applicationForm.employeeId,
       leaveTypeName: leaveType?.name || "Unknown",
       currentBalance: availableBalance,
-      approvalWorkflow: [
-        { level: 1, approver: "Manager", status: shouldAutoApprove ? "approved" : "pending", required: true },
-      ],
+      approvalWorkflow,
       isAutoApproved: shouldAutoApprove,
     };
 
@@ -671,6 +748,7 @@ const LeaveManagement = () => {
       status: "available",
       applied: false,
       createdAt: new Date().toISOString(),
+      policyType: compOffForm.policyType || "compOff", // Differentiate from overtime
     };
 
     dispatch({ type: "ADD_COMP_OFF", payload: compOff });
@@ -682,8 +760,9 @@ const LeaveManagement = () => {
       expiryDate: "",
       source: "holiday",
       description: "",
+      policyType: "compOff",
     });
-    alert("Comp-off added successfully");
+    alert(`Comp-off added successfully (Policy: ${compOffForm.policyType})`);
   };
 
   const handleApplyCompOff = (compOffId) => {
@@ -743,6 +822,28 @@ const LeaveManagement = () => {
     );
   };
 
+  // Calculate prorated leave based on joining/exit date
+  const calculateProratedLeave = (leaveType, employee, joiningDate, exitDate) => {
+    if (!leaveType.proration?.enabled || leaveType.proration.method === "none") {
+      return leaveType.accrualAmount;
+    }
+
+    if (leaveType.proration.method === "full") {
+      return leaveType.accrualAmount;
+    }
+
+    // Proportional proration
+    const today = new Date();
+    const startDate = exitDate ? new Date(exitDate) : (joiningDate ? new Date(joiningDate) : new Date(today.getFullYear(), 0, 1));
+    const endDate = exitDate ? new Date(exitDate) : new Date(today.getFullYear(), 11, 31);
+    
+    const totalDays = (endDate - startDate) / (1000 * 60 * 60 * 24);
+    const fullYearDays = 365;
+    const proratedAmount = (leaveType.accrualAmount * totalDays) / fullYearDays;
+
+    return Math.round(proratedAmount * 100) / 100; // Round to 2 decimal places
+  };
+
   // Auto-accrual function (should be called periodically)
   const processAutoAccrual = () => {
     const today = new Date();
@@ -767,8 +868,14 @@ const LeaveManagement = () => {
               lastAccrual.getFullYear() !== currentYear;
 
             if (shouldAccrue) {
+              // Apply proration if enabled
+              let accrualAmount = leaveType.accrualAmount;
+              if (leaveType.proration?.enabled && balance.joiningDate) {
+                accrualAmount = calculateProratedLeave(leaveType, employee, balance.joiningDate, balance.exitDate);
+              }
+
               const newAccrued = Math.min(
-                leaveType.accrualAmount,
+                accrualAmount,
                 leaveType.maxAccrual - (balance.accrued || 0)
               );
 
@@ -783,14 +890,18 @@ const LeaveManagement = () => {
               }
             }
           } else {
-            // Create new balance with initial accrual
+            // Create new balance with initial accrual (consider proration for new joiners)
+            let initialAccrual = leaveType.accrualAmount;
+            // Note: In real scenario, you'd get employee joining date
+            // For now, using full accrual, but structure supports proration
+            
             const newBalance = {
               id: Date.now(),
               employeeId: employee.id,
               leaveTypeId: leaveType.id,
-              balance: leaveType.accrualAmount,
+              balance: initialAccrual,
               used: 0,
-              accrued: leaveType.accrualAmount,
+              accrued: initialAccrual,
               carryForward: 0,
               encashed: 0,
               openingBalance: 0,
@@ -881,6 +992,101 @@ const LeaveManagement = () => {
     }
 
     return false;
+  };
+
+  // Get effective approver considering delegation
+  const getEffectiveApprover = (originalApprover, applicationDate) => {
+    const delegation = approvalDelegations.find(
+      d => d.fromApprover === originalApprover &&
+      new Date(d.startDate) <= new Date(applicationDate) &&
+      new Date(d.endDate) >= new Date(applicationDate) &&
+      d.isActive
+    );
+    return delegation ? delegation.toApprover : originalApprover;
+  };
+
+  // Setup approval delegation
+  const setupApprovalDelegation = (fromApprover, toApprover, startDate, endDate, reason) => {
+    const delegation = {
+      id: Date.now(),
+      fromApprover,
+      toApprover,
+      startDate,
+      endDate,
+      reason,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+    };
+    setApprovalDelegations(prev => {
+      const updated = [...prev, delegation];
+      localStorage.setItem('approvalDelegations', JSON.stringify(updated));
+      return updated;
+    });
+    alert("Approval delegation setup successfully");
+  };
+
+  // Export leave balance statement
+  const exportLeaveBalanceStatement = (employeeId, format = 'csv') => {
+    const balances = employeeId 
+      ? leaveBalances.filter(b => b.employeeId === employeeId)
+      : leaveBalances;
+
+    if (format === 'csv') {
+      const headers = ['Employee', 'Leave Type', 'Opening Balance', 'Accrued', 'Used', 'Carry Forward', 'Encashed', 'Current Balance'];
+      const rows = balances.map(balance => {
+        const employee = initialEmployees.find(e => e.id === balance.employeeId);
+        const leaveType = leaveTypes.find(lt => lt.id === balance.leaveTypeId);
+        return [
+          employee?.name || balance.employeeId,
+          leaveType?.name || 'Unknown',
+          balance.openingBalance || 0,
+          balance.accrued || 0,
+          balance.used || 0,
+          balance.carryForward || 0,
+          balance.encashed || 0,
+          balance.balance || 0,
+        ];
+      });
+
+      const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `leave_balance_statement_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      alert('Leave balance statement exported successfully');
+    } else {
+      // PDF/Print functionality would go here
+      window.print();
+    }
+  };
+
+  // Leave coverage planning
+  const calculateLeaveCoverage = (department, startDate, endDate) => {
+    const departmentEmployees = initialEmployees.filter(e => e.department === department);
+    const leavesInPeriod = leaveApplications.filter(app => {
+      const appStart = new Date(app.startDate);
+      const appEnd = new Date(app.endDate || app.startDate);
+      return app.status === 'approved' &&
+        appStart <= new Date(endDate) &&
+        appEnd >= new Date(startDate);
+    });
+
+    const employeeLeaves = {};
+    departmentEmployees.forEach(emp => {
+      employeeLeaves[emp.id] = leavesInPeriod.filter(l => l.employeeId === emp.id);
+    });
+
+    return {
+      totalEmployees: departmentEmployees.length,
+      employeesOnLeave: Object.keys(employeeLeaves).filter(id => employeeLeaves[id].length > 0).length,
+      coverage: ((departmentEmployees.length - Object.keys(employeeLeaves).filter(id => employeeLeaves[id].length > 0).length) / departmentEmployees.length * 100).toFixed(1),
+      leaveDetails: employeeLeaves,
+    };
   };
 
   // Handle leave application withdrawal
@@ -1092,6 +1298,14 @@ const LeaveManagement = () => {
                   Process Lapse
                 </button>
                 <button
+                  className="btn btn-info btn-sm"
+                  onClick={() => exportLeaveBalanceStatement(null, 'csv')}
+                  title="Export leave balance statement"
+                >
+                  <Download size={16} className="me-2" />
+                  Export Statement
+                </button>
+                <button
                   className="btn btn-primary btn-sm"
                   onClick={() => setShowBalanceModal(true)}
                 >
@@ -1198,6 +1412,13 @@ const LeaveManagement = () => {
                                 title="Edit Balance"
                               >
                                 <Edit size={14} />
+                              </button>
+                              <button
+                                className="btn btn-sm btn-outline-info"
+                                onClick={() => exportLeaveBalanceStatement(balance.employeeId, 'csv')}
+                                title="Export Statement"
+                              >
+                                <Download size={14} />
                               </button>
                               {leaveType?.encashment?.enabled && balance.balance > 0 && (
                                 <button
@@ -1563,6 +1784,435 @@ const LeaveManagement = () => {
     );
   };
 
+  const renderLeavePlanning = () => {
+    const departments = [...new Set(initialEmployees.map(e => e.department))];
+    const coverage = selectedDept === "All" 
+      ? departments.map(dept => calculateLeaveCoverage(dept, planningStartDate, planningEndDate))
+      : [calculateLeaveCoverage(selectedDept, planningStartDate, planningEndDate)];
+
+    const handleCreateCampaign = () => {
+      const campaign = {
+        id: Date.now(),
+        ...campaignForm,
+        createdAt: new Date().toISOString(),
+        createdBy: "Admin",
+      };
+      setLeavePlanningCampaigns(prev => {
+        const updated = [...prev, campaign];
+        localStorage.setItem('leavePlanningCampaigns', JSON.stringify(updated));
+        return updated;
+      });
+      setShowCampaignModal(false);
+      setCampaignForm({
+        name: "",
+        period: "quarterly",
+        startDate: "",
+        endDate: "",
+        targetDepartment: "All",
+        message: "",
+        status: "active",
+      });
+      alert("Leave planning campaign created successfully");
+    };
+
+    return (
+      <div className="row g-4">
+        <div className="col-12">
+          <div className="card border-0 shadow-sm">
+            <div className="card-header bg-white py-3">
+              <div className="d-flex justify-content-between align-items-center">
+                <h5 className="mb-0 d-flex align-items-center">
+                  <CalendarDays size={20} className="me-2 text-primary" />
+                  Leave Planning & Coverage
+                </h5>
+                <div className="d-flex gap-2">
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={() => setShowCampaignModal(true)}
+                  >
+                    <Plus size={16} className="me-2" />
+                    Create Campaign
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="card-body">
+              <div className="row g-3 mb-4">
+                <div className="col-md-4">
+                  <label className="form-label">Department</label>
+                  <select
+                    className="form-select"
+                    value={selectedDept}
+                    onChange={(e) => setSelectedDept(e.target.value)}
+                  >
+                    <option value="All">All Departments</option>
+                    {departments.map(dept => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">Start Date</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={planningStartDate}
+                    onChange={(e) => setPlanningStartDate(e.target.value)}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">End Date</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={planningEndDate}
+                    onChange={(e) => setPlanningEndDate(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <h6 className="mb-3">Coverage Analysis</h6>
+              <div className="row g-3 mb-4">
+                {coverage.map((cov, idx) => (
+                  <div key={idx} className="col-md-4">
+                    <div className="card border">
+                      <div className="card-body">
+                        <div className="fw-bold text-primary">
+                          {selectedDept === "All" ? departments[idx] : selectedDept}
+                        </div>
+                        <div className="mt-2">
+                          <small className="text-muted">Total Employees: {cov.totalEmployees}</small>
+                          <br />
+                          <small className="text-muted">On Leave: {cov.employeesOnLeave}</small>
+                          <br />
+                          <div className={`mt-2 badge bg-${parseFloat(cov.coverage) >= 80 ? 'success' : parseFloat(cov.coverage) >= 60 ? 'warning' : 'danger'}`}>
+                            Coverage: {cov.coverage}%
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <h6 className="mb-3">Active Planning Campaigns</h6>
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Campaign Name</th>
+                      <th>Period</th>
+                      <th>Start Date</th>
+                      <th>End Date</th>
+                      <th>Department</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {leavePlanningCampaigns.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="text-center py-4">
+                          <p className="text-muted mb-0">No planning campaigns</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      leavePlanningCampaigns.map(campaign => (
+                        <tr key={campaign.id}>
+                          <td>{campaign.name}</td>
+                          <td><span className="badge bg-info">{campaign.period}</span></td>
+                          <td>{campaign.startDate}</td>
+                          <td>{campaign.endDate}</td>
+                          <td>{campaign.targetDepartment}</td>
+                          <td>
+                            <span className={`badge bg-${campaign.status === 'active' ? 'success' : 'secondary'}`}>
+                              {campaign.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Campaign Modal */}
+        {showCampaignModal && (
+          <div className="modal show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+            <div className="modal-dialog">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Create Leave Planning Campaign</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setShowCampaignModal(false)}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <div className="row g-3">
+                    <div className="col-12">
+                      <label className="form-label">Campaign Name *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={campaignForm.name}
+                        onChange={(e) => setCampaignForm({ ...campaignForm, name: e.target.value })}
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Period *</label>
+                      <select
+                        className="form-select"
+                        value={campaignForm.period}
+                        onChange={(e) => setCampaignForm({ ...campaignForm, period: e.target.value })}
+                      >
+                        <option value="quarterly">Quarterly</option>
+                        <option value="annual">Annual</option>
+                      </select>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Target Department</label>
+                      <select
+                        className="form-select"
+                        value={campaignForm.targetDepartment}
+                        onChange={(e) => setCampaignForm({ ...campaignForm, targetDepartment: e.target.value })}
+                      >
+                        <option value="All">All Departments</option>
+                        {departments.map(dept => (
+                          <option key={dept} value={dept}>{dept}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Start Date *</label>
+                      <input
+                        type="date"
+                        className="form-control"
+                        value={campaignForm.startDate}
+                        onChange={(e) => setCampaignForm({ ...campaignForm, startDate: e.target.value })}
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">End Date *</label>
+                      <input
+                        type="date"
+                        className="form-control"
+                        value={campaignForm.endDate}
+                        onChange={(e) => setCampaignForm({ ...campaignForm, endDate: e.target.value })}
+                      />
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label">Message</label>
+                      <textarea
+                        className="form-control"
+                        rows="3"
+                        value={campaignForm.message}
+                        onChange={(e) => setCampaignForm({ ...campaignForm, message: e.target.value })}
+                        placeholder="Campaign message to employees..."
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowCampaignModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={handleCreateCampaign}
+                  >
+                    Create Campaign
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderApprovalDelegation = () => {
+    return (
+      <div className="row g-4">
+        <div className="col-12">
+          <div className="card border-0 shadow-sm">
+            <div className="card-header bg-white py-3">
+              <div className="d-flex justify-content-between align-items-center">
+                <h5 className="mb-0 d-flex align-items-center">
+                  <Users size={20} className="me-2 text-primary" />
+                  Approval Delegation Management
+                </h5>
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={() => setShowDelegationModal(true)}
+                >
+                  <Plus size={16} className="me-2" />
+                  Setup Delegation
+                </button>
+              </div>
+            </div>
+            <div className="card-body">
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead className="table-light">
+                    <tr>
+                      <th>From Approver</th>
+                      <th>To Approver</th>
+                      <th>Start Date</th>
+                      <th>End Date</th>
+                      <th>Reason</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {approvalDelegations.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="text-center py-4">
+                          <p className="text-muted mb-0">No approval delegations configured</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      approvalDelegations.map(delegation => {
+                        const isActive = delegation.isActive && 
+                          new Date(delegation.startDate) <= new Date() &&
+                          new Date(delegation.endDate) >= new Date();
+                        return (
+                          <tr key={delegation.id}>
+                            <td>{delegation.fromApprover}</td>
+                            <td>{delegation.toApprover}</td>
+                            <td>{delegation.startDate}</td>
+                            <td>{delegation.endDate}</td>
+                            <td><small>{delegation.reason}</small></td>
+                            <td>
+                              <span className={`badge bg-${isActive ? 'success' : 'secondary'}`}>
+                                {isActive ? 'Active' : 'Inactive'}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Delegation Modal */}
+        {showDelegationModal && (
+          <div className="modal show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+            <div className="modal-dialog">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Setup Approval Delegation</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setShowDelegationModal(false)}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label">From Approver (Role) *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={delegationForm.fromApprover}
+                        onChange={(e) => setDelegationForm({ ...delegationForm, fromApprover: e.target.value })}
+                        placeholder="e.g., Manager, HR"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">To Approver (Role) *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={delegationForm.toApprover}
+                        onChange={(e) => setDelegationForm({ ...delegationForm, toApprover: e.target.value })}
+                        placeholder="e.g., Deputy Manager, HR Manager"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Start Date *</label>
+                      <input
+                        type="date"
+                        className="form-control"
+                        value={delegationForm.startDate}
+                        onChange={(e) => setDelegationForm({ ...delegationForm, startDate: e.target.value })}
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">End Date *</label>
+                      <input
+                        type="date"
+                        className="form-control"
+                        value={delegationForm.endDate}
+                        onChange={(e) => setDelegationForm({ ...delegationForm, endDate: e.target.value })}
+                      />
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label">Reason *</label>
+                      <textarea
+                        className="form-control"
+                        rows="3"
+                        value={delegationForm.reason}
+                        onChange={(e) => setDelegationForm({ ...delegationForm, reason: e.target.value })}
+                        placeholder="Reason for delegation (e.g., On leave, Out of office)"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowDelegationModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => {
+                      setupApprovalDelegation(
+                        delegationForm.fromApprover,
+                        delegationForm.toApprover,
+                        delegationForm.startDate,
+                        delegationForm.endDate,
+                        delegationForm.reason
+                      );
+                      setShowDelegationModal(false);
+                      setDelegationForm({
+                        fromApprover: "",
+                        toApprover: "",
+                        startDate: "",
+                        endDate: "",
+                        reason: "",
+                      });
+                    }}
+                  >
+                    Setup Delegation
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderCompOff = () => (
     <div className="row g-4">
       <div className="col-12">
@@ -1589,11 +2239,12 @@ const LeaveManagement = () => {
                   <tr>
                     <th>Employee</th>
                     <th>Earned Date</th>
-                    <th>Hours</th>
-                    <th>Source</th>
-                    <th>Expiry Date</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                      <th>Hours</th>
+                      <th>Source</th>
+                      <th>Policy Type</th>
+                      <th>Expiry Date</th>
+                      <th>Status</th>
+                      <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1616,6 +2267,11 @@ const LeaveManagement = () => {
                           </td>
                           <td>
                             <span className="badge bg-info">{co.source}</span>
+                          </td>
+                          <td>
+                            <span className={`badge bg-${co.policyType === 'compOff' ? 'success' : 'warning'}`}>
+                              {co.policyType === 'compOff' ? 'Comp-Off' : 'Overtime'}
+                            </span>
                           </td>
                           <td>
                             {co.expiryDate ? (
@@ -1727,6 +2383,24 @@ const LeaveManagement = () => {
             Comp-Off
           </button>
         </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === "planning" ? "active" : ""}`}
+            onClick={() => setActiveTab("planning")}
+          >
+            <CalendarDays size={16} className="me-2" />
+            Planning
+          </button>
+        </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === "delegation" ? "active" : ""}`}
+            onClick={() => setActiveTab("delegation")}
+          >
+            <Users size={16} className="me-2" />
+            Delegation
+          </button>
+        </li>
       </ul>
 
       {/* Tab Content */}
@@ -1736,6 +2410,8 @@ const LeaveManagement = () => {
         {activeTab === "applications" && renderLeaveApplications()}
         {activeTab === "calendar" && renderLeaveCalendar()}
         {activeTab === "compOff" && renderCompOff()}
+        {activeTab === "planning" && renderLeavePlanning()}
+        {activeTab === "delegation" && renderApprovalDelegation()}
       </div>
 
       {/* Leave Type Modal */}
@@ -2071,6 +2747,133 @@ const LeaveManagement = () => {
                         </div>
                       </div>
                     </div>
+                  </div>
+                  <div className="col-12">
+                    <h6 className="mt-3 mb-2">Proration Rules</h6>
+                    <div className="row g-3">
+                      <div className="col-md-6">
+                        <div className="form-check form-switch">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={leaveTypeForm.proration?.enabled !== false}
+                            onChange={(e) =>
+                              setLeaveTypeForm({
+                                ...leaveTypeForm,
+                                proration: {
+                                  ...leaveTypeForm.proration,
+                                  enabled: e.target.checked,
+                                  method: leaveTypeForm.proration?.method || "proportional",
+                                },
+                              })
+                            }
+                          />
+                          <label className="form-check-label">Enable Proration</label>
+                        </div>
+                        <small className="text-muted">Apply proration for mid-year joiners and exits</small>
+                      </div>
+                      {leaveTypeForm.proration?.enabled !== false && (
+                        <div className="col-md-6">
+                          <label className="form-label">Proration Method</label>
+                          <select
+                            className="form-select"
+                            value={leaveTypeForm.proration?.method || "proportional"}
+                            onChange={(e) =>
+                              setLeaveTypeForm({
+                                ...leaveTypeForm,
+                                proration: {
+                                  ...leaveTypeForm.proration,
+                                  method: e.target.value,
+                                },
+                              })
+                            }
+                          >
+                            <option value="proportional">Proportional (based on days worked)</option>
+                            <option value="full">Full (no proration)</option>
+                            <option value="none">None (no accrual for mid-year)</option>
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="col-12">
+                    <h6 className="mt-3 mb-2">Approval Workflow</h6>
+                    <div className="row g-3">
+                      <div className="col-md-6">
+                        <label className="form-label">Number of Approval Levels</label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          min="1"
+                          max="5"
+                          value={leaveTypeForm.approvalWorkflow?.levels || 1}
+                          onChange={(e) => {
+                            const levels = parseInt(e.target.value) || 1;
+                            const approvers = [];
+                            for (let i = 1; i <= levels; i++) {
+                              approvers.push({
+                                level: i,
+                                role: i === 1 ? "Manager" : i === 2 ? "HR" : "Director",
+                                required: true,
+                              });
+                            }
+                            setLeaveTypeForm({
+                              ...leaveTypeForm,
+                              approvalWorkflow: {
+                                levels,
+                                approvers,
+                              },
+                            });
+                          }}
+                        />
+                        <small className="text-muted">Number of approval levels required</small>
+                      </div>
+                    </div>
+                    {leaveTypeForm.approvalWorkflow?.approvers?.map((approver, idx) => (
+                      <div key={idx} className="row g-3 mt-2">
+                        <div className="col-md-6">
+                          <label className="form-label">Level {approver.level} Approver Role</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={approver.role}
+                            onChange={(e) => {
+                              const approvers = [...(leaveTypeForm.approvalWorkflow?.approvers || [])];
+                              approvers[idx].role = e.target.value;
+                              setLeaveTypeForm({
+                                ...leaveTypeForm,
+                                approvalWorkflow: {
+                                  ...leaveTypeForm.approvalWorkflow,
+                                  approvers,
+                                },
+                              });
+                            }}
+                            placeholder="e.g., Manager, HR, Director"
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <div className="form-check form-switch mt-4">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              checked={approver.required !== false}
+                              onChange={(e) => {
+                                const approvers = [...(leaveTypeForm.approvalWorkflow?.approvers || [])];
+                                approvers[idx].required = e.target.checked;
+                                setLeaveTypeForm({
+                                  ...leaveTypeForm,
+                                  approvalWorkflow: {
+                                    ...leaveTypeForm.approvalWorkflow,
+                                    approvers,
+                                  },
+                                });
+                              }}
+                            />
+                            <label className="form-check-label">Required</label>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                   <div className="col-12">
                     <label className="form-label">Description</label>
@@ -2580,6 +3383,25 @@ const LeaveManagement = () => {
                       <option value="holiday">Holiday Working</option>
                       <option value="weekend">Weekend Working</option>
                     </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Policy Type *</label>
+                    <select
+                      className="form-select"
+                      value={compOffForm.policyType}
+                      onChange={(e) =>
+                        setCompOffForm({
+                          ...compOffForm,
+                          policyType: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="compOff">Compensatory Off (Leave Credit)</option>
+                      <option value="overtime">Overtime (Monetary Payment)</option>
+                    </select>
+                    <small className="text-muted">
+                      Comp-Off: Leave credit that can be used later. Overtime: Paid as monetary compensation.
+                    </small>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label">Expiry Date (Optional)</label>

@@ -439,6 +439,12 @@ const AttendanceCapture = () => {
     return stored ? JSON.parse(stored) : defaultValue;
   };
 
+  // Scheduled sync state - must be declared early
+  const [scheduledSyncs, setScheduledSyncs] = useState(() => {
+    const stored = localStorage.getItem('biometricScheduledSyncs');
+    return stored ? JSON.parse(stored) : [];
+  });
+
   const initialState = {
     attendanceRecords: loadFromStorage("attendanceRecords", []),
     biometricDevices: loadFromStorage("biometricDevices", initialDevices),
@@ -530,6 +536,44 @@ const AttendanceCapture = () => {
 
     return () => clearInterval(timer);
   }, []);
+
+  // Update device health metrics periodically
+  useEffect(() => {
+    if (biometricDevices.length > 0) {
+      updateDeviceHealthMetrics();
+      
+      const healthUpdateInterval = setInterval(() => {
+        updateDeviceHealthMetrics();
+      }, 5 * 60 * 1000); // Update every 5 minutes
+
+      return () => clearInterval(healthUpdateInterval);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [biometricDevices.length, syncLogs.length]);
+
+  // Initialize scheduled syncs on mount and when scheduledSyncs changes
+  useEffect(() => {
+    if (scheduledSyncs.length === 0) return;
+    
+    const enabledSyncs = scheduledSyncs.filter(s => s.enabled);
+    const intervalIds = [];
+    
+    enabledSyncs.forEach(schedule => {
+      const intervalId = startScheduledSync(schedule);
+      if (intervalId) {
+        intervalIds.push(intervalId);
+      }
+    });
+    
+    return () => {
+      intervalIds.forEach(id => {
+        if (id && typeof id === 'number') {
+          clearInterval(id);
+        }
+      });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scheduledSyncs.length]);
 
   // ==================== UTILITY FUNCTIONS ====================
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -872,6 +916,95 @@ const AttendanceCapture = () => {
     }));
   };
 
+  // Enhanced device health monitoring
+  const calculateDeviceHealth = (device) => {
+    const metrics = {
+      connectivity: device.status === "Online" ? 100 : 0,
+      syncFrequency: calculateSyncFrequencyScore(device),
+      errorRate: calculateErrorRate(device),
+      storageUsage: calculateStorageUsage(device),
+      uptime: calculateUptimeScore(device),
+    };
+
+    // Weighted average for overall health
+    const weights = {
+      connectivity: 0.3,
+      syncFrequency: 0.25,
+      errorRate: 0.2,
+      storageUsage: 0.15,
+      uptime: 0.1,
+    };
+
+    const overallHealth = Math.round(
+      metrics.connectivity * weights.connectivity +
+      metrics.syncFrequency * weights.syncFrequency +
+      (100 - metrics.errorRate) * weights.errorRate +
+      metrics.storageUsage * weights.storageUsage +
+      metrics.uptime * weights.uptime
+    );
+
+    return {
+      overall: overallHealth,
+      metrics,
+      status: overallHealth >= 80 ? "Healthy" : overallHealth >= 60 ? "Warning" : "Critical",
+      lastUpdated: new Date().toISOString(),
+    };
+  };
+
+  const calculateSyncFrequencyScore = (device) => {
+    if (!device.lastSync) return 0;
+    const lastSyncTime = new Date(device.lastSync);
+    const timeSinceSync = (Date.now() - lastSyncTime.getTime()) / 1000 / 60; // minutes
+    
+    // Score based on how recent the last sync was
+    if (timeSinceSync < 15) return 100;
+    if (timeSinceSync < 60) return 80;
+    if (timeSinceSync < 240) return 60;
+    if (timeSinceSync < 480) return 40;
+    return 20;
+  };
+
+  const calculateErrorRate = (device) => {
+    // Calculate error rate from sync logs (simulated)
+    const deviceLogs = syncLogs.filter(log => log.deviceId === device.id);
+    if (deviceLogs.length === 0) return 0;
+    
+    const failedLogs = deviceLogs.filter(log => log.status === "Failed" || log.status === "Error");
+    const errorRate = (failedLogs.length / deviceLogs.length) * 100;
+    return Math.min(100, errorRate); // Cap at 100%
+  };
+
+  const calculateStorageUsage = (device) => {
+    // Simulated storage usage calculation
+    const usage = device.storageUsage || Math.random() * 30 + 50; // 50-80% simulated
+    return Math.max(0, 100 - usage * 2); // Higher usage = lower score
+  };
+
+  const calculateUptimeScore = (device) => {
+    // Simulated uptime calculation (would check actual uptime in production)
+    if (device.status === "Online") {
+      return device.uptime || Math.random() * 20 + 80; // 80-100% simulated
+    }
+    return 0;
+  };
+
+  // Update device health for all devices
+  const updateDeviceHealthMetrics = () => {
+    const updatedDevices = biometricDevices.map(device => {
+      const healthData = calculateDeviceHealth(device);
+      return {
+        ...device,
+        health: healthData.overall,
+        healthMetrics: healthData.metrics,
+        healthStatus: healthData.status,
+        healthLastUpdated: healthData.lastUpdated,
+      };
+    });
+    
+    dispatch({ type: "SET_DEVICES", payload: updatedDevices });
+    localStorage.setItem("biometricDevices", JSON.stringify(updatedDevices));
+  };
+
   // ==================== BIOMETRIC FUNCTIONS ====================
   const addBiometricDevice = () => {
     if (!newDevice.model || !newDevice.ipAddress) {
@@ -889,6 +1022,16 @@ const AttendanceCapture = () => {
       lastSync: new Date().toISOString(),
       employees: 0,
       health: 100,
+      healthMetrics: {
+        connectivity: 100,
+        syncFrequency: 100,
+        errorRate: 0,
+        storageUsage: 70,
+        uptime: 100,
+      },
+      healthStatus: "Healthy",
+      storageUsage: 30,
+      uptime: 99.9,
     };
 
     dispatch({ type: "ADD_DEVICE", payload: device });
@@ -944,6 +1087,163 @@ const AttendanceCapture = () => {
     } finally {
       setProcessingAttendance(false);
     }
+  };
+
+  // Scheduled sync functionality for biometric devices
+  const addScheduledSync = (deviceId, schedule) => {
+    const newSchedule = {
+      id: Date.now(),
+      deviceId,
+      scheduleType: schedule.type, // 'realtime', 'interval', 'daily', 'weekly'
+      interval: schedule.interval || null, // minutes for interval type
+      time: schedule.time || null, // HH:MM for daily/weekly
+      days: schedule.days || [], // ['monday', 'tuesday'] for weekly
+      enabled: schedule.enabled !== false,
+      lastRun: null,
+      nextRun: calculateNextRun(schedule),
+    };
+
+    setScheduledSyncs(prevSyncs => {
+      const updated = [...prevSyncs, newSchedule];
+      localStorage.setItem('biometricScheduledSyncs', JSON.stringify(updated));
+      return updated;
+    });
+    
+    // Start the sync if enabled
+    if (newSchedule.enabled) {
+      startScheduledSync(newSchedule);
+    }
+
+    addSyncLog("scheduled_sync", "Success", `Scheduled sync added for device ${deviceId}`);
+  };
+
+  const calculateNextRun = (schedule) => {
+    const now = new Date();
+    
+    if (schedule.type === 'realtime') {
+      return null; // Continuous
+    } else if (schedule.type === 'interval') {
+      const next = new Date(now.getTime() + (schedule.interval || 60) * 60 * 1000);
+      return next.toISOString();
+    } else if (schedule.type === 'daily') {
+      const [hours, minutes] = (schedule.time || '09:00').split(':');
+      const next = new Date(now);
+      next.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      if (next <= now) {
+        next.setDate(next.getDate() + 1);
+      }
+      return next.toISOString();
+    } else if (schedule.type === 'weekly') {
+      // Calculate next occurrence based on selected days
+      const days = schedule.days || [];
+      const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      const dayNumbers = days.map(d => dayNames.indexOf(d.toLowerCase()));
+      dayNumbers.sort();
+      
+      for (let dayNum of dayNumbers) {
+        const next = new Date(now);
+        const daysUntil = (dayNum - now.getDay() + 7) % 7 || 7;
+        next.setDate(next.getDate() + daysUntil);
+        const [hours, minutes] = (schedule.time || '09:00').split(':');
+        next.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        if (next > now) {
+          return next.toISOString();
+        }
+      }
+    }
+    return null;
+  };
+
+  const startScheduledSync = (schedule) => {
+    if (schedule.type === 'realtime') {
+      // Real-time sync - check every 5 minutes
+      const intervalId = setInterval(() => {
+        syncBiometricData(schedule.deviceId);
+      }, 5 * 60 * 1000);
+      return intervalId;
+    } else if (schedule.type === 'interval') {
+      const intervalId = setInterval(() => {
+        syncBiometricData(schedule.deviceId);
+        setScheduledSyncs(prevSyncs => {
+          const updated = prevSyncs.map(s => 
+            s.id === schedule.id 
+              ? { ...s, lastRun: new Date().toISOString(), nextRun: calculateNextRun(schedule) }
+              : s
+          );
+          localStorage.setItem('biometricScheduledSyncs', JSON.stringify(updated));
+          return updated;
+        });
+      }, (schedule.interval || 60) * 60 * 1000);
+      return intervalId;
+    } else if (schedule.type === 'daily' || schedule.type === 'weekly') {
+      const checkInterval = setInterval(() => {
+        const now = new Date();
+        const nextRun = new Date(schedule.nextRun);
+        
+        if (now >= nextRun) {
+          syncBiometricData(schedule.deviceId);
+          setScheduledSyncs(prevSyncs => {
+            const updated = prevSyncs.map(s => 
+              s.id === schedule.id 
+                ? { ...s, lastRun: new Date().toISOString(), nextRun: calculateNextRun(schedule) }
+                : s
+            );
+            localStorage.setItem('biometricScheduledSyncs', JSON.stringify(updated));
+            return updated;
+          });
+        }
+      }, 60 * 1000); // Check every minute
+      return checkInterval;
+    }
+    return null;
+  };
+
+  // Enhanced duplicate punch detection
+  const detectDuplicatePunch = (employeeId, punchType, timestamp) => {
+    const punchTime = new Date(timestamp);
+    const windowMinutes = settings.duplicatePunchWindow || 5;
+    const windowStart = new Date(punchTime.getTime() - windowMinutes * 60 * 1000);
+    
+    // Check for duplicate punches within the time window
+    const recentPunches = punches.filter(p => {
+      const pTime = new Date(p.timestamp);
+      return p.employeeId === employeeId && 
+             p.type === punchType &&
+             pTime >= windowStart && 
+             pTime <= punchTime;
+    });
+
+    if (recentPunches.length > 0) {
+      const lastPunch = recentPunches[recentPunches.length - 1];
+      const timeDiff = Math.abs(punchTime - new Date(lastPunch.timestamp)) / 1000 / 60; // minutes
+      
+      return {
+        isDuplicate: true,
+        lastPunchTime: lastPunch.timestamp,
+        timeDifference: timeDiff.toFixed(2),
+        message: `Duplicate ${punchType} detected. Last punch was ${timeDiff.toFixed(1)} minutes ago. Please wait at least ${windowMinutes} minutes between ${punchType}s.`
+      };
+    }
+
+    // Check for invalid sequence (e.g., checkout before checkin)
+    if (punchType === 'checkout') {
+      const dayPunches = punches.filter(p => {
+        const pDate = new Date(p.timestamp).toISOString().split('T')[0];
+        const punchDate = new Date(timestamp).toISOString().split('T')[0];
+        return p.employeeId === employeeId && pDate === punchDate;
+      });
+      
+      const hasCheckIn = dayPunches.some(p => p.type === 'checkin' || p.type === 'breakend');
+      if (!hasCheckIn) {
+        return {
+          isDuplicate: false,
+          isInvalidSequence: true,
+          message: 'Cannot checkout without checking in first'
+        };
+      }
+    }
+
+    return { isDuplicate: false };
   };
 
   // ==================== GPS FUNCTIONS ====================
@@ -2102,11 +2402,30 @@ const AttendanceCapture = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  // Function to import from external system
-  const importFromExternalSystem = (system) => {
+  // Enhanced function to import from external system
+  const importFromExternalSystem = (system, config = {}) => {
     setIsUploading(true);
 
-    // Simulate external system import
+    // Supported external systems
+    const supportedSystems = {
+      'sap': { name: 'SAP SuccessFactors', apiEndpoint: '/api/sap/attendance' },
+      'oracle': { name: 'Oracle HCM Cloud', apiEndpoint: '/api/oracle/attendance' },
+      'workday': { name: 'Workday', apiEndpoint: '/api/workday/attendance' },
+      'adp': { name: 'ADP Workforce Now', apiEndpoint: '/api/adp/attendance' },
+      'bamboohr': { name: 'BambooHR', apiEndpoint: '/api/bamboohr/attendance' },
+      'zenefits': { name: 'Zenefits', apiEndpoint: '/api/zenefits/attendance' },
+      'gusto': { name: 'Gusto', apiEndpoint: '/api/gusto/attendance' },
+      'paycom': { name: 'Paycom', apiEndpoint: '/api/paycom/attendance' },
+      'paychex': { name: 'Paychex', apiEndpoint: '/api/paychex/attendance' },
+      'kronos': { name: 'Kronos Workforce Central', apiEndpoint: '/api/kronos/attendance' },
+      'ultipro': { name: 'UltiPro', apiEndpoint: '/api/ultipro/attendance' },
+      'paylocity': { name: 'Paylocity', apiEndpoint: '/api/paylocity/attendance' },
+      'api': { name: 'Custom API', apiEndpoint: config.apiEndpoint || '/api/custom/attendance' },
+    };
+
+    const systemConfig = supportedSystems[system.toLowerCase()] || { name: system, apiEndpoint: '/api/external/attendance' };
+
+    // Simulate external system import with enhanced data mapping
     setTimeout(() => {
       const records = [
         {
@@ -2116,9 +2435,13 @@ const AttendanceCapture = () => {
           date: new Date().toISOString().split("T")[0],
           status: "Present",
           method: "external",
-          sourceSystem: system,
+          sourceSystem: systemConfig.name,
+          sourceSystemId: system,
           importedAt: new Date().toISOString(),
           approvedBy: "System Admin",
+          apiEndpoint: systemConfig.apiEndpoint,
+          syncType: config.syncType || 'manual', // 'manual', 'scheduled', 'realtime'
+          mappingConfig: config.mappingConfig || {},
         },
         {
           id: Date.now() + 200,
@@ -2127,44 +2450,78 @@ const AttendanceCapture = () => {
           date: new Date().toISOString().split("T")[0],
           status: "Absent",
           method: "external",
-          sourceSystem: system,
+          sourceSystem: systemConfig.name,
+          sourceSystemId: system,
           importedAt: new Date().toISOString(),
           approvedBy: "System Admin",
+          apiEndpoint: systemConfig.apiEndpoint,
+          syncType: config.syncType || 'manual',
+          mappingConfig: config.mappingConfig || {},
         },
       ];
 
-      // Add records
+      // Add records with validation
+      let successCount = 0;
+      let errorCount = 0;
+      const errors = [];
+
       records.forEach((record) => {
-        dispatch({ type: "ADD_ATTENDANCE", payload: record });
+        try {
+          // Validate record before adding
+          if (record.employeeId && record.date) {
+            dispatch({ type: "ADD_ATTENDANCE", payload: record });
+            successCount++;
+          } else {
+            errors.push(`Invalid record: Missing employee ID or date`);
+            errorCount++;
+          }
+        } catch (error) {
+          errors.push(`Error importing record: ${error.message}`);
+          errorCount++;
+        }
       });
 
-      // Add to import history
+      // Add to import history with detailed information
       const importRecord = {
         id: Date.now(),
         timestamp: new Date().toISOString(),
-        systemName: system,
-        recordsImported: records.length,
-        status: "Success",
-        importedBy: "System",
+        systemName: systemConfig.name,
+        systemId: system,
+        recordsImported: successCount,
+        recordsFailed: errorCount,
+        totalRecords: records.length,
+        status: errorCount === 0 ? "Success" : errorCount === records.length ? "Failed" : "Partial",
+        importedBy: config.user || "System",
         source: "external_system",
+        apiEndpoint: systemConfig.apiEndpoint,
+        syncType: config.syncType || 'manual',
+        errors: errors.length > 0 ? errors : undefined,
       };
 
       setImportHistory((prev) => [importRecord, ...prev]);
+      localStorage.setItem('importHistory', JSON.stringify([importRecord, ...importHistory]));
 
       // Add audit log
       const auditLog = {
         id: Date.now(),
         timestamp: new Date().toISOString(),
         action: "EXTERNAL_IMPORT",
-        user: "System",
-        systemName: system,
-        recordsCount: records.length,
-        details: `Imported ${records.length} records from ${system}`,
+        user: config.user || "System",
+        systemName: systemConfig.name,
+        systemId: system,
+        recordsCount: successCount,
+        recordsFailed: errorCount,
+        details: `Imported ${successCount} records from ${systemConfig.name}${errorCount > 0 ? ` (${errorCount} failed)` : ''}`,
         ipAddress: "192.168.1.100",
+        apiEndpoint: systemConfig.apiEndpoint,
       };
 
       setIsUploading(false);
-      alert(`Successfully imported ${records.length} records from ${system}`);
+      if (errorCount === 0) {
+        alert(`✅ Successfully imported ${successCount} records from ${systemConfig.name}`);
+      } else {
+        alert(`⚠️ Import completed: ${successCount} succeeded, ${errorCount} failed from ${systemConfig.name}`);
+      }
     }, 1500);
   };
 
@@ -2174,14 +2531,105 @@ const AttendanceCapture = () => {
     setShowPreviewModal(true);
   };
 
-  // Get manual entries audit trail
-  const getAuditTrail = () => {
-    return attendanceRecords
-      .filter((r) => r.method === "manual")
+  // Enhanced manual entries audit trail
+  const getAuditTrail = (filters = {}) => {
+    const { employeeId = null, startDate = null, endDate = null, action = null } = filters;
+    
+    let auditRecords = attendanceRecords
+      .filter((r) => {
+        if (r.method !== "manual") return false;
+        if (employeeId && r.employeeId !== employeeId) return false;
+        if (startDate && r.date < startDate) return false;
+        if (endDate && r.date > endDate) return false;
+        return true;
+      })
       .map((record) => ({
-        ...record,
-        auditEvents: record.changeLog || [],
+        id: record.id,
+        employeeId: record.employeeId,
+        employeeName: record.employeeName,
+        date: record.date,
+        action: "CREATE_MANUAL_ENTRY",
+        timestamp: record.createdAt || record.date,
+        user: record.createdBy || "Admin",
+        details: `Manual entry created: ${record.status}`,
+        ipAddress: record.ipAddress || "N/A",
+        changeLog: record.changeLog || [],
+        auditEvents: [
+          {
+            timestamp: record.createdAt || record.date,
+            action: "Created",
+            user: record.createdBy || "Admin",
+            details: `Manual attendance entry created with status: ${record.status}`,
+          },
+          ...(record.changeLog || []),
+          ...(record.lastModifiedAt ? [{
+            timestamp: record.lastModifiedAt,
+            action: "Modified",
+            user: record.lastModifiedBy || "Admin",
+            details: "Record was last modified",
+          }] : []),
+        ],
+        status: record.status,
+        method: record.method,
+        approvedBy: record.approvedBy,
+        verifiedBy: record.verifiedBy,
+        isVerified: record.isVerified,
       }));
+
+    if (action) {
+      auditRecords = auditRecords.filter(r => r.action === action);
+    }
+
+    return auditRecords.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  };
+
+  // Add audit log entry
+  const addAuditLogEntry = (entry) => {
+    const auditLog = {
+      id: Date.now(),
+      timestamp: new Date().toISOString(),
+      ...entry,
+    };
+
+    // Store in localStorage for audit trail
+    const auditTrail = loadFromStorage('auditTrail', []);
+    auditTrail.unshift(auditLog);
+    
+    // Keep only last 1000 entries
+    const trimmedTrail = auditTrail.slice(0, 1000);
+    localStorage.setItem('auditTrail', JSON.stringify(trimmedTrail));
+
+    return auditLog;
+  };
+
+  // Update audit trail when manual entry is modified
+  const updateRecordAuditTrail = (recordId, action, user, details) => {
+    const record = attendanceRecords.find(r => r.id === recordId);
+    if (!record) return;
+
+    const changeLogEntry = {
+      timestamp: new Date().toISOString(),
+      action,
+      user,
+      details,
+    };
+
+    const updatedRecord = {
+      ...record,
+      changeLog: [...(record.changeLog || []), changeLogEntry],
+      lastModifiedBy: user,
+      lastModifiedAt: new Date().toISOString(),
+    };
+
+    dispatch({ type: "UPDATE_ATTENDANCE", payload: updatedRecord });
+    addAuditLogEntry({
+      action: `UPDATE_MANUAL_ENTRY_${action}`,
+      user,
+      employeeId: record.employeeId,
+      employeeName: record.employeeName,
+      recordId,
+      details,
+    });
   };
   // ==================== FILTERING & PAGINATION ====================
   const filteredRecords = attendanceRecords.filter((record) => {
@@ -2295,6 +2743,15 @@ const AttendanceCapture = () => {
         ...editFormData,
       };
       dispatch({ type: "UPDATE_ATTENDANCE", payload: updatedRecord });
+      
+      // Update audit trail
+      updateRecordAuditTrail(
+        editingRecord.id,
+        "EDIT",
+        "Admin",
+        `Record updated: Status changed to ${editFormData.status}`
+      );
+      
       setShowEditModal(false);
       setEditingRecord(null);
       alert("Attendance record updated successfully!");
@@ -2377,6 +2834,15 @@ const AttendanceCapture = () => {
                   <option value="Honeywell">Honeywell</option>
                   <option value="Suprema">Suprema</option>
                   <option value="HID">HID Global</option>
+                  <option value="Mantra">Mantra</option>
+                  <option value="Matrix">Matrix</option>
+                  <option value="BioEnable">BioEnable</option>
+                  <option value="Pegasus">Pegasus</option>
+                  <option value="Starlight">Starlight</option>
+                  <option value="IDTECH">ID TECH</option>
+                  <option value="RealTime">RealTime</option>
+                  <option value="BioMax">BioMax</option>
+                  <option value="Kimaldi">Kimaldi</option>
                   <option value="Other">Other Vendor</option>
                 </select>
               </div>

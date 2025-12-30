@@ -101,6 +101,15 @@ const holidayReducer = (state, action) => {
       };
     case "SET_CARRY_FORWARD":
       return { ...state, carryForward: action.payload };
+
+    case "UPDATE_CALENDAR":
+      return {
+        ...state,
+        calendars: state.calendars.map((c) =>
+          c.id === action.payload.id ? action.payload : c
+        ),
+      };
+
     default:
       return state;
   }
@@ -108,25 +117,95 @@ const holidayReducer = (state, action) => {
 
 // ==================== INITIAL DATA ====================
 const initialEmployees = [
-  { id: "EMP001", name: "Khuswanth Rao", department: "IT", location: "Bangalore", employeeGroup: "IT_Group" },
-  { id: "EMP002", name: "John Smith", department: "HR", location: "Mumbai", employeeGroup: "HR_Group" },
-  { id: "EMP003", name: "Sarah Johnson", department: "Finance", location: "Delhi", employeeGroup: "Finance_Group" },
-  { id: "EMP004", name: "Mike Brown", department: "Sales", location: "Bangalore", employeeGroup: "Sales_Group" },
-  { id: "EMP005", name: "Emma Wilson", department: "IT", location: "Mumbai", employeeGroup: "IT_Group" },
+  {
+    id: "EMP001",
+    name: "Khuswanth Rao",
+    department: "IT",
+    location: "Bangalore",
+    employeeGroup: "IT_Group",
+  },
+  {
+    id: "EMP002",
+    name: "John Smith",
+    department: "HR",
+    location: "Mumbai",
+    employeeGroup: "HR_Group",
+  },
+  {
+    id: "EMP003",
+    name: "Sarah Johnson",
+    department: "Finance",
+    location: "Delhi",
+    employeeGroup: "Finance_Group",
+  },
+  {
+    id: "EMP004",
+    name: "Mike Brown",
+    department: "Sales",
+    location: "Bangalore",
+    employeeGroup: "Sales_Group",
+  },
+  {
+    id: "EMP005",
+    name: "Emma Wilson",
+    department: "IT",
+    location: "Mumbai",
+    employeeGroup: "IT_Group",
+  },
 ];
 
 const initialLocations = [
-  { id: "LOC001", name: "Bangalore", code: "BLR", country: "India", state: "Karnataka" },
-  { id: "LOC002", name: "Mumbai", code: "MUM", country: "India", state: "Maharashtra" },
-  { id: "LOC003", name: "Delhi", code: "DEL", country: "India", state: "Delhi" },
-  { id: "LOC004", name: "Hyderabad", code: "HYD", country: "India", state: "Telangana" },
+  {
+    id: "LOC001",
+    name: "Bangalore",
+    code: "BLR",
+    country: "India",
+    state: "Karnataka",
+  },
+  {
+    id: "LOC002",
+    name: "Mumbai",
+    code: "MUM",
+    country: "India",
+    state: "Maharashtra",
+  },
+  {
+    id: "LOC003",
+    name: "Delhi",
+    code: "DEL",
+    country: "India",
+    state: "Delhi",
+  },
+  {
+    id: "LOC004",
+    name: "Hyderabad",
+    code: "HYD",
+    country: "India",
+    state: "Telangana",
+  },
 ];
 
 const initialEmployeeGroups = [
-  { id: "IT_Group", name: "IT Department", description: "IT and Engineering teams" },
-  { id: "HR_Group", name: "HR Department", description: "Human Resources team" },
-  { id: "Finance_Group", name: "Finance Department", description: "Finance and Accounting" },
-  { id: "Sales_Group", name: "Sales Department", description: "Sales and Business Development" },
+  {
+    id: "IT_Group",
+    name: "IT Department",
+    description: "IT and Engineering teams",
+  },
+  {
+    id: "HR_Group",
+    name: "HR Department",
+    description: "Human Resources team",
+  },
+  {
+    id: "Finance_Group",
+    name: "Finance Department",
+    description: "Finance and Accounting",
+  },
+  {
+    id: "Sales_Group",
+    name: "Sales Department",
+    description: "Sales and Business Development",
+  },
 ];
 
 const HolidayCalendar = () => {
@@ -155,12 +234,21 @@ const HolidayCalendar = () => {
   };
 
   const [state, dispatch] = useReducer(holidayReducer, initialState);
-  const { holidays, optionalApplications, calendars, swapRequests, carryForward } = state;
+  const {
+    holidays,
+    optionalApplications,
+    calendars,
+    swapRequests,
+    carryForward,
+  } = state;
 
   // Save to localStorage
   useEffect(() => {
     localStorage.setItem("holidays", JSON.stringify(holidays));
-    localStorage.setItem("optionalApplications", JSON.stringify(optionalApplications));
+    localStorage.setItem(
+      "optionalApplications",
+      JSON.stringify(optionalApplications)
+    );
     localStorage.setItem("holidayCalendars", JSON.stringify(calendars));
     localStorage.setItem("holidaySwapRequests", JSON.stringify(swapRequests));
     localStorage.setItem("holidayCarryForward", JSON.stringify(carryForward));
@@ -171,6 +259,9 @@ const HolidayCalendar = () => {
   // -------------------------------
   const [viewMode, setViewMode] = useState("month"); // "month" or "list"
   const [isMobileView, setIsMobileView] = useState(false);
+  /*Edit Holiday Calendar*/
+  const [isEditCalendar, setIsEditCalendar] = useState(false);
+  const [editingCalendarId, setEditingCalendarId] = useState(null);
 
   // -------------------------------
   // NOTIFICATION STATE
@@ -472,6 +563,19 @@ const HolidayCalendar = () => {
     showNotification("Holiday added successfully!", "success");
   };
 
+  const openEditCalendarModal = (calendar) => {
+    setCalendarForm({
+      name: calendar.name,
+      location: calendar.location,
+      employeeGroups: calendar.employeeGroups || ["all"],
+      isDefault: calendar.isDefault || false,
+    });
+
+    setEditingCalendarId(calendar.id);
+    setIsEditCalendar(true);
+    setShowCalendarModal(true);
+  };
+
   const openEditModal = (holiday) => {
     setEditHoliday({ ...holiday });
     setShowEditHolidayModal(true);
@@ -524,7 +628,10 @@ const HolidayCalendar = () => {
     const today = new Date();
     const daysDiff = Math.ceil((holidayDate - today) / (1000 * 60 * 60 * 24));
 
-    if (selectedHoliday.advanceBookingDays > 0 && daysDiff < selectedHoliday.advanceBookingDays) {
+    if (
+      selectedHoliday.advanceBookingDays > 0 &&
+      daysDiff < selectedHoliday.advanceBookingDays
+    ) {
       showNotification(
         `This holiday requires ${selectedHoliday.advanceBookingDays} days advance booking`,
         "warning"
@@ -560,7 +667,12 @@ const HolidayCalendar = () => {
 
   // Holiday swap function
   const handleHolidaySwap = () => {
-    if (!swapForm.employeeId || !swapForm.holidayDate || !swapForm.workDate || !swapForm.reason) {
+    if (
+      !swapForm.employeeId ||
+      !swapForm.holidayDate ||
+      !swapForm.workDate ||
+      !swapForm.reason
+    ) {
       showNotification("Please fill all required fields", "warning");
       return;
     }
@@ -590,8 +702,14 @@ const HolidayCalendar = () => {
 
   // Process carry forward
   const handleCarryForward = () => {
-    if (!carryForwardForm.employeeId || carryForwardForm.holidays.length === 0) {
-      showNotification("Please select employee and holidays to carry forward", "warning");
+    if (
+      !carryForwardForm.employeeId ||
+      carryForwardForm.holidays.length === 0
+    ) {
+      showNotification(
+        "Please select employee and holidays to carry forward",
+        "warning"
+      );
       return;
     }
 
@@ -603,7 +721,10 @@ const HolidayCalendar = () => {
       processedBy: "HR Admin",
     };
 
-    dispatch({ type: "SET_CARRY_FORWARD", payload: [...carryForward, carryForwardRecord] });
+    dispatch({
+      type: "SET_CARRY_FORWARD",
+      payload: [...carryForward, carryForwardRecord],
+    });
     setShowCarryForwardModal(false);
     setCarryForwardForm({
       employeeId: "",
@@ -627,8 +748,16 @@ const HolidayCalendar = () => {
     const updatedApplication = {
       ...selectedApplication,
       status: newStatus,
-      [newStatus === "Approved" ? "approvedAt" : newStatus === "Rejected" ? "rejectedAt" : "updatedAt"]: new Date().toISOString(),
-      [newStatus === "Approved" ? "approvedBy" : newStatus === "Rejected" ? "rejectedBy" : "updatedBy"]: "Manager",
+      [newStatus === "Approved"
+        ? "approvedAt"
+        : newStatus === "Rejected"
+        ? "rejectedAt"
+        : "updatedAt"]: new Date().toISOString(),
+      [newStatus === "Approved"
+        ? "approvedBy"
+        : newStatus === "Rejected"
+        ? "rejectedBy"
+        : "updatedBy"]: "Manager",
     };
 
     dispatch({ type: "UPDATE_APPLICATION", payload: updatedApplication });
@@ -677,7 +806,10 @@ const HolidayCalendar = () => {
     };
 
     dispatch({ type: "UPDATE_SWAP_REQUEST", payload: updatedSwap });
-    showNotification(`Swap request ${approved ? "approved" : "rejected"}`, "success");
+    showNotification(
+      `Swap request ${approved ? "approved" : "rejected"}`,
+      "success"
+    );
   };
 
   // -------------------------------
@@ -911,167 +1043,166 @@ const HolidayCalendar = () => {
       <div className="mb-3 mb-md-4">
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-2">
           <div className="d-flex align-items-center mb-2 mb-md-0">
-
-            <h6
-              className="fw-bold h4 h2-md"
-            >
-              Holiday Calendar
-            </h6>
+            <h6 className="fw-bold h4 h2-md">Holiday Calendar</h6>
           </div>
         </div>
       </div>
 
       {/* VIEW TOGGLE & SEARCH BAR */}
-<div className="card border shadow-none mb-3 mb-md-4">
-  <div className="card-body p-2 p-md-3">
-    <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 gap-sm-3">
-      
-      {/* View Toggle */}
-      <div className="btn-group" role="group">
-        <button
-          type="button"
-          className={`btn btn-sm ${
-            viewMode === "month" ? "btn-primary" : "btn-outline-primary"
-          }`}
-          onClick={() => setViewMode("month")}
-        >
-          <Grid size={14} className="me-sm-1" />
-          <span className="d-none d-sm-inline">Calendar</span>
-        </button>
-        <button
-          type="button"
-          className={`btn btn-sm ${
-            viewMode === "list" ? "btn-primary" : "btn-outline-primary"
-          }`}
-          onClick={() => setViewMode("list")}
-        >
-          <List size={14} className="me-sm-1" />
-          <span className="d-none d-sm-inline">List</span>
-        </button>
-      </div>
+      <div className="card border shadow-none mb-3 mb-md-4">
+        <div className="card-body p-2 p-md-3">
+          <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 gap-sm-3">
+            {/* View Toggle */}
+            <div className="btn-group" role="group">
+              <button
+                type="button"
+                className={`btn btn-sm ${
+                  viewMode === "month" ? "btn-primary" : "btn-outline-primary"
+                }`}
+                onClick={() => setViewMode("month")}
+              >
+                <Grid size={14} className="me-sm-1" />
+                <span className="d-none d-sm-inline">Calendar</span>
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm ${
+                  viewMode === "list" ? "btn-primary" : "btn-outline-primary"
+                }`}
+                onClick={() => setViewMode("list")}
+              >
+                <List size={14} className="me-sm-1" />
+                <span className="d-none d-sm-inline">List</span>
+              </button>
+            </div>
 
-      {/* Search and Filters - Main content area */}
-      <div className="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center flex-grow-1 gap-2">
-        
-        {/* Search Input */}
-        <div className="flex-grow-1 min-width-0">
-          <div className="input-group input-group-sm">
-            <span className="input-group-text bg-white border-end-0">
-              <Search size={14} />
-            </span>
-            <input
-              className="form-control border-start-0"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ fontSize: "0.9rem" }}
-            />
-          </div>
-        </div>
-
-        {/* Filters Dropdowns */}
-        <div className="d-flex flex-wrap gap-2">
-          {activeTab === "holidayMaster" ? (
-            <>
-              {/* Mobile: Stacked, Desktop: Inline */}
-              <div className="d-flex flex-column flex-sm-row gap-2">
-                <select
-                  className="form-select form-select-sm"
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  style={{
-                    fontSize: "0.9rem",
-                    minWidth: "140px"
-                  }}
-                >
-                      <option value="All">All Categories</option>
-                      <option value="Public Holiday">Public Holiday</option>
-                      <option value="National Holiday">National Holiday</option>
-                      <option value="Festival">Festival</option>
-                      <option value="State Holiday">State Holiday</option>
-                      <option value="Regional Holiday">Regional Holiday</option>
-                      <option value="Local Holiday">Local Holiday</option>
-                      <option value="Company Holiday">Company Holiday</option>
-                      <option value="Restricted Holiday">Restricted Holiday</option>
-                </select>
-                
-                <select
-                  className="form-select form-select-sm"
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                  style={{
-                    fontSize: "0.9rem",
-                    minWidth: "120px"
-                  }}
-                >
-                  <option value="All">All Types</option>
-                  <option value="mandatory">Mandatory</option>
-                  <option value="optional">Optional</option>
-                </select>
+            {/* Search and Filters - Main content area */}
+            <div className="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center flex-grow-1 gap-2">
+              {/* Search Input */}
+              <div className="flex-grow-1 min-width-0">
+                <div className="input-group input-group-sm">
+                  <span className="input-group-text bg-white border-end-0">
+                    <Search size={14} />
+                  </span>
+                  <input
+                    className="form-control border-start-0"
+                    placeholder="Search..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{ fontSize: "0.9rem" }}
+                  />
+                </div>
               </div>
-            </>
-          ) : (
-            <select
-              className="form-select form-select-sm"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              style={{
-                fontSize: "0.9rem",
-                minWidth: "120px"
-              }}
-            >
-              <option value="All">All Status</option>
-              <option value="Pending">Pending</option>
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
-            </select>
-          )}
 
-          {/* Action Buttons */}
-          <div className="d-flex gap-4">
-            {/* Mobile: Icon-only */}
-            <div className="btn-group d-sm-none">
-              <button
-                className="btn btn-success btn-sm"
-                onClick={exportToCSV}
-                title="Export to CSV"
-              >
-                <Download size={14} />
-              </button>
-              <button
-                className="btn btn-dark btn-sm"
-                onClick={printData}
-                title="Print"
-              >
-                <Printer size={14} />
-              </button>
-            </div>
+              {/* Filters Dropdowns */}
+              <div className="d-flex flex-wrap gap-2">
+                {activeTab === "holidayMaster" ? (
+                  <>
+                    {/* Mobile: Stacked, Desktop: Inline */}
+                    <div className="d-flex flex-column flex-sm-row gap-2">
+                      <select
+                        className="form-select form-select-sm"
+                        value={categoryFilter}
+                        onChange={(e) => setCategoryFilter(e.target.value)}
+                        style={{
+                          fontSize: "0.9rem",
+                          minWidth: "140px",
+                        }}
+                      >
+                        <option value="All">All Categories</option>
+                        <option value="Public Holiday">Public Holiday</option>
+                        <option value="National Holiday">
+                          National Holiday
+                        </option>
+                        <option value="Festival">Festival</option>
+                        <option value="State Holiday">State Holiday</option>
+                        <option value="Regional Holiday">
+                          Regional Holiday
+                        </option>
+                        <option value="Local Holiday">Local Holiday</option>
+                        <option value="Company Holiday">Company Holiday</option>
+                        <option value="Restricted Holiday">
+                          Restricted Holiday
+                        </option>
+                      </select>
 
-            {/* Desktop: Full buttons */}
-            <div className="d-none d-sm-flex btn-group">
-              <button
-                className="btn btn-success btn-sm d-flex align-items-center"
-                onClick={exportToCSV}
-                title="Export to CSV"
-              >
-                <Download size={14} className="me-1 me-md-2" />
-                <span className="d-none d-md-inline">Export</span>
-              </button>
-              <button
-                className="btn btn-dark btn-sm d-flex align-items-center"
-                onClick={printData}
-                title="Print"
-              >
-                <Printer size={14} className="me-1 me-md-2" />
-                <span className="d-none d-md-inline">Print</span>
-              </button>
+                      <select
+                        className="form-select form-select-sm"
+                        value={typeFilter}
+                        onChange={(e) => setTypeFilter(e.target.value)}
+                        style={{
+                          fontSize: "0.9rem",
+                          minWidth: "120px",
+                        }}
+                      >
+                        <option value="All">All Types</option>
+                        <option value="mandatory">Mandatory</option>
+                        <option value="optional">Optional</option>
+                      </select>
+                    </div>
+                  </>
+                ) : (
+                  <select
+                    className="form-select form-select-sm"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    style={{
+                      fontSize: "0.9rem",
+                      minWidth: "120px",
+                    }}
+                  >
+                    <option value="All">All Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                  </select>
+                )}
+
+                {/* Action Buttons */}
+                <div className="d-flex gap-4">
+                  {/* Mobile: Icon-only */}
+                  <div className="btn-group d-sm-none">
+                    <button
+                      className="btn btn-success btn-sm"
+                      onClick={exportToCSV}
+                      title="Export to CSV"
+                    >
+                      <Download size={14} />
+                    </button>
+                    <button
+                      className="btn btn-dark btn-sm"
+                      onClick={printData}
+                      title="Print"
+                    >
+                      <Printer size={14} />
+                    </button>
+                  </div>
+
+                  {/* Desktop: Full buttons */}
+                  <div className="d-none d-sm-flex btn-group">
+                    <button
+                      className="btn btn-success btn-sm d-flex align-items-center"
+                      onClick={exportToCSV}
+                      title="Export to CSV"
+                    >
+                      <Download size={14} className="me-1 me-md-2" />
+                      <span className="d-none d-md-inline">Export</span>
+                    </button>
+                    <button
+                      className="btn btn-dark btn-sm d-flex align-items-center"
+                      onClick={printData}
+                      title="Print"
+                    >
+                      <Printer size={14} className="me-1 me-md-2" />
+                      <span className="d-none d-md-inline">Print</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
 
       {/* MAIN CONTENT AREA */}
       {viewMode === "month" ? (
@@ -1293,9 +1424,7 @@ const HolidayCalendar = () => {
                     />
                     <div className="text-start">
                       <div className="fw-bold">Calendars</div>
-                      <div className="small">
-                        {calendars.length} Calendars
-                      </div>
+                      <div className="small">{calendars.length} Calendars</div>
                     </div>
                   </button>
                   <button
@@ -1339,9 +1468,7 @@ const HolidayCalendar = () => {
                     />
                     <div className="text-start">
                       <div className="fw-bold">Carry Forward</div>
-                      <div className="small">
-                        {carryForward.length} Records
-                      </div>
+                      <div className="small">{carryForward.length} Records</div>
                     </div>
                   </button>
                 </div>
@@ -1353,12 +1480,25 @@ const HolidayCalendar = () => {
               <div className="card border shadow-none">
                 <div className="card-header bg-white border-bottom d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center py-2 py-md-3">
                   <h5 className="fw-bold mb-2 mb-md-0 d-flex align-items-center">
-                    <Building size={isMobileView ? 16 : 18} className="me-2 text-info" />
+                    <Building
+                      size={isMobileView ? 16 : 18}
+                      className="me-2 text-info"
+                    />
                     Holiday Calendars
                   </h5>
                   <button
                     className="btn btn-info btn-sm d-flex align-items-center"
-                    onClick={() => setShowCalendarModal(true)}
+                    onClick={() => {
+                      setIsEditCalendar(false); // ✅ RESET EDIT MODE
+                      setEditingCalendarId(null); // ✅ CLEAR ID
+                      setCalendarForm({
+                        name: "",
+                        location: "",
+                        employeeGroups: [],
+                        isDefault: false,
+                      });
+                      setShowCalendarModal(true);
+                    }}
                   >
                     <Plus size={isMobileView ? 12 : 16} className="me-1" />
                     {!isMobileView && "Add Calendar"}
@@ -1380,7 +1520,9 @@ const HolidayCalendar = () => {
                         {calendars.length === 0 ? (
                           <tr>
                             <td colSpan="5" className="text-center py-4">
-                              <p className="text-muted">No calendars configured</p>
+                              <p className="text-muted">
+                                No calendars configured
+                              </p>
                             </td>
                           </tr>
                         ) : (
@@ -1389,7 +1531,9 @@ const HolidayCalendar = () => {
                               <td>
                                 <div className="fw-medium">{cal.name}</div>
                                 {cal.isDefault && (
-                                  <small className="badge bg-primary">Default</small>
+                                  <small className="badge bg-primary">
+                                    Default
+                                  </small>
                                 )}
                               </td>
                               <td>{cal.location}</td>
@@ -1404,9 +1548,45 @@ const HolidayCalendar = () => {
                                 <span className="badge bg-success">Active</span>
                               </td>
                               <td>
-                                <button className="btn btn-sm btn-outline-primary">
-                                  <Edit size={14} />
-                                </button>
+                                <div className="d-flex gap-1 justify-content-center">
+                                  {/* Edit */}
+                                  <button
+                                    className="btn btn-sm btn-outline-primary"
+                                    onClick={() => openEditCalendarModal(cal)}
+                                    title="Edit Calendar"
+                                  >
+                                    <Edit size={14} />
+                                  </button>
+
+                                  {/* Delete */}
+                                  <button
+                                    className="btn btn-sm btn-outline-danger"
+                                    title="Delete Calendar"
+                                    onClick={() =>
+                                      setConfirmAction({
+                                        title: "Delete Holiday Calendar",
+                                        message: `Are you sure you want to delete "${cal.name}"?`,
+                                        onConfirm: () => {
+                                          dispatch({
+                                            type: "SET_CALENDARS",
+                                            payload: calendars.filter(
+                                              (c) => c.id !== cal.id
+                                            ),
+                                          });
+                                          setShowConfirmModal(false);
+                                          showNotification(
+                                            "Calendar deleted successfully!",
+                                            "success"
+                                          );
+                                        },
+                                        onCancel: () =>
+                                          setShowConfirmModal(false),
+                                      }) || setShowConfirmModal(true)
+                                    }
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           ))
@@ -1420,7 +1600,10 @@ const HolidayCalendar = () => {
               <div className="card border shadow-none">
                 <div className="card-header bg-white border-bottom d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center py-2 py-md-3">
                   <h5 className="fw-bold mb-2 mb-md-0 d-flex align-items-center">
-                    <ArrowLeftRight size={isMobileView ? 16 : 18} className="me-2 text-warning" />
+                    <ArrowLeftRight
+                      size={isMobileView ? 16 : 18}
+                      className="me-2 text-warning"
+                    />
                     Holiday Swap Requests
                   </h5>
                   <button
@@ -1453,7 +1636,9 @@ const HolidayCalendar = () => {
                           </tr>
                         ) : (
                           swapRequests.map((swap) => {
-                            const employee = initialEmployees.find((e) => e.id === swap.employeeId);
+                            const employee = initialEmployees.find(
+                              (e) => e.id === swap.employeeId
+                            );
                             return (
                               <tr key={swap.id}>
                                 <td>{employee?.name || swap.employeeId}</td>
@@ -1480,13 +1665,17 @@ const HolidayCalendar = () => {
                                     <div className="d-flex gap-1">
                                       <button
                                         className="btn btn-sm btn-outline-success"
-                                        onClick={() => handleSwapApproval(swap.id, true)}
+                                        onClick={() =>
+                                          handleSwapApproval(swap.id, true)
+                                        }
                                       >
                                         <CheckCircle size={14} />
                                       </button>
                                       <button
                                         className="btn btn-sm btn-outline-danger"
-                                        onClick={() => handleSwapApproval(swap.id, false)}
+                                        onClick={() =>
+                                          handleSwapApproval(swap.id, false)
+                                        }
                                       >
                                         <XCircle size={14} />
                                       </button>
@@ -1506,7 +1695,10 @@ const HolidayCalendar = () => {
               <div className="card border shadow-none">
                 <div className="card-header bg-white border-bottom d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center py-2 py-md-3">
                   <h5 className="fw-bold mb-2 mb-md-0 d-flex align-items-center">
-                    <RefreshCw size={isMobileView ? 16 : 18} className="me-2 text-secondary" />
+                    <RefreshCw
+                      size={isMobileView ? 16 : 18}
+                      className="me-2 text-secondary"
+                    />
                     Holiday Carry Forward
                   </h5>
                   <button
@@ -1534,12 +1726,16 @@ const HolidayCalendar = () => {
                         {carryForward.length === 0 ? (
                           <tr>
                             <td colSpan="6" className="text-center py-4">
-                              <p className="text-muted">No carry forward records</p>
+                              <p className="text-muted">
+                                No carry forward records
+                              </p>
                             </td>
                           </tr>
                         ) : (
                           carryForward.map((cf) => {
-                            const employee = initialEmployees.find((e) => e.id === cf.employeeId);
+                            const employee = initialEmployees.find(
+                              (e) => e.id === cf.employeeId
+                            );
                             return (
                               <tr key={cf.id}>
                                 <td>{employee?.name || cf.employeeId}</td>
@@ -1547,7 +1743,9 @@ const HolidayCalendar = () => {
                                 <td>{cf.toYear}</td>
                                 <td>{cf.holidays.length} holidays</td>
                                 <td>
-                                  <span className="badge bg-success">{cf.status}</span>
+                                  <span className="badge bg-success">
+                                    {cf.status}
+                                  </span>
                                 </td>
                                 <td>{cf.processedBy}</td>
                               </tr>
@@ -1606,13 +1804,13 @@ const HolidayCalendar = () => {
                             DATE
                           </th>
                           {!isMobileView && (
-                          <th
-                            style={{
-                              fontSize: isMobileView ? "0.75rem" : "0.85rem",
-                            }}
-                          >
-                            CATEGORY
-                          </th>
+                            <th
+                              style={{
+                                fontSize: isMobileView ? "0.75rem" : "0.85rem",
+                              }}
+                            >
+                              CATEGORY
+                            </th>
                           )}
                           {!isMobileView && (
                             <th
@@ -2422,7 +2620,9 @@ const HolidayCalendar = () => {
                   {newHoliday.optional && (
                     <>
                       <div className="col-md-6">
-                        <label className="form-label">Advance Booking (Days)</label>
+                        <label className="form-label">
+                          Advance Booking (Days)
+                        </label>
                         <input
                           type="number"
                           className="form-control"
@@ -2438,7 +2638,9 @@ const HolidayCalendar = () => {
                         />
                       </div>
                       <div className="col-md-6">
-                        <label className="form-label">Allow Carry Forward?</label>
+                        <label className="form-label">
+                          Allow Carry Forward?
+                        </label>
                         <select
                           className="form-select"
                           value={newHoliday.allowCarryForward ? "Yes" : "No"}
@@ -2455,7 +2657,9 @@ const HolidayCalendar = () => {
                       </div>
                       {newHoliday.allowCarryForward && (
                         <div className="col-md-6">
-                          <label className="form-label">Carry Forward Limit (days)</label>
+                          <label className="form-label">
+                            Carry Forward Limit (days)
+                          </label>
                           <input
                             type="number"
                             className="form-control"
@@ -2463,7 +2667,8 @@ const HolidayCalendar = () => {
                             onChange={(e) =>
                               setNewHoliday({
                                 ...newHoliday,
-                                carryForwardLimit: parseInt(e.target.value) || 0,
+                                carryForwardLimit:
+                                  parseInt(e.target.value) || 0,
                               })
                             }
                             min="0"
@@ -2473,18 +2678,18 @@ const HolidayCalendar = () => {
                     </>
                   )}
                   <div className="col-md-6">
-                    <label className="form-label">Applicable Employee Groups</label>
+                    <label className="form-label">
+                      Applicable Employee Group
+                    </label>
                     <select
                       className="form-select"
-                      multiple
-                      value={newHoliday.applicableGroups}
-                      onChange={(e) => {
-                        const selected = Array.from(e.target.selectedOptions, (option) => option.value);
+                      value={newHoliday.applicableGroups[0] || "all"}
+                      onChange={(e) =>
                         setNewHoliday({
                           ...newHoliday,
-                          applicableGroups: selected,
-                        });
-                      }}
+                          applicableGroups: [e.target.value],
+                        })
+                      }
                     >
                       <option value="all">All Groups</option>
                       {initialEmployeeGroups.map((group) => (
@@ -2493,7 +2698,9 @@ const HolidayCalendar = () => {
                         </option>
                       ))}
                     </select>
-                    <small className="text-muted">Hold Ctrl/Cmd to select multiple</small>
+                    <small className="text-muted">
+                      Holiday will apply to the selected employee group
+                    </small>
                   </div>
                 </div>
               </div>
@@ -2643,7 +2850,9 @@ const HolidayCalendar = () => {
                   {editHoliday.optional && (
                     <>
                       <div className="col-md-6">
-                        <label className="form-label">Advance Booking (Days)</label>
+                        <label className="form-label">
+                          Advance Booking (Days)
+                        </label>
                         <input
                           type="number"
                           className="form-control"
@@ -2658,7 +2867,9 @@ const HolidayCalendar = () => {
                         />
                       </div>
                       <div className="col-md-6">
-                        <label className="form-label">Allow Carry Forward?</label>
+                        <label className="form-label">
+                          Allow Carry Forward?
+                        </label>
                         <select
                           className="form-select"
                           value={editHoliday.allowCarryForward ? "Yes" : "No"}
@@ -2675,7 +2886,9 @@ const HolidayCalendar = () => {
                       </div>
                       {editHoliday.allowCarryForward && (
                         <div className="col-md-6">
-                          <label className="form-label">Carry Forward Limit (days)</label>
+                          <label className="form-label">
+                            Carry Forward Limit (days)
+                          </label>
                           <input
                             type="number"
                             className="form-control"
@@ -2683,7 +2896,8 @@ const HolidayCalendar = () => {
                             onChange={(e) =>
                               setEditHoliday({
                                 ...editHoliday,
-                                carryForwardLimit: parseInt(e.target.value) || 0,
+                                carryForwardLimit:
+                                  parseInt(e.target.value) || 0,
                               })
                             }
                             min="0"
@@ -2693,18 +2907,18 @@ const HolidayCalendar = () => {
                     </>
                   )}
                   <div className="col-md-6">
-                    <label className="form-label">Applicable Employee Groups</label>
+                    <label className="form-label">
+                      Applicable Employee Group
+                    </label>
                     <select
                       className="form-select"
-                      multiple
-                      value={editHoliday.applicableGroups}
-                      onChange={(e) => {
-                        const selected = Array.from(e.target.selectedOptions, (option) => option.value);
+                      value={editHoliday.applicableGroups?.[0] || "all"}
+                      onChange={(e) =>
                         setEditHoliday({
                           ...editHoliday,
-                          applicableGroups: selected,
-                        });
-                      }}
+                          applicableGroups: [e.target.value],
+                        })
+                      }
                     >
                       <option value="all">All Groups</option>
                       {initialEmployeeGroups.map((group) => (
@@ -2713,7 +2927,9 @@ const HolidayCalendar = () => {
                         </option>
                       ))}
                     </select>
-                    <small className="text-muted">Hold Ctrl/Cmd to select multiple</small>
+                    <small className="text-muted">
+                      Holiday will apply to the selected employee group
+                    </small>
                   </div>
                 </div>
               </div>
@@ -2950,7 +3166,12 @@ const HolidayCalendar = () => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Add Holiday Calendar</h5>
+                <h5 className="modal-title">
+                  {isEditCalendar
+                    ? "Edit Holiday Calendar"
+                    : "Add Holiday Calendar"}
+                </h5>
+
                 <button
                   type="button"
                   className="btn-close"
@@ -2966,7 +3187,10 @@ const HolidayCalendar = () => {
                       className="form-control"
                       value={calendarForm.name}
                       onChange={(e) =>
-                        setCalendarForm({ ...calendarForm, name: e.target.value })
+                        setCalendarForm({
+                          ...calendarForm,
+                          name: e.target.value,
+                        })
                       }
                       placeholder="e.g., Bangalore Office Calendar"
                     />
@@ -2977,7 +3201,10 @@ const HolidayCalendar = () => {
                       className="form-select"
                       value={calendarForm.location}
                       onChange={(e) =>
-                        setCalendarForm({ ...calendarForm, location: e.target.value })
+                        setCalendarForm({
+                          ...calendarForm,
+                          location: e.target.value,
+                        })
                       }
                     >
                       <option value="">Select location...</option>
@@ -2989,24 +3216,29 @@ const HolidayCalendar = () => {
                     </select>
                   </div>
                   <div className="col-12">
-                    <label className="form-label">Employee Groups</label>
+                    <label className="form-label">Employee Group</label>
                     <select
                       className="form-select"
-                      multiple
-                      value={calendarForm.employeeGroups}
-                      onChange={(e) => {
-                        const selected = Array.from(e.target.selectedOptions, (option) => option.value);
-                        setCalendarForm({ ...calendarForm, employeeGroups: selected });
-                      }}
+                      value={calendarForm.employeeGroups?.[0] || "all"}
+                      onChange={(e) =>
+                        setCalendarForm({
+                          ...calendarForm,
+                          employeeGroups: [e.target.value],
+                        })
+                      }
                     >
+                      <option value="all">All Groups</option>
                       {initialEmployeeGroups.map((group) => (
                         <option key={group.id} value={group.id}>
                           {group.name}
                         </option>
                       ))}
                     </select>
-                    <small className="text-muted">Hold Ctrl/Cmd to select multiple</small>
+                    <small className="text-muted">
+                      Calendar will apply to the selected employee group
+                    </small>
                   </div>
+
                   <div className="col-12">
                     <div className="form-check">
                       <input
@@ -3014,10 +3246,15 @@ const HolidayCalendar = () => {
                         type="checkbox"
                         checked={calendarForm.isDefault}
                         onChange={(e) =>
-                          setCalendarForm({ ...calendarForm, isDefault: e.target.checked })
+                          setCalendarForm({
+                            ...calendarForm,
+                            isDefault: e.target.checked,
+                          })
                         }
                       />
-                      <label className="form-check-label">Set as Default Calendar</label>
+                      <label className="form-check-label">
+                        Set as Default Calendar
+                      </label>
                     </div>
                   </div>
                 </div>
@@ -3035,25 +3272,53 @@ const HolidayCalendar = () => {
                   className="btn btn-primary"
                   onClick={() => {
                     if (!calendarForm.name || !calendarForm.location) {
-                      showNotification("Please fill all required fields", "warning");
+                      showNotification(
+                        "Please fill all required fields",
+                        "warning"
+                      );
                       return;
                     }
-                    const newCalendar = {
-                      id: Date.now(),
-                      ...calendarForm,
-                    };
-                    dispatch({ type: "ADD_CALENDAR", payload: newCalendar });
+
+                    if (isEditCalendar) {
+                      dispatch({
+                        type: "UPDATE_CALENDAR",
+                        payload: {
+                          id: editingCalendarId,
+                          ...calendarForm,
+                        },
+                      });
+
+                      showNotification(
+                        "Calendar updated successfully!",
+                        "success"
+                      );
+                    } else {
+                      dispatch({
+                        type: "ADD_CALENDAR",
+                        payload: {
+                          id: Date.now(),
+                          ...calendarForm,
+                        },
+                      });
+
+                      showNotification(
+                        "Calendar added successfully!",
+                        "success"
+                      );
+                    }
+
                     setShowCalendarModal(false);
+                    setIsEditCalendar(false);
+                    setEditingCalendarId(null);
                     setCalendarForm({
                       name: "",
                       location: "",
                       employeeGroups: [],
                       isDefault: false,
                     });
-                    showNotification("Calendar added successfully!", "success");
                   }}
                 >
-                  Save Calendar
+                  {isEditCalendar ? "Update Calendar" : "Save Calendar"}
                 </button>
               </div>
             </div>
@@ -3106,7 +3371,10 @@ const HolidayCalendar = () => {
                       className="form-control"
                       value={swapForm.holidayDate}
                       onChange={(e) =>
-                        setSwapForm({ ...swapForm, holidayDate: e.target.value })
+                        setSwapForm({
+                          ...swapForm,
+                          holidayDate: e.target.value,
+                        })
                       }
                     />
                     <small className="text-muted">Date you want to work</small>
@@ -3121,7 +3389,9 @@ const HolidayCalendar = () => {
                         setSwapForm({ ...swapForm, workDate: e.target.value })
                       }
                     />
-                    <small className="text-muted">Date you want to take off</small>
+                    <small className="text-muted">
+                      Date you want to take off
+                    </small>
                   </div>
                   <div className="col-12">
                     <label className="form-label">Reason *</label>
@@ -3185,7 +3455,10 @@ const HolidayCalendar = () => {
                       className="form-select"
                       value={carryForwardForm.employeeId}
                       onChange={(e) =>
-                        setCarryForwardForm({ ...carryForwardForm, employeeId: e.target.value })
+                        setCarryForwardForm({
+                          ...carryForwardForm,
+                          employeeId: e.target.value,
+                        })
                       }
                     >
                       <option value="">Select employee...</option>
@@ -3225,7 +3498,9 @@ const HolidayCalendar = () => {
                     />
                   </div>
                   <div className="col-12">
-                    <label className="form-label">Select Unused Optional Holidays</label>
+                    <label className="form-label">
+                      Select Unused Optional Holidays
+                    </label>
                     <div
                       style={{
                         maxHeight: "200px",
@@ -3242,12 +3517,17 @@ const HolidayCalendar = () => {
                             <input
                               className="form-check-input"
                               type="checkbox"
-                              checked={carryForwardForm.holidays.includes(holiday.id)}
+                              checked={carryForwardForm.holidays.includes(
+                                holiday.id
+                              )}
                               onChange={(e) => {
                                 if (e.target.checked) {
                                   setCarryForwardForm({
                                     ...carryForwardForm,
-                                    holidays: [...carryForwardForm.holidays, holiday.id],
+                                    holidays: [
+                                      ...carryForwardForm.holidays,
+                                      holiday.id,
+                                    ],
                                   });
                                 } else {
                                   setCarryForwardForm({
@@ -3265,7 +3545,8 @@ const HolidayCalendar = () => {
                           </div>
                         ))}
                     </div>
-                    {holidays.filter((h) => h.optional && h.allowCarryForward).length === 0 && (
+                    {holidays.filter((h) => h.optional && h.allowCarryForward)
+                      .length === 0 && (
                       <p className="text-muted mt-2">
                         No optional holidays with carry forward enabled
                       </p>

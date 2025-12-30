@@ -205,6 +205,7 @@ const ShiftManagement = () => {
   const [rosterStartDate, setRosterStartDate] = useState(
     new Date().toISOString().split("T")[0]
   );
+  const [showNotifications, setShowNotifications] = useState(false);
 
   // Form states
   const [shiftForm, setShiftForm] = useState({
@@ -498,6 +499,7 @@ const ShiftManagement = () => {
 
   // ==================== SHIFT ASSIGNMENT FUNCTIONS ====================
   const handleBulkAssignShift = (shiftId, employeeIds) => {
+    const shift = shifts.find(s => s.id === shiftId);
     const assignments = employeeIds.map((empId) => ({
       id: Date.now() + Math.random(),
       employeeId: empId,
@@ -511,12 +513,22 @@ const ShiftManagement = () => {
 
     assignments.forEach((assignment) => {
       dispatch({ type: "ADD_SHIFT_ASSIGNMENT", payload: assignment });
+      
+      // Send notification to each employee
+      sendShiftChangeNotification('shift_assigned', {
+        employeeId: assignment.employeeId,
+        shiftId: shiftId,
+        shiftName: shift?.name || "Unknown",
+        startDate: assignment.startDate,
+        message: `You have been assigned to ${shift?.name || "shift"} starting ${assignment.startDate}`,
+      });
     });
 
-    alert(`Shift assigned to ${assignments.length} employees`);
+    alert(`Shift assigned to ${assignments.length} employees. Notifications sent.`);
   };
 
   const handleIndividualAssignShift = (shiftId, employeeId, startDate, endDate) => {
+    const shift = shifts.find(s => s.id === shiftId);
     const assignment = {
       id: Date.now(),
       employeeId,
@@ -529,14 +541,121 @@ const ShiftManagement = () => {
     };
 
     dispatch({ type: "ADD_SHIFT_ASSIGNMENT", payload: assignment });
-    alert("Shift assigned successfully");
+    
+    // Send notification
+    sendShiftChangeNotification('shift_assigned', {
+      employeeId,
+      shiftId,
+      shiftName: shift?.name || "Unknown",
+      startDate: assignment.startDate,
+      endDate: assignment.endDate,
+      message: `You have been assigned to ${shift?.name || "shift"} starting ${assignment.startDate}${assignment.endDate ? ` until ${assignment.endDate}` : ''}`,
+    });
+    
+    alert("Shift assigned successfully. Notification sent to employee.");
   };
 
   // ==================== ROSTER FUNCTIONS ====================
+  // Rotational shift scheduling function
+  const generateRotationalRoster = (shift, startDate, period, rotationShifts = []) => {
+    if (!shift || shift.type !== "rotational") {
+      return null;
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(start);
+    
+    if (period === "weekly") {
+      end.setDate(end.getDate() + 6);
+    } else {
+      end.setMonth(end.getMonth() + 1);
+      end.setDate(0);
+    }
+
+    // Get all rotational shifts if not provided
+    const availableShifts = rotationShifts.length > 0 
+      ? rotationShifts 
+      : shifts.filter(s => s.type === "rotational" && s.isActive);
+
+    if (availableShifts.length === 0) {
+      return null;
+    }
+
+    const rosterDays = [];
+    const currentDate = new Date(start);
+    let shiftIndex = 0;
+    const rotationPattern = shift.rotationPattern || "weekly";
+    let weekCounter = 0;
+
+    while (currentDate <= end) {
+      const dayOfWeek = currentDate.toLocaleDateString("en-US", { weekday: "long" });
+      const isWeekOff = shift.weekOffs.includes(dayOfWeek);
+      
+      // Determine which shift to assign based on rotation pattern
+      let assignedShift = shift;
+      
+      if (rotationPattern === "weekly" && availableShifts.length > 1) {
+        // Rotate weekly
+        const weekNumber = Math.floor((currentDate - start) / (7 * 24 * 60 * 60 * 1000));
+        shiftIndex = weekNumber % availableShifts.length;
+        assignedShift = availableShifts[shiftIndex];
+      } else if (rotationPattern === "daily" && availableShifts.length > 1) {
+        // Rotate daily
+        const dayNumber = Math.floor((currentDate - start) / (24 * 60 * 60 * 1000));
+        shiftIndex = dayNumber % availableShifts.length;
+        assignedShift = availableShifts[shiftIndex];
+      } else if (rotationPattern === "biweekly" && availableShifts.length > 1) {
+        // Rotate bi-weekly
+        const weekNumber = Math.floor((currentDate - start) / (7 * 24 * 60 * 60 * 1000));
+        shiftIndex = Math.floor(weekNumber / 2) % availableShifts.length;
+        assignedShift = availableShifts[shiftIndex];
+      }
+
+      rosterDays.push({
+        date: new Date(currentDate).toISOString().split("T")[0],
+        day: dayOfWeek,
+        shiftId: assignedShift.id,
+        shiftName: assignedShift.name,
+        shiftCode: assignedShift.code,
+        isWeekOff,
+        employees: [],
+        rotationSequence: shiftIndex + 1,
+      });
+      
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return {
+      id: Date.now(),
+      name: `${shift.name} Rotational Roster - ${startDate}`,
+      shiftId: shift.id,
+      period: period,
+      startDate: startDate,
+      endDate: end.toISOString().split("T")[0],
+      days: rosterDays,
+      status: "draft",
+      published: false,
+      rotationPattern: rotationPattern,
+      rotationShifts: availableShifts.map(s => s.id),
+      createdAt: new Date().toISOString(),
+      createdBy: "Admin",
+    };
+  };
+
   const generateRoster = () => {
     if (!selectedShift) {
       alert("Please select a shift");
       return;
+    }
+
+    // Check if it's a rotational shift
+    if (selectedShift.type === "rotational") {
+      const rotationalRoster = generateRotationalRoster(selectedShift, rosterStartDate, rosterPeriod);
+      if (rotationalRoster) {
+        dispatch({ type: "ADD_ROSTER", payload: rotationalRoster });
+        alert(`Rotational roster generated successfully with ${selectedShift.rotationPattern || "weekly"} rotation pattern`);
+        return;
+      }
     }
 
     const startDate = new Date(rosterStartDate);
@@ -587,6 +706,31 @@ const ShiftManagement = () => {
     alert("Roster generated successfully");
   };
 
+  // Notification system for shift changes
+  const [notifications, setNotifications] = useState(() => {
+    const stored = localStorage.getItem('shiftNotifications');
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  const sendShiftChangeNotification = (type, data) => {
+    const notification = {
+      id: Date.now(),
+      type, // 'shift_assigned', 'shift_swapped', 'roster_published', 'shift_changed'
+      timestamp: new Date().toISOString(),
+      ...data,
+      read: false,
+    };
+
+    setNotifications(prev => {
+      const updated = [notification, ...prev].slice(0, 100); // Keep last 100
+      localStorage.setItem('shiftNotifications', JSON.stringify(updated));
+      return updated;
+    });
+
+    // In production, this would send email/SMS notifications
+    console.log('Notification sent:', notification);
+  };
+
   const publishRoster = (rosterId) => {
     const roster = rosters.find((r) => r.id === rosterId);
     if (!roster) return;
@@ -600,9 +744,27 @@ const ShiftManagement = () => {
 
     dispatch({ type: "SET_ROSTERS", payload: rosters.map((r) => r.id === rosterId ? updatedRoster : r) });
     
-    // Send notifications (simulated)
-    alert(`Roster "${roster.name}" published successfully. Notifications sent to ${roster.days.reduce((sum, day) =>
-       sum + day.employees.length, 0)} employees.`);
+    // Get employees assigned to this roster
+    const assignedEmployees = roster.days.reduce((acc, day) => {
+      day.employees.forEach(empId => {
+        if (!acc.includes(empId)) acc.push(empId);
+      });
+      return acc;
+    }, []);
+
+    // Send notifications to all assigned employees
+    assignedEmployees.forEach(employeeId => {
+      sendShiftChangeNotification('roster_published', {
+        employeeId,
+        rosterId: roster.id,
+        rosterName: roster.name,
+        startDate: roster.startDate,
+        endDate: roster.endDate,
+        message: `Your shift roster "${roster.name}" has been published for ${roster.startDate} to ${roster.endDate}`,
+      });
+    });
+    
+    alert(`Roster "${roster.name}" published successfully. Notifications sent to ${assignedEmployees.length} employees.`);
   };
 
   // ==================== SWAP REQUEST FUNCTIONS ====================
@@ -657,14 +819,50 @@ const ShiftManagement = () => {
         (a) => a.employeeId === request.employeeId && a.isActive
       );
       if (assignment) {
+        const oldShift = shifts.find(s => s.id === assignment.shiftId);
+        const newShift = shifts.find(s => s.id === request.requestedShiftId);
+        
         dispatch({
           type: "UPDATE_SHIFT_ASSIGNMENT",
           payload: { ...assignment, shiftId: request.requestedShiftId },
         });
+
+        // Send notification to employee about shift swap approval
+        sendShiftChangeNotification('shift_swapped', {
+          employeeId: request.employeeId,
+          requestId: request.id,
+          oldShiftId: assignment.shiftId,
+          oldShiftName: oldShift?.name || "Unknown",
+          newShiftId: request.requestedShiftId,
+          newShiftName: newShift?.name || "Unknown",
+          swapDate: request.swapDate,
+          message: `Your shift swap request has been approved. You will be on ${newShift?.name || "new shift"} starting ${request.swapDate}`,
+        });
+
+        // If swapping with another employee, notify them too
+        if (request.swapWithEmployeeId) {
+          sendShiftChangeNotification('shift_swapped', {
+            employeeId: request.swapWithEmployeeId,
+            requestId: request.id,
+            oldShiftId: request.requestedShiftId,
+            oldShiftName: newShift?.name || "Unknown",
+            newShiftId: assignment.shiftId,
+            newShiftName: oldShift?.name || "Unknown",
+            swapDate: request.swapDate,
+            message: `You have been swapped to ${oldShift?.name || "shift"} starting ${request.swapDate}`,
+          });
+        }
       }
-      alert("Shift swap approved and assignment updated");
+      alert("Shift swap approved and assignment updated. Notifications sent.");
     } else {
-      alert("Shift swap rejected");
+      // Send rejection notification
+      sendShiftChangeNotification('shift_swap_rejected', {
+        employeeId: request.employeeId,
+        requestId: request.id,
+        reason: "Not approved by manager",
+        message: `Your shift swap request for ${request.swapDate} has been rejected.`,
+      });
+      alert("Shift swap rejected. Notification sent to employee.");
     }
   };
 
@@ -1056,6 +1254,26 @@ const ShiftManagement = () => {
                   <option value="monthly">Monthly</option>
                 </select>
               </div>
+              {selectedShift?.type === "rotational" && (
+                <div className="col-md-4">
+                  <label className="form-label">Rotation Pattern</label>
+                  <select
+                    className="form-select"
+                    value={selectedShift.rotationPattern || "weekly"}
+                    onChange={(e) => {
+                      const updatedShift = { ...selectedShift, rotationPattern: e.target.value };
+                      setSelectedShift(updatedShift);
+                      // Update shift in state
+                      dispatch({ type: "UPDATE_SHIFT", payload: updatedShift });
+                    }}
+                  >
+                    <option value="daily">Daily Rotation</option>
+                    <option value="weekly">Weekly Rotation</option>
+                    <option value="biweekly">Bi-Weekly Rotation</option>
+                  </select>
+                  <small className="text-muted">How often shifts rotate</small>
+                </div>
+              )}
               <div className="col-md-4">
                 <label className="form-label">Start Date</label>
                 <input
@@ -1120,6 +1338,13 @@ const ShiftManagement = () => {
                             <span className={`badge bg-${roster.status === "published" ? "success" : "warning"}`}>
                               {roster.status}
                             </span>
+                            {roster.rotationPattern && (
+                              <div className="mt-1">
+                                <small className="badge bg-info">
+                                  {roster.rotationPattern} rotation
+                                </small>
+                              </div>
+                            )}
                           </td>
                           <td>
                             {roster.published ? (
@@ -1306,7 +1531,19 @@ const ShiftManagement = () => {
                             {arrangement.flexibleStart} - {arrangement.flexibleEnd}
                           </td>
                           <td>
-                            {arrangement.remoteWorkDays?.length || 0} days
+                            {arrangement.arrangementType === "hybrid" ? (
+                              <div>
+                                <small className="d-block">Office: {arrangement.hybridSchedule?.officeDays?.length || 0} days</small>
+                                <small className="d-block">Remote: {arrangement.hybridSchedule?.remoteDays?.length || 0} days</small>
+                              </div>
+                            ) : arrangement.arrangementType === "compressed" ? (
+                              <div>
+                                <small className="d-block">{arrangement.compressedWeek?.workDays || 0} days/week</small>
+                                <small className="d-block">{arrangement.compressedWeek?.hoursPerDay || 0} hrs/day</small>
+                              </div>
+                            ) : (
+                              <span>{arrangement.remoteWorkDays?.length || 0} days</span>
+                            )}
                           </td>
                           <td>
                             <span className={`badge bg-${arrangement.isActive ? "success" : "secondary"}`}>
@@ -1694,6 +1931,78 @@ const ShiftManagement = () => {
         </div>
       </div>
 
+      {/* Notifications Badge */}
+      <div className="d-flex justify-content-end mb-3">
+        <button
+          className="btn btn-outline-primary position-relative"
+          onClick={() => setShowNotifications(!showNotifications)}
+        >
+          <Bell size={16} className="me-2" />
+          Notifications
+          {notifications.filter(n => !n.read).length > 0 && (
+            <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+              {notifications.filter(n => !n.read).length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Notifications Panel */}
+      {showNotifications && (
+        <div className="card border-0 shadow-sm mb-4">
+          <div className="card-header bg-white d-flex justify-content-between align-items-center">
+            <h6 className="mb-0">Shift Change Notifications</h6>
+            <button
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => {
+                setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+                localStorage.setItem('shiftNotifications', JSON.stringify(notifications.map(n => ({ ...n, read: true }))));
+              }}
+            >
+              Mark All Read
+            </button>
+          </div>
+          <div className="card-body" style={{ maxHeight: "400px", overflowY: "auto" }}>
+            {notifications.length === 0 ? (
+              <p className="text-muted text-center mb-0">No notifications</p>
+            ) : (
+              notifications.slice(0, 20).map((notification) => (
+                <div
+                  key={notification.id}
+                  className={`alert alert-${notification.read ? 'light' : 'info'} mb-2`}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    setNotifications(prev =>
+                      prev.map(n =>
+                        n.id === notification.id ? { ...n, read: true } : n
+                      )
+                    );
+                    localStorage.setItem('shiftNotifications', JSON.stringify(
+                      notifications.map(n =>
+                        n.id === notification.id ? { ...n, read: true } : n
+                      )
+                    ));
+                  }}
+                >
+                  <div className="d-flex justify-content-between">
+                    <div>
+                      <strong>{notification.type.replace(/_/g, ' ').toUpperCase()}</strong>
+                      <p className="mb-0 mt-1">{notification.message}</p>
+                      <small className="text-muted">
+                        {new Date(notification.timestamp).toLocaleString()}
+                      </small>
+                    </div>
+                    {!notification.read && (
+                      <span className="badge bg-primary">New</span>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Tabs */}
       <ul className="nav nav-tabs mb-4">
         <li className="nav-item">
@@ -1819,6 +2128,23 @@ const ShiftManagement = () => {
                       <option value="flexible">Flexible</option>
                     </select>
                   </div>
+                  {shiftForm.type === "rotational" && (
+                    <div className="col-md-6">
+                      <label className="form-label">Rotation Pattern</label>
+                      <select
+                        className="form-select"
+                        value={shiftForm.rotationPattern || "weekly"}
+                        onChange={(e) =>
+                          setShiftForm({ ...shiftForm, rotationPattern: e.target.value })
+                        }
+                      >
+                        <option value="daily">Daily Rotation</option>
+                        <option value="weekly">Weekly Rotation</option>
+                        <option value="biweekly">Bi-Weekly Rotation</option>
+                      </select>
+                      <small className="text-muted">How often shifts rotate (daily, weekly, or bi-weekly)</small>
+                    </div>
+                  )}
                   <div className="col-md-6">
                     <label className="form-label">Duration (hours)</label>
                     <input
@@ -2312,42 +2638,190 @@ const ShiftManagement = () => {
                       }
                     />
                   </div>
+                  {/* Remote Work Day Marking */}
+                  {(flexibleForm.arrangementType === "remote" || flexibleForm.arrangementType === "flexible") && (
+                    <div className="col-12">
+                      <label className="form-label">Remote Work Days</label>
+                      <div className="d-flex flex-wrap gap-2">
+                        {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
+                          <div key={day} className="form-check">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              checked={flexibleForm.remoteWorkDays.includes(day)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setFlexibleForm({
+                                    ...flexibleForm,
+                                    remoteWorkDays: [...flexibleForm.remoteWorkDays, day],
+                                  });
+                                } else {
+                                  setFlexibleForm({
+                                    ...flexibleForm,
+                                    remoteWorkDays: flexibleForm.remoteWorkDays.filter((d) => d !== day),
+                                  });
+                                }
+                              }}
+                            />
+                            <label className="form-check-label">{day}</label>
+                          </div>
+                        ))}
+                      </div>
+                      <small className="text-muted">Select days when employee works remotely</small>
+                    </div>
+                  )}
+
+                  {/* Hybrid Work Schedule Management */}
+                  {flexibleForm.arrangementType === "hybrid" && (
+                    <>
+                      <div className="col-12">
+                        <label className="form-label">Office Days</label>
+                        <div className="d-flex flex-wrap gap-2">
+                          {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
+                            <div key={day} className="form-check">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                checked={flexibleForm.hybridSchedule.officeDays.includes(day)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setFlexibleForm({
+                                      ...flexibleForm,
+                                      hybridSchedule: {
+                                        ...flexibleForm.hybridSchedule,
+                                        officeDays: [...flexibleForm.hybridSchedule.officeDays, day],
+                                        remoteDays: flexibleForm.hybridSchedule.remoteDays.filter((d) => d !== day),
+                                      },
+                                    });
+                                  } else {
+                                    setFlexibleForm({
+                                      ...flexibleForm,
+                                      hybridSchedule: {
+                                        ...flexibleForm.hybridSchedule,
+                                        officeDays: flexibleForm.hybridSchedule.officeDays.filter((d) => d !== day),
+                                      },
+                                    });
+                                  }
+                                }}
+                              />
+                              <label className="form-check-label">{day}</label>
+                            </div>
+                          ))}
+                        </div>
+                        <small className="text-muted">Select days when employee works from office</small>
+                      </div>
+                      <div className="col-12">
+                        <label className="form-label">Remote Days</label>
+                        <div className="d-flex flex-wrap gap-2">
+                          {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
+                            <div key={day} className="form-check">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                checked={flexibleForm.hybridSchedule.remoteDays.includes(day)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setFlexibleForm({
+                                      ...flexibleForm,
+                                      hybridSchedule: {
+                                        ...flexibleForm.hybridSchedule,
+                                        remoteDays: [...flexibleForm.hybridSchedule.remoteDays, day],
+                                        officeDays: flexibleForm.hybridSchedule.officeDays.filter((d) => d !== day),
+                                      },
+                                    });
+                                  } else {
+                                    setFlexibleForm({
+                                      ...flexibleForm,
+                                      hybridSchedule: {
+                                        ...flexibleForm.hybridSchedule,
+                                        remoteDays: flexibleForm.hybridSchedule.remoteDays.filter((d) => d !== day),
+                                      },
+                                    });
+                                  }
+                                }}
+                              />
+                              <label className="form-check-label">{day}</label>
+                            </div>
+                          ))}
+                        </div>
+                        <small className="text-muted">Select days when employee works remotely</small>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Compressed Work Week Support */}
                   {flexibleForm.arrangementType === "compressed" && (
                     <>
-                      <div className="col-md-6">
-                        <label className="form-label">Work Days Per Week</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          value={flexibleForm.compressedWeek.workDays}
-                          onChange={(e) =>
-                            setFlexibleForm({
-                              ...flexibleForm,
-                              compressedWeek: {
-                                ...flexibleForm.compressedWeek,
-                                workDays: parseInt(e.target.value),
-                              },
-                            })
-                          }
-                        />
+                      <div className="col-12">
+                        <div className="form-check form-switch mb-3">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={flexibleForm.compressedWeek.enabled}
+                            onChange={(e) =>
+                              setFlexibleForm({
+                                ...flexibleForm,
+                                compressedWeek: {
+                                  ...flexibleForm.compressedWeek,
+                                  enabled: e.target.checked,
+                                },
+                              })
+                            }
+                          />
+                          <label className="form-check-label">Enable Compressed Work Week</label>
+                        </div>
                       </div>
-                      <div className="col-md-6">
-                        <label className="form-label">Hours Per Day</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          value={flexibleForm.compressedWeek.hoursPerDay}
-                          onChange={(e) =>
-                            setFlexibleForm({
-                              ...flexibleForm,
-                              compressedWeek: {
-                                ...flexibleForm.compressedWeek,
-                                hoursPerDay: parseInt(e.target.value),
-                              },
-                            })
-                          }
-                        />
-                      </div>
+                      {flexibleForm.compressedWeek.enabled && (
+                        <>
+                          <div className="col-md-6">
+                            <label className="form-label">Work Days Per Week</label>
+                            <input
+                              type="number"
+                              className="form-control"
+                              min="3"
+                              max="5"
+                              value={flexibleForm.compressedWeek.workDays}
+                              onChange={(e) =>
+                                setFlexibleForm({
+                                  ...flexibleForm,
+                                  compressedWeek: {
+                                    ...flexibleForm.compressedWeek,
+                                    workDays: parseInt(e.target.value) || 4,
+                                  },
+                                })
+                              }
+                            />
+                            <small className="text-muted">Typically 4 days (e.g., Mon-Thu)</small>
+                          </div>
+                          <div className="col-md-6">
+                            <label className="form-label">Hours Per Day</label>
+                            <input
+                              type="number"
+                              className="form-control"
+                              min="8"
+                              max="12"
+                              value={flexibleForm.compressedWeek.hoursPerDay}
+                              onChange={(e) =>
+                                setFlexibleForm({
+                                  ...flexibleForm,
+                                  compressedWeek: {
+                                    ...flexibleForm.compressedWeek,
+                                    hoursPerDay: parseInt(e.target.value) || 10,
+                                  },
+                                })
+                              }
+                            />
+                            <small className="text-muted">Hours to work per day (e.g., 10 hours)</small>
+                          </div>
+                          <div className="col-12">
+                            <div className="alert alert-info">
+                              <strong>Total Weekly Hours:</strong> {flexibleForm.compressedWeek.workDays * flexibleForm.compressedWeek.hoursPerDay} hours
+                              <br />
+                              <small>This arrangement allows working {flexibleForm.compressedWeek.workDays} days per week with {flexibleForm.compressedWeek.hoursPerDay} hours per day.</small>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </>
                   )}
                 </div>

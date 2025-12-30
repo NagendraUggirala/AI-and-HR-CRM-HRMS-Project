@@ -1517,6 +1517,193 @@ const AttendanceReports = () => {
     return { dayOfWeekCounts, monthlyCounts };
   }, [filteredData]);
 
+  // Calculate attendance anomalies
+  const attendanceAnomalies = useMemo(() => {
+    const anomalies = [];
+    const employeeStats = {};
+    
+    // Calculate per-employee statistics
+    filteredData.forEach(record => {
+      if (!employeeStats[record.employeeId]) {
+        employeeStats[record.employeeId] = {
+          employeeId: record.employeeId,
+          employeeName: record.employeeName,
+          department: record.department,
+          totalDays: 0,
+          absentCount: 0,
+          lateCount: 0,
+          lateMinutes: [],
+          overtimeHours: [],
+          consecutiveLate: 0,
+          maxConsecutiveLate: 0,
+          consecutiveAbsent: 0,
+          maxConsecutiveAbsent: 0,
+          dayOfWeekPattern: { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 },
+        };
+      }
+      
+      const stats = employeeStats[record.employeeId];
+      stats.totalDays++;
+      
+      if (record.status === 'absent') {
+        stats.absentCount++;
+        stats.consecutiveAbsent++;
+        stats.maxConsecutiveAbsent = Math.max(stats.maxConsecutiveAbsent, stats.consecutiveAbsent);
+      } else {
+        stats.consecutiveAbsent = 0;
+      }
+      
+      if (record.late > 0) {
+        stats.lateCount++;
+        stats.lateMinutes.push(record.late);
+        stats.consecutiveLate++;
+        stats.maxConsecutiveLate = Math.max(stats.maxConsecutiveLate, stats.consecutiveLate);
+      } else {
+        stats.consecutiveLate = 0;
+      }
+      
+      if (record.overtime > 0) {
+        stats.overtimeHours.push(record.overtime);
+      }
+      
+      const date = new Date(record.date);
+      const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
+      if (record.status === 'absent' || record.status === 'leave') {
+        stats.dayOfWeekPattern[dayOfWeek]++;
+      }
+    });
+    
+    // Detect anomalies
+    Object.values(employeeStats).forEach(stats => {
+      const absentRate = (stats.absentCount / stats.totalDays) * 100;
+      const lateRate = (stats.lateCount / stats.totalDays) * 100;
+      const avgLate = stats.lateMinutes.length > 0 
+        ? stats.lateMinutes.reduce((a, b) => a + b, 0) / stats.lateMinutes.length 
+        : 0;
+      const avgOvertime = stats.overtimeHours.length > 0
+        ? stats.overtimeHours.reduce((a, b) => a + b, 0) / stats.overtimeHours.length
+        : 0;
+      const totalOvertime = stats.overtimeHours.reduce((a, b) => a + b, 0);
+      
+      // Anomaly 1: Consecutive late arrivals (3+ days)
+      if (stats.maxConsecutiveLate >= 3) {
+        anomalies.push({
+          type: 'consecutive_late',
+          severity: stats.maxConsecutiveLate >= 5 ? 'high' : 'medium',
+          employeeId: stats.employeeId,
+          employeeName: stats.employeeName,
+          department: stats.department,
+          metric: `${stats.maxConsecutiveLate} consecutive late arrivals`,
+          value: stats.maxConsecutiveLate,
+          description: `Employee has ${stats.maxConsecutiveLate} consecutive late arrivals`,
+        });
+      }
+      
+      // Anomaly 2: High absenteeism rate (>10%)
+      if (absentRate > 10 && stats.totalDays >= 20) {
+        anomalies.push({
+          type: 'high_absenteeism',
+          severity: absentRate > 20 ? 'high' : 'medium',
+          employeeId: stats.employeeId,
+          employeeName: stats.employeeName,
+          department: stats.department,
+          metric: `${absentRate.toFixed(1)}% absenteeism rate`,
+          value: absentRate,
+          description: `Absenteeism rate of ${absentRate.toFixed(1)}% exceeds threshold of 10%`,
+        });
+      }
+      
+      // Anomaly 3: Frequent late arrivals (>30% late rate)
+      if (lateRate > 30 && stats.totalDays >= 20) {
+        anomalies.push({
+          type: 'frequent_late',
+          severity: lateRate > 50 ? 'high' : 'medium',
+          employeeId: stats.employeeId,
+          employeeName: stats.employeeName,
+          department: stats.department,
+          metric: `${lateRate.toFixed(1)}% late arrival rate`,
+          value: lateRate,
+          description: `Late arrival rate of ${lateRate.toFixed(1)}% with average ${avgLate.toFixed(0)} minutes late`,
+        });
+      }
+      
+      // Anomaly 4: Excessive overtime (>15 hours per week average)
+      if (avgOvertime > 3 && stats.overtimeHours.length > 0) {
+        anomalies.push({
+          type: 'excessive_overtime',
+          severity: avgOvertime > 5 ? 'high' : 'medium',
+          employeeId: stats.employeeId,
+          employeeName: stats.employeeName,
+          department: stats.department,
+          metric: `${avgOvertime.toFixed(1)}h average overtime (${totalOvertime.toFixed(0)}h total)`,
+          value: totalOvertime,
+          description: `Average ${avgOvertime.toFixed(1)} hours overtime per day, total ${totalOvertime.toFixed(0)} hours`,
+        });
+      }
+      
+      // Anomaly 5: Consecutive absences (3+ days)
+      if (stats.maxConsecutiveAbsent >= 3) {
+        anomalies.push({
+          type: 'consecutive_absent',
+          severity: stats.maxConsecutiveAbsent >= 5 ? 'high' : 'medium',
+          employeeId: stats.employeeId,
+          employeeName: stats.employeeName,
+          department: stats.department,
+          metric: `${stats.maxConsecutiveAbsent} consecutive absences`,
+          value: stats.maxConsecutiveAbsent,
+          description: `Employee has ${stats.maxConsecutiveAbsent} consecutive absent days`,
+        });
+      }
+      
+      // Anomaly 6: Pattern detection (same day of week absences)
+      const maxDayAbsences = Math.max(...Object.values(stats.dayOfWeekPattern));
+      if (maxDayAbsences >= 4) {
+        const frequentDay = Object.entries(stats.dayOfWeekPattern)
+          .find(([day, count]) => count === maxDayAbsences)[0];
+        anomalies.push({
+          type: 'pattern_detection',
+          severity: maxDayAbsences >= 6 ? 'high' : 'medium',
+          employeeId: stats.employeeId,
+          employeeName: stats.employeeName,
+          department: stats.department,
+          metric: `${maxDayAbsences} absences on ${frequentDay}s`,
+          value: maxDayAbsences,
+          description: `Pattern detected: ${maxDayAbsences} absences on ${frequentDay}s (potential pattern)`,
+        });
+      }
+      
+      // Anomaly 7: Average late time > 30 minutes
+      if (avgLate > 30 && stats.lateCount >= 5) {
+        anomalies.push({
+          type: 'severe_lateness',
+          severity: avgLate > 60 ? 'high' : 'medium',
+          employeeId: stats.employeeId,
+          employeeName: stats.employeeName,
+          department: stats.department,
+          metric: `${avgLate.toFixed(0)} minutes average late`,
+          value: avgLate,
+          description: `Average late arrival time of ${avgLate.toFixed(0)} minutes exceeds 30 minutes threshold`,
+        });
+      }
+    });
+    
+    // Calculate anomaly statistics
+    const anomalyStats = {
+      total: anomalies.length,
+      byType: {},
+      bySeverity: { high: 0, medium: 0, low: 0 },
+      byDepartment: {},
+    };
+    
+    anomalies.forEach(anomaly => {
+      anomalyStats.byType[anomaly.type] = (anomalyStats.byType[anomaly.type] || 0) + 1;
+      anomalyStats.bySeverity[anomaly.severity] = (anomalyStats.bySeverity[anomaly.severity] || 0) + 1;
+      anomalyStats.byDepartment[anomaly.department] = (anomalyStats.byDepartment[anomaly.department] || 0) + 1;
+    });
+    
+    return { anomalies, stats: anomalyStats };
+  }, [filteredData]);
+
   const renderAnalytics = () => {
 
     return (
@@ -1816,6 +2003,164 @@ const AttendanceReports = () => {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Attendance Anomaly Detection */}
+        <div className="chart-card" style={{ marginTop: '24px' }}>
+          <div className="chart-title">
+            <AlertCircle size={18} color="#dc2626" />
+            Attendance Anomaly Detection
+          </div>
+          
+          {/* Anomaly Summary */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px', marginTop: '16px' }}>
+            <div style={{ 
+              padding: '16px', 
+              backgroundColor: '#fee2e2', 
+              borderRadius: '8px',
+              border: '1px solid #fca5a5'
+            }}>
+              <div style={{ fontSize: '12px', color: '#991b1b', marginBottom: '8px' }}>Total Anomalies</div>
+              <div style={{ fontSize: '28px', fontWeight: 700, color: '#7f1d1d' }}>
+                {attendanceAnomalies.stats?.total || 0}
+              </div>
+            </div>
+            <div style={{ 
+              padding: '16px', 
+              backgroundColor: '#fee2e2', 
+              borderRadius: '8px',
+              border: '1px solid #f87171'
+            }}>
+              <div style={{ fontSize: '12px', color: '#991b1b', marginBottom: '8px' }}>High Severity</div>
+              <div style={{ fontSize: '28px', fontWeight: 700, color: '#7f1d1d' }}>
+                {attendanceAnomalies.stats?.bySeverity?.high || 0}
+              </div>
+            </div>
+            <div style={{ 
+              padding: '16px', 
+              backgroundColor: '#fef3c7', 
+              borderRadius: '8px',
+              border: '1px solid #fde68a'
+            }}>
+              <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '8px' }}>Medium Severity</div>
+              <div style={{ fontSize: '28px', fontWeight: 700, color: '#78350f' }}>
+                {attendanceAnomalies.stats?.bySeverity?.medium || 0}
+              </div>
+            </div>
+            <div style={{ 
+              padding: '16px', 
+              backgroundColor: '#dbeafe', 
+              borderRadius: '8px',
+              border: '1px solid #93c5fd'
+            }}>
+              <div style={{ fontSize: '12px', color: '#1e40af', marginBottom: '8px' }}>Affected Employees</div>
+              <div style={{ fontSize: '28px', fontWeight: 700, color: '#1e3a8a' }}>
+                {new Set(attendanceAnomalies.anomalies?.map(a => a.employeeId) || []).size}
+              </div>
+            </div>
+          </div>
+
+          {/* Anomaly Types Distribution */}
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '12px', color: '#475569' }}>
+              Anomalies by Type
+            </div>
+            <div>
+              {Object.entries(attendanceAnomalies.stats?.byType || {}).map(([type, count]) => {
+                const typeLabels = {
+                  consecutive_late: 'Consecutive Late Arrivals',
+                  high_absenteeism: 'High Absenteeism',
+                  frequent_late: 'Frequent Late Arrivals',
+                  excessive_overtime: 'Excessive Overtime',
+                  consecutive_absent: 'Consecutive Absences',
+                  pattern_detection: 'Pattern Detection',
+                  severe_lateness: 'Severe Lateness',
+                };
+                return (
+                  <div key={type} style={{ marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '6px' }}>
+                      <span style={{ fontWeight: 500 }}>{typeLabels[type] || type}</span>
+                      <span style={{ color: '#475569', fontWeight: 600 }}>{count}</span>
+                    </div>
+                    <div style={{ height: '6px', backgroundColor: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div 
+                        style={{ 
+                          height: '100%', 
+                          width: `${(count / (attendanceAnomalies.stats?.total || 1)) * 100}%`,
+                          background: 'linear-gradient(90deg, #dc2626, #ef4444)',
+                          borderRadius: '3px'
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Detailed Anomaly List */}
+          <div style={{ marginTop: '24px' }}>
+            <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '12px', color: '#475569' }}>
+              Detected Anomalies ({attendanceAnomalies.anomalies?.length || 0})
+            </div>
+            <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #e2e8f0', position: 'sticky', top: 0 }}>
+                    <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Employee</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Anomaly Type</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Metric</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Severity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {attendanceAnomalies.anomalies?.length === 0 ? (
+                    <tr>
+                      <td colSpan="4" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                        <CheckCircle size={32} style={{ opacity: 0.3, marginBottom: '12px' }} />
+                        <div>No anomalies detected</div>
+                      </td>
+                    </tr>
+                  ) : (
+                    attendanceAnomalies.anomalies
+                      .sort((a, b) => {
+                        const severityOrder = { high: 3, medium: 2, low: 1 };
+                        return severityOrder[b.severity] - severityOrder[a.severity];
+                      })
+                      .map((anomaly, index) => (
+                        <tr key={index} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          <td style={{ padding: '14px' }}>
+                            <div>
+                              <div style={{ fontWeight: 500, color: '#1e293b' }}>{anomaly.employeeName}</div>
+                              <div style={{ fontSize: '12px', color: '#64748b' }}>{anomaly.department}</div>
+                            </div>
+                          </td>
+                          <td style={{ padding: '14px', color: '#475569' }}>
+                            {anomaly.type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          </td>
+                          <td style={{ padding: '14px', color: '#475569', fontSize: '13px' }}>
+                            {anomaly.metric}
+                          </td>
+                          <td style={{ padding: '14px', textAlign: 'center' }}>
+                            <span style={{ 
+                              padding: '4px 12px', 
+                              backgroundColor: anomaly.severity === 'high' ? '#fee2e2' : '#fef3c7',
+                              color: anomaly.severity === 'high' ? '#991b1b' : '#92400e',
+                              borderRadius: '12px',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              textTransform: 'uppercase'
+                            }}>
+                              {anomaly.severity}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

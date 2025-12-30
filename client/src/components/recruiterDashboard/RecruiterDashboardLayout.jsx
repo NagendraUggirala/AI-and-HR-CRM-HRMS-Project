@@ -601,6 +601,13 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
                     Holiday Calendar
                   </NavLink>
                 </li>
+
+                <li>
+                  <NavLink to='/attendance/payroll-integration' className={(navData) => navData.isActive ? "active-page" : ""}>
+                    <Icon icon='heroicons:gift' className='icon text-sm me-2 fs-5' />
+                     Payroll Integration
+                  </NavLink>
+                </li>
                 <li>
                   <NavLink to='/attendance/reports' className={(navData) => navData.isActive ? "active-page" : ""}>
                     <Icon icon='heroicons:chart-bar' className='icon text-sm me-2 fs-5' />
