@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap-icons/font/bootstrap-icons.css";
 
 const CustomFormBuilder = () => {
   // State for active tab (0 = Form Design, 1 = Configuration)
