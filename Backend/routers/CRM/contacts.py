@@ -50,7 +50,16 @@ def convert_contact_output(db_contact: ContactModel):
 #  CREATE CONTACT  
 @router.post("/", response_model=contact.ContactResponse)
 def create_contact(contact_data: contact.ContactCreate, db: Session = Depends(get_db)):
-    db_contact = crud_ops.create_contact(db=db, contact=contact_data)
+    # Convert tags array to CSV string if it's a list
+    contact_dict = contact_data.dict()
+    if isinstance(contact_dict.get("tags"), list):
+        contact_dict["tags"] = ",".join(contact_dict["tags"]) if contact_dict["tags"] else None
+    
+    # Create a new ContactCreate object with converted tags
+    from schema.contact import ContactCreate
+    contact_data_converted = ContactCreate(**contact_dict)
+    
+    db_contact = crud_ops.create_contact(db=db, contact=contact_data_converted)
     return convert_contact_output(db_contact)
 
 
@@ -71,9 +80,22 @@ def read_contact(contact_id: int, db: Session = Depends(get_db)):
 #  UPDATE CONTACT  
 @router.put("/{contact_id}", response_model=contact.ContactResponse)
 def update_contact(contact_id: int, updated: contact.ContactUpdate, db: Session = Depends(get_db)):
-    db_contact = crud_ops.update_contact(db=db, contact_id=contact_id, updated=updated)
+    # Get the contact first
+    db_contact = crud_ops.get_contact(db=db, contact_id=contact_id)
     if not db_contact:
         raise HTTPException(status_code=404, detail="Contact not found")
+    
+    # Convert tags array to CSV string if it's a list
+    updated_dict = updated.dict(exclude_unset=True)
+    if "tags" in updated_dict and isinstance(updated_dict["tags"], list):
+        updated_dict["tags"] = ",".join(updated_dict["tags"]) if updated_dict["tags"] else None
+    
+    # Update fields directly
+    for key, value in updated_dict.items():
+        setattr(db_contact, key, value)
+    
+    db.commit()
+    db.refresh(db_contact)
     return convert_contact_output(db_contact)
 
 #  DELETE CONTACT  
