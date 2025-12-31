@@ -204,10 +204,10 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
           </button>
           <div>
           <Link to='/dashboard' className='sidebar-logo'>
-            <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTGE7W96JxSIvT7IXR8leAYNnqTBtRgzXSbnQ&s' alt='site logo' className='light-logo' />
+            <img src='assets/images/auth/auth-img.png' alt='site logo' className='light-logo' />
             
             
-            <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTGE7W96JxSIvT7IXR8leAYNnqTBtRgzXSbnQ&s' alt='site logo' className='logo-icon' />
+            <img src='assets/images/auth/auth-img.png' alt='site logo' className='logo-icon' />
           </Link>
         </div>
           <div className='sidebar-menu-area'>
@@ -488,76 +488,59 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
 
             <li className='sidebar-menu-group-title'>HR Management</li>
 
+            {/* All Employees - Quick Access */}
+            <li>
+              <LinkItem to='/hrms/all-employees' tabKey='all-employees' icon='heroicons:user-group' label='All Employees' />
+            </li>
+
+            {/* Onboarding & Pre-Joining */}
             <li className='dropdown'>
               <Link to='#'>
-                <Icon icon='heroicons:shield-check' className='menu-icon' />
-                <span>Tenant & User </span>
+                <Icon icon='heroicons:user-plus' className='menu-icon' />
+                <span>Onboarding & Pre-Joining</span>
               </Link>
               <ul className='sidebar-submenu'>
                 <li>
-                  <NavLink to='/Tenant/MultiTenant' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:building-office' className='icon text-sm me-2 fs-5' />
-                    Multi-Tenant Setup
+                  <NavLink to='/onboarding/offers' className={(navData) => navData.isActive ? "active-page" : ""}>
+                    <Icon icon='heroicons:document-check' className='icon text-sm me-2 fs-5' />
+                    Offer Management
                   </NavLink>
                 </li>
                 <li>
-                  <NavLink to='/Tenant/Authentication' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:key' className='icon text-sm me-2 fs-5' />
-                    Authentication
+                  <NavLink to='/onboarding/pre-joining' className={(navData) => navData.isActive ? "active-page" : ""}>
+                    <Icon icon='heroicons:chat-bubble-left-right' className='icon text-sm me-2 fs-5' />
+                    Pre-Joining Engagement
                   </NavLink>
                 </li>
                 <li>
-                  <NavLink to='/Tenant/RolesPermission' className={(navData) => navData.isActive ? "active-page" : ""}>
+                  <NavLink to='/onboarding/joining-day' className={(navData) => navData.isActive ? "active-page" : ""}>
+                    <Icon icon='heroicons:calendar' className='icon text-sm me-2 fs-5' />
+                    Joining Day Management
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to='/onboarding/induction' className={(navData) => navData.isActive ? "active-page" : ""}>
+                    <Icon icon='heroicons:academic-cap' className='icon text-sm me-2 fs-5' />
+                    Induction & Orientation
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to='/onboarding/probation' className={(navData) => navData.isActive ? "active-page" : ""}>
+                    <Icon icon='heroicons:clock' className='icon text-sm me-2 fs-5' />
+                    Probation Management
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to='/onboarding/buddy' className={(navData) => navData.isActive ? "active-page" : ""}>
                     <Icon icon='heroicons:user-group' className='icon text-sm me-2 fs-5' />
-                    Roles & Permissions
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/Tenant/Company' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:cog-6-tooth' className='icon text-sm me-2 fs-5' />
-                    Company Settings
+                    Buddy/Mentor Program
                   </NavLink>
                 </li>
               </ul>
             </li>
-            <li className='dropdown'>
-              <Link to='#'>
-                <Icon icon='heroicons:users' className='menu-icon' />
-                <span>Employe Management</span>
-              </Link>
-              <ul className='sidebar-submenu'>
-                <li>
-                  <NavLink to='/employee/master' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:user-circle' className='icon text-sm me-2 fs-5' />
-                    Employee Master Data
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/employee/hierarchy' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:rectangle-stack' className='icon text-sm me-2 fs-5' />
-                    Organization Hierarchy
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/employee/documents' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:archive-box' className='icon text-sm me-2 fs-5' />
-                    Document Vault
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/employee/lifecycle' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:arrow-path' className='icon text-sm me-2 fs-5' />
-                    Employee Lifecycle
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/employee/self-service' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:computer-desktop' className='icon text-sm me-2 fs-5' />
-                    Employee Self-Service
-                  </NavLink>
-                </li>
-              </ul>
-            </li>
+
+
+              {/* Attendance & Leave Management */}  
 
             <li className='dropdown'>
               <Link to='#'>
@@ -616,6 +599,50 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
                 </li>
               </ul>
             </li>
+
+            {/* Employee Management */}
+           
+            <li className='dropdown'>
+              <Link to='#'>
+                <Icon icon='heroicons:users' className='menu-icon' />
+                <span>Employe
+                   Management</span>
+              </Link>
+              <ul className='sidebar-submenu'>
+                <li>
+                  <NavLink to='/employee/master' className={(navData) => navData.isActive ? "active-page" : ""}>
+                    <Icon icon='heroicons:user-circle' className='icon text-sm me-2 fs-5' />
+                    Employee Master Data
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to='/employee/hierarchy' className={(navData) => navData.isActive ? "active-page" : ""}>
+                    <Icon icon='heroicons:rectangle-stack' className='icon text-sm me-2 fs-5' />
+                    Org Hierarchy
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to='/employee/documents' className={(navData) => navData.isActive ? "active-page" : ""}>
+                    <Icon icon='heroicons:archive-box' className='icon text-sm me-2 fs-5' />
+                    Document Vault
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to='/employee/lifecycle' className={(navData) => navData.isActive ? "active-page" : ""}>
+                    <Icon icon='heroicons:arrow-path' className='icon text-sm me-2 fs-5' />
+                    Employee Lifecycle
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to='/employee/self-service' className={(navData) => navData.isActive ? "active-page" : ""}>
+                    <Icon icon='heroicons:computer-desktop' className='icon text-sm me-2 fs-5' />
+                    Employee Self-Service
+                  </NavLink>
+                </li>
+              </ul>
+            </li>
+
+            
 
             <li className='dropdown'>
               <Link to='#'>
@@ -680,50 +707,7 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
               </ul>
             </li>
 
-            <li className='dropdown'>
-              <Link to='#'>
-                <Icon icon='heroicons:user-plus' className='menu-icon' />
-                <span>Onboarding & Pre-Joining</span>
-              </Link>
-              <ul className='sidebar-submenu'>
-                <li>
-                  <NavLink to='/onboarding/offers' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:document-check' className='icon text-sm me-2 fs-5' />
-                    Offer Management
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/onboarding/pre-joining' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:chat-bubble-left-right' className='icon text-sm me-2 fs-5' />
-                    Pre-Joining Engagement
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/onboarding/joining-day' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:calendar' className='icon text-sm me-2 fs-5' />
-                    Joining Day Management
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/onboarding/induction' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:academic-cap' className='icon text-sm me-2 fs-5' />
-                    Induction & Orientation
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/onboarding/probation' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:clock' className='icon text-sm me-2 fs-5' />
-                    Probation Management
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/onboarding/buddy' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:user-group' className='icon text-sm me-2 fs-5' />
-                    Buddy/Mentor Program
-                  </NavLink>
-                </li>
-              </ul>
-            </li>
+            
 
             <li className='dropdown'>
               <Link to='#'>
@@ -877,6 +861,13 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
                 </li>
               </ul>
             </li>
+
+            <li>
+                  <NavLink to='/Tenant/Company' className={ (navData) => navData.isActive ? "active-page" : ""}>
+                    <Icon icon='heroicons:cog-6-tooth' className='icon menu-icon text-sm me-2 fs-5' />
+                    Company Settings
+                  </NavLink>
+                </li>
 
 
 

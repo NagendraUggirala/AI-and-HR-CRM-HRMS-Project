@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { activitiesAPI } from "../../utils/api";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Activities = () => {
     const [activities, setActivities] = useState([]);
@@ -8,6 +10,9 @@ const Activities = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [editingActivityId, setEditingActivityId] = useState(null);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [activityToDelete, setActivityToDelete] = useState(null);
     
     // Helper function to get badge class and icon based on type
     const getActivityStyle = (type) => {
@@ -74,12 +79,18 @@ const Activities = () => {
             // Map backend field names to frontend display names
             const transformedData = data.map(activity => {
                 if (!activity) return null;
-                const activityType = activity.activity_type || activity.type || "Calls"; // Backend sends 'activity_type', not 'type'
+                // Get activity type from backend (activity_type field) - handle empty strings and null
+                let activityType = (activity.activity_type || activity.type || "").toString().trim();
+                if (!activityType || activityType === "null" || activityType === "undefined") {
+                    activityType = "Calls"; // Default fallback
+                }
+                const styleInfo = getActivityStyle(activityType);
                 return {
                     ...activity,
                     type: activityType, // Add 'type' for display compatibility
-                    badgeClass: getActivityStyle(activityType).badgeClass,
-                    icon: getActivityStyle(activityType).icon,
+                    activity_type: activityType, // Ensure activity_type is also set
+                    badgeClass: styleInfo.badgeClass,
+                    icon: styleInfo.icon,
                     dueDate: activity.due_date ? formatDate(activity.due_date) : "",
                     activityTime: activity.activity_time ? formatTime(activity.activity_time) : "", // Format time for display
                     createdDate: activity.created_date ? formatDate(activity.created_date) : "",
@@ -175,9 +186,9 @@ const Activities = () => {
             
             // Map frontend field names to backend schema field names
             const activityData = {
-                title: formData.title,
+                title: formData.title || "",
                 activity_type: selectedActivity.charAt(0).toUpperCase() + selectedActivity.slice(1), // Backend expects 'activity_type', not 'type'
-                due_date: dueDate,
+                due_date: dueDate || null,
                 activity_time: formData.time || null, // Backend expects 'activity_time', not 'time'
                 remainder: formData.remainder || null, // Backend expects 'remainder', not 'reminder'
                 remainder_type: formData.remainderType || null, // Backend expects 'remainder_type', not 'reminder_type'
@@ -190,8 +201,15 @@ const Activities = () => {
                 created_date: new Date().toISOString().split('T')[0] || null // Backend expects date string in YYYY-MM-DD format
             };
 
-            const response = await activitiesAPI.create(activityData);
-            console.log("Activity created successfully:", response);
+            // Remove empty strings and convert to null
+            Object.keys(activityData).forEach(key => {
+                if (activityData[key] === "" || activityData[key] === undefined) {
+                    activityData[key] = null;
+                }
+            });
+
+            await activitiesAPI.create(activityData);
+            toast.success("Activity created successfully!");
             
             // Reset form
             setFormData({
@@ -226,87 +244,98 @@ const Activities = () => {
                 }
             }
             
-            // Reload activities after a short delay to ensure backend has processed
-            setTimeout(() => {
-                loadActivities();
-            }, 300);
+            // Reload activities
+            await loadActivities();
         } catch (err) {
             console.error("Error creating activity:", err);
-            setError("Failed to create activity. Please try again.");
+            const errorMessage = err.message || err.detail || "Failed to create activity. Please try again.";
+            setError(errorMessage);
+            toast.error(errorMessage);
         }
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this activity?")) {
-            return;
-        }
+    const handleDeleteClick = (activity) => {
+        setActivityToDelete(activity);
+        setShowDeleteModal(true);
+    };
+
+    const handleDelete = async () => {
+        if (!activityToDelete || !activityToDelete.id) return;
+        
         try {
             setError(null);
-            const response = await activitiesAPI.delete(id);
-            console.log("Activity deleted successfully:", response);
-            
-            // Close delete modal
-            const modal = document.getElementById('delete_modal');
-            if (modal) {
-                const bsModal = window.bootstrap ? window.bootstrap.Modal.getInstance(modal) : null;
-                if (bsModal) {
-                    bsModal.hide();
-                } else {
-                    // Fallback: hide modal manually
-                    modal.classList.remove('show');
-                    modal.setAttribute('aria-hidden', 'true');
-                    document.body.classList.remove('modal-open');
-                    const backdrop = document.querySelector('.modal-backdrop');
-                    if (backdrop) backdrop.remove();
+            setLoading(true);
+            await activitiesAPI.delete(activityToDelete.id);
+            toast.success("Activity deleted successfully!");
+            setShowDeleteModal(false);
+            setActivityToDelete(null);
+            await loadActivities();
+        } catch (err) {
+            console.error("Error deleting activity:", err);
+            const errorMessage = err.message || err.detail || "Failed to delete activity. Please try again.";
+            setError(errorMessage);
+            toast.error(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleEdit = async (activity) => {
+        try {
+            setLoading(true);
+            // Fetch full activity data from API if we have an ID
+            let fullActivityData = activity;
+            if (activity.id) {
+                try {
+                    fullActivityData = await activitiesAPI.getById(activity.id);
+                } catch (err) {
+                    console.error("Error fetching activity details:", err);
+                    // Use existing activity data if API call fails
                 }
             }
             
-            // Reload activities after a short delay to ensure backend has processed
-            setTimeout(() => {
-                loadActivities();
-            }, 300);
-        } catch (err) {
-            console.error("Error deleting activity:", err);
-            setError(err.message || "Failed to delete activity. Please try again.");
-        }
-    };
-
-    const handleEdit = (activity) => {
-        setEditingActivityId(activity.id);
-        // Map backend field names to frontend form field names
-        // Format date for date input (YYYY-MM-DD)
-        let formattedDate = "";
-        if (activity.due_date) {
-            if (typeof activity.due_date === 'string') {
-                formattedDate = activity.due_date.split('T')[0];
-            } else {
-                // Handle date object
-                const date = new Date(activity.due_date);
-                formattedDate = date.toISOString().split('T')[0];
+            setEditingActivityId(fullActivityData.id);
+            // Map backend field names to frontend form field names
+            // Format date for date input (YYYY-MM-DD)
+            let formattedDate = "";
+            if (fullActivityData.due_date) {
+                if (typeof fullActivityData.due_date === 'string') {
+                    formattedDate = fullActivityData.due_date.split('T')[0];
+                } else {
+                    // Handle date object
+                    const date = new Date(fullActivityData.due_date);
+                    formattedDate = date.toISOString().split('T')[0];
+                }
             }
+            
+            // Format time for time input (HH:MM)
+            let formattedTime = "";
+            if (fullActivityData.activity_time) {
+                formattedTime = formatTime(fullActivityData.activity_time);
+            }
+            
+            setEditActivity({
+                title: fullActivityData.title || "",
+                type: fullActivityData.activity_type || "", // Backend sends 'activity_type', not 'type'
+                dueDate: formattedDate,
+                time: formattedTime, // Format time for time input
+                reminder: fullActivityData.remainder || "", // Backend sends 'remainder', not 'reminder'
+                reminderType: fullActivityData.remainder_type || "Work", // Backend sends 'remainder_type', not 'reminder_type'
+                owner: fullActivityData.owner || "",
+                guests: fullActivityData.guests || "",
+                description: fullActivityData.description || "",
+                deals: fullActivityData.deals || "", // Backend sends 'deals' (plural), not 'deal'
+                contacts: fullActivityData.contacts || "", // Backend sends 'contacts' (plural), not 'contact'
+                companies: fullActivityData.companies || "", // Backend sends 'companies' (plural), not 'company'
+            });
+            setSelectedActivity(fullActivityData.activity_type?.toLowerCase() || "calls");
+            setShowEditModal(true);
+        } catch (err) {
+            console.error("Error opening edit modal:", err);
+            toast.error("Failed to load activity details.");
+        } finally {
+            setLoading(false);
         }
-        
-        // Format time for time input (HH:MM)
-        let formattedTime = "";
-        if (activity.activity_time) {
-            formattedTime = formatTime(activity.activity_time);
-        }
-        
-        setEditActivity({
-            title: activity.title || "",
-            type: activity.activity_type || "", // Backend sends 'activity_type', not 'type'
-            dueDate: formattedDate,
-            time: formattedTime, // Format time for time input
-            reminder: activity.remainder || "", // Backend sends 'remainder', not 'reminder'
-            reminderType: activity.remainder_type || "Work", // Backend sends 'remainder_type', not 'reminder_type'
-            owner: activity.owner || "",
-            guests: activity.guests || "",
-            description: activity.description || "",
-            deals: activity.deals || "", // Backend sends 'deals' (plural), not 'deal'
-            contacts: activity.contacts || "", // Backend sends 'contacts' (plural), not 'contact'
-            companies: activity.companies || "", // Backend sends 'companies' (plural), not 'company'
-        });
-        setSelectedActivity(activity.activity_type?.toLowerCase() || "calls");
     };
 
     const handleUpdateSubmit = async (e) => {
@@ -315,51 +344,44 @@ const Activities = () => {
         
         try {
             setError(null);
+            setLoading(true);
             const dueDate = editActivity.dueDate ? new Date(editActivity.dueDate).toISOString().split('T')[0] : null;
             
             // Map frontend field names to backend schema field names
             const activityData = {
-                title: editActivity.title,
-                activity_type: selectedActivity.charAt(0).toUpperCase() + selectedActivity.slice(1), // Backend expects 'activity_type', not 'type'
-                due_date: dueDate,
-                activity_time: editActivity.time || null, // Backend expects 'activity_time', not 'time'
-                remainder: editActivity.reminder || null, // Backend expects 'remainder', not 'reminder'
-                remainder_type: editActivity.reminderType || null, // Backend expects 'remainder_type', not 'reminder_type'
+                title: editActivity.title || "",
+                activity_type: editActivity.type || selectedActivity.charAt(0).toUpperCase() + selectedActivity.slice(1), // Backend expects 'activity_type'
+                due_date: dueDate || null,
+                activity_time: editActivity.time || null, // Backend expects 'activity_time'
+                remainder: editActivity.reminder || null, // Backend expects 'remainder'
+                remainder_type: editActivity.reminderType || null, // Backend expects 'remainder_type'
                 owner: editActivity.owner || null,
                 guests: editActivity.guests || null,
                 description: editActivity.description || null,
-                deals: editActivity.deals || null, // Backend expects 'deals' (plural), not 'deal'
-                contacts: editActivity.contacts || null, // Backend expects 'contacts' (plural), not 'contact'
-                companies: editActivity.companies || null, // Backend expects 'companies' (plural), not 'company'
+                deals: editActivity.deals || null, // Backend expects 'deals' (plural)
+                contacts: editActivity.contacts || null, // Backend expects 'contacts' (plural)
+                companies: editActivity.companies || null, // Backend expects 'companies' (plural)
             };
 
-            const response = await activitiesAPI.update(editingActivityId, activityData);
-            console.log("Activity updated successfully:", response);
-            
-            // Close modal and reload activities
-            const modal = document.getElementById('edit_activity');
-            if (modal) {
-                const bsModal = window.bootstrap ? window.bootstrap.Modal.getInstance(modal) : null;
-                if (bsModal) {
-                    bsModal.hide();
-                } else {
-                    // Fallback: hide modal manually
-                    modal.classList.remove('show');
-                    modal.setAttribute('aria-hidden', 'true');
-                    document.body.classList.remove('modal-open');
-                    const backdrop = document.querySelector('.modal-backdrop');
-                    if (backdrop) backdrop.remove();
+            // Remove empty strings and convert to null
+            Object.keys(activityData).forEach(key => {
+                if (activityData[key] === "" || activityData[key] === undefined) {
+                    activityData[key] = null;
                 }
-            }
-            
+            });
+
+            await activitiesAPI.update(editingActivityId, activityData);
+            toast.success("Activity updated successfully!");
+            setShowEditModal(false);
             setEditingActivityId(null);
-            // Reload activities after a short delay to ensure backend has processed
-            setTimeout(() => {
-                loadActivities();
-            }, 300);
+            await loadActivities();
         } catch (err) {
             console.error("Error updating activity:", err);
-            setError("Failed to update activity. Please try again.");
+            const errorMessage = err.message || err.detail || "Failed to update activity. Please try again.";
+            setError(errorMessage);
+            toast.error(errorMessage);
+        } finally {
+            setLoading(false);
         }
     };
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -374,9 +396,22 @@ const Activities = () => {
     }, [isCollapsed]);
     return (
         <div>
-            <div>
-            
+            {error && (
+                <div className="alert alert-warning alert-dismissible fade show" role="alert">
+                    <strong>Note:</strong> {error}
+                    <button type="button" className="btn-close" onClick={() => setError(null)}></button>
+                </div>
+            )}
 
+            {loading && activities.length === 0 && (
+                <div className="text-center p-4">
+                    <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            )}
+
+            <div>
                 {/* Heading + Button in same line */}
                 <div className="d-flex align-items-center justify-content-between mb-3">
                     <h2 className="fs-4 mb-0"><strong>Activity</strong></h2>
@@ -422,7 +457,7 @@ const Activities = () => {
                                     <th>Due Date</th>
                                     <th>Owner</th>
                                     <th>Created Date</th>
-                                    <th></th>
+                                    <th style={{ width: '180px', minWidth: '180px' }}>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -442,59 +477,44 @@ const Activities = () => {
                                             <p className="fs-14 text-dark fw-medium">{activity.title}</p>
                                         </td>
                                         <td>
-                                            <span className={`badge ${activity.badgeClass}`}>
-                                                <i className={`${activity.icon} me-1`}></i>
-                                                {activity.type}
-                                            </span>
+                                            {(() => {
+                                                // Get activity type - check both type and activity_type fields
+                                                const activityType = (activity.type || activity.activity_type || "Calls").trim();
+                                                // Get style info - use existing if available, otherwise get from helper
+                                                const badgeClass = activity.badgeClass || getActivityStyle(activityType).badgeClass;
+                                                const icon = activity.icon || getActivityStyle(activityType).icon;
+                                                
+                                                return (
+                                                    <span className={`badge ${badgeClass}`}>
+                                                        <i className={`${icon} me-1`}></i>
+                                                        {activityType}
+                                                    </span>
+                                                );
+                                            })()}
                                         </td>
                                         <td>{activity.dueDate}</td>
                                         <td>{activity.owner}</td>
                                         <td>{activity.createdDate}</td>
-                                        <td>
-                                            <div className="action-icon d-inline-flex">
-                                                <a
-                                                    href="#!"
-                                                    className="me-2"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        handleEdit(activity);
-                                                        const editModal = document.getElementById('edit_activity');
-                                                        const modal = window.bootstrap ? new window.bootstrap.Modal(editModal) : null;
-                                                        if (modal) {
-                                                            modal.show();
-                                                        } else {
-                                                            // Fallback: show modal manually
-                                                            editModal.classList.add('show');
-                                                            editModal.setAttribute('aria-hidden', 'false');
-                                                            document.body.classList.add('modal-open');
-                                                        }
-                                                    }}
+                                        <td style={{ whiteSpace: 'nowrap', width: '180px' }}>
+                                            <div className="d-flex align-items-center gap-2">
+                                                <button
+                                                    className="btn btn-sm btn-primary"
+                                                    onClick={() => handleEdit(activity)}
+                                                    title="Edit Activity"
+                                                    type="button"
+                                                    style={{ fontSize: '12px', padding: '4px 10px', minWidth: '65px' }}
                                                 >
-                                                    <i className="ti ti-edit"></i>
-                                                </a>
-                                                <a
-                                                    href="#!"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        const deleteModal = document.getElementById('delete_modal');
-                                                        const modal = window.bootstrap ? new window.bootstrap.Modal(deleteModal) : null;
-                                                        if (modal) {
-                                                            modal.show();
-                                                        }
-                                                        // Store the activity ID for deletion
-                                                        const deleteBtn = deleteModal.querySelector('.btn-danger');
-                                                        if (deleteBtn) {
-                                                            const originalOnClick = deleteBtn.onclick;
-                                                            deleteBtn.onclick = (evt) => {
-                                                                evt.preventDefault();
-                                                                handleDelete(activity.id);
-                                                                if (modal) modal.hide();
-                                                            };
-                                                        }
-                                                    }}
+                                                    <i className="ti ti-edit me-1"></i>Edit
+                                                </button>
+                                                <button
+                                                    className="btn btn-sm btn-danger"
+                                                    onClick={() => handleDeleteClick(activity)}
+                                                    title="Delete Activity"
+                                                    type="button"
+                                                    style={{ fontSize: '12px', padding: '4px 10px', minWidth: '75px' }}
                                                 >
-                                                    <i className="ti ti-trash"></i>
-                                                </a>
+                                                    <i className="ti ti-trash me-1"></i>Delete
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -875,20 +895,27 @@ const Activities = () => {
             </div>
 
 
-            <div className="modal fade" id="edit_activity">
-                <div className="modal-dialog modal-dialog-centered modal-lg">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h4 className="modal-title">Edit Activity</h4>
-                            <button
-                                type="button"
-                                className="btn-close custom-btn-close"
-                                data-bs-dismiss="modal"
-                                aria-label="Close"
-                            >
-                                <i className="ti ti-x"></i>
-                            </button>
-                        </div>
+            {/* Edit Activity Modal */}
+            {showEditModal && (
+                <>
+                    <div className="modal-backdrop fade show" style={{zIndex: 1040}}></div>
+                    <div className="modal fade show d-block" tabIndex="-1" style={{zIndex: 1050}}>
+                        <div className="modal-dialog modal-dialog-centered modal-lg">
+                            <div className="modal-content">
+                                <div className="modal-header">
+                                    <h4 className="modal-title">Edit Activity</h4>
+                                    <button
+                                        type="button"
+                                        className="btn-close custom-btn-close"
+                                        onClick={() => {
+                                            setShowEditModal(false);
+                                            setEditingActivityId(null);
+                                        }}
+                                        aria-label="Close"
+                                    >
+                                        <i className="ti ti-x"></i>
+                                    </button>
+                                </div>
 
                         <form onSubmit={handleUpdateSubmit}>
                             <div className="modal-body pb-0">
@@ -1215,18 +1242,27 @@ const Activities = () => {
                                 </div>
                             </div>
 
-                            <div className="modal-footer">
-                                <button type="button" className="btn btn-light text-primary btn-sm me-2" data-bs-dismiss="modal">
-                                    Cancel
-                                </button>
-                                <button type="submit" className="btn btn-secondary btn-sm">
-                                    Save Changes
-                                </button>
-                            </div>
-                        </form>
+                                <div className="modal-footer">
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-light me-2" 
+                                        onClick={() => {
+                                            setShowEditModal(false);
+                                            setEditingActivityId(null);
+                                        }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button type="submit" className="btn btn-primary">
+                                        Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </>
+            )}
 
 
             <div className="modal fade" id="add_deals">
@@ -2695,40 +2731,61 @@ const Activities = () => {
                     </div>
                 </div>
             </div>
-            <div className="modal fade" id="delete_modal">
-                <div className="modal-dialog modal-dialog-centered">
-                    <div className="modal-content">
-                        <div className="modal-body text-center">
-                            <span className="avatar avatar-xl bg-transparent-danger text-danger mb-3">
-                                <i className="ti ti-trash-x fs-36"></i>
-                            </span>
-                            <h4 className="mb-1">Confirm Delete</h4>
-                            <p className="mb-3">
-                                You want to delete all the marked items, this can't be undone once you delete.
-                            </p>
-                            <div className="d-flex justify-content-center">
-                                <button type="button" className="btn btn-light text-primary me-3" data-bs-dismiss="modal">
-                                    Cancel
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-danger"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        // The onclick handler is set when the delete link is clicked
-                                        const deleteBtn = document.querySelector('#delete_modal .btn-danger');
-                                        if (deleteBtn && deleteBtn.onclick) {
-                                            deleteBtn.onclick(e);
-                                        }
-                                    }}
-                                >
-                                    Yes, Delete
-                                </button>
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <>
+                    <div className="modal-backdrop fade show" style={{zIndex: 1040}}></div>
+                    <div className="modal fade show d-block" tabIndex="-1" style={{zIndex: 1050}}>
+                        <div className="modal-dialog modal-dialog-centered">
+                            <div className="modal-content">
+                                <div className="modal-body text-center">
+                                    <span className="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                                        <i className="ti ti-alert-triangle fs-36"></i>
+                                    </span>
+                                    <h4 className="mb-1">Confirm Delete</h4>
+                                    <p className="mb-3">
+                                        Are you sure you want to delete the activity "{activityToDelete?.title || 'this activity'}"? This action cannot be undone.
+                                    </p>
+                                    <div className="d-flex justify-content-center">
+                                        <button 
+                                            type="button" 
+                                            className="btn btn-light me-3" 
+                                            onClick={() => {
+                                                setShowDeleteModal(false);
+                                                setActivityToDelete(null);
+                                            }}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn btn-danger"
+                                            onClick={handleDelete}
+                                        >
+                                            Yes, Delete
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
+                </>
+            )}
+
+            {/* Toast Container */}
+            <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={true}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+                style={{ top: '38px' }}
+            />
            
         </div>
 

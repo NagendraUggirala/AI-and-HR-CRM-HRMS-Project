@@ -145,7 +145,7 @@ const Contacts = () => {
     // Set image preview from existing profile photo
     const profilePhotoUrl = contact.profile_photo 
       ? (contact.profile_photo.startsWith('http') ? contact.profile_photo : `${BASE_URL}${contact.profile_photo}`)
-      : '/assets/img/users/user-49.jpg';
+      : '/assets/images/users/user1.png';
     setImagePreview(profilePhotoUrl);
     // Map API response (backend field names) to form data format (frontend field names)
     setFormData({
@@ -167,7 +167,7 @@ const Contacts = () => {
       language: contact.language || 'English',
       source: contact.source || '',
       tags: Array.isArray(contact.tags) ? contact.tags : (contact.tags ? contact.tags.split(',') : []),
-      img: contact.profile_photo || '/assets/img/users/user-49.jpg',
+      img: contact.profile_photo || '/assets/images/users/user1.png',
       // Address Information
       location: contact.location || '',
       city: contact.city || '',
@@ -191,9 +191,13 @@ const Contacts = () => {
     setActiveTab('basic');
     setShowModal(true);
   };
- const handleCloseModal = () => {
+  const handleCloseModal = () => {
     setShowModal(false);
-    setActiveTab('basic-info'); // Reset to first tab when closing
+    setActiveTab('basic'); // Reset to first tab when closing
+    resetForm();
+    setSelectedContact(null);
+    setSelectedFile(null);
+    setImagePreview(null);
   };
   const handleDeleteContact = (contact) => {
     setContactToDelete(contact);
@@ -210,7 +214,8 @@ const Contacts = () => {
         setContactToDelete(null);
       } catch (err) {
         console.error("Error deleting contact:", err);
-        setError("Failed to delete contact. Please try again.");
+        const errorMessage = err.message || err.detail || "Failed to delete contact. Please try again.";
+        setError(errorMessage);
       }
     }
   };
@@ -221,21 +226,27 @@ const Contacts = () => {
     try {
       setError(null);
       
-      let profilePhotoPath = formData.img || null;
-      
-      // Upload profile photo if a new file is selected
-      if (selectedFile && selectedContact) {
-        try {
-          const uploadResult = await contactsAPI.uploadProfilePhoto(selectedContact.id, selectedFile);
-          profilePhotoPath = uploadResult.profile_photo;
-        } catch (uploadErr) {
-          console.error("Error uploading profile photo:", uploadErr);
-          setError("Failed to upload profile photo. Please try again.");
-          return;
+      // Handle profile photo path - preserve existing photo if no new file selected
+      let profilePhotoPath = null;
+      if (modalType === 'edit' && selectedContact) {
+        // For edit mode, preserve existing photo path if no new file is selected
+        if (selectedFile) {
+          // Upload new photo if a file is selected
+          try {
+            const uploadResult = await contactsAPI.uploadProfilePhoto(selectedContact.id, selectedFile);
+            profilePhotoPath = uploadResult.profile_photo;
+          } catch (uploadErr) {
+            console.error("Error uploading profile photo:", uploadErr);
+            setError("Failed to upload profile photo. Please try again.");
+            return;
+          }
+        } else {
+          // No new file selected, preserve existing photo path
+          profilePhotoPath = selectedContact.profile_photo || null;
         }
-      } else if (selectedFile && modalType === 'add') {
-        // For new contacts, we'll create the contact first, then upload the photo
-        // This will be handled after contact creation
+      } else {
+        // For add mode, use formData.img or null
+        profilePhotoPath = formData.img || null;
       }
       
       // Prepare contact data for API - map frontend fields to backend schema
@@ -257,7 +268,7 @@ const Contacts = () => {
         currency: formData.currency || null,
         language: formData.language || null,
         source: formData.source || null,
-        tags: Array.isArray(formData.tags) ? formData.tags : [],
+        tags: Array.isArray(formData.tags) ? formData.tags : (formData.tags ? [formData.tags] : []),
         profile_photo: profilePhotoPath,
         // Address Information
         location: formData.location || null,
@@ -305,7 +316,8 @@ const Contacts = () => {
       setImagePreview(null);
     } catch (err) {
       console.error("Error saving contact:", err);
-      setError("Failed to save contact. Please try again.");
+      const errorMessage = err.message || err.detail || "Failed to save contact. Please try again.";
+      setError(errorMessage);
     }
   };
 
@@ -411,11 +423,11 @@ const Contacts = () => {
           </div>
         </div>
       </div>
-      {/* Contact Grid Header */}
+      {/* Contact Table Header */}
       <div className="card w-100">
         <div className="card-body p-3">
           <div className="d-flex align-items-center justify-content-between">
-            <h5>Contact Grid</h5>
+            <h5>Contact Table</h5>
             <div className="dropdown">
               <a
                 href="#"
@@ -436,7 +448,7 @@ const Contacts = () => {
         </div>
       </div>
 
-      {/* Contacts Grid */}
+      {/* Contacts Table */}
       {loading && (
         <div className="text-center py-5">
           <p className="text-muted">Loading contacts...</p>
@@ -452,127 +464,175 @@ const Contacts = () => {
           <p className="text-muted">No contacts found. Add your first contact!</p>
         </div>
       )}
-      <div className="row">
-        {!loading && contacts.map((c) => (
-          <div className="col-xl-3 col-lg-4 col-md-6" key={c.id}>
-            <div className="card w-100">
-              <div className="card-body">
-                <div className="d-flex justify-content-between align-items-start mb-2">
-                  <div className="form-check form-check-md">
-                    <input className="form-check-input" type="checkbox" />
-                  </div>
-                  <div>
-                    <a className="avatar avatar-xl avatar-rounded online border p-1 border-primary rounded-circle">
-                      <img 
-                        src={
-                          c.profile_photo 
-                            ? (c.profile_photo.startsWith('http') ? c.profile_photo : `${BASE_URL}${c.profile_photo}`)
-                            : '/assets/images/users/user1.png'
-                        } 
-                        alt="user" 
-                        className="img-fluid h-auto w-auto" 
-                        onError={(e) => {
-                          e.target.src = '/assets/images/users/user1.png';
-                        }}
-                      />
-                    </a>
-                  </div>
-                  <div className="dropdown">
-                    <button
-                      className="btn btn-icon btn-sm rounded-circle"
-                      type="button"
-                      data-bs-toggle="dropdown"
-                    >
-                      <i className="ti ti-dots-vertical"></i>
-                    </button>
-                    <ul className="dropdown-menu dropdown-menu-end p-3">
-                      <li>
-                        <button
-                          className="dropdown-item rounded-1"
-                          onClick={() => handleEditContact(c)}
-                        >
-                          <i className="ti ti-edit me-1"></i>Edit
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          className="dropdown-item rounded-1"
-                          onClick={() => handleDeleteContact(c)}
-                        >
-                          <i className="ti ti-trash me-1"></i>Delete
-                        </button>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-                <div className="text-center mb-3">
-                  <h6 className="mb-1">
-                    <a href="">{c.name} {c.last_name || ''}</a>
-                  </h6>
-                  <span className="badge bg-pink-transparent fs-10 fw-medium">
-                    {c.job_title || 'N/A'}
-                  </span>
-                </div>
-                <div className="d-flex flex-column">
-                  <p className="text-dark d-inline-flex align-items-center mb-2">
-                    <i className="ti ti-phone text-gray-5 me-2"></i>
-                    {c.phone_number || 'N/A'}
-                  </p>
-                  {c.phone_number2 && (
-                    <p className="text-dark d-inline-flex align-items-center mb-2">
-                      <i className="ti ti-phone text-gray-5 me-2"></i>
-                      {c.phone_number2}
-                    </p>
-                  )}
-                  {c.email && (
-                    <p className="text-dark d-inline-flex align-items-center mb-2">
-                      <i className="ti ti-mail text-gray-5 me-2"></i>
-                      {c.email}
-                    </p>
-                  )}
-                  <p className="text-dark d-inline-flex align-items-center mb-2">
-                    <i className="ti ti-building text-gray-5 me-2"></i>
-                    {c.company_name || 'N/A'}
-                  </p>
-                  <p className="text-dark d-inline-flex align-items-center mb-2">
-                    <i className="ti ti-map-pin text-gray-5 me-2"></i>
-                    {c.location || 'N/A'}
-                    {c.city && `, ${c.city}`}
-                    {c.state && `, ${c.state}`}
-                    {c.country && `, ${c.country}`}
-                  </p>
-                  {c.industry && (
-                    <p className="text-dark d-inline-flex align-items-center mb-2">
-                      <i className="ti ti-briefcase text-gray-5 me-2"></i>
-                      {c.industry}
-                    </p>
-                  )}
-                  {c.ratings && (
-                    <p className="text-dark d-inline-flex align-items-center mb-2">
-                      <i className="ti ti-star text-gray-5 me-2"></i>
-                      {c.ratings} Stars
-                    </p>
-                  )}
-                  {c.owner && (
-                    <p className="text-dark d-inline-flex align-items-center mb-2">
-                      <i className="ti ti-user text-gray-5 me-2"></i>
-                      {c.owner}
-                    </p>
-                  )}
-                </div>
-                <div className="d-flex align-items-center justify-content-between border-top pt-3 mt-3">
-                  <div className="icons-social d-flex align-items-center">
-                    <a href="#" className="avatar avatar-rounded avatar-sm me-1"><i className="ti ti-mail"></i></a>
-                    <a href="#" className="avatar avatar-rounded avatar-sm me-1"><i className="ti ti-phone-call"></i></a>
-                    <a href="#" className="avatar avatar-rounded avatar-sm"><i className="ti ti-brand-facebook"></i></a>
-                  </div>
-
-                </div>
-              </div>
+      
+      {!loading && contacts.length > 0 && (
+        <div className="card w-100">
+          <div className="card-body p-0">
+            <div className="table-responsive">
+              <table className="table table-hover">
+                <thead>
+                  <tr>
+                    <th style={{ width: '50px' }}>
+                      <div className="form-check">
+                        <input className="form-check-input" type="checkbox" />
+                      </div>
+                    </th>
+                    <th>Contact</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Company</th>
+                    <th>Job Title</th>
+                    <th>Location</th>
+                    <th>Industry</th>
+                    <th>Rating</th>
+                    <th style={{ width: '180px', minWidth: '180px' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {contacts.map((c) => (
+                    <tr key={c.id}>
+                      <td>
+                        <div className="form-check">
+                          <input className="form-check-input" type="checkbox" />
+                        </div>
+                      </td>
+                      <td>
+                        <div className="d-flex align-items-center">
+                          <div className="avatar avatar-sm avatar-rounded me-2">
+                            <img 
+                              src={
+                                c.profile_photo 
+                                  ? (c.profile_photo.startsWith('http') ? c.profile_photo : `${BASE_URL}${c.profile_photo}`)
+                                  : '/assets/images/users/user1.png'
+                              } 
+                              alt="user" 
+                              className="img-fluid" 
+                              style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '50%' }}
+                              onError={(e) => {
+                                e.target.src = '/assets/images/users/user1.png';
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <div className="fw-medium">
+                              {c.name} {c.last_name || ''}
+                            </div>
+                            {c.owner && (
+                              <small className="text-muted">
+                                <i className="ti ti-user me-1"></i>{c.owner}
+                              </small>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        {c.email ? (
+                          <div className="d-flex align-items-center">
+                            <i className="ti ti-mail text-gray-5 me-2"></i>
+                            <span>{c.email}</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted">N/A</span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="d-flex flex-column">
+                          {c.phone_number && (
+                            <div className="d-flex align-items-center mb-1">
+                              <i className="ti ti-phone text-gray-5 me-2"></i>
+                              <span>{c.phone_number}</span>
+                            </div>
+                          )}
+                          {c.phone_number2 && (
+                            <div className="d-flex align-items-center">
+                              <i className="ti ti-phone text-gray-5 me-2"></i>
+                              <span className="text-muted small">{c.phone_number2}</span>
+                            </div>
+                          )}
+                          {!c.phone_number && <span className="text-muted">N/A</span>}
+                        </div>
+                      </td>
+                      <td>
+                        {c.company_name ? (
+                          <div className="d-flex align-items-center">
+                            <i className="ti ti-building text-gray-5 me-2"></i>
+                            <span>{c.company_name}</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted">N/A</span>
+                        )}
+                      </td>
+                      <td>
+                        {c.job_title ? (
+                          <span className="badge bg-pink-transparent fs-10 fw-medium">
+                            {c.job_title}
+                          </span>
+                        ) : (
+                          <span className="text-muted">N/A</span>
+                        )}
+                      </td>
+                      <td>
+                        {c.location || c.city || c.state || c.country ? (
+                          <div className="d-flex align-items-center">
+                            <i className="ti ti-map-pin text-gray-5 me-2"></i>
+                            <span>
+                              {[c.location, c.city, c.state, c.country].filter(Boolean).join(', ') || 'N/A'}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted">N/A</span>
+                        )}
+                      </td>
+                      <td>
+                        {c.industry ? (
+                          <div className="d-flex align-items-center">
+                            <i className="ti ti-briefcase text-gray-5 me-2"></i>
+                            <span>{c.industry}</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted">N/A</span>
+                        )}
+                      </td>
+                      <td>
+                        {c.ratings ? (
+                          <div className="d-flex align-items-center">
+                            <i className="ti ti-star-filled text-warning me-1"></i>
+                            <span>{c.ratings}</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted">-</span>
+                        )}
+                      </td>
+                      <td style={{ whiteSpace: 'nowrap', width: '180px' }}>
+                        <div className="d-flex align-items-center gap-2">
+                          <button
+                            className="btn btn-sm btn-primary"
+                            onClick={() => handleEditContact(c)}
+                            title="Edit Contact"
+                            type="button"
+                            style={{ fontSize: '13px', padding: '6px 12px', minWidth: '70px' }}
+                          >
+                            <i className="ti ti-edit me-1"></i>Edit
+                          </button>
+                          <button
+                            className="btn btn-sm btn-danger"
+                            onClick={() => handleDeleteContact(c)}
+                            title="Delete Contact"
+                            type="button"
+                            style={{ fontSize: '13px', padding: '6px 12px', minWidth: '70px' }}
+                          >
+                            <i className="ti ti-trash me-1"></i>Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
       {/* Add/Edit Contact Modal */}
       {showModal && (
@@ -1300,10 +1360,7 @@ const Contacts = () => {
           </div>
         </div>
       )}
-      <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-        <p className="mb-0">2014 - 2025 &copy; DCM</p>
-        <p>Designed &amp; Developed By <a href="javascript:void(0);" class="text-primary">Dreams</a></p>
-      </div>
+      
     </div>
 
   );

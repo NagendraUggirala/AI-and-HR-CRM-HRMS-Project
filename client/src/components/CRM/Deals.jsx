@@ -237,7 +237,7 @@ export default function Deals() {
                 assignee: fullDealData.assignee || fullDealData.owner || deal.owner || "",
                 stage: fullDealData.status || fullDealData.stage || deal.stage || dealsState[stageIndex]?.stage || "New", // Backend sends 'status'
                 pipeline: fullDealData.pipeline || "",
-                status: fullDealData.status || "",
+                status: fullDealData.status || fullDealData.stage || deal.stage || "", // Backend sends 'status', map to both stage and status
                 currency: fullDealData.currency || "",
                 tags: fullDealData.tags || "",
                 source: fullDealData.source || "",
@@ -297,28 +297,35 @@ export default function Deals() {
             
             // Prepare deal data for API - map frontend fields to backend schema
             const dealData = {
-                deal_name: formData.dealName || "Untitled Deal", // Backend expects 'deal_name', not 'name'
+                deal_name: formData.dealName || "Untitled Deal", // Backend expects 'deal_name'
                 pipeline: formData.pipeline || null,
-                status: formData.status || selectedStage || "Open", // Backend expects 'status', not 'stage'
-                deal_value: formData.dealValue ? parseFloat(formData.dealValue) : null, // Backend expects 'deal_value', not 'value'
+                // Map stage to status: backend uses 'status' field to store stage value (New, Prospect, Proposal, Won)
+                // Use stage value if available, otherwise use status, fallback to selectedStage or "New"
+                status: formData.stage || formData.status || selectedStage || "New", // Backend expects 'status' (stores stage value)
+                deal_value: formData.dealValue ? parseFloat(formData.dealValue) : null, // Backend expects 'deal_value'
                 currency: formData.currency || null,
                 period: formData.period || null,
                 period_value: formData.periodValue ? parseInt(formData.periodValue) : null,
-                contact: formData.contact || null, // Backend expects 'contact', not 'email'
-                project: formData.project || null, // Backend expects 'project', not 'location'
-                due_date: formData.dueDate || null, // Backend expects 'due_date', not 'dueDate'
-                expected_closing_date: formData.closingDate || null, // Backend expects 'expected_closing_date', not 'closingDate'
+                contact: formData.contact || null, // Backend expects 'contact'
+                project: formData.project || null, // Backend expects 'project'
+                due_date: formData.dueDate || null, // Backend expects 'due_date'
+                expected_closing_date: formData.closingDate || null, // Backend expects 'expected_closing_date'
                 assignee: formData.assignee || null,
                 tags: formData.tags || null,
-                followup_date: formData.followupDate || null, // Backend expects 'followup_date', not 'followupDate'
+                followup_date: formData.followupDate || null, // Backend expects 'followup_date'
                 source: formData.source || null,
                 priority: formData.priority || null,
                 description: formData.description || null,
             };
 
             // Remove empty strings and convert to null
+            // Also handle NaN values for numeric fields
             Object.keys(dealData).forEach(key => {
-                if (dealData[key] === "") {
+                if (dealData[key] === "" || dealData[key] === undefined) {
+                    dealData[key] = null;
+                }
+                // Handle NaN for numeric fields
+                if ((key === 'deal_value' || key === 'period_value') && (isNaN(dealData[key]) || dealData[key] === null)) {
                     dealData[key] = null;
                 }
             });
@@ -589,20 +596,24 @@ export default function Deals() {
                                                         <i className="ti ti-calendar-due text-gray-5" /> {deal.date}
                                                     </span>
 
-                                                    <div>
+                                                    <div className="d-flex gap-1">
                                                         <button
                                                             type="button"
-                                                            className="btn btn-sm btn-link me-2"
+                                                            className="btn btn-sm btn-primary"
                                                             onClick={() => openEditModal(stageIndex, dealIndex)}
+                                                            title="Edit Deal"
+                                                            style={{ fontSize: '12px', padding: '4px 10px', minWidth: '65px' }}
                                                         >
-                                                            <i className="ti ti-edit" />
+                                                            <i className="ti ti-edit me-1"></i>Edit
                                                         </button>
                                                         <button
                                                             type="button"
-                                                            className="btn btn-sm btn-link text-danger"
+                                                            className="btn btn-sm btn-danger"
                                                             onClick={() => openDeleteModal(stageIndex, dealIndex)}
+                                                            title="Delete Deal"
+                                                            style={{ fontSize: '12px', padding: '4px 10px', minWidth: '75px' }}
                                                         >
-                                                            <i className="ti ti-trash" />
+                                                            <i className="ti ti-trash me-1"></i>Delete
                                                         </button>
                                                     </div>
                                                 </div>
@@ -655,7 +666,18 @@ export default function Deals() {
                             {/* Stage */}
                             <div className="col-md-6 mb-3">
                                 <Form.Label>Stage<span className="text-danger">*</span></Form.Label>
-                                <Form.Select name="stage" value={formData.stage} onChange={handleChange} required>
+                                <Form.Select 
+                                    name="stage" 
+                                    value={formData.stage} 
+                                    onChange={(e) => {
+                                        handleChange(e);
+                                        // Sync status with stage for backend (backend uses status field)
+                                        if (e.target.value) {
+                                            setFormData(prev => ({ ...prev, status: e.target.value }));
+                                        }
+                                    }} 
+                                    required
+                                >
                                     <option value="">Select</option>
                                     <option value="New">New</option>
                                     <option value="Prospect">Prospect</option>
@@ -664,14 +686,22 @@ export default function Deals() {
                                 </Form.Select>
                             </div>
 
-                            {/* Status */}
+                            {/* Status - Hidden or shown for compatibility */}
                             <div className="col-md-6 mb-3">
                                 <Form.Label>Status<span className="text-danger">*</span></Form.Label>
-                                <Form.Select name="status" value={formData.status} onChange={handleChange} required>
+                                <Form.Select 
+                                    name="status" 
+                                    value={formData.status || formData.stage} 
+                                    onChange={handleChange} 
+                                    required
+                                >
                                     <option value="">Select</option>
-                                    <option>Open</option>
-                                    <option>Won</option>
-                                    <option>Lost</option>
+                                    <option value="New">New</option>
+                                    <option value="Prospect">Prospect</option>
+                                    <option value="Proposal">Proposal</option>
+                                    <option value="Won">Won</option>
+                                    <option value="Open">Open</option>
+                                    <option value="Lost">Lost</option>
                                 </Form.Select>
                             </div>
 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import RecruiterDashboardLayout from '../../recruiterDashboard/RecruiterDashboardLayout';
 
 const RolesPermissions = () => {
   // ==================== MODULES & FEATURES ====================

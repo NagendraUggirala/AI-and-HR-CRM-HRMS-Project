@@ -1,34 +1,35 @@
 import React, { useState, useEffect } from "react";
-import { contactsAPI, leadsAPI, dealsAPI, companiesAPI } from "../../utils/api";
+import { contactsAPI, leadsAPI, dealsAPI, companiesAPI, activitiesAPI, analyticsAPI } from "../../utils/api";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Chart from "react-apexcharts";
 import jsPDF from "jspdf";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { BASE_URL } from "../../config/api.config";
 
- 
  
 const Analytics = () => {
   const [selectedDate, setSelectedDate] = useState(new Date("2025-04-15"));
- 
-  // Modal states
-  const [showModal, setShowModal] = useState(false);
-  const [editType, setEditType] = useState("");
-  const [editData, setEditData] = useState(null);
- 
+
+  // Delete modal states
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+
   // Data states
   const [contacts, setContacts] = useState([]);
   const [deals, setDeals] = useState([]);
   const [leads, setLeads] = useState([]);
   const [companies, setCompanies] = useState([]);
+  const [activities, setActivities] = useState([]);
 
   // Loading and error states
   const [loading, setLoading] = useState({
     contacts: true,
     deals: true,
     leads: true,
-    companies: true
+    companies: true,
+    activities: true
   });
   const [error, setError] = useState(null);
 
@@ -42,17 +43,19 @@ const Analytics = () => {
       setError(null);
       
       // Load all data in parallel
-      const [contactsData, dealsData, leadsData, companiesData] = await Promise.all([
+      const [contactsData, dealsData, leadsData, companiesData, activitiesData] = await Promise.all([
         contactsAPI.list().catch(() => []),
         dealsAPI.list().catch(() => []),
         leadsAPI.list().catch(() => []),
-        companiesAPI.list().catch(() => [])
+        companiesAPI.list().catch(() => []),
+        activitiesAPI.list().catch(() => [])
       ]);
 
       setContacts(Array.isArray(contactsData) ? contactsData : []);
       setDeals(Array.isArray(dealsData) ? dealsData : []);
       setLeads(Array.isArray(leadsData) ? leadsData : []);
       setCompanies(Array.isArray(companiesData) ? companiesData : []);
+      setActivities(Array.isArray(activitiesData) ? activitiesData : []);
     } catch (err) {
       console.error("Error loading analytics data:", err);
       setError("Failed to load analytics data. Please try again.");
@@ -61,16 +64,18 @@ const Analytics = () => {
       setDeals([]);
       setLeads([]);
       setCompanies([]);
+      setActivities([]);
     } finally {
       setLoading({
         contacts: false,
         deals: false,
         leads: false,
-        companies: false
+        companies: false,
+        activities: false
       });
     }
   };
- 
+
   // Calculate chart data from real data
   const getLeadsBySource = () => {
     const sourceCounts = {};
@@ -106,11 +111,11 @@ const Analytics = () => {
       dataLabels: { enabled: true, formatter: (val) => `${val.toFixed(0)}%` },
     },
   };
- 
+
   const dealsStageData = getDealsByStage();
   const dealsStageLabels = Object.keys(dealsStageData);
   const dealsStageValues = Object.values(dealsStageData);
- 
+
   const barOptions = {
     chart: { type: "bar", stacked: true, toolbar: { show: false } },
     plotOptions: { bar: { horizontal: false, columnWidth: "45%", borderRadius: 4 } },
@@ -123,87 +128,52 @@ const Analytics = () => {
     tooltip: { y: { formatter: (val) => `${val} deals` } },
     legend: { position: "top" },
   };
- 
+
   const barSeries = [
     { name: "Income", data: dealsStageValues.length > 0 ? dealsStageValues : [80, 40, 100, 20] },
     { name: "Expenses", data: dealsStageValues.length > 0 ? dealsStageValues.map(v => Math.floor(v * 0.6)) : [100, 100, 120, 60] },
   ];
- 
-  // Action Handlers
-  const handleEdit = (type, id) => {
-    let data;
-    if (type === "contact") data = contacts.find(c => c.id === id);
-    if (type === "deal") data = deals.find(d => d.id === id);
-    if (type === "lead") data = leads.find(l => l.id === id);
-    if (type === "company") data = companies.find(c => c.id === id);
- 
-    setEditType(type);
-    setEditData({ ...data });
-    setShowModal(true);
+
+  // Delete Handlers
+  const handleDeleteClick = (type, id, name) => {
+    setItemToDelete({ type, id, name });
+    setShowDeleteModal(true);
   };
- 
-  const handleSaveEdit = async () => {
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+
     try {
       setError(null);
+      const { type, id } = itemToDelete;
       
-      if (editType === "contact") {
-        await contactsAPI.update(editData.id, editData);
-        toast.success("Contact updated successfully!");
+      if (type === "contact") {
+        await contactsAPI.delete(id);
+        toast.success("Contact deleted successfully!");
+      } else if (type === "deal") {
+        await dealsAPI.delete(id);
+        toast.success("Deal deleted successfully!");
+      } else if (type === "lead") {
+        await leadsAPI.delete(id);
+        toast.success("Lead deleted successfully!");
+      } else if (type === "company") {
+        await companiesAPI.delete(id);
+        toast.success("Company deleted successfully!");
+      } else if (type === "activity") {
+        await activitiesAPI.delete(id);
+        toast.success("Activity deleted successfully!");
       }
-      if (editType === "deal") {
-        await dealsAPI.update(editData.id, editData);
-        toast.success("Deal updated successfully!");
-      }
-      if (editType === "lead") {
-        await leadsAPI.update(editData.id, editData);
-        toast.success("Lead updated successfully!");
-      }
-      if (editType === "company") {
-        await companiesAPI.update(editData.id, editData);
-        toast.success("Company updated successfully!");
-      }
- 
+      
       await loadAllData();
-      setShowModal(false);
-      setEditData(null);
+      setShowDeleteModal(false);
+      setItemToDelete(null);
     } catch (err) {
-      console.error("Error updating:", err);
-      setError(`Failed to update ${editType}. Please try again.`);
-      toast.error(`Failed to update ${editType}. Please try again.`);
+      console.error("Error deleting:", err);
+      setError(`Failed to delete ${itemToDelete?.type}. Please try again.`);
+      toast.error(`Failed to delete ${itemToDelete?.type}. Please try again.`);
     }
   };
- 
-  const handleDelete = async (type, id) => {
-    if (window.confirm(`Are you sure you want to delete this ${type}?`)) {
-      try {
-        setError(null);
-        
-        if (type === "contact") {
-          await contactsAPI.delete(id);
-          toast.success("Contact deleted successfully!");
-        }
-        if (type === "deal") {
-          await dealsAPI.delete(id);
-          toast.success("Deal deleted successfully!");
-        }
-        if (type === "lead") {
-          await leadsAPI.delete(id);
-          toast.success("Lead deleted successfully!");
-        }
-        if (type === "company") {
-          await companiesAPI.delete(id);
-          toast.success("Company deleted successfully!");
-        }
-        
-        await loadAllData();
-      } catch (err) {
-        console.error("Error deleting:", err);
-        setError(`Failed to delete ${type}. Please try again.`);
-        toast.error(`Failed to delete ${type}. Please try again.`);
-      }
-    }
-  };
- 
+
   const handleExportPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(16);
@@ -238,7 +208,47 @@ const Analytics = () => {
     if (deal.owner && deal.owner.name) return deal.owner.name;
     return "N/A";
   };
- 
+
+  // Helper function to get activity type display
+  const getActivityTypeDisplay = (activity) => {
+    return activity.activity_type || activity.type || "N/A";
+  };
+
+  // Helper function to get deal name
+  const getDealName = (deal) => {
+    return deal.deal_name || deal.name || "N/A";
+  };
+
+  // Helper function to get deal value
+  const getDealValue = (deal) => {
+    return deal.deal_value || deal.value || 0;
+  };
+
+  // Helper function to get contact profile image
+  const getContactImage = (contact) => {
+    if (contact.profile_photo) {
+      return `${BASE_URL}${contact.profile_photo.startsWith('/') ? '' : '/'}${contact.profile_photo}`;
+    }
+    if (contact.img) {
+      return contact.img.startsWith('http') ? contact.img : `${BASE_URL}${contact.img.startsWith('/') ? '' : '/'}${contact.img}`;
+    }
+    if (contact.avatar) {
+      return contact.avatar.startsWith('http') ? contact.avatar : `${BASE_URL}${contact.avatar.startsWith('/') ? '' : '/'}${contact.avatar}`;
+    }
+    return "/assets/images/users/user1.png";
+  };
+
+  // Helper function to get company logo
+  const getCompanyLogo = (company) => {
+    if (company.logo) {
+      return `${BASE_URL}${company.logo.startsWith('/') ? '' : '/'}${company.logo}`;
+    }
+    if (company.avatar) {
+      return company.avatar.startsWith('http') ? company.avatar : `${BASE_URL}${company.avatar.startsWith('/') ? '' : '/'}${company.avatar}`;
+    }
+    return "/assets/images/users/user1.png";
+  };
+
   return (
     <div>
       {error && (
@@ -246,11 +256,6 @@ const Analytics = () => {
           {error}
         </div>
       )}
-
-
-           
-
-
 
       {/* Header */}
       <div className="d-md-flex d-block align-items-center justify-content-between page-breadcrumb mb-3">
@@ -260,7 +265,7 @@ const Analytics = () => {
           <DatePicker selected={selectedDate} onChange={setSelectedDate} className="form-control w-50" />
         </div>
       </div>
- 
+
       {/* Tables */}
       <div className="d-flex">
         <div>
@@ -278,18 +283,25 @@ const Analytics = () => {
                 </div>
               ) : (
                 <table className="table">
-                  <thead><tr><th>Profile</th><th>Name</th><th>Email</th><th>Phone</th><th>Created</th><th>Actions</th></tr></thead>
+                  <thead><tr><th>Profile</th><th>Name</th><th>Email</th><th>Phone</th><th>Created</th><th style={{ width: '100px', minWidth: '100px' }}>Actions</th></tr></thead>
                   <tbody>
                     {contacts.map(c => (
                       <tr key={c.id}>
-                        <td><img src={c.img || c.avatar || "/assets/img/users/user-49.jpg"} width={40} alt="" /></td>
+                        <td><img src={getContactImage(c)} width={40} height={40} style={{ borderRadius: '50%' }} alt="" onError={(e) => { e.target.src = "/assets/images/users/user1.png"; }} /></td>
                         <td>{c.name} {c.last_name || ''}<br /><small>{c.role || 'N/A'}</small></td>
                         <td>{c.email || 'N/A'}</td>
                         <td>{c.phone || 'N/A'}</td>
                         <td>{formatDate(c.created_at || c.createdAt)}</td>
-                        <td>
-                          <button className="btn btn-warning btn-sm me-1" onClick={() => handleEdit("contact", c.id)}>Edit</button>
-                          <button className="btn btn-danger btn-sm" onClick={() => handleDelete("contact", c.id)}>Delete</button>
+                        <td style={{ whiteSpace: 'nowrap', width: '100px' }}>
+                          <button 
+                            className="btn btn-sm btn-danger" 
+                            onClick={() => handleDeleteClick("contact", c.id, `${c.name} ${c.last_name || ''}`)}
+                            title="Delete Contact"
+                            type="button"
+                            style={{ fontSize: '12px', padding: '4px 10px', minWidth: '75px' }}
+                          >
+                            <i className="ti ti-trash me-1"></i>Delete
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -298,7 +310,7 @@ const Analytics = () => {
               )}
             </div>
           </div>
- 
+
           {/* Deals */}
           <div className="card mb-4 w-100" style={{ width: "450px" }}>
             <div className="card-header"><h5>Deals</h5></div>
@@ -313,18 +325,25 @@ const Analytics = () => {
                 </div>
               ) : (
                 <table className="table">
-                  <thead><tr><th>Name</th><th>Stage</th><th>Value</th><th>Owner</th><th>Closed</th><th>Actions</th></tr></thead>
+                  <thead><tr><th>Name</th><th>Stage</th><th>Value</th><th>Owner</th><th>Closed</th><th style={{ width: '100px', minWidth: '100px' }}>Actions</th></tr></thead>
                   <tbody>
                     {deals.map(d => (
                       <tr key={d.id}>
-                        <td>{d.name || 'N/A'}</td>
-                        <td>{d.stage || 'N/A'}</td>
-                        <td>${d.value ? d.value.toLocaleString() : '0'}</td>
+                        <td>{getDealName(d)}</td>
+                        <td>{d.status || d.stage || 'N/A'}</td>
+                        <td>${getDealValue(d).toLocaleString()}</td>
                         <td>{getOwnerName(d)}</td>
-                        <td>{formatDate(d.closed_date || d.closedDate)}</td>
-                        <td>
-                          <button className="btn btn-warning btn-sm me-1" onClick={() => handleEdit("deal", d.id)}>Edit</button>
-                          <button className="btn btn-danger btn-sm" onClick={() => handleDelete("deal", d.id)}>Delete</button>
+                        <td>{formatDate(d.closed_date || d.closedDate || d.due_date)}</td>
+                        <td style={{ whiteSpace: 'nowrap', width: '100px' }}>
+                          <button 
+                            className="btn btn-sm btn-danger" 
+                            onClick={() => handleDeleteClick("deal", d.id, getDealName(d))}
+                            title="Delete Deal"
+                            type="button"
+                            style={{ fontSize: '12px', padding: '4px 10px', minWidth: '75px' }}
+                          >
+                            <i className="ti ti-trash me-1"></i>Delete
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -333,7 +352,7 @@ const Analytics = () => {
               )}
             </div>
           </div>
- 
+
           {/* Leads */}
           <div className="card mb-4 w-100" style={{ width: "450px" }}>
             <div className="card-header"><h5>Leads</h5></div>
@@ -348,7 +367,7 @@ const Analytics = () => {
                 </div>
               ) : (
                 <table className="table">
-                  <thead><tr><th>Name</th><th>Company</th><th>Stage</th><th>Created</th><th>Owner</th><th>Actions</th></tr></thead>
+                  <thead><tr><th>Name</th><th>Company</th><th>Stage</th><th>Created</th><th>Owner</th><th style={{ width: '100px', minWidth: '100px' }}>Actions</th></tr></thead>
                   <tbody>
                     {leads.map(l => (
                       <tr key={l.id}>
@@ -357,9 +376,16 @@ const Analytics = () => {
                         <td>{l.status || l.stage || 'N/A'}</td>
                         <td>{formatDate(l.created_at || l.createdDate)}</td>
                         <td>{l.owner || 'N/A'}</td>
-                        <td>
-                          <button className="btn btn-warning btn-sm me-1" onClick={() => handleEdit("lead", l.id)}>Edit</button>
-                          <button className="btn btn-danger btn-sm" onClick={() => handleDelete("lead", l.id)}>Delete</button>
+                        <td style={{ whiteSpace: 'nowrap', width: '100px' }}>
+                          <button 
+                            className="btn btn-sm btn-danger" 
+                            onClick={() => handleDeleteClick("lead", l.id, l.name || 'Lead')}
+                            title="Delete Lead"
+                            type="button"
+                            style={{ fontSize: '12px', padding: '4px 10px', minWidth: '75px' }}
+                          >
+                            <i className="ti ti-trash me-1"></i>Delete
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -368,7 +394,7 @@ const Analytics = () => {
               )}
             </div>
           </div>
- 
+
           {/* Companies */}
           <div className="card mb-4 w-100" style={{ width: "450px" }}>
             <div className="card-header"><h5>Companies</h5></div>
@@ -383,18 +409,66 @@ const Analytics = () => {
                 </div>
               ) : (
                 <table className="table">
-                  <thead><tr><th>Logo</th><th>Name</th><th>Email</th><th>Phone</th><th>Created</th><th>Actions</th></tr></thead>
+                  <thead><tr><th>Logo</th><th>Name</th><th>Email</th><th>Phone</th><th>Created</th><th style={{ width: '100px', minWidth: '100px' }}>Actions</th></tr></thead>
                   <tbody>
                     {companies.map(c => (
                       <tr key={c.id}>
-                        <td><img src={c.avatar || c.logo || "/assets/img/homeicons/custom-workflows-icon.png"} width={40} alt="" /></td>
+                        <td><img src={getCompanyLogo(c)} width={40} height={40} style={{ borderRadius: '50%' }} alt="" onError={(e) => { e.target.src = "/assets/images/users/user1.png"; }} /></td>
                         <td>{c.name || 'N/A'}</td>
                         <td>{c.email || 'N/A'}</td>
                         <td>{c.phone || 'N/A'}</td>
                         <td>{formatDate(c.created_at || c.createdAt)}</td>
-                        <td>
-                          <button className="btn btn-warning btn-sm me-1" onClick={() => handleEdit("company", c.id)}>Edit</button>
-                          <button className="btn btn-danger btn-sm" onClick={() => handleDelete("company", c.id)}>Delete</button>
+                        <td style={{ whiteSpace: 'nowrap', width: '100px' }}>
+                          <button 
+                            className="btn btn-sm btn-danger" 
+                            onClick={() => handleDeleteClick("company", c.id, c.name || 'Company')}
+                            title="Delete Company"
+                            type="button"
+                            style={{ fontSize: '12px', padding: '4px 10px', minWidth: '75px' }}
+                          >
+                            <i className="ti ti-trash me-1"></i>Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+
+          {/* Activities */}
+          <div className="card mb-4 w-100" style={{ width: "450px" }}>
+            <div className="card-header"><h5>Activities</h5></div>
+            <div className="card-body p-0">
+              {loading.activities ? (
+                <div className="text-center py-3">
+                  <p className="text-muted">Loading activities...</p>
+                </div>
+              ) : activities.length === 0 ? (
+                <div className="text-center py-3">
+                  <p className="text-muted">No activities found.</p>
+                </div>
+              ) : (
+                <table className="table">
+                  <thead><tr><th>Title</th><th>Type</th><th>Due Date</th><th>Owner</th><th style={{ width: '100px', minWidth: '100px' }}>Actions</th></tr></thead>
+                  <tbody>
+                    {activities.map(a => (
+                      <tr key={a.id}>
+                        <td>{a.title || 'N/A'}</td>
+                        <td>{getActivityTypeDisplay(a)}</td>
+                        <td>{formatDate(a.due_date)}</td>
+                        <td>{a.owner || 'N/A'}</td>
+                        <td style={{ whiteSpace: 'nowrap', width: '100px' }}>
+                          <button 
+                            className="btn btn-sm btn-danger" 
+                            onClick={() => handleDeleteClick("activity", a.id, a.title || 'Activity')}
+                            title="Delete Activity"
+                            type="button"
+                            style={{ fontSize: '12px', padding: '4px 10px', minWidth: '75px' }}
+                          >
+                            <i className="ti ti-trash me-1"></i>Delete
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -404,7 +478,7 @@ const Analytics = () => {
             </div>
           </div>
         </div>
- 
+
         {/* Charts */}
         <div className="mx-4">
           <div className="card mb-4 w-100" style={{ width: "500px" }}>
@@ -428,18 +502,25 @@ const Analytics = () => {
                 </div>
               ) : (
                 <table className="table">
-                  <thead><tr><th>Logo</th><th>Name</th><th>Email</th><th>Phone</th><th>Created</th><th>Actions</th></tr></thead>
+                  <thead><tr><th>Logo</th><th>Name</th><th>Email</th><th>Phone</th><th>Created</th><th style={{ width: '100px', minWidth: '100px' }}>Actions</th></tr></thead>
                   <tbody>
                     {companies.slice(0, 5).map(c => (
                       <tr key={c.id}>
-                        <td><img src={c.avatar || c.logo || "/assets/img/homeicons/custom-workflows-icon.png"} width={40} alt="" /></td>
+                        <td><img src={getCompanyLogo(c)} width={40} height={40} style={{ borderRadius: '50%' }} alt="" onError={(e) => { e.target.src = "/assets/images/users/user1.png"; }} /></td>
                         <td>{c.name || 'N/A'}</td>
                         <td>{c.email || 'N/A'}</td>
                         <td>{c.phone || 'N/A'}</td>
                         <td>{formatDate(c.created_at || c.createdAt)}</td>
-                        <td>
-                          <button className="btn btn-warning btn-sm me-1" onClick={() => handleEdit("company", c.id)}>Edit</button>
-                          <button className="btn btn-danger btn-sm" onClick={() => handleDelete("company", c.id)}>Delete</button>
+                        <td style={{ whiteSpace: 'nowrap', width: '100px' }}>
+                          <button 
+                            className="btn btn-sm btn-danger" 
+                            onClick={() => handleDeleteClick("company", c.id, c.name || 'Company')}
+                            title="Delete Company"
+                            type="button"
+                            style={{ fontSize: '12px', padding: '4px 10px', minWidth: '75px' }}
+                          >
+                            <i className="ti ti-trash me-1"></i>Delete
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -450,31 +531,42 @@ const Analytics = () => {
           </div>
         </div>
       </div>
- 
-      {/* Edit Modal */}
-      {showModal && (
-        <div className="modal show d-block" tabIndex="-1">
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && itemToDelete && (
+        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Edit {editType}</h5>
-                <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
+                <h5 className="modal-title">Confirm Delete</h5>
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setItemToDelete(null);
+                  }}
+                ></button>
               </div>
               <div className="modal-body">
-                {editData && (
-                  <>
-                    <input className="form-control mb-2" value={editData.name || ""} onChange={(e) => setEditData({ ...editData, name: e.target.value })} />
-                    {"email" in editData && <input className="form-control mb-2" value={editData.email} onChange={(e) => setEditData({ ...editData, email: e.target.value })} />}
-                    {"phone" in editData && <input className="form-control mb-2" value={editData.phone} onChange={(e) => setEditData({ ...editData, phone: e.target.value })} />}
-                  </>
-                )}
+                <p>Are you sure you want to delete <strong>{itemToDelete.name || itemToDelete.type}</strong>?</p>
+                <p className="text-muted">This action cannot be undone.</p>
               </div>
               <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Close</button>
-                <button className="btn btn-primary" onClick={handleSaveEdit}>Save changes</button>
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setItemToDelete(null);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button className="btn btn-danger" onClick={confirmDelete}>
+                  Delete
+                </button>
               </div>
             </div>
- 
           </div>
         </div>
       )}

@@ -8,6 +8,10 @@ const Leads = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [showAddLeadModal, setShowAddLeadModal] = useState(false);
   const [showAddCompanyModal, setShowAddCompanyModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [modalType, setModalType] = useState('add'); // 'add' or 'edit'
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [leadToDelete, setLeadToDelete] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [leadsData, setLeadsData] = useState([]);
@@ -246,7 +250,100 @@ const Leads = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handle add lead form submission
+  // Reset form to initial state
+  const resetForm = () => {
+    setFormData({
+      leadName: '',
+      company: '',
+      value: '',
+      currency: 'USD',
+      phone: '',
+      email: '',
+      source: '',
+      industry: '',
+      owner: '',
+      tags: '',
+      description: '',
+      visibility: 'private',
+      status: 'Not Contacted'
+    });
+  };
+
+  // Open Add Lead Modal
+  const handleAddLeadClick = () => {
+    setModalType('add');
+    setSelectedLead(null);
+    resetForm();
+    setShowAddLeadModal(true);
+  };
+
+  // Open Edit Lead Modal
+  const handleEditLead = async (lead) => {
+    try {
+      setModalType('edit');
+      setSelectedLead(lead);
+      
+      // Fetch full lead data from API if we have an ID
+      let fullLeadData = lead;
+      if (lead.id) {
+        try {
+          fullLeadData = await leadsAPI.getById(lead.id);
+        } catch (err) {
+          console.error('Error fetching lead details:', err);
+          // Use existing lead data if API call fails
+        }
+      }
+
+      // Map backend field names to frontend form field names
+      setFormData({
+        leadName: fullLeadData.name || lead.name || '',
+        company: fullLeadData.company || '',
+        value: fullLeadData.value || '',
+        currency: fullLeadData.currency || 'USD',
+        phone: fullLeadData.phone || '',
+        email: fullLeadData.email || '',
+        source: fullLeadData.source || '',
+        industry: fullLeadData.industry || '',
+        owner: fullLeadData.owner || '',
+        tags: fullLeadData.tags || '',
+        description: fullLeadData.description || '',
+        visibility: fullLeadData.visibility || 'private',
+        status: fullLeadData.status || 'Not Contacted'
+      });
+      
+      setShowAddLeadModal(true);
+    } catch (err) {
+      console.error('Error opening edit modal:', err);
+      toast.error('Failed to load lead details.');
+    }
+  };
+
+  // Handle Delete Lead
+  const handleDeleteLead = (lead) => {
+    setLeadToDelete(lead);
+    setShowDeleteModal(true);
+  };
+
+  // Confirm Delete
+  const confirmDelete = async () => {
+    if (leadToDelete && leadToDelete.id) {
+      try {
+        setError(null);
+        await leadsAPI.delete(leadToDelete.id);
+        await loadLeads();
+        setShowDeleteModal(false);
+        setLeadToDelete(null);
+        toast.success('Lead deleted successfully!');
+      } catch (err) {
+        console.error('Error deleting lead:', err);
+        const errorMessage = err.message || err.detail || 'Failed to delete lead. Please try again.';
+        setError(errorMessage);
+        toast.error(errorMessage);
+      }
+    }
+  };
+
+  // Handle add/edit lead form submission
   const handleAddLead = async (e) => {
     e.preventDefault();
     
@@ -254,56 +351,48 @@ const Leads = () => {
       setError(null);
       setLoading(true);
       
-      // Prepare lead data for API - backend expects value as string
+      // Prepare lead data for API - map frontend fields to backend schema
       const leadData = {
-        name: formData.leadName || 'Untitled Lead',
+        name: formData.leadName || 'Untitled Lead', // Backend expects 'name', not 'leadName'
         company: formData.company || null,
-        value: formData.value ? String(formData.value) : null, // Backend expects string, not number
+        value: formData.value ? String(formData.value) : null, // Backend expects string
         currency: formData.currency || null,
         phone: formData.phone || null,
         email: formData.email || null,
         source: formData.source || null,
         industry: formData.industry || null,
         owner: formData.owner || null,
-        tags: formData.tags || null, // Backend expects string, not array
+        tags: formData.tags || null, // Backend expects string
         description: formData.description || null,
         visibility: formData.visibility || 'private',
         status: formData.status || 'Not Contacted'
       };
 
-      // Remove empty strings
+      // Remove empty strings and convert to null
       Object.keys(leadData).forEach(key => {
-        if (leadData[key] === '') {
+        if (leadData[key] === '' || leadData[key] === undefined) {
           leadData[key] = null;
         }
       });
 
-      await leadsAPI.create(leadData);
-      toast.success('Lead created successfully!');
+      if (modalType === 'add') {
+        await leadsAPI.create(leadData);
+        toast.success('Lead created successfully!');
+      } else if (selectedLead && selectedLead.id) {
+        await leadsAPI.update(selectedLead.id, leadData);
+        toast.success('Lead updated successfully!');
+      }
       
       // Reload leads
       await loadLeads();
       
       // Close modal and reset form
       setShowAddLeadModal(false);
-      setFormData({
-        leadName: '',
-        company: '',
-        value: '',
-        currency: 'USD',
-        phone: '',
-        email: '',
-        source: '',
-        industry: '',
-        owner: '',
-        tags: '',
-        description: '',
-        visibility: 'private',
-        status: 'Not Contacted'
-      });
+      resetForm();
+      setSelectedLead(null);
     } catch (err) {
-      console.error('Error creating lead:', err);
-      const errorMessage = err.message || err.detail || 'Failed to create lead. Please try again.';
+      console.error('Error saving lead:', err);
+      const errorMessage = err.message || err.detail || 'Failed to save lead. Please try again.';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -539,7 +628,7 @@ const Leads = () => {
             </div>
           </div>
           <div className="mb-2">
-            <button type="button" className="btn btn-primary d-flex align-items-center" onClick={() => setShowAddLeadModal(true)}>
+            <button type="button" className="btn btn-primary d-flex align-items-center" onClick={handleAddLeadClick}>
               <i className="ti ti-circle-plus me-2"></i>Add Lead
             </button>
           </div>
@@ -624,7 +713,7 @@ const Leads = () => {
                     </div>
                     <div className="d-flex align-items-center">
                       <div className="action-icon d-inline-flex">
-                        <button type="button" className="btn btn-sm" onClick={() => setShowAddLeadModal(true)}>
+                        <button type="button" className="btn btn-sm" onClick={handleAddLeadClick}>
                           <i className="ti ti-circle-plus"></i>
                         </button>
                       </div>
@@ -678,16 +767,25 @@ const Leads = () => {
                               <button type="button" className="avatar avatar-sm avatar-rounded flex-shrink-0 bg-light d-flex align-items-center justify-content-center">
                                 <i className="ti ti-building-warehouse fs-6 text-primary"></i>
                               </button>
-                              <div className="d-flex align-items-center">
-                                <a href="#" className="btn btn-sm" title="Call">
-                                  <i className="ti ti-phone-call"></i>
-                                </a>
-                                <a href="#" className="btn btn-sm" title="Chat">
-                                  <i className="ti ti-brand-hipchat"></i>
-                                </a>
-                                <a href="#" className="btn btn-sm" title="More">
-                                  <i className="ti ti-color-swatch"></i>
-                                </a>
+                              <div className="d-flex align-items-center gap-1">
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-primary"
+                                  onClick={() => handleEditLead(lead)}
+                                  title="Edit Lead"
+                                  style={{ fontSize: '12px', padding: '4px 10px', minWidth: '65px' }}
+                                >
+                                  <i className="ti ti-edit me-1"></i>Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-danger"
+                                  onClick={() => handleDeleteLead(lead)}
+                                  title="Delete Lead"
+                                  style={{ fontSize: '12px', padding: '4px 10px', minWidth: '75px' }}
+                                >
+                                  <i className="ti ti-trash me-1"></i>Delete
+                                </button>
                               </div>
                             </div>
                           </div>
@@ -716,10 +814,12 @@ const Leads = () => {
         <div className="modal-dialog modal-lg">
           <div className="modal-content" style={{maxWidth: '800px'}}>
             <div className="modal-header">
-              <h4 className="modal-title">Add New Lead</h4>
+              <h4 className="modal-title">{modalType === 'add' ? 'Add New Lead' : 'Edit Lead'}</h4>
               <button type="button" className="btn-close custom-btn-close" onClick={(e) => {
                 e.stopPropagation();
                 setShowAddLeadModal(false);
+                resetForm();
+                setSelectedLead(null);
               }} aria-label="Close">
                 <i className="ti ti-x"></i>
               </button>
@@ -1068,8 +1168,10 @@ const Leads = () => {
                 <button type="button" className="btn btn-light me-2" onClick={(e) => {
                   e.stopPropagation();
                   setShowAddLeadModal(false);
+                  resetForm();
+                  setSelectedLead(null);
                 }}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Add Lead</button>
+                <button type="submit" className="btn btn-primary">{modalType === 'add' ? 'Add Lead' : 'Save Changes'}</button>
               </div>
             </form>
           </div>
@@ -1381,6 +1483,49 @@ const Leads = () => {
         </>
       )}
       
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-sm modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Confirm Delete</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowDeleteModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="text-center">
+                  <i className="ti ti-alert-triangle text-warning fs-1 mb-3"></i>
+                  <h5>Are you sure?</h5>
+                  <p className="text-muted">
+                    Do you want to delete the lead "{leadToDelete?.name || 'this lead'}"? This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary m-2"
+                  onClick={() => setShowDeleteModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={confirmDelete}
+                >
+                  Delete Lead
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Toast Container */}
       <ToastContainer
         position="top-right"

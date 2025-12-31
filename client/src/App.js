@@ -10,6 +10,10 @@ import AdminPanel from './components/recruiterDashboard/AdminPanel';
 import SuperAdminPanel from './components/superAdmin/SuperAdminPanel';
 import SuperAdminLogin from './components/superAdmin/SuperAdminLogin';
 import SuperAdminLayout from './components/superAdmin/SuperAdminLayout';
+import MultiTenantSetup from './components/superAdmin/MultiTenantSetup';
+import RolesPermissions from './components/superAdmin/RolesPermissions';
+import CompanySettings from './components/superAdmin/CompanySettings';
+import Authentication from './components/superAdmin/Authentication';
 import Candidates from './components/recruiterDashboard/Candidates';
 import DashboardOverview from './components/recruiterDashboard/DashboardOverview';
 import PipelineOverview from './components/recruiterDashboard/PipelineOverview';
@@ -59,12 +63,9 @@ import Contacts from './components/CRM/Contacts';
 import Deals from './components/CRM/Deals';
 import Leads from './components/CRM/Leads';
 import Pipeline from './components/CRM/Pipeline';
-// Tenant & User Management
-import Authentication from './components/HRMS/Tenant&UserManagement/Authentication';
-import CompanySettings from './components/HRMS/Tenant&UserManagement/CompanySettings';
-import MultiTenantSetup from './components/HRMS/Tenant&UserManagement/MultiTenantSetup';
-import RolesPermissions from './components/HRMS/Tenant&UserManagement/RolesPermissions';
+// Tenant & User Management - Moved to superAdmin folder
 // Employee Management
+import AllEmployees from './components/HRMS/AllEmployees';
 import EmployeeLifecycle from './components/HRMS/EmployeeManagement/EmployeeLifecycle';
 import EmployeeMasterData from './components/HRMS/EmployeeManagement/EmployeeMasterData';
 import EmployeeSelfService from './components/HRMS/EmployeeManagement/EmployeeSelfService';
@@ -611,6 +612,18 @@ const App = () => {
           <ProtectedRoute>
             <RecruiterDashboardLayout>
               <CompanySettings />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* HRMS Routes */}
+      <Route
+        path='/hrms/all-employees'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <AllEmployees />
             </RecruiterDashboardLayout>
           </ProtectedRoute>
         }
@@ -1304,13 +1317,63 @@ const App = () => {
 
       <Route path='/login' element={<SuperAdminLogin />} />
 
-      {/* Super Admin Route */}
+      {/* Super Admin Routes */}
       <Route
         path='/super-admin'
         element={
           <ProtectedRoute superAdminOnly={true}>
             <SuperAdminLayout>
               <SuperAdminPanel />
+            </SuperAdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/super-admin/tenants'
+        element={
+          <ProtectedRoute superAdminOnly={true}>
+            <SuperAdminLayout>
+              <MultiTenantSetup />
+            </SuperAdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/super-admin/users'
+        element={
+          <ProtectedRoute superAdminOnly={true}>
+            <SuperAdminLayout>
+              <SuperAdminPanel />
+            </SuperAdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/super-admin/roles'
+        element={
+          <ProtectedRoute superAdminOnly={true}>
+            <SuperAdminLayout>
+              <RolesPermissions />
+            </SuperAdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/super-admin/settings'
+        element={
+          <ProtectedRoute superAdminOnly={true}>
+            <SuperAdminLayout>
+              <CompanySettings />
+            </SuperAdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/super-admin/authentication'
+        element={
+          <ProtectedRoute superAdminOnly={true}>
+            <SuperAdminLayout>
+              <Authentication />
             </SuperAdminLayout>
           </ProtectedRoute>
         }

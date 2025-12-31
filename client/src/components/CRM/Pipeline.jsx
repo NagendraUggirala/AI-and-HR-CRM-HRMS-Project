@@ -91,17 +91,24 @@ const Pipeline = () => {
   };
 
   // Transform API data to component format - map backend field names to frontend
-  const transformPipeline = (pipeline) => ({
-    id: pipeline.id,
-    name: pipeline.pipeline_Name || pipeline.name || "Untitled Pipeline", // Backend sends 'pipeline_Name'
-    value: formatValue(pipeline.total_deal_value || pipeline.value), // Backend sends 'total_deal_value'
-    valueRaw: pipeline.total_deal_value || pipeline.value,
-    deals: pipeline.deals || 0,
-    stage: pipeline.stages || pipeline.stage || "In Pipeline", // Backend sends 'stages'
-    stageColor: pipeline.stage_color || "primary",
-    date: formatDate(pipeline.created_date || pipeline.created_at),
-    status: pipeline.status || "Active"
-  });
+  const transformPipeline = (pipeline) => {
+    // Convert status from "active"/"inactive" (lowercase) to "Active"/"Inactive" (capitalized) for display
+    const statusDisplay = pipeline.status === "active" ? "Active" : 
+                         pipeline.status === "inactive" ? "Inactive" : 
+                         pipeline.status?.charAt(0).toUpperCase() + pipeline.status?.slice(1).toLowerCase() || "Active";
+    
+    return {
+      id: pipeline.id,
+      name: pipeline.pipeline_Name || pipeline.name || "Untitled Pipeline", // Backend sends 'pipeline_Name'
+      value: formatValue(pipeline.total_deal_value || pipeline.value), // Backend sends 'total_deal_value'
+      valueRaw: pipeline.total_deal_value || pipeline.value,
+      deals: pipeline.deals || 0,
+      stage: pipeline.stages || pipeline.stage || "In Pipeline", // Backend sends 'stages'
+      stageColor: pipeline.stage_color || "primary",
+      date: formatDate(pipeline.created_date || pipeline.created_at),
+      status: statusDisplay // Convert to capitalized for display
+    };
+  };
 
   const transformedPipelines = pipelines.map(transformPipeline);
 
@@ -189,39 +196,53 @@ const Pipeline = () => {
     }));
   };
 
+  // Reset form to initial state
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      value: "",
+      deals: "",
+      stage: "In Pipeline",
+      stage_color: "primary",
+      created_date: "",
+      status: "Active"
+    });
+  };
+
   // Handle add pipeline
   const handleAddPipeline = async (e) => {
     e.preventDefault();
     try {
       setError(null);
+      setLoading(true);
+      
       // Map frontend fields to backend schema
+      // Convert status from "Active"/"Inactive" to "active"/"inactive" (lowercase)
+      const statusValue = formData.status === "Active" ? "active" : 
+                         formData.status === "Inactive" ? "inactive" : 
+                         formData.status?.toLowerCase() || "active";
+      
       const pipelineData = {
-        pipeline_Name: formData.name || "Untitled Pipeline", // Backend expects 'pipeline_Name', not 'name'
-        total_deal_value: formData.value ? parseFloat(formData.value) : 0, // Backend expects 'total_deal_value', not 'value'
+        pipeline_Name: formData.name || "Untitled Pipeline", // Backend expects 'pipeline_Name'
+        total_deal_value: formData.value ? parseFloat(formData.value) : 0, // Backend expects 'total_deal_value'
         deals: formData.deals ? parseInt(formData.deals) : 0,
-        stages: formData.stage || "In Pipeline", // Backend expects 'stages', not 'stage'
-        created_date: formData.created_date || new Date().toISOString().split('T')[0], // Backend expects date string
-        status: formData.status || "active" // Backend expects lowercase enum
+        stages: formData.stage || "In Pipeline", // Backend expects 'stages'
+        created_date: formData.created_date || new Date().toISOString().split('T')[0], // Backend expects date string (YYYY-MM-DD)
+        status: statusValue // Backend expects lowercase enum: "active" or "inactive"
       };
 
       await crmPipelinesAPI.create(pipelineData);
       toast.success("Pipeline added successfully!");
       setShowAddModal(false);
-      setFormData({
-        name: "",
-        value: "",
-        deals: "",
-        stage: "In Pipeline",
-        stage_color: "primary",
-        created_date: "",
-        status: "Active"
-      });
-      loadPipelines();
+      resetForm();
+      await loadPipelines();
     } catch (err) {
       console.error("Error adding pipeline:", err);
       const errorMessage = err.message || err.detail || "Failed to add pipeline. Please try again.";
       setError(errorMessage);
       toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -232,35 +253,36 @@ const Pipeline = () => {
     
     try {
       setError(null);
+      setLoading(true);
+      
       // Map frontend fields to backend schema
+      // Convert status from "Active"/"Inactive" to "active"/"inactive" (lowercase)
+      const statusValue = formData.status === "Active" ? "active" : 
+                         formData.status === "Inactive" ? "inactive" : 
+                         formData.status?.toLowerCase() || "active";
+      
       const pipelineData = {
-        pipeline_Name: formData.name || "Untitled Pipeline", // Backend expects 'pipeline_Name', not 'name'
-        total_deal_value: formData.value ? parseFloat(formData.value) : 0, // Backend expects 'total_deal_value', not 'value'
+        pipeline_Name: formData.name || "Untitled Pipeline", // Backend expects 'pipeline_Name'
+        total_deal_value: formData.value ? parseFloat(formData.value) : 0, // Backend expects 'total_deal_value'
         deals: formData.deals ? parseInt(formData.deals) : 0,
-        stages: formData.stage || "In Pipeline", // Backend expects 'stages', not 'stage'
-        created_date: formData.created_date || new Date().toISOString().split('T')[0], // Backend expects date string
-        status: formData.status || "active" // Backend expects lowercase enum
+        stages: formData.stage || "In Pipeline", // Backend expects 'stages'
+        created_date: formData.created_date || new Date().toISOString().split('T')[0], // Backend expects date string (YYYY-MM-DD)
+        status: statusValue // Backend expects lowercase enum: "active" or "inactive"
       };
 
       await crmPipelinesAPI.update(editingPipeline.id, pipelineData);
       toast.success("Pipeline updated successfully!");
       setShowEditModal(false);
       setEditingPipeline(null);
-      setFormData({
-        name: "",
-        value: "",
-        deals: "",
-        stage: "In Pipeline",
-        stage_color: "primary",
-        created_date: "",
-        status: "Active"
-      });
-      loadPipelines();
+      resetForm();
+      await loadPipelines();
     } catch (err) {
       console.error("Error updating pipeline:", err);
       const errorMessage = err.message || err.detail || "Failed to update pipeline. Please try again.";
       setError(errorMessage);
       toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -270,26 +292,35 @@ const Pipeline = () => {
     
     try {
       setError(null);
+      setLoading(true);
       await crmPipelinesAPI.delete(deletingPipelineId);
       toast.success("Pipeline deleted successfully!");
       setShowDeleteModal(false);
       setDeletingPipelineId(null);
-      loadPipelines();
+      await loadPipelines();
     } catch (err) {
       console.error("Error deleting pipeline:", err);
       const errorMessage = err.message || err.detail || "Failed to delete pipeline. Please try again.";
       setError(errorMessage);
       toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
   // Open edit modal
   const openEditModal = async (pipelineId) => {
     try {
+      setLoading(true);
       const pipeline = await crmPipelinesAPI.getById(pipelineId);
       if (pipeline) {
         setEditingPipeline(pipeline);
         // Map backend field names to frontend form field names
+        // Convert status from "active"/"inactive" (lowercase) to "Active"/"Inactive" (capitalized)
+        const statusDisplay = pipeline.status === "active" ? "Active" : 
+                             pipeline.status === "inactive" ? "Inactive" : 
+                             pipeline.status?.charAt(0).toUpperCase() + pipeline.status?.slice(1).toLowerCase() || "Active";
+        
         setFormData({
           name: pipeline.pipeline_Name || pipeline.name || "", // Backend sends 'pipeline_Name'
           value: pipeline.total_deal_value || pipeline.value || "", // Backend sends 'total_deal_value'
@@ -297,13 +328,15 @@ const Pipeline = () => {
           stage: pipeline.stages || pipeline.stage || "In Pipeline", // Backend sends 'stages'
           stage_color: pipeline.stage_color || "primary",
           created_date: pipeline.created_date ? (typeof pipeline.created_date === 'string' ? pipeline.created_date.split('T')[0] : dayjs(pipeline.created_date).format("YYYY-MM-DD")) : "",
-          status: pipeline.status || "Active"
+          status: statusDisplay // Convert to capitalized for display
         });
         setShowEditModal(true);
       }
     } catch (err) {
       console.error("Error fetching pipeline:", err);
       toast.error("Failed to load pipeline for editing.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -453,24 +486,16 @@ const Pipeline = () => {
 
             {/* Add New Pipeline */}
             <div className="mb-2">
-              <button
-                className="btn btn-primary d-flex align-items-center fs-7"
-                onClick={() => {
-                  setFormData({
-                    name: "",
-                    value: "",
-                    deals: "",
-                    stage: "In Pipeline",
-                    stage_color: "primary",
-                    created_date: "",
-                    status: "Active"
-                  });
-                  setShowAddModal(true);
-                }}
-              >
-                <FaPlusCircle className="me-2" />
-                <small>Add Pipeline</small>
-              </button>
+                <button
+                  className="btn btn-primary d-flex align-items-center fs-7"
+                  onClick={() => {
+                    resetForm();
+                    setShowAddModal(true);
+                  }}
+                >
+                  <FaPlusCircle className="me-2" />
+                  <small>Add Pipeline</small>
+                </button>
             </div>
             </div>
 
@@ -701,7 +726,7 @@ const Pipeline = () => {
                   <th style={{ width: "250px;" }}>Stages</th>
                   <th>Created Date</th>
                   <th>Status</th>
-                  <th>Actions</th>
+                  <th style={{ width: '180px', minWidth: '180px' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -744,25 +769,33 @@ const Pipeline = () => {
                     <td>
                       <span
                         className={`badge ${
-                          pipe.status === "Active" ? "bg-success" : "bg-danger"
+                          (pipe.status === "Active" || pipe.status === "active") ? "bg-success" : "bg-danger"
                         }`}
                       >
-                        {pipe.status}
+                        {pipe.status === "active" ? "Active" : pipe.status === "inactive" ? "Inactive" : pipe.status}
                       </span>
                     </td>
-                    <td>
-                      <button
-                        className="btn btn-sm me-2"
-                        onClick={() => openEditModal(pipe.id)}
-                      >
-                        <FaEdit />
-                      </button>
-                      <button
-                        className="btn btn-sm "
-                        onClick={() => openDeleteModal(pipe.id)}
-                      >
-                        <FaTrash />
-                      </button>
+                    <td style={{ whiteSpace: 'nowrap', width: '180px' }}>
+                      <div className="d-flex align-items-center gap-2">
+                        <button
+                          className="btn btn-sm btn-primary"
+                          onClick={() => openEditModal(pipe.id)}
+                          title="Edit Pipeline"
+                          type="button"
+                          style={{ fontSize: '12px', padding: '4px 10px', minWidth: '65px' }}
+                        >
+                          <i className="ti ti-edit me-1"></i>Edit
+                        </button>
+                        <button
+                          className="btn btn-sm btn-danger"
+                          onClick={() => openDeleteModal(pipe.id)}
+                          title="Delete Pipeline"
+                          type="button"
+                          style={{ fontSize: '12px', padding: '4px 10px', minWidth: '75px' }}
+                        >
+                          <i className="ti ti-trash me-1"></i>Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -968,7 +1001,10 @@ const Pipeline = () => {
                     <button
                       type="button"
                       className="btn btn-light me-2"
-                      onClick={() => setShowAddModal(false)}
+                      onClick={() => {
+                        setShowAddModal(false);
+                        resetForm();
+                      }}
                     >
                       Cancel
                     </button>
@@ -1103,6 +1139,7 @@ const Pipeline = () => {
                       onClick={() => {
                         setShowEditModal(false);
                         setEditingPipeline(null);
+                        resetForm();
                       }}
                     >
                       Cancel

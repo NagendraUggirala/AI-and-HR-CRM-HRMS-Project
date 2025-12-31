@@ -230,6 +230,7 @@ function Companies() {
       borderRadius: '8px',
       boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
       transition: 'transform 0.2s ease',
+      position: 'relative',
     },
     logo: {
       fontSize: '14px',
@@ -238,6 +239,10 @@ function Companies() {
   };
 
   const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState('add'); // 'add' or 'edit'
+  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [companyToDelete, setCompanyToDelete] = useState(null);
   const [activeTab, setActiveTab] = useState('basic-info');
   const [formData, setFormData] = useState({
     companyName: '',
@@ -310,6 +315,117 @@ function Companies() {
     setImagePreview(null);
   };
 
+  const resetForm = () => {
+    setFormData({
+      companyName: '',
+      email: '',
+      phoneNumber: '',
+      phoneNumber2: '',
+      fax: '',
+      website: '',
+      ratings: '',
+      owner: '',
+      tags: 'Collab',
+      deals: '',
+      industry: '',
+      source: '',
+      currency: '',
+      language: '',
+      about: '',
+      contact: '',
+      address: '',
+      country: '',
+      state: '',
+      city: '',
+      zipcode: '',
+      facebook: '',
+      twitter: '',
+      linkedin: '',
+      skype: '',
+      whatsapp: '',
+      instagram: '',
+      visibility: 'private',
+      status: ''
+    });
+    setSelectedFile(null);
+    setImagePreview(null);
+  };
+
+  const handleAddCompany = () => {
+    setModalType('add');
+    resetForm();
+    setSelectedCompany(null);
+    setActiveTab('basic-info');
+    setShowModal(true);
+  };
+
+  const handleEditCompany = (company) => {
+    setModalType('edit');
+    setSelectedCompany(company);
+    setSelectedFile(null);
+    // Set image preview from existing logo
+    const logoUrl = company.logoPath || (company.logo ? `${BASE_URL}${company.logo}` : null);
+    setImagePreview(logoUrl);
+    // Map API response (backend field names) to form data format (frontend field names)
+    setFormData({
+      companyName: company.company_name || company.name || '',
+      email: company.email || '',
+      phoneNumber: company.phone_number || company.phone || '',
+      phoneNumber2: company.phone_number2 || company.phone2 || '',
+      fax: company.fax || '',
+      website: company.website || '',
+      location: company.location || company.address || '',
+      city: company.city || '',
+      state: company.state || '',
+      country: company.country || '',
+      zipcode: company.zipcode || '',
+      address: company.address || '',
+      ratings: company.rating ? company.rating.toString() : '',
+      industry: company.industry || '',
+      source: company.source || '',
+      currency: company.currency || '',
+      language: company.language || '',
+      owner: company.owner || '',
+      contact: company.contact || '',
+      deals: company.deals || '',
+      tags: company.tags || 'Collab',
+      about: company.about || '',
+      facebook: company.facebook || '',
+      twitter: company.twitter || '',
+      linkedin: company.linkedin || '',
+      instagram: company.instagram || '',
+      skype: company.skype || '',
+      whatsapp: company.whatsapp || '',
+      visibility: company.visibility || 'private',
+      status: company.status || ''
+    });
+    setActiveTab('basic-info');
+    setShowModal(true);
+  };
+
+  const handleDeleteCompany = (company) => {
+    setCompanyToDelete(company);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (companyToDelete) {
+      try {
+        setError(null);
+        await companiesAPI.delete(companyToDelete.id);
+        await loadCompanies();
+        setShowDeleteModal(false);
+        setCompanyToDelete(null);
+        toast.success('Company deleted successfully!');
+      } catch (err) {
+        console.error("Error deleting company:", err);
+        const errorMessage = err.message || err.detail || "Failed to delete company. Please try again.";
+        setError(errorMessage);
+        toast.error(errorMessage);
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -325,7 +441,7 @@ function Companies() {
         phone_number2: formData.phoneNumber2 || null, // Backend expects 'phone_number2', not 'phone2'
         fax: formData.fax || null,
         website: formData.website || null,
-        location: formData.location || formData.country || null,
+        location: formData.location || formData.address || formData.country || null,
         city: formData.city || null,
         state: formData.state || null,
         country: formData.country || null,
@@ -358,8 +474,13 @@ function Companies() {
         }
       });
 
-      await companiesAPI.create(companyData, selectedFile);
-      toast.success('Company created successfully!');
+      if (modalType === 'add') {
+        await companiesAPI.create(companyData, selectedFile);
+        toast.success('Company created successfully!');
+      } else if (selectedCompany) {
+        await companiesAPI.update(selectedCompany.id, companyData, selectedFile);
+        toast.success('Company updated successfully!');
+      }
       
       // Reload companies
       await loadCompanies();
@@ -367,42 +488,11 @@ function Companies() {
       // Close modal and reset form
       setShowModal(false);
       setActiveTab('basic-info');
-      setSelectedFile(null);
-      setImagePreview(null);
-      setFormData({
-        companyName: '',
-        email: '',
-        phoneNumber: '',
-        phoneNumber2: '',
-        fax: '',
-        website: '',
-        ratings: '',
-        owner: '',
-        tags: 'Collab',
-        deals: '',
-        industry: '',
-        source: '',
-        currency: '',
-        language: '',
-        about: '',
-        contact: '',
-        address: '',
-        country: '',
-        state: '',
-        city: '',
-        zipcode: '',
-        facebook: '',
-        twitter: '',
-        linkedin: '',
-        skype: '',
-        whatsapp: '',
-        instagram: '',
-        visibility: 'private',
-        status: ''
-      });
+      resetForm();
+      setSelectedCompany(null);
     } catch (err) {
-      console.error('Error creating company:', err);
-      const errorMessage = err.message || err.detail || 'Failed to create company. Please try again.';
+      console.error('Error saving company:', err);
+      const errorMessage = err.message || err.detail || 'Failed to save company. Please try again.';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -413,8 +503,8 @@ function Companies() {
   const handleCloseModal = () => {
     setShowModal(false);
     setActiveTab('basic-info'); // Reset to first tab when closing
-    setSelectedFile(null);
-    setImagePreview(null);
+    resetForm();
+    setSelectedCompany(null);
   };
 
   const handleBackdropClick = (e) => {
@@ -579,7 +669,7 @@ function Companies() {
           </div>
           <button
             style={styles.button}
-            onClick={() => setShowModal(true)}
+            onClick={handleAddCompany}
           >
             <i className='fe fe-plus-circle'></i>  Add Company
           </button>
@@ -607,19 +697,41 @@ function Companies() {
         <div style={styles.grid}>
           {displayedCompanies.map((company, index) => (
             <div key={company.id || index} style={styles.card}>
-              <div style={styles.logo}>
-                {company.logoPath ? (
-                  <img 
-                    src={company.logoPath} 
-                    alt={company.name}
-                    style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }}
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'block';
-                    }}
-                  />
-                ) : null}
-                <span style={{ display: company.logoPath ? 'none' : 'block', fontSize: '40px' }}>🏢</span>
+              <div className="d-flex justify-content-between align-items-start mb-2">
+                <div style={styles.logo}>
+                  {company.logoPath ? (
+                    <img 
+                      src={company.logoPath} 
+                      alt={company.name}
+                      style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'block';
+                      }}
+                    />
+                  ) : null}
+                  <span style={{ display: company.logoPath ? 'none' : 'block', fontSize: '40px' }}>🏢</span>
+                </div>
+                <div className="d-flex gap-1">
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={() => handleEditCompany(company)}
+                    title="Edit Company"
+                    type="button"
+                    style={{ fontSize: '12px', padding: '4px 10px', minWidth: '65px' }}
+                  >
+                    <i className="ti ti-edit me-1"></i>Edit
+                  </button>
+                  <button
+                    className="btn btn-sm btn-danger"
+                    onClick={() => handleDeleteCompany(company)}
+                    title="Delete Company"
+                    type="button"
+                    style={{ fontSize: '12px', padding: '4px 10px', minWidth: '75px' }}
+                  >
+                    <i className="ti ti-trash me-1"></i>Delete
+                  </button>
+                </div>
               </div>
               <h5><b>{company.name}</b></h5>
               <p><strong>Email:</strong> {company.email || 'N/A'}</p>
@@ -655,7 +767,9 @@ function Companies() {
           <div className="modal-dialog modal-xl">
             <div className="modal-content">
               <div className="modal-header">
-                <h4 className="modal-title">Add New Company</h4>
+                <h4 className="modal-title">
+                  {modalType === 'add' ? 'Add New Company' : 'Edit Company'}
+                </h4>
                 <button
                   type="button"
                   className="btn-close custom-btn-close"
@@ -1349,6 +1463,49 @@ function Companies() {
                   )}
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-sm">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Confirm Delete</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowDeleteModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="text-center">
+                  <i className="ti ti-alert-triangle text-warning fs-1 mb-3"></i>
+                  <h5>Are you sure?</h5>
+                  <p className="text-muted">
+                    Do you want to delete the company "{companyToDelete?.company_name || companyToDelete?.name}"? This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary m-2"
+                  onClick={() => setShowDeleteModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={confirmDelete}
+                >
+                  Delete Company
+                </button>
+              </div>
             </div>
           </div>
         </div>
