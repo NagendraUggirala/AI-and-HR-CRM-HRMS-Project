@@ -40,7 +40,7 @@ class User(SQLModel, table=True):
     email: str
     hashed_password: str
     role: str
-    is_active: bool = Field(default=True)  
+    is_active: bool = Field(default=False)
     company_name: Optional[str]
     company_website: Optional[str]
     company_id: Optional[str] = None

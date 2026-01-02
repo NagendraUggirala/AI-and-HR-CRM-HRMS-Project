@@ -1,3 +1,5 @@
+# routers/admin_candidates.py
+
 print("🔥 admin_candidates router loaded")
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -14,43 +16,44 @@ from schema.onboarding.candidate import CandidateCreate
 
 router = APIRouter()
 
-# ------------------------------------------------------------------
-# SEND INVITE EMAIL (HTML – PROFESSIONAL)
-# ------------------------------------------------------------------
+# =====================================================
+# SEND INVITE EMAIL (HTML)
+# =====================================================
+
 async def send_invite_email(
     email: str,
     name: str,
     onboarding_link: str,
-    expiry_date: datetime
+    expiry: datetime
 ):
     html_body = f"""
     <div style="font-family: Arial, sans-serif; line-height:1.6; color:#333;">
         <p>Hello <b>{name}</b>,</p>
 
         <p>
-            Welcome to <b>Levitica Technologies Pvt Ltd</b>!
+            Welcome to <b>Levitica Technologies Private Limited</b>.
         </p>
 
         <p>
-            We are happy to inform you that we have initiated your onboarding process.
+            We have initiated your onboarding process.
         </p>
 
         <p>
-            Please click the link below and submit your details:
+            Click the button below to complete your onboarding form:
         </p>
 
         <p>
             <a href="{onboarding_link}"
                style="background:#2563eb;color:#fff;
-               padding:10px 16px;text-decoration:none;
-               border-radius:4px;">
+               padding:10px 18px;text-decoration:none;
+               border-radius:6px;display:inline-block;">
                Complete Onboarding
             </a>
         </p>
 
-        <p style="margin-top:15px;">
-            <b>Note:</b> This link is valid till:
-            <b>{expiry_date.strftime("%d-%b-%Y")}</b>
+        <p style="margin-top:12px;">
+            <b>Note:</b> This link is valid till
+            <b>{expiry.strftime("%d-%b-%Y")}</b>.
         </p>
 
         <br/>
@@ -63,25 +66,24 @@ async def send_invite_email(
     """
 
     message = MessageSchema(
-        subject="Self-Onboarding Initiated: Submit your details",
+        subject="Self-Onboarding Initiated",
         recipients=[email],
         body=html_body,
         subtype=MessageType.html
     )
 
-    fm = FastMail(mail_config)
-    await fm.send_message(message)
+    await FastMail(mail_config).send_message(message)
 
 
-# ------------------------------------------------------------------
-# CREATE / INVITE CANDIDATE
-# ------------------------------------------------------------------
+# =====================================================
+# INVITE CANDIDATE
+# =====================================================
+
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def invite_candidate(
     payload: CandidateCreate,
     db: Session = Depends(get_db)
 ):
-    # HARD VALIDATION
     if not payload.email and not payload.mobile:
         raise HTTPException(
             status_code=400,
@@ -106,18 +108,17 @@ async def invite_candidate(
 
     onboarding_link = f"https://yourdomain.com/onboarding/{token}"
 
-    # SEND EMAIL (DO NOT FAIL API IF MAIL FAILS)
+    # Send email (do NOT fail API if email fails)
     if payload.email:
         try:
             await send_invite_email(
                 email=payload.email,
                 name=payload.full_name,
                 onboarding_link=onboarding_link,
-                expiry_date=expiry
+                expiry=expiry
             )
         except Exception as e:
-            # LOG ONLY – DO NOT BREAK FLOW
-            print("❌ Email send failed:", str(e))
+            print("❌ Email failed:", e)
 
     return {
         "id": candidate.id,
@@ -128,9 +129,10 @@ async def invite_candidate(
     }
 
 
-# ------------------------------------------------------------------
-# LIST ALL CANDIDATES
-# ------------------------------------------------------------------
+# =====================================================
+# LIST ALL CANDIDATES (TABLE VIEW)
+# =====================================================
+
 @router.get("/")
 def list_candidates(db: Session = Depends(get_db)):
     return (
@@ -140,9 +142,41 @@ def list_candidates(db: Session = Depends(get_db)):
     )
 
 
-# ------------------------------------------------------------------
+# =====================================================
+# APPROVE CANDIDATE (ADMIN ACTION)
+# =====================================================
+
+@router.put("/{candidate_id}/approve")
+def approve_candidate(
+    candidate_id: int,
+    db: Session = Depends(get_db)
+):
+    candidate = db.query(Candidate).filter(
+        Candidate.id == candidate_id
+    ).first()
+
+    if not candidate:
+        raise HTTPException(404, "Candidate not found")
+
+    if candidate.status != "SUBMITTED":
+        raise HTTPException(
+            400,
+            f"Cannot approve candidate with status {candidate.status}"
+        )
+
+    candidate.status = "APPROVED"
+    db.commit()
+
+    return {
+        "id": candidate.id,
+        "status": candidate.status
+    }
+
+
+# =====================================================
 # DELETE CANDIDATE
-# ------------------------------------------------------------------
+# =====================================================
+
 @router.delete("/{candidate_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_candidate(
     candidate_id: int,
@@ -153,10 +187,7 @@ def delete_candidate(
     ).first()
 
     if not candidate:
-        raise HTTPException(
-            status_code=404,
-            detail="Candidate not found"
-        )
+        raise HTTPException(404, "Candidate not found")
 
     db.delete(candidate)
     db.commit()

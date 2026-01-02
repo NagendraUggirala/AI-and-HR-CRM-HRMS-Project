@@ -94,7 +94,8 @@ from routers.HR_Automation.Onboarding.routers import candidates as onboard_candi
 from routers.HR_Automation.attendance.routers import attendance, leave
 from routers.AI_Interview_Bot.routes import interviews
 from routers.CRM import contacts, company, deals, leads, pipelines, activities, analytics,projects, clients, tasks
-from routers.onboarding.admin_candidates import router as onboarding_candidate_router
+# from routers.onboarding.admin_candidates import router as onboarding_candidate_router
+
 
 
 # CORS
@@ -208,7 +209,8 @@ app.include_router(tasks.router)
 
 # Onboarding Routes
 
-app.include_router(onboarding_candidate_router, prefix="/admin_candidates", tags=["Onboarding Candidates"])
+#app.include_router(onboarding_candidate_router, prefix="/admin_candidates", tags=["Onboarding Candidates"])
+
  
 
 # STATIC FILES
