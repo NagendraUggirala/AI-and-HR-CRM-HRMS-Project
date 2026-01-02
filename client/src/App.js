@@ -72,7 +72,21 @@ import EmployeeSelfService from './components/HRMS/EmployeeManagement/EmployeeSe
 import OrganizationHierarchy from './components/HRMS/EmployeeManagement/OrganizationHierarchy';
 import DocumentVault from './components/HRMS/EmployeeManagement/DocumentVault';
 // Onboarding & Joining
+import OnboardingDashboard from './components/HRMS/Onboarding&Joining/OnboardingDashboard';
+import NewOnboardingForm from './components/HRMS/Onboarding&Joining/NewOnboardingForm';
+import PersonalInformationForm from './components/HRMS/Onboarding&Joining/PersonalInformationForm';
 import OfferManagement from './components/HRMS/Onboarding&Joining/OfferManagement';
+import Newhire from './components/HRMS/OnboardingForm/Newhire';
+import Basicdetails from './components/HRMS/OnboardingForm/Basicdetails';
+import Onboardingcontactdetails from './components/HRMS/OnboardingForm/Onboardingcontactdetails';
+import OnboardingPersonaldetails from './components/HRMS/OnboardingForm/OnboardingPersonaldetails';
+import OnboardingStatutorydetails from './components/HRMS/OnboardingForm/OnboardingStatutorydetails';
+import Familydetails from './components/HRMS/OnboardingForm/Familydetails';
+import Onboardingpresentaddress from './components/HRMS/OnboardingForm/Onboardingpresentaddress';
+import Permanentaddress from './components/HRMS/OnboardingForm/Permanentaddress';
+import Onboardingbankdetails from './components/HRMS/OnboardingForm/Onboardingbankdetails';
+import Uploaddocument from './components/HRMS/OnboardingForm/Uploaddocument';
+import Final from './components/HRMS/OnboardingForm/Final';
 import JoiningDayManagement from './components/HRMS/Onboarding&Joining/JoiningDayManagement';
 import ProbationManagement from './components/HRMS/Onboarding&Joining/ProbationManagement';
 import PreJoiningEngagement from './components/HRMS/Onboarding&Joining/PreJoiningEngagement';
@@ -1162,6 +1176,146 @@ const App = () => {
       />
     
     {/* Canonical lowercase onboarding routes (match sidebar links) */}
+      <Route
+        path='/onboarding'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <OnboardingDashboard />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/onboarding/form/new'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <NewOnboardingForm />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/onboarding/form/personal-info'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <PersonalInformationForm />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/newhire'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <Newhire />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/basicdetails'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <Basicdetails />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/onboardingcontactdetails'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <Onboardingcontactdetails />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/onboardingPersonaldetails'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <OnboardingPersonaldetails />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/onboardingstatutorydetails'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <OnboardingStatutorydetails />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/familydetails'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <Familydetails />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/onboardingPresentaddress'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <Onboardingpresentaddress />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/permanentaddress'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <Permanentaddress />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/onboardingbankdetails'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <Onboardingbankdetails />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/uploaddocument'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <Uploaddocument />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/final'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <Final />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
       <Route
         path='/onboarding/offers'
         element={

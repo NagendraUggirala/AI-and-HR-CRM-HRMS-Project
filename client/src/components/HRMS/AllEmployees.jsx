@@ -437,9 +437,8 @@ const AllEmployees = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
-  const [showModal, setShowModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showDetailView, setShowDetailView] = useState(false);
   const [newEmployee, setNewEmployee] = useState({
     name: '',
     email: '',
@@ -690,14 +689,20 @@ const AllEmployees = () => {
 
   const handleViewDetails = (employee) => {
     setSelectedEmployee(employee);
-    setShowModal(true);
+    setShowDetailView(true);
+  };
+
+  const handleBackToList = () => {
+    setShowDetailView(false);
+    setSelectedEmployee(null);
+    setActiveDetailTab('personal');
   };
 
   const handleDeleteEmployee = (id) => {
     if (window.confirm('Are you sure you want to delete this employee?')) {
       setEmployees(employees.filter(emp => emp.id !== id));
       if (selectedEmployee?.id === id) {
-        setShowModal(false);
+        handleBackToList();
       }
     }
   };
@@ -749,7 +754,7 @@ const AllEmployees = () => {
     });
     
     setEmployees([...employees, newEmp]);
-    setShowAddModal(false);
+    
     setActiveAddTab('personal');
     setNewEmployee({
       name: '',
@@ -1041,13 +1046,6 @@ const AllEmployees = () => {
               {/* Action Buttons */}
               <div className="d-flex gap-2">
                 <button
-                  onClick={() => setShowAddModal(true)}
-                  className="btn btn-success d-flex align-items-center"
-                >
-                  <Icon icon="heroicons:user-plus" className="me-2" />
-                  Add Employee
-                </button>
-                <button
                   onClick={exportToCSV}
                   className="btn btn-primary d-flex align-items-center"
                 >
@@ -1059,7 +1057,8 @@ const AllEmployees = () => {
           </div>
         </div>
 
-        {/* Employees Table */}
+        {/* Employees Table - Only show when not viewing details */}
+        {!showDetailView && (
         <div className="card border shadow-none">
           <div className="card-header bg-transparent border-0">
             <div className="d-flex justify-content-between align-items-center">
@@ -1107,19 +1106,6 @@ const AllEmployees = () => {
                       </div>
                     </th>
                     <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">Contact</th>
-                    <th 
-                      className="border-0 px-3 py-3 text-uppercase fw-bold text-dark cursor-pointer"
-                      onClick={() => handleSort('salary')}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <div className="d-flex align-items-center gap-2">
-                        Salary
-                        <Icon 
-                          icon={`heroicons:chevron-${sortConfig.key === 'salary' && sortConfig.direction === 'asc' ? 'up' : 'down'}`} 
-                          className="small" 
-                        />
-                      </div>
-                    </th>
                     <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">Status</th>
                     <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">Actions</th>
                   </tr>
@@ -1147,12 +1133,6 @@ const AllEmployees = () => {
                       <td className="px-4 py-3">
                         <div className="text-muted">{employee.email || (employee.employmentInfo || {}).workEmail}</div>
                         <div className="small text-muted">{employee.phone || (employee.personalInfo || {}).phonePrimary}</div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="fw-semibold text-dark">{formatCurrency((employee.salaryInfo || {}).currentCTC || employee.salary || 0)}</div>
-                        <div className="small text-muted">
-                          {getEmploymentTypeBadge((employee.employmentInfo || {}).employmentType || employee.employmentType)}
-                        </div>
                       </td>
                       <td className="px-4 py-3" style={{width:"120px"}}>
                         {getStatusBadge((employee.employmentInfo || {}).employmentStatus || employee.status)}
@@ -1227,1276 +1207,159 @@ const AllEmployees = () => {
             )}
           </div>
         </div>
-
-        {/* Employee Details Modal - Comprehensive Tabbed View */}
-        {showModal && selectedEmployee && (
-          <div 
-            className="modal show d-block" 
-            style={{ 
-              backgroundColor: 'rgba(0,0,0,0.5)', 
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 1050,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '15px',
-              overflow: 'auto'
-            }}
-            onClick={(e) => {
-              if (e.target === e.currentTarget) {
-                setShowModal(false);
-                setActiveDetailTab('personal');
-              }
-            }}
-          >
-            <div 
-              className="modal-dialog modal-xl" 
-              style={{ 
-                maxWidth: '1400px', 
-                width: '90%', 
-                margin: 'auto',
-                maxHeight: '90vh',
-                position: 'relative',
-                transform: 'none'
-              }}
-            >
-              <div className="modal-content" style={{ maxHeight: '90vh',width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderRadius: '8px', boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}>
-                <div className="modal-header bg-primary text-white">
-                  <div className="d-flex align-items-center gap-3">
-                    {selectedEmployee.personalInfo?.profilePhoto ? (
-                      <img 
-                        src={selectedEmployee.personalInfo.profilePhoto} 
-                        alt={selectedEmployee.name}
-                        className="rounded-circle"
-                        style={{ width: '60px', height: '60px', objectFit: 'cover' }}
-                      />
-                    ) : (
-                      <div className="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px' }}>
-                        <Icon icon="heroicons:user" className="fs-3" />
-                      </div>
-                    )}
-                    <div>
-                      <h5 className="modal-title mb-0 text-white">
-                        {selectedEmployee.name}
-                      </h5>
-                      <small className="text-white-50">
-                        {(selectedEmployee.employmentInfo || {}).employeeId || selectedEmployee.employeeId} • {(selectedEmployee.employmentInfo || {}).designation || selectedEmployee.designation}
-                      </small>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="btn-close btn-close-white"
-                    onClick={() => {
-                      setShowModal(false);
-                      setActiveDetailTab('personal');
-                    }}
-                  ></button>
-                </div>
-                <div className="modal-body p-0" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                  {/* Tab Navigation */}
-                  <ul className="nav nav-tabs border-bottom px-3 pt-3" style={{ flexShrink: 0 }}>
-                    <li className="nav-item">
-                      <button
-                        className={`nav-link ${activeDetailTab === 'personal' ? 'active' : ''}`}
-                        onClick={() => setActiveDetailTab('personal')}
-                      >
-                        <Icon icon="heroicons:user-circle" className="me-2" />
-                        Personal Info
-                      </button>
-                    </li>
-                    <li className="nav-item">
-                      <button
-                        className={`nav-link ${activeDetailTab === 'employment' ? 'active' : ''}`}
-                        onClick={() => setActiveDetailTab('employment')}
-                      >
-                        <Icon icon="heroicons:briefcase" className="me-2" />
-                        Employment
-                      </button>
-                    </li>
-                    <li className="nav-item">
-                      <button
-                        className={`nav-link ${activeDetailTab === 'jobHistory' ? 'active' : ''}`}
-                        onClick={() => setActiveDetailTab('jobHistory')}
-                      >
-                        <Icon icon="heroicons:clock" className="me-2" />
-                        Job History
-                      </button>
-                    </li>
-                    <li className="nav-item">
-                      <button
-                        className={`nav-link ${activeDetailTab === 'salary' ? 'active' : ''}`}
-                        onClick={() => setActiveDetailTab('salary')}
-                      >
-                        <Icon icon="heroicons:currency-dollar" className="me-2" />
-                        Salary & Compensation
-                      </button>
-                    </li>
-                    <li className="nav-item">
-                      <button
-                        className={`nav-link ${activeDetailTab === 'statutory' ? 'active' : ''}`}
-                        onClick={() => setActiveDetailTab('statutory')}
-                      >
-                        <Icon icon="heroicons:document-check" className="me-2" />
-                        Statutory & Compliance
-                      </button>
-                    </li>
-                  </ul>
-
-                  {/* Tab Content */}
-                  <div className="p-4" style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
-                    {/* Personal Information Tab */}
-                    {activeDetailTab === 'personal' && (
-                      <PersonalInfoTab employee={selectedEmployee} formatDate={formatDate} />
-                    )}
-
-                    {/* Employment Information Tab */}
-                    {activeDetailTab === 'employment' && (
-                      <EmploymentInfoTab 
-                        employee={selectedEmployee} 
-                        formatDate={formatDate}
-                        getStatusBadge={getStatusBadge}
-                        getEmploymentTypeBadge={getEmploymentTypeBadge}
-                      />
-                    )}
-
-                    {/* Job History Tab */}
-                    {activeDetailTab === 'jobHistory' && (
-                      <JobHistoryTab employee={selectedEmployee} formatDate={formatDate} formatCurrency={formatCurrency} />
-                    )}
-
-                    {/* Salary & Compensation Tab */}
-                    {activeDetailTab === 'salary' && (
-                      <SalaryInfoTab employee={selectedEmployee} formatCurrency={formatCurrency} formatDate={formatDate} />
-                    )}
-
-                    {/* Statutory & Compliance Tab */}
-                    {activeDetailTab === 'statutory' && (
-                      <StatutoryInfoTab employee={selectedEmployee} formatDate={formatDate} />
-                    )}
-                  </div>
-                </div>
-                <div className="modal-footer" style={{ flexShrink: 0 }}>
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => {
-                      setShowModal(false);
-                      setActiveDetailTab('personal');
-                    }}
-                  >
-                    Close
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => {
-                      // Edit functionality would go here
-                      alert('Edit functionality to be implemented');
-                    }}
-                  >
-                    <Icon icon="heroicons:pencil-square" className="me-2" />
-                    Edit Employee
-                  </button>
-                  <button 
-                    type="button" 
-                    className="btn btn-danger"
-                    onClick={() => handleDeleteEmployee(selectedEmployee.id)}
-                  >
-                    <Icon icon="heroicons:trash" className="me-2" />
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
         )}
 
-        {/* Add Employee Modal - Comprehensive Tabbed Form */}
-        {showAddModal && (
-          <div 
-            className="modal show d-block" 
-            style={{ 
-              backgroundColor: 'rgba(0,0,0,0.5)', 
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 1050,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '15px',
-              overflow: 'auto'
-            }}
-            onClick={(e) => {
-              if (e.target === e.currentTarget) {
-                setShowAddModal(false);
-                setActiveAddTab('personal');
-              }
-            }}
-          >
-            <div 
-              className="modal-dialog modal-xl" 
-              style={{ 
-                maxWidth: '1600px', 
-                width: '95%', 
-                margin: '0 auto',
-                maxHeight: '90vh',
-                position: 'relative',
-                transform: 'none'
-              }}
-            >
-              <div className="modal-content" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column', borderRadius: '8px', boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}>
-                <div className="modal-header bg-primary text-white">
-                  <h5 className="modal-title d-flex align-items-center gap-2 text-white">
-                    <Icon icon="heroicons:user-plus" />
-                    Add New Employee
-                  </h5>
-                  <button
-                    type="button"
-                    className="btn-close btn-close-white"
-                    onClick={() => {
-                      setShowAddModal(false);
-                      setActiveAddTab('personal');
-                    }}
-                  ></button>
-                </div>
-                <div className="modal-body p-0" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                  {/* Tab Navigation */}
-                  <ul className="nav nav-tabs border-bottom px-3 pt-3" style={{ flexShrink: 0 }}>
-                    <li className="nav-item">
-                      <button
-                        className={`nav-link ${activeAddTab === 'personal' ? 'active' : ''}`}
-                        onClick={() => setActiveAddTab('personal')}
-                      >
-                        <Icon icon="heroicons:user-circle" className="me-2" />
-                        Personal Info
-                      </button>
-                    </li>
-                    <li className="nav-item">
-                      <button
-                        className={`nav-link ${activeAddTab === 'employment' ? 'active' : ''}`}
-                        onClick={() => setActiveAddTab('employment')}
-                      >
-                        <Icon icon="heroicons:briefcase" className="me-2" />
-                        Employment
-                      </button>
-                    </li>
-                    <li className="nav-item">
-                      <button
-                        className={`nav-link ${activeAddTab === 'salary' ? 'active' : ''}`}
-                        onClick={() => setActiveAddTab('salary')}
-                      >
-                        <Icon icon="heroicons:currency-dollar" className="me-2" />
-                        Salary
-                      </button>
-                    </li>
-                    <li className="nav-item">
-                      <button
-                        className={`nav-link ${activeAddTab === 'statutory' ? 'active' : ''}`}
-                        onClick={() => setActiveAddTab('statutory')}
-                      >
-                        <Icon icon="heroicons:document-check" className="me-2" />
-                        Statutory
-                      </button>
-                    </li>
-                  </ul>
-
-                  {/* Tab Content */}
-                  <div className="p-4" style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
-                    {/* Personal Information Tab */}
-                    {activeAddTab === 'personal' && (
-                      <div className="row g-3">
-                        {/* Profile Photo Upload */}
-                        <div className="col-12 mb-3">
-                          <label className="form-label">Profile Photo</label>
-                          <div className="d-flex align-items-center gap-3">
-                            <div className="position-relative">
-                              {newEmployee.personalInfo.profilePhoto ? (
-                                <img 
-                                  src={newEmployee.personalInfo.profilePhoto} 
-                                  alt="Profile" 
-                                  className="rounded-circle border"
-                                  style={{ width: '100px', height: '100px', objectFit: 'cover' }}
-                                />
-                              ) : (
-                                <div className="rounded-circle border d-flex align-items-center justify-content-center bg-light" style={{ width: '100px', height: '100px' }}>
-                                  <Icon icon="heroicons:user" className="fs-1 text-muted" />
-                                </div>
-                              )}
-                            </div>
-                            <div>
-                              <input
-                                type="file"
-                                className="form-control"
-                                accept="image/*"
-                                onChange={(e) => {
-                                  const file = e.target.files[0];
-                                  if (file) {
-                                    const reader = new FileReader();
-                                    reader.onloadend = () => {
-                                      setNewEmployee({
-                                        ...newEmployee,
-                                        personalInfo: {
-                                          ...newEmployee.personalInfo,
-                                          profilePhoto: reader.result
-                                        }
-                                      });
-                                    };
-                                    reader.readAsDataURL(file);
-                                  }
-                                }}
-                              />
-                              <small className="text-muted">Upload employee profile photo (JPG, PNG, max 5MB)</small>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Full Name <span className="text-danger">*</span></label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.name}
-                            onChange={(e) => setNewEmployee({...newEmployee, name: e.target.value})}
-                            placeholder="Enter full name"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Date of Birth</label>
-                          <input
-                            type="date"
-                            className="form-control"
-                            value={newEmployee.personalInfo.dateOfBirth}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {...newEmployee.personalInfo, dateOfBirth: e.target.value}
-                            })}
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Gender</label>
-                          <select
-                            className="form-select"
-                            value={newEmployee.personalInfo.gender}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {...newEmployee.personalInfo, gender: e.target.value}
-                            })}
-                          >
-                            <option value="">Select</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                          </select>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Blood Group</label>
-                          <select
-                            className="form-select"
-                            value={newEmployee.personalInfo.bloodGroup}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {...newEmployee.personalInfo, bloodGroup: e.target.value}
-                            })}
-                          >
-                            <option value="">Select</option>
-                            <option value="A+">A+</option>
-                            <option value="A-">A-</option>
-                            <option value="B+">B+</option>
-                            <option value="B-">B-</option>
-                            <option value="AB+">AB+</option>
-                            <option value="AB-">AB-</option>
-                            <option value="O+">O+</option>
-                            <option value="O-">O-</option>
-                          </select>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Marital Status</label>
-                          <select
-                            className="form-select"
-                            value={newEmployee.personalInfo.maritalStatus}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {...newEmployee.personalInfo, maritalStatus: e.target.value}
-                            })}
-                          >
-                            <option value="">Select</option>
-                            <option value="Single">Single</option>
-                            <option value="Married">Married</option>
-                            <option value="Divorced">Divorced</option>
-                            <option value="Widowed">Widowed</option>
-                          </select>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Nationality</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.personalInfo.nationality}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {...newEmployee.personalInfo, nationality: e.target.value}
-                            })}
-                            placeholder="Enter nationality"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Languages</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.personalInfo.languages.join(', ')}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {
-                                ...newEmployee.personalInfo,
-                                languages: e.target.value.split(',').map(lang => lang.trim()).filter(lang => lang)
-                              }
-                            })}
-                            placeholder="Enter languages (comma separated, e.g., English, Hindi, Spanish)"
-                          />
-                          <small className="text-muted">Separate multiple languages with commas</small>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Personal Email</label>
-                          <input
-                            type="email"
-                            className="form-control"
-                            value={newEmployee.personalInfo.personalEmail}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {...newEmployee.personalInfo, personalEmail: e.target.value}
-                            })}
-                            placeholder="personal@email.com"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Primary Phone <span className="text-danger">*</span></label>
-                          <input
-                            type="tel"
-                            className="form-control"
-                            value={newEmployee.phone || newEmployee.personalInfo.phonePrimary}
-                            onChange={(e) => {
-                              setNewEmployee({
-                                ...newEmployee,
-                                phone: e.target.value,
-                                personalInfo: {...newEmployee.personalInfo, phonePrimary: e.target.value}
-                              });
-                            }}
-                            placeholder="+1 (555) 123-4567"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Secondary Phone</label>
-                          <input
-                            type="tel"
-                            className="form-control"
-                            value={newEmployee.personalInfo.phoneSecondary}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {...newEmployee.personalInfo, phoneSecondary: e.target.value}
-                            })}
-                            placeholder="+1 (555) 123-4568"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">PAN Number</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.personalInfo.identification.pan.number}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {
-                                ...newEmployee.personalInfo,
-                                identification: {
-                                  ...newEmployee.personalInfo.identification,
-                                  pan: {...newEmployee.personalInfo.identification.pan, number: e.target.value}
-                                }
-                              }
-                            })}
-                            placeholder="ABCDE1234F"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Aadhaar Number</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.personalInfo.identification.aadhaar.number}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {
-                                ...newEmployee.personalInfo,
-                                identification: {
-                                  ...newEmployee.personalInfo.identification,
-                                  aadhaar: {...newEmployee.personalInfo.identification.aadhaar, number: e.target.value}
-                                }
-                              }
-                            })}
-                            placeholder="1234 5678 9012"
-                          />
-                        </div>
-
-                        {/* Current Address Section */}
-                        <div className="col-12 mt-4">
-                          <h6 className="fw-bold mb-3 border-bottom pb-2">
-                            <Icon icon="heroicons:map-pin" className="me-2" />
-                            Current Address
-                          </h6>
-                        </div>
-                        <div className="col-md-12">
-                          <label className="form-label">Address Line 1</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.personalInfo.currentAddress.line1}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {
-                                ...newEmployee.personalInfo,
-                                currentAddress: {...newEmployee.personalInfo.currentAddress, line1: e.target.value}
-                              }
-                            })}
-                            placeholder="Enter address line 1"
-                          />
-                        </div>
-                        <div className="col-md-12">
-                          <label className="form-label">Address Line 2</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.personalInfo.currentAddress.line2}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {
-                                ...newEmployee.personalInfo,
-                                currentAddress: {...newEmployee.personalInfo.currentAddress, line2: e.target.value}
-                              }
-                            })}
-                            placeholder="Enter address line 2"
-                          />
-                        </div>
-                        <div className="col-md-4">
-                          <label className="form-label">City</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.personalInfo.currentAddress.city}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {
-                                ...newEmployee.personalInfo,
-                                currentAddress: {...newEmployee.personalInfo.currentAddress, city: e.target.value}
-                              }
-                            })}
-                            placeholder="Enter city"
-                          />
-                        </div>
-                        <div className="col-md-4">
-                          <label className="form-label">State</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.personalInfo.currentAddress.state}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {
-                                ...newEmployee.personalInfo,
-                                currentAddress: {...newEmployee.personalInfo.currentAddress, state: e.target.value}
-                              }
-                            })}
-                            placeholder="Enter state"
-                          />
-                        </div>
-                        <div className="col-md-4">
-                          <label className="form-label">Pincode</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.personalInfo.currentAddress.pincode}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {
-                                ...newEmployee.personalInfo,
-                                currentAddress: {...newEmployee.personalInfo.currentAddress, pincode: e.target.value}
-                              }
-                            })}
-                            placeholder="Enter pincode"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Country</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.personalInfo.currentAddress.country}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {
-                                ...newEmployee.personalInfo,
-                                currentAddress: {...newEmployee.personalInfo.currentAddress, country: e.target.value}
-                              }
-                            })}
-                            placeholder="Enter country"
-                          />
-                        </div>
-
-                        {/* Permanent Address Section */}
-                        <div className="col-12 mt-4">
-                          <h6 className="fw-bold mb-3 border-bottom pb-2">
-                            <Icon icon="heroicons:home" className="me-2" />
-                            Permanent Address
-                          </h6>
-                        </div>
-                        <div className="col-md-12">
-                          <div className="form-check mb-3">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              id="sameAsCurrent"
-                              checked={JSON.stringify(newEmployee.personalInfo.currentAddress) === JSON.stringify(newEmployee.personalInfo.permanentAddress) && 
-                                       newEmployee.personalInfo.currentAddress.line1 !== ''}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setNewEmployee({
-                                    ...newEmployee,
-                                    personalInfo: {
-                                      ...newEmployee.personalInfo,
-                                      permanentAddress: {...newEmployee.personalInfo.currentAddress}
-                                    }
-                                  });
-                                }
-                              }}
-                            />
-                            <label className="form-check-label" htmlFor="sameAsCurrent">
-                              Same as Current Address
-                            </label>
-                          </div>
-                        </div>
-                        <div className="col-md-12">
-                          <label className="form-label">Address Line 1</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.personalInfo.permanentAddress.line1}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {
-                                ...newEmployee.personalInfo,
-                                permanentAddress: {...newEmployee.personalInfo.permanentAddress, line1: e.target.value}
-                              }
-                            })}
-                            placeholder="Enter address line 1"
-                          />
-                        </div>
-                        <div className="col-md-12">
-                          <label className="form-label">Address Line 2</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.personalInfo.permanentAddress.line2}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {
-                                ...newEmployee.personalInfo,
-                                permanentAddress: {...newEmployee.personalInfo.permanentAddress, line2: e.target.value}
-                              }
-                            })}
-                            placeholder="Enter address line 2"
-                          />
-                        </div>
-                        <div className="col-md-4">
-                          <label className="form-label">City</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.personalInfo.permanentAddress.city}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {
-                                ...newEmployee.personalInfo,
-                                permanentAddress: {...newEmployee.personalInfo.permanentAddress, city: e.target.value}
-                              }
-                            })}
-                            placeholder="Enter city"
-                          />
-                        </div>
-                        <div className="col-md-4">
-                          <label className="form-label">State</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.personalInfo.permanentAddress.state}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {
-                                ...newEmployee.personalInfo,
-                                permanentAddress: {...newEmployee.personalInfo.permanentAddress, state: e.target.value}
-                              }
-                            })}
-                            placeholder="Enter state"
-                          />
-                        </div>
-                        <div className="col-md-4">
-                          <label className="form-label">Pincode</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.personalInfo.permanentAddress.pincode}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {
-                                ...newEmployee.personalInfo,
-                                permanentAddress: {...newEmployee.personalInfo.permanentAddress, pincode: e.target.value}
-                              }
-                            })}
-                            placeholder="Enter pincode"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Country</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.personalInfo.permanentAddress.country}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              personalInfo: {
-                                ...newEmployee.personalInfo,
-                                permanentAddress: {...newEmployee.personalInfo.permanentAddress, country: e.target.value}
-                              }
-                            })}
-                            placeholder="Enter country"
-                          />
-                        </div>
-
-                        {/* Document Upload Section */}
-                        <div className="col-12 mt-4">
-                          <h6 className="fw-bold mb-3 border-bottom pb-2">
-                            <Icon icon="heroicons:document-text" className="me-2" />
-                            Document Proof Upload
-                          </h6>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">PAN Card Photo</label>
-                          <input
-                            type="file"
-                            className="form-control"
-                            accept="image/*,.pdf"
-                            onChange={(e) => {
-                              const file = e.target.files[0];
-                              if (file) {
-                                const reader = new FileReader();
-                                reader.onloadend = () => {
-                                  setNewEmployee({
-                                    ...newEmployee,
-                                    personalInfo: {
-                                      ...newEmployee.personalInfo,
-                                      identification: {
-                                        ...newEmployee.personalInfo.identification,
-                                        pan: {
-                                          ...newEmployee.personalInfo.identification.pan,
-                                          document: reader.result
-                                        }
-                                      }
-                                    }
-                                  });
-                                };
-                                reader.readAsDataURL(file);
-                              }
-                            }}
-                          />
-                          <small className="text-muted">Upload PAN card photo (JPG, PNG, PDF, max 5MB)</small>
-                          {newEmployee.personalInfo.identification.pan.document && (
-                            <div className="mt-2">
-                              <a href={newEmployee.personalInfo.identification.pan.document} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary">
-                                <Icon icon="heroicons:eye" className="me-1" />
-                                View Uploaded
-                              </a>
-                            </div>
-                          )}
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Aadhaar Card Photo</label>
-                          <input
-                            type="file"
-                            className="form-control"
-                            accept="image/*,.pdf"
-                            onChange={(e) => {
-                              const file = e.target.files[0];
-                              if (file) {
-                                const reader = new FileReader();
-                                reader.onloadend = () => {
-                                  setNewEmployee({
-                                    ...newEmployee,
-                                    personalInfo: {
-                                      ...newEmployee.personalInfo,
-                                      identification: {
-                                        ...newEmployee.personalInfo.identification,
-                                        aadhaar: {
-                                          ...newEmployee.personalInfo.identification.aadhaar,
-                                          document: reader.result
-                                        }
-                                      }
-                                    }
-                                  });
-                                };
-                                reader.readAsDataURL(file);
-                              }
-                            }}
-                          />
-                          <small className="text-muted">Upload Aadhaar card photo (JPG, PNG, PDF, max 5MB)</small>
-                          {newEmployee.personalInfo.identification.aadhaar.document && (
-                            <div className="mt-2">
-                              <a href={newEmployee.personalInfo.identification.aadhaar.document} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary">
-                                <Icon icon="heroicons:eye" className="me-1" />
-                                View Uploaded
-                              </a>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Employment Information Tab */}
-                    {activeAddTab === 'employment' && (
-                      <div className="row g-3">
-                        <div className="col-md-6">
-                          <label className="form-label">Date of Joining <span className="text-danger">*</span></label>
-                          <input
-                            type="date"
-                            className="form-control"
-                            value={newEmployee.employmentInfo.dateOfJoining}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              employmentInfo: {...newEmployee.employmentInfo, dateOfJoining: e.target.value}
-                            })}
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Probation Period (months)</label>
-                          <input
-                            type="number"
-                            className="form-control"
-                            value={newEmployee.employmentInfo.probationPeriod}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              employmentInfo: {...newEmployee.employmentInfo, probationPeriod: parseInt(e.target.value) || 0}
-                            })}
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Employment Type <span className="text-danger">*</span></label>
-                          <select
-                            className="form-select"
-                            value={newEmployee.employmentInfo.employmentType}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              employmentInfo: {...newEmployee.employmentInfo, employmentType: e.target.value},
-                              employmentType: e.target.value === 'Permanent' ? 'Full-time' : e.target.value
-                            })}
-                          >
-                            <option value="Permanent">Permanent</option>
-                            <option value="Contract">Contract</option>
-                            <option value="Intern">Intern</option>
-                            <option value="Consultant">Consultant</option>
-                          </select>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Employment Status</label>
-                          <select
-                            className="form-select"
-                            value={newEmployee.employmentInfo.employmentStatus}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              employmentInfo: {...newEmployee.employmentInfo, employmentStatus: e.target.value}
-                            })}
-                          >
-                            <option value="Active">Active</option>
-                            <option value="On-Hold">On-Hold</option>
-                            <option value="On Leave">On Leave</option>
-                          </select>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Department <span className="text-danger">*</span></label>
-                          <select
-                            className="form-select"
-                            value={newEmployee.employmentInfo.department || newEmployee.department}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              department: e.target.value,
-                              employmentInfo: {...newEmployee.employmentInfo, department: e.target.value}
-                            })}
-                          >
-                            <option value="Engineering">Engineering</option>
-                            <option value="Marketing">Marketing</option>
-                            <option value="HR">HR</option>
-                            <option value="Finance">Finance</option>
-                            <option value="Sales">Sales</option>
-                            <option value="Operations">Operations</option>
-                            <option value="IT">IT</option>
-                          </select>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Sub-Department</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.employmentInfo.subDepartment}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              employmentInfo: {...newEmployee.employmentInfo, subDepartment: e.target.value}
-                            })}
-                            placeholder="Enter sub-department"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Designation <span className="text-danger">*</span></label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.employmentInfo.designation || newEmployee.designation}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              designation: e.target.value,
-                              employmentInfo: {...newEmployee.employmentInfo, designation: e.target.value}
-                            })}
-                            placeholder="Enter designation"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Location <span className="text-danger">*</span></label>
-                          <select
-                            className="form-select"
-                            value={newEmployee.employmentInfo.location || newEmployee.location}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              location: e.target.value,
-                              employmentInfo: {...newEmployee.employmentInfo, location: e.target.value}
-                            })}
-                          >
-                            <option value="New York">New York</option>
-                            <option value="San Francisco">San Francisco</option>
-                            <option value="Chicago">Chicago</option>
-                            <option value="Boston">Boston</option>
-                            <option value="Austin">Austin</option>
-                            <option value="Seattle">Seattle</option>
-                            <option value="Remote">Remote</option>
-                          </select>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Workplace Type</label>
-                          <select
-                            className="form-select"
-                            value={newEmployee.employmentInfo.workplaceType}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              employmentInfo: {...newEmployee.employmentInfo, workplaceType: e.target.value}
-                            })}
-                          >
-                            <option value="Office">Office</option>
-                            <option value="Remote">Remote</option>
-                            <option value="Hybrid">Hybrid</option>
-                          </select>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Work Email <span className="text-danger">*</span></label>
-                          <input
-                            type="email"
-                            className="form-control"
-                            value={newEmployee.employmentInfo.workEmail || newEmployee.email}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              email: e.target.value,
-                              employmentInfo: {...newEmployee.employmentInfo, workEmail: e.target.value}
-                            })}
-                            placeholder="employee@company.com"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Direct Reporting Manager</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.employmentInfo.reportingManager.direct}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              employmentInfo: {
-                                ...newEmployee.employmentInfo,
-                                reportingManager: {
-                                  ...newEmployee.employmentInfo.reportingManager,
-                                  direct: e.target.value
-                                }
-                              }
-                            })}
-                            placeholder="Manager name"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Notice Period (days)</label>
-                          <input
-                            type="number"
-                            className="form-control"
-                            value={newEmployee.employmentInfo.noticePeriod}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              employmentInfo: {...newEmployee.employmentInfo, noticePeriod: parseInt(e.target.value) || 0}
-                            })}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Salary & Compensation Tab */}
-                    {activeAddTab === 'salary' && (
-                      <div className="row g-3">
-                        <div className="col-md-6">
-                          <label className="form-label">Current CTC (Annual) <span className="text-danger">*</span></label>
-                          <input
-                            type="number"
-                            className="form-control"
-                            value={newEmployee.salaryInfo.currentCTC || newEmployee.salary}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              salary: e.target.value,
-                              salaryInfo: {...newEmployee.salaryInfo, currentCTC: parseInt(e.target.value) || 0}
-                            })}
-                            placeholder="75000"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Payment Mode</label>
-                          <select
-                            className="form-select"
-                            value={newEmployee.salaryInfo.paymentMode}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              salaryInfo: {...newEmployee.salaryInfo, paymentMode: e.target.value}
-                            })}
-                          >
-                            <option value="Bank Transfer">Bank Transfer</option>
-                            <option value="Cheque">Cheque</option>
-                            <option value="Cash">Cash</option>
-                          </select>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Primary Bank Account Number</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.salaryInfo.bankAccounts.primary.accountNumber}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              salaryInfo: {
-                                ...newEmployee.salaryInfo,
-                                bankAccounts: {
-                                  ...newEmployee.salaryInfo.bankAccounts,
-                                  primary: {
-                                    ...newEmployee.salaryInfo.bankAccounts.primary,
-                                    accountNumber: e.target.value
-                                  }
-                                }
-                              }
-                            })}
-                            placeholder="1234567890"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">IFSC Code</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.salaryInfo.bankAccounts.primary.ifscCode}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              salaryInfo: {
-                                ...newEmployee.salaryInfo,
-                                bankAccounts: {
-                                  ...newEmployee.salaryInfo.bankAccounts,
-                                  primary: {
-                                    ...newEmployee.salaryInfo.bankAccounts.primary,
-                                    ifscCode: e.target.value
-                                  }
-                                }
-                              }
-                            })}
-                            placeholder="BANK0001234"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Bank Name</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.salaryInfo.bankAccounts.primary.bankName}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              salaryInfo: {
-                                ...newEmployee.salaryInfo,
-                                bankAccounts: {
-                                  ...newEmployee.salaryInfo.bankAccounts,
-                                  primary: {
-                                    ...newEmployee.salaryInfo.bankAccounts.primary,
-                                    bankName: e.target.value
-                                  }
-                                }
-                              }
-                            })}
-                            placeholder="Bank Name"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">UAN (Universal Account Number)</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.salaryInfo.uan}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              salaryInfo: {...newEmployee.salaryInfo, uan: e.target.value}
-                            })}
-                            placeholder="UAN123456789"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">PF Account Number</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.salaryInfo.pfAccountNumber}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              salaryInfo: {...newEmployee.salaryInfo, pfAccountNumber: e.target.value}
-                            })}
-                            placeholder="PF123456"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">ESI Number</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={newEmployee.salaryInfo.esiNumber}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              salaryInfo: {...newEmployee.salaryInfo, esiNumber: e.target.value}
-                            })}
-                            placeholder="ESI123456"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Statutory & Compliance Tab */}
-                    {activeAddTab === 'statutory' && (
-                      <div className="row g-3">
-                        <div className="col-12 mb-3">
-                          <div className="alert alert-info">
-                            <Icon icon="heroicons:information-circle" className="me-2" />
-                            <strong>Note:</strong> PAN and Aadhaar numbers are managed in the Personal Info tab. This section is for statutory compliance and verification status.
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">PF Enrolled</label>
-                          <select
-                            className="form-select"
-                            value={newEmployee.statutoryInfo.pfMembership.enrolled}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              statutoryInfo: {
-                                ...newEmployee.statutoryInfo,
-                                pfMembership: {...newEmployee.statutoryInfo.pfMembership, enrolled: e.target.value === 'true'}
-                              }
-                            })}
-                          >
-                            <option value={false}>No</option>
-                            <option value={true}>Yes</option>
-                          </select>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">ESI Enrolled</label>
-                          <select
-                            className="form-select"
-                            value={newEmployee.statutoryInfo.esiRegistration.enrolled}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              statutoryInfo: {
-                                ...newEmployee.statutoryInfo,
-                                esiRegistration: {...newEmployee.statutoryInfo.esiRegistration, enrolled: e.target.value === 'true'}
-                              }
-                            })}
-                          >
-                            <option value={false}>No</option>
-                            <option value={true}>Yes</option>
-                          </select>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Professional Tax Applicable</label>
-                          <select
-                            className="form-select"
-                            value={newEmployee.statutoryInfo.professionalTax.applicable}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              statutoryInfo: {
-                                ...newEmployee.statutoryInfo,
-                                professionalTax: {...newEmployee.statutoryInfo.professionalTax, applicable: e.target.value === 'true'}
-                              }
-                            })}
-                          >
-                            <option value={false}>No</option>
-                            <option value={true}>Yes</option>
-                          </select>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Gratuity Eligible</label>
-                          <select
-                            className="form-select"
-                            value={newEmployee.statutoryInfo.gratuity.eligible}
-                            onChange={(e) => setNewEmployee({
-                              ...newEmployee,
-                              statutoryInfo: {
-                                ...newEmployee.statutoryInfo,
-                                gratuity: {...newEmployee.statutoryInfo.gratuity, eligible: e.target.value === 'true'}
-                              }
-                            })}
-                          >
-                            <option value={false}>No</option>
-                            <option value={true}>Yes</option>
-                          </select>
-                        </div>
-                      </div>
-                    )}
+        {/* Employee Details Inline View */}
+        {showDetailView && selectedEmployee && (
+          <div className="card border shadow-none mt-4">
+            <div className="card-header bg-primary text-white">
+              <div className="d-flex align-items-center justify-content-between">
+                <div className="d-flex align-items-center gap-3">
+                  {selectedEmployee.personalInfo?.profilePhoto ? (
+                    <img 
+                      src={selectedEmployee.personalInfo.profilePhoto} 
+                      alt={selectedEmployee.name}
+                      className="rounded-circle"
+                      style={{ width: '60px', height: '60px', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div className="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px' }}>
+                      <Icon icon="heroicons:user" className="fs-3" />
+                    </div>
+                  )}
+                  <div>
+                    <h5 className="mb-0 text-white">
+                      {selectedEmployee.name}
+                    </h5>
+                    <small className="text-white-50">
+                      {(selectedEmployee.employmentInfo || {}).employeeId || selectedEmployee.employeeId} • {(selectedEmployee.employmentInfo || {}).designation || selectedEmployee.designation}
+                    </small>
                   </div>
                 </div>
-                <div className="modal-footer d-flex justify-content-end gap-2" style={{ flexShrink: 0 }}>
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => {
-                      setShowAddModal(false);
-                      setActiveAddTab('personal');
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="button" 
-                    className="btn btn-success d-flex align-items-center"
-                    onClick={handleAddEmployee}
-                    disabled={!newEmployee.name || !newEmployee.email || !newEmployee.employmentInfo.designation || !newEmployee.salary}
-                  >
-                    <Icon icon="heroicons:user-plus" className="me-2" />
-                    Add Employee
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  className="btn btn-light btn-sm d-flex align-items-center gap-2"
+                  onClick={handleBackToList}
+                >
+                  <Icon icon="heroicons:arrow-left" />
+                  Back to List
+                </button>
               </div>
+            </div>
+            <div className="card-body p-0">
+              {/* Tab Navigation */}
+              <ul className="nav nav-tabs border-bottom px-3 pt-3" style={{ flexShrink: 0 }}>
+                <li className="nav-item">
+                  <button
+                    className={`nav-link ${activeDetailTab === 'personal' ? 'active' : ''}`}
+                    onClick={() => setActiveDetailTab('personal')}
+                  >
+                    <Icon icon="heroicons:user-circle" className="me-2" />
+                    Personal Info
+                  </button>
+                </li>
+                <li className="nav-item">
+                  <button
+                    className={`nav-link ${activeDetailTab === 'employment' ? 'active' : ''}`}
+                    onClick={() => setActiveDetailTab('employment')}
+                  >
+                    <Icon icon="heroicons:briefcase" className="me-2" />
+                    Employment
+                  </button>
+                </li>
+                <li className="nav-item">
+                  <button
+                    className={`nav-link ${activeDetailTab === 'jobHistory' ? 'active' : ''}`}
+                    onClick={() => setActiveDetailTab('jobHistory')}
+                  >
+                    <Icon icon="heroicons:clock" className="me-2" />
+                    Job History
+                  </button>
+                </li>
+                <li className="nav-item">
+                  <button
+                    className={`nav-link ${activeDetailTab === 'salary' ? 'active' : ''}`}
+                    onClick={() => setActiveDetailTab('salary')}
+                  >
+                    <Icon icon="heroicons:currency-dollar" className="me-2" />
+                    Salary & Compensation
+                  </button>
+                </li>
+                <li className="nav-item">
+                  <button
+                    className={`nav-link ${activeDetailTab === 'statutory' ? 'active' : ''}`}
+                    onClick={() => setActiveDetailTab('statutory')}
+                  >
+                    <Icon icon="heroicons:document-check" className="me-2" />
+                    Statutory & Compliance
+                  </button>
+                </li>
+              </ul>
+
+              {/* Tab Content */}
+              <div className="p-4" style={{ overflowY: 'auto', minHeight: 0 }}>
+                {/* Personal Information Tab */}
+                {activeDetailTab === 'personal' && (
+                  <PersonalInfoTab employee={selectedEmployee} formatDate={formatDate} />
+                )}
+
+                {/* Employment Information Tab */}
+                {activeDetailTab === 'employment' && (
+                  <EmploymentInfoTab 
+                    employee={selectedEmployee} 
+                    formatDate={formatDate}
+                    getStatusBadge={getStatusBadge}
+                    getEmploymentTypeBadge={getEmploymentTypeBadge}
+                  />
+                )}
+
+                {/* Job History Tab */}
+                {activeDetailTab === 'jobHistory' && (
+                  <JobHistoryTab employee={selectedEmployee} formatDate={formatDate} formatCurrency={formatCurrency} />
+                )}
+
+                {/* Salary & Compensation Tab */}
+                {activeDetailTab === 'salary' && (
+                  <SalaryInfoTab employee={selectedEmployee} formatCurrency={formatCurrency} formatDate={formatDate} />
+                )}
+
+                {/* Statutory & Compliance Tab */}
+                {activeDetailTab === 'statutory' && (
+                  <StatutoryInfoTab employee={selectedEmployee} formatDate={formatDate} />
+                )}
+              </div>
+            </div>
+            <div className="card-footer bg-transparent border-top d-flex justify-content-end gap-2">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleBackToList}
+              >
+                <Icon icon="heroicons:arrow-left" className="me-2" />
+                Back to List
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => {
+                  // Edit functionality would go here
+                  alert('Edit functionality to be implemented');
+                }}
+              >
+                <Icon icon="heroicons:pencil-square" className="me-2" />
+                Edit Employee
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-danger"
+                onClick={() => {
+                  handleDeleteEmployee(selectedEmployee.id);
+                  handleBackToList();
+                }}
+              >
+                <Icon icon="heroicons:trash" className="me-2" />
+                Delete
+              </button>
             </div>
           </div>
         )}

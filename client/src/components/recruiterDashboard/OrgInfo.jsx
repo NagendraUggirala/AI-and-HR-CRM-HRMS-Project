@@ -317,7 +317,7 @@ const OrgInfo = () => {
                         <img
                           src={logo.preview}
                           alt="Company Logo"
-                          className="img-fluid border border-2 rounded shadow-sm"
+                          className="img-fluid  border-2 rounded shadow-sm"
                           style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'contain' }}
                         />
                       </div>
@@ -330,7 +330,7 @@ const OrgInfo = () => {
                           onChange={handleLogoUpload}
                           className="d-none"
                         />
-                        <div className="border border-2 border-dashed border-secondary rounded p-4 text-center cursor-pointer hover-bg-light">
+                        <div className=" border-2 border-dashed border-secondary rounded p-4 text-center cursor-pointer hover-bg-light">
                           <Icon icon="heroicons:cloud-arrow-up" className="text-muted mb-2" style={{ fontSize: '2rem' }} />
                           <p className="fw-medium text-dark mb-1">Upload Logo</p>
                           <p className="small text-muted mb-0">PNG, JPG, SVG (Max 2MB)</p>

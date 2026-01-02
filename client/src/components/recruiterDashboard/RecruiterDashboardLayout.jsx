@@ -203,13 +203,13 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
             <Icon icon='radix-icons:cross-2' />
           </button>
           <div>
-          <Link to='/dashboard' className='sidebar-logo'>
-            <img src='assets/images/auth/auth-img.png' alt='site logo' className='light-logo' />
-            
-            
-            <img src='assets/images/auth/auth-img.png' alt='site logo' className='logo-icon' />
-          </Link>
-        </div>
+            <Link to='/dashboard' className='sidebar-logo'>
+              <img src='assets/images/auth/auth-img.png' alt='site logo' className='light-logo' />
+
+
+              <img src='assets/images/auth/auth-img.png' alt='site logo' className='logo-icon' />
+            </Link>
+          </div>
           <div className='sidebar-menu-area'>
 
             <ul className='sidebar-menu' id='sidebar-menu' style={{ display: "flex", justifyContent: "flex-start", flexDirection: "column", alignItems: "flex-start" }}>
@@ -395,7 +395,7 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
 
 
 
-               {/* CRM Section */}
+              {/* CRM Section */}
               <li className='sidebar-menu-group-title'>CRM</li>
               <li className='dropdown'>
                 <Link to='#'>
@@ -444,7 +444,7 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
                       }
                     >
                       <Icon icon='heroicons:building-office' className='icon text-sm me-2 fs-5' />
-                     Leads
+                      Leads
                     </NavLink>
                   </li>
                   <li>
@@ -469,7 +469,7 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
                       Analytics
                     </NavLink>
                   </li>
-                    <li>
+                  <li>
                     <NavLink
                       to='/crm/activities'
                       className={(navData) =>
@@ -486,388 +486,390 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
 
 
 
-            <li className='sidebar-menu-group-title'>HR Management</li>
+              <li className='sidebar-menu-group-title'>HR Management</li>
 
-            {/* All Employees - Quick Access */}
-            <li>
-              <LinkItem to='/hrms/all-employees' tabKey='all-employees' icon='heroicons:user-group' label='All Employees' />
-            </li>
+              {/* All Employees - Quick Access */}
+              <li>
+                <LinkItem to='/hrms/all-employees' tabKey='all-employees' icon='heroicons:user-group' label='All Employees' />
+              </li>
 
-            {/* Onboarding & Pre-Joining */}
-            <li className='dropdown'>
-              <Link to='#'>
-                <Icon icon='heroicons:user-plus' className='menu-icon' />
-                <span>Onboarding & Pre-Joining</span>
-              </Link>
-              <ul className='sidebar-submenu'>
-                <li>
-                  <NavLink to='/onboarding/offers' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:document-check' className='icon text-sm me-2 fs-5' />
-                    Offer Management
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/onboarding/pre-joining' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:chat-bubble-left-right' className='icon text-sm me-2 fs-5' />
-                    Pre-Joining Engagement
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/onboarding/joining-day' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:calendar' className='icon text-sm me-2 fs-5' />
-                    Joining Day Management
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/onboarding/induction' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:academic-cap' className='icon text-sm me-2 fs-5' />
-                    Induction & Orientation
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/onboarding/probation' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:clock' className='icon text-sm me-2 fs-5' />
-                    Probation Management
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/onboarding/buddy' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:user-group' className='icon text-sm me-2 fs-5' />
-                    Buddy/Mentor Program
-                  </NavLink>
-                </li>
-              </ul>
-            </li>
+              {/* Onboarding & Pre-Joining */}
+              <li className='dropdown'>
+                <Link to='/onboarding'>
+                  <Icon icon='heroicons:user-plus' className='menu-icon' />
+                  <span>Onboarding & Pre-Joining</span>
+                </Link>
+                <ul className='sidebar-submenu'>
+
+                  <li>
+                    <NavLink to='/onboarding/pre-joining' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:chat-bubble-left-right' className='icon text-sm me-2 fs-5' />
+                      On Boarding Form
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/onboarding/offers' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:document-check' className='icon text-sm me-2 fs-5' />
+                      Offer Management
+                    </NavLink>
+                  </li>
+
+                  <li>
+                    <NavLink to='/onboarding/joining-day' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:calendar' className='icon text-sm me-2 fs-5' />
+                      Joining Day Management
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/onboarding/induction' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:academic-cap' className='icon text-sm me-2 fs-5' />
+                      Induction & Orientation
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/onboarding/probation' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:clock' className='icon text-sm me-2 fs-5' />
+                      Probation Management
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/onboarding/buddy' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:user-group' className='icon text-sm me-2 fs-5' />
+                      Buddy/Mentor Program
+                    </NavLink>
+                  </li>
+                </ul>
+              </li>
 
 
-              {/* Attendance & Leave Management */}  
+              {/* Attendance & Leave Management */}
 
-            <li className='dropdown'>
-              <Link to='#'>
-                <Icon icon='heroicons:calendar' className='menu-icon' />
-                <span>Attendance & Leave</span>
-              </Link>
-              <ul className='sidebar-submenu'>
-                <li>
-                  <NavLink to='/attendance/capture' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:clock' className='icon text-sm me-2 fs-5' />
-                    Attendance Capture
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/attendance/shifts' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:arrow-path-rounded-square' className='icon text-sm me-2 fs-5' />
-                    Shift Management
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/attendance/rules' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:document-text' className='icon text-sm me-2 fs-5' />
-                    Work Hour Rules
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/attendance/leave' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:calendar-days' className='icon text-sm me-2 fs-5' />
-                    Leave Management
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/attendance/regularization' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:check-badge' className='icon text-sm me-2 fs-5' />
-                    Regularization
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/attendance/holidays' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:gift' className='icon text-sm me-2 fs-5' />
-                    Holiday Calendar
-                  </NavLink>
-                </li>
+              <li className='dropdown'>
+                <Link to='#'>
+                  <Icon icon='heroicons:calendar' className='menu-icon' />
+                  <span>Attendance & Leave</span>
+                </Link>
+                <ul className='sidebar-submenu'>
+                  <li>
+                    <NavLink to='/attendance/capture' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:clock' className='icon text-sm me-2 fs-5' />
+                      Attendance Capture
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/attendance/shifts' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:arrow-path-rounded-square' className='icon text-sm me-2 fs-5' />
+                      Shift Management
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/attendance/rules' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:document-text' className='icon text-sm me-2 fs-5' />
+                      Work Hour Rules
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/attendance/leave' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:calendar-days' className='icon text-sm me-2 fs-5' />
+                      Leave Management
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/attendance/regularization' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:check-badge' className='icon text-sm me-2 fs-5' />
+                      Regularization
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/attendance/holidays' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:gift' className='icon text-sm me-2 fs-5' />
+                      Holiday Calendar
+                    </NavLink>
+                  </li>
 
-                <li>
-                  <NavLink to='/attendance/payroll-integration' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:gift' className='icon text-sm me-2 fs-5' />
-                     Payroll Integration
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/attendance/reports' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:chart-bar' className='icon text-sm me-2 fs-5' />
-                    Attendance Reports
-                  </NavLink>
-                </li>
-              </ul>
-            </li>
+                  <li>
+                    <NavLink to='/attendance/payroll-integration' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:gift' className='icon text-sm me-2 fs-5' />
+                      Payroll Integration
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/attendance/reports' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:chart-bar' className='icon text-sm me-2 fs-5' />
+                      Attendance Reports
+                    </NavLink>
+                  </li>
+                </ul>
+              </li>
 
-            {/* Employee Management */}
-           
-            <li className='dropdown'>
-              <Link to='#'>
-                <Icon icon='heroicons:users' className='menu-icon' />
-                <span>Employe
-                   Management</span>
-              </Link>
-              <ul className='sidebar-submenu'>
-                <li>
-                  <NavLink to='/employee/master' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:user-circle' className='icon text-sm me-2 fs-5' />
-                    Employee Master Data
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/employee/hierarchy' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:rectangle-stack' className='icon text-sm me-2 fs-5' />
-                    Org Hierarchy
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/employee/documents' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:archive-box' className='icon text-sm me-2 fs-5' />
-                    Document Vault
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/employee/lifecycle' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:arrow-path' className='icon text-sm me-2 fs-5' />
-                    Employee Lifecycle
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/employee/self-service' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:computer-desktop' className='icon text-sm me-2 fs-5' />
-                    Employee Self-Service
-                  </NavLink>
-                </li>
-              </ul>
-            </li>
+              {/* Employee Management */}
 
-            
+              <li className='dropdown'>
+                <Link to='#'>
+                  <Icon icon='heroicons:users' className='menu-icon' />
+                  <span>Employe
+                    Management</span>
+                </Link>
+                <ul className='sidebar-submenu'>
+                  <li>
+                    <NavLink to='/employee/master' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:user-circle' className='icon text-sm me-2 fs-5' />
+                      Employee Master Data
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/employee/hierarchy' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:rectangle-stack' className='icon text-sm me-2 fs-5' />
+                      Org Hierarchy
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/employee/documents' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:archive-box' className='icon text-sm me-2 fs-5' />
+                      Document Vault
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/employee/lifecycle' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:arrow-path' className='icon text-sm me-2 fs-5' />
+                      Employee Lifecycle
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/employee/self-service' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:computer-desktop' className='icon text-sm me-2 fs-5' />
+                      Employee Self-Service
+                    </NavLink>
+                  </li>
+                </ul>
+              </li>
 
-            <li className='dropdown'>
-              <Link to='#'>
-                <Icon icon='heroicons:banknotes' className='menu-icon' />
-                <span>Payroll Management</span>
-              </Link>
-              <ul className='sidebar-submenu'>
-                <li>
-                  <NavLink to='/payroll/structure' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:cog-6-tooth' className='icon text-sm me-2 fs-5' />
-                    Salary Structure
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/payroll/processing' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:arrow-path' className='icon text-sm me-2 fs-5' />
-                    Payroll Processing
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/payroll/compliance' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:shield-check' className='icon text-sm me-2 fs-5' />
-                    Statutory Compliance
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/payroll/slips' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:document-text' className='icon text-sm me-2 fs-5' />
-                    Salary Slips
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/payroll/reimbursements' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:receipt-refund' className='icon text-sm me-2 fs-5' />
-                    Reimbursements
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/payroll/loans' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:currency-dollar' className='icon text-sm me-2 fs-5' />
-                    Loans & Advances
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/payroll/settlement' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:document-check' className='icon text-sm me-2 fs-5' />
-                    Final Settlement
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/payroll/bank-transfer' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:building-library' className='icon text-sm me-2 fs-5' />
-                    Bank Transfer
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/payroll/reports' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:chart-pie' className='icon text-sm me-2 fs-5' />
-                    Payroll Reports
-                  </NavLink>
-                </li>
-              </ul>
-            </li>
 
-            
 
-            <li className='dropdown'>
-              <Link to='#'>
-                <Icon icon='heroicons:briefcase' className='menu-icon' />
-                <span>HR Operations</span>
-              </Link>
-              <ul className='sidebar-submenu'>
-                <li>
-                  <NavLink to='/hr-ops/confirmation' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:check-badge' className='icon text-sm me-2 fs-5' />
-                    Employee Confirmation
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/hr-ops/promotions' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:arrow-trending-up' className='icon text-sm me-2 fs-5' />
-                    Promotions & Career
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/hr-ops/transfers' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:arrow-right-circle' className='icon text-sm me-2 fs-5' />
-                    Transfers & Movement
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/hr-ops/helpdesk' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:lifebuoy' className='icon text-sm me-2 fs-5' />
-                    HR Helpdesk
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/hr-ops/letters' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:envelope' className='icon text-sm me-2 fs-5' />
-                    Letter Generation
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/hr-ops/assets' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:cube' className='icon text-sm me-2 fs-5' />
-                    Asset Management
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/hr-ops/notice' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:exclamation-triangle' className='icon text-sm me-2 fs-5' />
-                    Notice Period Tracking
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/hr-ops/exit' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:arrow-right-on-rectangle' className='icon text-sm me-2 fs-5' />
-                    Exit Management
-                  </NavLink>
-                </li>
-              </ul>
-            </li>
+              <li className='dropdown'>
+                <Link to='#'>
+                  <Icon icon='heroicons:banknotes' className='menu-icon' />
+                  <span>Payroll Management</span>
+                </Link>
+                <ul className='sidebar-submenu'>
+                  <li>
+                    <NavLink to='/payroll/structure' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:cog-6-tooth' className='icon text-sm me-2 fs-5' />
+                      Salary Structure
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/payroll/processing' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:arrow-path' className='icon text-sm me-2 fs-5' />
+                      Payroll Processing
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/payroll/compliance' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:shield-check' className='icon text-sm me-2 fs-5' />
+                      Statutory Compliance
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/payroll/slips' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:document-text' className='icon text-sm me-2 fs-5' />
+                      Salary Slips
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/payroll/reimbursements' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:receipt-refund' className='icon text-sm me-2 fs-5' />
+                      Reimbursements
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/payroll/loans' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:currency-dollar' className='icon text-sm me-2 fs-5' />
+                      Loans & Advances
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/payroll/settlement' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:document-check' className='icon text-sm me-2 fs-5' />
+                      Final Settlement
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/payroll/bank-transfer' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:building-library' className='icon text-sm me-2 fs-5' />
+                      Bank Transfer
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/payroll/reports' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:chart-pie' className='icon text-sm me-2 fs-5' />
+                      Payroll Reports
+                    </NavLink>
+                  </li>
+                </ul>
+              </li>
 
-            <li className='dropdown'>
-              <Link to='#'>
-                <Icon icon='heroicons:arrow-path' className='menu-icon' />
-                <span>Forms & Workflows</span>
-              </Link>
-              <ul className='sidebar-submenu'>
-                <li>
-                  <NavLink to='/forms/builder' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:pencil-square' className='icon text-sm me-2 fs-5' />
-                    Custom Form Builder
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/forms/requests' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:clipboard-document-list' className='icon text-sm me-2 fs-5' />
-                    Request Management
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/forms/workflow' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:arrows-right-left' className='icon text-sm me-2 fs-5' />
-                    Workflow Engine
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/forms/surveys' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:chart-bar-square' className='icon text-sm me-2 fs-5' />
-                    Surveys & Pulse Checks
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/forms/approvals' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:check-circle' className='icon text-sm me-2 fs-5' />
-                    Approvals Dashboard
-                  </NavLink>
-                </li>
-              </ul>
-            </li>
 
-            <li className='dropdown'>
-              <Link to='#'>
-                <Icon icon='heroicons:chart-bar' className='menu-icon' />
-                <span>Reports & Analytics</span>
-              </Link>
-              <ul className='sidebar-submenu'>
-                <li>
-                  <NavLink to='/reports/employee' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:user-group' className='icon text-sm me-2 fs-5' />
-                    Employee Reports
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/reports/attendance' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:clock' className='icon text-sm me-2 fs-5' />
-                    Attendance Reports
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/reports/leave' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:calendar' className='icon text-sm me-2 fs-5' />
-                    Leave Reports
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/reports/payroll' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:banknotes' className='icon text-sm me-2 fs-5' />
-                    Payroll Reports
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/reports/compliance' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:shield-check' className='icon text-sm me-2 fs-5' />
-                    Compliance Reports
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/reports/custom' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:pencil-square' className='icon text-sm me-2 fs-5' />
-                    Custom Report Builder
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/reports/dashboards' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:presentation-chart-bar' className='icon text-sm me-2 fs-5' />
-                    Executive Dashboards
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to='/reports/ai-insights' className={(navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:sparkles' className='icon text-sm me-2 fs-5' />
-                    AI-Driven Insights
-                  </NavLink>
-                </li>
-              </ul>
-            </li>
 
-            <li>
-                  <NavLink to='/Tenant/Company' className={ (navData) => navData.isActive ? "active-page" : ""}>
-                    <Icon icon='heroicons:cog-6-tooth' className='icon menu-icon text-sm me-2 fs-5' />
-                    Company Settings
-                  </NavLink>
-                </li>
+              <li className='dropdown'>
+                <Link to='#'>
+                  <Icon icon='heroicons:briefcase' className='menu-icon' />
+                  <span>HR Operations</span>
+                </Link>
+                <ul className='sidebar-submenu'>
+                  <li>
+                    <NavLink to='/hr-ops/confirmation' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:check-badge' className='icon text-sm me-2 fs-5' />
+                      Employee Confirmation
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/hr-ops/promotions' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:arrow-trending-up' className='icon text-sm me-2 fs-5' />
+                      Promotions & Career
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/hr-ops/transfers' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:arrow-right-circle' className='icon text-sm me-2 fs-5' />
+                      Transfers & Movement
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/hr-ops/helpdesk' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:lifebuoy' className='icon text-sm me-2 fs-5' />
+                      HR Helpdesk
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/hr-ops/letters' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:envelope' className='icon text-sm me-2 fs-5' />
+                      Letter Generation
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/hr-ops/assets' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:cube' className='icon text-sm me-2 fs-5' />
+                      Asset Management
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/hr-ops/notice' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:exclamation-triangle' className='icon text-sm me-2 fs-5' />
+                      Notice Period Tracking
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/hr-ops/exit' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:arrow-right-on-rectangle' className='icon text-sm me-2 fs-5' />
+                      Exit Management
+                    </NavLink>
+                  </li>
+                </ul>
+              </li>
+
+              <li className='dropdown'>
+                <Link to='#'>
+                  <Icon icon='heroicons:arrow-path' className='menu-icon' />
+                  <span>Forms & Workflows</span>
+                </Link>
+                <ul className='sidebar-submenu'>
+                  <li>
+                    <NavLink to='/forms/builder' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:pencil-square' className='icon text-sm me-2 fs-5' />
+                      Custom Form Builder
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/forms/requests' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:clipboard-document-list' className='icon text-sm me-2 fs-5' />
+                      Request Management
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/forms/workflow' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:arrows-right-left' className='icon text-sm me-2 fs-5' />
+                      Workflow Engine
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/forms/surveys' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:chart-bar-square' className='icon text-sm me-2 fs-5' />
+                      Surveys & Pulse Checks
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/forms/approvals' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:check-circle' className='icon text-sm me-2 fs-5' />
+                      Approvals Dashboard
+                    </NavLink>
+                  </li>
+                </ul>
+              </li>
+
+              <li className='dropdown'>
+                <Link to='#'>
+                  <Icon icon='heroicons:chart-bar' className='menu-icon' />
+                  <span>Reports & Analytics</span>
+                </Link>
+                <ul className='sidebar-submenu'>
+                  <li>
+                    <NavLink to='/reports/employee' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:user-group' className='icon text-sm me-2 fs-5' />
+                      Employee Reports
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/reports/attendance' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:clock' className='icon text-sm me-2 fs-5' />
+                      Attendance Reports
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/reports/leave' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:calendar' className='icon text-sm me-2 fs-5' />
+                      Leave Reports
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/reports/payroll' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:banknotes' className='icon text-sm me-2 fs-5' />
+                      Payroll Reports
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/reports/compliance' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:shield-check' className='icon text-sm me-2 fs-5' />
+                      Compliance Reports
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/reports/custom' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:pencil-square' className='icon text-sm me-2 fs-5' />
+                      Custom Report Builder
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/reports/dashboards' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:presentation-chart-bar' className='icon text-sm me-2 fs-5' />
+                      Executive Dashboards
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/reports/ai-insights' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:sparkles' className='icon text-sm me-2 fs-5' />
+                      AI-Driven Insights
+                    </NavLink>
+                  </li>
+                </ul>
+              </li>
+
+              <li>
+                <NavLink to='/Tenant/Company' className={(navData) => navData.isActive ? "active-page" : ""}>
+                  <Icon icon='heroicons:cog-6-tooth' className='icon menu-icon text-sm me-2 fs-5' />
+                  Company Settings
+                </NavLink>
+              </li>
 
 
 
@@ -901,7 +903,7 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
                   <button onClick={mobileMenuControl} type='button' className='sidebar-mobile-toggle'>
                     <Icon icon='heroicons:bars-3-solid' className='icon' />
                   </button>
-                  
+
                 </div>
               </div>
               <div className='col-auto'>
