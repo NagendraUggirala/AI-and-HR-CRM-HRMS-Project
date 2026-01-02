@@ -17,51 +17,51 @@ app = FastAPI(title="AI Recruitment HR Platform")
  
 # ADMIN BASIC AUTH MIDDLEWARE
 
-@app.middleware("http")
-async def admin_protect(request: Request, call_next):
+# @app.middleware("http")
+# async def admin_protect(request: Request, call_next):
  
-    if request.url.path.startswith("/admin"):
-        auth = request.headers.get("Authorization")
+#     if request.url.path.startswith("/admin"):
+#         auth = request.headers.get("Authorization")
  
-        if not auth or not auth.startswith("Basic "):
-            return Response(
-                status_code=401,
-                headers={
-                    "WWW-Authenticate": 'Basic realm="AdminPanel"',
-                    "Cache-Control": "no-store"
-                },
-                content="Authentication required"
-            )
+#         if not auth or not auth.startswith("Basic "):
+#             return Response(
+#                 status_code=401,
+#                 headers={
+#                     "WWW-Authenticate": 'Basic realm="AdminPanel"',
+#                     "Cache-Control": "no-store"
+#                 },
+#                 content="Authentication required"
+#             )
  
-        try:
-            encoded = auth.split(" ")[1]
-            decoded = base64.b64decode(encoded).decode()
-            username, password = decoded.split(":", 1)
+#         try:
+#             encoded = auth.split(" ")[1]
+#             decoded = base64.b64decode(encoded).decode()
+#             username, password = decoded.split(":", 1)
  
-            ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
-            ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+#             ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
+#             ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
  
-            if username != ADMIN_USERNAME or password != ADMIN_PASSWORD:
-                return Response(
-                    status_code=401,
-                    headers={
-                        "WWW-Authenticate": 'Basic realm="AdminPanel"',
-                        "Cache-Control": "no-store"
-                    },
-                    content="Invalid username or password"
-                )
+#             if username != ADMIN_USERNAME or password != ADMIN_PASSWORD:
+#                 return Response(
+#                     status_code=401,
+#                     headers={
+#                         "WWW-Authenticate": 'Basic realm="AdminPanel"',
+#                         "Cache-Control": "no-store"
+#                     },
+#                     content="Invalid username or password"
+#                 )
  
-        except Exception:
-            return Response(
-                status_code=401,
-                headers={
-                    "WWW-Authenticate": 'Basic realm="AdminPanel"',
-                    "Cache-Control": "no-store"
-                },
-                content="Invalid authentication format"
-            )
+#         except Exception:
+#             return Response(
+#                 status_code=401,
+#                 headers={
+#                     "WWW-Authenticate": 'Basic realm="AdminPanel"',
+#                     "Cache-Control": "no-store"
+#                 },
+#                 content="Invalid authentication format"
+#             )
  
-    return await call_next(request)
+#     return await call_next(request)
  
  
 
@@ -94,7 +94,8 @@ from routers.HR_Automation.Onboarding.routers import candidates as onboard_candi
 from routers.HR_Automation.attendance.routers import attendance, leave
 from routers.AI_Interview_Bot.routes import interviews
 from routers.CRM import contacts, company, deals, leads, pipelines, activities, analytics,projects, clients, tasks
- 
+from routers.onboarding.admin_candidates import router as onboarding_candidate_router
+
 
 # CORS
 
@@ -205,6 +206,9 @@ app.include_router(clients.router)
 app.include_router(projects.router)
 app.include_router(tasks.router)
 
+# Onboarding Routes
+
+app.include_router(onboarding_candidate_router, prefix="/admin_candidates", tags=["Onboarding Candidates"])
  
 
 # STATIC FILES

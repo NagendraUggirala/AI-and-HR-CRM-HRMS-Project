@@ -1,23 +1,33 @@
 from pydantic_settings import BaseSettings
 
+
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "tasks-service"
+    # App
+    PROJECT_NAME: str = "hrms-backend"
+
+    # Database
     DATABASE_URL: str
 
-    email_user: str
-    email_pass: str
-    smtp_host: str
-    smtp_port: int
-    smtp_user: str
-    smtp_pass: str
-    smtp_from: str
-    score_threshold: float
-    admin_username: str
-    admin_password: str
-    openai_api_key: str
+    # SMTP / Email
+    SMTP_HOST: str
+    SMTP_PORT: int
+    SMTP_USERNAME: str
+    SMTP_PASSWORD: str
+    SMTP_FROM: str
+
+    # Admin
+    ADMIN_USERNAME: str
+    ADMIN_PASSWORD: str
+
+    # Business
+    SCORE_THRESHOLD: float
+
+    # OpenAI
+    OPENAI_API_KEY: str
 
     class Config:
         env_file = ".env"
-        extra = "ignore" 
+        case_sensitive = True
+
 
 settings = Settings()

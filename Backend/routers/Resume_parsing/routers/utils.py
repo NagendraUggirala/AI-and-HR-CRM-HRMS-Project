@@ -10,7 +10,15 @@ import pdfplumber
 from docx import Document
 from openai import OpenAI
 
-from .config import OPENAI_API_KEY, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM
+from .config import (
+    OPENAI_API_KEY,
+    SMTP_HOST,
+    SMTP_PORT,
+    SMTP_USERNAME,
+    SMTP_PASSWORD,
+    SMTP_FROM,
+)
+
 
 # OpenAI client
 _client = OpenAI(api_key=OPENAI_API_KEY)
