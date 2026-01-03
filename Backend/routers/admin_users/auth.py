@@ -10,14 +10,9 @@ from jose import jwt, JWTError
 from core.database import get_db
 from model.models import User
 
-
-# ROUTER
-
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
-
-# PASSWORD HASHING
-
+# ---------------- PASSWORD ----------------
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_password_hash(password: str) -> str:
@@ -26,22 +21,17 @@ def get_password_hash(password: str) -> str:
 def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
-
-# JWT CONFIG
-
+# ---------------- JWT ----------------
 SECRET_KEY = "your_super_secret_key"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
-
-# SCHEMAS
-
+# ---------------- SCHEMAS ----------------
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
-
 
 class SignupRequest(BaseModel):
     name: str
@@ -51,19 +41,18 @@ class SignupRequest(BaseModel):
     company_name: Optional[str] = None
     company_website: Optional[str] = None
 
+class LoginJSON(BaseModel):
+    email: EmailStr
+    password: str
 
-
-# TOKEN CREATOR
-
+# ---------------- TOKEN ----------------
 def create_access_token(data: dict):
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-
-# CURRENT USER
-
+# ---------------- CURRENT USER ----------------
 def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
@@ -80,11 +69,12 @@ def get_current_user(
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
 
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Account not activated by admin")
+
     return user
 
-
-# ROLE GUARD
-
+# ---------------- ROLE GUARD ----------------
 def require_roles(allowed_roles: List[str]):
     def checker(user: User = Depends(get_current_user)):
         if user.role not in allowed_roles:
@@ -92,14 +82,11 @@ def require_roles(allowed_roles: List[str]):
         return user
     return checker
 
-
-# SIGNUP (JSON)
-
+# ---------------- SIGNUP ----------------
 @router.post("/signup", status_code=201)
 def signup(payload: SignupRequest, db: Session = Depends(get_db)):
-    existing = db.exec(select(User).where(User.email == payload.email)).first()
-    if existing:
-        raise HTTPException(status_code=409, detail="Email already registered")
+    if db.exec(select(User).where(User.email == payload.email)).first():
+        raise HTTPException(409, "Email already registered")
 
     user = User(
         name=payload.name,
@@ -108,43 +95,42 @@ def signup(payload: SignupRequest, db: Session = Depends(get_db)):
         role=payload.role,
         company_name=payload.company_name,
         company_website=payload.company_website,
-        is_active=False
+        is_active=False  # 🔒 admin approval required
     )
 
     db.add(user)
     db.commit()
     db.refresh(user)
 
-    return {
-        "id": user.id,
-        "email": user.email,
-        "role": user.role,
-        "message": "Signup successful"
-    }
+    return {"message": "Signup successful. Awaiting admin approval."}
 
+# ---------------- LOGIN JSON (Frontend) ----------------
+@router.post("/login-json", response_model=TokenResponse)
+def login_json(payload: LoginJSON, db: Session = Depends(get_db)):
+    user = db.exec(select(User).where(User.email == payload.email)).first()
 
+    if not user or not verify_password(payload.password, user.hashed_password):
+        raise HTTPException(401, "Invalid email or password")
+
+    if not user.is_active:
+        raise HTTPException(403, "Account not activated by admin")
+
+    token = create_access_token({"sub": str(user.id)})
+    return {"access_token": token, "token_type": "bearer"}
+
+# ---------------- LOGIN FORM (Swagger) ----------------
 @router.post("/login", response_model=TokenResponse)
-def login(
+def login_form(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-    # IMPORTANT:
-    # form_data.username = EMAIL
-    # form_data.password = PASSWORD
-
-    user = db.exec(
-        select(User).where(User.email == form_data.username)
-    ).first()
+    user = db.exec(select(User).where(User.email == form_data.username)).first()
 
     if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
-        )
+        raise HTTPException(401, "Invalid email or password")
+
+    if not user.is_active:
+        raise HTTPException(403, "Account not activated by admin")
 
     token = create_access_token({"sub": str(user.id)})
-
-    return {
-        "access_token": token,
-        "token_type": "bearer"
-    }
+    return {"access_token": token, "token_type": "bearer"}
