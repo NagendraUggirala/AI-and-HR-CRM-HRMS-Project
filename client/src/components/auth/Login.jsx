@@ -49,14 +49,18 @@ const Login = () => {
         localStorage.setItem('userEmail', data.email);
 
         console.log('Login successful:', data);
+        console.log(localStorage.getItem('token'));
 
         // Navigate based on role
-        if (data.role === 'recruiter' || data.role === 'company') {
+        if (data.role === 'superadmin') {
+          navigate('/super-admin');
+        } 
+        else if (data.role === 'recruiter' || data.role === 'company') {
           navigate('/dashboard');
         } else if (data.role === 'admin') {
           navigate('/dashboard');
         } else {
-          navigate('/admin/dashboard');
+          navigate('/dashboard');
         }
       } else {
         // Handle error response

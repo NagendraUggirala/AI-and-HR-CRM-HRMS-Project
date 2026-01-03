@@ -181,7 +181,10 @@ const ScrollAnimatedCard = ({ children, delay = 0, isVisible }) => {
     <div
       key={`animate-${animationKey}`}
       style={{
-        animation: shouldAnimate ? `fadeInUp 0.8s ease-out ${delay}ms forwards` : 'none',
+        animationName: shouldAnimate ? 'fadeInUp' : 'none',
+        animationDuration: shouldAnimate ? '0.8s' : '0s',
+        animationTimingFunction: 'ease-out',
+        animationDelay: shouldAnimate ? `${delay}ms` : '0ms',
         animationFillMode: 'both',
         opacity: 0,
         transform: 'translateY(30px)'
