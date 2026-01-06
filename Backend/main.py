@@ -94,7 +94,7 @@ from routers.HR_Automation.Onboarding.routers import candidates as onboard_candi
 from routers.HR_Automation.attendance.routers import attendance, leave
 from routers.AI_Interview_Bot.routes import interviews
 from routers.CRM import contacts, company, deals, leads, pipelines, activities, analytics,projects, clients, tasks
-# from routers.onboarding.admin_candidates import router as onboarding_candidate_router
+from routers.onboarding.admin_candidates import router as onboarding_candidate_router
 
 
 
@@ -102,7 +102,7 @@ from routers.CRM import contacts, company, deals, leads, pipelines, activities, 
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -209,7 +209,7 @@ app.include_router(tasks.router)
 
 # Onboarding Routes
 
-#app.include_router(onboarding_candidate_router, prefix="/admin_candidates", tags=["Onboarding Candidates"])
+app.include_router(onboarding_candidate_router, prefix="/admin_candidates", tags=["Onboarding Candidates"])
 
  
 
