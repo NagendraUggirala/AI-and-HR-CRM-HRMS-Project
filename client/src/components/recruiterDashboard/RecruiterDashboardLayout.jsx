@@ -508,9 +508,9 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
                     </NavLink>
                   </li>
                   <li>
-                    <NavLink to='/onboarding/offers' className={(navData) => navData.isActive ? "active-page" : ""}>
+                    <NavLink to='/onboarding/offer-letters' className={(navData) => navData.isActive ? "active-page" : ""}>
                       <Icon icon='heroicons:document-check' className='icon text-sm me-2 fs-5' />
-                      Offer Management
+                      Offer Letters
                     </NavLink>
                   </li>
 

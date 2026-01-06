@@ -141,7 +141,8 @@ import WorkflowEngine from './components/HRMS/Forms&Workflows/WorkflowEngine';
 
 const App = () => {
   return (
-    <Routes>
+    <div>
+      <Routes>
       <Route path='/' element={<Landing />} />
       <Route path='/signup' element={<Signup />} />
       <Route path='/login' element={<Login />} />
@@ -1317,7 +1318,7 @@ const App = () => {
         }
       />
       <Route
-        path='/onboarding/offers'
+        path='/onboarding/offer-letters'
         element={
           <ProtectedRoute>
             <RecruiterDashboardLayout>
@@ -1535,6 +1536,7 @@ const App = () => {
 
       <Route path='*' element={<Navigate to='/' replace />} />
     </Routes>
+    </div>
   );
 };
 

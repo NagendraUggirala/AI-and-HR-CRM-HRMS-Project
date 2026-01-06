@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -28,6 +28,8 @@ const OfferManagement = () => {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [approvalWorkflowStatus, setApprovalWorkflowStatus] = useState([]);
   const [declineReason, setDeclineReason] = useState('');
+  const [showExpiredAlert, setShowExpiredAlert] = useState(true);
+  const [showExpiringSoonAlert, setShowExpiringSoonAlert] = useState(true);
   const [emailSettings, setEmailSettings] = useState({
     sendEmail: true,
     sendSMS: false,
@@ -879,9 +881,7 @@ const OfferManagement = () => {
   const acceptanceRate = calculateAcceptanceRate();
 
   return (
-    <
-      
-    >
+    <>
       <div className="container-fluid">
         {/* Header */}
         <div className="d-flex justify-content-between align-items-center mb-4">
@@ -1364,11 +1364,36 @@ const OfferManagement = () => {
             className="modal fade show d-block" 
             style={{ 
               backgroundColor: 'rgba(0,0,0,0.5)',
-              zIndex: 1050
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 1055,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '15px',
+              overflow: 'auto'
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowForm(false);
+                resetForm();
+              }
             }}
           >
-            <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-              <div className="modal-content">
+            <div 
+              className="modal-dialog modal-dialog-centered modal-dialog-scrollable"
+              style={{
+                maxWidth: '1400px',
+                width: '95%',
+                margin: '0 auto',
+                maxHeight: '90vh',
+                position: 'relative'
+              }}
+            >
+              <div className="modal-content" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
                 <div className="modal-header bg-light">
                   <h5 className="modal-title d-flex align-items-center">
                     <Icon icon="heroicons:document-plus" className="me-2" />
@@ -1384,7 +1409,7 @@ const OfferManagement = () => {
                   ></button>
                 </div>
                 
-                <div className="modal-body">
+                <div className="modal-body" style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
                   <form onSubmit={handleSubmit} id="offerForm">
                     {/* Step 1: Candidate Information */}
                     <div className="mb-4">
@@ -1588,10 +1613,11 @@ const OfferManagement = () => {
                             <button
                               className="btn btn-outline-secondary"
                               type="button"
-                              onClick={() => {
-                                const selectedTemplate = TEMPLATES.find(t => t.id === formData.template);
-                                if (selectedTemplate) {
-                                  setSelectedTemplate(selectedTemplate);
+                              onClick={(e) => {
+                                e.preventDefault();
+                                const template = TEMPLATES.find(t => t.id === formData.template);
+                                if (template) {
+                                  setSelectedTemplate(template);
                                   setShowTemplateModal(true);
                                 }
                               }}
@@ -1851,11 +1877,40 @@ const OfferManagement = () => {
             className="modal fade show d-block" 
             style={{ 
               backgroundColor: 'rgba(0,0,0,0.5)',
-              zIndex: 1050
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 1055,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '15px',
+              overflow: 'auto'
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowPreview(false);
+              }
+            }}
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) {
+                e.stopPropagation();
+              }
             }}
           >
-            <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-              <div className="modal-content">
+            <div 
+              className="modal-dialog modal-dialog-centered modal-dialog-scrollable"
+              style={{
+                maxWidth: '1200px',
+                width: '95%',
+                margin: '0 auto',
+                maxHeight: '90vh',
+                position: 'relative'
+              }}
+            >
+              <div className="modal-content" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
                 <div className="modal-header bg-light">
                   <h5 className="modal-title d-flex align-items-center">
                     <Icon icon="heroicons:eye" className="me-2" />
@@ -1868,7 +1923,7 @@ const OfferManagement = () => {
                   ></button>
                 </div>
                 
-                <div className="modal-body">
+                <div className="modal-body" style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
                   {/* Offer Letter Template */}
                   <div className="border p-4 bg-white">
                     <div className="text-center mb-4">
@@ -2026,23 +2081,667 @@ const OfferManagement = () => {
           
           return (
             <>
-              {expiredOffers.length > 0 && (
+              {expiredOffers.length > 0 && showExpiredAlert && (
                 <div className="alert alert-danger alert-dismissible fade show" role="alert" style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999, minWidth: '400px' }}>
                   <Icon icon="heroicons:exclamation-triangle" className="me-2" />
                   <strong>Expired Offers:</strong> {expiredOffers.length} offer(s) have expired. Please follow up with candidates or withdraw offers.
-                  <button type="button" className="btn-close" onClick={(e) => e.target.closest('.alert').remove()}></button>
+                  <button type="button" className="btn-close" onClick={() => setShowExpiredAlert(false)}></button>
                 </div>
               )}
-              {expiringSoon.length > 0 && (
-                <div className="alert alert-warning alert-dismissible fade show" role="alert" style={{ position: 'fixed', top: expiredOffers.length > 0 ? '100px' : '20px', right: '20px', zIndex: 9999, minWidth: '400px' }}>
+              {expiringSoon.length > 0 && showExpiringSoonAlert && (
+                <div className="alert alert-warning alert-dismissible fade show" role="alert" style={{ position: 'fixed', top: (expiredOffers.length > 0 && showExpiredAlert) ? '100px' : '20px', right: '20px', zIndex: 9999, minWidth: '400px' }}>
                   <Icon icon="heroicons:clock" className="me-2" />
                   <strong>Expiring Soon:</strong> {expiringSoon.length} offer(s) will expire within 3 days. Please follow up with candidates.
-                  <button type="button" className="btn-close" onClick={(e) => e.target.closest('.alert').remove()}></button>
+                  <button type="button" className="btn-close" onClick={() => setShowExpiringSoonAlert(false)}></button>
                 </div>
               )}
             </>
           );
         })()}
+
+        {/* Send Offer Modal */}
+        {showSendModal && selectedOffer && (
+          <div 
+            className="modal fade show d-block" 
+            style={{ 
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 1055,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowSendModal(false);
+              }
+            }}
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) {
+                e.stopPropagation();
+              }
+            }}
+          >
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header bg-primary text-white">
+                  <h5 className="modal-title d-flex align-items-center">
+                    <Icon icon="heroicons:paper-airplane" className="me-2" />
+                    Send Offer
+                  </h5>
+                  <button 
+                    type="button" 
+                    className="btn-close btn-close-white" 
+                    onClick={() => setShowSendModal(false)}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <p>Send offer to <strong>{selectedOffer.candidateName}</strong>?</p>
+                  <div className="mb-3">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        checked={emailSettings.sendEmail}
+                        onChange={(e) => setEmailSettings({...emailSettings, sendEmail: e.target.checked})}
+                      />
+                      <label className="form-check-label">Send via Email</label>
+                    </div>
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        checked={emailSettings.sendSMS}
+                        onChange={(e) => setEmailSettings({...emailSettings, sendSMS: e.target.checked})}
+                      />
+                      <label className="form-check-label">Send via SMS</label>
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowSendModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={handleConfirmSendOffer}
+                  >
+                    <Icon icon="heroicons:paper-airplane" className="me-2" />
+                    Send Offer
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Decline Offer Modal */}
+        {showDeclineModal && selectedOffer && (
+          <div 
+            className="modal fade show d-block" 
+            style={{ 
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 1055,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowDeclineModal(false);
+                setDeclineReason('');
+              }
+            }}
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) {
+                e.stopPropagation();
+              }
+            }}
+          >
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header bg-danger text-white">
+                  <h5 className="modal-title d-flex align-items-center">
+                    <Icon icon="heroicons:x-circle" className="me-2" />
+                    Decline Offer
+                  </h5>
+                  <button 
+                    type="button" 
+                    className="btn-close btn-close-white" 
+                    onClick={() => {
+                      setShowDeclineModal(false);
+                      setDeclineReason('');
+                    }}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <p>Mark offer for <strong>{selectedOffer.candidateName}</strong> as declined?</p>
+                  <div className="mb-3">
+                    <label className="form-label">Reason for Decline</label>
+                    <textarea
+                      className="form-control"
+                      rows="3"
+                      value={declineReason}
+                      onChange={(e) => setDeclineReason(e.target.value)}
+                      placeholder="Enter reason for declining the offer..."
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setShowDeclineModal(false);
+                      setDeclineReason('');
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    onClick={handleConfirmDecline}
+                  >
+                    <Icon icon="heroicons:x-circle" className="me-2" />
+                    Confirm Decline
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Approval Workflow Modal */}
+        {showApprovalModal && selectedOffer && (
+          <div 
+            className="modal fade show d-block" 
+            style={{ 
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 1055,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowApprovalModal(false);
+              }
+            }}
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) {
+                e.stopPropagation();
+              }
+            }}
+          >
+            <div className="modal-dialog modal-dialog-centered modal-lg">
+              <div className="modal-content">
+                <div className="modal-header bg-info text-white">
+                  <h5 className="modal-title d-flex align-items-center">
+                    <Icon icon="heroicons:clipboard-document-check" className="me-2" />
+                    Approval Workflow
+                  </h5>
+                  <button 
+                    type="button" 
+                    className="btn-close btn-close-white" 
+                    onClick={() => setShowApprovalModal(false)}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  {selectedOffer.approvalWorkflow && (
+                    <div>
+                      <h6 className="mb-3">Approval Steps</h6>
+                      {selectedOffer.approvalWorkflow.steps.map((step, index) => (
+                        <div key={index} className="mb-3 p-3 border rounded">
+                          <div className="d-flex justify-content-between align-items-center">
+                            <div>
+                              <strong>Level {step.level}: {step.role}</strong>
+                              <div className="small text-muted mt-1">
+                                Status: <span className={`badge bg-${step.status === 'approved' ? 'success' : step.status === 'pending' ? 'warning' : 'secondary'}`}>
+                                  {step.status}
+                                </span>
+                              </div>
+                              {step.approvedBy && (
+                                <div className="small text-muted mt-1">
+                                  Approved by: {step.approvedBy} on {step.approvedDate ? new Date(step.approvedDate).toLocaleDateString() : 'N/A'}
+                                </div>
+                              )}
+                            </div>
+                            {step.status === 'pending' && (
+                              <button
+                                className="btn btn-sm btn-success"
+                                onClick={() => handleApproveOffer(selectedOffer, step.level)}
+                              >
+                                <Icon icon="heroicons:check" className="me-1" />
+                                Approve
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowApprovalModal(false)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Background Verification Modal */}
+        {showBGVModal && selectedOffer && (
+          <div 
+            className="modal fade show d-block" 
+            style={{ 
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 1055,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowBGVModal(false);
+              }
+            }}
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) {
+                e.stopPropagation();
+              }
+            }}
+          >
+            <div className="modal-dialog modal-dialog-centered modal-lg">
+              <div className="modal-content">
+                <div className="modal-header bg-warning text-dark">
+                  <h5 className="modal-title d-flex align-items-center">
+                    <Icon icon="heroicons:shield-check" className="me-2" />
+                    Background Verification
+                  </h5>
+                  <button 
+                    type="button" 
+                    className="btn-close" 
+                    onClick={() => setShowBGVModal(false)}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <div>
+                    <p><strong>Candidate:</strong> {selectedOffer.candidateName}</p>
+                    <p><strong>Status:</strong> <span className="badge bg-warning">{selectedOffer.bgvStatus || 'Pending'}</span></p>
+                    {selectedOffer.bgvDetails && (
+                      <div className="mt-3">
+                        <p><strong>Initiated Date:</strong> {selectedOffer.bgvDetails.initiatedDate || 'N/A'}</p>
+                        <p><strong>Completed Date:</strong> {selectedOffer.bgvDetails.completedDate || 'N/A'}</p>
+                        <p><strong>Verified By:</strong> {selectedOffer.bgvDetails.verifiedBy || 'N/A'}</p>
+                        {selectedOffer.bgvDetails.remarks && (
+                          <p><strong>Remarks:</strong> {selectedOffer.bgvDetails.remarks}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowBGVModal(false)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Reference Check Modal */}
+        {showReferenceCheckModal && selectedOffer && (
+          <div 
+            className="modal fade show d-block" 
+            style={{ 
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 1055,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowReferenceCheckModal(false);
+              }
+            }}
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) {
+                e.stopPropagation();
+              }
+            }}
+          >
+            <div className="modal-dialog modal-dialog-centered modal-lg">
+              <div className="modal-content">
+                <div className="modal-header bg-secondary text-white">
+                  <h5 className="modal-title d-flex align-items-center">
+                    <Icon icon="heroicons:user-group" className="me-2" />
+                    Reference Check
+                  </h5>
+                  <button 
+                    type="button" 
+                    className="btn-close btn-close-white" 
+                    onClick={() => setShowReferenceCheckModal(false)}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  {selectedOffer.referenceCheck && typeof selectedOffer.referenceCheck === 'object' ? (
+                    <div>
+                      <p><strong>Status:</strong> <span className="badge bg-success">{selectedOffer.referenceCheck.status}</span></p>
+                      <p><strong>Checked By:</strong> {selectedOffer.referenceCheck.checkedBy}</p>
+                      <p><strong>Check Date:</strong> {selectedOffer.referenceCheck.checkDate}</p>
+                      {selectedOffer.referenceCheck.feedback && (
+                        <p><strong>Feedback:</strong> {selectedOffer.referenceCheck.feedback}</p>
+                      )}
+                      {selectedOffer.referenceCheck.references && selectedOffer.referenceCheck.references.length > 0 && (
+                        <div className="mt-3">
+                          <h6>References:</h6>
+                          {selectedOffer.referenceCheck.references.map((ref, idx) => (
+                            <div key={idx} className="border p-2 mb-2 rounded">
+                              <p><strong>{ref.name}</strong> - {ref.designation} at {ref.company}</p>
+                              <p className="small text-muted">{ref.feedback}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p>{selectedOffer.referenceCheck || 'No reference check information available'}</p>
+                  )}
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowReferenceCheckModal(false)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Version History Modal */}
+        {showVersionHistoryModal && selectedOffer && (
+          <div 
+            className="modal fade show d-block" 
+            style={{ 
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 1055,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowVersionHistoryModal(false);
+              }
+            }}
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) {
+                e.stopPropagation();
+              }
+            }}
+          >
+            <div className="modal-dialog modal-dialog-centered modal-lg">
+              <div className="modal-content">
+                <div className="modal-header bg-info text-white">
+                  <h5 className="modal-title d-flex align-items-center">
+                    <Icon icon="heroicons:clock" className="me-2" />
+                    Version History
+                  </h5>
+                  <button 
+                    type="button" 
+                    className="btn-close btn-close-white" 
+                    onClick={() => setShowVersionHistoryModal(false)}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <p><strong>Current Version:</strong> {selectedOffer.version || 1}</p>
+                  {selectedOffer.versionHistory && selectedOffer.versionHistory.length > 0 ? (
+                    <div className="mt-3">
+                      <h6>Previous Versions:</h6>
+                      {selectedOffer.versionHistory.map((version, idx) => (
+                        <div key={idx} className="border p-2 mb-2 rounded">
+                          <p><strong>Version {version.version}</strong> - {version.date}</p>
+                          <p className="small">Status: {version.status} | CTC: {version.ctc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted">No previous versions</p>
+                  )}
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowVersionHistoryModal(false)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Template Customization Modal */}
+        {showTemplateModal && selectedTemplate && (
+          <div 
+            className="modal fade show d-block" 
+            style={{ 
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 1055,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowTemplateModal(false);
+                setSelectedTemplate(null);
+              }
+            }}
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) {
+                e.stopPropagation();
+              }
+            }}
+          >
+            <div className="modal-dialog modal-dialog-centered modal-lg">
+              <div className="modal-content">
+                <div className="modal-header bg-primary text-white">
+                  <h5 className="modal-title d-flex align-items-center">
+                    <Icon icon="heroicons:document-text" className="me-2" />
+                    Customize Template: {selectedTemplate.name}
+                  </h5>
+                  <button 
+                    type="button" 
+                    className="btn-close btn-close-white" 
+                    onClick={() => {
+                      setShowTemplateModal(false);
+                      setSelectedTemplate(null);
+                    }}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <h6>Template Sections:</h6>
+                    <ul>
+                      {selectedTemplate.sections.map((section, idx) => (
+                        <li key={idx}>{section.replace(/_/g, ' ')}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="mb-3">
+                    <h6>Customizable Fields:</h6>
+                    <ul>
+                      {selectedTemplate.customizableFields.map((field, idx) => (
+                        <li key={idx}>{field.replace(/_/g, ' ')}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="mb-3">
+                    <h6>Default Terms:</h6>
+                    <textarea 
+                      className="form-control" 
+                      rows="6" 
+                      value={formData.terms}
+                      onChange={(e) => setFormData({...formData, terms: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setShowTemplateModal(false);
+                      setSelectedTemplate(null);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => {
+                      setShowTemplateModal(false);
+                      setSelectedTemplate(null);
+                    }}
+                  >
+                    <Icon icon="heroicons:check" className="me-2" />
+                    Apply Template
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* E-Signature Modal */}
+        {showESignatureModal && selectedOffer && (
+          <div 
+            className="modal fade show d-block" 
+            style={{ 
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 1055,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowESignatureModal(false);
+              }
+            }}
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) {
+                e.stopPropagation();
+              }
+            }}
+          >
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header bg-success text-white">
+                  <h5 className="modal-title d-flex align-items-center">
+                    <Icon icon="heroicons:check-badge" className="me-2" />
+                    Digital Signature
+                  </h5>
+                  <button 
+                    type="button" 
+                    className="btn-close btn-close-white" 
+                    onClick={() => setShowESignatureModal(false)}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <p>Accept offer with digital signature for <strong>{selectedOffer.candidateName}</strong>?</p>
+                  <div className="alert alert-info">
+                    <Icon icon="heroicons:information-circle" className="me-2" />
+                    Digital signature will be captured along with IP address and device information.
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowESignatureModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-success"
+                    onClick={handleConfirmESignature}
+                  >
+                    <Icon icon="heroicons:check-badge" className="me-2" />
+                    Confirm Signature
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
