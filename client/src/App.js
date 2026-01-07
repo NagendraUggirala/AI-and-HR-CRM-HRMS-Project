@@ -92,6 +92,7 @@ import ProbationManagement from './components/HRMS/Onboarding&Joining/ProbationM
 import PreJoiningEngagement from './components/HRMS/Onboarding&Joining/PreJoiningEngagement';
 import InductionOrientation from './components/HRMS/Onboarding&Joining/InductionOrientation';
 import BuddyMentorAssignment from './components/HRMS/Onboarding&Joining/BuddyMentorAssignment';
+import BackgroundVerification from './components/HRMS/Onboarding&Joining/BackgroundVerification';
 // Payroll Management
 // HR Operations (HROperations)
 import AssestManagement from './components/HRMS/HROperations/AssestManagement';
@@ -114,6 +115,11 @@ import BankTransfer from './components/HRMS/PayrollManagement/BankTransfer';
 import FinalSettlement from './components/HRMS/PayrollManagement/FinalSettlement';
 // Attendance & Leave Management
 import AttendanceCapture from './components/HRMS/Attendance&Leave/AttendanceCapture';
+import DailyPunches from './components/HRMS/Attendance&Leave/DailyPunches';
+import DailyAttendance from './components/HRMS/Attendance&Leave/DailyAttendance';
+import MonthlyAttendance from './components/HRMS/Attendance&Leave/MonthlyAttendance';
+import ManualAttendance from './components/HRMS/Attendance&Leave/ManualAttendance';
+import LeaveCorrection from './components/HRMS/Attendance&Leave/LeaveCorrection';
 import ShiftManagement from './components/HRMS/Attendance&Leave/ShiftManagement';
 import WorkHourRules from './components/HRMS/Attendance&Leave/WorkHourRules';
 import LeaveManagement from './components/HRMS/Attendance&Leave/LeaveManagement';
@@ -771,6 +777,56 @@ const App = () => {
         }
       />
       <Route
+        path='/attendance/daily-punches'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <DailyPunches />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/attendance/daily-attendance'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <DailyAttendance />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/attendance/monthly-attendance'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <MonthlyAttendance />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/attendance/manual-attendance'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <ManualAttendance />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/attendance/leave-correction'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <LeaveCorrection />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path='/attendance/shifts'
         element={
           <ProtectedRoute>
@@ -1373,6 +1429,16 @@ const App = () => {
           <ProtectedRoute>
             <RecruiterDashboardLayout>
               <BuddyMentorAssignment />
+            </RecruiterDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/onboarding/background-verification'
+        element={
+          <ProtectedRoute>
+            <RecruiterDashboardLayout>
+              <BackgroundVerification />
             </RecruiterDashboardLayout>
           </ProtectedRoute>
         }

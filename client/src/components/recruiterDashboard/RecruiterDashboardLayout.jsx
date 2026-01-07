@@ -502,9 +502,9 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
                 <ul className='sidebar-submenu'>
 
                   <li>
-                    <NavLink to='/onboarding/pre-joining' className={(navData) => navData.isActive ? "active-page" : ""}>
-                      <Icon icon='heroicons:chat-bubble-left-right' className='icon text-sm me-2 fs-5' />
-                      On Boarding Form
+                    <NavLink to='/onboarding/background-verification' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:shield-check' className='icon text-sm me-2 fs-5' />
+                      Background Verification
                     </NavLink>
                   </li>
                   <li>
@@ -513,11 +513,16 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
                       Offer Letters
                     </NavLink>
                   </li>
-
+                  <li>
+                    <NavLink to='/onboarding/pre-joining' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:chat-bubble-left-right' className='icon text-sm me-2 fs-5' />
+                      On Boarding Form
+                    </NavLink>
+                  </li>
                   <li>
                     <NavLink to='/onboarding/joining-day' className={(navData) => navData.isActive ? "active-page" : ""}>
                       <Icon icon='heroicons:calendar' className='icon text-sm me-2 fs-5' />
-                      Joining Day Management
+                      Add Employee
                     </NavLink>
                   </li>
                   <li>
@@ -537,7 +542,7 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
                       <Icon icon='heroicons:user-group' className='icon text-sm me-2 fs-5' />
                       Buddy/Mentor Program
                     </NavLink>
-                  </li>
+                  </li>d
                 </ul>
               </li>
 
@@ -554,6 +559,36 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
                     <NavLink to='/attendance/capture' className={(navData) => navData.isActive ? "active-page" : ""}>
                       <Icon icon='heroicons:clock' className='icon text-sm me-2 fs-5' />
                       Attendance Capture
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/attendance/daily-punches' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:clock' className='icon text-sm me-2 fs-5' />
+                      Daily Punches
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/attendance/daily-attendance' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:calendar-days' className='icon text-sm me-2 fs-5' />
+                      Daily Attendance
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/attendance/monthly-attendance' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:calendar' className='icon text-sm me-2 fs-5' />
+                      Monthly Attendance
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/attendance/manual-attendance' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:pencil-square' className='icon text-sm me-2 fs-5' />
+                      Manual Attendance
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to='/attendance/leave-correction' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:exclamation-circle' className='icon text-sm me-2 fs-5' />
+                      Leave Correction
                     </NavLink>
                   </li>
                   <li>

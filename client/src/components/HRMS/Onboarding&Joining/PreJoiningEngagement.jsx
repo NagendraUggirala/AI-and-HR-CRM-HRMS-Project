@@ -36,12 +36,74 @@ const initialForms = [
 export default function OnboardingFormsTable() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [forms, setForms] = useState(initialForms);
+  const [forms, setForms] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
   const { formId } = useParams();
   const candidate = location.state?.candidate;
   const processedFormsRef = useRef(new Set()); // Track processed form IDs
+
+  // Load forms from localStorage on component mount
+  useEffect(() => {
+    const savedForms = localStorage.getItem('onboardingForms');
+    const savedProfiles = localStorage.getItem('employeeProfiles');
+    
+    if (savedForms) {
+      const parsedForms = JSON.parse(savedForms);
+      setForms(parsedForms);
+    } else if (savedProfiles) {
+      // Convert employee profiles to form format
+      const profiles = JSON.parse(savedProfiles);
+      const convertedForms = profiles.map((profile, index) => ({
+        id: parseInt(profile.id) || (1860 + index),
+        candidate: `${profile.firstName} ${profile.middleName ? profile.middleName + ' ' : ''}${profile.lastName}`.trim(),
+        created: profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        email: profile.officialEmail || profile.email,
+        mobile: profile.phone || 'N/A',
+        info: 'View Form',
+        status: profile.status === 'approved' ? 'Approved' : profile.status === 'pending_review' ? 'Pending' : 'Sent',
+        employeeId: profile.employeeId
+      }));
+      setForms(convertedForms);
+      localStorage.setItem('onboardingForms', JSON.stringify(convertedForms));
+    } else {
+      // Use initial forms if no saved data
+      setForms(initialForms);
+      localStorage.setItem('onboardingForms', JSON.stringify(initialForms));
+    }
+  }, []);
+
+  // Listen for changes in localStorage (when new employee is created in JoiningDayManagement)
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const savedForms = localStorage.getItem('onboardingForms');
+      if (savedForms) {
+        const parsedForms = JSON.parse(savedForms);
+        setForms(parsedForms);
+      }
+    };
+
+    // Listen for storage events (from other tabs/windows)
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also check periodically for changes (same tab)
+    const interval = setInterval(() => {
+      const savedForms = localStorage.getItem('onboardingForms');
+      if (savedForms) {
+        const parsedForms = JSON.parse(savedForms);
+        const currentFormsStr = JSON.stringify(forms);
+        const savedFormsStr = JSON.stringify(parsedForms);
+        if (currentFormsStr !== savedFormsStr) {
+          setForms(parsedForms);
+        }
+      }
+    }, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [forms]);
 
   // Add new form from navigation state (FinalizeAndSendForm)
   useEffect(() => {
@@ -56,7 +118,9 @@ export default function OnboardingFormsTable() {
           const formExists = prev.some(f => f.id === formId);
           if (!formExists) {
             processedFormsRef.current.add(formId);
-            return [newForm, ...prev];
+            const updatedForms = [newForm, ...prev];
+            localStorage.setItem('onboardingForms', JSON.stringify(updatedForms));
+            return updatedForms;
           }
           return prev;
         });
@@ -83,6 +147,7 @@ export default function OnboardingFormsTable() {
           // Update existing form
           const updatedForms = [...prev];
           updatedForms[formIndex] = updatedForm;
+          localStorage.setItem('onboardingForms', JSON.stringify(updatedForms));
           return updatedForms;
         }
         return prev;
@@ -137,11 +202,26 @@ export default function OnboardingFormsTable() {
     // Check the current status of the form
     if (form.status === "Pending" || form.status === "Sent") {
       // Update status to Approved
-      setForms(forms.map(f => 
+      const updatedForms = forms.map(f => 
         f.id === formId 
           ? { ...f, status: "Approved" }
           : f
-      ));
+      );
+      setForms(updatedForms);
+      localStorage.setItem('onboardingForms', JSON.stringify(updatedForms));
+      
+      // Also update the corresponding employee profile status in JoiningDayManagement
+      const savedProfiles = localStorage.getItem('employeeProfiles');
+      if (savedProfiles && form.employeeId) {
+        const profiles = JSON.parse(savedProfiles);
+        const updatedProfiles = profiles.map(p => 
+          p.employeeId === form.employeeId 
+            ? { ...p, status: 'approved', approvedAt: new Date().toISOString() }
+            : p
+        );
+        localStorage.setItem('employeeProfiles', JSON.stringify(updatedProfiles));
+      }
+      
       alert(`Form for ${form.candidate} has been approved successfully!`);
     } else if (form.status === "Approved") {
       alert(`Form for ${form.candidate} is already approved.`);
@@ -156,7 +236,9 @@ export default function OnboardingFormsTable() {
     if (!form) return;
     
     if (window.confirm(`Are you sure you want to delete the form for ${form.candidate}?`)) {
-      setForms(forms.filter(f => f.id !== formId));
+      const updatedForms = forms.filter(f => f.id !== formId);
+      setForms(updatedForms);
+      localStorage.setItem('onboardingForms', JSON.stringify(updatedForms));
       alert(`Form for ${form.candidate} has been deleted successfully!`);
     }
   }

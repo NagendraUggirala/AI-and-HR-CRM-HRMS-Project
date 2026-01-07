@@ -218,7 +218,12 @@ const OfferManagement = () => {
     interviewSummary: '',
     salaryNegotiationHistory: '',
     enableBGV: true,
-    requireDigitalSignature: false
+    requireDigitalSignature: false,
+    businessUnit: '',
+    location: '',
+    costCenter: '',
+    shiftPolicy: '',
+    weekOffPolicy: ''
   });
 
   // Initialize sample data
@@ -508,7 +513,12 @@ const OfferManagement = () => {
       interviewSummary: '',
       salaryNegotiationHistory: '',
       enableBGV: true,
-      requireDigitalSignature: false
+      requireDigitalSignature: false,
+      businessUnit: '',
+      location: '',
+      costCenter: '',
+      shiftPolicy: '',
+      weekOffPolicy: ''
     });
     setSelectedOffer(null);
   };
@@ -1724,6 +1734,129 @@ const OfferManagement = () => {
                         </div>
                       </div>
                       
+                      {/* Work Profile (Optional) */}
+                      <div className="mb-4">
+                        <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center">
+                          <Icon icon="heroicons:briefcase" className="me-2" />
+                          Work Profile (Optional)
+                        </h6>
+                        <p className="text-muted small mb-3">
+                          Select work profile for this employee. If you do not select these values now, system will assign default values, which you can edit later.
+                        </p>
+                        <div className="row g-3">
+                          <div className="col-md-6">
+                            <label className="form-label">Business Unit</label>
+                            <select
+                              className="form-select"
+                              name="businessUnit"
+                              value={formData.businessUnit}
+                              onChange={handleInputChange}
+                            >
+                              <option value="">- Select -</option>
+                              <option value="IT">IT</option>
+                              <option value="HR">HR</option>
+                              <option value="Finance">Finance</option>
+                              <option value="Operations">Operations</option>
+                              <option value="Sales">Sales</option>
+                              <option value="Marketing">Marketing</option>
+                            </select>
+                          </div>
+                          
+                          <div className="col-md-6">
+                            <label className="form-label">Location</label>
+                            <select
+                              className="form-select"
+                              name="location"
+                              value={formData.location}
+                              onChange={handleInputChange}
+                            >
+                              <option value="">- Select -</option>
+                              <option value="Mumbai">Mumbai</option>
+                              <option value="Delhi">Delhi</option>
+                              <option value="Bangalore">Bangalore</option>
+                              <option value="Hyderabad">Hyderabad</option>
+                              <option value="Chennai">Chennai</option>
+                              <option value="Pune">Pune</option>
+                            </select>
+                          </div>
+                          
+                          <div className="col-md-6">
+                            <label className="form-label">Cost Center</label>
+                            <select
+                              className="form-select"
+                              name="costCenter"
+                              value={formData.costCenter}
+                              onChange={handleInputChange}
+                            >
+                              <option value="">- Select -</option>
+                              <option value="CC001">CC001</option>
+                              <option value="CC002">CC002</option>
+                              <option value="CC003">CC003</option>
+                              <option value="CC004">CC004</option>
+                              <option value="CC005">CC005</option>
+                            </select>
+                          </div>
+                          
+                          <div className="col-md-6">
+                            <label className="form-label">Designation</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="position"
+                              value={formData.position}
+                              onChange={handleInputChange}
+                              placeholder="Designation"
+                              disabled
+                            />
+                            <small className="text-muted">Same as Position</small>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Policies (Optional) */}
+                      <div className="mb-4">
+                        <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center">
+                          <Icon icon="heroicons:document-check" className="me-2" />
+                          Policies (Optional)
+                        </h6>
+                        <p className="text-muted small mb-3">
+                          Select policies applicable to this employee. If you do not select these values now, system will assign default values, which you can edit later.
+                        </p>
+                        <div className="row g-3">
+                          <div className="col-md-6">
+                            <label className="form-label">Shift Policy</label>
+                            <select
+                              className="form-select"
+                              name="shiftPolicy"
+                              value={formData.shiftPolicy}
+                              onChange={handleInputChange}
+                            >
+                              <option value="">- Select -</option>
+                              <option value="General">General</option>
+                              <option value="Night">Night</option>
+                              <option value="Flexible">Flexible</option>
+                              <option value="Rotational">Rotational</option>
+                            </select>
+                          </div>
+                          
+                          <div className="col-md-6">
+                            <label className="form-label">Week Off Policy</label>
+                            <select
+                              className="form-select"
+                              name="weekOffPolicy"
+                              value={formData.weekOffPolicy}
+                              onChange={handleInputChange}
+                            >
+                              <option value="">- Select -</option>
+                              <option value="Sunday">Sunday</option>
+                              <option value="Saturday-Sunday">Saturday-Sunday</option>
+                              <option value="Flexible">Flexible</option>
+                              <option value="Rotational">Rotational</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                      
                       {/* Additional Information */}
                       {/* Step 3: Interview & Negotiation Details */}
                       <div className="mb-4">
@@ -1758,7 +1891,7 @@ const OfferManagement = () => {
                         </div>
                       </div>
 
-                      {/* Step 4: Background Verification & References */}
+                      {/* Step 4: Background Verification & References 
                       <div className="mb-4">
                         <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center">
                           <span className="badge bg-primary me-2">4</span>
@@ -1787,7 +1920,7 @@ const OfferManagement = () => {
                           </div>
                         </div>
                       </div>
-                      
+                      */}
                       <div className="mb-4">
                         <label className="form-label">Notes</label>
                         <textarea

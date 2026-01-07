@@ -108,7 +108,14 @@ export const API_ENDPOINTS = {
     UPDATE_STATUS: (id) => `/api/offers/offer-tracking/${id}/status`,
     STATS: '/api/offers/offer-tracking/stats',
   },
-  
+
+  // Email
+  EMAIL: {
+    SEND: '/api/send-email',
+    SEND_BULK: '/api/send-bulk-email',
+    SEND_ASSESSMENT: '/api/send-assessment-email',
+  },
+
   // Test endpoint
   TEST: '/api/test',
 };
