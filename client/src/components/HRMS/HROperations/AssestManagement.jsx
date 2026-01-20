@@ -1,379 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Search, 
-  Filter, 
-  Download, 
-  Printer, 
-  Eye, 
-  Edit,
-  Calendar,
-  Clock,
-  DollarSign,
-  Percent,
-  Shield,
-  TrendingUp,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
-  BarChart3,
-  Zap,
-  Bot,
-  Brain,
-  Sparkles,
-  Target,
-  Users,
-  FileText,
-  Calculator,
-  ChevronRight,
-  ExternalLink,
-  RefreshCw,
-  Settings,
-  MoreVertical,
-  Send,
-  ThumbsUp,
-  ThumbsDown,
-  MessageSquare,
-  Bell,
-  UserCheck,
-  FileCheck,
-  Mail,
-  Phone,
-  Briefcase,
-  Award,
-  Crown,
-  X,
-  Check,
-  File,
-  Trash2,
-  Copy,
-  Share2,
-  Info,
-  Star,
-  Heart,
-  FolderPlus,
-  Upload,
-  Save,
-  Lock,
-  Unlock,
-  Volume2,
-  Mic,
-  Video,
-  PhoneCall,
-  MapPin,
-  Globe,
-  Link,
-  FileUp,
-  UserX,
-  Scale,
-  CalendarDays,
-  Laptop,
-  Smartphone,
-  Monitor,
-  Tablet,
-  Headphones,
-  Cpu,
-  HardDrive,
-  Server,
-  Router,
-  Camera,
-  Printer as PrinterIcon,
-  Scan,
-  Battery,
-  Wifi,
-  Bluetooth,
-  Database,
-  Key,
-  Home,
-  Building,
-  Map,
-  Package,
-  Truck,
-  ShieldCheck,
-  ShieldAlert,
-  ShieldOff,
-  Wallet,
-  CreditCard,
-  TrendingDown,
-  Percent as PercentIcon,
-  GitBranch,
-  GitPullRequest,
-  GitMerge,
-  GitCommit,
-  GitCompare,
-  GitFork,
-  Layers,
-  Grid,
-  List,
-  Grid3x3,
-  Columns,
-  Rows,
-  Layout,
-  LayoutGrid,
-  LayoutList,
-  Box,
-  Boxes,
-  Package2,
-  PackageOpen,
-  Inbox,
-  Archive,
-  ArchiveRestore,
-  Folder,
-  FolderOpen,
-  FolderInput,
-  FolderOutput,
-  FolderMinus,
-  FolderPlus as FolderPlusIcon,
-  FolderKey,
-  FolderSearch,
-  FolderX,
-  FolderCheck,
-  FolderArchive,
-  FolderDown,
-  FolderUp,
-  HardDriveDownload,
-  HardDriveUpload,
-  ServerCog,
-  RouterCog,
-  Network,
-  Cloud,
-  CloudOff,
-  CloudRain,
-  CloudSnow,
-  CloudLightning,
-  CloudDrizzle,
-  CloudFog,
-  CloudSun,
-  CloudMoon,
-  Cloudy,
-  Sun,
-  Moon,
-  CloudUpload,
-  CloudDownload,
-  CloudSync,
-  Terminal,
-  Code,
-  Brackets,
-  Braces,
-  Parentheses,
-  CurlyBraces,
-  Square,
-  Circle,
-  Triangle,
-  Octagon,
-  Hexagon,
-  Pentagon,
-  Octagram,
-  Crosshair,
-  Target as TargetIcon,
-  Cross,
-  Minus,
-  Plus,
-  Divide,
-  Multiply,
-  Equal,
-  NotEqual,
-  Infinity as InfinityIcon,
-  Pi,
-  Sigma,
-  Omega,
-  Alpha,
-  Beta,
-  Gamma,
-  Delta,
-  Epsilon,
-  Zeta,
-  Eta,
-  Theta,
-  Iota,
-  Kappa,
-  Lambda,
-  Mu,
-  Nu,
-  Xi,
-  Omicron,
-  Rho,
-  Tau,
-  Upsilon,
-  Phi,
-  Chi,
-  Psi,
-  OmegaCircle,
-  AlphaCircle,
-  BetaCircle,
-  GammaCircle,
-  DeltaCircle,
-  EpsilonCircle,
-  ZetaCircle,
-  EtaCircle,
-  ThetaCircle,
-  IotaCircle,
-  KappaCircle,
-  LambdaCircle,
-  MuCircle,
-  NuCircle,
-  XiCircle,
-  OmicronCircle,
-  RhoCircle,
-  TauCircle,
-  UpsilonCircle,
-  PhiCircle,
-  ChiCircle,
-  PsiCircle,
-  Copyright,
-  Registered,
-  Trademark,
-  Hash,
-  AtSign,
-  Asterisk,
-  Ampersand,
-  DollarSign as DollarIcon,
-  Euro,
-  PoundSterling,
-  Yen,
-  Bitcoin,
-  CreditCard as CreditCardIcon,
-  QrCode,
-  Barcode,
-  Radio,
-  Tv,
-  Watch,
-  WatchIcon,
-  AlarmClock,
-  Timer,
-  TimerReset,
-  TimerOff,
-  Hourglass,
-  SandTimer,
-  CalendarClock,
-  CalendarMinus,
-  CalendarPlus,
-  CalendarX,
-  CalendarCheck,
-  CalendarRange,
-  CalendarSearch,
-  CalendarDays as CalendarDaysIcon,
-  CalendarHeart,
-  CalendarStar,
-  CalendarSync,
-  Clock4,
-  Clock5,
-  Clock6,
-  Clock7,
-  Clock8,
-  Clock9,
-  Clock10,
-  Clock11,
-  Clock12,
-  Clock1,
-  Clock2,
-  Clock3,
-  ClockArrowUp,
-  ClockArrowDown,
-  History,
-  RotateCcw,
-  RotateCw,
-  Repeat,
-  Repeat1,
-  Shuffle,
-  SkipBack,
-  SkipForward,
-  Play,
-  Pause,
-  StopCircle,
-  Power,
-  PowerOff,
-  BatteryCharging,
-  BatteryFull,
-  BatteryMedium,
-  BatteryLow,
-  BatteryWarning,
-  BatteryEmpty,
-  Plug,
-  PlugZap,
-  PlugOff,
-  Unplug,
-  Cigarette,
-  CigaretteOff,
-  Coffee,
-  CoffeeOff,
-  Wine,
-  WineOff,
-  Beer,
-  BeerOff,
-  GlassWater,
-  GlassWaterOff,
-  Droplets,
-  Droplet,
-  DropletOff,
-  Thermometer,
-  ThermometerSnowflake,
-  ThermometerSun,
-  Wind,
-  Flame,
-  Snowflake,
-  SunDim,
-  SunMedium,
-  SunBright,
-  CloudSunRain,
-  CloudMoonRain,
-  CloudHail,
-  CloudSleet,
-  CloudWind,
-  Tornado,
-  Hurricane,
-  Earthquake,
-  Volcano,
-  Meteor,
-  Comet,
-  Satellite,
-  SatelliteDish,
-  Telescope,
-  Microscope,
-  Beaker,
-  FlaskConical,
-  FlaskRound,
-  TestTube,
-  TestTubeDiagonal,
-  Vial,
-  Pill,
-  Capsule,
-  Syringe,
-  Stethoscope,
-  Scalpel,
-  Bone,
-  Skull,
-  Brain as BrainIcon,
-  HeartPulse,
-  Lungs,
-  Kidney,
-  Liver,
-  Stomach,
-  Eye as EyeIcon,
-  Ear,
-  Nose,
-  Mouth,
-  Hand,
-  Arm,
-  Leg,
-  Foot,
-  Skeleton,
-  PersonStanding,
-  PersonWalking,
-  PersonRunning,
-  PersonSwimming,
-  PersonSkiing,
-  PersonSnowboarding,
-  PersonSurfing,
-  PersonClimbing,
-  PersonJumping,
-  PersonFalling
+  Search, Filter, Download, Printer, Eye, Edit, Package, Truck, Wrench,
+  FileText, Settings, BarChart3, Database, ArchiveRestore, ShieldCheck,
+  TrendingDown, Users, DollarSign, Percent as PercentIcon, Calendar,
+  AlertCircle, Check, Save, Info, CheckCircle, TrendingUp, RefreshCw,
+  Calculator, X, Laptop, Smartphone, Monitor, Tablet, Server, Router,
+  Headphones, Printer as PrinterIcon, Scan, Home, Building, MapPin,
+  ExternalLink, Clock, Shield, Zap, Bot, Brain, Sparkles, Target,
+  User, Phone, Mail, Map, Globe, Lock, Unlock, Key
 } from 'lucide-react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { jsPDF } from 'jspdf';
 
 // Custom icon components for missing ones
 const Chair = (props) => <div {...props}>🪑</div>;
 const Car = (props) => <div {...props}>🚗</div>;
-const Wrench = (props) => <svg {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>;
 
 const AssestManagement = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -383,63 +24,20 @@ const AssestManagement = () => {
   const [showAllocationModal, setShowAllocationModal] = useState(false);
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
-  const [showTransferModal, setShowTransferModal] = useState(false);
-  const [showDepreciationModal, setShowDepreciationModal] = useState(false);
-  const [showInsuranceModal, setShowInsuranceModal] = useState(false);
-  const [showDamageModal, setShowDamageModal] = useState(false);
-  const [showReportsModal, setShowReportsModal] = useState(false);
-  const [showFilterModal, setShowFilterModal] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   
-  // Filter states
-  const [filters, setFilters] = useState({
-    category: '',
-    status: '',
-    condition: '',
-    department: '',
-    location: '',
-    minValue: '',
-    maxValue: '',
-    dateFrom: '',
-    dateTo: ''
-  });
-
-  // Departments
-  const departments = [
-    'Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 
-    'Operations', 'IT', 'Design', 'Product', 'Support'
-  ];
-
-  // Locations
-  const locations = [
-    'Head Office - Floor 1',
-    'Head Office - Floor 2',
-    'Head Office - Floor 3',
-    'Branch Office - Mumbai',
-    'Branch Office - Bangalore',
-    'Branch Office - Delhi',
-    'IT Store Room',
-    'Repair Center',
-    'Warehouse'
-  ];
-
-  // Menu items for the dashboard layout
-  const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: <BarChart3 size={20} />, active: true },
-    { id: 'assets', label: 'Assets', icon: <Package size={20} /> },
-    { id: 'allocations', label: 'Allocations', icon: <Truck size={20} /> },
-    { id: 'maintenance', label: 'Maintenance', icon: <Wrench size={20} /> },
-    { id: 'reports', label: 'Reports', icon: <FileText size={20} /> },
-    { id: 'settings', label: 'Settings', icon: <Settings size={20} /> }
-  ];
-
-  // User info for the dashboard layout
-  const userInfo = {
-    name: 'John Doe',
-    role: 'Asset Manager',
-    avatar: 'JD'
-  };
-
+  // New state variables for action buttons
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editAsset, setEditAsset] = useState(null);
+  const [showAllocationDetails, setShowAllocationDetails] = useState(false);
+  const [selectedAllocation, setSelectedAllocation] = useState(null);
+  const [showMaintenanceDetails, setShowMaintenanceDetails] = useState(false);
+  const [selectedMaintenance, setSelectedMaintenance] = useState(null);
+  const [showInsuranceModal, setShowInsuranceModal] = useState(false);
+  const [showClaimModal, setShowClaimModal] = useState(false);
+  const [showReallocateModal, setShowReallocateModal] = useState(false);
+  
   // Asset Master Data
   const [assetMaster, setAssetMaster] = useState([
     {
@@ -996,6 +594,25 @@ const AssestManagement = () => {
     expiringInsurance: 1
   };
 
+  // Departments
+  const departments = [
+    'Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 
+    'Operations', 'IT', 'Design', 'Product', 'Support'
+  ];
+
+  // Locations
+  const locations = [
+    'Head Office - Floor 1',
+    'Head Office - Floor 2',
+    'Head Office - Floor 3',
+    'Branch Office - Mumbai',
+    'Branch Office - Bangalore',
+    'Branch Office - Delhi',
+    'IT Store Room',
+    'Repair Center',
+    'Warehouse'
+  ];
+
   // Utility Functions
   const formatCurrency = (amount) => {
     if (!amount) return '₹0';
@@ -1032,103 +649,619 @@ const AssestManagement = () => {
     return cat ? cat.icon : <Package size={16} />;
   };
 
-  // Extract numeric value from currency string
-  const extractNumericValue = (value) => {
-    if (!value) return 0;
-    if (typeof value === 'number') return value;
-    return parseInt(value.toString().replace(/[^0-9]/g, '')) || 0;
+  // Action Button Handlers - FIXED VERSION
+  const handleViewAsset = (asset) => {
+    setSelectedAsset(asset);
+    setShowViewModal(true);
   };
 
-  // Filter assets based on search term and filters
-  const filterAssets = (assetsList) => {
-    return assetsList.filter(asset => {
-      // Search term filter
-      if (searchTerm && !(
-        asset.assetName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        asset.assetTag?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        asset.serialNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        asset.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (asset.allocatedTo && asset.allocatedTo.toLowerCase().includes(searchTerm.toLowerCase()))
-      )) {
-        return false;
-      }
+  const handleEditAsset = (asset) => {
+    setEditAsset(asset);
+    setEditMode(true);
+    setShowAssetModal(true);
+  };
 
-      // Category filter
-      if (filters.category && asset.category !== filters.category) {
-        return false;
-      }
+  const handleAllocateAssetClick = (asset) => {
+    if (asset.status === 'Available') {
+      setSelectedAsset(asset);
+      setShowAllocationModal(true);
+    } else {
+      alert(`Cannot allocate ${asset.assetName}. Current status: ${asset.status}`);
+    }
+  };
 
-      // Status filter
-      if (filters.status && asset.status !== filters.status) {
-        return false;
-      }
+  const handleMaintenanceClick = (asset) => {
+    setSelectedAsset(asset);
+    setShowMaintenanceModal(true);
+  };
 
-      // Condition filter
-      if (filters.condition && asset.condition !== filters.condition) {
-        return false;
-      }
+  const handleViewAllocationDetails = (allocation) => {
+    setSelectedAllocation(allocation);
+    setShowAllocationDetails(true);
+  };
 
-      // Department filter
-      if (filters.department && asset.department !== filters.department) {
-        return false;
-      }
+  const handleInitiateReturn = (allocation) => {
+    const asset = assetMaster.find(a => a.assetId === allocation.assetId);
+    if (asset) {
+      setSelectedAsset(asset);
+      setShowReturnModal(true);
+    }
+  };
 
-      // Location filter
-      if (filters.location && asset.location !== filters.location) {
-        return false;
-      }
+  const handleViewMaintenanceDetails = (maintenance) => {
+    setSelectedMaintenance(maintenance);
+    setShowMaintenanceDetails(true);
+  };
 
-      // Value range filter
-      const assetValue = extractNumericValue(asset.currentValue);
-      if (filters.minValue && assetValue < parseInt(filters.minValue)) {
-        return false;
-      }
-      if (filters.maxValue && assetValue > parseInt(filters.maxValue)) {
-        return false;
-      }
+  const handleEditMaintenance = (maintenance) => {
+    setSelectedMaintenance(maintenance);
+    setShowMaintenanceModal(true);
+  };
 
-      // Date range filter (purchase date)
-      if (filters.dateFrom && asset.purchaseDate && new Date(asset.purchaseDate) < new Date(filters.dateFrom)) {
-        return false;
-      }
-      if (filters.dateTo && asset.purchaseDate && new Date(asset.purchaseDate) > new Date(filters.dateTo)) {
-        return false;
-      }
+  const handleViewPolicyDetails = (policy) => {
+    const asset = assetMaster.find(a => a.assetId === policy.assetId);
+    if (asset) {
+      setSelectedAsset(asset);
+      setShowViewModal(true);
+    }
+  };
 
-      return true;
+  const handleFileClaim = (policy) => {
+    const asset = assetMaster.find(a => a.assetId === policy.assetId);
+    if (asset) {
+      setSelectedAsset(asset);
+      setShowClaimModal(true);
+    }
+  };
+
+  const handleReallocateAsset = (returnItem) => {
+    const asset = assetMaster.find(a => a.assetId === returnItem.assetId);
+    if (asset && asset.status === 'Available') {
+      setSelectedAsset(asset);
+      setShowReallocateModal(true);
+    } else {
+      alert('Asset is not available for reallocation');
+    }
+  };
+
+  // Additional Action Handlers
+  const handleDeleteAsset = (assetId) => {
+    if (window.confirm('Are you sure you want to delete this asset?')) {
+      setAssetMaster(prev => prev.filter(asset => asset.id !== assetId));
+      alert('Asset deleted successfully!');
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedAssets.length === 0) {
+      alert('Please select assets to delete');
+      return;
+    }
+    
+    if (window.confirm(`Are you sure you want to delete ${selectedAssets.length} selected assets?`)) {
+      setAssetMaster(prev => prev.filter(asset => !selectedAssets.includes(asset.id)));
+      setSelectedAssets([]);
+      alert(`${selectedAssets.length} assets deleted successfully!`);
+    }
+  };
+
+  // Simple Table Drawing Function for PDF
+  const drawTable = (doc, headers, data, startX, startY, options = {}) => {
+    const { fontSize = 8, headerBackground = [41, 128, 185], rowHeight = 10 } = options;
+    const pageWidth = doc.internal.pageSize.width;
+    const margin = 20;
+    const availableWidth = pageWidth - (margin * 2);
+    const colCount = headers.length;
+    const colWidth = availableWidth / colCount;
+    
+    let currentY = startY;
+    let currentX = margin;
+    
+    // Draw header
+    doc.setFontSize(fontSize);
+    doc.setFont('helvetica', 'bold');
+    doc.setFillColor(...headerBackground);
+    doc.rect(currentX, currentY, availableWidth, rowHeight, 'F');
+    doc.setTextColor(255, 255, 255);
+    
+    headers.forEach((header, index) => {
+      const x = currentX + (colWidth * index) + 2;
+      const y = currentY + (rowHeight / 2) + 2;
+      const text = typeof header === 'string' ? header.substring(0, 15) : String(header).substring(0, 15);
+      doc.text(text, x, y);
     });
-  };
-
-  // Reset filters
-  const resetFilters = () => {
-    setFilters({
-      category: '',
-      status: '',
-      condition: '',
-      department: '',
-      location: '',
-      minValue: '',
-      maxValue: '',
-      dateFrom: '',
-      dateTo: ''
+    
+    currentY += rowHeight;
+    
+    // Draw data rows
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+    
+    data.forEach((row, rowIndex) => {
+      // Alternate row background
+      if (rowIndex % 2 === 0) {
+        doc.setFillColor(245, 245, 245);
+        doc.rect(currentX, currentY, availableWidth, rowHeight, 'F');
+      }
+      
+      // Draw cell borders
+      doc.setDrawColor(200, 200, 200);
+      for (let i = 0; i <= colCount; i++) {
+        doc.line(currentX + (colWidth * i), currentY, currentX + (colWidth * i), currentY + rowHeight);
+      }
+      doc.line(currentX, currentY, currentX + availableWidth, currentY);
+      doc.line(currentX, currentY + rowHeight, currentX + availableWidth, currentY + rowHeight);
+      
+      // Draw cell content
+      headers.forEach((header, colIndex) => {
+        const x = currentX + (colWidth * colIndex) + 2;
+        const y = currentY + (rowHeight / 2) + 2;
+        let cellValue = row[colIndex];
+        if (cellValue === undefined || cellValue === null) cellValue = '';
+        const text = String(cellValue).substring(0, 20);
+        doc.text(text, x, y);
+      });
+      
+      currentY += rowHeight;
+      
+      // Check for page break
+      if (currentY > 280) {
+        doc.addPage();
+        currentY = margin;
+        // Redraw header on new page
+        doc.setFillColor(...headerBackground);
+        doc.rect(currentX, currentY, availableWidth, rowHeight, 'F');
+        doc.setTextColor(255, 255, 255);
+        headers.forEach((header, index) => {
+          const x = currentX + (colWidth * index) + 2;
+          const y = currentY + (rowHeight / 2) + 2;
+          doc.text(header.substring(0, 15), x, y);
+        });
+        currentY += rowHeight;
+        doc.setTextColor(0, 0, 0);
+      }
     });
-    setSearchTerm('');
+    
+    return { finalY: currentY + 5 };
   };
 
-  // Handle filter change
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  // PDF Report Generation Functions
+  const generateAssetInventoryPDF = () => {
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = doc.internal.pageSize.width;
+    
+    // Report Header
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('ASSET INVENTORY REPORT', pageWidth / 2, 15, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}`, pageWidth / 2, 22, { align: 'center' });
+    doc.text(`Company: Asset Management System`, pageWidth / 2, 27, { align: 'center' });
+    
+    // Summary Section
+    let yPos = 35;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('SUMMARY STATISTICS', 20, yPos);
+    
+    yPos += 8;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    
+    const allocatedCount = assetMaster.filter(a => a.status === 'Allocated').length;
+    const availableCount = assetMaster.filter(a => a.status === 'Available').length;
+    const underRepairCount = assetMaster.filter(a => a.status === 'Under Repair').length;
+    const totalValue = assetMaster.reduce((sum, asset) => sum + parseInt(asset.currentValue.replace(/[^0-9]/g, '')), 0);
+    
+    doc.text(`Total Assets: ${assetMaster.length}`, 20, yPos);
+    doc.text(`Total Value: ${formatCurrency(totalValue)}`, 100, yPos);
+    yPos += 6;
+    doc.text(`Allocated: ${allocatedCount}`, 20, yPos);
+    doc.text(`Available: ${availableCount}`, 100, yPos);
+    yPos += 6;
+    doc.text(`Under Repair: ${underRepairCount}`, 20, yPos);
+    doc.text(`Utilization: ${Math.round((allocatedCount / assetMaster.length) * 100)}%`, 100, yPos);
+    yPos += 15;
+    
+    // Asset Details Table
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('ASSET DETAILS', 20, yPos);
+    yPos += 8;
+    
+    const headers = ['Asset Tag', 'Asset Name', 'Category', 'Status', 'Value', 'Location'];
+    const tableData = assetMaster.map(asset => [
+      asset.assetTag,
+      asset.assetName,
+      asset.category,
+      asset.status,
+      asset.currentValue,
+      asset.location
+    ]);
+    
+    const tableResult = drawTable(doc, headers, tableData, 20, yPos, {
+      fontSize: 7,
+      headerBackground: [41, 128, 185]
+    });
+    
+    yPos = tableResult.finalY + 10;
+    
+    // Category-wise Summary
+    if (yPos > 250) {
+      doc.addPage();
+      yPos = 20;
+    }
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('CATEGORY-WISE SUMMARY', 20, yPos);
+    yPos += 8;
+    
+    const categories = [...new Set(assetMaster.map(a => a.category))];
+    const categoryData = categories.map(category => {
+      const categoryAssets = assetMaster.filter(a => a.category === category);
+      const categoryValue = categoryAssets.reduce((sum, asset) => 
+        sum + parseInt(asset.currentValue.replace(/[^0-9]/g, '')), 0
+      );
+      return [
+        category,
+        categoryAssets.length,
+        formatCurrency(categoryValue)
+      ];
+    });
+    
+    drawTable(doc, ['Category', 'Count', 'Total Value'], categoryData, 20, yPos, {
+      headerBackground: [39, 174, 96]
+    });
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, 285, { align: 'center' });
+      doc.text('Confidential - Asset Management System', pageWidth / 2, 290, { align: 'center' });
+    }
+    
+    // Save PDF
+    doc.save(`asset-inventory-report-${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
-  // Active filters count
-  const activeFiltersCount = Object.values(filters).filter(val => val !== '').length + (searchTerm ? 1 : 0);
+  const generateEmployeeWisePDF = () => {
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = doc.internal.pageSize.width;
+    
+    // Report Header
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('EMPLOYEE ASSET ALLOCATION REPORT', pageWidth / 2, 15, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}`, pageWidth / 2, 22, { align: 'center' });
+    
+    // Summary
+    let yPos = 30;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('ALLOCATION SUMMARY', 20, yPos);
+    yPos += 8;
+    
+    const activeAllocations = assetAllocations.filter(a => a.status === 'Active');
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Total Active Allocations: ${activeAllocations.length}`, 20, yPos);
+    doc.text(`Employees: ${[...new Set(activeAllocations.map(a => a.employeeName))].length}`, 100, yPos);
+    yPos += 10;
+    
+    // Allocations Table
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('ASSET ALLOCATIONS', 20, yPos);
+    yPos += 8;
+    
+    const headers = ['Allocation ID', 'Asset', 'Employee', 'Department', 'Allocation Date'];
+    const tableData = activeAllocations.map(allocation => [
+      allocation.allocationId,
+      allocation.assetName,
+      allocation.employeeName,
+      allocation.department,
+      allocation.allocationDate
+    ]);
+    
+    drawTable(doc, headers, tableData, 20, yPos, {
+      fontSize: 7,
+      headerBackground: [41, 128, 185]
+    });
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, 285, { align: 'center' });
+      doc.text('Confidential - Asset Management System', pageWidth / 2, 290, { align: 'center' });
+    }
+    
+    doc.save(`employee-asset-report-${new Date().toISOString().split('T')[0]}.pdf`);
+  };
 
-  // Filtered assets
-  const filteredAssets = filterAssets(assetMaster);
+  const generateDepreciationPDF = () => {
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = doc.internal.pageSize.width;
+    
+    // Report Header
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('ASSET DEPRECIATION REPORT', pageWidth / 2, 15, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}`, pageWidth / 2, 22, { align: 'center' });
+    
+    // Summary
+    let yPos = 30;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DEPRECIATION SUMMARY', 20, yPos);
+    yPos += 8;
+    
+    const totalPurchase = depreciationSchedule.reduce((sum, asset) => 
+      sum + parseInt(asset.purchasePrice.replace(/[^0-9]/g, '')), 0
+    );
+    const totalCurrent = depreciationSchedule.reduce((sum, asset) => 
+      sum + parseInt(asset.currentValue.replace(/[^0-9]/g, '')), 0
+    );
+    const totalDepreciation = totalPurchase - totalCurrent;
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Total Assets: ${depreciationSchedule.length}`, 20, yPos);
+    doc.text(`Total Purchase Value: ${formatCurrency(totalPurchase)}`, 100, yPos);
+    yPos += 6;
+    doc.text(`Total Current Value: ${formatCurrency(totalCurrent)}`, 20, yPos);
+    doc.text(`Total Depreciation: ${formatCurrency(totalDepreciation)}`, 100, yPos);
+    yPos += 15;
+    
+    // Depreciation Schedule Table
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DEPRECIATION SCHEDULE', 20, yPos);
+    yPos += 8;
+    
+    const headers = ['Asset', 'Purchase Price', 'Current Value', 'Dep %', 'Yearly Dep', 'Acc Dep', 'NBV'];
+    const tableData = depreciationSchedule.map(schedule => [
+      schedule.assetName,
+      schedule.purchasePrice,
+      schedule.currentValue,
+      schedule.depreciationRate,
+      schedule.yearlyDepreciation,
+      schedule.accumulatedDepreciation,
+      schedule.netBookValue
+    ]);
+    
+    drawTable(doc, headers, tableData, 20, yPos, {
+      fontSize: 7,
+      headerBackground: [155, 89, 182]
+    });
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, 285, { align: 'center' });
+      doc.text('Confidential - Asset Management System', pageWidth / 2, 290, { align: 'center' });
+    }
+    
+    doc.save(`depreciation-report-${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
+  const generateMaintenancePDF = () => {
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = doc.internal.pageSize.width;
+    
+    // Report Header
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('MAINTENANCE HISTORY REPORT', pageWidth / 2, 15, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}`, pageWidth / 2, 22, { align: 'center' });
+    
+    // Summary
+    let yPos = 30;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('MAINTENANCE SUMMARY', 20, yPos);
+    yPos += 8;
+    
+    const totalCost = maintenanceHistory.reduce((sum, record) => 
+      sum + parseInt(record.cost.replace(/[^0-9]/g, '')), 0
+    );
+    const warrantyCovered = maintenanceHistory.filter(m => m.warrantyCovered).length;
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Total Records: ${maintenanceHistory.length}`, 20, yPos);
+    doc.text(`Total Cost: ${formatCurrency(totalCost)}`, 100, yPos);
+    yPos += 6;
+    doc.text(`Warranty Covered: ${warrantyCovered}`, 20, yPos);
+    yPos += 10;
+    
+    // Maintenance Table
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('MAINTENANCE RECORDS', 20, yPos);
+    yPos += 8;
+    
+    const headers = ['Date', 'Asset', 'Type', 'Cost', 'Performed By', 'Warranty'];
+    const tableData = maintenanceHistory.map(record => [
+      record.maintenanceDate,
+      record.assetName,
+      record.maintenanceType,
+      record.cost,
+      record.performedBy,
+      record.warrantyCovered ? 'Yes' : 'No'
+    ]);
+    
+    drawTable(doc, headers, tableData, 20, yPos, {
+      fontSize: 7,
+      headerBackground: [230, 126, 34]
+    });
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, 285, { align: 'center' });
+      doc.text('Confidential - Asset Management System', pageWidth / 2, 290, { align: 'center' });
+    }
+    
+    doc.save(`maintenance-report-${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
+  const generateInsurancePDF = () => {
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = doc.internal.pageSize.width;
+    
+    // Report Header
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('INSURANCE POLICIES REPORT', pageWidth / 2, 15, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}`, pageWidth / 2, 22, { align: 'center' });
+    
+    // Summary
+    let yPos = 30;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('INSURANCE SUMMARY', 20, yPos);
+    yPos += 8;
+    
+    const totalCoverage = insurancePolicies.reduce((sum, policy) => 
+      sum + parseInt(policy.coverageAmount.replace(/[^0-9]/g, '')), 0
+    );
+    const totalPremium = insurancePolicies.reduce((sum, policy) => 
+      sum + parseInt(policy.premium.replace(/[^0-9]/g, '')), 0
+    );
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Total Policies: ${insurancePolicies.length}`, 20, yPos);
+    doc.text(`Total Coverage: ${formatCurrency(totalCoverage)}`, 100, yPos);
+    yPos += 6;
+    doc.text(`Total Premium: ${formatCurrency(totalPremium)}`, 20, yPos);
+    yPos += 10;
+    
+    // Insurance Policies Table
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('INSURANCE POLICIES', 20, yPos);
+    yPos += 8;
+    
+    const headers = ['Policy ID', 'Asset', 'Provider', 'Coverage', 'Premium', 'Validity'];
+    const tableData = insurancePolicies.map(policy => [
+      policy.policyId,
+      policy.assetName,
+      policy.provider,
+      policy.coverageAmount,
+      policy.premium,
+      policy.endDate
+    ]);
+    
+    drawTable(doc, headers, tableData, 20, yPos, {
+      fontSize: 7,
+      headerBackground: [41, 128, 185]
+    });
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, 285, { align: 'center' });
+      doc.text('Confidential - Asset Management System', pageWidth / 2, 290, { align: 'center' });
+    }
+    
+    doc.save(`insurance-report-${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
+  const generateReturnsPDF = () => {
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = doc.internal.pageSize.width;
+    
+    // Report Header
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('ASSET RETURNS REPORT', pageWidth / 2, 15, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}`, pageWidth / 2, 22, { align: 'center' });
+    
+    // Summary
+    let yPos = 30;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('RETURNS SUMMARY', 20, yPos);
+    yPos += 8;
+    
+    const totalPenalty = assetReturns.reduce((sum, returnItem) => 
+      sum + parseInt(returnItem.penaltyAmount.replace(/[^0-9]/g, '')), 0
+    );
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Total Returns: ${assetReturns.length}`, 20, yPos);
+    doc.text(`Total Penalty: ${formatCurrency(totalPenalty)}`, 100, yPos);
+    yPos += 10;
+    
+    // Returns Table
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('ASSET RETURNS', 20, yPos);
+    yPos += 8;
+    
+    const headers = ['Return ID', 'Asset', 'Employee', 'Return Date', 'Reason', 'Condition'];
+    const tableData = assetReturns.map(returnItem => [
+      returnItem.returnId,
+      returnItem.assetName,
+      returnItem.employeeName,
+      returnItem.returnDate,
+      returnItem.returnReason,
+      returnItem.conditionAtReturn
+    ]);
+    
+    drawTable(doc, headers, tableData, 20, yPos, {
+      fontSize: 7,
+      headerBackground: [39, 174, 96]
+    });
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, 285, { align: 'center' });
+      doc.text('Confidential - Asset Management System', pageWidth / 2, 290, { align: 'center' });
+    }
+    
+    doc.save(`returns-report-${new Date().toISOString().split('T')[0]}.pdf`);
+  };
 
   // Handlers
   const handleAddAsset = (assetData) => {
@@ -1250,1129 +1383,232 @@ const AssestManagement = () => {
     alert(`Maintenance record added successfully!`);
   };
 
-  // Reports
-  const generateAssetInventoryReport = () => {
-    const report = {
-      title: 'Asset Inventory Report',
-      generatedDate: new Date().toISOString().split('T')[0],
-      summary: statistics,
-      assets: assetMaster,
-      categories: assetCategories.map(cat => ({
-        category: cat.label,
-        count: assetMaster.filter(a => a.category === cat.value).length,
-        totalValue: assetMaster
-          .filter(a => a.category === cat.value)
-          .reduce((sum, asset) => sum + parseInt(asset.currentValue.replace(/[^0-9]/g, '')), 0)
-      })),
-      departments: departments.map(dept => ({
-        department: dept,
-        assets: assetMaster.filter(a => a.department === dept).length,
-        allocated: assetMaster.filter(a => a.department === dept && a.status === 'Allocated').length
-      }))
-    };
-    
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `asset-inventory-report-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    alert('Asset inventory report downloaded!');
-  };
+  // Filter assets based on search term
+  const filteredAssets = assetMaster.filter(asset =>
+    searchTerm === '' ||
+    asset.assetName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    asset.assetTag.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    asset.serialNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    asset.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (asset.allocatedTo && asset.allocatedTo.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
-  const generateEmployeeWiseReport = () => {
-    const report = {
-      title: 'Employee-wise Asset Allocation Report',
-      generatedDate: new Date().toISOString().split('T')[0],
-      allocations: assetAllocations.filter(a => a.status === 'Active'),
-      summary: {
-        totalAllocations: assetAllocations.filter(a => a.status === 'Active').length,
-        totalEmployees: new Set(assetAllocations.filter(a => a.status === 'Active').map(a => a.employeeId)).size,
-        departments: [...new Set(assetAllocations.filter(a => a.status === 'Active').map(a => a.department))]
-      }
-    };
-    
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `employee-asset-report-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    alert('Employee-wise asset report downloaded!');
-  };
-
-  const generateDepreciationReport = () => {
-    const report = {
-      title: 'Asset Depreciation Report',
-      generatedDate: new Date().toISOString().split('T')[0],
-      schedule: depreciationSchedule,
-      summary: {
-        totalAssets: depreciationSchedule.length,
-        totalPurchaseValue: depreciationSchedule.reduce((sum, asset) => sum + parseInt(asset.purchasePrice.replace(/[^0-9]/g, '')), 0),
-        totalCurrentValue: depreciationSchedule.reduce((sum, asset) => sum + parseInt(asset.currentValue.replace(/[^0-9]/g, '')), 0),
-        totalDepreciation: depreciationSchedule.reduce((sum, asset) => sum + parseInt(asset.accumulatedDepreciation.replace(/[^0-9]/g, '')), 0)
-      }
-    };
-    
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `depreciation-report-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    alert('Depreciation report downloaded!');
-  };
-
-  // Filter Modal Component
-  const FilterModal = () => (
-    <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog modal-dialog-centered modal-lg">
-        <div className="modal-content">
-          <div className="modal-header bg-primary text-white">
-            <h5 className="modal-title fw-bold">
-              <Filter className="me-2" />
-              Advanced Filters
-            </h5>
-            <button className="btn-close btn-close-white" onClick={() => setShowFilterModal(false)}></button>
+  // Reports Section Component
+  const ReportsSection = () => (
+    <div className="row g-4">
+      <div className="col-12 col-md-6">
+        <div className="card h-100">
+          <div className="card-header bg-primary text-white">
+            <h6 className="fw-bold mb-0">
+              <FileText className="me-2" />
+              Asset Inventory Report (PDF)
+            </h6>
           </div>
-          
-          <div className="modal-body">
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Asset Category</label>
-                <select
-                  name="category"
-                  value={filters.category}
-                  onChange={handleFilterChange}
-                  className="form-select"
-                >
-                  <option value="">All Categories</option>
-                  {assetCategories.map(category => (
-                    <option key={category.value} value={category.value}>
-                      {category.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Status</label>
-                <select
-                  name="status"
-                  value={filters.status}
-                  onChange={handleFilterChange}
-                  className="form-select"
-                >
-                  <option value="">All Statuses</option>
-                  {assetStatuses.map(status => (
-                    <option key={status.value} value={status.value}>
-                      {status.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+          <div className="card-body">
+            <p className="text-muted">Complete inventory with all asset details, categories, and current values.</p>
+            <div className="mb-3">
+              <h6>Report Includes:</h6>
+              <ul className="small">
+                <li>Asset master data with all fields</li>
+                <li>Category-wise summary</li>
+                <li>Department-wise allocation</li>
+                <li>Current value calculation</li>
+                <li>Status distribution</li>
+              </ul>
             </div>
-            
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Condition</label>
-                <select
-                  name="condition"
-                  value={filters.condition}
-                  onChange={handleFilterChange}
-                  className="form-select"
-                >
-                  <option value="">All Conditions</option>
-                  {assetConditions.map(condition => (
-                    <option key={condition.value} value={condition.value}>
-                      {condition.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Department</label>
-                <select
-                  name="department"
-                  value={filters.department}
-                  onChange={handleFilterChange}
-                  className="form-select"
-                >
-                  <option value="">All Departments</option>
-                  {departments.map(dept => (
-                    <option key={dept} value={dept}>
-                      {dept}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <button className="btn btn-primary w-100" onClick={generateAssetInventoryPDF}>
+              <Download className="me-2" size={16} />
+              Download PDF Report
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div className="col-12 col-md-6">
+        <div className="card h-100">
+          <div className="card-header bg-success text-white">
+            <h6 className="fw-bold mb-0">
+              <Users className="me-2" />
+              Employee-wise Allocation Report (PDF)
+            </h6>
+          </div>
+          <div className="card-body">
+            <p className="text-muted">Detailed report of assets allocated to each employee.</p>
+            <div className="mb-3">
+              <h6>Report Includes:</h6>
+              <ul className="small">
+                <li>Employee-wise asset list</li>
+                <li>Allocation dates and terms</li>
+                <li>Department-wise summary</li>
+                <li>Pending returns list</li>
+                <li>Insurance coverage details</li>
+              </ul>
             </div>
-            
+            <button className="btn btn-success w-100" onClick={generateEmployeeWisePDF}>
+              <Download className="me-2" size={16} />
+              Download PDF Report
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div className="col-12 col-md-6">
+        <div className="card h-100">
+          <div className="card-header bg-info text-white">
+            <h6 className="fw-bold mb-0">
+              <TrendingDown className="me-2" />
+              Depreciation Report (PDF)
+            </h6>
+          </div>
+          <div className="card-body">
+            <p className="text-muted">Detailed depreciation schedule and calculations for all assets.</p>
+            <div className="mb-3">
+              <h6>Report Includes:</h6>
+              <ul className="small">
+                <li>Depreciation schedule for each asset</li>
+                <li>Purchase price vs current value</li>
+                <li>Accumulated depreciation</li>
+                <li>Net book values</li>
+                <li>Next depreciation dates</li>
+              </ul>
+            </div>
+            <button className="btn btn-info w-100 text-white" onClick={generateDepreciationPDF}>
+              <Download className="me-2" size={16} />
+              Download PDF Report
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div className="col-12 col-md-6">
+        <div className="card h-100">
+          <div className="card-header bg-warning text-dark">
+            <h6 className="fw-bold mb-0">
+              <AlertCircle className="me-2" />
+              Maintenance Report (PDF)
+            </h6>
+          </div>
+          <div className="card-body">
+            <p className="text-muted">Complete maintenance history and cost analysis.</p>
+            <div className="mb-3">
+              <h6>Report Includes:</h6>
+              <ul className="small">
+                <li>Maintenance history for all assets</li>
+                <li>Cost analysis and trends</li>
+                <li>Warranty vs non-warranty repairs</li>
+                <li>Upcoming maintenance schedule</li>
+                <li>Service provider details</li>
+              </ul>
+            </div>
+            <button className="btn btn-warning w-100" onClick={generateMaintenancePDF}>
+              <Download className="me-2" size={16} />
+              Download PDF Report
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="col-12 col-md-6">
+        <div className="card h-100">
+          <div className="card-header bg-purple text-white" style={{ backgroundColor: '#6f42c1' }}>
+            <h6 className="fw-bold mb-0">
+              <ShieldCheck className="me-2" />
+              Insurance Report (PDF)
+            </h6>
+          </div>
+          <div className="card-body">
+            <p className="text-muted">Insurance policies and claim history.</p>
+            <div className="mb-3">
+              <h6>Report Includes:</h6>
+              <ul className="small">
+                <li>Insurance policy details</li>
+                <li>Coverage amounts and premiums</li>
+                <li>Claim history</li>
+                <li>Policy expiry dates</li>
+                <li>Provider-wise summary</li>
+              </ul>
+            </div>
+            <button className="btn w-100" style={{ backgroundColor: '#6f42c1', color: 'white' }} onClick={generateInsurancePDF}>
+              <Download className="me-2" size={16} />
+              Download Insurance Report
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="col-12 col-md-6">
+        <div className="card h-100">
+          <div className="card-header bg-teal text-white" style={{ backgroundColor: '#20c997' }}>
+            <h6 className="fw-bold mb-0">
+              <ArchiveRestore className="me-2" />
+              Asset Return Report (PDF)
+            </h6>
+          </div>
+          <div className="card-body">
+            <p className="text-muted">Asset return history and condition analysis.</p>
+            <div className="mb-3">
+              <h6>Report Includes:</h6>
+              <ul className="small">
+                <li>Return history for all assets</li>
+                <li>Condition analysis</li>
+                <li>Penalty calculations</li>
+                <li>Missing items report</li>
+                <li>Employee-wise return summary</li>
+              </ul>
+            </div>
+            <button className="btn w-100" style={{ backgroundColor: '#20c997', color: 'white' }} onClick={generateReturnsPDF}>
+              <Download className="me-2" size={16} />
+              Download Returns Report
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="col-12">
+        <div className="card">
+          <div className="card-header bg-dark text-white">
+            <h6 className="fw-bold mb-0">
+              <Printer className="me-2" />
+              Bulk Report Generator
+            </h6>
+          </div>
+          <div className="card-body">
             <div className="row">
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Location</label>
-                <select
-                  name="location"
-                  value={filters.location}
-                  onChange={handleFilterChange}
-                  className="form-select"
-                >
-                  <option value="">All Locations</option>
-                  {locations.map(location => (
-                    <option key={location} value={location}>
-                      {location}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Value Range (₹)</label>
-                <div className="row">
-                  <div className="col-6">
-                    <input
-                      type="number"
-                      name="minValue"
-                      value={filters.minValue}
-                      onChange={handleFilterChange}
-                      className="form-control"
-                      placeholder="Min"
-                      min="0"
-                    />
+              <div className="col-md-8">
+                <p className="text-muted">Generate multiple reports at once with custom date ranges.</p>
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label">From Date</label>
+                    <input type="date" className="form-control" defaultValue={new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString().split('T')[0]} />
                   </div>
-                  <div className="col-6">
-                    <input
-                      type="number"
-                      name="maxValue"
-                      value={filters.maxValue}
-                      onChange={handleFilterChange}
-                      className="form-control"
-                      placeholder="Max"
-                      min="0"
-                    />
+                  <div className="col-md-6">
+                    <label className="form-label">To Date</label>
+                    <input type="date" className="form-control" defaultValue={new Date().toISOString().split('T')[0]} />
                   </div>
                 </div>
               </div>
-            </div>
-            
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Purchase Date Range</label>
-                <div className="row">
-                  <div className="col-6">
-                    <input
-                      type="date"
-                      name="dateFrom"
-                      value={filters.dateFrom}
-                      onChange={handleFilterChange}
-                      className="form-control"
-                      placeholder="From"
-                    />
-                  </div>
-                  <div className="col-6">
-                    <input
-                      type="date"
-                      name="dateTo"
-                      value={filters.dateTo}
-                      onChange={handleFilterChange}
-                      className="form-control"
-                      placeholder="To"
-                    />
-                  </div>
-                </div>
+              <div className="col-md-4 d-flex align-items-end">
+                <button className="btn btn-dark w-100" onClick={() => {
+                  generateAssetInventoryPDF();
+                  setTimeout(() => generateEmployeeWisePDF(), 1000);
+                  setTimeout(() => generateDepreciationPDF(), 2000);
+                  setTimeout(() => generateMaintenancePDF(), 3000);
+                  setTimeout(() => generateInsurancePDF(), 4000);
+                  setTimeout(() => generateReturnsPDF(), 5000);
+                }}>
+                  <Download className="me-2" size={16} />
+                  Generate All Reports
+                </button>
               </div>
             </div>
-          </div>
-          
-          <div className="modal-footer">
-            <button type="button" className="btn btn-outline-danger" onClick={resetFilters}>
-              Reset All Filters
-            </button>
-            <button type="button" className="btn btn-secondary" onClick={() => setShowFilterModal(false)}>
-              Cancel
-            </button>
-            <button type="button" className="btn btn-primary" onClick={() => setShowFilterModal(false)}>
-              Apply Filters
-            </button>
           </div>
         </div>
       </div>
     </div>
   );
 
-  // Modal Components
-  const AssetMasterModal = () => {
-    const [formData, setFormData] = useState({
-      assetName: '',
-      category: 'Laptop',
-      make: '',
-      model: '',
-      serialNumber: '',
-      purchaseDate: new Date().toISOString().split('T')[0],
-      purchasePrice: '',
-      depreciationRate: '15',
-      condition: 'Brand New',
-      location: 'Head Office - Floor 1',
-      department: 'IT',
-      warrantyUntil: '',
-      insuranceProvider: '',
-      insurancePolicy: ''
-    });
-
-    return (
-      <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-        <div className="modal-dialog modal-dialog-centered modal-lg">
-          <div className="modal-content">
-            <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title fw-bold">
-                <Package className="me-2" />
-                Add New Asset
-              </h5>
-              <button className="btn-close btn-close-white" onClick={() => setShowAssetModal(false)}></button>
-            </div>
-            
-            <div className="modal-body">
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Asset Name *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.assetName}
-                    onChange={(e) => setFormData({...formData, assetName: e.target.value})}
-                    required
-                    placeholder="e.g., Dell Latitude 5440"
-                  />
-                </div>
-                
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Asset Category *</label>
-                  <select
-                    className="form-select"
-                    value={formData.category}
-                    onChange={(e) => setFormData({...formData, category: e.target.value})}
-                    required
-                  >
-                    <option value="">Select Category</option>
-                    {assetCategories.map(category => (
-                      <option key={category.value} value={category.value}>
-                        {category.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Make *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.make}
-                    onChange={(e) => setFormData({...formData, make: e.target.value})}
-                    required
-                    placeholder="e.g., Dell, HP, Apple"
-                  />
-                </div>
-                
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Model *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.model}
-                    onChange={(e) => setFormData({...formData, model: e.target.value})}
-                    required
-                    placeholder="e.g., Latitude 5440, iPhone 15 Pro"
-                  />
-                </div>
-              </div>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Serial Number *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.serialNumber}
-                    onChange={(e) => setFormData({...formData, serialNumber: e.target.value})}
-                    required
-                    placeholder="Unique serial number"
-                  />
-                </div>
-                
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Purchase Date *</label>
-                  <input
-                    type="date"
-                    className="form-control"
-                    value={formData.purchaseDate}
-                    onChange={(e) => setFormData({...formData, purchaseDate: e.target.value})}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Purchase Price (₹) *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.purchasePrice}
-                    onChange={(e) => setFormData({...formData, purchasePrice: e.target.value})}
-                    required
-                    placeholder="e.g., 85000"
-                  />
-                </div>
-                
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Depreciation Rate (%) *</label>
-                  <select
-                    className="form-select"
-                    value={formData.depreciationRate}
-                    onChange={(e) => setFormData({...formData, depreciationRate: e.target.value})}
-                    required
-                  >
-                    <option value="10">10%</option>
-                    <option value="15">15%</option>
-                    <option value="20">20%</option>
-                    <option value="25">25%</option>
-                    <option value="30">30%</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Condition *</label>
-                  <select
-                    className="form-select"
-                    value={formData.condition}
-                    onChange={(e) => setFormData({...formData, condition: e.target.value})}
-                    required
-                  >
-                    {assetConditions.map(condition => (
-                      <option key={condition.value} value={condition.value}>
-                        {condition.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Location *</label>
-                  <select
-                    className="form-select"
-                    value={formData.location}
-                    onChange={(e) => setFormData({...formData, location: e.target.value})}
-                    required
-                  >
-                    <option value="">Select Location</option>
-                    {locations.map(location => (
-                      <option key={location} value={location}>
-                        {location}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Department *</label>
-                  <select
-                    className="form-select"
-                    value={formData.department}
-                    onChange={(e) => setFormData({...formData, department: e.target.value})}
-                    required
-                  >
-                    <option value="">Select Department</option>
-                    {departments.map(dept => (
-                      <option key={dept} value={dept}>
-                        {dept}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Warranty Until</label>
-                  <input
-                    type="date"
-                    className="form-control"
-                    value={formData.warrantyUntil}
-                    onChange={(e) => setFormData({...formData, warrantyUntil: e.target.value})}
-                  />
-                </div>
-              </div>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Insurance Provider</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.insuranceProvider}
-                    onChange={(e) => setFormData({...formData, insuranceProvider: e.target.value})}
-                    placeholder="e.g., ICICI Lombard"
-                  />
-                </div>
-                
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Insurance Policy No.</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.insurancePolicy}
-                    onChange={(e) => setFormData({...formData, insurancePolicy: e.target.value})}
-                    placeholder="Policy number"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div className="modal-footer">
-              <button className="btn btn-outline-secondary" onClick={() => setShowAssetModal(false)}>
-                Cancel
-              </button>
-              <button 
-                className="btn btn-primary" 
-                onClick={() => handleAddAsset(formData)}
-                disabled={!formData.assetName || !formData.make || !formData.model || !formData.serialNumber || !formData.purchasePrice}
-              >
-                <Save className="me-2" size={16} />
-                Save Asset
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const AssetAllocationModal = () => {
-    const [formData, setFormData] = useState({
-      assetId: '',
-      employeeId: '',
-      employeeName: '',
-      department: '',
-      allocationType: 'New Joining',
-      allocationReason: '',
-      expectedReturnDate: '',
-      approvedBy: '',
-      insuranceCoverage: 'Basic Coverage'
-    });
-
-    const availableAssets = assetMaster.filter(a => a.status === 'Available');
-
-    return (
-      <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-        <div className="modal-dialog modal-dialog-centered modal-lg">
-          <div className="modal-content">
-            <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title fw-bold">
-                <Truck className="me-2" />
-                Allocate Asset
-              </h5>
-              <button className="btn-close btn-close-white" onClick={() => setShowAllocationModal(false)}></button>
-            </div>
-            
-            <div className="modal-body">
-              <div className="alert alert-info">
-                <Info className="me-2" size={16} />
-                Select an available asset and provide employee details for allocation.
-              </div>
-              
-              <div className="mb-3">
-                <label className="form-label">Select Asset *</label>
-                <select
-                  className="form-select"
-                  value={formData.assetId}
-                  onChange={(e) => {
-                    const asset = assetMaster.find(a => a.id === parseInt(e.target.value));
-                    setFormData({
-                      ...formData,
-                      assetId: e.target.value,
-                      department: asset?.department || ''
-                    });
-                  }}
-                  required
-                >
-                  <option value="">Select Available Asset</option>
-                  {availableAssets.map(asset => (
-                    <option key={asset.id} value={asset.id}>
-                      {asset.assetName} ({asset.assetTag}) - {formatCurrency(asset.currentValue)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Employee ID *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.employeeId}
-                    onChange={(e) => setFormData({...formData, employeeId: e.target.value})}
-                    required
-                    placeholder="e.g., EMP001"
-                  />
-                </div>
-                
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Employee Name *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.employeeName}
-                    onChange={(e) => setFormData({...formData, employeeName: e.target.value})}
-                    required
-                    placeholder="Full name"
-                  />
-                </div>
-              </div>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Department *</label>
-                  <select
-                    className="form-select"
-                    value={formData.department}
-                    onChange={(e) => setFormData({...formData, department: e.target.value})}
-                    required
-                  >
-                    <option value="">Select Department</option>
-                    {departments.map(dept => (
-                      <option key={dept} value={dept}>
-                        {dept}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Allocation Type *</label>
-                  <select
-                    className="form-select"
-                    value={formData.allocationType}
-                    onChange={(e) => setFormData({...formData, allocationType: e.target.value})}
-                    required
-                  >
-                    <option value="New Joining">New Joining</option>
-                    <option value="Role Change">Role Change</option>
-                    <option value="Replacement">Replacement</option>
-                    <option value="Project Requirement">Project Requirement</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="mb-3">
-                <label className="form-label">Allocation Reason *</label>
-                <textarea
-                  className="form-control"
-                  rows="3"
-                  value={formData.allocationReason}
-                  onChange={(e) => setFormData({...formData, allocationReason: e.target.value})}
-                  required
-                  placeholder="Reason for asset allocation..."
-                />
-              </div>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Expected Return Date</label>
-                  <input
-                    type="date"
-                    className="form-control"
-                    value={formData.expectedReturnDate}
-                    onChange={(e) => setFormData({...formData, expectedReturnDate: e.target.value})}
-                  />
-                </div>
-                
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Approved By *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.approvedBy}
-                    onChange={(e) => setFormData({...formData, approvedBy: e.target.value})}
-                    required
-                    placeholder="Manager/Director name"
-                  />
-                </div>
-              </div>
-              
-              <div className="mb-3">
-                <label className="form-label">Insurance Coverage *</label>
-                <select
-                  className="form-select"
-                  value={formData.insuranceCoverage}
-                  onChange={(e) => setFormData({...formData, insuranceCoverage: e.target.value})}
-                  required
-                >
-                  <option value="Basic Coverage">Basic Coverage</option>
-                  <option value="Full Coverage">Full Coverage</option>
-                  <option value="Premium Coverage">Premium Coverage</option>
-                  <option value="No Coverage">No Coverage</option>
-                </select>
-              </div>
-              
-              <div className="card border">
-                <div className="card-header">
-                  <h6 className="fw-bold mb-0">Handover Checklist</h6>
-                </div>
-                <div className="card-body">
-                  <div className="form-check mb-2">
-                    <input className="form-check-input" type="checkbox" id="check1" />
-                    <label className="form-check-label" htmlFor="check1">
-                      Asset in good condition
-                    </label>
-                  </div>
-                  <div className="form-check mb-2">
-                    <input className="form-check-input" type="checkbox" id="check2" />
-                    <label className="form-check-label" htmlFor="check2">
-                      All accessories included
-                    </label>
-                  </div>
-                  <div className="form-check mb-2">
-                    <input className="form-check-input" type="checkbox" id="check3" />
-                    <label className="form-check-label" htmlFor="check3">
-                      User manual provided
-                    </label>
-                  </div>
-                  <div className="form-check mb-2">
-                    <input className="form-check-input" type="checkbox" id="check4" />
-                    <label className="form-check-label" htmlFor="check4">
-                      Terms and conditions explained
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="modal-footer">
-              <button className="btn btn-outline-secondary" onClick={() => setShowAllocationModal(false)}>
-                Cancel
-              </button>
-              <button 
-                className="btn btn-primary" 
-                onClick={() => handleAllocateAsset(formData)}
-                disabled={!formData.assetId || !formData.employeeId || !formData.employeeName || !formData.department || !formData.allocationReason || !formData.approvedBy}
-              >
-                <Check className="me-2" size={16} />
-                Allocate Asset
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const AssetReturnModal = () => {
-    const [formData, setFormData] = useState({
-      assetId: '',
-      employeeId: '',
-      returnReason: '',
-      conditionAtReturn: 'Good',
-      physicalVerification: true,
-      missingItems: '',
-      damageDetails: '',
-      penaltyAmount: '0',
-      penaltyReason: ''
-    });
-
-    const allocatedAssets = assetMaster.filter(a => a.status === 'Allocated');
-
-    return (
-      <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-        <div className="modal-dialog modal-dialog-centered modal-lg">
-          <div className="modal-content">
-            <div className="modal-header bg-warning text-dark">
-              <h5 className="modal-title fw-bold">
-                <ArchiveRestore className="me-2" />
-                Process Asset Return
-              </h5>
-              <button className="btn-close" onClick={() => setShowReturnModal(false)}></button>
-            </div>
-            
-            <div className="modal-body">
-              <div className="alert alert-warning">
-                <AlertCircle className="me-2" size={16} />
-                <strong>Note:</strong> Complete physical verification before processing return.
-              </div>
-              
-              <div className="mb-3">
-                <label className="form-label">Select Asset to Return *</label>
-                <select
-                  className="form-select"
-                  value={formData.assetId}
-                  onChange={(e) => {
-                    const asset = assetMaster.find(a => a.id === parseInt(e.target.value));
-                    setFormData({
-                      ...formData,
-                      assetId: e.target.value,
-                      employeeId: asset?.allocatedTo?.split(' - ')[0] || ''
-                    });
-                  }}
-                  required
-                >
-                  <option value="">Select Allocated Asset</option>
-                  {allocatedAssets.map(asset => (
-                    <option key={asset.id} value={asset.id}>
-                      {asset.assetName} ({asset.assetTag}) - Allocated to: {asset.allocatedTo}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Employee ID *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.employeeId}
-                    onChange={(e) => setFormData({...formData, employeeId: e.target.value})}
-                    required
-                    disabled
-                  />
-                </div>
-                
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Return Reason *</label>
-                  <select
-                    className="form-select"
-                    value={formData.returnReason}
-                    onChange={(e) => setFormData({...formData, returnReason: e.target.value})}
-                    required
-                  >
-                    <option value="">Select Reason</option>
-                    <option value="Employee Resignation">Employee Resignation</option>
-                    <option value="Internal Transfer">Internal Transfer</option>
-                    <option value="Asset Upgrade">Asset Upgrade</option>
-                    <option value="End of Project">End of Project</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Condition at Return *</label>
-                  <select
-                    className="form-select"
-                    value={formData.conditionAtReturn}
-                    onChange={(e) => setFormData({...formData, conditionAtReturn: e.target.value})}
-                    required
-                  >
-                    {assetConditions.map(condition => (
-                      <option key={condition.value} value={condition.value}>
-                        {condition.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Physical Verification</label>
-                  <div className="form-check mt-2">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      checked={formData.physicalVerification}
-                      onChange={(e) => setFormData({...formData, physicalVerification: e.target.checked})}
-                      id="physicalVerification"
-                    />
-                    <label className="form-check-label" htmlFor="physicalVerification">
-                      Asset physically verified
-                    </label>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mb-3">
-                <label className="form-label">Return Checklist</label>
-                <div className="card border">
-                  <div className="card-body">
-                    <div className="row">
-                      <div className="col-md-6">
-                        <div className="form-check mb-2">
-                          <input className="form-check-input" type="checkbox" id="returnCheck1" />
-                          <label className="form-check-label" htmlFor="returnCheck1">
-                            Asset received
-                          </label>
-                        </div>
-                        <div className="form-check mb-2">
-                          <input className="form-check-input" type="checkbox" id="returnCheck2" />
-                          <label className="form-check-label" htmlFor="returnCheck2">
-                            All accessories returned
-                          </label>
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-check mb-2">
-                          <input className="form-check-input" type="checkbox" id="returnCheck3" />
-                          <label className="form-check-label" htmlFor="returnCheck3">
-                            Data wiped/backup taken
-                          </label>
-                        </div>
-                        <div className="form-check mb-2">
-                          <input className="form-check-input" type="checkbox" id="returnCheck4" />
-                          <label className="form-check-label" htmlFor="returnCheck4">
-                            Condition documented
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Missing Items</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.missingItems}
-                    onChange={(e) => setFormData({...formData, missingItems: e.target.value})}
-                    placeholder="List missing items, if any"
-                  />
-                </div>
-                
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Damage Details</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.damageDetails}
-                    onChange={(e) => setFormData({...formData, damageDetails: e.target.value})}
-                    placeholder="Describe any damage"
-                  />
-                </div>
-              </div>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Penalty Amount (₹)</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.penaltyAmount}
-                    onChange={(e) => setFormData({...formData, penaltyAmount: e.target.value})}
-                    placeholder="0"
-                  />
-                </div>
-                
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Penalty Reason</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.penaltyReason}
-                    onChange={(e) => setFormData({...formData, penaltyReason: e.target.value})}
-                    placeholder="Reason for penalty, if any"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div className="modal-footer">
-              <button className="btn btn-outline-secondary" onClick={() => setShowReturnModal(false)}>
-                Cancel
-              </button>
-              <button 
-                className="btn btn-warning" 
-                onClick={() => handleReturnAsset(formData)}
-                disabled={!formData.assetId || !formData.returnReason || !formData.conditionAtReturn}
-              >
-                <ArchiveRestore className="me-2" size={16} />
-                Process Return
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const MaintenanceModal = () => {
-    const [formData, setFormData] = useState({
-      assetId: '',
-      maintenanceType: 'Preventive',
-      maintenanceDate: new Date().toISOString().split('T')[0],
-      cost: '',
-      performedBy: '',
-      description: '',
-      nextMaintenanceDate: '',
-      warrantyCovered: false
-    });
-
-    return (
-      <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-        <div className="modal-dialog modal-dialog-centered modal-lg">
-          <div className="modal-content">
-            <div className="modal-header bg-info text-white">
-              <h5 className="modal-title fw-bold">
-                <Wrench className="me-2" />
-                Add Maintenance Record
-              </h5>
-              <button className="btn-close btn-close-white" onClick={() => setShowMaintenanceModal(false)}></button>
-            </div>
-            
-            <div className="modal-body">
-              <div className="mb-3">
-                <label className="form-label">Select Asset *</label>
-                <select
-                  className="form-select"
-                  value={formData.assetId}
-                  onChange={(e) => setFormData({...formData, assetId: e.target.value})}
-                  required
-                >
-                  <option value="">Select Asset</option>
-                  {assetMaster.map(asset => (
-                    <option key={asset.id} value={asset.id}>
-                      {asset.assetName} ({asset.assetTag})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Maintenance Type *</label>
-                  <select
-                    className="form-select"
-                    value={formData.maintenanceType}
-                    onChange={(e) => setFormData({...formData, maintenanceType: e.target.value})}
-                    required
-                  >
-                    <option value="Preventive">Preventive</option>
-                    <option value="Corrective">Corrective</option>
-                    <option value="Emergency">Emergency</option>
-                    <option value="Routine Check">Routine Check</option>
-                    <option value="Upgrade">Upgrade</option>
-                  </select>
-                </div>
-                
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Maintenance Date *</label>
-                  <input
-                    type="date"
-                    className="form-control"
-                    value={formData.maintenanceDate}
-                    onChange={(e) => setFormData({...formData, maintenanceDate: e.target.value})}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Cost (₹) *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.cost}
-                    onChange={(e) => setFormData({...formData, cost: e.target.value})}
-                    required
-                    placeholder="0"
-                  />
-                </div>
-                
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Performed By *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.performedBy}
-                    onChange={(e) => setFormData({...formData, performedBy: e.target.value})}
-                    required
-                    placeholder="Technician/Service center name"
-                  />
-                </div>
-              </div>
-              
-              <div className="mb-3">
-                <label className="form-label">Description *</label>
-                <textarea
-                  className="form-control"
-                  rows="3"
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  required
-                  placeholder="Describe maintenance work done..."
-                />
-              </div>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Next Maintenance Date</label>
-                  <input
-                    type="date"
-                    className="form-control"
-                    value={formData.nextMaintenanceDate}
-                    onChange={(e) => setFormData({...formData, nextMaintenanceDate: e.target.value})}
-                  />
-                </div>
-                
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Warranty Covered</label>
-                  <div className="form-check mt-2">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      checked={formData.warrantyCovered}
-                      onChange={(e) => setFormData({...formData, warrantyCovered: e.target.checked})}
-                      id="warrantyCovered"
-                    />
-                    <label className="form-check-label" htmlFor="warrantyCovered">
-                      Covered under warranty
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="modal-footer">
-              <button className="btn btn-outline-secondary" onClick={() => setShowMaintenanceModal(false)}>
-                Cancel
-              </button>
-              <button 
-                className="btn btn-info text-white" 
-                onClick={() => handleAddMaintenance(formData)}
-                disabled={!formData.assetId || !formData.cost || !formData.performedBy || !formData.description}
-              >
-                <Save className="me-2" size={16} />
-                Save Record
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   // Main Component
-  const mainContent = (
+  return (
     <div className="container-fluid px-3 px-md-4 py-3">
       {/* Header */}
       <div className="mb-4">
@@ -2453,13 +1689,13 @@ const AssestManagement = () => {
             <div className="d-flex justify-content-between align-items-center">
               <div>
                 <div className="text-muted small mb-1">Total Assets</div>
-                <div className="h3 mb-0 fw-bold text-primary">{filteredAssets.length}</div>
+                <div className="h3 mb-0 fw-bold text-primary">{statistics.totalAssets}</div>
               </div>
               <Package size={24} className="text-primary opacity-75" />
             </div>
             <div className="small text-success mt-2">
               <TrendingUp size={12} className="me-1" />
-              {formatCurrency(filteredAssets.reduce((sum, asset) => sum + parseInt(asset.currentValue.replace(/[^0-9]/g, '')), 0))} total value
+              {formatCurrency(statistics.totalValue)} total value
             </div>
           </div>
         </div>
@@ -2469,12 +1705,12 @@ const AssestManagement = () => {
             <div className="d-flex justify-content-between align-items-center">
               <div>
                 <div className="text-muted small mb-1">Allocated Assets</div>
-                <div className="h3 mb-0 fw-bold text-success">{filteredAssets.filter(a => a.status === 'Allocated').length}</div>
+                <div className="h3 mb-0 fw-bold text-success">{statistics.allocatedAssets}</div>
               </div>
               <Truck size={24} className="text-success opacity-75" />
             </div>
             <div className="small text-muted mt-2">
-              {filteredAssets.length > 0 ? Math.round((filteredAssets.filter(a => a.status === 'Allocated').length / filteredAssets.length) * 100) : 0}% utilization
+              {Math.round((statistics.allocatedAssets / statistics.totalAssets) * 100)}% utilization
             </div>
           </div>
         </div>
@@ -2484,7 +1720,7 @@ const AssestManagement = () => {
             <div className="d-flex justify-content-between align-items-center">
               <div>
                 <div className="text-muted small mb-1">Under Repair</div>
-                <div className="h3 mb-0 fw-bold text-warning">{filteredAssets.filter(a => a.status === 'Under Repair').length}</div>
+                <div className="h3 mb-0 fw-bold text-warning">{statistics.underRepair}</div>
               </div>
               <Wrench size={24} className="text-warning opacity-75" />
             </div>
@@ -2496,12 +1732,12 @@ const AssestManagement = () => {
           <div className="p-3 bg-white border rounded">
             <div className="d-flex justify-content-between align-items-center">
               <div>
-                <div className="text-muted small mb-1">Available</div>
-                <div className="h3 mb-0 fw-bold text-info">{filteredAssets.filter(a => a.status === 'Available').length}</div>
+                <div className="text-muted small mb-1">Pending Returns</div>
+                <div className="h3 mb-0 fw-bold text-info">{statistics.pendingReturns}</div>
               </div>
               <ArchiveRestore size={24} className="text-info opacity-75" />
             </div>
-            <div className="small text-muted mt-2">Ready for allocation</div>
+            <div className="small text-muted mt-2">Follow-up required</div>
           </div>
         </div>
       </div>
@@ -2546,15 +1782,9 @@ const AssestManagement = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <button 
-                className="btn btn-outline-primary"
-                onClick={() => setShowFilterModal(true)}
-              >
+              <button className="btn btn-outline-primary">
                 <Filter size={16} className="me-2" />
-                Filters
-                {activeFiltersCount > 0 && (
-                  <span className="badge bg-danger ms-1">{activeFiltersCount}</span>
-                )}
+                Filter
               </button>
             </div>
           </div>
@@ -2568,7 +1798,7 @@ const AssestManagement = () => {
               </button>
               <button 
                 className="btn btn-outline-secondary flex-grow-1 d-flex align-items-center justify-content-center"
-                onClick={() => setShowReportsModal(true)}
+                onClick={() => setActiveSection('reports')}
               >
                 <Download size={16} />
               </button>
@@ -2583,51 +1813,7 @@ const AssestManagement = () => {
         </div>
       </div>
 
-      {/* Active Filters Display */}
-      {activeFiltersCount > 0 && (
-        <div className="alert alert-info py-2 mb-3">
-          <div className="d-flex justify-content-between align-items-center">
-            <div>
-              <Filter size={16} className="me-2" />
-              <strong>Active Filters:</strong>
-              {searchTerm && (
-                <span className="badge bg-primary ms-2">
-                  Search: "{searchTerm}" <X size={12} className="ms-1" style={{cursor: 'pointer'}} onClick={() => setSearchTerm('')} />
-                </span>
-              )}
-              {filters.category && (
-                <span className="badge bg-info ms-2">
-                  Category: {filters.category} <X size={12} className="ms-1" style={{cursor: 'pointer'}} onClick={() => setFilters({...filters, category: ''})} />
-                </span>
-              )}
-              {filters.status && (
-                <span className="badge bg-warning ms-2">
-                  Status: {filters.status} <X size={12} className="ms-1" style={{cursor: 'pointer'}} onClick={() => setFilters({...filters, status: ''})} />
-                </span>
-              )}
-              {filters.condition && (
-                <span className="badge bg-success ms-2">
-                  Condition: {filters.condition} <X size={12} className="ms-1" style={{cursor: 'pointer'}} onClick={() => setFilters({...filters, condition: ''})} />
-                </span>
-              )}
-              {filters.department && (
-                <span className="badge bg-danger ms-2">
-                  Department: {filters.department} <X size={12} className="ms-1" style={{cursor: 'pointer'}} onClick={() => setFilters({...filters, department: ''})} />
-                </span>
-              )}
-            </div>
-            <button 
-              className="btn btn-sm btn-outline-danger"
-              onClick={resetFilters}
-            >
-              <X size={14} className="me-1" />
-              Clear All
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Asset Master Section */}
+      {/* Dynamic Content based on Active Section */}
       {activeSection === 'master' && (
         <div className="row g-4">
           <div className="col-12">
@@ -2638,7 +1824,7 @@ const AssestManagement = () => {
                   Asset Master
                 </h6>
                 <div className="d-flex gap-2">
-                  <span className="badge bg-primary">{filteredAssets.length} assets</span>
+                  <span className="badge bg-primary">{statistics.totalAssets} assets</span>
                   <button 
                     className="btn btn-sm btn-outline-primary"
                     onClick={() => setShowAssetModal(true)}
@@ -2646,6 +1832,15 @@ const AssestManagement = () => {
                     <Package size={14} className="me-1" />
                     Add New
                   </button>
+                  {selectedAssets.length > 0 && (
+                    <button 
+                      className="btn btn-sm btn-danger"
+                      onClick={handleBulkDelete}
+                    >
+                      <X size={14} className="me-1" />
+                      Delete Selected ({selectedAssets.length})
+                    </button>
+                  )}
                 </div>
               </div>
               <div className="card-body">
@@ -2678,110 +1873,102 @@ const AssestManagement = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredAssets.length === 0 ? (
-                        <tr>
-                          <td colSpan="10" className="text-center py-4">
-                            <Package size={48} className="text-muted mb-2" />
-                            <h6 className="text-muted">No assets found</h6>
-                            <p className="text-muted small mb-0">
-                              {activeFiltersCount > 0 ? 'Try changing your filters' : 'Add your first asset'}
-                            </p>
+                      {filteredAssets.map(asset => (
+                        <tr key={asset.id}>
+                          <td>
+                            <input 
+                              type="checkbox" 
+                              className="form-check-input"
+                              checked={selectedAssets.includes(asset.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedAssets(prev => [...prev, asset.id]);
+                                } else {
+                                  setSelectedAssets(prev => prev.filter(id => id !== asset.id));
+                                }
+                              }}
+                            />
+                          </td>
+                          <td>
+                            <div className="fw-medium">{asset.assetName}</div>
+                            <small className="text-muted">{asset.assetTag}</small>
+                            <div className="small">
+                              <span className="me-2">{asset.make}</span>
+                              <span>{asset.model}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="d-flex align-items-center gap-2">
+                              {getCategoryIcon(asset.category)}
+                              <span>{asset.category}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <code>{asset.serialNumber}</code>
+                          </td>
+                          <td>
+                            <div className="small">
+                              <div>Date: {asset.purchaseDate}</div>
+                              <div>Price: {asset.purchasePrice}</div>
+                            </div>
+                          </td>
+                          <td className="fw-bold text-success">
+                            {asset.currentValue}
+                          </td>
+                          <td>
+                            {getConditionBadge(asset.condition)}
+                          </td>
+                          <td>
+                            {getStatusBadge(asset.status)}
+                          </td>
+                          <td>
+                            {asset.allocatedTo ? (
+                              <div className="small">
+                                <div className="fw-medium">{asset.allocatedTo}</div>
+                                <div className="text-muted">Since: {asset.allocationDate}</div>
+                              </div>
+                            ) : (
+                              <span className="text-muted">Not allocated</span>
+                            )}
+                          </td>
+                          <td>
+                            <div className="btn-group btn-group-sm">
+                              <button 
+                                className="btn btn-outline-primary"
+                                onClick={() => handleViewAsset(asset)}
+                              >
+                                <Eye size={12} />
+                              </button>
+                              <button 
+                                className="btn btn-outline-success"
+                                onClick={() => handleAllocateAssetClick(asset)}
+                                disabled={asset.status !== 'Available'}
+                                title={asset.status !== 'Available' ? 'Asset not available for allocation' : 'Allocate asset'}
+                              >
+                                <Truck size={12} />
+                              </button>
+                              <button 
+                                className="btn btn-outline-info"
+                                onClick={() => handleMaintenanceClick(asset)}
+                              >
+                                <Wrench size={12} />
+                              </button>
+                              <button 
+                                className="btn btn-outline-warning"
+                                onClick={() => handleEditAsset(asset)}
+                              >
+                                <Edit size={12} />
+                              </button>
+                              <button 
+                                className="btn btn-outline-danger"
+                                onClick={() => handleDeleteAsset(asset.id)}
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
-                      ) : (
-                        filteredAssets.map(asset => (
-                          <tr key={asset.id}>
-                            <td>
-                              <input 
-                                type="checkbox" 
-                                className="form-check-input"
-                                checked={selectedAssets.includes(asset.id)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setSelectedAssets(prev => [...prev, asset.id]);
-                                  } else {
-                                    setSelectedAssets(prev => prev.filter(id => id !== asset.id));
-                                  }
-                                }}
-                              />
-                            </td>
-                            <td>
-                              <div className="fw-medium">{asset.assetName}</div>
-                              <small className="text-muted">{asset.assetTag}</small>
-                              <div className="small">
-                                <span className="me-2">{asset.make}</span>
-                                <span>{asset.model}</span>
-                              </div>
-                            </td>
-                            <td>
-                              <div className="d-flex align-items-center gap-2">
-                                {getCategoryIcon(asset.category)}
-                                <span>{asset.category}</span>
-                              </div>
-                            </td>
-                            <td>
-                              <code>{asset.serialNumber}</code>
-                            </td>
-                            <td>
-                              <div className="small">
-                                <div>Date: {asset.purchaseDate}</div>
-                                <div>Price: {asset.purchasePrice}</div>
-                              </div>
-                            </td>
-                            <td className="fw-bold text-success">
-                              {asset.currentValue}
-                            </td>
-                            <td>
-                              {getConditionBadge(asset.condition)}
-                            </td>
-                            <td>
-                              {getStatusBadge(asset.status)}
-                            </td>
-                            <td>
-                              {asset.allocatedTo ? (
-                                <div className="small">
-                                  <div className="fw-medium">{asset.allocatedTo}</div>
-                                  <div className="text-muted">Since: {asset.allocationDate}</div>
-                                </div>
-                              ) : (
-                                <span className="text-muted">Not allocated</span>
-                              )}
-                            </td>
-                            <td>
-                              <div className="btn-group btn-group-sm">
-                                <button 
-                                  className="btn btn-outline-primary"
-                                  onClick={() => {
-                                    setSelectedAsset(asset);
-                                    // Show details modal
-                                  }}
-                                >
-                                  <Eye size={12} />
-                                </button>
-                                <button 
-                                  className="btn btn-outline-success"
-                                  onClick={() => {
-                                    setSelectedAsset(asset);
-                                    setShowAllocationModal(true);
-                                  }}
-                                  disabled={asset.status !== 'Available'}
-                                >
-                                  <Truck size={12} />
-                                </button>
-                                <button 
-                                  className="btn btn-outline-info"
-                                  onClick={() => {
-                                    setSelectedAsset(asset);
-                                    setShowMaintenanceModal(true);
-                                  }}
-                                >
-                                  <Wrench size={12} />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      )}
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -2791,7 +1978,6 @@ const AssestManagement = () => {
         </div>
       )}
 
-      {/* Allocations Section */}
       {activeSection === 'allocations' && (
         <div className="row g-4">
           <div className="col-12">
@@ -2865,18 +2051,15 @@ const AssestManagement = () => {
                             <div className="btn-group btn-group-sm">
                               <button 
                                 className="btn btn-outline-info"
-                                onClick={() => {
-                                  // Show allocation details
-                                }}
+                                onClick={() => handleViewAllocationDetails(allocation)}
                               >
                                 <Eye size={12} />
                               </button>
                               <button 
                                 className="btn btn-outline-warning"
-                                onClick={() => {
-                                  // Initiate return
-                                }}
+                                onClick={() => handleInitiateReturn(allocation)}
                                 disabled={allocation.status !== 'Active'}
+                                title={allocation.status !== 'Active' ? 'Already returned' : 'Initiate return'}
                               >
                                 <ArchiveRestore size={12} />
                               </button>
@@ -2893,7 +2076,6 @@ const AssestManagement = () => {
         </div>
       )}
 
-      {/* Returns Section */}
       {activeSection === 'returns' && (
         <div className="row g-4">
           <div className="col-12">
@@ -2972,16 +2154,16 @@ const AssestManagement = () => {
                               <button 
                                 className="btn btn-outline-info"
                                 onClick={() => {
-                                  // Show return details
+                                  const asset = assetMaster.find(a => a.assetId === returnItem.assetId);
+                                  if (asset) handleViewAsset(asset);
                                 }}
                               >
                                 <Eye size={12} />
                               </button>
                               <button 
                                 className="btn btn-outline-success"
-                                onClick={() => {
-                                  // Re-allocate asset
-                                }}
+                                onClick={() => handleReallocateAsset(returnItem)}
+                                title="Re-allocate this asset"
                               >
                                 <Truck size={12} />
                               </button>
@@ -2998,7 +2180,6 @@ const AssestManagement = () => {
         </div>
       )}
 
-      {/* Maintenance Section */}
       {activeSection === 'maintenance' && (
         <div className="row g-4">
           <div className="col-12">
@@ -3079,17 +2260,13 @@ const AssestManagement = () => {
                             <div className="btn-group btn-group-sm">
                               <button 
                                 className="btn btn-outline-info"
-                                onClick={() => {
-                                  // Show maintenance details
-                                }}
+                                onClick={() => handleViewMaintenanceDetails(maintenance)}
                               >
                                 <Eye size={12} />
                               </button>
                               <button 
                                 className="btn btn-outline-primary"
-                                onClick={() => {
-                                  // Edit maintenance
-                                }}
+                                onClick={() => handleEditMaintenance(maintenance)}
                               >
                                 <Edit size={12} />
                               </button>
@@ -3106,7 +2283,6 @@ const AssestManagement = () => {
         </div>
       )}
 
-      {/* Insurance Section */}
       {activeSection === 'insurance' && (
         <div className="row g-4">
           <div className="col-12">
@@ -3186,17 +2362,13 @@ const AssestManagement = () => {
                             <div className="btn-group btn-group-sm">
                               <button 
                                 className="btn btn-outline-info"
-                                onClick={() => {
-                                  // Show policy details
-                                }}
+                                onClick={() => handleViewPolicyDetails(policy)}
                               >
                                 <Eye size={12} />
                               </button>
                               <button 
                                 className="btn btn-outline-warning"
-                                onClick={() => {
-                                  // File claim
-                                }}
+                                onClick={() => handleFileClaim(policy)}
                               >
                                 <AlertCircle size={12} />
                               </button>
@@ -3213,7 +2385,6 @@ const AssestManagement = () => {
         </div>
       )}
 
-      {/* Depreciation Section */}
       {activeSection === 'depreciation' && (
         <div className="row g-4">
           <div className="col-12">
@@ -3227,7 +2398,9 @@ const AssestManagement = () => {
                   <span className="badge bg-primary">{depreciationSchedule.length} assets</span>
                   <button 
                     className="btn btn-primary btn-sm"
-                    onClick={() => setShowDepreciationModal(true)}
+                    onClick={() => {
+                      alert('Depreciation calculation feature coming soon!');
+                    }}
                   >
                     <Calculator size={14} className="me-1" />
                     Calculate
@@ -3275,7 +2448,8 @@ const AssestManagement = () => {
                               <button 
                                 className="btn btn-outline-info"
                                 onClick={() => {
-                                  // Show depreciation details
+                                  const asset = assetMaster.find(a => a.assetId === schedule.assetId);
+                                  if (asset) handleViewAsset(asset);
                                 }}
                               >
                                 <Eye size={12} />
@@ -3283,7 +2457,7 @@ const AssestManagement = () => {
                               <button 
                                 className="btn btn-outline-primary"
                                 onClick={() => {
-                                  // Edit schedule
+                                  alert('Edit depreciation schedule feature coming soon!');
                                 }}
                               >
                                 <Edit size={12} />
@@ -3302,121 +2476,7 @@ const AssestManagement = () => {
       )}
 
       {/* Reports Section */}
-      {activeSection === 'reports' && (
-        <div className="row g-4">
-          <div className="col-12 col-md-6">
-            <div className="card h-100">
-              <div className="card-header bg-primary text-white">
-                <h6 className="fw-bold mb-0">
-                  <FileText className="me-2" />
-                  Asset Inventory Report
-                </h6>
-              </div>
-              <div className="card-body">
-                <p className="text-muted">Complete inventory with all asset details, categories, and current values.</p>
-                <div className="mb-3">
-                  <h6>Report Includes:</h6>
-                  <ul className="small">
-                    <li>Asset master data with all fields</li>
-                    <li>Category-wise summary</li>
-                    <li>Department-wise allocation</li>
-                    <li>Current value calculation</li>
-                    <li>Status distribution</li>
-                  </ul>
-                </div>
-                <button className="btn btn-primary w-100" onClick={generateAssetInventoryReport}>
-                  <Download className="me-2" size={16} />
-                  Generate Report
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <div className="col-12 col-md-6">
-            <div className="card h-100">
-              <div className="card-header bg-success text-white">
-                <h6 className="fw-bold mb-0">
-                  <Users className="me-2" />
-                  Employee-wise Allocation Report
-                </h6>
-              </div>
-              <div className="card-body">
-                <p className="text-muted">Detailed report of assets allocated to each employee.</p>
-                <div className="mb-3">
-                  <h6>Report Includes:</h6>
-                  <ul className="small">
-                    <li>Employee-wise asset list</li>
-                    <li>Allocation dates and terms</li>
-                    <li>Department-wise summary</li>
-                    <li>Pending returns list</li>
-                    <li>Insurance coverage details</li>
-                  </ul>
-                </div>
-                <button className="btn btn-success w-100" onClick={generateEmployeeWiseReport}>
-                  <Download className="me-2" size={16} />
-                  Generate Report
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <div className="col-12 col-md-6">
-            <div className="card h-100">
-              <div className="card-header bg-info text-white">
-                <h6 className="fw-bold mb-0">
-                  <TrendingDown className="me-2" />
-                  Depreciation Report
-                </h6>
-              </div>
-              <div className="card-body">
-                <p className="text-muted">Detailed depreciation schedule and calculations for all assets.</p>
-                <div className="mb-3">
-                  <h6>Report Includes:</h6>
-                  <ul className="small">
-                    <li>Depreciation schedule for each asset</li>
-                    <li>Purchase price vs current value</li>
-                    <li>Accumulated depreciation</li>
-                    <li>Net book values</li>
-                    <li>Next depreciation dates</li>
-                  </ul>
-                </div>
-                <button className="btn btn-info w-100 text-white" onClick={generateDepreciationReport}>
-                  <Download className="me-2" size={16} />
-                  Generate Report
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <div className="col-12 col-md-6">
-            <div className="card h-100">
-              <div className="card-header bg-warning text-dark">
-                <h6 className="fw-bold mb-0">
-                  <AlertCircle className="me-2" />
-                  Lost/Damaged Asset Report
-                </h6>
-              </div>
-              <div className="card-body">
-                <p className="text-muted">Report on lost, damaged, or under repair assets.</p>
-                <div className="mb-3">
-                  <h6>Report Includes:</h6>
-                  <ul className="small">
-                    <li>List of damaged assets</li>
-                    <li>Repair cost details</li>
-                    <li>Insurance claim status</li>
-                    <li>Penalty calculations</li>
-                    <li>Replacement recommendations</li>
-                  </ul>
-                </div>
-                <button className="btn btn-warning w-100">
-                  <Download className="me-2" size={16} />
-                  Generate Report
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {activeSection === 'reports' && <ReportsSection />}
 
       {/* Quick Stats */}
       <div className="mt-4 pt-3 border-top">
@@ -3431,7 +2491,7 @@ const AssestManagement = () => {
                 <div className="text-muted small">Total Asset Value</div>
                 <DollarSign size={20} className="text-success" />
               </div>
-              <div className="h4 fw-bold">{formatCurrency(filteredAssets.reduce((sum, asset) => sum + extractNumericValue(asset.currentValue), 0))}</div>
+              <div className="h4 fw-bold">{formatCurrency(statistics.totalValue)}</div>
             </div>
           </div>
           <div className="col-6 col-md-3">
@@ -3441,7 +2501,7 @@ const AssestManagement = () => {
                 <PercentIcon size={20} className="text-primary" />
               </div>
               <div className="h4 fw-bold">
-                {filteredAssets.length > 0 ? Math.round((filteredAssets.filter(a => a.status === 'Allocated').length / filteredAssets.length) * 100) : 0}%
+                {Math.round((statistics.allocatedAssets / statistics.totalAssets) * 100)}%
               </div>
             </div>
           </div>
@@ -3458,7 +2518,7 @@ const AssestManagement = () => {
             <div className="p-3 border rounded">
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <div className="text-muted small">Expiring Insurance</div>
-                <ShieldAlert size={20} className="text-danger" />
+                <AlertCircle size={20} className="text-danger" />
               </div>
               <div className="h4 fw-bold">{statistics.expiringInsurance}</div>
             </div>
@@ -3466,16 +2526,972 @@ const AssestManagement = () => {
         </div>
       </div>
 
-      {/* Modals */}
-      {showAssetModal && <AssetMasterModal />}
-      {showAllocationModal && <AssetAllocationModal />}
-      {showReturnModal && <AssetReturnModal />}
-      {showMaintenanceModal && <MaintenanceModal />}
-      {showFilterModal && <FilterModal />}
+      {/* Asset View Modal - Fixed with scroll inside modal */}
+      {showViewModal && selectedAsset && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title fw-bold">
+                  <Eye className="me-2" />
+                  Asset Details - {selectedAsset.assetName}
+                </h5>
+                <button className="btn-close btn-close-white" onClick={() => setShowViewModal(false)}></button>
+              </div>
+              <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <h6 className="fw-bold mb-3">Basic Information</h6>
+                    <div className="mb-2">
+                      <small className="text-muted">Asset ID</small>
+                      <div className="fw-medium">{selectedAsset.assetId}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Asset Tag</small>
+                      <div className="fw-medium">{selectedAsset.assetTag}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Category</small>
+                      <div className="d-flex align-items-center gap-2">
+                        {getCategoryIcon(selectedAsset.category)}
+                        <span>{selectedAsset.category}</span>
+                      </div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Make & Model</small>
+                      <div className="fw-medium">{selectedAsset.make} {selectedAsset.model}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Serial Number</small>
+                      <div className="fw-medium">{selectedAsset.serialNumber}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="col-md-6 mb-3">
+                    <h6 className="fw-bold mb-3">Status & Value</h6>
+                    <div className="mb-2">
+                      <small className="text-muted">Status</small>
+                      <div>{getStatusBadge(selectedAsset.status)}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Condition</small>
+                      <div>{getConditionBadge(selectedAsset.condition)}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Purchase Details</small>
+                      <div className="fw-medium">
+                        {selectedAsset.purchaseDate} • {selectedAsset.purchasePrice}
+                      </div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Current Value</small>
+                      <div className="fw-bold text-success h5">{selectedAsset.currentValue}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Depreciation Rate</small>
+                      <div className="fw-medium">{selectedAsset.depreciationRate}</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="row mt-3">
+                  <div className="col-md-6 mb-3">
+                    <h6 className="fw-bold mb-3">Location & Allocation</h6>
+                    <div className="mb-2">
+                      <small className="text-muted">Location</small>
+                      <div className="fw-medium">{selectedAsset.location}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Department</small>
+                      <div className="fw-medium">{selectedAsset.department}</div>
+                    </div>
+                    {selectedAsset.allocatedTo && (
+                      <div className="mb-2">
+                        <small className="text-muted">Allocated To</small>
+                        <div className="fw-medium">{selectedAsset.allocatedTo}</div>
+                        <small className="text-muted">Since: {selectedAsset.allocationDate}</small>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="col-md-6 mb-3">
+                    <h6 className="fw-bold mb-3">Maintenance & Warranty</h6>
+                    <div className="mb-2">
+                      <small className="text-muted">Last Maintenance</small>
+                      <div className="fw-medium">{selectedAsset.lastMaintenance || 'None'}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Next Maintenance Due</small>
+                      <div className="fw-medium">{selectedAsset.nextMaintenance || 'Not scheduled'}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Warranty Until</small>
+                      <div className="fw-medium">{selectedAsset.warrantyUntil || 'No warranty'}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Insurance Policy</small>
+                      <div className="fw-medium">{selectedAsset.insurancePolicy || 'No insurance'}</div>
+                    </div>
+                  </div>
+                </div>
+                
+                {selectedAsset.maintenanceHistory && selectedAsset.maintenanceHistory.length > 0 && (
+                  <div className="mt-4">
+                    <h6 className="fw-bold mb-3">Maintenance History</h6>
+                    <div className="table-responsive" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                      <table className="table table-sm">
+                        <thead>
+                          <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Cost</th>
+                            <th>Technician</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedAsset.maintenanceHistory.map((history, index) => (
+                            <tr key={index}>
+                              <td>{history.date}</td>
+                              <td>{history.type}</td>
+                              <td>{history.cost}</td>
+                              <td>{history.technician}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={() => setShowViewModal(false)}>
+                  Close
+                </button>
+                <button className="btn btn-primary" onClick={() => {
+                  setShowViewModal(false);
+                  handleEditAsset(selectedAsset);
+                }}>
+                  <Edit className="me-2" size={16} />
+                  Edit Asset
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Allocation Details Modal - Fixed with scroll inside modal */}
+      {showAllocationDetails && selectedAllocation && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header bg-success text-white">
+                <h5 className="modal-title fw-bold">
+                  <Truck className="me-2" />
+                  Allocation Details - {selectedAllocation.allocationId}
+                </h5>
+                <button className="btn-close btn-close-white" onClick={() => setShowAllocationDetails(false)}></button>
+              </div>
+              <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <h6 className="fw-bold mb-3">Asset Information</h6>
+                    <div className="mb-2">
+                      <small className="text-muted">Asset Name</small>
+                      <div className="fw-medium">{selectedAllocation.assetName}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Asset ID</small>
+                      <div className="fw-medium">{selectedAllocation.assetId}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Allocation Type</small>
+                      <div className="fw-medium">{selectedAllocation.allocationType}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Reason</small>
+                      <div className="fw-medium">{selectedAllocation.allocationReason}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="col-md-6 mb-3">
+                    <h6 className="fw-bold mb-3">Employee Details</h6>
+                    <div className="mb-2">
+                      <small className="text-muted">Employee Name</small>
+                      <div className="fw-medium">{selectedAllocation.employeeName}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Employee ID</small>
+                      <div className="fw-medium">{selectedAllocation.employeeId}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Department</small>
+                      <div className="fw-medium">{selectedAllocation.department}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Allocation Date</small>
+                      <div className="fw-medium">{selectedAllocation.allocationDate}</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="row mt-3">
+                  <div className="col-md-6 mb-3">
+                    <h6 className="fw-bold mb-3">Approval & Handover</h6>
+                    <div className="mb-2">
+                      <small className="text-muted">Approved By</small>
+                      <div className="fw-medium">{selectedAllocation.approvedBy}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Handover Date</small>
+                      <div className="fw-medium">{selectedAllocation.handoverDate}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Handover By</small>
+                      <div className="fw-medium">{selectedAllocation.handoverBy}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Acknowledgment</small>
+                      <div className="fw-medium">{selectedAllocation.acknowledgment}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="col-md-6 mb-3">
+                    <h6 className="fw-bold mb-3">Terms & Insurance</h6>
+                    <div className="mb-2">
+                      <small className="text-muted">Insurance Coverage</small>
+                      <div className="fw-medium">{selectedAllocation.insuranceCoverage}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Terms Accepted</small>
+                      <div className="fw-medium">
+                        {selectedAllocation.termsAccepted ? 'Yes' : 'No'} on {selectedAllocation.termsAcceptedDate}
+                      </div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Expected Return Date</small>
+                      <div className="fw-medium">{selectedAllocation.expectedReturnDate}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Status</small>
+                      <div>{selectedAllocation.status === 'Active' ? 
+                        <span className="badge bg-success">Active</span> : 
+                        <span className="badge bg-secondary">Returned</span>}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {selectedAllocation.handoverChecklist && selectedAllocation.handoverChecklist.length > 0 && (
+                  <div className="mt-4">
+                    <h6 className="fw-bold mb-3">Handover Checklist</h6>
+                    <div className="row">
+                      {selectedAllocation.handoverChecklist.map((item, index) => (
+                        <div className="col-md-4 mb-2" key={index}>
+                          <div className={`d-flex align-items-center gap-2 ${item.checked ? 'text-success' : 'text-danger'}`}>
+                            {item.checked ? <Check size={16} /> : <X size={16} />}
+                            <span>{item.item}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={() => setShowAllocationDetails(false)}>
+                  Close
+                </button>
+                {selectedAllocation.status === 'Active' && (
+                  <button className="btn btn-warning" onClick={() => {
+                    setShowAllocationDetails(false);
+                    handleInitiateReturn(selectedAllocation);
+                  }}>
+                    <ArchiveRestore className="me-2" size={16} />
+                    Initiate Return
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Maintenance Details Modal - Fixed with scroll inside modal */}
+      {showMaintenanceDetails && selectedMaintenance && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header bg-info text-white">
+                <h5 className="modal-title fw-bold">
+                  <Wrench className="me-2" />
+                  Maintenance Details - {selectedMaintenance.maintenanceId}
+                </h5>
+                <button className="btn-close btn-close-white" onClick={() => setShowMaintenanceDetails(false)}></button>
+              </div>
+              <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <h6 className="fw-bold mb-3">Asset Information</h6>
+                    <div className="mb-2">
+                      <small className="text-muted">Asset Name</small>
+                      <div className="fw-medium">{selectedMaintenance.assetName}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Asset ID</small>
+                      <div className="fw-medium">{selectedMaintenance.assetId}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Maintenance Type</small>
+                      <div className="fw-medium">
+                        <span className={`badge ${
+                          selectedMaintenance.maintenanceType === 'Emergency' ? 'bg-danger' :
+                          selectedMaintenance.maintenanceType === 'Corrective' ? 'bg-warning' :
+                          selectedMaintenance.maintenanceType === 'Preventive' ? 'bg-success' : 'bg-info'
+                        }`}>
+                          {selectedMaintenance.maintenanceType}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Maintenance Date</small>
+                      <div className="fw-medium">{selectedMaintenance.maintenanceDate}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="col-md-6 mb-3">
+                    <h6 className="fw-bold mb-3">Cost & Warranty</h6>
+                    <div className="mb-2">
+                      <small className="text-muted">Cost</small>
+                      <div className="fw-bold h5">{selectedMaintenance.cost}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Warranty Covered</small>
+                      <div className="fw-medium">
+                        {selectedMaintenance.warrantyCovered ? 
+                          <span className="badge bg-success">Yes</span> : 
+                          <span className="badge bg-secondary">No</span>}
+                      </div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Performed By</small>
+                      <div className="fw-medium">{selectedMaintenance.performedBy}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted">Next Maintenance Due</small>
+                      <div className="fw-medium">{selectedMaintenance.nextMaintenanceDate}</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="row mt-3">
+                  <div className="col-12 mb-3">
+                    <h6 className="fw-bold mb-3">Description</h6>
+                    <div className="p-3 bg-light rounded">
+                      {selectedMaintenance.description}
+                    </div>
+                  </div>
+                </div>
+                
+                {selectedMaintenance.attachments && selectedMaintenance.attachments.length > 0 && (
+                  <div className="mt-4">
+                    <h6 className="fw-bold mb-3">Attachments</h6>
+                    <div className="row">
+                      {selectedMaintenance.attachments.map((attachment, index) => (
+                        <div className="col-md-4 mb-2" key={index}>
+                          <div className="p-2 border rounded d-flex align-items-center gap-2">
+                            <FileText size={16} />
+                            <span className="small">{attachment}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={() => setShowMaintenanceDetails(false)}>
+                  Close
+                </button>
+                <button className="btn btn-primary" onClick={() => {
+                  setShowMaintenanceDetails(false);
+                  handleEditMaintenance(selectedMaintenance);
+                }}>
+                  <Edit className="me-2" size={16} />
+                  Edit Maintenance
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modals for Add/Edit/Allocate/Return/Maintenance - Fixed with scroll */}
+      {showAssetModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title fw-bold">
+                  <Package className="me-2" />
+                  {editMode ? 'Edit Asset' : 'Add New Asset'}
+                </h5>
+                <button className="btn-close btn-close-white" onClick={() => {
+                  setShowAssetModal(false);
+                  setEditMode(false);
+                  setEditAsset(null);
+                }}></button>
+              </div>
+              <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                <div className="alert alert-info">
+                  <Info className="me-2" size={16} />
+                  {editMode ? 'Update asset information' : 'Fill all required fields to add a new asset'}
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Asset Name *</label>
+                    <input type="text" className="form-control" placeholder="e.g., Dell Latitude 5440" 
+                      defaultValue={editAsset?.assetName} />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Category *</label>
+                    <select className="form-select" defaultValue={editAsset?.category}>
+                      <option value="">Select Category</option>
+                      {assetCategories.map(cat => (
+                        <option key={cat.value} value={cat.value}>{cat.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Make *</label>
+                    <input type="text" className="form-control" placeholder="e.g., Dell" 
+                      defaultValue={editAsset?.make} />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Model *</label>
+                    <input type="text" className="form-control" placeholder="e.g., Latitude 5440" 
+                      defaultValue={editAsset?.model} />
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Serial Number *</label>
+                    <input type="text" className="form-control" placeholder="Unique serial number" 
+                      defaultValue={editAsset?.serialNumber} />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Purchase Date *</label>
+                    <input type="date" className="form-control" defaultValue={editAsset?.purchaseDate} />
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Purchase Price (₹) *</label>
+                    <input type="text" className="form-control" placeholder="e.g., 85000" 
+                      defaultValue={editAsset?.purchasePrice?.replace('₹', '')} />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Depreciation Rate (%) *</label>
+                    <select className="form-select" defaultValue={editAsset?.depreciationRate?.replace('%', '')}>
+                      <option value="10">10%</option>
+                      <option value="15">15%</option>
+                      <option value="20">20%</option>
+                      <option value="25">25%</option>
+                      <option value="30">30%</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Condition *</label>
+                    <select className="form-select" defaultValue={editAsset?.condition}>
+                      {assetConditions.map(cond => (
+                        <option key={cond.value} value={cond.value}>{cond.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Location *</label>
+                    <select className="form-select" defaultValue={editAsset?.location}>
+                      <option value="">Select Location</option>
+                      {locations.map(loc => (
+                        <option key={loc} value={loc}>{loc}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Department *</label>
+                    <select className="form-select" defaultValue={editAsset?.department}>
+                      <option value="">Select Department</option>
+                      {departments.map(dept => (
+                        <option key={dept} value={dept}>{dept}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Warranty Until</label>
+                    <input type="date" className="form-control" defaultValue={editAsset?.warrantyUntil} />
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-outline-secondary" onClick={() => {
+                  setShowAssetModal(false);
+                  setEditMode(false);
+                  setEditAsset(null);
+                }}>
+                  Cancel
+                </button>
+                <button className="btn btn-primary" onClick={() => {
+                  alert(editMode ? 'Asset updated successfully!' : 'Asset added successfully!');
+                  setShowAssetModal(false);
+                  setEditMode(false);
+                  setEditAsset(null);
+                }}>
+                  <Save className="me-2" size={16} />
+                  {editMode ? 'Update Asset' : 'Save Asset'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAllocationModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header bg-success text-white">
+                <h5 className="modal-title fw-bold">
+                  <Truck className="me-2" />
+                  Allocate Asset
+                </h5>
+                <button className="btn-close btn-close-white" onClick={() => setShowAllocationModal(false)}></button>
+              </div>
+              <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                <div className="alert alert-info">
+                  <Info className="me-2" size={16} />
+                  Select an available asset and provide employee details
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Select Asset *</label>
+                  <select className="form-select" defaultValue={selectedAsset?.id}>
+                    <option value="">Select Available Asset</option>
+                    {assetMaster.filter(a => a.status === 'Available').map(asset => (
+                      <option key={asset.id} value={asset.id}>
+                        {asset.assetName} ({asset.assetTag}) - {asset.currentValue}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Employee ID *</label>
+                    <input type="text" className="form-control" placeholder="e.g., EMP001" />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Employee Name *</label>
+                    <input type="text" className="form-control" placeholder="Full name" />
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Department *</label>
+                    <select className="form-select">
+                      <option value="">Select Department</option>
+                      {departments.map(dept => (
+                        <option key={dept} value={dept}>{dept}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Allocation Type *</label>
+                    <select className="form-select">
+                      <option value="New Joining">New Joining</option>
+                      <option value="Role Change">Role Change</option>
+                      <option value="Replacement">Replacement</option>
+                      <option value="Project Requirement">Project Requirement</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Allocation Reason *</label>
+                  <textarea className="form-control" rows="3" placeholder="Reason for allocation..." />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-outline-secondary" onClick={() => setShowAllocationModal(false)}>
+                  Cancel
+                </button>
+                <button className="btn btn-success" onClick={() => {
+                  alert('Asset allocated successfully!');
+                  setShowAllocationModal(false);
+                }}>
+                  <Check className="me-2" size={16} />
+                  Allocate Asset
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showReturnModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header bg-warning text-dark">
+                <h5 className="modal-title fw-bold">
+                  <ArchiveRestore className="me-2" />
+                  Process Asset Return
+                </h5>
+                <button className="btn-close" onClick={() => setShowReturnModal(false)}></button>
+              </div>
+              <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                <div className="alert alert-warning">
+                  <AlertCircle className="me-2" size={16} />
+                  Complete physical verification before processing return
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Select Asset to Return *</label>
+                  <select className="form-select" defaultValue={selectedAsset?.id}>
+                    <option value="">Select Allocated Asset</option>
+                    {assetMaster.filter(a => a.status === 'Allocated').map(asset => (
+                      <option key={asset.id} value={asset.id}>
+                        {asset.assetName} ({asset.assetTag}) - {asset.allocatedTo}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Return Reason *</label>
+                    <select className="form-select">
+                      <option value="">Select Reason</option>
+                      <option value="Employee Resignation">Employee Resignation</option>
+                      <option value="Internal Transfer">Internal Transfer</option>
+                      <option value="Asset Upgrade">Asset Upgrade</option>
+                      <option value="End of Project">End of Project</option>
+                    </select>
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Condition at Return *</label>
+                    <select className="form-select">
+                      {assetConditions.map(cond => (
+                        <option key={cond.value} value={cond.value}>{cond.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Missing Items</label>
+                    <input type="text" className="form-control" placeholder="List missing items, if any" />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Damage Details</label>
+                    <input type="text" className="form-control" placeholder="Describe any damage" />
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-outline-secondary" onClick={() => setShowReturnModal(false)}>
+                  Cancel
+                </button>
+                <button className="btn btn-warning" onClick={() => {
+                  alert('Asset return processed successfully!');
+                  setShowReturnModal(false);
+                }}>
+                  <ArchiveRestore className="me-2" size={16} />
+                  Process Return
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showMaintenanceModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header bg-info text-white">
+                <h5 className="modal-title fw-bold">
+                  <Wrench className="me-2" />
+                  {selectedMaintenance ? 'Edit Maintenance Record' : 'Add Maintenance Record'}
+                </h5>
+                <button className="btn-close btn-close-white" onClick={() => {
+                  setShowMaintenanceModal(false);
+                  setSelectedMaintenance(null);
+                }}></button>
+              </div>
+              <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                <div className="alert alert-info">
+                  <Info className="me-2" size={16} />
+                  {selectedMaintenance ? 'Update maintenance details' : 'Record maintenance details for an asset'}
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Select Asset *</label>
+                  <select className="form-select" defaultValue={selectedAsset?.id || selectedMaintenance?.assetId}>
+                    <option value="">Select Asset</option>
+                    {assetMaster.map(asset => (
+                      <option key={asset.id} value={asset.id}>
+                        {asset.assetName} ({asset.assetTag})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Maintenance Type *</label>
+                    <select className="form-select" defaultValue={selectedMaintenance?.maintenanceType}>
+                      <option value="Preventive">Preventive</option>
+                      <option value="Corrective">Corrective</option>
+                      <option value="Emergency">Emergency</option>
+                      <option value="Routine Check">Routine Check</option>
+                    </select>
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Maintenance Date *</label>
+                    <input type="date" className="form-control" defaultValue={selectedMaintenance?.maintenanceDate} />
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Cost (₹) *</label>
+                    <input type="text" className="form-control" placeholder="0" 
+                      defaultValue={selectedMaintenance?.cost?.replace('₹', '')} />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Performed By *</label>
+                    <input type="text" className="form-control" placeholder="Technician/Service center" 
+                      defaultValue={selectedMaintenance?.performedBy} />
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Description *</label>
+                  <textarea className="form-control" rows="3" placeholder="Describe maintenance work done..." 
+                    defaultValue={selectedMaintenance?.description} />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-outline-secondary" onClick={() => {
+                  setShowMaintenanceModal(false);
+                  setSelectedMaintenance(null);
+                }}>
+                  Cancel
+                </button>
+                <button className="btn btn-info text-white" onClick={() => {
+                  alert(selectedMaintenance ? 'Maintenance record updated successfully!' : 'Maintenance record added successfully!');
+                  setShowMaintenanceModal(false);
+                  setSelectedMaintenance(null);
+                }}>
+                  <Save className="me-2" size={16} />
+                  {selectedMaintenance ? 'Update Record' : 'Save Record'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Insurance Modal - Fixed with scroll */}
+      {showInsuranceModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header bg-success text-white">
+                <h5 className="modal-title fw-bold">
+                  <ShieldCheck className="me-2" />
+                  Add Insurance Policy
+                </h5>
+                <button className="btn-close btn-close-white" onClick={() => setShowInsuranceModal(false)}></button>
+              </div>
+              <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                <div className="alert alert-info">
+                  <Info className="me-2" size={16} />
+                  Add insurance policy details for an asset
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Select Asset *</label>
+                  <select className="form-select">
+                    <option value="">Select Asset</option>
+                    {assetMaster.map(asset => (
+                      <option key={asset.id} value={asset.id}>
+                        {asset.assetName} ({asset.assetTag})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Insurance Provider *</label>
+                    <input type="text" className="form-control" placeholder="e.g., ICICI Lombard" />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Policy Number *</label>
+                    <input type="text" className="form-control" placeholder="Policy number" />
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Coverage Amount (₹) *</label>
+                    <input type="text" className="form-control" placeholder="e.g., 85000" />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Premium (₹) *</label>
+                    <input type="text" className="form-control" placeholder="e.g., 8500" />
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Start Date *</label>
+                    <input type="date" className="form-control" />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">End Date *</label>
+                    <input type="date" className="form-control" />
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-outline-secondary" onClick={() => setShowInsuranceModal(false)}>
+                  Cancel
+                </button>
+                <button className="btn btn-success" onClick={() => {
+                  alert('Insurance policy added successfully!');
+                  setShowInsuranceModal(false);
+                }}>
+                  <Save className="me-2" size={16} />
+                  Save Policy
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Claim Modal - Fixed with scroll */}
+      {showClaimModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header bg-warning text-dark">
+                <h5 className="modal-title fw-bold">
+                  <AlertCircle className="me-2" />
+                  File Insurance Claim
+                </h5>
+                <button className="btn-close" onClick={() => setShowClaimModal(false)}></button>
+              </div>
+              <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                <div className="alert alert-warning">
+                  <AlertCircle className="me-2" size={16} />
+                  File insurance claim for {selectedAsset?.assetName}
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Claim Date *</label>
+                  <input type="date" className="form-control" />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Claim Amount (₹) *</label>
+                  <input type="text" className="form-control" placeholder="Claim amount" />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Claim Reason *</label>
+                  <textarea className="form-control" rows="3" placeholder="Describe the reason for claim..." />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-outline-secondary" onClick={() => setShowClaimModal(false)}>
+                  Cancel
+                </button>
+                <button className="btn btn-warning" onClick={() => {
+                  alert('Insurance claim filed successfully!');
+                  setShowClaimModal(false);
+                }}>
+                  <AlertCircle className="me-2" size={16} />
+                  File Claim
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reallocate Modal - Fixed with scroll */}
+      {showReallocateModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header bg-success text-white">
+                <h5 className="modal-title fw-bold">
+                  <Truck className="me-2" />
+                  Re-allocate Asset
+                </h5>
+                <button className="btn-close btn-close-white" onClick={() => setShowReallocateModal(false)}></button>
+              </div>
+              <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                <div className="alert alert-info">
+                  <Info className="me-2" size={16} />
+                  Re-allocate {selectedAsset?.assetName} to a new employee
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Employee ID *</label>
+                    <input type="text" className="form-control" placeholder="e.g., EMP001" />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Employee Name *</label>
+                    <input type="text" className="form-control" placeholder="Full name" />
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Department *</label>
+                    <select className="form-select">
+                      <option value="">Select Department</option>
+                      {departments.map(dept => (
+                        <option key={dept} value={dept}>{dept}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Allocation Type *</label>
+                    <select className="form-select">
+                      <option value="New Joining">New Joining</option>
+                      <option value="Role Change">Role Change</option>
+                      <option value="Replacement">Replacement</option>
+                      <option value="Project Requirement">Project Requirement</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Allocation Reason *</label>
+                  <textarea className="form-control" rows="3" placeholder="Reason for allocation..." />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-outline-secondary" onClick={() => setShowReallocateModal(false)}>
+                  Cancel
+                </button>
+                <button className="btn btn-success" onClick={() => {
+                  alert('Asset re-allocated successfully!');
+                  setShowReallocateModal(false);
+                }}>
+                  <Check className="me-2" size={16} />
+                  Re-allocate Asset
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-
-  return mainContent;
 };
 
 export default AssestManagement;

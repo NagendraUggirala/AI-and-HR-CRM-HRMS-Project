@@ -1,6 +1,9 @@
-// PayrollReports.jsx (Part 1 of 3)
+// src\components\HRMS\PayrollManagement\PayrollReports.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { Icon } from '@iconify/react/dist/iconify.js';
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 const PayrollReports = () => {
   // UI & navigation state
@@ -12,18 +15,16 @@ const PayrollReports = () => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [filterPeriod, setFilterPeriod] = useState('All');
   const [filterDepartment, setFilterDepartment] = useState('All');
+  const [filterLocation, setFilterLocation] = useState('All');
+  const [filterGrade, setFilterGrade] = useState('All');
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
 
-  const sidebarContent = [
-  { icon: "heroicons:home", label: "Dashboard", path: "/dashboard" },
-  { icon: "heroicons:document-report", label: "Reports", path: "/payroll-reports" },
-  { icon: "heroicons:cog", label: "Settings", path: "/settings" }
-];
-
-const userInfo = {
-  name: "HR Manager",
-  role: "Payroll Administrator",
-  avatar: "/assets/img/user.png"
-};
+  // Enhanced state based on HRMS specification
+  const [employeeData, setEmployeeData] = useState([]);
+  const [payrollTransactions, setPayrollTransactions] = useState([]);
+  const [statutoryData, setStatutoryData] = useState([]);
+  const [complianceDeadlines, setComplianceDeadlines] = useState([]);
+  const [aiInsights, setAiInsights] = useState([]);
 
   // Add/Edit modal state
   const [showReportModal, setShowReportModal] = useState(false);
@@ -35,48 +36,49 @@ const userInfo = {
     description: '',
     frequency: 'Monthly',
     format: ['pdf'],
-    department: 'All'
+    department: 'All',
+    scheduleType: 'manual',
+    recipients: [],
+    parameters: {}
   });
 
-  // report/config state
-  const [reportData, setReportData] = useState({});
-  const [analyticsData, setAnalyticsData] = useState({});
-  const [reportConfig, setReportConfig] = useState({
-    format: 'pdf',
-    includeCharts: true,
-    includeSummary: true,
-    emailNotification: false,
-    autoGenerate: false,
-    retentionPeriod: 36
-  });
-
-  // report builder (still present)
+  // Report builder state
   const [reportBuilder, setReportBuilder] = useState({
+    step: 1,
     name: '',
     description: '',
     category: 'Payroll',
+    dataSource: 'payroll',
     selectedColumns: [],
     selectedFilters: [],
+    grouping: [],
+    calculations: [],
     format: ['pdf', 'excel'],
     schedule: 'none',
-    recipients: []
+    recipients: [],
+    dashboardWidget: false
   });
 
-  // chart config (used by analytics)
+  // Chart configurations
   const [chartConfig, setChartConfig] = useState({
     chartType: 'bar',
-    colorScheme: 'primary',
+    colorScheme: 'corporate',
     showTrendLines: true,
-    showDataLabels: false,
-    comparePeriod: true
+    showDataLabels: true,
+    comparePeriod: true,
+    drillDownEnabled: true
   });
 
-  // constants
-  const departments = ['All', 'Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'IT'];
+  // Constants from HRMS specification
+  const departments = ['All', 'Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'IT', 'Product', 'Customer Support'];
+  const locations = ['All', 'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Pune', 'Kolkata'];
+  const grades = ['All', 'A', 'B', 'C', 'D', 'E', 'Executive', 'Management'];
   const periods = ['All', 'Current Month', 'Last Month', 'Quarter 1', 'Quarter 2', 'Quarter 3', 'Quarter 4', 'Year to Date', 'Last Year'];
+  const salaryComponents = ['Basic', 'HRA', 'Conveyance', 'Special Allowance', 'Performance Bonus', 'PF', 'ESI', 'PT', 'TDS', 'Loan EMI', 'Advance Recovery'];
+  
   const itemsPerPage = 8;
 
-  // data lists
+  // Data lists
   const [standardReports, setStandardReports] = useState([]);
   const [complianceReports, setComplianceReports] = useState([]);
   const [analyticsDashboards, setAnalyticsDashboards] = useState([]);
@@ -89,78 +91,98 @@ const userInfo = {
   const [selectedColumns, setSelectedColumns] = useState([]);
   const [selectedFilters, setSelectedFilters] = useState([]);
   const [builderStep, setBuilderStep] = useState(1);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [previewReport, setPreviewReport] = useState(null);
-  const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [scheduleForm, setScheduleForm] = useState({
-    reportId: '',
-    frequency: 'monthly',
-    day: 1,
-    time: '09:00',
-    recipients: [],
-    format: 'pdf',
-    autoGenerate: true
-  });
-  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
-  const [selectedDashboard, setSelectedDashboard] = useState(null);
-  const [dateRange, setDateRange] = useState({ start: '', end: '' });
-  const [locations, setLocations] = useState(['All', 'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Pune']);
-  const [grades, setGrades] = useState(['All', 'A', 'B', 'C', 'D', 'E']);
-  const [costCenters, setCostCenters] = useState(['All', 'CC001', 'CC002', 'CC003', 'CC004', 'CC005']);
 
-  // --- Helper functions ---
-  const formatCurrency = (value) => {
-    if (value == null) return '-';
-    try {
-      return value.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
-    } catch (e) {
-      return `₹${value}`;
-    }
+  // Sidebar navigation based on HRMS specification
+  const sidebarContent = [
+    { icon: "heroicons:home", label: "Dashboard", path: "/dashboard" },
+    { icon: "heroicons:document-report", label: "Reports", path: "/payroll-reports" },
+    { icon: "heroicons:users", label: "Employee Reports", path: "/reports/employee" },
+    { icon: "heroicons:clock", label: "Attendance Reports", path: "/reports/attendance" },
+    { icon: "heroicons:calendar", label: "Leave Reports", path: "/reports/leave" },
+    { icon: "heroicons:banknotes", label: "Payroll Reports", path: "/payroll-reports", active: true },
+    { icon: "heroicons:shield-check", label: "Compliance", path: "/compliance" },
+    { icon: "heroicons:chart-bar", label: "Analytics", path: "/analytics" },
+    { icon: "heroicons:cog", label: "Configuration", path: "/settings" }
+  ];
+
+  const userInfo = {
+    name: "Priya Sharma",
+    role: "Payroll Administrator",
+    avatar: "/assets/img/user.png",
+    permissions: ['view_all', 'generate_reports', 'schedule_reports', 'configure_templates']
   };
 
-  const formatDate = (val) => {
-    if (!val) return 'N/A';
-    const d = new Date(val);
-    if (isNaN(d)) return val;
-    return d.toLocaleDateString();
+  // Helper functions
+  const formatCurrency = (value) => {
+    if (value == null) return '-';
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(value);
+  };
+
+  const formatDate = (date) => {
+    if (!date) return 'N/A';
+    return new Date(date).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
   };
 
   const getStatusBadge = (status) => {
-    switch (status) {
-      case 'generated': return <span className="badge bg-success-subtle text-success">Generated</span>;
-      case 'pending': return <span className="badge bg-warning-subtle text-warning">Pending</span>;
-      case 'submitted': return <span className="badge bg-info-subtle text-info">Submitted</span>;
-      case 'in-progress': return <span className="badge bg-primary-subtle text-primary">In Progress</span>;
-      case 'available': return <span className="badge bg-success-subtle text-success">Available</span>;
-      case 'paused': return <span className="badge bg-secondary-subtle text-secondary">Paused</span>;
-      case 'completed': return <span className="badge bg-success">Completed</span>;
-      default: return <span className="badge bg-light text-dark">{status}</span>;
-    }
+    const badges = {
+      'generated': 'bg-success-subtle text-success',
+      'pending': 'bg-warning-subtle text-warning',
+      'submitted': 'bg-info-subtle text-info',
+      'in-progress': 'bg-primary-subtle text-primary',
+      'approved': 'bg-success',
+      'rejected': 'bg-danger',
+      'overdue': 'bg-danger-subtle text-danger',
+      'active': 'bg-success-subtle text-success',
+      'paused': 'bg-secondary-subtle text-secondary'
+    };
+    return <span className={`badge ${badges[status] || 'bg-light text-dark'}`}>{status}</span>;
   };
 
-  // KPI calculations
+  // KPI calculations from actual data
   const kpis = useMemo(() => {
-    const totalReports = standardReports.length + complianceReports.length + analyticsDashboards.length;
-    const generatedCount = generatedReports.length;
-    const scheduledCount = scheduledReports.length;
-    const overdueCount = generatedReports.filter(r => r.status === 'overdue').length;
-    const totalPayrollCost = 7500000; // static placeholder
-    const avgSalary = 55000;
-    const statutoryDeductions = 1250000;
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    const currentMonthData = payrollTransactions.filter(t => {
+      const date = new Date(t.date);
+      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+    });
+
+    const totalPayrollCost = currentMonthData.reduce((sum, t) => sum + (t.grossSalary || 0), 0);
+    const statutoryDeductions = currentMonthData.reduce((sum, t) => 
+      sum + (t.pf || 0) + (t.esi || 0) + (t.pt || 0) + (t.tds || 0), 0);
     const netPayroll = totalPayrollCost - statutoryDeductions;
+    const avgSalary = currentMonthData.length > 0 ? totalPayrollCost / currentMonthData.length : 0;
+    
+    const departmentBreakdown = employeeData.reduce((acc, emp) => {
+      const dept = emp.department || 'Unknown';
+      acc[dept] = (acc[dept] || 0) + 1;
+      return acc;
+    }, {});
+
     return {
-      totalReports,
-      generatedCount,
-      scheduledCount,
-      overdueCount,
+      totalReports: standardReports.length + complianceReports.length + analyticsDashboards.length + customReports.length,
+      generatedCount: generatedReports.length,
+      scheduledCount: scheduledReports.length,
+      overdueCompliance: complianceDeadlines.filter(d => new Date(d.dueDate) < new Date() && d.status !== 'submitted').length,
       totalPayrollCost,
       avgSalary,
       statutoryDeductions,
-      netPayroll
+      netPayroll,
+      employeeCount: employeeData.length,
+      departmentBreakdown
     };
-  }, [standardReports, complianceReports, analyticsDashboards, generatedReports, scheduledReports]);
+  }, [employeeData, payrollTransactions, standardReports, complianceReports, analyticsDashboards, customReports, generatedReports, scheduledReports, complianceDeadlines]);
 
-  // filter / search logic
+  // Enhanced filtering logic
   const getFilteredData = () => {
     let data = [];
     const term = searchTerm.trim().toLowerCase();
@@ -168,296 +190,139 @@ const userInfo = {
     switch (activeSection) {
       case 'standard':
         data = standardReports.filter(r =>
-          r.name.toLowerCase().includes(term) || (r.category || '').toLowerCase().includes(term)
+          r.name.toLowerCase().includes(term) || 
+          r.description.toLowerCase().includes(term) ||
+          (r.category || '').toLowerCase().includes(term)
         );
         break;
       case 'compliance':
         data = complianceReports.filter(r =>
-          r.name.toLowerCase().includes(term) || (r.type || '').toLowerCase().includes(term)
+          r.name.toLowerCase().includes(term) || 
+          r.type.toLowerCase().includes(term) ||
+          (r.formType || '').toLowerCase().includes(term)
         );
         break;
       case 'analytics':
         data = analyticsDashboards.filter(r =>
-          r.name.toLowerCase().includes(term) || (r.description || '').toLowerCase().includes(term)
+          r.name.toLowerCase().includes(term) || 
+          r.description.toLowerCase().includes(term)
         );
         break;
       case 'generated':
         data = generatedReports.filter(r =>
-          (r.reportName || '').toLowerCase().includes(term) || (r.period || '').toLowerCase().includes(term)
+          r.reportName.toLowerCase().includes(term) || 
+          r.period.toLowerCase().includes(term) ||
+          (r.generatedBy || '').toLowerCase().includes(term)
         );
         break;
       case 'scheduled':
         data = scheduledReports.filter(r =>
-          (r.reportName || '').toLowerCase().includes(term) || (r.schedule || '').toLowerCase().includes(term)
+          r.reportName.toLowerCase().includes(term) || 
+          r.schedule.toLowerCase().includes(term)
         );
         break;
       case 'configure':
         data = [...reportTemplates, ...customReports].filter(r =>
-          (r.name || '').toLowerCase().includes(term) || (r.category || '').toLowerCase().includes(term)
+          r.name.toLowerCase().includes(term) || 
+          r.category.toLowerCase().includes(term)
         );
         break;
       default:
         data = [];
     }
 
+    // Apply additional filters
     if (filterPeriod !== 'All' && activeSection === 'generated') {
-      data = data.filter(item => item.period === filterPeriod || item.period?.includes(filterPeriod));
+      data = data.filter(item => item.period === filterPeriod);
     }
-    if (filterDepartment !== 'All' && (activeSection === 'standard' || activeSection === 'analytics')) {
-      data = data.filter(item => item.department === filterDepartment || item.department === 'All' || !item.department);
+    if (filterDepartment !== 'All' && activeSection === 'standard') {
+      data = data.filter(item => item.department === filterDepartment || item.department === 'All');
+    }
+    if (dateRange.start && dateRange.end && activeSection === 'generated') {
+      data = data.filter(item => {
+        const genDate = new Date(item.generatedDate);
+        return genDate >= new Date(dateRange.start) && genDate <= new Date(dateRange.end);
+      });
     }
 
     return data;
   };
 
-  const filteredData = getFilteredData();
-  const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
-  const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-  // --- action handlers (stubs, safe) ---
-  const handleExportData = () => {
-    const dataToExport = filteredData;
-    console.log('Exporting data', dataToExport);
-    alert(`Exported ${dataToExport.length} items (check console).`);
-  };
-
-  const handleRefreshData = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      loadInitialData();
-      setIsLoading(false);
-      alert('Data refreshed');
-    }, 400);
+  // Action Handlers
+  const handleExportData = (format = 'excel') => {
+    const data = getFilteredData();
+    
+    if (format === 'excel') {
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Report Data');
+      XLSX.writeFile(wb, `Payroll_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
+    } else if (format === 'pdf') {
+      const doc = new jsPDF();
+      doc.text(`Payroll Report - ${new Date().toLocaleDateString()}`, 10, 10);
+      
+      const headers = Object.keys(data[0] || {}).map(key => ({
+        title: key.toUpperCase(),
+        dataKey: key
+      }));
+      
+      doc.autoTable({
+        head: [headers.map(h => h.title)],
+        body: data.map(row => headers.map(h => row[h.dataKey])),
+        startY: 20
+      });
+      
+      doc.save(`Payroll_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+    }
   };
 
   const handleGenerateReport = (report) => {
-    const name = report.name || report.reportName || 'Custom Report';
+    setIsLoading(true);
     
-    // Show preview modal first
-    setPreviewReport({
-      ...report,
-      previewData: generatePreviewData(report)
-    });
-    setShowPreviewModal(true);
-  };
-
-  const generatePreviewData = (report) => {
-    // Generate sample preview data based on report type
-    const sampleData = [];
-    for (let i = 1; i <= 5; i++) {
-      sampleData.push({
-        employeeId: `EMP${String(i).padStart(3, '0')}`,
-        name: `Employee ${i}`,
-        department: ['Engineering', 'Sales', 'Marketing', 'HR', 'Finance'][i - 1],
-        grossSalary: 50000 + (i * 10000),
-        deductions: 5000 + (i * 1000),
-        netSalary: 45000 + (i * 9000)
-      });
-    }
-    return sampleData;
-  };
-
-  const handleConfirmGenerate = () => {
-    if (!previewReport) return;
-    
-    const name = previewReport.name || previewReport.reportName || 'Custom Report';
-    const newGenerated = {
-      id: `GR_${Date.now()}`,
-      reportName: name,
-      period: filterPeriod !== 'All' ? filterPeriod : 'Current Month',
-      generatedDate: new Date().toISOString(),
-      generatedBy: 'System',
-      format: (previewReport.format && (Array.isArray(previewReport.format) ? previewReport.format[0] : previewReport.format)) || 'PDF',
-      size: '1.1 MB',
-      status: 'completed',
-      downloadCount: 0,
-      reportId: previewReport.id
-    };
-    setGeneratedReports(prev => [newGenerated, ...prev]);
-    setShowPreviewModal(false);
-    setPreviewReport(null);
-    alert(`${name} generated successfully.`);
-  };
-
-  const handleDownloadReport = (report) => {
-    console.log('Downloading report', report);
-    alert(`Downloading: ${report.reportName || report.name || 'Report'}`);
+    // Simulate report generation
+    setTimeout(() => {
+      const newGenerated = {
+        id: `GR_${Date.now()}`,
+        reportName: report.name || report.reportName,
+        period: 'Current Month',
+        generatedDate: new Date().toISOString(),
+        generatedBy: userInfo.name,
+        format: Array.isArray(report.format) ? report.format[0] : report.format,
+        size: `${Math.random() * 2 + 0.5} MB`,
+        status: 'completed',
+        downloadCount: 0,
+        parameters: {
+          department: filterDepartment,
+          period: filterPeriod,
+          ...dateRange
+        }
+      };
+      
+      setGeneratedReports(prev => [newGenerated, ...prev]);
+      setIsLoading(false);
+      
+      // Show notification
+      alert(`Report "${report.name}" generated successfully and available for download.`);
+    }, 1500);
   };
 
   const handleScheduleReport = (report) => {
-    setScheduleForm({
-      reportId: report.id,
-      frequency: 'monthly',
-      day: 1,
-      time: '09:00',
-      recipients: [],
-      format: (report.format && (Array.isArray(report.format) ? report.format[0] : report.format)) || 'pdf',
-      autoGenerate: true
-    });
-    setShowScheduleModal(true);
-  };
-
-  const handleSaveSchedule = () => {
-    if (!scheduleForm.reportId) {
-      alert('Please select a report');
-      return;
-    }
-
-    const report = [...standardReports, ...complianceReports, ...analyticsDashboards]
-      .find(r => r.id === scheduleForm.reportId);
-
-    if (!report) {
-      alert('Report not found');
-      return;
-    }
-
-    const scheduleText = scheduleForm.frequency === 'monthly' 
-      ? `${scheduleForm.day}${getDaySuffix(scheduleForm.day)} of every month`
-      : scheduleForm.frequency === 'weekly'
-      ? `Every ${new Date().toLocaleDateString('en-US', { weekday: 'long' })}`
-      : scheduleForm.frequency === 'daily'
-      ? 'Every day'
-      : 'Quarterly';
-
-    const nextRun = calculateNextRun(scheduleForm.frequency, scheduleForm.day, scheduleForm.time);
-
     const scheduleEntry = {
       id: `SRC_${Date.now()}`,
-      reportName: report.name || report.reportName,
-      reportId: scheduleForm.reportId,
-      schedule: scheduleText,
-      frequency: scheduleForm.frequency,
-      day: scheduleForm.day,
-      time: scheduleForm.time,
-      nextRun: nextRun,
-      format: scheduleForm.format,
-      recipients: scheduleForm.recipients.length > 0 ? scheduleForm.recipients : ['hr@company.com'],
+      reportName: report.reportName || report.name,
+      schedule: '1st of every month',
+      nextRun: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
+      format: Array.isArray(report.format) ? report.format.join(' & ') : report.format,
+      recipients: ['hr@company.com', 'finance@company.com'],
       status: 'active',
-      autoGenerate: scheduleForm.autoGenerate
+      lastRun: null,
+      frequency: 'Monthly'
     };
     
     setScheduledReports(prev => [scheduleEntry, ...prev]);
-    setShowScheduleModal(false);
-    alert('Report scheduled successfully.');
+    alert(`Report "${report.name}" scheduled successfully.`);
   };
 
-  const getDaySuffix = (day) => {
-    if (day > 3 && day < 21) return 'th';
-    switch (day % 10) {
-      case 1: return 'st';
-      case 2: return 'nd';
-      case 3: return 'rd';
-      default: return 'th';
-    }
-  };
-
-  const calculateNextRun = (frequency, day, time) => {
-    const now = new Date();
-    const [hours, minutes] = time.split(':').map(Number);
-    
-    if (frequency === 'daily') {
-      const next = new Date(now);
-      next.setHours(hours, minutes, 0, 0);
-      if (next <= now) {
-        next.setDate(next.getDate() + 1);
-      }
-      return next.toISOString();
-    } else if (frequency === 'weekly') {
-      const next = new Date(now);
-      next.setHours(hours, minutes, 0, 0);
-      const daysUntilNext = (7 - next.getDay() + day) % 7 || 7;
-      next.setDate(next.getDate() + daysUntilNext);
-      return next.toISOString();
-    } else if (frequency === 'monthly') {
-      const next = new Date(now.getFullYear(), now.getMonth(), day, hours, minutes, 0, 0);
-      if (next <= now) {
-        next.setMonth(next.getMonth() + 1);
-      }
-      return next.toISOString();
-    } else if (frequency === 'quarterly') {
-      const next = new Date(now.getFullYear(), now.getMonth() - (now.getMonth() % 3) + 3, day, hours, minutes, 0, 0);
-      if (next <= now) {
-        next.setMonth(next.getMonth() + 3);
-      }
-      return next.toISOString();
-    }
-    return new Date().toISOString();
-  };
-
-  const handleEditCustomReport = (report) => {
-    setReportBuilder({
-      name: report.name || report.reportName,
-      description: report.description || '',
-      category: report.category || 'Payroll',
-      selectedColumns: report.columns || [],
-      selectedFilters: report.filters || [],
-      format: report.format || ['pdf'],
-      schedule: report.schedule || 'none',
-      recipients: report.recipients || []
-    });
-    setSelectedColumns(report.columns || []);
-    setSelectedFilters(report.filters || []);
-    setActiveSection('builder');
-  };
-
-  // handleUseTemplate (used by templates list)
-  const handleUseTemplate = (template) => {
-    setReportBuilder({
-      name: `${template.name} (Copy)`,
-      description: template.description,
-      category: template.category || 'Payroll',
-      selectedColumns: template.columns || [],
-      selectedFilters: template.filters || [],
-      format: template.format || ['pdf'],
-      schedule: 'none',
-      recipients: []
-    });
-    setSelectedColumns(template.columns || []);
-    setSelectedFilters(template.filters || []);
-    setActiveSection('builder');
-  };
-
-  const handleDeleteTemplate = (templateId) => {
-    if (!window.confirm('Delete this template?')) return;
-    setReportTemplates(prev => prev.filter(t => t.id !== templateId));
-  };
-
-  const handleCreateCustomReport = (e) => {
-    e?.preventDefault?.();
-    const newId = `custom_${Date.now()}`;
-    setCustomReports(prev => [
-      ...prev,
-      {
-        id: newId,
-        name: reportBuilder.name || `New Report ${newId}`,
-        category: reportBuilder.category,
-        description: reportBuilder.description,
-        columns: reportBuilder.selectedColumns || [],
-        filters: reportBuilder.selectedFilters || [],
-        format: reportBuilder.format,
-        schedule: reportBuilder.schedule,
-        recipients: reportBuilder.recipients || [],
-        createdDate: new Date().toISOString(),
-        lastGenerated: null,
-        usageCount: 0,
-        isCustom: true
-      }
-    ]);
-    alert('Custom report created');
-    setReportBuilder({
-      name: '',
-      description: '',
-      category: 'Payroll',
-      selectedColumns: [],
-      selectedFilters: [],
-      format: ['pdf', 'excel'],
-      schedule: 'none',
-      recipients: []
-    });
-    setActiveSection('configure');
-  };
-
-  // --- Add / Edit / Delete handlers for reports (modal-driven) ---
   const handleAddReport = () => {
     setIsEditMode(false);
     setReportForm({
@@ -467,560 +332,386 @@ const userInfo = {
       description: '',
       frequency: 'Monthly',
       format: ['pdf'],
-      department: 'All'
+      department: 'All',
+      scheduleType: 'manual',
+      recipients: [],
+      parameters: {}
     });
     setShowReportModal(true);
   };
 
-  const handleEditReport = (report, categoryOverride) => {
-    // categoryOverride is optional; if present, use it else infer
-    const category = categoryOverride || (report.category ? report.category : (standardReports.find(r => r.id === report.id) ? 'standard' : 'compliance'));
+  const handleEditReport = (report, category) => {
     setIsEditMode(true);
     setReportForm({
       ...report,
-      category
+      category: category || report.category
     });
     setShowReportModal(true);
   };
 
   const handleDeleteReport = (reportId, category) => {
     if (!window.confirm('Are you sure you want to delete this report?')) return;
-    if (category === 'standard') {
-      setStandardReports(prev => prev.filter(r => r.id !== reportId));
-    } else if (category === 'compliance') {
-      setComplianceReports(prev => prev.filter(r => r.id !== reportId));
-    } else if (category === 'analytics') {
-      setAnalyticsDashboards(prev => prev.filter(r => r.id !== reportId));
-    } else {
-      // try all
-      setStandardReports(prev => prev.filter(r => r.id !== reportId));
-      setComplianceReports(prev => prev.filter(r => r.id !== reportId));
-      setAnalyticsDashboards(prev => prev.filter(r => r.id !== reportId));
+    
+    const setters = {
+      'standard': setStandardReports,
+      'compliance': setComplianceReports,
+      'analytics': setAnalyticsDashboards
+    };
+    
+    const setter = setters[category];
+    if (setter) {
+      setter(prev => prev.filter(r => r.id !== reportId));
     }
-    alert('Report deleted.');
+    
+    alert('Report deleted successfully.');
   };
 
   const handleSaveReport = () => {
-    if (!reportForm.name) {
+    if (!reportForm.name.trim()) {
       alert('Report name is required');
       return;
     }
-    const payload = { ...reportForm };
-    // normalize format to array
-    if (!Array.isArray(payload.format)) payload.format = [payload.format];
 
-    if (payload.category === 'standard') {
-      setStandardReports(prev => {
-        const exists = prev.find(r => r.id === payload.id);
-        if (exists) return prev.map(r => r.id === payload.id ? payload : r);
-        return [...prev, payload];
-      });
-    } else if (payload.category === 'compliance') {
-      setComplianceReports(prev => {
-        const exists = prev.find(r => r.id === payload.id);
-        if (exists) return prev.map(r => r.id === payload.id ? payload : r);
-        return [...prev, payload];
-      });
-    } else if (payload.category === 'analytics') {
-      setAnalyticsDashboards(prev => {
-        const exists = prev.find(r => r.id === payload.id);
-        if (exists) return prev.map(r => r.id === payload.id ? payload : r);
-        return [...prev, payload];
-      });
+    const payload = { 
+      ...reportForm, 
+      lastModified: new Date().toISOString(),
+      modifiedBy: userInfo.name
+    };
+
+    // Update appropriate state based on category
+    switch (payload.category) {
+      case 'standard':
+        setStandardReports(prev => {
+          const exists = prev.find(r => r.id === payload.id);
+          return exists ? prev.map(r => r.id === payload.id ? payload : r) : [...prev, payload];
+        });
+        break;
+      case 'compliance':
+        setComplianceReports(prev => {
+          const exists = prev.find(r => r.id === payload.id);
+          return exists ? prev.map(r => r.id === payload.id ? payload : r) : [...prev, payload];
+        });
+        break;
+      case 'analytics':
+        setAnalyticsDashboards(prev => {
+          const exists = prev.find(r => r.id === payload.id);
+          return exists ? prev.map(r => r.id === payload.id ? payload : r) : [...prev, payload];
+        });
+        break;
     }
 
     setShowReportModal(false);
-    alert(isEditMode ? 'Report updated.' : 'Report added.');
-
-    // Make the newly added/updated report visible immediately:
-    // - switch to the report's category (standard/compliance/analytics)
-    // - clear any search term that may hide it
-    // - reset pagination to page 1
-    try {
-      if (payload && payload.category) setActiveSection(payload.category);
-    } catch (e) {
-      // ignore
-    }
+    alert(isEditMode ? 'Report updated successfully.' : 'Report added successfully.');
+    
+    // Navigate to the relevant section
+    setActiveSection(payload.category);
     setSearchTerm('');
     setCurrentPage(1);
   };
 
-  // load initial data (fully replaced dataset per PDF)
+  // Initialize with comprehensive data from HRMS specification
   const loadInitialData = () => {
-    // Standard Reports (match PDF list)
+    // Load employee data
+    const employees = Array.from({ length: 150 }, (_, i) => ({
+      id: `EMP${String(i+1).padStart(4, '0')}`,
+      name: `Employee ${i+1}`,
+      department: departments[Math.floor(Math.random() * (departments.length - 1)) + 1],
+      location: locations[Math.floor(Math.random() * (locations.length - 1)) + 1],
+      grade: grades[Math.floor(Math.random() * (grades.length - 1)) + 1],
+      basicSalary: Math.floor(Math.random() * 50000) + 30000,
+      grossSalary: Math.floor(Math.random() * 80000) + 40000,
+      netSalary: Math.floor(Math.random() * 70000) + 35000,
+      pf: Math.floor(Math.random() * 6000),
+      esi: Math.floor(Math.random() * 2000),
+      pt: Math.floor(Math.random() * 200),
+      tds: Math.floor(Math.random() * 8000),
+      status: ['active', 'inactive', 'notice_period'][Math.floor(Math.random() * 3)]
+    }));
+    setEmployeeData(employees);
+
+    // Standard Reports (from HRMS spec section 4.9)
     setStandardReports([
-      { id: 'SR001', name: 'Monthly Payroll Register', category: 'standard', description: 'Detailed monthly payroll register with employee-wise breakdown', frequency: 'Monthly', department: 'All', lastGenerated: '2024-03-31', status: 'generated', format: ['pdf', 'excel'], size: '2.4 MB' },
-      { id: 'SR002', name: 'Department-wise Payroll Summary', category: 'standard', description: 'Summary of payroll costs by department', frequency: 'Monthly', department: 'All', lastGenerated: '2024-03-31', status: 'generated', format: ['pdf', 'excel'], size: '1.8 MB' },
-      { id: 'SR003', name: 'Location-wise Payroll Summary', category: 'standard', description: 'Payroll summary grouped by location', frequency: 'Monthly', department: 'All', lastGenerated: '2024-03-31', status: 'generated', format: ['pdf', 'excel'], size: '1.4 MB' },
-      { id: 'SR004', name: 'Grade-wise Salary Analysis', category: 'standard', description: 'Salary distribution across grades', frequency: 'Quarterly', department: 'All', lastGenerated: '2024-03-31', status: 'generated', format: ['pdf', 'excel'], size: '1.2 MB' },
-      { id: 'SR005', name: 'Bank Transfer Summary', category: 'standard', description: 'Summary of bank transfers for salary payments', frequency: 'Monthly', department: 'All', lastGenerated: '2024-03-31', status: 'pending', format: ['pdf', 'excel'], size: '0.9 MB' },
-      { id: 'SR006', name: 'Statutory Reports (PF, ESI, PT, TDS)', category: 'standard', description: 'All statutory deduction summaries', frequency: 'Monthly/Quarterly', department: 'Finance', lastGenerated: '2024-03-31', status: 'generated', format: ['pdf', 'excel'], size: '3.0 MB' },
-      { id: 'SR007', name: 'Cost Center Wise Payroll', category: 'standard', description: 'Payroll cost allocation by cost center', frequency: 'Monthly', department: 'Finance', lastGenerated: '2024-03-31', status: 'generated', format: ['pdf', 'excel'], size: '1.5 MB' },
-      { id: 'SR008', name: 'Arrear Register', category: 'standard', description: 'Register of arrears and recoveries', frequency: 'Monthly', department: 'Finance', lastGenerated: '2024-03-31', status: 'generated', format: ['pdf'], size: '0.8 MB' },
-      { id: 'SR009', name: 'Payroll Variance Report (Month-over-Month)', category: 'standard', description: 'Month-over-month payroll variance analysis', frequency: 'Monthly', department: 'All', lastGenerated: '2024-03-31', status: 'generated', format: ['pdf', 'excel'], size: '1.7 MB' },
-      { id: 'SR010', name: 'Headcount and Payroll Cost Trends', category: 'standard', description: 'Historical trends of headcount and payroll costs', frequency: 'Monthly', department: 'HR', lastGenerated: '2024-03-31', status: 'generated', format: ['pdf', 'excel'], size: '2.1 MB' }
+      { id: 'SR001', name: 'Monthly Payroll Register', category: 'standard', description: 'Detailed monthly payroll register with employee-wise breakdown', frequency: 'Monthly', department: 'All', lastGenerated: '2024-03-31', status: 'generated', format: ['pdf', 'excel'], size: '2.4 MB', statutory: false, scheduleEnabled: true },
+      { id: 'SR002', name: 'Department-wise Payroll Summary', category: 'standard', description: 'Summary of payroll costs by department', frequency: 'Monthly', department: 'All', lastGenerated: '2024-03-31', status: 'generated', format: ['pdf', 'excel'], size: '1.8 MB', statutory: false, scheduleEnabled: true },
+      { id: 'SR003', name: 'Location-wise Payroll Summary', category: 'standard', description: 'Payroll summary grouped by location', frequency: 'Monthly', department: 'All', lastGenerated: '2024-03-31', status: 'generated', format: ['pdf', 'excel'], size: '1.4 MB', statutory: false, scheduleEnabled: true },
+      { id: 'SR004', name: 'Grade-wise Salary Analysis', category: 'standard', description: 'Salary distribution across grades', frequency: 'Quarterly', department: 'All', lastGenerated: '2024-03-31', status: 'generated', format: ['pdf', 'excel'], size: '1.2 MB', statutory: false, scheduleEnabled: true },
+      { id: 'SR005', name: 'Bank Transfer Summary', category: 'standard', description: 'Summary of bank transfers for salary payments', frequency: 'Monthly', department: 'All', lastGenerated: '2024-03-31', status: 'pending', format: ['pdf', 'excel'], size: '0.9 MB', statutory: false, scheduleEnabled: true },
+      { id: 'SR006', name: 'Statutory Reports (PF, ESI, PT, TDS)', category: 'standard', description: 'All statutory deduction summaries', frequency: 'Monthly/Quarterly', department: 'Finance', lastGenerated: '2024-03-31', status: 'generated', format: ['pdf', 'excel'], size: '3.0 MB', statutory: true, scheduleEnabled: true },
+      { id: 'SR007', name: 'Cost Center Wise Payroll', category: 'standard', description: 'Payroll cost allocation by cost center', frequency: 'Monthly', department: 'Finance', lastGenerated: '2024-03-31', status: 'generated', format: ['pdf', 'excel'], size: '1.5 MB', statutory: false, scheduleEnabled: true },
+      { id: 'SR008', name: 'Arrear Register', category: 'standard', description: 'Register of arrears and recoveries', frequency: 'Monthly', department: 'Finance', lastGenerated: '2024-03-31', status: 'generated', format: ['pdf'], size: '0.8 MB', statutory: false, scheduleEnabled: true },
+      { id: 'SR009', name: 'Payroll Variance Report (Month-over-Month)', category: 'standard', description: 'Month-over-month payroll variance analysis', frequency: 'Monthly', department: 'All', lastGenerated: '2024-03-31', status: 'generated', format: ['pdf', 'excel'], size: '1.7 MB', statutory: false, scheduleEnabled: true },
+      { id: 'SR010', name: 'Headcount and Payroll Cost Trends', category: 'standard', description: 'Historical trends of headcount and payroll costs', frequency: 'Monthly', department: 'HR', lastGenerated: '2024-03-31', status: 'generated', format: ['pdf', 'excel'], size: '2.1 MB', statutory: false, scheduleEnabled: true }
     ]);
 
-    // Compliance Reports (match PDF list)
+    // Compliance Reports (from HRMS spec section 4.9)
     setComplianceReports([
-      { id: 'CR001', name: 'Form 24Q (TDS quarterly return)', type: 'TDS', category: 'compliance', description: 'Quarterly TDS return for salaried employees (Form 24Q)', frequency: 'Quarterly', dueDate: '2024-04-30', status: 'pending', formType: 'TDS', year: '2023-24', quarter: 'Q4' },
-      { id: 'CR002', name: 'ECR (PF monthly return)', type: 'PF', category: 'compliance', description: 'ECR file for monthly PF contributions', frequency: 'Monthly', dueDate: '2024-04-15', status: 'submitted', formType: 'PF', month: 'March 2024' },
-      { id: 'CR003', name: 'ESI Monthly Return', type: 'ESI', category: 'compliance', description: 'Monthly ESI contribution return', frequency: 'Monthly', dueDate: '2024-04-15', status: 'submitted', formType: 'ESI', month: 'March 2024' },
-      { id: 'CR004', name: 'PT Challan Reports', type: 'Professional Tax', category: 'compliance', description: 'Professional Tax challan and payment reports', frequency: 'Monthly', dueDate: '2024-04-21', status: 'generated', formType: 'PT', month: 'March 2024' },
-      { id: 'CR005', name: 'Form 16 (Annual TDS certificate)', type: 'TDS Certificate', category: 'compliance', description: 'Form 16 annual TDS certificate for employees', frequency: 'Annual', dueDate: '2024-06-15', status: 'in-progress', formType: 'TDS', year: '2023-24' },
-      { id: 'CR006', name: 'Salary Certificate', type: 'Certificate', category: 'compliance', description: 'Employee salary certificate for various purposes', frequency: 'On Demand', dueDate: 'N/A', status: 'available', formType: 'Certificate' },
-      { id: 'CR007', name: 'PF Annual Return (Form 3A, 6A)', type: 'PF', category: 'compliance', description: 'Annual PF return (Form 3A, 6A)', frequency: 'Annual', dueDate: '2024-05-30', status: 'pending', formType: 'PF', year: '2023-24' }
+      { id: 'CR001', name: 'Form 24Q (TDS quarterly return)', type: 'TDS', category: 'compliance', description: 'Quarterly TDS return for salaried employees (Form 24Q)', frequency: 'Quarterly', dueDate: '2024-04-30', status: 'pending', formType: 'TDS', year: '2023-24', quarter: 'Q4', statutory: true, autoGenerated: true },
+      { id: 'CR002', name: 'ECR (PF monthly return)', type: 'PF', category: 'compliance', description: 'ECR file for monthly PF contributions', frequency: 'Monthly', dueDate: '2024-04-15', status: 'submitted', formType: 'PF', month: 'March 2024', statutory: true, autoGenerated: true },
+      { id: 'CR003', name: 'ESI Monthly Return', type: 'ESI', category: 'compliance', description: 'Monthly ESI contribution return', frequency: 'Monthly', dueDate: '2024-04-15', status: 'submitted', formType: 'ESI', month: 'March 2024', statutory: true, autoGenerated: true },
+      { id: 'CR004', name: 'PT Challan Reports', type: 'Professional Tax', category: 'compliance', description: 'Professional Tax challan and payment reports', frequency: 'Monthly', dueDate: '2024-04-21', status: 'generated', formType: 'PT', month: 'March 2024', statutory: true, autoGenerated: true },
+      { id: 'CR005', name: 'Form 16 (Annual TDS certificate)', type: 'TDS Certificate', category: 'compliance', description: 'Form 16 annual TDS certificate for employees', frequency: 'Annual', dueDate: '2024-06-15', status: 'in-progress', formType: 'TDS', year: '2023-24', statutory: true, autoGenerated: true },
+      { id: 'CR006', name: 'Salary Certificate', type: 'Certificate', category: 'compliance', description: 'Employee salary certificate for various purposes', frequency: 'On Demand', dueDate: 'N/A', status: 'available', formType: 'Certificate', statutory: false, autoGenerated: false },
+      { id: 'CR007', name: 'PF Annual Return (Form 3A, 6A)', type: 'PF', category: 'compliance', description: 'Annual PF return (Form 3A, 6A)', frequency: 'Annual', dueDate: '2024-05-30', status: 'pending', formType: 'PF', year: '2023-24', statutory: true, autoGenerated: true }
     ]);
 
-    // Analytics Dashboards (match PDF list)
+    // Analytics Dashboards (from HRMS spec section 4.9)
     setAnalyticsDashboards([
-      { id: 'AD001', name: 'Total Payroll Cost Visualization', description: 'Interactive visualization of total payroll costs', category: 'analytics', metrics: ['Total Cost', 'Cost per Employee', 'Department Breakdown'], refreshRate: 'Real-time', accessLevel: 'Manager+', lastUpdated: '2024-03-31' },
-      { id: 'AD002', name: 'Average Salary by Department/Grade', description: 'Average salary analysis across departments and grades', category: 'analytics', metrics: ['Average Salary', 'Median Salary', 'Salary Range'], refreshRate: 'Daily', accessLevel: 'HR+', lastUpdated: '2024-03-31' },
-      { id: 'AD003', name: 'Salary Distribution Analysis', description: 'Analysis of salary distribution across organization', category: 'analytics', metrics: ['Distribution Curve', 'Percentiles', 'Outliers'], refreshRate: 'Monthly', accessLevel: 'HR+', lastUpdated: '2024-03-31' },
-      { id: 'AD004', name: 'Statutory Contribution Trends', description: 'Trend analysis of statutory contributions (PF, ESI, PT)', category: 'analytics', metrics: ['PF Trends', 'ESI Trends', 'PT Trends'], refreshRate: 'Monthly', accessLevel: 'Finance+', lastUpdated: '2024-03-31' },
-      { id: 'AD005', name: 'Payroll Cost Forecasting', description: 'Forecast future payroll costs based on trends', category: 'analytics', metrics: ['3-Month Forecast', '6-Month Forecast', 'Variance Analysis'], refreshRate: 'Monthly', accessLevel: 'Executive', lastUpdated: '2024-03-31' },
-      { id: 'AD006', name: 'Budget vs Actual Payroll Comparison', description: 'Comparison of budgeted vs actual payroll costs', category: 'analytics', metrics: ['Variance %', 'Budget Utilization', 'Department Performance'], refreshRate: 'Monthly', accessLevel: 'Manager+', lastUpdated: '2024-03-31' },
-      { id: 'AD007', name: 'Attrition Impact on Payroll Costs', description: 'Analysis of attrition impact on payroll', category: 'analytics', metrics: ['Cost of Attrition', 'Replacement Cost', 'Productivity Loss'], refreshRate: 'Quarterly', accessLevel: 'HR+', lastUpdated: '2024-03-31' }
+      { id: 'AD001', name: 'Total Payroll Cost Visualization', description: 'Interactive visualization of total payroll costs', category: 'analytics', metrics: ['Total Cost', 'Cost per Employee', 'Department Breakdown'], refreshRate: 'Real-time', accessLevel: 'Manager+', lastUpdated: '2024-03-31', chartType: 'bar', drillDown: true },
+      { id: 'AD002', name: 'Average Salary by Department/Grade', description: 'Average salary analysis across departments and grades', category: 'analytics', metrics: ['Average Salary', 'Median Salary', 'Salary Range'], refreshRate: 'Daily', accessLevel: 'HR+', lastUpdated: '2024-03-31', chartType: 'combo', drillDown: true },
+      { id: 'AD003', name: 'Salary Distribution Analysis', description: 'Analysis of salary distribution across organization', category: 'analytics', metrics: ['Distribution Curve', 'Percentiles', 'Outliers'], refreshRate: 'Monthly', accessLevel: 'HR+', lastUpdated: '2024-03-31', chartType: 'histogram', drillDown: true },
+      { id: 'AD004', name: 'Statutory Contribution Trends', description: 'Trend analysis of statutory contributions (PF, ESI, PT)', category: 'analytics', metrics: ['PF Trends', 'ESI Trends', 'PT Trends'], refreshRate: 'Monthly', accessLevel: 'Finance+', lastUpdated: '2024-03-31', chartType: 'line', drillDown: false },
+      { id: 'AD005', name: 'Payroll Cost Forecasting', description: 'Forecast future payroll costs based on trends', category: 'analytics', metrics: ['3-Month Forecast', '6-Month Forecast', 'Variance Analysis'], refreshRate: 'Monthly', accessLevel: 'Executive', lastUpdated: '2024-03-31', chartType: 'line', drillDown: true },
+      { id: 'AD006', name: 'Budget vs Actual Payroll Comparison', description: 'Comparison of budgeted vs actual payroll costs', category: 'analytics', metrics: ['Variance %', 'Budget Utilization', 'Department Performance'], refreshRate: 'Monthly', accessLevel: 'Manager+', lastUpdated: '2024-03-31', chartType: 'combo', drillDown: true },
+      { id: 'AD007', name: 'Attrition Impact on Payroll Costs', description: 'Analysis of attrition impact on payroll', category: 'analytics', metrics: ['Cost of Attrition', 'Replacement Cost', 'Productivity Loss'], refreshRate: 'Quarterly', accessLevel: 'HR+', lastUpdated: '2024-03-31', chartType: 'bar', drillDown: true }
     ]);
 
-    // Sample generated reports (history)
+    // Generated reports history
     setGeneratedReports([
-      { id: 'GR001', reportName: 'Monthly Payroll Register', period: 'March 2024', generatedDate: '2024-04-01', generatedBy: 'System', format: 'PDF', size: '2.4 MB', status: 'completed', downloadCount: 15 },
-      { id: 'GR002', reportName: 'Department-wise Summary', period: 'March 2024', generatedDate: '2024-04-01', generatedBy: 'HR Manager', format: 'Excel', size: '1.8 MB', status: 'completed', downloadCount: 8 },
-      { id: 'GR003', reportName: 'Form 24Q', period: 'Q4 FY 2023-24', generatedDate: '2024-04-10', generatedBy: 'Finance', format: 'Excel', size: '3.2 MB', status: 'completed', downloadCount: 3 }
+      { id: 'GR001', reportName: 'Monthly Payroll Register', period: 'March 2024', generatedDate: '2024-04-01', generatedBy: 'System', format: 'PDF', size: '2.4 MB', status: 'completed', downloadCount: 15, parameters: { department: 'All', location: 'All' } },
+      { id: 'GR002', reportName: 'Department-wise Summary', period: 'March 2024', generatedDate: '2024-04-01', generatedBy: 'HR Manager', format: 'Excel', size: '1.8 MB', status: 'completed', downloadCount: 8, parameters: { department: 'Engineering', location: 'Bangalore' } },
+      { id: 'GR003', reportName: 'Form 24Q', period: 'Q4 FY 2023-24', generatedDate: '2024-04-10', generatedBy: 'Finance', format: 'Excel', size: '3.2 MB', status: 'completed', downloadCount: 3, parameters: { year: '2023-24', quarter: 'Q4' } }
     ]);
 
-    // scheduled reports sample
+    // Scheduled reports
     setScheduledReports([
-      { id: 'SRC001', reportName: 'Monthly Payroll Register', schedule: '1st of every month', nextRun: '2024-05-01', format: 'PDF & Excel', recipients: ['hr@company.com', 'finance@company.com'], status: 'active' },
-      { id: 'SRC002', reportName: 'Bank Transfer Summary', schedule: '28th of every month', nextRun: '2024-04-28', format: 'Excel', recipients: ['finance@company.com'], status: 'active' }
+      { id: 'SRC001', reportName: 'Monthly Payroll Register', schedule: '1st of every month', nextRun: '2024-05-01', format: 'PDF & Excel', recipients: ['hr@company.com', 'finance@company.com'], status: 'active', frequency: 'Monthly', lastRun: '2024-04-01', errorCount: 0 },
+      { id: 'SRC002', reportName: 'Bank Transfer Summary', schedule: '28th of every month', nextRun: '2024-04-28', format: 'Excel', recipients: ['finance@company.com'], status: 'active', frequency: 'Monthly', lastRun: '2024-03-28', errorCount: 0 }
     ]);
 
-    // report templates
+    // AI Insights based on HRMS spec section 8.8
+    setAiInsights([
+      { id: 'AI001', type: 'anomaly', title: 'Unusual Overtime Pattern', description: 'Sales department showing 300% overtime increase', severity: 'high', recommendedAction: 'Review overtime approvals' },
+      { id: 'AI002', type: 'prediction', title: 'Attrition Risk Alert', description: '5 employees in Engineering show high flight risk', severity: 'medium', recommendedAction: 'Schedule retention meetings' },
+      { id: 'AI003', type: 'recommendation', title: 'Salary Benchmarking', description: 'Market parity suggests 8-12% salary adjustment for Grade B', severity: 'low', recommendedAction: 'Consider in next cycle' }
+    ]);
+
+    // Report templates
     setReportTemplates([
-      { id: 'template001', name: 'Basic Payroll Summary', category: 'Payroll', description: 'Basic payroll summary with essential columns', columns: ['Employee ID', 'Name', 'Basic Salary', 'Gross Salary', 'Net Salary'], filters: ['department', 'date_range'], format: ['pdf', 'excel'], isCustom: false },
-      { id: 'template002', name: 'Detailed Salary Breakup', category: 'Salary', description: 'Detailed salary breakup with all components', columns: ['Employee ID', 'Name', 'Basic', 'HRA', 'Allowances', 'Deductions', 'Net'], filters: ['department', 'grade', 'date_range'], format: ['excel'], isCustom: false },
-      { id: 'template003', name: 'Statutory Compliance Report', category: 'Compliance', description: 'All statutory deductions in one report', columns: ['Employee ID', 'Name', 'PF', 'ESI', 'PT', 'TDS', 'Total'], filters: ['date_range', 'location'], format: ['pdf', 'excel'], isCustom: false }
+      { id: 'template001', name: 'Basic Payroll Summary', category: 'Payroll', description: 'Basic payroll summary with essential columns', columns: ['Employee ID', 'Name', 'Basic Salary', 'Gross Salary', 'Net Salary'], filters: ['department', 'date_range'], format: ['pdf', 'excel'], isCustom: false, usageCount: 45 },
+      { id: 'template002', name: 'Detailed Salary Breakup', category: 'Salary', description: 'Detailed salary breakup with all components', columns: ['Employee ID', 'Name', 'Basic', 'HRA', 'Allowances', 'Deductions', 'Net'], filters: ['department', 'grade', 'date_range'], format: ['excel'], isCustom: false, usageCount: 32 },
+      { id: 'template003', name: 'Statutory Compliance Report', category: 'Compliance', description: 'All statutory deductions in one report', columns: ['Employee ID', 'Name', 'PF', 'ESI', 'PT', 'TDS', 'Total'], filters: ['date_range', 'location'], format: ['pdf', 'excel'], isCustom: false, usageCount: 28 }
     ]);
 
-    // custom reports (empty initially)
-    setCustomReports([]);
-
-    // available columns & filters (sample)
+    // Available columns for report builder
     setAvailableColumns([
-      { id: 'emp_id', name: 'Employee ID', category: 'Basic', type: 'text' },
-      { id: 'name', name: 'Name', category: 'Basic', type: 'text' },
-      { id: 'department', name: 'Department', category: 'Basic', type: 'text' },
-      { id: 'designation', name: 'Designation', category: 'Basic', type: 'text' },
-      { id: 'basic_salary', name: 'Basic Salary', category: 'Salary', type: 'currency' },
-      { id: 'gross_salary', name: 'Gross Salary', category: 'Salary', type: 'currency' },
-      { id: 'net_salary', name: 'Net Salary', category: 'Salary', type: 'currency' },
-      { id: 'pf_employee', name: 'PF (Employee)', category: 'Deductions', type: 'currency' },
-      { id: 'tds', name: 'TDS', category: 'Deductions', type: 'currency' },
-      { id: 'leave_balance', name: 'Leave Balance', category: 'Attendance', type: 'number' }
+      { id: 'emp_id', name: 'Employee ID', category: 'Basic', type: 'text', description: 'Unique employee identifier' },
+      { id: 'name', name: 'Name', category: 'Basic', type: 'text', description: 'Employee full name' },
+      { id: 'department', name: 'Department', category: 'Basic', type: 'text', description: 'Department assignment' },
+      { id: 'designation', name: 'Designation', category: 'Basic', type: 'text', description: 'Job title/position' },
+      { id: 'location', name: 'Location', category: 'Basic', type: 'text', description: 'Work location' },
+      { id: 'grade', name: 'Grade', category: 'Basic', type: 'text', description: 'Employee grade/level' },
+      { id: 'basic_salary', name: 'Basic Salary', category: 'Salary', type: 'currency', description: 'Basic salary component' },
+      { id: 'gross_salary', name: 'Gross Salary', category: 'Salary', type: 'currency', description: 'Total earnings before deductions' },
+      { id: 'net_salary', name: 'Net Salary', category: 'Salary', type: 'currency', description: 'Take-home salary' },
+      { id: 'pf_employee', name: 'PF (Employee)', category: 'Deductions', type: 'currency', description: 'Employee PF contribution' },
+      { id: 'pf_employer', name: 'PF (Employer)', category: 'Deductions', type: 'currency', description: 'Employer PF contribution' },
+      { id: 'esi_employee', name: 'ESI (Employee)', category: 'Deductions', type: 'currency', description: 'Employee ESI contribution' },
+      { id: 'esi_employer', name: 'ESI (Employer)', category: 'Deductions', type: 'currency', description: 'Employer ESI contribution' },
+      { id: 'tds', name: 'TDS', category: 'Deductions', type: 'currency', description: 'Tax deducted at source' },
+      { id: 'pt', name: 'Professional Tax', category: 'Deductions', type: 'currency', description: 'State professional tax' },
+      { id: 'leave_balance', name: 'Leave Balance', category: 'Attendance', type: 'number', description: 'Available leave balance' },
+      { id: 'attendance_days', name: 'Attendance Days', category: 'Attendance', type: 'number', description: 'Number of days present' },
+      { id: 'overtime_hours', name: 'Overtime Hours', category: 'Attendance', type: 'number', description: 'Total overtime worked' }
     ]);
 
+    // Available filters
     setAvailableFilters([
-      { id: 'department', name: 'Department', type: 'multi-select', options: departments.slice(1) },
-      { id: 'date_range', name: 'Date Range', type: 'date-range' },
-      { id: 'salary_range', name: 'Salary Range', type: 'range', min: 0, max: 500000 },
-      { id: 'location', name: 'Location', type: 'multi-select', options: ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad'] },
-      { id: 'grade', name: 'Grade', type: 'multi-select', options: ['A', 'B', 'C', 'D', 'E'] }
+      { id: 'department', name: 'Department', type: 'multi-select', options: departments.slice(1), description: 'Filter by department' },
+      { id: 'location', name: 'Location', type: 'multi-select', options: locations.slice(1), description: 'Filter by work location' },
+      { id: 'grade', name: 'Grade', type: 'multi-select', options: grades.slice(1), description: 'Filter by employee grade' },
+      { id: 'date_range', name: 'Date Range', type: 'date-range', description: 'Filter by date range' },
+      { id: 'salary_range', name: 'Salary Range', type: 'range', min: 0, max: 500000, description: 'Filter by salary range' },
+      { id: 'employment_type', name: 'Employment Type', type: 'multi-select', options: ['Permanent', 'Contract', 'Intern', 'Consultant'], description: 'Filter by employment type' },
+      { id: 'status', name: 'Employment Status', type: 'multi-select', options: ['Active', 'Inactive', 'Notice Period', 'Suspended'], description: 'Filter by employment status' }
     ]);
 
-    // sample analytics data
-    setAnalyticsData({
-      payrollTrends: { labels: ['Jan','Feb','Mar','Apr','May','Jun'], data: [6800000,7000000,7500000,7200000,7400000,7600000] },
-      departmentBreakdown: { labels: ['Engineering','Sales','Marketing','HR','Finance','Operations'], data: [3200000,1500000,800000,400000,600000,1000000] }
-    });
+    setIsLoading(false);
   };
 
-  // Enhanced report builder
-  const renderReportBuilder = () => {
-    return (
-      <div className="row g-4">
-        <div className="col-12">
-          <div className="card border shadow-none">
-            <div className="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  // Render components
+  const renderKPICards = () => (
+    <div className="row g-3 mb-4">
+      <div className="col-md-3">
+        <div className="card border-primary border-2">
+          <div className="card-body">
+            <div className="d-flex justify-content-between align-items-center">
               <div>
-                <h5 className="mb-0">Custom Report Builder</h5>
-                <div className="small text-muted">Design your custom payroll report step by step</div>
+                <h6 className="text-muted mb-1">Total Payroll Cost</h6>
+                <h4 className="fw-bold">{formatCurrency(kpis.totalPayrollCost)}</h4>
+                <div className="small text-success">↓ 2.3% from last month</div>
               </div>
-              <button
-                className="btn btn-secondary"
-                onClick={() => setActiveSection("configure")}
-              >
-                <Icon icon="heroicons:arrow-left" className="me-2" />
-                Back to Configuration
-              </button>
-            </div>
-
-            <div className="card-body">
-              {/* Step Indicator */}
-              <div className="mb-4">
-                <div className="d-flex align-items-center justify-content-between">
-                  {[1, 2, 3, 4].map((step) => (
-                    <React.Fragment key={step}>
-                      <div className="d-flex flex-column align-items-center">
-                        <div
-                          className={`rounded-circle d-flex align-items-center justify-content-center ${
-                            builderStep >= step ? 'bg-primary text-white' : 'bg-light text-muted'
-                          }`}
-                          style={{ width: '40px', height: '40px' }}
-                        >
-                          {builderStep > step ? (
-                            <Icon icon="heroicons:check" />
-                          ) : (
-                            step
-                          )}
-                        </div>
-                        <div className="small mt-2 text-muted">
-                          {step === 1 ? 'Basic Info' : step === 2 ? 'Columns' : step === 3 ? 'Filters' : 'Schedule'}
-                        </div>
-                      </div>
-                      {step < 4 && (
-                        <div
-                          className={`flex-fill border-top mx-2 ${
-                            builderStep > step ? 'border-primary' : 'border-secondary'
-                          }`}
-                          style={{ height: '2px' }}
-                        />
-                      )}
-                    </React.Fragment>
-                  ))}
-                </div>
-              </div>
-
-              {/* Step 1: Basic Information */}
-              {builderStep === 1 && (
-                <div>
-                  <h6 className="mb-3">Step 1: Basic Information</h6>
-                  <div className="row g-3">
-                    <div className="col-md-6">
-                      <label className="form-label">Report Name *</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={reportBuilder.name}
-                        onChange={(e) => setReportBuilder(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Enter report name"
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Category</label>
-                      <select
-                        className="form-select"
-                        value={reportBuilder.category}
-                        onChange={(e) => setReportBuilder(prev => ({ ...prev, category: e.target.value }))}
-                      >
-                        <option value="Payroll">Payroll</option>
-                        <option value="Salary">Salary</option>
-                        <option value="Compliance">Compliance</option>
-                        <option value="Deduction">Deduction</option>
-                        <option value="Custom">Custom</option>
-                      </select>
-                    </div>
-                    <div className="col-12">
-                      <label className="form-label">Description</label>
-                      <textarea
-                        className="form-control"
-                        rows="3"
-                        value={reportBuilder.description}
-                        onChange={(e) => setReportBuilder(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="Describe what this report contains"
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Output Format</label>
-                      <div className="d-flex gap-3">
-                        {['pdf', 'excel', 'csv'].map(format => (
-                          <div key={format} className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              checked={reportBuilder.format.includes(format)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setReportBuilder(prev => ({
-                                    ...prev,
-                                    format: [...prev.format, format]
-                                  }));
-                                } else {
-                                  setReportBuilder(prev => ({
-                                    ...prev,
-                                    format: prev.format.filter(f => f !== format)
-                                  }));
-                                }
-                              }}
-                            />
-                            <label className="form-check-label text-capitalize">{format}</label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: Select Columns */}
-              {builderStep === 2 && (
-                <div>
-                  <h6 className="mb-3">Step 2: Select Columns</h6>
-                  <div className="mb-3">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search columns..."
-                      onChange={(e) => {
-                        // Filter columns based on search
-                      }}
-                    />
-                  </div>
-                  <div className="row g-3">
-                    {availableColumns.map(col => (
-                      <div key={col.id} className="col-md-4">
-                        <div className="card border">
-                          <div className="card-body p-2">
-                            <div className="form-check">
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                                checked={selectedColumns.includes(col.id)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setSelectedColumns([...selectedColumns, col.id]);
-                                  } else {
-                                    setSelectedColumns(selectedColumns.filter(c => c !== col.id));
-                                  }
-                                }}
-                              />
-                              <label className="form-check-label">
-                                <div className="fw-semibold">{col.name}</div>
-                                <div className="small text-muted">{col.category} • {col.type}</div>
-                              </label>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-3">
-                    <div className="alert alert-info">
-                      <strong>Selected:</strong> {selectedColumns.length} column(s)
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Apply Filters */}
-              {builderStep === 3 && (
-                <div>
-                  <h6 className="mb-3">Step 3: Apply Filters</h6>
-                  <div className="row g-3">
-                    {availableFilters.map(filter => (
-                      <div key={filter.id} className="col-md-6">
-                        <label className="form-label">{filter.name}</label>
-                        {filter.type === 'multi-select' && (
-                          <select
-                            className="form-select"
-                            multiple
-                            onChange={(e) => {
-                              const selected = Array.from(e.target.selectedOptions, option => option.value);
-                              setSelectedFilters(prev => ({
-                                ...prev,
-                                [filter.id]: selected
-                              }));
-                            }}
-                          >
-                            {filter.options.map(opt => (
-                              <option key={opt} value={opt}>{opt}</option>
-                            ))}
-                          </select>
-                        )}
-                        {filter.type === 'date-range' && (
-                          <div className="d-flex gap-2">
-                            <input
-                              type="date"
-                              className="form-control"
-                              value={dateRange.start}
-                              onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                            />
-                            <input
-                              type="date"
-                              className="form-control"
-                              value={dateRange.end}
-                              onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                            />
-                          </div>
-                        )}
-                        {filter.type === 'range' && (
-                          <div className="d-flex gap-2">
-                            <input
-                              type="number"
-                              className="form-control"
-                              placeholder="Min"
-                              min={filter.min}
-                              max={filter.max}
-                            />
-                            <input
-                              type="number"
-                              className="form-control"
-                              placeholder="Max"
-                              min={filter.min}
-                              max={filter.max}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Step 4: Schedule */}
-              {builderStep === 4 && (
-                <div>
-                  <h6 className="mb-3">Step 4: Schedule (Optional)</h6>
-                  <div className="row g-3">
-                    <div className="col-md-6">
-                      <label className="form-label">Schedule Frequency</label>
-                      <select
-                        className="form-select"
-                        value={reportBuilder.schedule}
-                        onChange={(e) => setReportBuilder(prev => ({ ...prev, schedule: e.target.value }))}
-                      >
-                        <option value="none">No Schedule</option>
-                        <option value="daily">Daily</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="monthly">Monthly</option>
-                        <option value="quarterly">Quarterly</option>
-                      </select>
-                    </div>
-                    {reportBuilder.schedule !== 'none' && (
-                      <>
-                        <div className="col-md-6">
-                          <label className="form-label">Recipients (Email)</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="email1@company.com, email2@company.com"
-                            onChange={(e) => {
-                              setReportBuilder(prev => ({
-                                ...prev,
-                                recipients: e.target.value.split(',').map(e => e.trim())
-                              }));
-                            }}
-                          />
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Navigation Buttons */}
-              <div className="d-flex justify-content-between mt-4">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    if (builderStep > 1) setBuilderStep(builderStep - 1);
-                    else setActiveSection('configure');
-                  }}
-                >
-                  <Icon icon="heroicons:arrow-left" className="me-2" />
-                  {builderStep > 1 ? 'Previous' : 'Cancel'}
-                </button>
-                <div className="d-flex gap-2">
-                  {builderStep < 4 && (
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => {
-                        if (builderStep === 1 && !reportBuilder.name) {
-                          alert('Please enter a report name');
-                          return;
-                        }
-                        if (builderStep === 2 && selectedColumns.length === 0) {
-                          alert('Please select at least one column');
-                          return;
-                        }
-                        setBuilderStep(builderStep + 1);
-                      }}
-                    >
-                      Next
-                      <Icon icon="heroicons:arrow-right" className="ms-2" />
-                    </button>
-                  )}
-                  {builderStep === 4 && (
-                    <button
-                      className="btn btn-success"
-                      onClick={handleCreateCustomReport}
-                    >
-                      <Icon icon="heroicons:check" className="me-2" />
-                      Create Report
-                    </button>
-                  )}
-                </div>
+              <div className="bg-primary-subtle p-3 rounded">
+                <Icon icon="heroicons:banknotes" className="text-primary" width="24" />
               </div>
             </div>
           </div>
         </div>
       </div>
-    );
-  };
 
+      <div className="col-md-3">
+        <div className="card border-success border-2">
+          <div className="card-body">
+            <div className="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 className="text-muted mb-1">Statutory Deductions</h6>
+                <h4 className="fw-bold">{formatCurrency(kpis.statutoryDeductions)}</h4>
+                <div className="small text-muted">{((kpis.statutoryDeductions / kpis.totalPayrollCost) * 100).toFixed(1)}% of total</div>
+              </div>
+              <div className="bg-success-subtle p-3 rounded">
+                <Icon icon="heroicons:shield-check" className="text-success" width="24" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-  
+      <div className="col-md-3">
+        <div className="card border-warning border-2">
+          <div className="card-body">
+            <div className="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 className="text-muted mb-1">Average Salary</h6>
+                <h4 className="fw-bold">{formatCurrency(kpis.avgSalary)}</h4>
+                <div className="small text-warning">+5.2% year-on-year</div>
+              </div>
+              <div className="bg-warning-subtle p-3 rounded">
+                <Icon icon="heroicons:chart-bar" className="text-warning" width="24" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-  // init
-  useEffect(() => {
-    loadInitialData();
-    setTimeout(() => setIsLoading(false), 300);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-// PayrollReports.jsx (Part 2 of 3)
-  // Render functions for sections
-  const renderStandardReports = () => (
+      <div className="col-md-3">
+        <div className="card border-info border-2">
+          <div className="card-body">
+            <div className="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 className="text-muted mb-1">Compliance Status</h6>
+                <h4 className="fw-bold">{kpis.overdueCompliance === 0 ? '100%' : `${((complianceReports.length - kpis.overdueCompliance) / complianceReports.length * 100).toFixed(0)}%`}</h4>
+                <div className="small text-danger">{kpis.overdueCompliance > 0 ? `${kpis.overdueCompliance} overdue` : 'All compliant'}</div>
+              </div>
+              <div className="bg-info-subtle p-3 rounded">
+                <Icon icon="heroicons:document-check" className="text-info" width="24" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderAIInsights = () => (
+    <div className="card border-0 shadow-sm mb-4">
+      <div className="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+        <h6 className="mb-0">AI-Driven Insights</h6>
+        <span className="badge bg-primary">Beta</span>
+      </div>
+      <div className="card-body">
+        <div className="row g-3">
+          {aiInsights.map(insight => (
+            <div key={insight.id} className="col-md-4">
+              <div className={`card border-${insight.severity === 'high' ? 'danger' : insight.severity === 'medium' ? 'warning' : 'info'}`}>
+                <div className="card-body">
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <h6 className="mb-0">{insight.title}</h6>
+                    <Icon icon="heroicons:light-bulb" className="text-warning" />
+                  </div>
+                  <p className="small text-muted mb-2">{insight.description}</p>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span className={`badge bg-${insight.severity === 'high' ? 'danger' : insight.severity === 'medium' ? 'warning' : 'info'}-subtle text-${insight.severity === 'high' ? 'danger' : insight.severity === 'medium' ? 'warning' : 'info'}`}>
+                      {insight.severity}
+                    </span>
+                    <button className="btn btn-sm btn-outline-primary">View Details</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderStandardReportsSection = () => (
     <div className="row g-4">
       <div className="col-12">
         <div className="card border shadow-none">
           <div className="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
             <div>
               <h5 className="mb-0">Standard Payroll Reports</h5>
-              <div className="small text-muted">Core payroll & operational reports</div>
+              <div className="small text-muted">Core payroll & operational reports as per HRMS spec 4.9</div>
             </div>
             <div className="d-flex gap-2">
-              <button className="btn btn-outline-secondary" onClick={handleRefreshData}><Icon icon="heroicons:arrow-path" className="me-2" /> Refresh</button>
-              <button className="btn btn-primary" onClick={handleAddReport}><Icon icon="heroicons:plus" className="me-2" />  Add Report</button>
+              <button className="btn btn-outline-secondary" onClick={() => setIsLoading(true)}>
+                <Icon icon="heroicons:arrow-path" className={`me-2 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
+              <button className="btn btn-primary" onClick={handleAddReport}>
+                <Icon icon="heroicons:plus" className="me-2" />
+                Add Report
+              </button>
             </div>
           </div>
 
           <div className="card-body p-0">
             <div className="p-4 border-bottom">
-              <div className="d-flex flex-wrap gap-3 align-items-center">
-                <div className="position-relative flex-fill" style={{ minWidth: '300px' }}>
-                  <Icon icon="heroicons:magnifying-glass" className="position-absolute top-50 translate-middle-y text-muted ms-3" />
-                  <input type="text" placeholder="Search reports." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }} className="form-control ps-5" />
+              <div className="row g-3">
+                <div className="col-md-4">
+                  <div className="input-group">
+                    <span className="input-group-text">
+                      <Icon icon="heroicons:magnifying-glass" />
+                    </span>
+                    <input 
+                      type="text" 
+                      placeholder="Search reports..." 
+                      value={searchTerm} 
+                      onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }} 
+                      className="form-control" 
+                    />
+                  </div>
                 </div>
-
-                <div style={{ minWidth: '150px' }}>
+                <div className="col-md-3">
                   <select value={filterDepartment} onChange={(e) => setFilterDepartment(e.target.value)} className="form-select">
                     {departments.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
+                </div>
+                <div className="col-md-3">
+                  <select value={filterPeriod} onChange={(e) => setFilterPeriod(e.target.value)} className="form-select">
+                    {periods.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+                <div className="col-md-2">
+                  <button className="btn btn-outline-primary w-100" onClick={handleExportData}>
+                    <Icon icon="heroicons:arrow-down-tray" className="me-2" />
+                    Export
+                  </button>
                 </div>
               </div>
             </div>
 
             <div className="card-body">
               <div className="row g-3">
-                {paginatedData.map(report => (
+                {standardReports.map(report => (
                   <div key={report.id} className="col-md-6 col-lg-4">
-                    <div className="card h-100">
+                    <div className="card h-100 hover-shadow">
                       <div className="card-body">
-                        <div className="d-flex justify-content-between">
+                        <div className="d-flex justify-content-between align-items-start">
                           <div>
                             <h6 className="mb-1">{report.name}</h6>
                             <p className="text-muted small mb-2">{report.description}</p>
-                            <div className="small text-muted">Frequency: {report.frequency}</div>
+                            <div className="small text-muted">
+                              <Icon icon="heroicons:calendar" className="me-1" />
+                              Frequency: {report.frequency}
+                            </div>
+                            <div className="small text-muted">
+                              <Icon icon="heroicons:building-office" className="me-1" />
+                              Department: {report.department}
+                            </div>
                           </div>
                           <div>
                             <div className="small text-muted">Last: {formatDate(report.lastGenerated)}</div>
@@ -1029,18 +720,18 @@ const userInfo = {
                         </div>
                       </div>
                       <div className="card-footer bg-transparent border-top d-flex justify-content-between">
-                        <div className="small text-muted">Formats: {Array.isArray(report.format) ? report.format.join(', ') : report.format}</div>
-                        <div className="d-flex gap-2">
-                          <button className="btn btn-sm btn-outline-primary" onClick={() => { handleGenerateReport(report); }}>
-                            <Icon icon="heroicons:document-arrow-down" className="me-1" />
-                            Generate
+                        <div className="small text-muted">
+                          Formats: {Array.isArray(report.format) ? report.format.join(', ') : report.format}
+                        </div>
+                        <div className="d-flex gap-1">
+                          <button className="btn btn-sm btn-outline-primary" onClick={() => handleGenerateReport(report)}>
+                            <Icon icon="heroicons:play" />
                           </button>
-                          <button className="btn btn-sm btn-outline-info" onClick={() => handleScheduleReport(report)}>
-                            <Icon icon="heroicons:clock" className="me-1" />
-                            Schedule
+                          <button className="btn btn-sm btn-outline-success" onClick={() => handleScheduleReport(report)}>
+                            <Icon icon="heroicons:clock" />
                           </button>
                           <button className="btn btn-sm btn-outline-warning" onClick={() => handleEditReport(report, 'standard')}>
-                            <Icon icon="heroicons:pencil" />
+                            <Icon icon="heroicons:pencil-square" />
                           </button>
                           <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteReport(report.id, 'standard')}>
                             <Icon icon="heroicons:trash" />
@@ -1052,26 +743,32 @@ const userInfo = {
                 ))}
               </div>
 
-              {paginatedData.length === 0 && (
+              {standardReports.length === 0 && (
                 <div className="text-center py-5 text-muted">
-                  <Icon icon="heroicons:document-text" className="text-4xl mb-3" />
+                  <Icon icon="heroicons:document-text" className="display-6 mb-3" />
                   <h5>No reports found</h5>
-                  <p>No reports match your search criteria.</p>
+                  <p>No standard reports match your search criteria.</p>
+                  <button className="btn btn-primary mt-2" onClick={handleAddReport}>
+                    <Icon icon="heroicons:plus" className="me-2" />
+                    Create Your First Report
+                  </button>
                 </div>
               )}
             </div>
 
-            {totalPages > 1 && (
+            {standardReports.length > itemsPerPage && (
               <div className="px-4 py-3 border-top d-flex align-items-center justify-content-between">
                 <div className="small text-muted">
-                  Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} reports
+                  Showing {Math.min(standardReports.length, itemsPerPage)} of {standardReports.length} reports
                 </div>
                 <div className="d-flex gap-2">
-                  <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="btn btn-sm btn-outline-secondary">Previous</button>
-                  {Array.from({ length: totalPages }).map((_, i) => (
-                    <button key={i} onClick={() => setCurrentPage(i + 1)} className={`btn btn-sm ${currentPage === i + 1 ? 'btn-primary' : 'btn-outline-secondary'}`}>{i + 1}</button>
-                  ))}
-                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="btn btn-sm btn-outline-secondary">Next</button>
+                  <button className="btn btn-sm btn-outline-secondary" disabled={currentPage === 1}>
+                    Previous
+                  </button>
+                  <button className="btn btn-sm btn-primary">{currentPage}</button>
+                  <button className="btn btn-sm btn-outline-secondary">
+                    Next
+                  </button>
                 </div>
               </div>
             )}
@@ -1081,18 +778,20 @@ const userInfo = {
     </div>
   );
 
-  const renderComplianceReports = () => (
+  const renderComplianceReportsSection = () => (
     <div className="row g-4">
       <div className="col-12">
         <div className="card border shadow-none">
           <div className="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
             <div>
-              <h5 className="mb-0">Compliance Reports</h5>
-              <div className="small text-muted">Statutory & compliance filings</div>
+              <h5 className="mb-0">Statutory Compliance Reports</h5>
+              <div className="small text-muted">PF, ESI, PT, TDS filings and certificates</div>
             </div>
             <div className="d-flex gap-2">
-              <button className="btn btn-outline-secondary" onClick={handleRefreshData}><Icon icon="heroicons:arrow-path" className="me-2" /> Refresh</button>
-              <button className="btn btn-primary" onClick={handleAddReport}><Icon icon="heroicons:plus" className="me-2" /> + Add Report</button>
+              <button className="btn btn-outline-danger">
+                <Icon icon="heroicons:exclamation-triangle" className="me-2" />
+                {kpis.overdueCompliance} Overdue
+              </button>
             </div>
           </div>
 
@@ -1107,718 +806,721 @@ const userInfo = {
                     <th>Due Date</th>
                     <th>Status</th>
                     <th>Period</th>
+                    <th>Auto-Generated</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {complianceReports.map(report => (
-                    <tr key={report.id}>
-                      <td>
-                        <div className="fw-bold">{report.name}</div>
-                        <div className="small text-muted">{report.description}</div>
-                      </td>
-                      <td><span className="badge bg-info-subtle text-info">{report.formType || report.type}</span></td>
-                      <td>{report.frequency}</td>
-                      <td>
-                        <div className="fw-semibold">{formatDate(report.dueDate)}</div>
-                        {report.dueDate !== 'N/A' && new Date(report.dueDate) < new Date() && (
-                          <div className="small text-danger">Overdue!</div>
-                        )}
-                      </td>
-                      <td>{getStatusBadge(report.status)}</td>
-                      <td>{report.month || report.year || report.quarter || 'N/A'}</td>
-                      <td>
-                        <div className="d-flex gap-2">
-                          <button className="btn btn-sm btn-outline-primary" onClick={() => handleGenerateReport(report)}>Generate</button>
-                          <button className="btn btn-sm btn-outline-success" onClick={() => handleDownloadReport(report)} disabled={!(report.status === 'generated' || report.status === 'submitted')}>Download</button>
-                          <button className="btn btn-sm btn-outline-warning" onClick={() => handleEditReport(report, 'compliance')}>Edit</button>
-                          <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteReport(report.id, 'compliance')}>Delete</button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderAnalyticsDashboards = () => {
-    const renderChart = (data, labels, title, type = 'bar') => {
-      const maxValue = Math.max(...data);
-      return (
-        <div className="mb-4">
-          <h6 className="mb-3">{title}</h6>
-          <div className="d-flex align-items-end gap-2" style={{ height: '200px' }}>
-            {data.map((value, index) => (
-              <div key={index} className="flex-fill d-flex flex-column align-items-center">
-                <div
-                  className="bg-primary rounded-top w-100 mb-2"
-                  style={{
-                    height: `${(value / maxValue) * 180}px`,
-                    minHeight: '10px'
-                  }}
-                  title={`${labels[index]}: ${formatCurrency(value)}`}
-                />
-                <div className="small text-muted text-center" style={{ fontSize: '10px', writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
-                  {labels[index]}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    };
-
-    return (
-      <div className="row g-4">
-        <div className="col-12">
-          <div className="card border shadow-none">
-            <div className="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
-              <div>
-                <h5 className="mb-0">Analytics Dashboards</h5>
-                <div className="small text-muted">Interactive dashboards and forecasts</div>
-              </div>
-              <div className="d-flex gap-2">
-                <button className="btn btn-outline-secondary" onClick={handleRefreshData}>
-                  <Icon icon="heroicons:arrow-path" className="me-2" /> Refresh
-                </button>
-                <button className="btn btn-primary" onClick={handleAddReport}>
-                  <Icon icon="heroicons:plus" className="me-2" /> + Add Dashboard
-                </button>
-              </div>
-            </div>
-
-            <div className="card-body">
-              <div className="row g-4">
-                <div className="col-md-8">
-                  <div className="card border">
-                    <div className="card-header">
-                      <h6 className="mb-0">Available Dashboards</h6>
-                    </div>
-                    <div className="card-body">
-                      <div className="row g-3">
-                        {analyticsDashboards.map(d => (
-                          <div key={d.id} className="col-md-6">
-                            <div className="card h-100 border">
-                              <div className="card-body">
-                                <h6 className="mb-1">{d.name}</h6>
-                                <p className="small text-muted mb-2">{d.description}</p>
-                                <div className="small text-muted mb-2">
-                                  <Icon icon="heroicons:clock" className="me-1" />
-                                  Updated: {formatDate(d.lastUpdated)}
-                                </div>
-                                <div className="small text-muted mb-2">
-                                  <Icon icon="heroicons:chart-bar" className="me-1" />
-                                  Refresh: {d.refreshRate}
-                                </div>
-                                <div className="small">
-                                  <span className="badge bg-info-subtle text-info">
-                                    {d.accessLevel}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="card-footer bg-transparent border-top d-flex justify-content-between align-items-center">
-                                <div className="small text-muted">
-                                  Metrics: {d.metrics?.slice(0, 2).join(', ')}
-                                  {d.metrics?.length > 2 && ` +${d.metrics.length - 2}`}
-                                </div>
-                                <div className="d-flex gap-2">
-                                  <button
-                                    className="btn btn-sm btn-outline-primary"
-                                    onClick={() => {
-                                      setSelectedDashboard(d);
-                                      setShowAnalyticsModal(true);
-                                    }}
-                                  >
-                                    <Icon icon="heroicons:eye" />
-                                  </button>
-                                  <button
-                                    className="btn btn-sm btn-outline-warning"
-                                    onClick={() => handleEditReport(d, 'analytics')}
-                                  >
-                                    <Icon icon="heroicons:pencil" />
-                                  </button>
-                                  <button
-                                    className="btn btn-sm btn-outline-danger"
-                                    onClick={() => handleDeleteReport(d.id, 'analytics')}
-                                  >
-                                    <Icon icon="heroicons:trash" />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
+                  {complianceReports.map(report => {
+                    const isOverdue = report.dueDate !== 'N/A' && new Date(report.dueDate) < new Date() && report.status !== 'submitted';
+                    return (
+                      <tr key={report.id} className={isOverdue ? 'table-danger' : ''}>
+                        <td>
+                          <div className="fw-bold">{report.name}</div>
+                          <div className="small text-muted">{report.description}</div>
+                        </td>
+                        <td><span className="badge bg-info-subtle text-info">{report.formType || report.type}</span></td>
+                        <td>{report.frequency}</td>
+                        <td>
+                          <div className={`fw-semibold ${isOverdue ? 'text-danger' : ''}`}>
+                            {formatDate(report.dueDate)}
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="col-md-4">
-                  <div className="card border h-100">
-                    <div className="card-header">
-                      <h6 className="mb-0">Quick Metrics</h6>
-                    </div>
-                    <div className="card-body">
-                      <div className="mb-3">
-                        <div className="small text-muted">Total Payroll Cost</div>
-                        <div className="fw-semibold fs-5">{formatCurrency(kpis.totalPayrollCost)}</div>
-                      </div>
-                      <div className="mb-3">
-                        <div className="small text-muted">Average Salary</div>
-                        <div className="fw-semibold fs-5">{formatCurrency(kpis.avgSalary)}</div>
-                      </div>
-                      <div className="mb-3">
-                        <div className="small text-muted">Statutory Deductions</div>
-                        <div className="fw-semibold fs-5">{formatCurrency(kpis.statutoryDeductions)}</div>
-                      </div>
-                      <div>
-                        <div className="small text-muted">Net Payroll</div>
-                        <div className="fw-semibold fs-5 text-success">{formatCurrency(kpis.netPayroll)}</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Quick Chart Preview */}
-                  <div className="card border mt-3">
-                    <div className="card-header">
-                      <h6 className="mb-0">Payroll Trend</h6>
-                    </div>
-                    <div className="card-body">
-                      {renderChart(
-                        analyticsData.payrollTrends?.data || [6800000, 7000000, 7500000, 7200000, 7400000, 7600000],
-                        analyticsData.payrollTrends?.labels || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                        'Last 6 Months'
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderGeneratedReports = () => (
-    <div className="row g-4">
-      <div className="col-12">
-        <div className="card border shadow-none">
-          <div className="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
-            <div><h5 className="mb-0">Generated Reports History</h5><div className="small text-muted">Recent exports & generated files</div></div>
-            <div className="d-flex gap-2"><button onClick={handleExportData} className="btn btn-primary"><Icon icon="heroicons:document-arrow-down" className="me-2" /> Export History</button><button onClick={handleRefreshData} className="btn btn-outline-primary"><Icon icon="heroicons:arrow-path" className="me-2" /> Refresh</button></div>
-          </div>
-
-          <div className="card-body p-0">
-            <div className="p-4 border-bottom">
-              <div className="d-flex flex-wrap gap-3 align-items-center">
-                <div className="position-relative flex-fill" style={{ minWidth: '300px' }}><Icon icon="heroicons:magnifying-glass" className="position-absolute top-50 translate-middle-y text-muted ms-3" /><input type="text" placeholder="Search generated reports." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="form-control ps-5" /></div>
-                <div style={{ minWidth: '150px' }}><select value={filterPeriod} onChange={(e) => setFilterPeriod(e.target.value)} className="form-select">{periods.map(p => <option key={p} value={p}>{p}</option>)}</select></div>
-              </div>
-            </div>
-
-            <div className="table-responsive">
-              <table className="table table-hover mb-0">
-                <thead className="bg-light">
-                  <tr><th>Report Name</th><th>Period</th><th>Generated Date</th><th>Generated By</th><th>Format</th><th>Size</th><th>Status</th><th>Actions</th></tr>
-                </thead>
-                <tbody>
-                  {generatedReports.map(gr => (
-                    <tr key={gr.id}>
-                      <td className="fw-bold">{gr.reportName}</td>
-                      <td>{gr.period}</td>
-                      <td>{formatDate(gr.generatedDate)}</td>
-                      <td>{gr.generatedBy}</td>
-                      <td>{gr.format}</td>
-                      <td>{gr.size}</td>
-                      <td>{getStatusBadge(gr.status)}</td>
-                      <td><div className="d-flex gap-2"><button className="btn btn-sm btn-outline-success" onClick={() => handleDownloadReport(gr)}>Download</button></div></td>
-                    </tr>
-                  ))}
+                          {isOverdue && (
+                            <div className="small text-danger">
+                              <Icon icon="heroicons:exclamation-circle" className="me-1" />
+                              Overdue!
+                            </div>
+                          )}
+                        </td>
+                        <td>{getStatusBadge(report.status)}</td>
+                        <td>{report.month || report.year || report.quarter || 'N/A'}</td>
+                        <td>
+                          {report.autoGenerated ? (
+                            <Icon icon="heroicons:check-circle" className="text-success" />
+                          ) : (
+                            <Icon icon="heroicons:x-circle" className="text-muted" />
+                          )}
+                        </td>
+                        <td>
+                          <div className="d-flex gap-2">
+                            <button className="btn btn-sm btn-outline-primary" onClick={() => handleGenerateReport(report)}>
+                              Generate
+                            </button>
+                            <button className="btn btn-sm btn-outline-success" 
+                              disabled={!(report.status === 'generated' || report.status === 'submitted')}>
+                              Download
+                            </button>
+                            <button className="btn btn-sm btn-outline-warning" 
+                              onClick={() => handleEditReport(report, 'compliance')}>
+                              Edit
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
-
           </div>
         </div>
       </div>
     </div>
   );
 
-  const renderScheduledReports = () => (
+  const renderAnalyticsSection = () => (
     <div className="row g-4">
       <div className="col-12">
         <div className="card border shadow-none">
           <div className="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
-            <div><h5 className="mb-0">Scheduled Reports</h5><div className="small text-muted">Automated scheduled reports</div></div>
-            <div><button className="btn btn-primary"><Icon icon="heroicons:plus" className="me-2" /> Schedule New Report</button></div>
-          </div>
-
-          <div className="card-body">
-            <div className="table-responsive">
-              <table className="table table-hover">
-                <thead>
-                  <tr><th>Report Name</th><th>Schedule</th><th>Next Run</th><th>Format</th><th>Recipients</th><th>Status</th><th>Actions</th></tr>
-                </thead>
-                <tbody>
-                  {scheduledReports.map(sr => (
-                    <tr key={sr.id}>
-                      <td className="fw-bold">{sr.reportName}</td>
-                      <td>{sr.schedule}</td>
-                      <td><div className="fw-semibold">{formatDate(sr.nextRun)}</div><div className="small text-muted">{new Date(sr.nextRun) > new Date() ? `${Math.ceil((new Date(sr.nextRun) - new Date()) / (1000 * 60 * 60 * 24))} days remaining` : 'Due'}</div></td>
-                      <td>{sr.format}</td>
-                      <td><div className="small">{sr.recipients?.map((r, idx) => <div key={idx}>{r}</div>)}</div></td>
-                      <td>{getStatusBadge(sr.status)}</td>
-                      <td><div className="d-flex gap-2"><button className="btn btn-sm btn-outline-primary">Edit</button><button className="btn btn-sm btn-outline-warning">{sr.status === 'active' ? 'Pause' : 'Activate'}</button></div></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderReportConfiguration = () => (
-    <div className="row g-4">
-      <div className="col-md-8">
-        <div className="card">
-          <div className="card-header"><h6 className="mb-0">Report Configuration</h6></div>
-          <div className="card-body">
-            <div className="mb-4">
-              <label className="form-label">Default Report Format</label>
-              <select className="form-select" value={reportConfig.format} onChange={(e) => setReportConfig(prev => ({ ...prev, format: e.target.value }))}>
-                <option value="pdf">PDF</option>
-                <option value="excel">Excel</option>
-                <option value="csv">CSV</option>
-              </select>
-            </div>
-
-            <div className="mb-4">
-              <label className="form-label">Report Retention Period (months)</label>
-              <select className="form-select" value={reportConfig.retentionPeriod} onChange={(e) => setReportConfig(prev => ({ ...prev, retentionPeriod: parseInt(e.target.value) }))}>
-                <option value={3}>3 months</option>
-                <option value={6}>6 months</option>
-                <option value={12}>12 months</option>
-                <option value={36}>36 months</option>
-              </select>
-            </div>
-
-            <div className="form-check form-switch mb-3">
-              <input className="form-check-input" type="checkbox" id="autoGenerate" checked={reportConfig.autoGenerate} onChange={() => setReportConfig(prev => ({ ...prev, autoGenerate: !prev.autoGenerate }))} />
-              <label className="form-check-label" htmlFor="autoGenerate">Auto-generate scheduled reports</label>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-      <div className="col-md-4">
-        <div className="card border">
-          <div className="card-header"><h6 className="mb-0">Templates & Custom Reports</h6></div>
-          <div className="card-body">
-            <div className="mb-3">
-              <label className="form-label">Available Templates</label>
-              <div className="list-group">
-                {reportTemplates.map(t => (
-                  <button key={t.id} className="list-group-item list-group-item-action d-flex justify-content-between align-items-center" onClick={() => handleUseTemplate(t)}>
-                    <div>
-                      <div className="fw-semibold">{t.name}</div>
-                      <div className="small text-muted">{t.description}</div>
-                    </div>
-                    <div className="small text-muted">{t.format.join(', ')}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <div>
-              <label className="form-label">Custom Reports</label>
-              {customReports.length === 0 ? <div className="text-muted small">No custom reports yet.</div> : (
-                <ul className="list-group">
-                  {customReports.map(c => (<li key={c.id} className="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
-                      <div className="fw-semibold">{c.name}</div>
-                      <div className="small text-muted">{formatDate(c.createdDate)}</div>
-                    </div>
-                    <div>
-                      <button className="btn btn-sm btn-outline-primary me-1" onClick={() => handleGenerateReport(c)}>Generate</button>
-                      <button className="btn btn-sm btn-outline-warning" onClick={() => handleEditCustomReport(c)}>Edit</button>
-                      <button className="btn btn-sm btn-outline-danger" onClick={() => setCustomReports(prev => prev.filter(x => x.id !== c.id))}>Delete</button>
-                    </div>
-                  </li>))}
-                </ul>
-              )}
+              <h5 className="mb-0">Payroll Analytics Dashboards</h5>
+              <div className="small text-muted">Interactive dashboards and forecasts</div>
             </div>
+            <div className="d-flex gap-2">
+              <button className="btn btn-outline-secondary">
+                <Icon icon="heroicons:arrow-path" className="me-2" />
+                Refresh All
+              </button>
+            </div>
+          </div>
 
+          <div className="card-body">
+            <div className="row g-4">
+              {analyticsDashboards.map(dashboard => (
+                <div key={dashboard.id} className="col-md-6">
+                  <div className="card h-100">
+                    <div className="card-body">
+                      <div className="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                          <h6 className="mb-1">{dashboard.name}</h6>
+                          <p className="small text-muted mb-2">{dashboard.description}</p>
+                        </div>
+                        <div className="dropdown">
+                          <button className="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                            <Icon icon="heroicons:ellipsis-vertical" />
+                          </button>
+                          <ul className="dropdown-menu">
+                            <li><button className="dropdown-item" onClick={() => handleEditReport(dashboard, 'analytics')}>Edit Dashboard</button></li>
+                            <li><button className="dropdown-item" onClick={() => handleScheduleReport(dashboard)}>Schedule</button></li>
+                            <li><button className="dropdown-item" onClick={() => handleDeleteReport(dashboard.id, 'analytics')}>Delete</button></li>
+                          </ul>
+                        </div>
+                      </div>
+                      
+                      <div className="mb-3">
+                        <div className="d-flex gap-3">
+                          <div className="small">
+                            <Icon icon="heroicons:chart-bar" className="me-1" />
+                            {dashboard.chartType}
+                          </div>
+                          <div className="small">
+                            <Icon icon="heroicons:arrow-path" className="me-1" />
+                            {dashboard.refreshRate}
+                          </div>
+                          <div className="small">
+                            <Icon icon="heroicons:lock-closed" className="me-1" />
+                            {dashboard.accessLevel}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div className="small text-muted">
+                          Metrics: {(dashboard.metrics || []).slice(0, 3).join(', ')}
+                          {(dashboard.metrics || []).length > 3 && '...'}
+                        </div>
+                        <button className="btn btn-sm btn-primary">
+                          <Icon icon="heroicons:eye" className="me-1" />
+                          View Dashboard
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-// PayrollReports.jsx — Part 3 of 3 (Cards + Table on same page, modal, final render)
-// Paste this after Parts 1 & 2 exactly.
 
-  // --- Table renderers (detailed lists) ---
-  const renderStandardTable = () => (
+  const renderReportBuilder = () => (
     <div className="card mt-3">
       <div className="card-body">
-        <div className="table-responsive">
-          <table className="table table-striped">
-            <thead className="bg-light">
-              <tr>
-                <th>Report ID</th>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Frequency</th>
-                <th>Department</th>
-                <th>Last Generated</th>
-                <th>Formats</th>
-                <th>Size</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {standardReports.map(r => (
-                <tr key={r.id}>
-                  <td>{r.id}</td>
-                  <td className="fw-semibold">{r.name}</td>
-                  <td className="text-muted">{r.description}</td>
-                  <td>{r.frequency}</td>
-                  <td>{r.department || 'All'}</td>
-                  <td>{formatDate(r.lastGenerated)}</td>
-                  <td>{Array.isArray(r.format) ? r.format.join(', ') : r.format}</td>
-                  <td>{r.size || '-'}</td>
-                  <td>
-                    <div className="d-flex gap-2">
-                      <button className="btn btn-sm btn-outline-primary" onClick={() => handleGenerateReport(r)}>Generate</button>
-                      <button className="btn btn-sm btn-outline-warning" onClick={() => handleEditReport(r, 'standard')}>Edit</button>
-                      <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteReport(r.id, 'standard')}>Delete</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {standardReports.length === 0 && (
-                <tr><td colSpan={9} className="text-center text-muted">No standard reports available.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderComplianceTable = () => (
-    <div className="card mt-3">
-      <div className="card-body">
-        <div className="table-responsive">
-          <table className="table table-striped">
-            <thead className="bg-light">
-              <tr>
-                <th>ID</th>
-                <th>Report Name</th>
-                <th>Form/Type</th>
-                <th>Frequency</th>
-                <th>Due Date</th>
-                <th>Status</th>
-                <th>Period</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {complianceReports.map(c => (
-                <tr key={c.id}>
-                  <td>{c.id}</td>
-                  <td className="fw-semibold">{c.name}</td>
-                  <td>{c.formType || c.type}</td>
-                  <td>{c.frequency}</td>
-                  <td>{formatDate(c.dueDate)}</td>
-                  <td>{getStatusBadge(c.status)}</td>
-                  <td>{c.month || c.quarter || c.year || 'N/A'}</td>
-                  <td>
-                        <div className="d-flex gap-2">
-                          <button className="btn btn-sm btn-outline-primary" onClick={() => handleGenerateReport(c)}>
-                            <Icon icon="heroicons:document-arrow-down" className="me-1" />
-                            Generate
-                          </button>
-                          <button className="btn btn-sm btn-outline-success" onClick={() => handleDownloadReport(c)} disabled={!(c.status === 'generated' || c.status === 'submitted')}>
-                            <Icon icon="heroicons:download" className="me-1" />
-                            Download
-                          </button>
-                          <button className="btn btn-sm btn-outline-info" onClick={() => handleScheduleReport(c)}>
-                            <Icon icon="heroicons:clock" className="me-1" />
-                            Schedule
-                          </button>
-                          <button className="btn btn-sm btn-outline-warning" onClick={() => handleEditReport(c, 'compliance')}>
-                            <Icon icon="heroicons:pencil" />
-                          </button>
-                          <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteReport(c.id, 'compliance')}>
-                            <Icon icon="heroicons:trash" />
-                          </button>
-                        </div>
-                  </td>
-                </tr>
-              ))}
-              {complianceReports.length === 0 && (
-                <tr><td colSpan={8} className="text-center text-muted">No compliance reports available.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderAnalyticsTable = () => (
-    <div className="card mt-3">
-      <div className="card-body">
-        <div className="table-responsive">
-          <table className="table table-striped">
-            <thead className="bg-light">
-              <tr>
-                <th>ID</th>
-                <th>Dashboard</th>
-                <th>Description</th>
-                <th>Metrics</th>
-                <th>Refresh</th>
-                <th>Access</th>
-                <th>Last Updated</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {analyticsDashboards.map(a => (
-                <tr key={a.id}>
-                  <td>{a.id}</td>
-                  <td className="fw-semibold">{a.name}</td>
-                  <td className="text-muted">{a.description}</td>
-                  <td>{(a.metrics || []).slice(0,4).join(', ')}</td>
-                  <td>{a.refreshRate}</td>
-                  <td>{a.accessLevel}</td>
-                  <td>{formatDate(a.lastUpdated)}</td>
-                  <td>
-                    <div className="d-flex gap-2">
-                      <button className="btn btn-sm btn-outline-primary" onClick={() => alert('Open dashboard preview (stub)')}>Preview</button>
-                      <button className="btn btn-sm btn-outline-warning" onClick={() => handleEditReport(a, 'analytics')}>Edit</button>
-                      <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteReport(a.id, 'analytics')}>Delete</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {analyticsDashboards.length === 0 && (
-                <tr><td colSpan={8} className="text-center text-muted">No dashboards available.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Combined cards + table renderer for active section (Option 3: both visible)
-  const renderCombinedSection = () => {
-    switch (activeSection) {
-      case 'standard':
-        return (
-          <>
-            {renderStandardReports()}
-            {renderStandardTable()}
-          </>
-        );
-      case 'compliance':
-        return (
-          <>
-            {renderComplianceReports()}
-            {renderComplianceTable()}
-          </>
-        );
-      case 'analytics':
-        return (
-          <>
-            {renderAnalyticsDashboards()}
-            {renderAnalyticsTable()}
-          </>
-        );
-      case 'generated':
-        return (
-          <>
-            {renderGeneratedReports()}
-          </>
-        );
-      case 'scheduled':
-        return (
-          <>
-            {renderScheduledReports()}
-            {/* Table view for scheduled reports */}
-            <div className="card mt-3">
-              <div className="card-body">
-                <div className="table-responsive">
-                  <table className="table table-striped">
-                    <thead className="bg-light">
-                      <tr><th>Report</th><th>Schedule</th><th>Next Run</th><th>Recipients</th><th>Format</th><th>Status</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody>
-                      {scheduledReports.map(s => (
-                        <tr key={s.id}>
-                          <td className="fw-semibold">{s.reportName}</td>
-                          <td>{s.schedule}</td>
-                          <td>{formatDate(s.nextRun)}</td>
-                          <td>{(s.recipients || []).join(', ')}</td>
-                          <td>{s.format}</td>
-                          <td>{getStatusBadge(s.status)}</td>
-                          <td><div className="d-flex gap-2"><button className="btn btn-sm btn-outline-primary">Edit</button><button className="btn btn-sm btn-outline-warning">{s.status === 'active' ? 'Pause' : 'Activate'}</button></div></td>
-                        </tr>
-                      ))}
-                      {scheduledReports.length === 0 && <tr><td colSpan={7} className="text-center text-muted">No scheduled reports.</td></tr>}
-                    </tbody>
-                  </table>
+        <h4 className="fw-bold mb-3">Custom Report Builder</h4>
+        
+        <div className="row">
+          <div className="col-md-3">
+            <div className="list-group">
+              <button className={`list-group-item list-group-item-action ${builderStep === 1 ? 'active' : ''}`}
+                onClick={() => setBuilderStep(1)}>
+                <div className="d-flex align-items-center">
+                  <div className="bg-primary-subtle p-2 rounded me-3">
+                    <Icon icon="heroicons:document-text" className="text-primary" />
+                  </div>
+                  <div>
+                    <div className="fw-semibold">Report Details</div>
+                    <div className="small text-muted">Name, category, description</div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </>
-        );
-      case 'configure':
-        return (
-          <>
-            {renderReportConfiguration()}
-            {/* Table view for templates & custom reports */}
-            <div className="card mt-3">
-              <div className="card-body">
-                <h6>All Templates & Custom Reports</h6>
-                <div className="table-responsive">
-                  <table className="table table-striped">
-                    <thead className="bg-light"><tr><th>ID</th><th>Name</th><th>Category</th><th>Columns</th><th>Format</th><th>Actions</th></tr></thead>
-                    <tbody>
-                      {reportTemplates.map(t => (
-                        <tr key={t.id}>
-                          <td>{t.id}</td>
-                          <td className="fw-semibold">{t.name}</td>
-                          <td>{t.category}</td>
-                          <td>{(t.columns || []).slice(0,4).join(', ')}</td>
-                          <td>{(t.format || []).join(', ')}</td>
-                          <td><div className="d-flex gap-2"><button className="btn btn-sm btn-outline-primary" onClick={() => handleUseTemplate(t)}>Use</button><button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteTemplate(t.id)}>Delete</button></div></td>
-                        </tr>
-                      ))}
-                      {customReports.map(c => (
-                        <tr key={c.id}>
-                          <td>{c.id}</td>
-                          <td className="fw-semibold">{c.name}</td>
-                          <td>{c.category}</td>
-                          <td>{(c.columns || []).slice(0,4).join(', ')}</td>
-                          <td>{(c.format || []).join(', ')}</td>
-                          <td><div className="d-flex gap-2"><button className="btn btn-sm btn-outline-primary" onClick={() => handleGenerateReport(c)}>Generate</button><button className="btn btn-sm btn-outline-warning" onClick={() => handleEditCustomReport(c)}>Edit</button><button className="btn btn-sm btn-outline-danger" onClick={() => setCustomReports(prev => prev.filter(x => x.id !== c.id))}>Delete</button></div></td>
-                        </tr>
-                      ))}
-                      {reportTemplates.length === 0 && customReports.length === 0 && <tr><td colSpan={6} className="text-center text-muted">No templates or custom reports available.</td></tr>}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </>
-        );
-      case 'builder':
-        return renderReportBuilder();
-      default:
-        return renderStandardReports();
-    }
-  };
-
-  // inline modal styles (reused)
-  const modalBackdropStyle = { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 };
-  const modalContainerStyle = { background: '#fff', padding: 20, width: 520, borderRadius: 10, boxShadow: '0 4px 10px rgba(0,0,0,0.3)' };
-
-  // Final render (uses combined view)
-  return (
-    <
-     
-    >
-      <div className="container-fluid">
-        <div className="mb-4">
-          <div className="d-flex align-items-center gap-3 mb-3">
-            {activeSection !== 'standard' && (
-              <button onClick={() => setActiveSection('standard')} className="btn btn-link d-flex align-items-center gap-2">
-                <Icon icon="heroicons:arrow-left" /> Back to Reports
               </button>
+              
+              <button className={`list-group-item list-group-item-action ${builderStep === 2 ? 'active' : ''}`}
+                onClick={() => setBuilderStep(2)}>
+                <div className="d-flex align-items-center">
+                  <div className="bg-primary-subtle p-2 rounded me-3">
+                    <Icon icon="heroicons:table-cells" className="text-primary" />
+                  </div>
+                  <div>
+                    <div className="fw-semibold">Columns & Data</div>
+                    <div className="small text-muted">Select data fields</div>
+                  </div>
+                </div>
+              </button>
+              
+              <button className={`list-group-item list-group-item-action ${builderStep === 3 ? 'active' : ''}`}
+                onClick={() => setBuilderStep(3)}>
+                <div className="d-flex align-items-center">
+                  <div className="bg-primary-subtle p-2 rounded me-3">
+                    <Icon icon="heroicons:funnel" className="text-primary" />
+                  </div>
+                  <div>
+                    <div className="fw-semibold">Filters & Sorting</div>
+                    <div className="small text-muted">Apply filters and sorting</div>
+                  </div>
+                </div>
+              </button>
+              
+              <button className={`list-group-item list-group-item-action ${builderStep === 4 ? 'active' : ''}`}
+                onClick={() => setBuilderStep(4)}>
+                <div className="d-flex align-items-center">
+                  <div className="bg-primary-subtle p-2 rounded me-3">
+                    <Icon icon="heroicons:cog" className="text-primary" />
+                  </div>
+                  <div>
+                    <div className="fw-semibold">Format & Schedule</div>
+                    <div className="small text-muted">Export and scheduling options</div>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div className="col-md-9">
+            {builderStep === 1 && (
+              <div>
+                <h6 className="mb-3">Report Details</h6>
+                <div className="mb-3">
+                  <label className="form-label">Report Name</label>
+                  <input type="text" className="form-control" placeholder="Enter report name" 
+                    value={reportBuilder.name} onChange={(e) => setReportBuilder({...reportBuilder, name: e.target.value})} />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Description</label>
+                  <textarea className="form-control" rows="3" placeholder="Describe this report"
+                    value={reportBuilder.description} onChange={(e) => setReportBuilder({...reportBuilder, description: e.target.value})} />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Category</label>
+                  <select className="form-select" value={reportBuilder.category}
+                    onChange={(e) => setReportBuilder({...reportBuilder, category: e.target.value})}>
+                    <option value="Payroll">Payroll</option>
+                    <option value="Compliance">Compliance</option>
+                    <option value="Analytics">Analytics</option>
+                    <option value="Custom">Custom</option>
+                  </select>
+                </div>
+              </div>
             )}
 
-           
-          </div>
-
-          <h5 className="text-3xl fw-bold text-dark mb-2 mt-3 d-flex align-items-center gap-2">
-            <Icon icon="heroicons:chart-bar" /> Payroll Reports & Analytics
-          </h5>
-          <p className="text-muted">Cards + Table view — view summary and full detail together.</p>
-        </div>
-
-        {/* Combined content area (cards + table stacked per activeSection) */}
-        {renderCombinedSection()}
-
-        {/* Add / Edit Report Modal */}
-        {showReportModal && (
-          <div style={modalBackdropStyle}>
-            <div style={modalContainerStyle}>
-              <h5>{isEditMode ? 'Edit Report' : 'Add New Report'}</h5>
-
-              <div className="mb-3">
-                <label className="form-label">Report Name</label>
-                <input type="text" className="form-control" value={reportForm.name} onChange={(e) => setReportForm(prev => ({ ...prev, name: e.target.value }))} />
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label">Category</label>
-                <select className="form-select" value={reportForm.category} onChange={(e) => setReportForm(prev => ({ ...prev, category: e.target.value }))}>
-                  <option value="standard">Standard</option>
-                  <option value="compliance">Compliance</option>
-                  <option value="analytics">Analytics</option>
-                </select>
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label">Description</label>
-                <textarea className="form-control" rows="2" value={reportForm.description} onChange={(e) => setReportForm(prev => ({ ...prev, description: e.target.value }))}></textarea>
-              </div>
-
-              <div className="row g-3">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Frequency</label>
-                  <select className="form-select" value={reportForm.frequency} onChange={(e) => setReportForm(prev => ({ ...prev, frequency: e.target.value }))}>
-                    <option>Daily</option>
-                    <option>Weekly</option>
-                    <option>Monthly</option>
-                    <option>Quarterly</option>
-                    <option>Yearly</option>
-                  </select>
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Format</label>
-                  <select className="form-select" value={Array.isArray(reportForm.format) ? reportForm.format[0] : reportForm.format} onChange={(e) => setReportForm(prev => ({ ...prev, format: [e.target.value] }))}>
-                    <option value="pdf">PDF</option>
-                    <option value="excel">Excel</option>
-                    <option value="csv">CSV</option>
-                  </select>
+            {builderStep === 2 && (
+              <div>
+                <h6 className="mb-3">Select Data Columns</h6>
+                <div className="row">
+                  {availableColumns.map(column => (
+                    <div key={column.id} className="col-md-6 mb-2">
+                      <div className="form-check">
+                        <input className="form-check-input" type="checkbox" 
+                          checked={selectedColumns.includes(column.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedColumns([...selectedColumns, column.id]);
+                            } else {
+                              setSelectedColumns(selectedColumns.filter(id => id !== column.id));
+                            }
+                          }} />
+                        <label className="form-check-label">
+                          <div className="fw-semibold">{column.name}</div>
+                          <div className="small text-muted">{column.description}</div>
+                        </label>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
+            )}
 
-              <div className="d-flex justify-content-end gap-2 mt-3">
-                <button className="btn btn-secondary" onClick={() => setShowReportModal(false)}>Cancel</button>
-                <button className="btn btn-primary" onClick={handleSaveReport}>{isEditMode ? 'Update' : 'Save'}</button>
+            {builderStep === 3 && (
+              <div>
+                <h6 className="mb-3">Apply Filters</h6>
+                <div className="mb-3">
+                  <label className="form-label">Department</label>
+                  <select className="form-select" multiple>
+                    {departments.slice(1).map(dept => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Date Range</label>
+                  <div className="row g-2">
+                    <div className="col">
+                      <input type="date" className="form-control" placeholder="Start date" />
+                    </div>
+                    <div className="col">
+                      <input type="date" className="form-control" placeholder="End date" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {builderStep === 4 && (
+              <div>
+                <h6 className="mb-3">Format & Schedule</h6>
+                <div className="mb-3">
+                  <label className="form-label">Export Format</label>
+                  <div className="d-flex gap-3">
+                    {['pdf', 'excel', 'csv'].map(format => (
+                      <div key={format} className="form-check">
+                        <input className="form-check-input" type="checkbox" 
+                          checked={reportBuilder.format.includes(format)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setReportBuilder({...reportBuilder, format: [...reportBuilder.format, format]});
+                            } else {
+                              setReportBuilder({...reportBuilder, format: reportBuilder.format.filter(f => f !== format)});
+                            }
+                          }} />
+                        <label className="form-check-label text-uppercase">{format}</label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Schedule Frequency</label>
+                  <select className="form-select" value={reportBuilder.schedule}
+                    onChange={(e) => setReportBuilder({...reportBuilder, schedule: e.target.value})}>
+                    <option value="none">Don't schedule</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            <div className="d-flex justify-content-between mt-4">
+              <button className="btn btn-outline-secondary" 
+                onClick={() => setBuilderStep(prev => Math.max(1, prev - 1))}
+                disabled={builderStep === 1}>
+                <Icon icon="heroicons:arrow-left" className="me-2" />
+                Previous
+              </button>
+              
+              <div>
+                {builderStep < 4 && (
+                  <button className="btn btn-primary" 
+                    onClick={() => setBuilderStep(prev => Math.min(4, prev + 1))}>
+                    Next
+                    <Icon icon="heroicons:arrow-right" className="ms-2" />
+                  </button>
+                )}
+                {builderStep === 4 && (
+                  <button className="btn btn-success" onClick={() => {
+                    setCustomReports([...customReports, {
+                      id: `CUSTOM_${Date.now()}`,
+                      name: reportBuilder.name || 'New Custom Report',
+                      description: reportBuilder.description,
+                      columns: selectedColumns,
+                      filters: selectedFilters,
+                      format: reportBuilder.format,
+                      schedule: reportBuilder.schedule,
+                      createdDate: new Date().toISOString(),
+                      isCustom: true
+                    }]);
+                    setActiveSection('configure');
+                    alert('Custom report created successfully!');
+                  }}>
+                    <Icon icon="heroicons:check" className="me-2" />
+                    Create Report
+                  </button>
+                )}
               </div>
             </div>
           </div>
-        )}
-
+        </div>
       </div>
-    </>
+    </div>
+  );
+
+  const renderNavigation = () => (
+    <div className="mb-4">
+      <div className="d-flex flex-wrap gap-2 mb-3">
+        <button className={`btn ${activeSection === 'standard' ? 'btn-primary' : 'btn-outline-primary'}`}
+          onClick={() => setActiveSection('standard')}>
+          <Icon icon="heroicons:document-text" className="me-2" />
+          Standard Reports
+        </button>
+        <button className={`btn ${activeSection === 'compliance' ? 'btn-primary' : 'btn-outline-primary'}`}
+          onClick={() => setActiveSection('compliance')}>
+          <Icon icon="heroicons:shield-check" className="me-2" />
+          Compliance
+        </button>
+        <button className={`btn ${activeSection === 'analytics' ? 'btn-primary' : 'btn-outline-primary'}`}
+          onClick={() => setActiveSection('analytics')}>
+          <Icon icon="heroicons:chart-bar" className="me-2" />
+          Analytics
+        </button>
+        <button className={`btn ${activeSection === 'generated' ? 'btn-primary' : 'btn-outline-primary'}`}
+          onClick={() => setActiveSection('generated')}>
+          <Icon icon="heroicons:archive-box" className="me-2" />
+          Generated
+        </button>
+        <button className={`btn ${activeSection === 'scheduled' ? 'btn-primary' : 'btn-outline-primary'}`}
+          onClick={() => setActiveSection('scheduled')}>
+          <Icon icon="heroicons:clock" className="me-2" />
+          Scheduled
+        </button>
+        <button className={`btn ${activeSection === 'configure' ? 'btn-primary' : 'btn-outline-primary'}`}
+          onClick={() => setActiveSection('configure')}>
+          <Icon icon="heroicons:cog" className="me-2" />
+          Configuration
+        </button>
+        <button className={`btn ${activeSection === 'builder' ? 'btn-primary' : 'btn-outline-primary'}`}
+          onClick={() => setActiveSection('builder')}>
+          <Icon icon="heroicons:wrench-screwdriver" className="me-2" />
+          Report Builder
+        </button>
+      </div>
+    </div>
+  );
+
+  // Main render
+  return (
+    <div className="container-fluid py-4">
+      {/* Header */}
+      <div className="mb-4">
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h5 className="text-3xl fw-bold text-dark mb-2">
+              <Icon icon="heroicons:chart-bar" className="me-2" />
+              Payroll Reports & Analytics
+            </h5>
+            <p className="text-muted">Comprehensive payroll reporting system with AI-driven insights</p>
+          </div>
+          <div className="d-flex gap-2">
+            <button className="btn btn-primary" onClick={handleAddReport}>
+              <Icon icon="heroicons:plus" className="me-2" />
+              Add Report
+            </button>
+            <button className="btn btn-outline-primary" onClick={() => handleExportData('excel')}>
+              <Icon icon="heroicons:document-arrow-down" className="me-2" />
+              Export Data
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* KPI Cards */}
+      {renderKPICards()}
+
+      {/* AI Insights */}
+      {renderAIInsights()}
+
+      {/* Navigation */}
+      {renderNavigation()}
+
+      {/* Main Content Area */}
+      <div className="row">
+        <div className="col-12">
+          {activeSection === 'standard' && renderStandardReportsSection()}
+          {activeSection === 'compliance' && renderComplianceReportsSection()}
+          {activeSection === 'analytics' && renderAnalyticsSection()}
+          {activeSection === 'builder' && renderReportBuilder()}
+          
+          {activeSection === 'generated' && (
+            <div className="card">
+              <div className="card-header">
+                <h5 className="mb-0">Generated Reports</h5>
+              </div>
+              <div className="card-body">
+                <div className="table-responsive">
+                  <table className="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Report Name</th>
+                        <th>Period</th>
+                        <th>Generated Date</th>
+                        <th>Generated By</th>
+                        <th>Format</th>
+                        <th>Size</th>
+                        <th>Downloads</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {generatedReports.map(report => (
+                        <tr key={report.id}>
+                          <td className="fw-semibold">{report.reportName}</td>
+                          <td>{report.period}</td>
+                          <td>{formatDate(report.generatedDate)}</td>
+                          <td>{report.generatedBy}</td>
+                          <td>{report.format}</td>
+                          <td>{report.size}</td>
+                          <td>{report.downloadCount}</td>
+                          <td>
+                            <button className="btn btn-sm btn-outline-primary">
+                              <Icon icon="heroicons:arrow-down-tray" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeSection === 'scheduled' && (
+            <div className="card">
+              <div className="card-header">
+                <h5 className="mb-0">Scheduled Reports</h5>
+              </div>
+              <div className="card-body">
+                <div className="table-responsive">
+                  <table className="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Report Name</th>
+                        <th>Schedule</th>
+                        <th>Next Run</th>
+                        <th>Recipients</th>
+                        <th>Format</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {scheduledReports.map(report => (
+                        <tr key={report.id}>
+                          <td className="fw-semibold">{report.reportName}</td>
+                          <td>{report.schedule}</td>
+                          <td>{formatDate(report.nextRun)}</td>
+                          <td>
+                            <div className="small">
+                              {report.recipients.map((r, i) => (
+                                <div key={i}>{r}</div>
+                              ))}
+                            </div>
+                          </td>
+                          <td>{report.format}</td>
+                          <td>{getStatusBadge(report.status)}</td>
+                          <td>
+                            <button className="btn btn-sm btn-outline-primary me-1">
+                              Edit
+                            </button>
+                            <button className="btn btn-sm btn-outline-warning">
+                              {report.status === 'active' ? 'Pause' : 'Activate'}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeSection === 'configure' && (
+            <div className="row">
+              <div className="col-md-8">
+                <div className="card mb-4">
+                  <div className="card-header">
+                    <h6 className="mb-0">Report Configuration</h6>
+                  </div>
+                  <div className="card-body">
+                    <div className="mb-3">
+                      <label className="form-label">Default Report Format</label>
+                      <select className="form-select">
+                        <option>PDF</option>
+                        <option>Excel</option>
+                        <option>CSV</option>
+                      </select>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Retention Period (months)</label>
+                      <select className="form-select">
+                        <option>3</option>
+                        <option>6</option>
+                        <option>12</option>
+                        <option>24</option>
+                        <option>36</option>
+                      </select>
+                    </div>
+                    <div className="form-check form-switch mb-3">
+                      <input className="form-check-input" type="checkbox" id="autoGenerate" />
+                      <label className="form-check-label" htmlFor="autoGenerate">
+                        Auto-generate scheduled reports
+                      </label>
+                    </div>
+                    <div className="form-check form-switch mb-3">
+                      <input className="form-check-input" type="checkbox" id="emailNotification" />
+                      <label className="form-check-label" htmlFor="emailNotification">
+                        Email notifications for completed reports
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-4">
+                <div className="card">
+                  <div className="card-header">
+                    <h6 className="mb-0">Quick Actions</h6>
+                  </div>
+                  <div className="card-body">
+                    <button className="btn btn-primary w-100 mb-2" onClick={() => setActiveSection('builder')}>
+                      <Icon icon="heroicons:plus" className="me-2" />
+                      Create New Report
+                    </button>
+                    <button className="btn btn-outline-primary w-100 mb-2" onClick={handleExportData}>
+                      <Icon icon="heroicons:document-arrow-down" className="me-2" />
+                      Export Configuration
+                    </button>
+                    <button className="btn btn-outline-secondary w-100 mb-2">
+                      <Icon icon="heroicons:arrow-path" className="me-2" />
+                      Reset to Defaults
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Add/Edit Report Modal */}
+      {showReportModal && (
+        <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">{isEditMode ? 'Edit Report' : 'Add New Report'}</h5>
+                <button type="button" className="btn-close" onClick={() => setShowReportModal(false)}></button>
+              </div>
+              <div className="modal-body">
+                <div className="row g-3">
+                  <div className="col-md-12">
+                    <label className="form-label">Report Name *</label>
+                    <input type="text" className="form-control" 
+                      value={reportForm.name} 
+                      onChange={(e) => setReportForm({...reportForm, name: e.target.value})} />
+                  </div>
+                  
+                  <div className="col-md-6">
+                    <label className="form-label">Category</label>
+                    <select className="form-select" 
+                      value={reportForm.category}
+                      onChange={(e) => setReportForm({...reportForm, category: e.target.value})}>
+                      <option value="standard">Standard Report</option>
+                      <option value="compliance">Compliance Report</option>
+                      <option value="analytics">Analytics Dashboard</option>
+                    </select>
+                  </div>
+                  
+                  <div className="col-md-6">
+                    <label className="form-label">Frequency</label>
+                    <select className="form-select" 
+                      value={reportForm.frequency}
+                      onChange={(e) => setReportForm({...reportForm, frequency: e.target.value})}>
+                      <option>Daily</option>
+                      <option>Weekly</option>
+                      <option>Monthly</option>
+                      <option>Quarterly</option>
+                      <option>Yearly</option>
+                      <option>On Demand</option>
+                    </select>
+                  </div>
+                  
+                  <div className="col-md-12">
+                    <label className="form-label">Description</label>
+                    <textarea className="form-control" rows="3"
+                      value={reportForm.description}
+                      onChange={(e) => setReportForm({...reportForm, description: e.target.value})} />
+                  </div>
+                  
+                  <div className="col-md-6">
+                    <label className="form-label">Default Format</label>
+                    <select className="form-select" 
+                      value={Array.isArray(reportForm.format) ? reportForm.format[0] : reportForm.format}
+                      onChange={(e) => setReportForm({...reportForm, format: [e.target.value]})}>
+                      <option value="pdf">PDF</option>
+                      <option value="excel">Excel</option>
+                      <option value="csv">CSV</option>
+                    </select>
+                  </div>
+                  
+                  <div className="col-md-6">
+                    <label className="form-label">Target Department</label>
+                    <select className="form-select" 
+                      value={reportForm.department}
+                      onChange={(e) => setReportForm({...reportForm, department: e.target.value})}>
+                      {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                    </select>
+                  </div>
+                  
+                  <div className="col-md-12">
+                    <div className="form-check form-switch">
+                      <input className="form-check-input" type="checkbox" 
+                        checked={reportForm.scheduleType === 'auto'}
+                        onChange={(e) => setReportForm({...reportForm, scheduleType: e.target.checked ? 'auto' : 'manual'})} />
+                      <label className="form-check-label">Enable Auto-Scheduling</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowReportModal(false)}>
+                  Cancel
+                </button>
+                <button type="button" className="btn btn-primary" onClick={handleSaveReport}>
+                  {isEditMode ? 'Update Report' : 'Save Report'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loading Overlay */}
+      {isLoading && (
+        <div className="position-fixed top-0 start-0 w-100 h-100 bg-white bg-opacity-75 d-flex justify-content-center align-items-center"
+          style={{ zIndex: 9999 }}>
+          <div className="text-center">
+            <div className="spinner-border text-primary mb-3" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <div>Processing report...</div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

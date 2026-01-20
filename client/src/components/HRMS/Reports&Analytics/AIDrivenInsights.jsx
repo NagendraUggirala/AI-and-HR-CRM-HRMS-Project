@@ -1,3 +1,4 @@
+// src\components\HRMS\Reports&Analytics\AIDrivenInsights.jsx
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, 
@@ -83,8 +84,776 @@ const riskLevelColors = {
 const AIModels = {
   ANOMALY_DETECTION: { name: 'Anomaly Detection Model', accuracy: 92, version: '2.1.0' },
   ATTRITION_PREDICTION: { name: 'Attrition Prediction Model', accuracy: 87, version: '3.0.1' },
-  FORECASTING: { name: 'HR Forecasting Model', accuracy: 85, version: '1.8.2' }
+  FORECASTING: { name: 'HR Forecasting Model', accuracy: 85, version: '1.8.2' },
+  NLP: { name: 'Natural Language Processing', accuracy: 89, version: '2.0.0' },
+  RECOMMENDATION: { name: 'Recommendation Engine', accuracy: 83, version: '1.5.0' }
 };
+
+// =====================
+// 1. BREADCRUMB COMPONENT
+// =====================
+
+const BreadcrumbComponent = ({ items = [] }) => {
+  return (
+    <nav aria-label="breadcrumb" className="mb-3">
+      <ol className="breadcrumb mb-0">
+        {items.map((item, index) => (
+          <li 
+            key={index} 
+            className={`breadcrumb-item ${item.active ? 'active' : ''}`}
+            aria-current={item.active ? 'page' : undefined}
+          >
+            {item.link && !item.active ? (
+              <a href={item.link} className="text-decoration-none">{item.label}</a>
+            ) : (
+              item.label
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
+};
+
+// =====================
+// 2. EXPORT MODAL COMPONENT
+// =====================
+
+const ExportModal = ({ 
+  show, 
+  onClose, 
+  exportData, 
+  exportFormat, 
+  setExportFormat,
+  availableFormats = ['csv', 'json', 'pdf', 'excel']
+}) => {
+  if (!show) return null;
+
+  const exportOptions = [
+    { id: 'anomalies', label: 'Anomalies Report', description: 'All detected anomalies with details' },
+    { id: 'attrition', label: 'Attrition Risk Report', description: 'Employee attrition risk scores and factors' },
+    { id: 'predictions', label: 'Predictive Analytics', description: 'Forecast data and predictions' },
+    { id: 'recommendations', label: 'AI Recommendations', description: 'All AI-generated recommendations' },
+    { id: 'summary', label: 'Executive Summary', description: 'High-level insights summary' },
+  ];
+
+  return (
+    <div className="modal fade show d-block" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
+      <div className="modal-dialog modal-dialog-centered">
+        <div className="modal-content">
+          <div className="modal-header">
+            <h5 className="modal-title d-flex align-items-center gap-2">
+              <Download size={20} />
+              Export Insights
+            </h5>
+            <button type="button" className="btn-close" onClick={onClose}></button>
+          </div>
+          <div className="modal-body">
+            <div className="mb-4">
+              <h6 className="mb-2">Select Format</h6>
+              <div className="d-flex flex-wrap gap-2">
+                {availableFormats.map(format => (
+                  <button
+                    key={format}
+                    className={`btn ${exportFormat === format ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => setExportFormat(format)}
+                  >
+                    {format.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <h6 className="mb-2">Select Reports to Export</h6>
+              <div className="list-group">
+                {exportOptions.map(option => (
+                  <div key={option.id} className="list-group-item">
+                    <div className="form-check d-flex align-items-center justify-content-between">
+                      <div>
+                        <input
+                          className="form-check-input me-2"
+                          type="checkbox"
+                          id={`export-${option.id}`}
+                          defaultChecked
+                        />
+                        <label className="form-check-label fw-medium" htmlFor={`export-${option.id}`}>
+                          {option.label}
+                        </label>
+                        <div className="text-muted small">{option.description}</div>
+                      </div>
+                      <span className="badge bg-light text-dark">
+                        {exportFormat}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <h6 className="mb-2">Export Options</h6>
+              <div className="form-check mb-2">
+                <input className="form-check-input" type="checkbox" id="include-charts" />
+                <label className="form-check-label" htmlFor="include-charts">
+                  Include charts and visualizations
+                </label>
+              </div>
+              <div className="form-check mb-2">
+                <input className="form-check-input" type="checkbox" id="compressed" defaultChecked />
+                <label className="form-check-label" htmlFor="compressed">
+                  Compress files (ZIP)
+                </label>
+              </div>
+              <div className="form-check">
+                <input className="form-check-input" type="checkbox" id="watermark" />
+                <label className="form-check-label" htmlFor="watermark">
+                  Add company watermark
+                </label>
+              </div>
+            </div>
+
+            <div className="alert alert-info">
+              <i className="bi bi-info-circle me-2"></i>
+              Exports may take a few moments depending on data size.
+            </div>
+          </div>
+          <div className="modal-footer">
+            <button className="btn btn-outline-secondary" onClick={onClose}>
+              Cancel
+            </button>
+            <button 
+              className="btn btn-primary"
+              onClick={() => {
+                exportData('summary');
+                onClose();
+              }}
+            >
+              <Download size={16} className="me-2" />
+              Export All Selected
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// =====================
+// 3. SETTINGS PANEL COMPONENT - FIXED VERSION
+// =====================
+
+const SettingsPanel = ({ 
+  show, 
+  onClose, 
+  settings, 
+  onSettingsChange,
+  AIModels,
+  selectedModel,
+  onModelChange 
+}) => {
+  if (!show) return null;
+
+  const modelOptions = [
+    { id: 'ANOMALY_DETECTION', label: 'Anomaly Detection', color: '#3b82f6' },
+    { id: 'ATTRITION_PREDICTION', label: 'Attrition Prediction', color: '#ef4444' },
+    { id: 'FORECASTING', label: 'HR Forecasting', color: '#10b981' },
+    { id: 'NLP', label: 'Natural Language Processing', color: '#8b5cf6' },
+    { id: 'RECOMMENDATION', label: 'Recommendation Engine', color: '#f59e0b' },
+  ];
+
+  const handleSave = () => {
+    // Save settings logic here
+    console.log('Settings saved:', settings);
+    onClose();
+  };
+
+  return (
+    <div className="modal-backdrop" style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      zIndex: 1040,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      <div className="modal-content" style={{
+        backgroundColor: 'white',
+        borderRadius: '8px',
+        width: '90%',
+        maxWidth: '800px',
+        maxHeight: '90vh',
+        overflowY: 'auto',
+        zIndex: 1050
+      }}>
+        <div className="modal-header" style={{
+          padding: '1rem',
+          borderBottom: '1px solid #dee2e6',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <h5 className="modal-title d-flex align-items-center gap-2" style={{ margin: 0 }}>
+            <Settings size={20} />
+            AI Model Settings & Configuration
+          </h5>
+          <button 
+            type="button" 
+            className="btn-close" 
+            onClick={onClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: '1.5rem',
+              cursor: 'pointer',
+              padding: 0,
+              width: '30px',
+              height: '30px'
+            }}
+          >
+            ×
+          </button>
+        </div>
+        <div className="modal-body" style={{ padding: '1rem' }}>
+          <div className="row g-4">
+            <div className="col-12 col-md-6">
+              <div className="card h-100" style={{ border: '1px solid #dee2e6', borderRadius: '8px' }}>
+                <div className="card-header" style={{ 
+                  backgroundColor: '#f8f9fa', 
+                  borderBottom: '1px solid #dee2e6',
+                  padding: '0.75rem 1rem'
+                }}>
+                  <h6 className="mb-0" style={{ fontWeight: '600' }}>AI Model Configuration</h6>
+                </div>
+                <div className="card-body" style={{ padding: '1rem' }}>
+                  {modelOptions.map(model => (
+                    <div key={model.id} className="mb-3">
+                      <div className="d-flex justify-content-between align-items-center mb-1">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="radio"
+                            name="aiModel"
+                            id={`model-${model.id}`}
+                            value={model.id}
+                            checked={selectedModel === model.id}
+                            onChange={(e) => onModelChange(e.target.value)}
+                            style={{ marginRight: '0.5rem' }}
+                          />
+                          <label className="form-check-label fw-medium" htmlFor={`model-${model.id}`} style={{ cursor: 'pointer' }}>
+                            {model.label}
+                          </label>
+                        </div>
+                        <span className="badge" style={{ 
+                          backgroundColor: model.color, 
+                          color: 'white',
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '4px'
+                        }}>
+                          {AIModels[model.id]?.accuracy || 85}%
+                        </span>
+                      </div>
+                      {AIModels[model.id] && (
+                        <div className="text-muted small">
+                          v{AIModels[model.id].version} • Trained on {Math.floor(Math.random() * 100) + 50}K data points
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="col-12 col-md-6">
+              <div className="card h-100" style={{ border: '1px solid #dee2e6', borderRadius: '8px' }}>
+                <div className="card-header" style={{ 
+                  backgroundColor: '#f8f9fa', 
+                  borderBottom: '1px solid #dee2e6',
+                  padding: '0.75rem 1rem'
+                }}>
+                  <h6 className="mb-0" style={{ fontWeight: '600' }}>Detection Settings</h6>
+                </div>
+                <div className="card-body" style={{ padding: '1rem' }}>
+                  <div className="mb-3">
+                    <label className="form-label" style={{ fontWeight: '500', marginBottom: '0.5rem' }}>
+                      Confidence Threshold
+                    </label>
+                    <input
+                      type="range"
+                      className="form-range"
+                      min="50"
+                      max="95"
+                      value={settings.confidenceThreshold}
+                      onChange={(e) => onSettingsChange('confidenceThreshold', parseInt(e.target.value))}
+                      style={{ width: '100%' }}
+                    />
+                    <div className="d-flex justify-content-between mt-1">
+                      <small className="text-muted">Low ({settings.confidenceThreshold}%)</small>
+                      <small className="fw-semibold">{settings.confidenceThreshold}%</small>
+                      <small className="text-muted">High (95%)</small>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label" style={{ fontWeight: '500', marginBottom: '0.5rem' }}>
+                      Alert Frequency
+                    </label>
+                    <select 
+                      className="form-select"
+                      value={settings.alertFrequency}
+                      onChange={(e) => onSettingsChange('alertFrequency', e.target.value)}
+                      style={{ width: '100%', padding: '0.375rem 0.75rem' }}
+                    >
+                      <option value="realtime">Real-time</option>
+                      <option value="hourly">Hourly Digest</option>
+                      <option value="daily">Daily Summary</option>
+                      <option value="weekly">Weekly Report</option>
+                    </select>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label" style={{ fontWeight: '500', marginBottom: '0.5rem' }}>
+                      Data Retention
+                    </label>
+                    <select 
+                      className="form-select"
+                      value={settings.dataRetention}
+                      onChange={(e) => onSettingsChange('dataRetention', e.target.value)}
+                      style={{ width: '100%', padding: '0.375rem 0.75rem' }}
+                    >
+                      <option value="30">30 days</option>
+                      <option value="90">90 days</option>
+                      <option value="180">6 months</option>
+                      <option value="365">1 year</option>
+                    </select>
+                  </div>
+
+                  <div className="form-check mb-3">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={settings.autoRetrain}
+                      onChange={(e) => onSettingsChange('autoRetrain', e.target.checked)}
+                      id="autoRetrain"
+                      style={{ marginRight: '0.5rem' }}
+                    />
+                    <label className="form-check-label" htmlFor="autoRetrain" style={{ cursor: 'pointer' }}>
+                      Auto-retrain models weekly
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-12">
+              <div className="card" style={{ border: '1px solid #dee2e6', borderRadius: '8px' }}>
+                <div className="card-header" style={{ 
+                  backgroundColor: '#f8f9fa', 
+                  borderBottom: '1px solid #dee2e6',
+                  padding: '0.75rem 1rem'
+                }}>
+                  <h6 className="mb-0" style={{ fontWeight: '600' }}>Advanced Settings</h6>
+                </div>
+                <div className="card-body" style={{ padding: '1rem' }}>
+                  <div className="row g-3">
+                    <div className="col-12 col-md-4">
+                      <div className="form-check form-switch d-flex align-items-center">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          role="switch"
+                          checked={settings.predictiveMode}
+                          onChange={(e) => onSettingsChange('predictiveMode', e.target.checked)}
+                          id="predictiveMode"
+                          style={{ marginRight: '0.5rem' }}
+                        />
+                        <label className="form-check-label" htmlFor="predictiveMode" style={{ cursor: 'pointer' }}>
+                          Predictive Mode
+                        </label>
+                      </div>
+                    </div>
+                    <div className="col-12 col-md-4">
+                      <div className="form-check form-switch d-flex align-items-center">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          role="switch"
+                          checked={settings.ensembleLearning}
+                          onChange={(e) => onSettingsChange('ensembleLearning', e.target.checked)}
+                          id="ensembleLearning"
+                          style={{ marginRight: '0.5rem' }}
+                        />
+                        <label className="form-check-label" htmlFor="ensembleLearning" style={{ cursor: 'pointer' }}>
+                          Ensemble Learning
+                        </label>
+                      </div>
+                    </div>
+                    <div className="col-12 col-md-4">
+                      <div className="form-check form-switch d-flex align-items-center">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          role="switch"
+                          checked={settings.deepAnalysis}
+                          onChange={(e) => onSettingsChange('deepAnalysis', e.target.checked)}
+                          id="deepAnalysis"
+                          style={{ marginRight: '0.5rem' }}
+                        />
+                        <label className="form-check-label" htmlFor="deepAnalysis" style={{ cursor: 'pointer' }}>
+                          Deep Analysis
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="modal-footer" style={{
+          padding: '1rem',
+          borderTop: '1px solid #dee2e6',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: '0.5rem'
+        }}>
+          <button className="btn btn-outline-secondary" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="btn btn-primary" onClick={handleSave}>
+            Save Settings
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// =====================
+// 4. INSIGHT COMPARISON COMPONENT
+// =====================
+
+const InsightComparison = ({ 
+  currentData, 
+  previousData, 
+  timeframe = 'month',
+  metrics = ['attrition', 'anomalies', 'riskScore']
+}) => {
+  const getComparison = (current, previous) => {
+    if (!previous || previous === 0) return { change: 0, trend: 'neutral' };
+    const change = ((current - previous) / previous) * 100;
+    return {
+      change: Math.abs(change).toFixed(1),
+      trend: change > 0 ? 'up' : change < 0 ? 'down' : 'neutral'
+    };
+  };
+
+  const comparisons = {
+    attrition: getComparison(currentData.attrition, previousData?.attrition),
+    anomalies: getComparison(currentData.anomalies, previousData?.anomalies),
+    riskScore: getComparison(currentData.avgRiskScore, previousData?.avgRiskScore),
+  };
+
+  return (
+    <div className="card">
+      <div className="card-header">
+        <h6 className="mb-0">Insight Comparison</h6>
+        <small className="text-muted">vs Previous {timeframe}</small>
+      </div>
+      <div className="card-body">
+        <div className="row g-3">
+          {metrics.map(metric => {
+            const comp = comparisons[metric];
+            return (
+              <div key={metric} className="col-12 col-md-4">
+                <div className="card bg-light">
+                  <div className="card-body p-3">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <div className="text-muted small text-uppercase">
+                          {metric === 'attrition' ? 'Attrition Rate' : 
+                           metric === 'anomalies' ? 'Anomalies' : 'Avg Risk Score'}
+                        </div>
+                        <div className="h5 mb-0">{currentData[metric]}</div>
+                      </div>
+                      <div className="text-end">
+                        <div className={`d-flex align-items-center gap-1 ${comp.trend === 'up' ? 'text-danger' : comp.trend === 'down' ? 'text-success' : 'text-muted'}`}>
+                          {comp.trend === 'up' ? <TrendingUp size={16} /> : 
+                           comp.trend === 'down' ? <TrendingDown size={16} /> : 
+                           <Activity size={16} />}
+                          <span className="fw-semibold">{comp.change}%</span>
+                        </div>
+                        <small className="text-muted">
+                          {comp.trend === 'up' ? 'Increase' : comp.trend === 'down' ? 'Decrease' : 'No change'}
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// =====================
+// 5. ALERT MANAGEMENT COMPONENT
+// =====================
+
+const AlertManagement = ({ 
+  alerts, 
+  onAlertAction,
+  filterOptions = {},
+  onFilterChange,
+  view = 'list'
+}) => {
+  const [groupedAlerts, setGroupedAlerts] = React.useState({});
+
+  React.useEffect(() => {
+    // Group alerts by severity
+    const grouped = alerts.reduce((acc, alert) => {
+      const key = alert.severity || 'medium';
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(alert);
+      return acc;
+    }, {});
+
+    setGroupedAlerts(grouped);
+  }, [alerts]);
+
+  const severityColors = {
+    high: 'danger',
+    medium: 'warning',
+    low: 'info',
+    info: 'primary'
+  };
+
+  const getSeverityIcon = (severity) => {
+    switch(severity) {
+      case 'high': return <AlertTriangle size={16} />;
+      case 'medium': return <Bell size={16} />;
+      case 'low': return <Info size={16} />;
+      default: return <Bell size={16} />;
+    }
+  };
+
+  return (
+    <div className="card">
+      <div className="card-header d-flex justify-content-between align-items-center">
+        <h6 className="mb-0">Alert Management</h6>
+        <div className="d-flex gap-2">
+          <select 
+            className="form-select form-select-sm"
+            value={filterOptions.severity || 'all'}
+            onChange={(e) => onFilterChange('severity', e.target.value)}
+          >
+            <option value="all">All Severities</option>
+            <option value="high">High Only</option>
+            <option value="medium">Medium Only</option>
+            <option value="low">Low Only</option>
+          </select>
+          <select 
+            className="form-select form-select-sm"
+            value={filterOptions.status || 'all'}
+            onChange={(e) => onFilterChange('status', e.target.value)}
+          >
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="reviewed">Reviewed</option>
+            <option value="resolved">Resolved</option>
+          </select>
+        </div>
+      </div>
+      <div className="card-body">
+        {view === 'grouped' ? (
+          // Grouped View
+          <div className="accordion" id="alertsAccordion">
+            {Object.entries(groupedAlerts).map(([severity, severityAlerts]) => (
+              <div key={severity} className="accordion-item">
+                <h2 className="accordion-header">
+                  <button
+                    className="accordion-button"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target={`#collapse-${severity}`}
+                  >
+                    <span className={`badge bg-${severityColors[severity]} me-2`}>
+                      {getSeverityIcon(severity)}
+                    </span>
+                    {severity.charAt(0).toUpperCase() + severity.slice(1)} Alerts
+                    <span className="badge bg-light text-dark ms-2">
+                      {severityAlerts.length}
+                    </span>
+                  </button>
+                </h2>
+                <div id={`collapse-${severity}`} className="accordion-collapse collapse show">
+                  <div className="accordion-body p-0">
+                    <div className="list-group list-group-flush">
+                      {severityAlerts.map(alert => (
+                        <div key={alert.id} className="list-group-item">
+                          <div className="d-flex justify-content-between align-items-center">
+                            <div>
+                              <div className="fw-medium">{alert.title}</div>
+                              <div className="text-muted small">{alert.description}</div>
+                            </div>
+                            <div className="d-flex gap-1">
+                              <button 
+                                className="btn btn-sm btn-outline-success"
+                                onClick={() => onAlertAction(alert.id, 'resolve')}
+                              >
+                                <CheckCircle size={14} />
+                              </button>
+                              <button 
+                                className="btn btn-sm btn-outline-warning"
+                                onClick={() => onAlertAction(alert.id, 'review')}
+                              >
+                                <Clock size={14} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          // List View
+          <div className="table-responsive">
+            <table className="table table-hover">
+              <thead>
+                <tr>
+                  <th>Severity</th>
+                  <th>Alert</th>
+                  <th>Status</th>
+                  <th>Detected</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {alerts.map(alert => (
+                  <tr key={alert.id}>
+                    <td>
+                      <span className={`badge bg-${severityColors[alert.severity]}`}>
+                        {alert.severity}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="fw-medium">{alert.title}</div>
+                      <small className="text-muted">{alert.description}</small>
+                    </td>
+                    <td>
+                      <span className={`badge ${
+                        alert.status === 'pending' ? 'bg-warning' :
+                        alert.status === 'reviewed' ? 'bg-info' : 'bg-success'
+                      }`}>
+                        {alert.status}
+                      </span>
+                    </td>
+                    <td>
+                      {new Date(alert.timestamp).toLocaleDateString()}
+                    </td>
+                    <td>
+                      <div className="btn-group btn-group-sm">
+                        <button 
+                          className="btn btn-outline-success"
+                          onClick={() => onAlertAction(alert.id, 'resolve')}
+                        >
+                          Resolve
+                        </button>
+                        <button 
+                          className="btn btn-outline-primary"
+                          onClick={() => onAlertAction(alert.id, 'details')}
+                        >
+                          Details
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+      <div className="card-footer">
+        <div className="d-flex justify-content-between align-items-center">
+          <small className="text-muted">
+            Total: {alerts.length} alerts • Pending: {alerts.filter(a => a.status === 'pending').length}
+          </small>
+          <div className="d-flex gap-2">
+            <button 
+              className="btn btn-sm btn-outline-primary"
+              onClick={() => onAlertAction('all', 'resolve')}
+            >
+              Resolve All
+            </button>
+            <button 
+              className="btn btn-sm btn-outline-danger"
+              onClick={() => onAlertAction('all', 'dismiss')}
+            >
+              Dismiss All
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// =====================
+// ADDITIONAL ICON (Info)
+// =====================
+const Info = ({ size = 16, ...props }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+    {...props}
+  >
+    <circle cx="12" cy="12" r="10"></circle>
+    <line x1="12" y1="16" x2="12" y2="12"></line>
+    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+  </svg>
+);
+
+// Helper List Icon component
+const ListIcon = ({ size = 16, ...props }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+    {...props}
+  >
+    <line x1="8" y1="6" x2="21" y2="6"></line>
+    <line x1="8" y1="12" x2="21" y2="12"></line>
+    <line x1="8" y1="18" x2="21" y2="18"></line>
+    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+  </svg>
+);
 
 // Main AI Insights Component
 function AIDrivenInsightsContent() {
@@ -108,6 +877,20 @@ function AIDrivenInsightsContent() {
   const [insightThreshold, setInsightThreshold] = useState(75);
   const [viewMode, setViewMode] = useState('grid');
   const [exportFormat, setExportFormat] = useState('csv');
+  
+  // New state variables for missing components
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [showSettingsPanel, setShowSettingsPanel] = useState(false);
+  const [alertFilters, setAlertFilters] = useState({ severity: 'all', status: 'all' });
+  const [aiSettings, setAiSettings] = useState({
+    confidenceThreshold: 75,
+    alertFrequency: 'daily',
+    dataRetention: '90',
+    autoRetrain: true,
+    predictiveMode: false,
+    ensembleLearning: true,
+    deepAnalysis: true
+  });
 
   // Auto-refresh functionality
   useEffect(() => {
@@ -345,6 +1128,16 @@ function AIDrivenInsightsContent() {
     setNotifications([]);
   };
 
+  // Handle alert filters
+  const handleAlertFilterChange = (key, value) => {
+    setAlertFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  // Handle AI settings change
+  const handleAISettingsChange = (key, value) => {
+    setAiSettings(prev => ({ ...prev, [key]: value }));
+  };
+
   // Risk scatter chart data
   const riskScatterData = attritionRiskData.map(emp => ({
     x: emp.tenure,
@@ -378,6 +1171,15 @@ function AIDrivenInsightsContent() {
 
   return (
     <div className="container-fluid py-4" style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
+      {/* Breadcrumb Navigation */}
+      <BreadcrumbComponent
+        items={[
+          { label: 'Dashboard', link: '/dashboard' },
+          { label: 'Reports & Analytics', link: '/reports' },
+          { label: 'AI-Driven Insights', active: true }
+        ]}
+      />
+
       {/* Header with enhanced controls */}
       <div className="mb-4">
         <div className="d-flex justify-content-between align-items-center mb-3">
@@ -404,41 +1206,20 @@ function AIDrivenInsightsContent() {
               <RefreshCw size={16} />
               Refresh
             </button>
-            <div className="dropdown">
-              <button className="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2" 
-                type="button" data-bs-toggle="dropdown">
-                <Settings size={16} />
-                Settings
-              </button>
-              <ul className="dropdown-menu dropdown-menu-end">
-                <li>
-                  <div className="dropdown-item">
-                    <div className="form-check form-switch">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        checked={simulationMode}
-                        onChange={(e) => setSimulationMode(e.target.checked)}
-                      />
-                      <label className="form-check-label">Simulation Mode</label>
-                    </div>
-                  </div>
-                </li>
-                <li>
-                  <div className="dropdown-item">
-                    <div className="form-check form-switch">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        checked={autoRefresh}
-                        onChange={(e) => setAutoRefresh(e.target.checked)}
-                      />
-                      <label className="form-check-label">Auto-refresh (30s)</label>
-                    </div>
-                  </div>
-                </li>
-              </ul>
-            </div>
+            <button 
+              className="btn btn-outline-secondary d-flex align-items-center gap-2"
+              onClick={() => setShowSettingsPanel(true)}
+            >
+              <Settings size={16} />
+              Settings
+            </button>
+            <button 
+              className="btn btn-primary d-flex align-items-center gap-2"
+              onClick={() => setShowExportModal(true)}
+            >
+              <Download size={16} />
+              Export
+            </button>
           </div>
         </div>
 
@@ -456,6 +1237,8 @@ function AIDrivenInsightsContent() {
                   <option value="ANOMALY_DETECTION">Anomaly Detection ({AIModels.ANOMALY_DETECTION.accuracy}% accuracy)</option>
                   <option value="ATTRITION_PREDICTION">Attrition Prediction ({AIModels.ATTRITION_PREDICTION.accuracy}% accuracy)</option>
                   <option value="FORECASTING">HR Forecasting ({AIModels.FORECASTING.accuracy}% accuracy)</option>
+                  <option value="NLP">Natural Language Processing ({AIModels.NLP.accuracy}% accuracy)</option>
+                  <option value="RECOMMENDATION">Recommendation Engine ({AIModels.RECOMMENDATION.accuracy}% accuracy)</option>
                 </select>
                 <span className="badge bg-light text-dark">
                   v{AIModels[selectedModel].version}
@@ -478,6 +1261,26 @@ function AIDrivenInsightsContent() {
           </div>
         </div>
       </div>
+
+      {/* Export Modal */}
+      <ExportModal
+        show={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        exportData={exportData}
+        exportFormat={exportFormat}
+        setExportFormat={setExportFormat}
+      />
+
+      {/* Settings Panel - Fixed Version */}
+      <SettingsPanel
+        show={showSettingsPanel}
+        onClose={() => setShowSettingsPanel(false)}
+        settings={aiSettings}
+        onSettingsChange={handleAISettingsChange}
+        AIModels={AIModels}
+        selectedModel={selectedModel}
+        onModelChange={setSelectedModel}
+      />
 
       {/* Notifications Panel */}
       {notifications.length > 0 && (
@@ -583,6 +1386,19 @@ function AIDrivenInsightsContent() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Insight Comparison */}
+      <div className="mb-4">
+        <InsightComparison
+          currentData={{
+            attrition: insightsSummary.highRiskEmployees,
+            anomalies: insightsSummary.pendingAlerts,
+            riskScore: insightsSummary.avgRiskScore
+          }}
+          previousData={{ attrition: 4, anomalies: 15, riskScore: 68 }}
+          timeframe="month"
+        />
       </div>
 
       {/* Navigation Tabs */}
@@ -1182,6 +1998,21 @@ function AIDrivenInsightsContent() {
         </div>
       )}
 
+      {/* Alert Management Tab */}
+      {activeTab === 'alerts' && (
+        <div className="row g-4">
+          <div className="col-12">
+            <AlertManagement
+              alerts={anomalyData}
+              onAlertAction={(id, action) => handleAnomalyAction(id, action)}
+              filterOptions={alertFilters}
+              onFilterChange={handleAlertFilterChange}
+              view="list"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Enhanced NLP Tab */}
       {activeTab === 'nlp' && (
         <div className="row g-4">
@@ -1369,178 +2200,210 @@ function AIDrivenInsightsContent() {
 
       {/* Enhanced Alert Details Modal */}
       {showAlertDetails && (
-        <>
-          <div className="modal d-block" style={{ display: 'block' }} tabIndex="-1" role="dialog">
-            <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <div className="d-flex align-items-center gap-3">
-                    <div className={`rounded-circle p-2 ${showAlertDetails.severity === 'high' ? 'bg-danger' : showAlertDetails.severity === 'medium' ? 'bg-warning' : 'bg-success'}`}>
-                      <AlertTriangle size={24} className="text-white" />
-                    </div>
-                    <div>
-                      <h6 className="mb-0 fw-semibold">{showAlertDetails.type} Anomaly Detected</h6>
-                      <div className="text-muted">
-                        ID: {showAlertDetails.id} • Confidence: {showAlertDetails.confidence}%
-                      </div>
-                    </div>
-                  </div>
-                  <button type="button" className="btn-close" aria-label="Close" onClick={() => setShowAlertDetails(null)}></button>
+        <div className="modal-backdrop" style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 1040,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div className="modal-content" style={{
+            backgroundColor: 'white',
+            borderRadius: '8px',
+            width: '90%',
+            maxWidth: '800px',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            zIndex: 1050
+          }}>
+            <div className="modal-header" style={{
+              padding: '1rem',
+              borderBottom: '1px solid #dee2e6',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <div className="d-flex align-items-center gap-3">
+                <div className={`rounded-circle p-2 ${showAlertDetails.severity === 'high' ? 'bg-danger' : showAlertDetails.severity === 'medium' ? 'bg-warning' : 'bg-success'}`}>
+                  <AlertTriangle size={24} className="text-white" />
                 </div>
-                <div className="modal-body">
-                  <div className="row g-3 mb-4">
-                    <div className="col-12 col-md-6">
-                      <div className="card h-100">
-                        <div className="card-body">
-                          <h6 className="card-title">Details</h6>
-                          <div className="mb-2">
-                            <small className="text-muted">Description:</small>
-                            <div className="fw-medium">{showAlertDetails.description}</div>
-                          </div>
-                          <div className="mb-2">
-                            <small className="text-muted">Affected:</small>
-                            <div className="fw-medium">{showAlertDetails.employee || showAlertDetails.department}</div>
-                          </div>
-                          <div className="mb-2">
-                            <small className="text-muted">Date Detected:</small>
-                            <div className="fw-medium">{showAlertDetails.date}</div>
-                          </div>
-                          <div>
-                            <small className="text-muted">Impact:</small>
-                            <div className="fw-medium">{showAlertDetails.severity === 'high' ? 'High' : showAlertDetails.severity === 'medium' ? 'Medium' : 'Low'}</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-12 col-md-6">
-                      <div className="card h-100">
-                        <div className="card-body">
-                          <h6 className="card-title">AI Analysis</h6>
-                          <div className="mb-3">
-                            <div className="d-flex justify-content-between mb-1">
-                              <small>Confidence Level</small>
-                              <small className="fw-semibold">{showAlertDetails.confidence}%</small>
-                            </div>
-                            <div className="progress" style={{ height: '8px' }}>
-                              <div 
-                                className={`progress-bar ${showAlertDetails.confidence > 85 ? 'bg-success' : showAlertDetails.confidence > 70 ? 'bg-warning' : 'bg-danger'}`}
-                                style={{ width: `${showAlertDetails.confidence}%` }}
-                              ></div>
-                            </div>
-                          </div>
-                          <div className="mb-3">
-                            <small className="text-muted">Suggested Action:</small>
-                            <div className="fw-medium">Review and investigate immediately</div>
-                          </div>
-                          <div className="mb-3">
-                            <small className="text-muted">Algorithm Used:</small>
-                            <div className="fw-medium small">Random Forest Classifier v2.1</div>
-                          </div>
-                          <div>
-                            <small className="text-muted">Similar Patterns:</small>
-                            <div className="fw-medium small">
-                              {Math.floor(Math.random() * 10) + 1} similar cases in last 90 days
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                <div>
+                  <h6 className="mb-0 fw-semibold">{showAlertDetails.type} Anomaly Detected</h6>
+                  <div className="text-muted">
+                    ID: {showAlertDetails.id} • Confidence: {showAlertDetails.confidence}%
                   </div>
-
-                  <div className="card mb-3">
-                    <div className="card-body">
-                      <h6 className="card-title">Take Action</h6>
-                      <div className="d-flex gap-2">
-                        <button 
-                          className="btn btn-success flex-grow-1"
-                          onClick={() => {
-                            handleAnomalyAction(showAlertDetails.id, 'resolve');
-                            setShowAlertDetails(null);
-                          }}
-                        >
-                          <CheckCircle size={16} className="me-2" />
-                          Mark as Resolved
-                        </button>
-                        <button 
-                          className="btn btn-warning flex-grow-1"
-                          onClick={() => {
-                            handleAnomalyAction(showAlertDetails.id, 'review');
-                            setShowAlertDetails(null);
-                          }}
-                        >
-                          <Clock size={16} className="me-2" />
-                          Schedule Review
-                        </button>
-                        <button 
-                          className="btn btn-danger flex-grow-1"
-                          onClick={() => {
-                            handleAnomalyAction(showAlertDetails.id, 'ignore');
-                            setShowAlertDetails(null);
-                          }}
-                        >
-                          <X size={16} className="me-2" />
-                          Ignore Alert
-                        </button>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                className="btn-close" 
+                aria-label="Close" 
+                onClick={() => setShowAlertDetails(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  padding: 0,
+                  width: '30px',
+                  height: '30px'
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body" style={{ padding: '1rem' }}>
+              <div className="row g-3 mb-4">
+                <div className="col-12 col-md-6">
+                  <div className="card h-100" style={{ border: '1px solid #dee2e6', borderRadius: '8px' }}>
+                    <div className="card-body" style={{ padding: '1rem' }}>
+                      <h6 className="card-title" style={{ fontWeight: '600', marginBottom: '1rem' }}>Details</h6>
+                      <div className="mb-2">
+                        <small className="text-muted">Description:</small>
+                        <div className="fw-medium">{showAlertDetails.description}</div>
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="card">
-                    <div className="card-body">
-                      <h6 className="card-title">Historical Context</h6>
-                      <div className="text-sm text-muted">
-                        This pattern has been observed {Math.floor(Math.random() * 15) + 5} times in the last 90 days with an average resolution time of {Math.floor(Math.random() * 5) + 2} days. 
-                        Previous actions taken: {['policy review', 'employee counseling', 'process audit', 'system update'][Math.floor(Math.random() * 4)]}.
+                      <div className="mb-2">
+                        <small className="text-muted">Affected:</small>
+                        <div className="fw-medium">{showAlertDetails.employee || showAlertDetails.department}</div>
+                      </div>
+                      <div className="mb-2">
+                        <small className="text-muted">Date Detected:</small>
+                        <div className="fw-medium">{showAlertDetails.date}</div>
+                      </div>
+                      <div>
+                        <small className="text-muted">Impact:</small>
+                        <div className="fw-medium">{showAlertDetails.severity === 'high' ? 'High' : showAlertDetails.severity === 'medium' ? 'Medium' : 'Low'}</div>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="modal-footer">
-                  <button className="btn btn-outline-secondary" onClick={() => setShowAlertDetails(null)}>
-                    Close
-                  </button>
-                  <button 
-                    className="btn btn-primary"
-                    onClick={() => {
-                      exportToJSON([showAlertDetails], `anomaly-details-${showAlertDetails.id}`);
-                      setShowAlertDetails(null);
-                    }}
-                  >
-                    Export Details
-                  </button>
+                <div className="col-12 col-md-6">
+                  <div className="card h-100" style={{ border: '1px solid #dee2e6', borderRadius: '8px' }}>
+                    <div className="card-body" style={{ padding: '1rem' }}>
+                      <h6 className="card-title" style={{ fontWeight: '600', marginBottom: '1rem' }}>AI Analysis</h6>
+                      <div className="mb-3">
+                        <div className="d-flex justify-content-between mb-1">
+                          <small>Confidence Level</small>
+                          <small className="fw-semibold">{showAlertDetails.confidence}%</small>
+                        </div>
+                        <div className="progress" style={{ height: '8px' }}>
+                          <div 
+                            className={`progress-bar ${showAlertDetails.confidence > 85 ? 'bg-success' : showAlertDetails.confidence > 70 ? 'bg-warning' : 'bg-danger'}`}
+                            style={{ width: `${showAlertDetails.confidence}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                      <div className="mb-3">
+                        <small className="text-muted">Suggested Action:</small>
+                        <div className="fw-medium">Review and investigate immediately</div>
+                      </div>
+                      <div className="mb-3">
+                        <small className="text-muted">Algorithm Used:</small>
+                        <div className="fw-medium small">Random Forest Classifier v2.1</div>
+                      </div>
+                      <div>
+                        <small className="text-muted">Similar Patterns:</small>
+                        <div className="fw-medium small">
+                          {Math.floor(Math.random() * 10) + 1} similar cases in last 90 days
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="card mb-3" style={{ border: '1px solid #dee2e6', borderRadius: '8px' }}>
+                <div className="card-body" style={{ padding: '1rem' }}>
+                  <h6 className="card-title" style={{ fontWeight: '600', marginBottom: '1rem' }}>Take Action</h6>
+                  <div className="d-flex gap-2">
+                    <button 
+                      className="btn btn-success flex-grow-1"
+                      onClick={() => {
+                        handleAnomalyAction(showAlertDetails.id, 'resolve');
+                        setShowAlertDetails(null);
+                      }}
+                    >
+                      <CheckCircle size={16} className="me-2" />
+                      Mark as Resolved
+                    </button>
+                    <button 
+                      className="btn btn-warning flex-grow-1"
+                      onClick={() => {
+                        handleAnomalyAction(showAlertDetails.id, 'review');
+                        setShowAlertDetails(null);
+                      }}
+                    >
+                      <Clock size={16} className="me-2" />
+                      Schedule Review
+                    </button>
+                    <button 
+                      className="btn btn-danger flex-grow-1"
+                      onClick={() => {
+                        handleAnomalyAction(showAlertDetails.id, 'ignore');
+                        setShowAlertDetails(null);
+                      }}
+                    >
+                      <X size={16} className="me-2" />
+                      Ignore Alert
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="card" style={{ border: '1px solid #dee2e6', borderRadius: '8px' }}>
+                <div className="card-body" style={{ padding: '1rem' }}>
+                  <h6 className="card-title" style={{ fontWeight: '600', marginBottom: '1rem' }}>Historical Context</h6>
+                  <div className="text-sm text-muted">
+                    This pattern has been observed {Math.floor(Math.random() * 15) + 5} times in the last 90 days with an average resolution time of {Math.floor(Math.random() * 5) + 2} days. 
+                    Previous actions taken: {['policy review', 'employee counseling', 'process audit', 'system update'][Math.floor(Math.random() * 4)]}.
+                  </div>
                 </div>
               </div>
             </div>
+            <div className="modal-footer" style={{
+              padding: '1rem',
+              borderTop: '1px solid #dee2e6',
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '0.5rem'
+            }}>
+              <button className="btn btn-outline-secondary" onClick={() => setShowAlertDetails(null)}>
+                Close
+              </button>
+              <button 
+                className="btn btn-primary"
+                onClick={() => {
+                  const exportToJSON = (data, filename) => {
+                    const json = JSON.stringify(data, null, 2);
+                    const blob = new Blob([json], { type: 'application/json' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${filename}-${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    addNotification('success', 'Data exported as JSON');
+                  };
+                  exportToJSON([showAlertDetails], `anomaly-details-${showAlertDetails.id}`);
+                  setShowAlertDetails(null);
+                }}
+              >
+                Export Details
+              </button>
+            </div>
           </div>
-          <div className="modal-backdrop fade show" style={{ opacity: 0.5 }}></div>
-        </>
+        </div>
       )}
     </div>
   );
 }
-
-// Helper List Icon component
-const ListIcon = ({ size = 16, ...props }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round"
-    {...props}
-  >
-    <line x1="8" y1="6" x2="21" y2="6"></line>
-    <line x1="8" y1="12" x2="21" y2="12"></line>
-    <line x1="8" y1="18" x2="21" y2="18"></line>
-    <line x1="3" y1="6" x2="3.01" y2="6"></line>
-    <line x1="3" y1="12" x2="3.01" y2="12"></line>
-    <line x1="3" y1="18" x2="3.01" y2="18"></line>
-  </svg>
-);
 
 // Main exported component
 export default function AIDrivenInsights() {

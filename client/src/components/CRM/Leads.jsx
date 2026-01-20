@@ -25,6 +25,7 @@ const Leads = () => {
   // Form state for Add Lead Modal
   const [formData, setFormData] = useState({
     leadName: '',
+    leadType: 'organization',
     company: '',
     value: '',
     currency: 'USD',
@@ -254,6 +255,7 @@ const Leads = () => {
   const resetForm = () => {
     setFormData({
       leadName: '',
+      leadType: 'organization',
       company: '',
       value: '',
       currency: 'USD',
@@ -642,42 +644,45 @@ const Leads = () => {
         <div className="card-body p-3">
           <div className="d-flex align-items-center justify-content-between">
             <h5 className='fs-6'><b>Leads Grid</b></h5>
-            <div className="dropdown">
-              <button type="button" className="dropdown-toggle btn btn-sm btn-white d-inline-flex align-items-center" data-bs-toggle="dropdown">
-                Sort By : Last 7 Days
-              </button>
-              <ul className="dropdown-menu dropdown-menu-end p-3">
-                <li>
-                  <button type="button" className="dropdown-item rounded-1">
-                    Recent
-                  </button>
-                </li>
-                <li>
-                  <button type="button" className="dropdown-item rounded-1">
-                    Last Modified
-                  </button>
-                </li>
-                <li>
-                  <button type="button" className="dropdown-item rounded-1">
-                    Last 7 Days
-                  </button>
-                </li>
-                <li>
-                  <button type="button" className="dropdown-item rounded-1">
-                    Last 30 Days
-                  </button>
-                </li>
-                <li>
-                  <button type="button" className="dropdown-item rounded-1">
-                    Last Month
-                  </button>
-                </li>
-                <li>
-                  <button type="button" className="dropdown-item rounded-1">
-                    Last Year
-                  </button>
-                </li>
-              </ul>
+            <div className="d-flex align-items-center gap-2">
+              
+              <div className="dropdown">
+                <button type="button" className="dropdown-toggle btn btn-sm btn-white d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                  Sort By : Last 7 Days
+                </button>
+                <ul className="dropdown-menu dropdown-menu-end p-3">
+                  <li>
+                    <button type="button" className="dropdown-item rounded-1">
+                      Recent
+                    </button>
+                  </li>
+                  <li>
+                    <button type="button" className="dropdown-item rounded-1">
+                      Last Modified
+                    </button>
+                  </li>
+                  <li>
+                    <button type="button" className="dropdown-item rounded-1">
+                      Last 7 Days
+                    </button>
+                  </li>
+                  <li>
+                    <button type="button" className="dropdown-item rounded-1">
+                      Last 30 Days
+                    </button>
+                  </li>
+                  <li>
+                    <button type="button" className="dropdown-item rounded-1">
+                      Last Month
+                    </button>
+                  </li>
+                  <li>
+                    <button type="button" className="dropdown-item rounded-1">
+                      Last Year
+                    </button>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
@@ -713,8 +718,40 @@ const Leads = () => {
                     </div>
                     <div className="d-flex align-items-center">
                       <div className="action-icon d-inline-flex">
-                        <button type="button" className="btn btn-sm" onClick={handleAddLeadClick}>
-                          <i className="ti ti-circle-plus"></i>
+                        <button 
+                          type="button" 
+                          className="btn btn-sm btn-link p-0" 
+                          onClick={handleAddLeadClick}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.color = '#0d6efd';
+                            e.currentTarget.style.transform = 'scale(1.1)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.color = '#6c757d';
+                            e.currentTarget.style.transform = 'scale(1)';
+                          }}
+                          style={{ 
+                            width: 'auto', 
+                            height: 'auto', 
+                            padding: '2px 4px',
+                            minWidth: 'auto',
+                            border: 'none',
+                            background: 'transparent',
+                            cursor: 'pointer',
+                            color: '#6c757d',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s ease'
+                          }}
+                          title="Add Lead"
+                        >
+                          <span style={{ 
+                            fontSize: '18px', 
+                            lineHeight: '1',
+                            letterSpacing: '2px',
+                            fontWeight: 'bold'
+                          }}>⋯</span>
                         </button>
                       </div>
                     </div>
@@ -806,13 +843,29 @@ const Leads = () => {
 
       {/* Add New Lead Modal */}
       {showAddLeadModal && (
-        <div className="modal fade show" style={{display: 'block'}} tabIndex="-1" aria-labelledby="add_leads" aria-hidden="false" onClick={(e) => {
-          if (e.target === e.currentTarget && !showAddCompanyModal) {
-            setShowAddLeadModal(false);
-          }
-        }}>
-        <div className="modal-dialog modal-lg">
-          <div className="modal-content" style={{maxWidth: '800px'}}>
+        <div 
+          className="modal fade show" 
+          style={{
+            display: 'block', 
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: 1055,
+            overflow: 'auto'
+          }} 
+          tabIndex="-1" 
+          aria-labelledby="add_leads" 
+          aria-hidden="false" 
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !showAddCompanyModal) {
+              setShowAddLeadModal(false);
+            }
+          }}
+        >
+        <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+          <div className="modal-content" style={{maxWidth: '900px', margin: '1.75rem auto'}}>
             <div className="modal-header">
               <h4 className="modal-title">{modalType === 'add' ? 'Add New Lead' : 'Edit Lead'}</h4>
               <button type="button" className="btn-close custom-btn-close" onClick={(e) => {
@@ -824,32 +877,78 @@ const Leads = () => {
                 <i className="ti ti-x"></i>
               </button>
             </div>
-            <form onSubmit={handleAddLead}>
+            <form onSubmit={handleAddLead} id="add_leads">
               <div className="modal-body pb-0" style={{padding: '1.5rem'}}>
                 <style>
                   {`
                     #add_leads .form-label {
                       font-weight: 500;
                       margin-bottom: 0.5rem;
-                      min-width: auto;
-                      max-width: 120px;
+                      min-width: 120px;
                       white-space: nowrap;
+                      display: inline-block;
                     }
                     #add_leads .col-form-label {
                       font-weight: 500;
                       margin-bottom: 0.5rem;
-                      min-width: auto;
-                      max-width: 120px;
+                      min-width: 120px;
                       white-space: nowrap;
+                      display: inline-block;
                     }
                     #add_leads .form-control {
                       font-size: 0.875rem;
                     }
                     #add_leads .select {
                       font-size: 0.875rem;
+                      width: 100%;
+                      padding: 0.375rem 0.75rem;
+                      padding-right: 2rem;
+                      border: 1px solid #ced4da;
+                      border-radius: 0.25rem;
+                      background-color: #fff;
+                      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+                      background-repeat: no-repeat;
+                      background-position: right 0.75rem center;
+                      background-size: 16px 12px;
+                      color: #212529;
+                      line-height: 1.5;
+                      appearance: none;
+                      -webkit-appearance: none;
+                      -moz-appearance: none;
+                    }
+                    #add_leads .select:focus {
+                      outline: none;
+                      border-color: #86b7fe;
+                      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+                    }
+                    #add_leads .select:hover {
+                      border-color: #adb5bd;
                     }
                     #add_leads .mb-3 {
                       margin-bottom: 1rem !important;
+                    }
+                    #add_leads .form-row-field {
+                      display: flex;
+                      align-items: center;
+                      gap: 0.75rem;
+                    }
+                    #add_leads .form-row-field label {
+                      flex-shrink: 0;
+                      margin-bottom: 0;
+                    }
+                    #add_leads .form-row-field .form-control,
+                    #add_leads .form-row-field .select {
+                      flex: 1;
+                      min-width: 0;
+                    }
+                    #add_leads .form-check {
+                      display: flex;
+                      align-items: center;
+                      margin-right: 1rem;
+                    }
+                    #add_leads .form-check-input {
+                      margin-top: 0;
+                      margin-right: 0.5rem;
                     }
                   `}
                 </style>
@@ -871,15 +970,32 @@ const Leads = () => {
                   </div>
                   <div className="col-md-12">
                     <div className="mb-3">
-                      <div className="d-flex align-items-center ">
-                        <div className="form-check me-3">
-                          <input className="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1" />
+                      <div className="d-flex align-items-center gap-4">
+                        <div className="form-check">
+                          <input 
+                            className="form-check-input" 
+                            type="radio" 
+                            name="leadType" 
+                            id="flexRadioDefault1" 
+                            value="person"
+                            checked={formData.leadType === 'person'}
+                            onChange={handleFormChange}
+                          />
                           <label className="form-check-label" htmlFor="flexRadioDefault1">
                             Person
                           </label>
                         </div>
-                         <div className="form-check">
-                          <input className="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" defaultChecked />
+                        <div className="form-check">
+                          <input 
+                            className="form-check-input" 
+                            type="radio" 
+                            name="leadType" 
+                            id="flexRadioDefault2" 
+                            value="organization"
+                            checked={formData.leadType === 'organization' || !formData.leadType}
+                            onChange={handleFormChange}
+                            defaultChecked
+                          />
                           <label className="form-check-label" htmlFor="flexRadioDefault2">
                             Organization	
                           </label>
@@ -913,28 +1029,29 @@ const Leads = () => {
                     </div>									
                   </div>
                   <div className="col-md-6">
-                    <div className="mb-3 d-flex align-items-center">
-                      <label className="form-label me-3" style={{minWidth: '60px', whiteSpace: 'nowrap'}}>
+                    <div className="mb-3 form-row-field">
+                      <label className="form-label">
                         Value<span className="text-danger">*</span>
                       </label>
                       <input 
                         type="text" 
-                        className="form-control flex-grow-1" 
+                        className="form-control" 
                         style={{height: '40px'}}
                         name="value"
                         value={formData.value}
                         onChange={handleFormChange}
+                        placeholder="Enter value"
                         required
                       />
                     </div>									
                   </div>
                   <div className="col-md-6">
-                    <div className="mb-3 d-flex align-items-center">
-                      <label className="form-label me-3" style={{minWidth: '80px', whiteSpace: 'nowrap'}}>
+                    <div className="mb-3 form-row-field">
+                      <label className="form-label">
                         Currency<span className="text-danger">*</span>
                       </label>
                       <select 
-                        className="select flex-grow-1" 
+                        className="select" 
                         style={{height: '40px'}}
                         name="currency"
                         value={formData.currency}
@@ -944,73 +1061,68 @@ const Leads = () => {
                         <option value="">Select</option>
                         <option value="USD">USD</option>
                         <option value="Euro">Euro</option>
+                        <option value="INR">INR</option>
                       </select>
                     </div>									
                   </div>
-                  <div className="col-md-12 ">
-                    <div className="lead-phno-col">
-                      <div className="row">
-                        <div className="col-lg-8">
-                          <div className="input-block mb-3">
-                            <label className="form-label">Phone Number<span className="text-danger">*</span></label>
-                            <input 
-                              className="form-control" 
-                              type="text" 
-                              style={{height: '40px'}}
-                              name="phone"
-                              value={formData.phone}
-                              onChange={handleFormChange}
-                              required
-                            />
-                          </div>
-                        </div>	
-                        <div className="col-lg-4 d-flex align-items-end">
-                          <div className="input-block w-100 mb-3 d-flex align-items-center">
-                            <div className="w-100">
-                              <select className="select w-100">
-                                <option defaultValue>Work</option>
-                                <option>Home</option>
-                              </select>
-                            </div>
-                            <a href="#" className="add-modal-row text-primary add-lead-phno ms-2"><i className="ti ti-circle-plus"></i></a>
-                          </div>
-                        </div>
+                  <div className="col-md-12">
+                    <div className="lead-phno-col mb-3">
+                      <label className="form-label mb-2 d-block">Phone Number<span className="text-danger">*</span></label>
+                      <div className="d-flex align-items-center gap-2">
+                        <input 
+                          className="form-control flex-grow-1" 
+                          type="text" 
+                          style={{height: '40px'}}
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleFormChange}
+                          required
+                        />
+                        <select className="select" style={{height: '40px', width: '120px', flexShrink: 0}}>
+                          <option defaultValue>Work</option>
+                          <option>Home</option>
+                        </select>
+                        <button 
+                          type="button" 
+                          className="btn btn-link text-primary p-0" 
+                          style={{fontSize: '18px', width: '32px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0}}
+                          title="Add another phone number"
+                        >
+                          <i className="ti ti-circle-plus"></i>
+                        </button>
                       </div>
                     </div>
                   </div>
                   <div className="col-md-12">
-                    <div className="lead-email-col">
-                      <div className="row">
-                        <div className="col-lg-8">
-                          <div className="input-block mb-3">
-                            <label className="form-label">Email<span className="text-danger">*</span></label>
-                            <input 
-                              className="form-control" 
-                              type="email" 
-                              style={{height: '40px'}}
-                              name="email"
-                              value={formData.email}
-                              onChange={handleFormChange}
-                              required
-                            />
-                          </div>
-                        </div>	
-                        <div className="col-lg-4 d-flex align-items-end">
-                          <div className="input-block w-100 mb-3 d-flex align-items-center">
-                            <div className="w-100">
-                              <select className="select w-100">
-                                <option defaultValue>Work</option>
-                                <option>Home</option>
-                              </select>
-                            </div>
-                            <a href="#" className="add-email-row text-primary add-lead-phno ms-2"><i className="ti ti-circle-plus"></i></a>
-                          </div>
-                        </div>
+                    <div className="lead-email-col mb-3">
+                      <label className="form-label mb-2 d-block">Email<span className="text-danger">*</span></label>
+                      <div className="d-flex align-items-center gap-2">
+                        <input 
+                          className="form-control flex-grow-1" 
+                          type="email" 
+                          style={{height: '40px'}}
+                          name="email"
+                          value={formData.email}
+                          onChange={handleFormChange}
+                          required
+                        />
+                        <select className="select" style={{height: '40px', width: '120px', flexShrink: 0}}>
+                          <option defaultValue>Work</option>
+                          <option>Home</option>
+                        </select>
+                        <button 
+                          type="button" 
+                          className="btn btn-link text-primary p-0" 
+                          style={{fontSize: '18px', width: '32px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0}}
+                          title="Add another email"
+                        >
+                          <i className="ti ti-circle-plus"></i>
+                        </button>
                       </div>
                     </div>
                   </div>
                   <div className="col-md-6">
-                    <div className="mb-3">
+                    <div className="mb-3 form-row-field">
                       <label className="form-label">Source<span className="text-danger">*</span></label>
                       <select 
                         className="select" 
@@ -1028,7 +1140,7 @@ const Leads = () => {
                     </div>									
                   </div>
                   <div className="col-md-6">
-                    <div className="mb-3">
+                    <div className="mb-3 form-row-field">
                       <label className="form-label">Industry<span className="text-danger">*</span></label>
                       <select 
                         className="select" 
@@ -1046,7 +1158,7 @@ const Leads = () => {
                     </div>									
                   </div>
                   <div className="col-md-6">
-                    <div className="mb-3">
+                    <div className="mb-3 form-row-field">
                       <label className="form-label">Owner<span className="text-danger">*</span></label>
                       <select 
                         className="select" 
@@ -1064,24 +1176,27 @@ const Leads = () => {
                     </div>									
                   </div>
                   <div className="col-md-6">
-                    <div className="mb-3">
+                    <div className="mb-3 form-row-field">
                       <label className="form-label">Tags<span className="text-danger">*</span></label>
-                      <div className="bootstrap-tagsinput">
-                        <span className="tag label label-info">Collab<span data-role="remove"></span></span> 
-                        <input type="text" placeholder="Add new" />
+                      <div className="flex-grow-1">
+                        <div className="bootstrap-tagsinput mb-2" style={{display: 'none'}}>
+                          <span className="tag label label-info">Collab<span data-role="remove"></span></span> 
+                          <input type="text" placeholder="Add new" />
+                        </div>
+                        <input 
+                          className="form-control" 
+                          placeholder="Add tags (comma separated)" 
+                          type="text" 
+                          style={{height: '40px'}}
+                          name="tags"
+                          value={formData.tags}
+                          onChange={handleFormChange}
+                        />
                       </div>
-                      <input 
-                        className="form-control" 
-                        placeholder="Add tags (comma separated)" 
-                        type="text" 
-                        name="tags"
-                        value={formData.tags}
-                        onChange={handleFormChange}
-                      />
                     </div>									
                   </div>
                   <div className="col-md-12">
-                    <div className="mb-3 ">
+                    <div className="mb-3">
                       <label className="form-label">Description<span className="text-danger">*</span></label>
                       <div className="summernote" style={{display: 'none'}}></div>
                       <textarea 
@@ -1095,10 +1210,10 @@ const Leads = () => {
                       ></textarea>
                     </div>
                   </div>
-                  <div className="col-md-6 d-flex align-items-center">
+                  <div className="col-md-6">
                     <div className="mb-3">
-                      <label className="form-label">Visibility</label>
-                      <div className="d-flex align-items-center">
+                      <label className="form-label mb-2">Visibility</label>
+                      <div className="d-flex align-items-center flex-wrap">
                         <div className="form-check me-3">
                           <input 
                             className="form-check-input" 
@@ -1113,7 +1228,7 @@ const Leads = () => {
                             Public
                           </label>
                         </div>
-                         <div className="form-check me-3">
+                        <div className="form-check me-3">
                           <input 
                             className="form-check-input" 
                             type="radio" 
@@ -1127,7 +1242,7 @@ const Leads = () => {
                             Private	
                           </label>
                         </div>
-                         <div className="form-check">
+                        <div className="form-check">
                           <input 
                             className="form-check-input" 
                             type="radio" 
@@ -1145,10 +1260,11 @@ const Leads = () => {
                     </div>		
                   </div>
                   <div className="col-md-6">
-                    <div className="mb-3 ">
-                      <label className="form-label">Status</label>
+                    <div className="mb-3 form-row-field">
+                      <label className="form-label">Status<span className="text-danger">*</span></label>
                       <select 
                         className="select"
+                        style={{height: '40px'}}
                         name="status"
                         value={formData.status}
                         onChange={handleFormChange}

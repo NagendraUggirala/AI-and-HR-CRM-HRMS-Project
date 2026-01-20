@@ -14,6 +14,7 @@ const Contacts = () => {
   const [contactToDelete, setContactToDelete] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [selectedContacts, setSelectedContacts] = useState(new Set());
 
   // Load contacts from API
   useEffect(() => {
@@ -128,6 +129,31 @@ const Contacts = () => {
     }));
   };
 
+  // Checkbox handlers for table selection
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      const allContactIds = new Set(contacts.map(c => c.id));
+      setSelectedContacts(allContactIds);
+    } else {
+      setSelectedContacts(new Set());
+    }
+  };
+
+  const handleSelectContact = (contactId) => {
+    setSelectedContacts(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(contactId)) {
+        newSet.delete(contactId);
+      } else {
+        newSet.add(contactId);
+      }
+      return newSet;
+    });
+  };
+
+  const isAllSelected = contacts.length > 0 && selectedContacts.size === contacts.length;
+  const isIndeterminate = selectedContacts.size > 0 && selectedContacts.size < contacts.length;
+
   const handleAddContact = () => {
     setModalType('add');
     resetForm();
@@ -143,9 +169,16 @@ const Contacts = () => {
     setSelectedContact(contact);
     setSelectedFile(null);
     // Set image preview from existing profile photo
-    const profilePhotoUrl = contact.profile_photo 
-      ? (contact.profile_photo.startsWith('http') ? contact.profile_photo : `${BASE_URL}${contact.profile_photo}`)
-      : '/assets/images/users/user1.png';
+    let profilePhotoUrl = '/assets/images/users/user1.png';
+    if (contact.profile_photo) {
+      if (contact.profile_photo.startsWith('http://') || contact.profile_photo.startsWith('https://')) {
+        profilePhotoUrl = contact.profile_photo;
+      } else if (contact.profile_photo.startsWith('/')) {
+        profilePhotoUrl = `${BASE_URL}${contact.profile_photo}`;
+      } else {
+        profilePhotoUrl = `${BASE_URL}/${contact.profile_photo}`;
+      }
+    }
     setImagePreview(profilePhotoUrl);
     // Map API response (backend field names) to form data format (frontend field names)
     setFormData({
@@ -427,7 +460,15 @@ const Contacts = () => {
       <div className="card w-100">
         <div className="card-body p-3">
           <div className="d-flex align-items-center justify-content-between">
-            <h5>Contact Table</h5>
+            <div className="d-flex align-items-center gap-3">
+              <h5 className="mb-0">Contact Table</h5>
+              {selectedContacts.size > 0 && (
+                <span className="badge bg-primary d-flex align-items-center gap-2">
+                  <i className="ti ti-check"></i>
+                  {selectedContacts.size} {selectedContacts.size === 1 ? 'contact' : 'contacts'} selected
+                </span>
+              )}
+            </div>
             <div className="dropdown">
               <a
                 href="#"
@@ -467,14 +508,93 @@ const Contacts = () => {
       
       {!loading && contacts.length > 0 && (
         <div className="card w-100">
+          <style>{`
+            .contact-table-checkbox {
+              appearance: none;
+              -webkit-appearance: none;
+              -moz-appearance: none;
+              width: 18px;
+              height: 18px;
+              border: 2px solid #d1d5db;
+              border-radius: 4px;
+              background-color: #fff;
+              cursor: pointer;
+              position: relative;
+              transition: all 0.2s ease;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-shrink: 0;
+            }
+            .contact-table-checkbox:checked {
+              background-color: #0d6efd;
+              border-color: #0d6efd;
+            }
+            .contact-table-checkbox:checked::after {
+              content: '✓';
+              color: #fff;
+              font-size: 14px;
+              font-weight: bold;
+              line-height: 1;
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+            }
+            .contact-table-checkbox:indeterminate {
+              background-color: #0d6efd;
+              border-color: #0d6efd;
+            }
+            .contact-table-checkbox:indeterminate::after {
+              content: '−';
+              color: #fff;
+              font-size: 16px;
+              font-weight: bold;
+              line-height: 1;
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+            }
+            .contact-table-checkbox:hover {
+              border-color: #0d6efd;
+              box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1);
+            }
+            .contact-table-checkbox:focus {
+              outline: none;
+              border-color: #0d6efd;
+              box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+            }
+            .contact-avatar-container {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-shrink: 0;
+            }
+            .contact-avatar-container img {
+              max-width: 100%;
+              max-height: 100%;
+              object-fit: cover;
+              object-position: center;
+            }
+          `}</style>
           <div className="card-body p-0">
             <div className="table-responsive">
               <table className="table table-hover">
                 <thead>
                   <tr>
-                    <th style={{ width: '50px' }}>
-                      <div className="form-check">
-                        <input className="form-check-input" type="checkbox" />
+                    <th style={{ width: '50px', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>
+                      <div className="d-flex justify-content-center align-items-center" style={{ width: '100%', height: '100%' }}>
+                        <input 
+                          className="contact-table-checkbox" 
+                          type="checkbox" 
+                          checked={isAllSelected}
+                          ref={(input) => {
+                            if (input) input.indeterminate = isIndeterminate;
+                          }}
+                          onChange={handleSelectAll}
+                          title={isAllSelected ? 'Unselect all' : 'Select all'}
+                        />
                       </div>
                     </th>
                     <th>Contact</th>
@@ -491,25 +611,57 @@ const Contacts = () => {
                 <tbody>
                   {contacts.map((c) => (
                     <tr key={c.id}>
-                      <td>
-                        <div className="form-check">
-                          <input className="form-check-input" type="checkbox" />
+                      <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>
+                        <div className="d-flex justify-content-center align-items-center" style={{ width: '100%', height: '100%' }}>
+                          <input 
+                            className="contact-table-checkbox" 
+                            type="checkbox" 
+                            checked={selectedContacts.has(c.id)}
+                            onChange={() => handleSelectContact(c.id)}
+                            title={selectedContacts.has(c.id) ? 'Unselect contact' : 'Select contact'}
+                          />
                         </div>
                       </td>
                       <td>
                         <div className="d-flex align-items-center">
-                          <div className="avatar avatar-sm avatar-rounded me-2">
+                          <div 
+                            className="avatar avatar-sm avatar-rounded me-2 flex-shrink-0" 
+                            style={{ 
+                              width: '40px', 
+                              height: '40px', 
+                              overflow: 'hidden',
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              backgroundColor: '#f0f0f0'
+                            }}
+                          >
                             <img 
-                              src={
-                                c.profile_photo 
-                                  ? (c.profile_photo.startsWith('http') ? c.profile_photo : `${BASE_URL}${c.profile_photo}`)
-                                  : '/assets/images/users/user1.png'
-                              } 
-                              alt="user" 
-                              className="img-fluid" 
-                              style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '50%' }}
+                              src={(() => {
+                                if (!c.profile_photo) return '/assets/images/users/user1.png';
+                                if (c.profile_photo.startsWith('http://') || c.profile_photo.startsWith('https://')) {
+                                  return c.profile_photo;
+                                }
+                                if (c.profile_photo.startsWith('/')) {
+                                  return `${BASE_URL}${c.profile_photo}`;
+                                }
+                                return `${BASE_URL}/${c.profile_photo}`;
+                              })()}
+                              alt={`${c.name || 'Contact'}`}
+                              className="img-fluid"
+                              style={{ 
+                                width: '100%', 
+                                height: '100%', 
+                                objectFit: 'cover',
+                                objectPosition: 'center',
+                                display: 'block'
+                              }}
                               onError={(e) => {
-                                e.target.src = '/assets/images/users/user1.png';
+                                if (e.target.src !== '/assets/images/users/user1.png') {
+                                  e.target.onerror = null;
+                                  e.target.src = '/assets/images/users/user1.png';
+                                }
                               }}
                             />
                           </div>
@@ -564,9 +716,11 @@ const Contacts = () => {
                       </td>
                       <td>
                         {c.job_title ? (
-                          <span className="badge bg-pink-transparent fs-10 fw-medium">
-                            {c.job_title}
-                          </span>
+                          <div className="d-flex align-items-center">
+                          <i className="ti ti-building text-gray-5 me-2"></i>
+                          <span>{c.job_title}</span>
+                        </div>
+                          
                         ) : (
                           <span className="text-muted">N/A</span>
                         )}
@@ -693,18 +847,41 @@ const Contacts = () => {
                    
                     <div className="col-md-12">
                             <div className="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
-                              <div className="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames" style={{ position: 'relative', overflow: 'hidden' }}>
+                              <div 
+                                className="d-flex align-items-center justify-content-center border border-dashed me-2 flex-shrink-0 text-dark frames" 
+                                style={{ 
+                                  position: 'relative', 
+                                  overflow: 'hidden',
+                                  width: '120px',
+                                  height: '120px',
+                                  borderRadius: '50%',
+                                  backgroundColor: '#f8f9fa',
+                                  minWidth: '120px',
+                                  minHeight: '120px'
+                                }}
+                              >
                                 {imagePreview ? (
                                   <img 
                                     src={imagePreview} 
-                                    alt="Profile preview" 
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    alt="Profile preview"
+                                    className="img-fluid"
+                                    style={{ 
+                                      width: '100%', 
+                                      height: '100%', 
+                                      objectFit: 'cover',
+                                      objectPosition: 'center',
+                                      display: 'block',
+                                      borderRadius: '50%'
+                                    }}
                                     onError={(e) => {
-                                      e.target.src = '/assets/images/users/user1.png';
+                                      if (e.target.src !== '/assets/images/users/user1.png') {
+                                        e.target.onerror = null;
+                                        e.target.src = '/assets/images/users/user1.png';
+                                      }
                                     }}
                                   />
                                 ) : (
-                                  <i className="ti ti-photo text-gray-2 fs-16"></i>
+                                  <i className="ti ti-photo text-gray-2 fs-16" style={{ fontSize: '48px' }}></i>
                                 )}
                               </div>
                               <div className="profile-upload">

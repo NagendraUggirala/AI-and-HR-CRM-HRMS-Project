@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
 const EmployeeSelfServicePortal = () => {
   // ==================== STATE MANAGEMENT ====================
@@ -9,6 +10,11 @@ const EmployeeSelfServicePortal = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [locationFilter, setLocationFilter] = useState('All Locations');
+  const [workflowFilter, setWorkflowFilter] = useState('All Workflows');
+  const [statusFilter, setStatusFilter] = useState('All Status');
   
   // ==================== DEFAULT REQUEST HISTORY DATA ====================
   const [requestHistory, setRequestHistory] = useState([
@@ -17,6 +23,8 @@ const EmployeeSelfServicePortal = () => {
       requestId: 'REQ-1001',
       type: 'Bank Account Change Request',
       category: 'personal',
+      location: 'Hyderabad',
+      workflow: 'Open',
       submittedDate: '2024-03-20 10:30 AM',
       status: 'Approved',
       priority: 'high',
@@ -30,6 +38,8 @@ const EmployeeSelfServicePortal = () => {
       requestId: 'REQ-1002',
       type: 'Work-from-Home Request',
       category: 'work',
+      location: 'Bangalore',
+      workflow: 'Pending',
       submittedDate: '2024-03-18 02:15 PM',
       status: 'In Progress',
       priority: 'medium',
@@ -43,6 +53,8 @@ const EmployeeSelfServicePortal = () => {
       requestId: 'REQ-1003',
       type: 'Reimbursement Claim',
       category: 'financial',
+      location: 'Chennai',
+      workflow: 'Completed',
       submittedDate: '2024-03-15 11:00 AM',
       status: 'Completed',
       priority: 'medium',
@@ -56,6 +68,8 @@ const EmployeeSelfServicePortal = () => {
       requestId: 'REQ-1004',
       type: 'ID Card Reissue',
       category: 'administrative',
+      location: 'Delhi',
+      workflow: 'Processing',
       submittedDate: '2024-03-10 09:45 AM',
       status: 'Rejected',
       priority: 'medium',
@@ -69,6 +83,8 @@ const EmployeeSelfServicePortal = () => {
       requestId: 'REQ-1005',
       type: 'VPN Access Request',
       category: 'it',
+      location: 'Mumbai',
+      workflow: 'Open',
       submittedDate: '2024-03-08 04:30 PM',
       status: 'Submitted',
       priority: 'medium',
@@ -82,6 +98,8 @@ const EmployeeSelfServicePortal = () => {
       requestId: 'REQ-1006',
       type: 'Business Travel Request',
       category: 'travel',
+      location: 'Hyderabad',
+      workflow: 'Completed',
       submittedDate: '2024-03-05 03:20 PM',
       status: 'Approved',
       priority: 'high',
@@ -95,6 +113,8 @@ const EmployeeSelfServicePortal = () => {
       requestId: 'REQ-1007',
       type: 'General Feedback',
       category: 'feedback',
+      location: 'Bangalore',
+      workflow: 'Completed',
       submittedDate: '2024-03-01 01:10 PM',
       status: 'Completed',
       priority: 'low',
@@ -1098,7 +1118,35 @@ const EmployeeSelfServicePortal = () => {
     
     const matchesStatus = filterStatus === 'all' || req.status === filterStatus;
     
-    return matchesSearch && matchesStatus;
+    // Add date range filtering
+    let matchesDate = true;
+    if (fromDate || toDate) {
+      const reqDateStr = req.submittedDate.split(' ')[0]; // Extract date part only (YYYY-MM-DD)
+      const reqDate = new Date(reqDateStr);
+      
+      if (fromDate && toDate) {
+        const from = new Date(fromDate);
+        const to = new Date(toDate);
+        matchesDate = reqDate >= from && reqDate <= to;
+      } else if (fromDate) {
+        const from = new Date(fromDate);
+        matchesDate = reqDate >= from;
+      } else if (toDate) {
+        const to = new Date(toDate);
+        matchesDate = reqDate <= to;
+      }
+    }
+
+    // Add location filtering
+    const matchesLocation = locationFilter === 'All Locations' || req.location === locationFilter;
+    
+    // Add workflow filtering
+    const matchesWorkflow = workflowFilter === 'All Workflows' || req.workflow === workflowFilter;
+
+    // Add status filter (second status filter)
+    const matchesStatus2 = statusFilter === 'All Status' || req.status === statusFilter;
+    
+    return matchesSearch && matchesStatus && matchesDate && matchesLocation && matchesWorkflow && matchesStatus2;
   });
 
   const getStatusBadge = (status) => {
@@ -1296,6 +1344,8 @@ const EmployeeSelfServicePortal = () => {
       requestId: `REQ-${1000 + requestHistory.length + 1}`,
       type: selectedRequest.name,
       category: selectedRequest.category,
+      location: 'Hyderabad',  // Default location
+      workflow: 'Open',       // Default workflow
       submittedDate: new Date().toLocaleDateString('en-US', { 
         year: 'numeric', 
         month: 'short', 
@@ -1736,8 +1786,8 @@ const EmployeeSelfServicePortal = () => {
                   <h6 className="card-title text-muted mb-1">Total Requests</h6>
                   <h4 className="fw-bold mb-0">{stats.total}</h4>
                 </div>
-                <div className="p-2"> {/* Removed bg-primary and rounded-circle classes */}
-                  <i className="bi bi-list-task text-primary fs-4"></i> {/* Changed to text-primary */}
+                <div className="p-2">
+                  <i className="bi bi-list-task text-primary fs-4"></i>
                 </div>
               </div>
             </div>
@@ -1752,8 +1802,8 @@ const EmployeeSelfServicePortal = () => {
                   <h6 className="card-title text-muted mb-1">In Progress</h6>
                   <h4 className="fw-bold mb-0">{stats.inProgress}</h4>
                 </div>
-                <div className="p-2"> {/* Removed bg-warning and rounded-circle classes */}
-                  <i className="bi bi-clock-history text-warning fs-4"></i> {/* Changed to text-warning */}
+                <div className="p-2">
+                  <i className="bi bi-clock-history text-warning fs-4"></i>
                 </div>
               </div>
             </div>
@@ -1768,8 +1818,8 @@ const EmployeeSelfServicePortal = () => {
                   <h6 className="card-title text-muted mb-1">Approved</h6>
                   <h4 className="fw-bold mb-0">{stats.approved}</h4>
                 </div>
-                <div className="p-2"> {/* Removed bg-success and rounded-circle classes */}
-                  <i className="bi bi-check-circle text-success fs-4"></i> {/* Changed to text-success */}
+                <div className="p-2">
+                  <i className="bi bi-check-circle text-success fs-4"></i>
                 </div>
               </div>
             </div>
@@ -1784,8 +1834,8 @@ const EmployeeSelfServicePortal = () => {
                   <h6 className="card-title text-muted mb-1">Completed</h6>
                   <h4 className="fw-bold mb-0">{stats.completed}</h4>
                 </div>
-                <div className="p-2"> {/* Removed bg-secondary and rounded-circle classes */}
-                  <i className="bi bi-check2-all text-secondary fs-4"></i> {/* Changed to text-secondary */}
+                <div className="p-2">
+                  <i className="bi bi-check2-all text-secondary fs-4"></i>
                 </div>
               </div>
             </div>
@@ -1897,19 +1947,101 @@ const EmployeeSelfServicePortal = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <select 
-                  className="form-select form-select-sm"
-                  style={{ width: 'auto' }}
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                >
-                  <option value="all">All Status</option>
-                  <option value="Submitted">Submitted</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Approved">Approved</option>
-                  <option value="Rejected">Rejected</option>
-                  <option value="Completed">Completed</option>
-                </select>
+              </div>
+            </div>
+
+            {/* Filter Row */}
+            <div className="card-body border-bottom">
+              <div className="row mb-3">
+                {/* Location */}
+                <div className="col-12 col-md-6 col-lg-2">
+                  <label className="form-label fw-semibold">Location</label>
+                  <select 
+                    className="form-select"
+                    value={locationFilter}
+                    onChange={(e) => setLocationFilter(e.target.value)}
+                  >
+                    <option>All Locations</option>
+                    <option>Hyderabad</option>
+                    <option>Bangalore</option>
+                    <option>Chennai</option>
+                    <option>Delhi</option>
+                    <option>Mumbai</option>
+                  </select>
+                </div>
+
+                {/* Workflows */}
+                <div className="col-12 col-md-6 col-lg-2">
+                  <label className="form-label fw-semibold">Workflows</label>
+                  <select 
+                    className="form-select"
+                    value={workflowFilter}
+                    onChange={(e) => setWorkflowFilter(e.target.value)}
+                  >
+                    <option>All Workflows</option>
+                    <option>Open</option>
+                    <option>Completed</option>
+                    <option>Pending</option>
+                    <option>Processing</option>
+                  </select>
+                </div>
+
+                {/* Status */}
+                <div className="col-12 col-md-6 col-lg-2">
+                  <label className="form-label fw-semibold">Status</label>
+                  <select 
+                    className="form-select"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <option>All Status</option>
+                    <option>Open</option>
+                    <option>Completed</option>
+                    <option>Pending</option>
+                    <option>Processing</option>
+                  </select>
+                </div>
+
+                {/* Additional Status Filter */}
+                <div className="col-12 col-md-6 col-lg-2">
+                  <label className="form-label fw-semibold">Filter Status</label>
+                  <select 
+                    className="form-select"
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                  >
+                    <option value="all">All Status</option>
+                    <option value="Submitted">Submitted</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </div>
+
+                {/* Date Range */}
+                <div className="col-12 col-md-6 col-lg-4">
+                  <label className="form-label fw-semibold d-flex align-items-center gap-2">
+                    Date Range
+                    <i className="bi bi-info-circle text-primary" 
+                       title="Select date range to filter requests"
+                       style={{cursor: 'pointer'}}></i>
+                  </label>
+                  <div className="d-flex gap-2">
+                    <input
+                      type="date"
+                      className="form-control form-control-sm"
+                      value={fromDate}
+                      onChange={(e) => setFromDate(e.target.value)}
+                    />
+                    <input
+                      type="date"
+                      className="form-control form-control-sm"
+                      value={toDate}
+                      onChange={(e) => setToDate(e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -1921,8 +2053,11 @@ const EmployeeSelfServicePortal = () => {
                       <th>Request ID</th>
                       <th className="d-none d-md-table-cell">Type</th>
                       <th>Category</th>
-                      <th>Submitted Date</th>
+                      <th>Location</th>
+                      <th>Workflow</th>
                       <th>Status</th>
+                      <th>Submitted Date</th>
+                      <th>Priority</th>
                       <th>SLA</th>
                       <th>Description</th>
                     </tr>
@@ -1944,9 +2079,20 @@ const EmployeeSelfServicePortal = () => {
                           </div>
                         </td>
                         <td>
+                          <div className="small">{request.location}</div>
+                        </td>
+                        <td>
+                          <div className="small">{request.workflow}</div>
+                        </td>
+                        <td>
+                          {getStatusBadge(request.status)}
+                        </td>
+                        <td>
                           <div className="small">{request.submittedDate}</div>
                         </td>
-                        <td>{getStatusBadge(request.status)}</td>
+                        <td>
+                          {getPriorityBadge(request.priority)}
+                        </td>
                         <td>
                           <small className="text-muted">{request.sla}</small>
                         </td>

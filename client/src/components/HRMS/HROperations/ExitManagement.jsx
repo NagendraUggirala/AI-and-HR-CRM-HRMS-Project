@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Search, 
-  Download, 
-  Eye, 
+import {
+  Search,
+  Download,
+  Eye,
   MessageSquare,
   Share2,
   CreditCard,
@@ -28,11 +28,54 @@ import {
   Receipt,
   Wallet,
   Percent,
-  Shield,
-  ChevronLeft,
-  ChevronRight
+  Shield
 } from 'lucide-react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+
+const ModalWrapper = ({ title, onClose, children, size = "modal-lg" }) => {
+  return (
+    <div
+      className="modal fade show"
+      style={{
+        position: "fixed",
+        inset: 0,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1055
+      }}
+    >
+      <div className={`modal-dialog ${size}`} style={{ margin: 0, maxWidth: "900px", width: "100%" }}>
+        <div className="modal-content">
+
+          {/* Header */}
+          <div className="modal-header bg-primary text-white">
+            <h5 className="modal-title">{title}</h5>
+            <button
+              type="button"
+              className="btn-close btn-close-white"
+              onClick={onClose}
+            />
+          </div>
+
+          {/* Body */}
+          <div className="modal-body p-4">
+            {children}
+          </div>
+
+          {/* Footer */}
+          <div className="modal-footer">
+            <button className="btn btn-secondary btn-sm" onClick={onClose}>
+              Close
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const ExitManagement = () => {
   const [selectedExits, setSelectedExits] = useState([]);
@@ -60,6 +103,8 @@ const ExitManagement = () => {
   const [knowledgeTransferData, setKnowledgeTransferData] = useState({});
   const [clearanceDetails, setClearanceDetails] = useState({});
   const [showEmployeeExitsReport, setShowEmployeeExitsReport] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [showExportDropdown, setShowExportDropdown] = useState(false);
 
   // Employee Exits Report Filters State
   const [employeeExitsFilters, setEmployeeExitsFilters] = useState({
@@ -293,10 +338,10 @@ const ExitManagement = () => {
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      const currentItems = viewMode === 'exitCases' ? filteredExits : 
-                          viewMode === 'alumni' ? filteredAlumni : 
-                          viewMode === 'settlements' ? filteredSettlements :
-                          filteredEmployeeExits;
+      const currentItems = viewMode === 'exitCases' ? filteredExits :
+        viewMode === 'alumni' ? filteredAlumni :
+          viewMode === 'settlements' ? filteredSettlements :
+            filteredEmployeeExits;
       setSelectedExits(currentItems.map(item => item.id));
     } else {
       setSelectedExits([]);
@@ -304,7 +349,7 @@ const ExitManagement = () => {
   };
 
   const handleSelectExit = (id) => {
-    setSelectedExits(prev => 
+    setSelectedExits(prev =>
       prev.includes(id) ? prev.filter(itemId => itemId !== id) : [...prev, id]
     );
   };
@@ -339,37 +384,37 @@ const ExitManagement = () => {
   // Filter data for different views
   const filteredExits = exitCases.filter(exit => {
     const matchesSearch = exit.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         exit.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         exit.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         exit.role.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      exit.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      exit.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      exit.role.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesDepartment = !filters.department || exit.department.toLowerCase() === filters.department.toLowerCase();
     const matchesStatus = !filters.status || exit.status.toLowerCase() === filters.status.toLowerCase();
     const matchesClearanceType = !filters.clearanceType || exit.exitType.toLowerCase() === filters.clearanceType.toLowerCase();
     const matchesExitReason = !filters.exitReason || exit.exitReason.toLowerCase().includes(filters.exitReason.toLowerCase());
-    
+
     return matchesSearch && matchesDepartment && matchesStatus && matchesClearanceType && matchesExitReason;
   });
 
   const filteredAlumni = alumniNetwork.filter(alumni => {
     const matchesSearch = alumni.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         alumni.alumniId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         alumni.department.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      alumni.alumniId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      alumni.department.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesDepartment = !filters.department || alumni.department.toLowerCase() === filters.department.toLowerCase();
     const matchesStatus = !filters.status || alumni.rehireEligibility.toLowerCase() === filters.status.toLowerCase();
-    
+
     return matchesSearch && matchesDepartment && matchesStatus;
   });
 
   const filteredSettlements = settlements.filter(settlement => {
     const matchesSearch = settlement.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         settlement.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         settlement.department.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      settlement.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      settlement.department.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesDepartment = !filters.department || settlement.department.toLowerCase() === filters.department.toLowerCase();
     const matchesStatus = !filters.status || settlement.status.toLowerCase() === filters.status.toLowerCase();
-    
+
     return matchesSearch && matchesDepartment && matchesStatus;
   });
 
@@ -385,9 +430,9 @@ const ExitManagement = () => {
     const exitDate = emp.exit ? new Date(emp.exit) : null;
 
     const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         emp.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         emp.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         emp.designation.toLowerCase().includes(searchTerm.toLowerCase());
+      emp.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      emp.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      emp.designation.toLowerCase().includes(searchTerm.toLowerCase());
 
     return (
       matchesSearch &&
@@ -398,71 +443,6 @@ const ExitManagement = () => {
       (!toDate || !exitDate || exitDate <= toDate)
     );
   });
-
-  const handleExportEmployeeExitsExcel = () => {
-    if (filteredEmployeeExits.length === 0) {
-      alert("No records to export!");
-      return;
-    }
-
-    const headers = [
-      "Name",
-      "Code",
-      "Location",
-      "Department",
-      "Designation",
-      "Joining",
-      "Exit",
-      "Reason of Exit",
-    ];
-
-    const rows = filteredEmployeeExits.map((emp) => [
-      emp.name,
-      emp.code,
-      emp.location,
-      emp.department,
-      emp.designation,
-      emp.joining,
-      emp.exit,
-      emp.reason,
-    ]);
-
-    const csvContent =
-      [headers, ...rows].map((e) => e.join(",")).join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "Employee_Exits.csv";
-    link.click();
-    URL.revokeObjectURL(link.href);
-
-    alert("Excel (CSV) file downloaded!");
-  };
-
-  const handleExportEmployeeExitsPDF = () => {
-    if (filteredEmployeeExits.length === 0) {
-      alert("No records to export!");
-      return;
-    }
-
-    let content = "Employee Exits Report\n\n";
-    content += "Name | Code | Location | Department | Designation | Joining | Exit | Reason\n";
-    content += filteredEmployeeExits
-      .map(
-        (emp) =>
-          `${emp.name} | ${emp.code} | ${emp.location} | ${emp.department} | ${emp.designation} | ${emp.joining} | ${emp.exit} | ${emp.reason}`
-      )
-      .join("\n");
-
-    const blob = new Blob([content], { type: "application/pdf" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "Employee_Exits.pdf";
-    link.click();
-    URL.revokeObjectURL(link.href);
-
-    alert("PDF file downloaded!");
-  };
 
   // Get current items
   const getCurrentItems = () => {
@@ -483,11 +463,298 @@ const ExitManagement = () => {
     setCurrentPage(1);
   }, [searchTerm, filters, viewMode, employeeExitsFilters]);
 
-  const handleExport = () => {
-    if (viewMode === 'employeeExits') {
-      handleExportEmployeeExitsExcel();
+  // Function to get export data based on view mode
+  const getExportData = () => {
+    let headers = [];
+    let data = [];
+    let title = "";
+
+    switch(viewMode) {
+      case 'exitCases':
+        title = "Exit Management Report - Exit Cases";
+        headers = ["Employee ID", "Employee Name", "Department", "Role", "Resignation Date", "Last Working Day", "Exit Type", "Exit Reason", "Status", "Clearance Progress", "Pending Clearances"];
+        data = filteredExits.map(exit => [
+          exit.employeeId,
+          exit.employeeName,
+          exit.department,
+          exit.role,
+          exit.resignationDate,
+          exit.lastWorkingDay,
+          exit.exitType,
+          exit.exitReason,
+          exit.status,
+          `${exit.clearanceProgress}%`,
+          exit.pendingClearances.join(', ')
+        ]);
+        break;
+
+      case 'alumni':
+        title = "Exit Management Report - Alumni Network";
+        headers = ["Alumni ID", "Employee ID", "Name", "Department", "Last Role", "Exit Date", "Exit Reason", "Rehire Eligibility", "Boomerang Status", "Engagement Level", "Total Referrals", "Successful Hires"];
+        data = filteredAlumni.map(alumni => [
+          alumni.alumniId,
+          alumni.employeeId,
+          alumni.name,
+          alumni.department,
+          alumni.lastRole,
+          alumni.exitDate,
+          alumni.exitReason,
+          alumni.rehireEligibility,
+          alumni.boomerangStatus,
+          alumni.engagementLevel,
+          alumni.totalReferrals,
+          alumni.successfulHires
+        ]);
+        break;
+
+      case 'settlements':
+        title = "Exit Management Report - Settlements";
+        headers = ["Employee ID", "Employee Name", "Department", "Net Amount", "Payment Date", "Status", "Approval Status"];
+        data = filteredSettlements.map(settlement => [
+          settlement.employeeId,
+          settlement.employeeName,
+          settlement.department,
+          settlement.netAmount,
+          settlement.paymentDate,
+          settlement.status,
+          settlement.approvalStatus
+        ]);
+        break;
+
+      case 'employeeExits':
+        title = "Employee Exits Report";
+        headers = ["Name", "Code", "Location", "Department", "Designation", "Joining Date", "Exit Date", "Reason of Exit"];
+        data = filteredEmployeeExits.map(emp => [
+          emp.name,
+          emp.code,
+          emp.location,
+          emp.department,
+          emp.designation,
+          emp.joining,
+          emp.exit,
+          emp.reason
+        ]);
+        break;
+
+      default:
+        return { headers: [], data: [], title: "" };
+    }
+
+    return { headers, data, title };
+  };
+
+  // Function to export as Excel (CSV)
+  const handleExportExcel = () => {
+    if (currentItems.length === 0) {
+      alert("No data to export!");
+      return;
+    }
+
+    const { headers, data, title } = getExportData();
+    
+    // Add title as first row
+    const csvContent = [
+      [title],
+      [],
+      headers,
+      ...data
+    ].map(row => row.join(",")).join("\n");
+    
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    
+    // Set filename based on view mode
+    let filename = '';
+    switch(viewMode) {
+      case 'exitCases':
+        filename = 'Exit_Management_Report_Exit_Cases.csv';
+        break;
+      case 'alumni':
+        filename = 'Exit_Management_Report_Alumni_Network.csv';
+        break;
+      case 'settlements':
+        filename = 'Exit_Management_Report_Settlements.csv';
+        break;
+      case 'employeeExits':
+        filename = 'Employee_Exits_Report.csv';
+        break;
+      default:
+        filename = 'Exit_Management_Report.csv';
+    }
+    
+    link.download = filename;
+    link.click();
+    
+    URL.revokeObjectURL(url);
+    alert(`${filename} downloaded successfully!`);
+  };
+
+  // Function to export as PDF
+  const handleExportPDF = () => {
+    if (currentItems.length === 0) {
+      alert("No data to export!");
+      return;
+    }
+
+    const { headers, data, title } = getExportData();
+    
+    // Create PDF content using simple text format
+    let pdfContent = `%PDF-1.4\n`;
+    pdfContent += `1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n`;
+    pdfContent += `2 0 obj\n<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>\nendobj\n`;
+    pdfContent += `3 0 obj\n<<\n/Type /Page\n/Parent 2 0 R\n/MediaBox [0 0 612 792]\n/Contents 4 0 R\n/Resources <<\n/Font <<\n/F1 5 0 R\n/F2 6 0 R\n>>\n>>\n>>\nendobj\n`;
+    
+    // Create content stream
+    let stream = `BT\n/F2 16 Tf\n72 750 Td\n(${title}) Tj\nET\n`;
+    stream += `BT\n/F1 10 Tf\n72 720 Td\n`;
+    stream += `(Generated on: ${new Date().toLocaleDateString()}) Tj\nET\n`;
+    stream += `BT\n/F1 12 Tf\n72 680 Td\n`;
+    
+    // Add headers
+    stream += `(${headers.join(' | ')}) Tj\n`;
+    stream += `72 660 Td\n`;
+    
+    // Add data rows
+    data.forEach((row, index) => {
+      if (index < 20) { // Limit to 20 rows per page
+        stream += `(${row.join(' | ')}) Tj\n`;
+        stream += `72 ${660 - (index + 1) * 20} Td\n`;
+      }
+    });
+    
+    stream += `ET`;
+    
+    // Calculate length
+    const streamLength = stream.length;
+    
+    pdfContent += `4 0 obj\n<<\n/Length ${streamLength}\n>>\nstream\n${stream}\nendstream\nendobj\n`;
+    pdfContent += `5 0 obj\n<<\n/Type /Font\n/Subtype /Type1\n/BaseFont /Helvetica\n>>\nendobj\n`;
+    pdfContent += `6 0 obj\n<<\n/Type /Font\n/Subtype /Type1\n/BaseFont /Helvetica-Bold\n>>\nendobj\n`;
+    pdfContent += `xref\n0 7\n0000000000 65535 f \n0000000010 00000 n \n0000000079 00000 n \n0000000178 00000 n \n0000000301 00000 n \n0000000456 00000 n \n0000000512 00000 n \ntrailer\n<<\n/Size 7\n/Root 1 0 R\n>>\nstartxref\n720\n%%EOF`;
+    
+    const blob = new Blob([pdfContent], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    
+    // Set filename based on view mode
+    let filename = '';
+    switch(viewMode) {
+      case 'exitCases':
+        filename = 'Exit_Management_Report_Exit_Cases.pdf';
+        break;
+      case 'alumni':
+        filename = 'Exit_Management_Report_Alumni_Network.pdf';
+        break;
+      case 'settlements':
+        filename = 'Exit_Management_Report_Settlements.pdf';
+        break;
+      case 'employeeExits':
+        filename = 'Employee_Exits_Report.pdf';
+        break;
+      default:
+        filename = 'Exit_Management_Report.pdf';
+    }
+    
+    link.download = filename;
+    link.click();
+    
+    URL.revokeObjectURL(url);
+    alert(`${filename} downloaded successfully!`);
+  };
+
+  // Download individual settlement details
+  const handleDownloadSettlement = (settlementId, format = 'excel') => {
+    const settlement = settlements.find(s => s.id === settlementId);
+    if (!settlement) {
+      alert("Settlement not found!");
+      return;
+    }
+
+    // Find the corresponding exit case for more details
+    const exitCase = exitCases.find(e => e.employeeId === settlement.employeeId);
+    
+    // Create settlement details object
+    const settlementDetails = {
+      "Employee ID": settlement.employeeId,
+      "Employee Name": settlement.employeeName,
+      "Department": settlement.department,
+      "Net Amount": settlement.netAmount,
+      "Payment Date": settlement.paymentDate,
+      "Status": settlement.status,
+      "Approval Status": settlement.approvalStatus
+    };
+
+    if (exitCase) {
+      // Add more details from exit case
+      settlementDetails["Resignation Date"] = exitCase.resignationDate;
+      settlementDetails["Last Working Day"] = exitCase.lastWorkingDay;
+      settlementDetails["Exit Type"] = exitCase.exitType;
+      settlementDetails["Exit Reason"] = exitCase.exitReason;
+      settlementDetails["Clearance Progress"] = `${exitCase.clearanceProgress}%`;
+    }
+
+    if (format === 'excel') {
+      // Create CSV content for Excel
+      const headers = Object.keys(settlementDetails);
+      const values = Object.values(settlementDetails);
+      const csvContent = [headers.join(","), values.join(",")].join("\n");
+      
+      // Create and download CSV file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Settlement_${settlement.employeeId}_${settlement.employeeName.replace(/\s+/g, '_')}.csv`;
+      link.click();
+      
+      URL.revokeObjectURL(url);
+      alert(`Settlement details for ${settlement.employeeName} downloaded as Excel!`);
     } else {
-      alert('Export functionality for ' + viewMode);
+      // Create PDF content
+      let pdfContent = `%PDF-1.4\n`;
+      pdfContent += `1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n`;
+      pdfContent += `2 0 obj\n<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>\nendobj\n`;
+      pdfContent += `3 0 obj\n<<\n/Type /Page\n/Parent 2 0 R\n/MediaBox [0 0 612 792]\n/Contents 4 0 R\n/Resources <<\n/Font <<\n/F1 5 0 R\n/F2 6 0 R\n>>\n>>\n>>\nendobj\n`;
+      
+      // Create content stream
+      let stream = `BT\n/F2 16 Tf\n72 750 Td\n(Settlement Details Report) Tj\nET\n`;
+      stream += `BT\n/F1 10 Tf\n72 720 Td\n`;
+      stream += `(Generated on: ${new Date().toLocaleDateString()}) Tj\nET\n`;
+      stream += `BT\n/F1 12 Tf\n72 680 Td\n`;
+      
+      // Add details
+      let yPos = 680;
+      Object.entries(settlementDetails).forEach(([key, value]) => {
+        stream += `(${key}: ${value}) Tj\n`;
+        stream += `72 ${yPos - 20} Td\n`;
+        yPos -= 20;
+      });
+      
+      stream += `ET`;
+      
+      // Calculate length
+      const streamLength = stream.length;
+      
+      pdfContent += `4 0 obj\n<<\n/Length ${streamLength}\n>>\nstream\n${stream}\nendstream\nendobj\n`;
+      pdfContent += `5 0 obj\n<<\n/Type /Font\n/Subtype /Type1\n/BaseFont /Helvetica\n>>\nendobj\n`;
+      pdfContent += `6 0 obj\n<<\n/Type /Font\n/Subtype /Type1\n/BaseFont /Helvetica-Bold\n>>\nendobj\n`;
+      pdfContent += `xref\n0 7\n0000000000 65535 f \n0000000010 00000 n \n0000000079 00000 n \n0000000178 00000 n \n0000000301 00000 n \n0000000456 00000 n \n0000000512 00000 n \ntrailer\n<<\n/Size 7\n/Root 1 0 R\n>>\nstartxref\n720\n%%EOF`;
+      
+      const blob = new Blob([pdfContent], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Settlement_${settlement.employeeId}_${settlement.employeeName.replace(/\s+/g, '_')}.pdf`;
+      link.click();
+      
+      URL.revokeObjectURL(url);
+      alert(`Settlement details for ${settlement.employeeName} downloaded as PDF!`);
     }
   };
 
@@ -553,7 +820,7 @@ const ExitManagement = () => {
       const loanDeduction = exit.department === 'Finance' ? 15000 : 5000;
       const tax = roleBasedSalary * 0.1;
       const netPayable = roleBasedSalary + leaveEncashmentVal + bonus - loanDeduction - tax;
-      
+
       setSettlementDetail({
         basicSalary: roleBasedSalary,
         leaveEncashment: leaveEncashmentVal,
@@ -650,12 +917,12 @@ const ExitManagement = () => {
       <table className="table table-hover align-middle mb-0">
         <thead className="table-light">
           <tr>
-            <th style={{width: 40}} className="text-center d-none d-md-table-cell">
-              <input 
-                type="checkbox" 
+            <th style={{ width: 40 }} className="text-center d-none d-md-table-cell">
+              <input
+                type="checkbox"
                 className="form-check-input"
-                checked={selectedExits.length === currentItemsPage.length && currentItemsPage.length > 0} 
-                onChange={handleSelectAll} 
+                checked={selectedExits.length === currentItemsPage.length && currentItemsPage.length > 0}
+                onChange={handleSelectAll}
               />
             </th>
             <th className="text-start">EMPLOYEE</th>
@@ -671,16 +938,16 @@ const ExitManagement = () => {
           {currentItemsPage.map(exit => (
             <tr key={exit.id}>
               <td className="text-center d-none d-md-table-cell">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   className="form-check-input"
-                  checked={selectedExits.includes(exit.id)} 
-                  onChange={() => handleSelectExit(exit.id)} 
+                  checked={selectedExits.includes(exit.id)}
+                  onChange={() => handleSelectExit(exit.id)}
                 />
               </td>
               <td className="text-start">
                 <div className="d-flex align-items-center">
-                  <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2 me-md-3" style={{width: '36px', height: '36px', fontSize: '12px'}}>
+                  <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2 me-md-3" style={{ width: '36px', height: '36px', fontSize: '12px' }}>
                     {exit.employeeName.split(' ').map(n => n[0]).join('')}
                   </div>
                   <div className="d-flex flex-column">
@@ -705,10 +972,10 @@ const ExitManagement = () => {
               <td className="text-center d-none d-xl-table-cell">
                 <div className="d-flex align-items-center gap-2">
                   <div className="flex-grow-1">
-                    <div className="progress" style={{height: '6px'}}>
-                      <div 
-                        className={`progress-bar ${getProgressColor(exit.clearanceProgress)}`} 
-                        style={{width: `${exit.clearanceProgress}%`}}
+                    <div className="progress" style={{ height: '6px' }}>
+                      <div
+                        className={`progress-bar ${getProgressColor(exit.clearanceProgress)}`}
+                        style={{ width: `${exit.clearanceProgress}%` }}
                       ></div>
                     </div>
                   </div>
@@ -748,33 +1015,33 @@ const ExitManagement = () => {
               </td>
               <td className="text-center">
                 <div className="btn-group btn-group-sm" role="group">
-                  <button 
-                    type="button" 
-                    className="btn btn-icon btn-light p-1" 
+                  <button
+                    type="button"
+                    className="btn btn-icon btn-light p-1"
                     title="View"
                     onClick={() => handleViewExit(exit.id)}
                   >
                     <Eye size={14} />
                   </button>
-                  <button 
-                    type="button" 
-                    className="btn btn-icon btn-light p-1 d-none d-md-inline" 
+                  <button
+                    type="button"
+                    className="btn btn-icon btn-light p-1 d-none d-md-inline"
                     title="Interview"
                     onClick={() => handleOpenExitInterview(exit.id)}
                   >
                     <MessageSquare size={14} />
                   </button>
-                  <button 
-                    type="button" 
-                    className="btn btn-icon btn-light p-1 d-none d-md-inline" 
+                  <button
+                    type="button"
+                    className="btn btn-icon btn-light p-1 d-none d-md-inline"
                     title="Knowledge Transfer"
                     onClick={() => handleOpenKnowledgeTransfer(exit.id)}
                   >
                     <Share2 size={14} />
                   </button>
-                  <button 
-                    type="button" 
-                    className="btn btn-icon btn-light p-1 d-none d-md-inline" 
+                  <button
+                    type="button"
+                    className="btn btn-icon btn-light p-1 d-none d-md-inline"
                     title="Settlement"
                     onClick={() => handleOpenSettlement(exit.id)}
                   >
@@ -794,12 +1061,12 @@ const ExitManagement = () => {
       <table className="table table-hover align-middle mb-0">
         <thead className="table-light">
           <tr>
-            <th style={{width: 40}} className="text-center d-none d-md-table-cell">
-              <input 
-                type="checkbox" 
+            <th style={{ width: 40 }} className="text-center d-none d-md-table-cell">
+              <input
+                type="checkbox"
                 className="form-check-input"
-                checked={selectedExits.length === currentItemsPage.length && currentItemsPage.length > 0} 
-                onChange={handleSelectAll} 
+                checked={selectedExits.length === currentItemsPage.length && currentItemsPage.length > 0}
+                onChange={handleSelectAll}
               />
             </th>
             <th className="text-start">ALUMNI</th>
@@ -815,16 +1082,16 @@ const ExitManagement = () => {
           {currentItemsPage.map(alumni => (
             <tr key={alumni.id}>
               <td className="text-center d-none d-md-table-cell">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   className="form-check-input"
-                  checked={selectedExits.includes(alumni.id)} 
-                  onChange={() => handleSelectExit(alumni.id)} 
+                  checked={selectedExits.includes(alumni.id)}
+                  onChange={() => handleSelectExit(alumni.id)}
                 />
               </td>
               <td className="text-start">
                 <div className="d-flex align-items-center">
-                  <div className="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-2 me-md-3" style={{width: '36px', height: '36px', fontSize: '12px'}}>
+                  <div className="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-2 me-md-3" style={{ width: '36px', height: '36px', fontSize: '12px' }}>
                     {alumni.name.split(' ').map(n => n[0]).join('')}
                   </div>
                   <div className="d-flex flex-column">
@@ -853,27 +1120,27 @@ const ExitManagement = () => {
                 </span>
               </td>
               <td className="text-center d-none d-xl-table-cell">
-                <div className="progress" style={{height: '6px'}}>
-                  <div 
-                    className={`progress-bar ${alumni.engagementLevel === 'High' ? 'bg-success' : alumni.engagementLevel === 'Medium' ? 'bg-warning' : 'bg-danger'}`} 
-                    style={{width: alumni.engagementLevel === 'High' ? '80%' : alumni.engagementLevel === 'Medium' ? '50%' : '30%'}}
+                <div className="progress" style={{ height: '6px' }}>
+                  <div
+                    className={`progress-bar ${alumni.engagementLevel === 'High' ? 'bg-success' : alumni.engagementLevel === 'Medium' ? 'bg-warning' : 'bg-danger'}`}
+                    style={{ width: alumni.engagementLevel === 'High' ? '80%' : alumni.engagementLevel === 'Medium' ? '50%' : '30%' }}
                   ></div>
                 </div>
                 <small className="text-muted d-none d-xxl-block">{alumni.engagementLevel}</small>
               </td>
               <td className="text-center">
                 <div className="btn-group btn-group-sm" role="group">
-                  <button 
-                    type="button" 
-                    className="btn btn-icon btn-light p-1" 
+                  <button
+                    type="button"
+                    className="btn btn-icon btn-light p-1"
                     title="View"
                     onClick={() => { setSelectedExit(alumni); setShowAlumniModal(true); }}
                   >
                     <Eye size={14} />
                   </button>
-                  <button 
-                    type="button" 
-                    className="btn btn-icon btn-light p-1 d-none d-md-inline" 
+                  <button
+                    type="button"
+                    className="btn btn-icon btn-light p-1 d-none d-md-inline"
                     title="Message"
                     onClick={() => { setSelectedExit(alumni); setShowAlumniModal(true); }}
                   >
@@ -893,12 +1160,12 @@ const ExitManagement = () => {
       <table className="table table-hover align-middle mb-0">
         <thead className="table-light">
           <tr>
-            <th style={{width: 40}} className="text-center d-none d-md-table-cell">
-              <input 
-                type="checkbox" 
+            <th style={{ width: 40 }} className="text-center d-none d-md-table-cell">
+              <input
+                type="checkbox"
                 className="form-check-input"
-                checked={selectedExits.length === currentItemsPage.length && currentItemsPage.length > 0} 
-                onChange={handleSelectAll} 
+                checked={selectedExits.length === currentItemsPage.length && currentItemsPage.length > 0}
+                onChange={handleSelectAll}
               />
             </th>
             <th className="text-start">EMPLOYEE</th>
@@ -913,16 +1180,16 @@ const ExitManagement = () => {
           {currentItemsPage.map(settlement => (
             <tr key={settlement.id}>
               <td className="text-center d-none d-md-table-cell">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   className="form-check-input"
-                  checked={selectedExits.includes(settlement.id)} 
-                  onChange={() => handleSelectExit(settlement.id)} 
+                  checked={selectedExits.includes(settlement.id)}
+                  onChange={() => handleSelectExit(settlement.id)}
                 />
               </td>
               <td className="text-start">
                 <div className="d-flex align-items-center">
-                  <div className="bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-2 me-md-3" style={{width: '36px', height: '36px', fontSize: '12px'}}>
+                  <div className="bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-2 me-md-3" style={{ width: '36px', height: '36px', fontSize: '12px' }}>
                     {settlement.employeeName.split(' ').map(n => n[0]).join('')}
                   </div>
                   <div className="d-flex flex-column">
@@ -953,8 +1220,21 @@ const ExitManagement = () => {
                   <button type="button" className="btn btn-icon btn-light p-1" title="View" onClick={() => { setSelectedExit(settlement); handleOpenSettlement(settlement.id); }}>
                     <Eye size={14} />
                   </button>
-                  <button type="button" className="btn btn-icon btn-light p-1 d-none d-md-inline" title="Download">
-                    <Download size={14} />
+                  <button 
+                    type="button" 
+                    className="btn btn-icon btn-light p-1 d-none d-md-inline" 
+                    title="Download Excel"
+                    onClick={() => handleDownloadSettlement(settlement.id, 'excel')}
+                  >
+                    <FileTextIcon size={14} />
+                  </button>
+                  <button 
+                    type="button" 
+                    className="btn btn-icon btn-light p-1 d-none d-md-inline" 
+                    title="Download PDF"
+                    onClick={() => handleDownloadSettlement(settlement.id, 'pdf')}
+                  >
+                    <File size={14} />
                   </button>
                 </div>
               </td>
@@ -1080,11 +1360,10 @@ const ExitManagement = () => {
                       <span className="badge bg-danger-subtle text-danger small">{emp.exit}</span>
                     </td>
                     <td className="text-start">
-                      <span className={`badge ${
-                        emp.reason === 'Resignation' ? 'bg-warning-subtle text-warning' :
+                      <span className={`badge ${emp.reason === 'Resignation' ? 'bg-warning-subtle text-warning' :
                         emp.reason === 'Termination' ? 'bg-danger-subtle text-danger' :
-                        'bg-info-subtle text-info'
-                      } small`}>
+                          'bg-info-subtle text-info'
+                        } small`}>
                         {emp.reason}
                       </span>
                     </td>
@@ -1097,19 +1376,19 @@ const ExitManagement = () => {
 
         {/* Export Buttons */}
         <div className="d-flex gap-2 mt-4">
-          <button 
-            type="button" 
-            className="btn btn-success btn-sm" 
-            onClick={handleExportEmployeeExitsExcel}
+          <button
+            type="button"
+            className="btn btn-success btn-sm"
+            onClick={handleExportExcel}
             disabled={filteredEmployeeExits.length === 0}
           >
             <FileTextIcon size={14} className="me-1" />
             Download (Excel)
           </button>
-          <button 
-            type="button" 
-            className="btn btn-danger btn-sm" 
-            onClick={handleExportEmployeeExitsPDF}
+          <button
+            type="button"
+            className="btn btn-danger btn-sm"
+            onClick={handleExportPDF}
             disabled={filteredEmployeeExits.length === 0}
           >
             <File size={14} className="me-1" />
@@ -1120,6 +1399,34 @@ const ExitManagement = () => {
     </div>
   );
 
+  const styles = {
+  modalOverlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,0.4)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000
+  },
+  modal: {
+    background: "#fff",
+    padding: "20px",
+    borderRadius: "8px",
+    width: "400px"
+  },
+  button: {
+    padding: "8px 14px",
+    borderRadius: "6px",
+    border: "1px solid #d1d5db",
+    cursor: "pointer",
+    background: "#f9fafb"
+  },
+  secondaryButton: {
+    background: "#e5e7eb"
+  }
+};
+
   return (
     <div className="container-fluid px-2 px-sm-3 px-md-4 py-3">
       {/* Page Header */}
@@ -1127,32 +1434,73 @@ const ExitManagement = () => {
         <div className="mb-3 mb-md-0 flex-grow-1">
           <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-2">
             <h5 className="fw-bold mb-0">Exit Management & Clearance</h5>
+            <span className="text-muted d-none d-md-block">|</span>
+            <p className="text-muted mb-0 small d-none d-md-block">
+              Manage employee exits, clearances, and alumni network
+            </p>
           </div>
-         
+          <p className="text-muted mb-0 small d-md-none mt-1">
+            Manage employee exits, clearances, and alumni network
+          </p>
         </div>
 
         <div className="d-flex flex-wrap gap-2 ms-auto">
-          <button 
-            className="btn btn-dark d-flex align-items-center gap-2 btn-sm" 
-            onClick={handleExport}
-            title="Export"
-          >
-            <Download size={14} />
-            <span className="d-none d-sm-inline">Export</span>
-          </button>
-          
-          <button 
-            className="btn btn-dark d-flex align-items-center gap-2 btn-sm" 
+          {/* Export Dropdown */}
+          <div className="dropdown" style={{ position: 'relative' }}>
+            <button
+              className="btn btn-dark d-flex align-items-center gap-2 btn-sm dropdown-toggle"
+              type="button"
+              onClick={() => setShowExportDropdown(!showExportDropdown)}
+            >
+              <Download size={14} />
+              <span className="d-none d-sm-inline">Export</span>
+            </button>
+            
+            {showExportDropdown && (
+              <div className="dropdown-menu show" style={{ 
+                display: 'block', 
+                position: 'absolute', 
+                right: 0, 
+                top: '100%',
+                zIndex: 1000,
+                minWidth: '200px'
+              }}>
+                <button 
+                  className="dropdown-item d-flex align-items-center gap-2 py-2"
+                  onClick={() => {
+                    handleExportExcel();
+                    setShowExportDropdown(false);
+                  }}
+                >
+                  <FileTextIcon size={14} />
+                  <span>Export as Excel (CSV)</span>
+                </button>
+                <button 
+                  className="dropdown-item d-flex align-items-center gap-2 py-2"
+                  onClick={() => {
+                    handleExportPDF();
+                    setShowExportDropdown(false);
+                  }}
+                >
+                  <File size={14} />
+                  <span>Export as PDF</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          <button
+            className="btn btn-dark d-flex align-items-center gap-2 btn-sm"
             onClick={handlePrint}
             title="Print"
           >
             <Printer size={14} />
             <span className="d-none d-sm-inline">Print</span>
           </button>
-          
+
           {viewMode === 'exitCases' && (
-            <button 
-              className="btn btn-primary d-flex align-items-center gap-2 btn-sm" 
+            <button
+              className="btn btn-primary d-flex align-items-center gap-2 btn-sm"
               onClick={() => alert('New Exit Case')}
             >
               <i className="bi bi-plus-circle"></i>
@@ -1222,7 +1570,7 @@ const ExitManagement = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="col-6 col-md-3">
           <div className="card border h-100">
             <div className="card-body p-2 p-sm-3">
@@ -1238,7 +1586,7 @@ const ExitManagement = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="col-6 col-md-3">
           <div className="card border h-100">
             <div className="card-body p-2 p-sm-3">
@@ -1254,7 +1602,7 @@ const ExitManagement = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="col-6 col-md-3">
           <div className="card border h-100">
             <div className="card-body p-2 p-sm-3">
@@ -1282,18 +1630,18 @@ const ExitManagement = () => {
                   <span className="input-group-text bg-white">
                     <Search size={14} className="text-muted" />
                   </span>
-                  <input 
-                    className="form-control" 
-                    placeholder="Search..." 
-                    value={searchTerm} 
+                  <input
+                    className="form-control"
+                    placeholder="Search..."
+                    value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
               </div>
-              
+
               <div className="col-6 col-md-3 d-none d-md-block">
-                <select 
-                  className="form-select form-select-sm" 
+                <select
+                  className="form-select form-select-sm"
                   value={filters.department}
                   onChange={(e) => setFilters(prev => ({ ...prev, department: e.target.value }))}
                 >
@@ -1305,9 +1653,9 @@ const ExitManagement = () => {
                   <option value="finance">Finance</option>
                 </select>
               </div>
-              
+
               <div className="col-6 col-md-3 d-none d-md-block">
-                <select 
+                <select
                   className="form-select form-select-sm"
                   value={filters.status}
                   onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
@@ -1318,9 +1666,9 @@ const ExitManagement = () => {
                   <option value="completed">Completed</option>
                 </select>
               </div>
-              
+
               <div className="col-12 d-md-none">
-                <button 
+                <button
                   className="btn btn-outline-secondary w-100 btn-sm"
                   onClick={() => setShowFilters(!showFilters)}
                 >
@@ -1329,13 +1677,13 @@ const ExitManagement = () => {
                 </button>
               </div>
             </div>
-            
+
             {/* Mobile Filters Dropdown */}
             {showFilters && (
               <div className="row g-2 mt-3">
                 <div className="col-6">
-                  <select 
-                    className="form-select form-select-sm" 
+                  <select
+                    className="form-select form-select-sm"
                     value={filters.department}
                     onChange={(e) => setFilters(prev => ({ ...prev, department: e.target.value }))}
                   >
@@ -1347,9 +1695,9 @@ const ExitManagement = () => {
                     <option value="finance">Finance</option>
                   </select>
                 </div>
-                
+
                 <div className="col-6">
-                  <select 
+                  <select
                     className="form-select form-select-sm"
                     value={filters.status}
                     onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
@@ -1360,11 +1708,11 @@ const ExitManagement = () => {
                     <option value="completed">Completed</option>
                   </select>
                 </div>
-                
+
                 {viewMode === 'exitCases' && (
                   <>
                     <div className="col-6">
-                      <select 
+                      <select
                         className="form-select form-select-sm"
                         value={filters.clearanceType}
                         onChange={(e) => setFilters(prev => ({ ...prev, clearanceType: e.target.value }))}
@@ -1375,9 +1723,9 @@ const ExitManagement = () => {
                         <option value="retirement">Retirement</option>
                       </select>
                     </div>
-                    
+
                     <div className="col-6">
-                      <select 
+                      <select
                         className="form-select form-select-sm"
                         value={filters.exitReason}
                         onChange={(e) => setFilters(prev => ({ ...prev, exitReason: e.target.value }))}
@@ -1455,75 +1803,92 @@ const ExitManagement = () => {
         )}
         {viewMode === 'employeeExits' && renderEmployeeExitsTable()}
       </div>
-
-      {/* Pagination - Responsive */}
+      
+      {/* Pagination */}
       {viewMode !== 'employeeExits' && (
-        <div className="d-flex flex-column flex-sm-row align-items-center justify-content-between mb-4 gap-3">
-          <div className="order-2 order-sm-1">
-            <small className="text-secondary-light">
-              Showing <strong>{startIndex+1}</strong> to <strong>{Math.min(endIndex, currentItems.length)}</strong> of <strong>{currentItems.length}</strong>
-            </small>
-          </div>
-
-          <div className="d-flex flex-column flex-sm-row align-items-center gap-3 order-1 order-sm-2">
-            <div className="d-flex align-items-center gap-2">
-              <button 
-                className="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center" 
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} 
-                disabled={currentPage === 1}
-                style={{width: '36px', height: '36px', padding: 0}}
-              >
-                <ChevronLeft size={18} />
-              </button>
-              
-              <div className="d-none d-sm-flex gap-1">
-                {[...Array(Math.min(3, totalPages))].map((_, idx) => {
-                  const pageNum = idx + 1;
-                  return (
-                    <button 
-                      key={pageNum}
-                      className={pageNum === currentPage ? 'btn btn-primary btn-sm' : 'btn btn-outline-secondary btn-sm'} 
-                      onClick={() => setCurrentPage(pageNum)}
-                      style={{minWidth: '36px', height: '36px'}}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
-                {totalPages > 3 && (
-                  <>
-                    <span className="px-2 d-flex align-items-center">...</span>
-                    <button 
-                      className={totalPages === currentPage ? 'btn btn-primary btn-sm' : 'btn btn-outline-secondary btn-sm'} 
-                      onClick={() => setCurrentPage(totalPages)}
-                      style={{minWidth: '36px', height: '36px'}}
-                    >
-                      {totalPages}
-                    </button>
-                  </>
-                )}
+        <div className="card border-0 shadow-sm mb-4">
+          <div className="card-body py-3">
+            <div className="row align-items-center g-3">
+              {/* Showing info */}
+              <div className="col-12 col-md-4 text-center text-md-start">
+                <small className="text-muted">
+                  Showing <strong>{startIndex + 1}</strong> to{" "}
+                  <strong>{Math.min(endIndex, currentItems.length)}</strong> of{" "}
+                  <strong>{currentItems.length}</strong>
+                </small>
               </div>
-              
-              <button 
-                className="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center" 
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} 
-                disabled={currentPage === totalPages}
-                style={{width: '36px', height: '36px', padding: 0}}
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
 
-            <select 
-              className="form-select form-select-sm w-auto" 
-              value={itemsPerPage} 
-              onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
-            >
-              <option value="5">5</option>
-              <option value="10">10</option>
-              <option value="20">20</option>
-              <option value="50">50</option>
-            </select>
+              {/* Pagination controls */}
+              <div className="col-12 col-md-4 d-flex justify-content-center">
+                <div className="btn-group btn-group-sm">
+                  <button
+                    className="btn btn-outline-secondary"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    ‹
+                  </button>
+
+                  {[...Array(Math.min(3, totalPages))].map((_, idx) => {
+                    const pageNum = idx + 1;
+                    return (
+                      <button
+                        key={pageNum}
+                        className={`btn ${pageNum === currentPage
+                            ? "btn-primary"
+                            : "btn-outline-secondary"
+                          }`}
+                        onClick={() => setCurrentPage(pageNum)}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+
+                  {totalPages > 3 && (
+                    <>
+                      <button className="btn btn-outline-secondary" disabled>
+                        …
+                      </button>
+                      <button
+                        className={`btn ${totalPages === currentPage
+                            ? "btn-primary"
+                            : "btn-outline-secondary"
+                          }`}
+                        onClick={() => setCurrentPage(totalPages)}
+                      >
+                        {totalPages}
+                      </button>
+                    </>
+                  )}
+
+                  <button
+                    className="btn btn-outline-secondary"
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    ›
+                  </button>
+                </div>
+              </div>
+
+              {/* Page size */}
+              <div className="col-12 col-md-4 d-flex justify-content-center justify-content-md-end">
+                <div className="d-flex align-items-center gap-2">
+                  <small className="text-muted">Rows per page</small>
+                  <select
+                    className="form-select form-select-sm w-auto"
+                    value={itemsPerPage}
+                    onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                  >
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                  </select>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -1538,424 +1903,106 @@ const ExitManagement = () => {
             <div>
               <h6 className="alert-heading">Employee Exits Report</h6>
               <p className="mb-0 small">
-                View employees exiting during a given date range. Filter by location, department, exit reason, and date range. 
+                View employees exiting during a given date range. Filter by location, department, exit reason, and date range.
                 Export data to Excel (CSV) or PDF format.
               </p>
             </div>
           </div>
         </div>
       )}
-
-      {/* Comprehensive Clearance Details Modal */}
+      
+      {/* Clearance Modal */}
       {showClearanceModal && selectedExit && (
-        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050}}>
-          <div className="modal-dialog modal-dialog-centered modal-xl">
-            <div className="modal-content">
-              <div className="modal-header bg-primary text-white">
-                <h5 className="modal-title">Exit Clearance - {selectedExit.employeeName}</h5>
-                <button type="button" className="btn-close btn-close-white" onClick={handleCloseModal}></button>
-              </div>
-              <div className="modal-body" style={{maxHeight: '70vh', overflowY: 'auto'}}>
-                {/* Employee Info & Progress */}
-                <div className="row g-3 mb-4">
-                  <div className="col-12 col-md-6">
-                    <div className="card border">
-                      <div className="card-body">
-                        <h6 className="card-title">Employee Info</h6>
-                        <div className="row">
-                          <div className="col-6 mb-2">
-                            <small className="text-muted">Employee ID</small>
-                            <div className="fw-bold small">{selectedExit.employeeId}</div>
-                          </div>
-                          <div className="col-6 mb-2">
-                            <small className="text-muted">Department</small>
-                            <div className="fw-bold small">{selectedExit.department}</div>
-                          </div>
-                          <div className="col-6 mb-2">
-                            <small className="text-muted">Role</small>
-                            <div className="fw-bold small">{selectedExit.role}</div>
-                          </div>
-                          <div className="col-6 mb-2">
-                            <small className="text-muted">Last Day</small>
-                            <div className="fw-bold small">{selectedExit.lastWorkingDay}</div>
-                          </div>
-                        </div>
+        <ModalWrapper
+          title={`Exit Clearance – ${selectedExit.employeeName}`}
+          onClose={handleCloseModal}
+        >
+          <div className="container-fluid">
+            {/* Employee Info */}
+            <div className="row g-4 mb-4">
+              <div className="col-12">
+                <div className="card border shadow-sm">
+                  <div className="card-body">
+                    <h6 className="mb-3 fw-bold">Employee Information</h6>
+                    <div className="row small">
+                      <div className="col-6 mb-2">
+                        <span className="text-muted">Employee ID</span>
+                        <div className="fw-semibold">{selectedExit.employeeId}</div>
                       </div>
-                    </div>
-                  </div>
-                  <div className="col-12 col-md-6">
-                    <div className="card border">
-                      <div className="card-body">
-                        <h6 className="card-title">Clearance Progress</h6>
-                        <div className="d-flex align-items-center gap-3">
-                          <div className="flex-grow-1">
-                            <div className="progress" style={{height: '12px'}}>
-                              <div 
-                                className={`progress-bar ${getProgressColor(selectedExit.clearanceProgress)}`} 
-                                style={{width: `${selectedExit.clearanceProgress}%`}}
-                              ></div>
-                            </div>
-                          </div>
-                          <div className="h4 fw-bold">{selectedExit.clearanceProgress}%</div>
-                        </div>
-                        <div className="d-flex justify-content-between mt-2">
-                          <small className="text-muted">Progress</small>
-                          <small className="text-muted">{selectedExit.pendingClearances.length} pending</small>
-                        </div>
+                      <div className="col-6 mb-2">
+                        <span className="text-muted">Department</span>
+                        <div className="fw-semibold">{selectedExit.department}</div>
+                      </div>
+                      <div className="col-6 mb-2">
+                        <span className="text-muted">Role</span>
+                        <div className="fw-semibold">{selectedExit.role}</div>
+                      </div>
+                      <div className="col-6 mb-2">
+                        <span className="text-muted">Last Working Day</span>
+                        <div className="fw-semibold">{selectedExit.lastWorkingDay}</div>
                       </div>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Tab Navigation */}
-                <ul className="nav nav-tabs mb-3" role="tablist">
-                  {['IT', 'Admin', 'Finance', 'HR', 'Department'].map((dept) => {
-                    const deptStatus = clearanceDetails[dept]?.status || 'Pending';
-                    return (
-                      <li key={dept} className="nav-item" role="presentation">
-                        <button
-                          className={`nav-link ${activeModalTab === dept ? 'active' : ''}`}
-                          onClick={() => setActiveModalTab(dept)}
-                        >
-                          {dept}
-                          {deptStatus === 'Completed' && <CheckCircle2 size={14} className="ms-1 text-success" />}
-                          {deptStatus === 'Pending' && <Clock size={14} className="ms-1 text-warning" />}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-
-                {/* Department Clearance Details */}
-                {activeModalTab === 'IT' && (
-                  <div className="card border">
-                    <div className="card-header bg-info-subtle">
-                      <h6 className="mb-0">IT Clearance</h6>
+              {/* Progress */}
+              <div className="col-12">
+                <div className="card border shadow-sm">
+                  <div className="card-body">
+                    <h6 className="mb-3 fw-bold">Clearance Progress</h6>
+                    <div className="progress mb-2" style={{ height: 10 }}>
+                      <div
+                        className={`progress-bar ${getProgressColor(selectedExit.clearanceProgress)}`}
+                        style={{ width: `${selectedExit.clearanceProgress}%` }}
+                      />
                     </div>
-                    <div className="card-body">
-                      <div className="row g-3">
-                        <div className="col-12 col-md-6">
-                          <label className="form-label fw-medium">Laptop</label>
-                          <div className="input-group input-group-sm">
-                            <input type="text" className="form-control" placeholder="Asset ID" defaultValue={clearanceDetails.IT?.items?.laptop?.assetId || ''} />
-                            <select className="form-select" style={{maxWidth: '120px'}}>
-                              <option>Pending</option>
-                              <option>Completed</option>
-                            </select>
-                          </div>
-                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
-                        </div>
-                        <div className="col-12 col-md-6">
-                          <label className="form-label fw-medium">Mobile Device</label>
-                          <div className="input-group input-group-sm">
-                            <input type="text" className="form-control" placeholder="Asset ID" defaultValue={clearanceDetails.IT?.items?.mobile?.assetId || ''} />
-                            <select className="form-select" style={{maxWidth: '120px'}}>
-                              <option>Pending</option>
-                              <option>Completed</option>
-                            </select>
-                          </div>
-                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
-                        </div>
-                        <div className="col-12 col-md-6">
-                          <label className="form-label fw-medium">Access Cards</label>
-                          <input type="text" className="form-control form-control-sm" placeholder="Card IDs (comma separated)" />
-                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
-                        </div>
-                        <div className="col-12 col-md-6">
-                          <label className="form-label fw-medium">Software Licenses</label>
-                          <input type="text" className="form-control form-control-sm" placeholder="License IDs (comma separated)" />
-                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
-                        </div>
-                        <div className="col-12">
-                          <div className="row">
-                            <div className="col-md-6">
-                              <label className="form-label fw-medium">Cleared By</label>
-                              <input type="text" className="form-control form-control-sm" />
-                            </div>
-                            <div className="col-md-6">
-                              <label className="form-label fw-medium">Cleared Date</label>
-                              <input type="date" className="form-control form-control-sm" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                    <div className="d-flex justify-content-between small">
+                      <span>{selectedExit.clearanceProgress}% Completed</span>
+                      <span>{selectedExit.pendingClearances.length} Pending</span>
                     </div>
-                  </div>
-                )}
-
-                {activeModalTab === 'Admin' && (
-                  <div className="card border">
-                    <div className="card-header bg-warning-subtle">
-                      <h6 className="mb-0">Admin Clearance</h6>
-                    </div>
-                    <div className="card-body">
-                      <div className="row g-3">
-                        <div className="col-12 col-md-6">
-                          <label className="form-label fw-medium">ID Card</label>
-                          <div className="input-group input-group-sm">
-                            <input type="text" className="form-control" placeholder="Card Number" />
-                            <select className="form-select" style={{maxWidth: '120px'}}>
-                              <option>Pending</option>
-                              <option>Completed</option>
-                            </select>
-                          </div>
-                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
-                        </div>
-                        <div className="col-12 col-md-6">
-                          <label className="form-label fw-medium">Access Card</label>
-                          <div className="input-group input-group-sm">
-                            <input type="text" className="form-control" placeholder="Card Number" />
-                            <select className="form-select" style={{maxWidth: '120px'}}>
-                              <option>Pending</option>
-                              <option>Completed</option>
-                            </select>
-                          </div>
-                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
-                        </div>
-                        <div className="col-12 col-md-6">
-                          <label className="form-label fw-medium">Parking Sticker</label>
-                          <div className="input-group input-group-sm">
-                            <input type="text" className="form-control" placeholder="Sticker ID" />
-                            <select className="form-select" style={{maxWidth: '120px'}}>
-                              <option>Pending</option>
-                              <option>Completed</option>
-                            </select>
-                          </div>
-                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
-                        </div>
-                        <div className="col-12 col-md-6">
-                          <label className="form-label fw-medium">Locker Keys</label>
-                          <div className="input-group input-group-sm">
-                            <input type="text" className="form-control" placeholder="Locker Number" />
-                            <select className="form-select" style={{maxWidth: '120px'}}>
-                              <option>Pending</option>
-                              <option>Completed</option>
-                            </select>
-                          </div>
-                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
-                        </div>
-                        <div className="col-12">
-                          <div className="row">
-                            <div className="col-md-6">
-                              <label className="form-label fw-medium">Cleared By</label>
-                              <input type="text" className="form-control form-control-sm" />
-                            </div>
-                            <div className="col-md-6">
-                              <label className="form-label fw-medium">Cleared Date</label>
-                              <input type="date" className="form-control form-control-sm" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {activeModalTab === 'Finance' && (
-                  <div className="card border">
-                    <div className="card-header bg-success-subtle">
-                      <h6 className="mb-0">Finance Clearance</h6>
-                    </div>
-                    <div className="card-body">
-                      <div className="row g-3">
-                        <div className="col-12">
-                          <label className="form-label fw-medium">Advance Settlement</label>
-                          <div className="input-group input-group-sm">
-                            <span className="input-group-text">₹</span>
-                            <input type="number" className="form-control" placeholder="Amount" />
-                            <select className="form-select" style={{maxWidth: '120px'}}>
-                              <option>Pending</option>
-                              <option>Completed</option>
-                            </select>
-                          </div>
-                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
-                        </div>
-                        <div className="col-12">
-                          <label className="form-label fw-medium">Expense Claims</label>
-                          <input type="text" className="form-control form-control-sm" placeholder="Claim IDs (comma separated)" />
-                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
-                        </div>
-                        <div className="col-12">
-                          <label className="form-label fw-medium">Loan Outstanding</label>
-                          <div className="input-group input-group-sm">
-                            <span className="input-group-text">₹</span>
-                            <input type="number" className="form-control" placeholder="Amount" />
-                            <select className="form-select" style={{maxWidth: '120px'}}>
-                              <option>Pending</option>
-                              <option>Completed</option>
-                            </select>
-                          </div>
-                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
-                        </div>
-                        <div className="col-12">
-                          <div className="row">
-                            <div className="col-md-6">
-                              <label className="form-label fw-medium">Cleared By</label>
-                              <input type="text" className="form-control form-control-sm" />
-                            </div>
-                            <div className="col-md-6">
-                              <label className="form-label fw-medium">Cleared Date</label>
-                              <input type="date" className="form-control form-control-sm" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {activeModalTab === 'HR' && (
-                  <div className="card border">
-                    <div className="card-header bg-primary-subtle">
-                      <h6 className="mb-0">HR Clearance</h6>
-                    </div>
-                    <div className="card-body">
-                      <div className="row g-3">
-                        <div className="col-12">
-                          <label className="form-label fw-medium">Documentation</label>
-                          <input type="text" className="form-control form-control-sm" placeholder="Documents (comma separated)" />
-                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
-                        </div>
-                        <div className="col-12">
-                          <label className="form-label fw-medium">Exit Interview</label>
-                          <div className="input-group input-group-sm">
-                            <input type="date" className="form-control" placeholder="Scheduled Date" />
-                            <select className="form-select" style={{maxWidth: '120px'}}>
-                              <option>Pending</option>
-                              <option>Scheduled</option>
-                              <option>Completed</option>
-                            </select>
-                          </div>
-                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
-                        </div>
-                        <div className="col-12">
-                          <label className="form-label fw-medium">Policy Violations Check</label>
-                          <input type="text" className="form-control form-control-sm" placeholder="Violations (if any)" />
-                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
-                        </div>
-                        <div className="col-12">
-                          <div className="row">
-                            <div className="col-md-6">
-                              <label className="form-label fw-medium">Cleared By</label>
-                              <input type="text" className="form-control form-control-sm" />
-                            </div>
-                            <div className="col-md-6">
-                              <label className="form-label fw-medium">Cleared Date</label>
-                              <input type="date" className="form-control form-control-sm" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {activeModalTab === 'Department' && (
-                  <div className="card border">
-                    <div className="card-header bg-secondary-subtle">
-                      <h6 className="mb-0">Department Clearance</h6>
-                    </div>
-                    <div className="card-body">
-                      <div className="row g-3">
-                        <div className="col-12">
-                          <label className="form-label fw-medium">Project Handover</label>
-                          <input type="text" className="form-control form-control-sm" placeholder="Project IDs (comma separated)" />
-                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
-                        </div>
-                        <div className="col-12">
-                          <label className="form-label fw-medium">Knowledge Transfer</label>
-                          <select className="form-select form-select-sm">
-                            <option>Pending</option>
-                            <option>In Progress</option>
-                            <option>Completed</option>
-                          </select>
-                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
-                        </div>
-                        <div className="col-12">
-                          <label className="form-label fw-medium">Files & Documents</label>
-                          <input type="text" className="form-control form-control-sm" placeholder="Files/Documents (comma separated)" />
-                          <textarea className="form-control form-control-sm mt-2" rows="2" placeholder="Remarks"></textarea>
-                        </div>
-                        <div className="col-12">
-                          <div className="row">
-                            <div className="col-md-6">
-                              <label className="form-label fw-medium">Cleared By</label>
-                              <input type="text" className="form-control form-control-sm" />
-                            </div>
-                            <div className="col-md-6">
-                              <label className="form-label fw-medium">Cleared Date</label>
-                              <input type="date" className="form-control form-control-sm" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Quick Actions */}
-                <div className="row g-2 mt-4">
-                  <div className="col-12 col-md-4">
-                    <button 
-                      className="btn btn-outline-primary w-100 btn-sm"
-                      onClick={() => { setShowClearanceModal(false); handleOpenExitInterview(selectedExit.id); }}
-                    >
-                      <MessageSquare size={14} className="me-2" />
-                      Exit Interview
-                    </button>
-                  </div>
-                  <div className="col-12 col-md-4">
-                    <button 
-                      className="btn btn-outline-warning w-100 btn-sm"
-                      onClick={() => { setShowClearanceModal(false); handleOpenKnowledgeTransfer(selectedExit.id); }}
-                    >
-                      <Share2 size={14} className="me-2" />
-                      Knowledge Transfer
-                    </button>
-                  </div>
-                  <div className="col-12 col-md-4">
-                    <button 
-                      className="btn btn-outline-success w-100 btn-sm"
-                      onClick={() => { setShowClearanceModal(false); handleOpenSettlement(selectedExit.id); }}
-                    >
-                      <CreditCard size={14} className="me-2" />
-                      Full & Final Settlement
-                    </button>
                   </div>
                 </div>
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>
-                  Close
-                </button>
-                <button type="button" className="btn btn-primary">
-                  Save Changes
-                </button>
-                <button 
-                  type="button" 
-                  className="btn btn-success" 
-                  disabled={selectedExit.status !== 'Completed'}
-                  onClick={handleGenerateCertificate}
-                >
-                  <FileCheck size={14} className="me-1" />
-                  Generate Certificate
-                </button>
+            </div>
+
+            {/* Tabs */}
+            <ul className="nav nav-tabs mb-3">
+              {["IT", "Admin", "Finance", "HR", "Department"].map(tab => (
+                <li className="nav-item" key={tab}>
+                  <button
+                    className={`nav-link ${activeModalTab === tab ? "active" : ""}`}
+                    onClick={() => setActiveModalTab(tab)}
+                  >
+                    {tab}
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            {/* Tab Content */}
+            <div className="card border">
+              <div className="card-body">
+                <h6>{activeModalTab} Clearance</h6>
+                <p className="text-muted small mb-0">
+                  Status: <strong>{clearanceDetails[activeModalTab]?.status}</strong>
+                </p>
               </div>
             </div>
           </div>
-        </div>
+        </ModalWrapper>
       )}
 
       {/* Exit Interview Modal */}
       {showExitInterviewModal && selectedExit && (
-        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1051}}>
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1051 }}>
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div className="modal-content">
               <div className="modal-header bg-primary text-white">
                 <h5 className="modal-title">Exit Interview - {selectedExit.employeeName}</h5>
                 <button type="button" className="btn-close btn-close-white" onClick={handleCloseModal}></button>
               </div>
-              <div className="modal-body" style={{maxHeight: '70vh', overflowY: 'auto'}}>
+              <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
                 <div className="row g-3 mb-4">
                   <div className="col-12 col-md-6">
                     <label className="form-label fw-medium">Interview Date & Time</label>
@@ -2031,14 +2078,31 @@ const ExitManagement = () => {
 
       {/* Knowledge Transfer Modal */}
       {showKnowledgeTransferModal && selectedExit && (
-        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1051}}>
-          <div className="modal-dialog modal-dialog-centered modal-xl">
+        <div
+          className="modal fade show"
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1055
+          }}
+        >
+          <div className="modal-dialog modal-xl" style={{ margin: 0, width: "100%", maxWidth: "1000px" }}>
             <div className="modal-content">
               <div className="modal-header bg-warning text-white">
-                <h5 className="modal-title">Knowledge Transfer - {selectedExit.employeeName}</h5>
-                <button type="button" className="btn-close btn-close-white" onClick={handleCloseModal}></button>
+                <h5 className="modal-title">
+                  Knowledge Transfer – {selectedExit.employeeName}
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={handleCloseModal}
+                />
               </div>
-              <div className="modal-body" style={{maxHeight: '70vh', overflowY: 'auto'}}>
+              <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
                 <div className="row g-3 mb-4">
                   <div className="col-12">
                     <h6 className="fw-bold mb-3">KT Checklist</h6>
@@ -2123,9 +2187,11 @@ const ExitManagement = () => {
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>Close</button>
-                <button type="button" className="btn btn-primary">Save Progress</button>
-                <button type="button" className="btn btn-success">Complete KT</button>
+                <button className="btn btn-secondary" onClick={handleCloseModal}>
+                  Close
+                </button>
+                <button className="btn btn-primary">Save Progress</button>
+                <button className="btn btn-success">Complete KT</button>
               </div>
             </div>
           </div>
@@ -2134,14 +2200,14 @@ const ExitManagement = () => {
 
       {/* Alumni Network Modal */}
       {showAlumniModal && (
-        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1051}}>
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1051 }}>
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div className="modal-content">
               <div className="modal-header bg-success text-white">
                 <h5 className="modal-title">Alumni Network Management</h5>
                 <button type="button" className="btn-close btn-close-white" onClick={handleCloseModal}></button>
               </div>
-              <div className="modal-body" style={{maxHeight: '70vh', overflowY: 'auto'}}>
+              <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
                 <div className="row g-3">
                   <div className="col-12">
                     <h6 className="fw-bold mb-3">Alumni Engagement</h6>
@@ -2202,539 +2268,139 @@ const ExitManagement = () => {
           </div>
         </div>
       )}
-
-      {/* Full & Final Settlement Detail Modal - NEW */}
+      
+      {/* Settlement Modal */}
       {showSettlementModal && selectedExit && (
-        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1051}}>
-          <div className="modal-dialog modal-dialog-centered" style={{maxWidth: '95%', width: '1400px'}}>
-            <div className="modal-content">
-              <div className="modal-header bg-success text-white">
-                <h5 className="modal-title">Full & Final Settlement - {selectedExit.employeeName}</h5>
-                <button type="button" className="btn-close btn-close-white" onClick={handleCloseModal}></button>
+        <ModalWrapper
+          title={`Final Settlement – ${selectedExit.employeeName}`}
+          onClose={handleCloseModal}
+          size="modal-lg"
+        >
+          <div className="container-fluid">
+            <div className="row g-3">
+              <div className="col-md-6">
+                <label className="form-label small">Basic Salary</label>
+                <input
+                  className="form-control form-control-sm"
+                  value={settlementDetail.basicSalary}
+                  readOnly
+                />
               </div>
-              <div className="modal-body" style={{maxHeight: '75vh', overflowY: 'auto', padding: '2rem'}}>
-                <div className="row g-4 mb-4">
-                  <div className="col-12 col-lg-8">
-                    <div className="card border shadow-sm">
-                      <div className="card-header bg-success-subtle py-3">
-                        <h6 className="mb-0 fw-bold">Settlement Calculation</h6>
-                      </div>
-                      <div className="card-body p-4">
-                        {/* Earnings Section */}
-                        <div className="mb-4">
-                          <h6 className="fw-bold text-success mb-4">
-                            <DollarSign size={20} className="me-2" />
-                            Earnings
-                          </h6>
-                          <div className="row g-4">
-                            <div className="col-12 col-md-6">
-                              <label className="form-label fw-medium mb-2">Basic Salary</label>
-                              <div className="input-group">
-                                <span className="input-group-text bg-light">₹</span>
-                                <input 
-                                  type="number" 
-                                  className="form-control form-control-lg" 
-                                  name="basicSalary" 
-                                  value={settlementDetail.basicSalary}
-                                  onChange={handleSettlementChange}
-                                />
-                              </div>
-                            </div>
-                            <div className="col-12 col-md-6">
-                              <label className="form-label fw-medium mb-2">Leave Encashment</label>
-                              <div className="input-group">
-                                <span className="input-group-text bg-light">₹</span>
-                                <input 
-                                  type="number" 
-                                  className="form-control form-control-lg" 
-                                  name="leaveEncashment" 
-                                  value={settlementDetail.leaveEncashment}
-                                  onChange={handleSettlementChange}
-                                />
-                              </div>
-                            </div>
-                            <div className="col-12 col-md-6">
-                              <label className="form-label fw-medium mb-2">Bonus & Incentives</label>
-                              <div className="input-group">
-                                <span className="input-group-text bg-light">₹</span>
-                                <input 
-                                  type="number" 
-                                  className="form-control form-control-lg" 
-                                  name="bonusIncentives" 
-                                  value={settlementDetail.bonusIncentives}
-                                  onChange={handleSettlementChange}
-                                />
-                              </div>
-                            </div>
-                            <div className="col-12 col-md-6">
-                              <label className="form-label fw-medium mb-2">Other Earnings</label>
-                              <div className="input-group">
-                                <span className="input-group-text bg-light">₹</span>
-                                <input 
-                                  type="number" 
-                                  className="form-control form-control-lg" 
-                                  name="otherEarnings" 
-                                  value={settlementDetail.otherEarnings}
-                                  onChange={handleSettlementChange}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Deductions Section */}
-                        <div className="mb-4">
-                          <h6 className="fw-bold text-danger mb-4">
-                            <Calculator size={20} className="me-2" />
-                            Deductions
-                          </h6>
-                          <div className="row g-4">
-                            <div className="col-12 col-md-6">
-                              <label className="form-label fw-medium mb-2">Loan Deductions</label>
-                              <div className="input-group">
-                                <span className="input-group-text bg-light">₹</span>
-                                <input 
-                                  type="number" 
-                                  className="form-control form-control-lg" 
-                                  name="loanDeductions" 
-                                  value={settlementDetail.loanDeductions}
-                                  onChange={handleSettlementChange}
-                                />
-                              </div>
-                            </div>
-                            <div className="col-12 col-md-6">
-                              <label className="form-label fw-medium mb-2">Advance Deductions</label>
-                              <div className="input-group">
-                                <span className="input-group-text bg-light">₹</span>
-                                <input 
-                                  type="number" 
-                                  className="form-control form-control-lg" 
-                                  name="advanceDeductions" 
-                                  value={settlementDetail.advanceDeductions}
-                                  onChange={handleSettlementChange}
-                                />
-                              </div>
-                            </div>
-                            <div className="col-12 col-md-6">
-                              <label className="form-label fw-medium mb-2">Tax Deductions</label>
-                              <div className="input-group">
-                                <span className="input-group-text bg-light">₹</span>
-                                <input 
-                                  type="number" 
-                                  className="form-control form-control-lg" 
-                                  name="taxDeductions" 
-                                  value={settlementDetail.taxDeductions}
-                                  onChange={handleSettlementChange}
-                                />
-                              </div>
-                            </div>
-                            <div className="col-12 col-md-6">
-                              <label className="form-label fw-medium mb-2">Other Deductions</label>
-                              <div className="input-group">
-                                <span className="input-group-text bg-light">₹</span>
-                                <input 
-                                  type="number" 
-                                  className="form-control form-control-lg" 
-                                  name="otherDeductions" 
-                                  value={settlementDetail.otherDeductions}
-                                  onChange={handleSettlementChange}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Summary Section */}
-                        <div className="card border mt-4 shadow-sm">
-                          <div className="card-body p-4">
-                            <h6 className="fw-bold mb-4">Settlement Summary</h6>
-                            <div className="row">
-                              <div className="col-6">
-                                <div className="mb-2">
-                                  <small className="text-muted">Total Earnings</small>
-                                  <div className="fw-bold h5 text-success">
-                                    ₹{settlementDetail.basicSalary + settlementDetail.leaveEncashment + settlementDetail.bonusIncentives + settlementDetail.otherEarnings}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="col-6">
-                                <div className="mb-2">
-                                  <small className="text-muted">Total Deductions</small>
-                                  <div className="fw-bold h5 text-danger">
-                                    ₹{settlementDetail.loanDeductions + settlementDetail.advanceDeductions + settlementDetail.taxDeductions + settlementDetail.otherDeductions}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="col-12">
-                                <hr />
-                                <div className="d-flex justify-content-between align-items-center">
-                                  <div>
-                                    <small className="text-muted">Net Payable Amount</small>
-                                    <div className="fw-bold h4 text-primary">₹{settlementDetail.netPayable}</div>
-                                  </div>
-                                  <span className={`badge ${settlementDetail.status === 'Completed' ? 'bg-success' : settlementDetail.status === 'In Progress' ? 'bg-warning' : 'bg-secondary'}`}>
-                                    {settlementDetail.status}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="col-12 col-lg-4">
-                    {/* Payment Details */}
-                    <div className="card border mb-4 shadow-sm">
-                      <div className="card-header bg-primary-subtle py-3">
-                        <h6 className="mb-0 fw-bold">
-                          <CreditCard size={20} className="me-2" />
-                          Payment Details
-                        </h6>
-                      </div>
-                      <div className="card-body p-4">
-                        <div className="mb-4">
-                          <label className="form-label fw-medium mb-2">Payment Method</label>
-                          <select 
-                            className="form-select form-select-lg" 
-                            name="paymentMethod"
-                            value={settlementDetail.paymentMethod}
-                            onChange={handleSettlementChange}
-                          >
-                            <option>Bank Transfer</option>
-                            <option>Cheque</option>
-                            <option>Cash</option>
-                            <option>Online Payment</option>
-                          </select>
-                        </div>
-                        <div className="mb-4">
-                          <label className="form-label fw-medium mb-2">Payment Date</label>
-                          <input 
-                            type="date" 
-                            className="form-control form-control-lg" 
-                            name="paymentDate"
-                            value={settlementDetail.paymentDate}
-                            onChange={handleSettlementChange}
-                          />
-                        </div>
-                        <div className="mb-4">
-                          <label className="form-label fw-medium mb-2">Bank Account Number</label>
-                          <input 
-                            type="text" 
-                            className="form-control form-control-lg" 
-                            name="accountNumber"
-                            value={settlementDetail.bankDetails.accountNumber}
-                            onChange={handleBankDetailChange}
-                          />
-                        </div>
-                        <div className="mb-4">
-                          <label className="form-label fw-medium mb-2">Bank Name</label>
-                          <input 
-                            type="text" 
-                            className="form-control form-control-lg" 
-                            name="bankName"
-                            value={settlementDetail.bankDetails.bankName}
-                            onChange={handleBankDetailChange}
-                          />
-                        </div>
-                        <div className="mb-4">
-                          <label className="form-label fw-medium mb-2">IFSC Code</label>
-                          <input 
-                            type="text" 
-                            className="form-control form-control-lg" 
-                            name="ifscCode"
-                            value={settlementDetail.bankDetails.ifscCode}
-                            onChange={handleBankDetailChange}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Approvals */}
-                    <div className="card border shadow-sm">
-                      <div className="card-header bg-warning-subtle py-3">
-                        <h6 className="mb-0 fw-bold">
-                          <Shield size={20} className="me-2" />
-                          Approvals Required
-                        </h6>
-                      </div>
-                      <div className="card-body p-4">
-                        <div className="form-check mb-2">
-                          <input 
-                            className="form-check-input" 
-                            type="checkbox" 
-                            id="financeApproval"
-                            checked={settlementDetail.approvals.finance}
-                            onChange={() => handleApprovalChange('finance')}
-                          />
-                          <label className="form-check-label small" htmlFor="financeApproval">
-                            Finance Department
-                          </label>
-                        </div>
-                        <div className="form-check mb-2">
-                          <input 
-                            className="form-check-input" 
-                            type="checkbox" 
-                            id="hrApproval"
-                            checked={settlementDetail.approvals.hr}
-                            onChange={() => handleApprovalChange('hr')}
-                          />
-                          <label className="form-check-label small" htmlFor="hrApproval">
-                            HR Department
-                          </label>
-                        </div>
-                        <div className="form-check mb-2">
-                          <input 
-                            className="form-check-input" 
-                            type="checkbox" 
-                            id="deptApproval"
-                            checked={settlementDetail.approvals.department}
-                            onChange={() => handleApprovalChange('department')}
-                          />
-                          <label className="form-check-label small" htmlFor="deptApproval">
-                            Department Head
-                          </label>
-                        </div>
-                        <div className="form-check mb-2">
-                          <input 
-                            className="form-check-input" 
-                            type="checkbox" 
-                            id="ceoApproval"
-                            checked={settlementDetail.approvals.ceo}
-                            onChange={() => handleApprovalChange('ceo')}
-                          />
-                          <label className="form-check-label small" htmlFor="ceoApproval">
-                            CEO/Management
-                          </label>
-                        </div>
-                        <div className="mt-4">
-                          <label className="form-label fw-medium mb-2">Settlement Notes</label>
-                          <textarea 
-                            className="form-control" 
-                            rows="4" 
-                            name="notes"
-                            value={settlementDetail.notes}
-                            onChange={handleSettlementChange}
-                            placeholder="Additional notes or comments..."
-                          ></textarea>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div className="col-md-6">
+                <label className="form-label small">Leave Encashment</label>
+                <input
+                  className="form-control form-control-sm"
+                  value={settlementDetail.leaveEncashment}
+                  readOnly
+                />
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>Close</button>
-                <button type="button" className="btn btn-primary">Save Draft</button>
-                <button type="button" className="btn btn-warning">Calculate Settlement</button>
-                <button type="button" className="btn btn-success">
-                  <Receipt size={14} className="me-1" />
-                  Generate Settlement Slip
-                </button>
-                <button type="button" className="btn btn-info">
-                  <Wallet size={14} className="me-1" />
-                  Initiate Payment
-                </button>
+              <div className="col-md-6">
+                <label className="form-label small">Bonus / Incentives</label>
+                <input
+                  className="form-control form-control-sm"
+                  value={settlementDetail.bonusIncentives}
+                  readOnly
+                />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label small">Tax Deduction</label>
+                <input
+                  className="form-control form-control-sm"
+                  value={settlementDetail.taxDeductions}
+                  readOnly
+                />
               </div>
             </div>
+            <hr />
+            <div className="d-flex justify-content-between">
+              <span className="fw-bold">Net Payable</span>
+              <span className="fw-bold text-success">
+                ₹ {settlementDetail.netPayable.toFixed(2)}
+              </span>
+            </div>
           </div>
-        </div>
+        </ModalWrapper>
       )}
-
-      {/* Exit Trends Analysis Modal */}
+      
+      {/* Trends Modal */}
       {showTrendsModal && (
-        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1051}}>
-          <div className="modal-dialog modal-dialog-centered modal-xl">
-            <div className="modal-content" style={{borderRadius: '8px', overflow: 'hidden'}}>
-              <div className="modal-header bg-primary text-white py-3" style={{borderBottom: 'none'}}>
-                <h5 className="modal-title fw-bold">Exit Trend Analysis</h5>
-                <button type="button" className="btn-close btn-close-white" onClick={handleCloseModal}></button>
+        <ModalWrapper
+          title="Exit Trend Analysis"
+          onClose={handleCloseModal}
+          size="modal-xl"
+        >
+          <div className="container-fluid h-100">
+            {/* Filters */}
+            <div className="row g-3 mb-4">
+              <div className="col-12 col-md-6">
+                <label className="form-label fw-medium">Analysis Period</label>
+                <select className="form-select form-select-sm">
+                  <option>Last 3 Months</option>
+                  <option>Last 6 Months</option>
+                  <option>Last Year</option>
+                  <option>Custom Range</option>
+                </select>
               </div>
-              <div className="modal-body" style={{maxHeight: '75vh', overflowY: 'auto', padding: '1.5rem'}}>
-                {/* Filters Section */}
-                <div className="row g-3 mb-4">
-                  <div className="col-12 col-md-6">
-                    <label className="form-label fw-medium small mb-2">Analysis Period</label>
-                    <select className="form-select form-select-sm">
-                      <option>Last 3 Months</option>
-                      <option>Last 6 Months</option>
-                      <option>Last Year</option>
-                      <option>Custom Range</option>
-                    </select>
-                  </div>
-                  <div className="col-12 col-md-6">
-                    <label className="form-label fw-medium small mb-2">Filter By Department</label>
-                    <select className="form-select form-select-sm">
-                      <option>All Departments</option>
-                      <option>Engineering</option>
-                      <option>Marketing</option>
-                      <option>Sales</option>
-                      <option>HR</option>
-                      <option>Finance</option>
-                    </select>
-                  </div>
-                </div>
+              <div className="col-12 col-md-6">
+                <label className="form-label fw-medium">Filter By Department</label>
+                <select className="form-select form-select-sm">
+                  <option>All Departments</option>
+                  <option>Engineering</option>
+                  <option>Marketing</option>
+                  <option>Sales</option>
+                  <option>HR</option>
+                  <option>Finance</option>
+                </select>
+              </div>
+            </div>
 
-                {/* Key Metrics Cards */}
-                <div className="row g-3 mb-4">
-                  {/* Exit Rate Card */}
-                  <div className="col-12 col-md-4">
-                    <div className="card border shadow-sm h-100" style={{borderRadius: '6px'}}>
-                      <div className="card-body p-3">
-                        <div className="d-flex align-items-start mb-3">
-                          <div className="bg-primary-subtle rounded p-2 me-2">
-                            <TrendingUp size={20} className="text-primary" />
-                          </div>
-                          <div className="flex-grow-1">
-                            <h6 className="text-muted small mb-1 fw-medium">Exit Rate</h6>
-                          </div>
-                        </div>
-                        <div className="mb-2">
-                          <h3 className="fw-bold text-primary mb-0" style={{fontSize: '2rem'}}>8.5%</h3>
-                        </div>
-                        <div className="d-flex align-items-center">
-                          <ArrowUp size={14} className="text-success me-1" />
-                          <small className="text-muted">+2.1% from last period</small>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Top Exit Reason Card */}
-                  <div className="col-12 col-md-4">
-                    <div className="card border shadow-sm h-100" style={{borderRadius: '6px'}}>
-                      <div className="card-body p-3">
-                        <div className="d-flex align-items-start mb-3">
-                          <div className="bg-warning-subtle rounded p-2 me-2">
-                            <Users size={20} className="text-warning" />
-                          </div>
-                          <div className="flex-grow-1">
-                            <h6 className="text-muted small mb-1 fw-medium">Top Exit Reason</h6>
-                          </div>
-                        </div>
-                        <div className="mb-2">
-                          <h4 className="fw-bold text-warning mb-0" style={{fontSize: '1.25rem', lineHeight: '1.4', wordBreak: 'break-word'}}>Better Opportunity</h4>
-                        </div>
+            {/* CENTERED TREND CARDS */}
+            <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "40vh" }}>
+              <div className="w-100" style={{ maxWidth: "700px" }}>
+                <div className="row g-4">
+                  <div className="col-12">
+                    <div className="card border shadow-sm">
+                      <div className="card-body d-flex justify-content-between align-items-center">
                         <div>
-                          <small className="text-muted">45% of exits</small>
+                          <h6 className="fw-bold mb-1">Exit Rate</h6>
+                          <p className="text-muted small mb-0">Overall attrition trend</p>
                         </div>
+                        <div className="display-6 text-danger">12.5%</div>
                       </div>
                     </div>
                   </div>
-
-                  {/* Avg. Notice Period Card */}
-                  <div className="col-12 col-md-4">
-                    <div className="card border shadow-sm h-100" style={{borderRadius: '6px'}}>
-                      <div className="card-body p-3">
-                        <div className="d-flex align-items-start mb-3">
-                          <div className="bg-danger-subtle rounded p-2 me-2">
-                            <Clock size={20} className="text-danger" />
-                          </div>
-                          <div className="flex-grow-1">
-                            <h6 className="text-muted small mb-1 fw-medium">Avg. Notice Period</h6>
-                          </div>
+                  <div className="col-12">
+                    <div className="card border shadow-sm">
+                      <div className="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                          <h6 className="fw-bold mb-1">Avg Tenure</h6>
+                          <p className="text-muted small mb-0">Employee stay duration</p>
                         </div>
-                        <div className="mb-2">
-                          <h3 className="fw-bold text-danger mb-0" style={{fontSize: '2rem'}}>38 days</h3>
+                        <div className="display-6 text-primary">2.8 yrs</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-12">
+                    <div className="card border shadow-sm">
+                      <div className="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                          <h6 className="fw-bold mb-1">Top Exit Reason</h6>
+                          <p className="text-muted small mb-0">Most common reason</p>
                         </div>
-                        <div className="d-flex align-items-center">
-                          <ArrowUp size={14} className="text-danger me-1" style={{transform: 'rotate(180deg)'}} />
-                          <small className="text-muted">-5 days from last period</small>
-                        </div>
+                        <div className="fw-semibold fs-5">Better Opportunity</div>
                       </div>
                     </div>
                   </div>
                 </div>
-
-                {/* Exit Reasons Breakdown Section */}
-                <div className="card border shadow-sm mb-4" style={{borderRadius: '6px'}}>
-                  <div className="card-header bg-transparent border-bottom py-2 px-3" style={{cursor: 'pointer'}}>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <h6 className="mb-0 fw-medium text-dark">Exit Reasons Breakdown</h6>
-                      <i className="bi bi-chevron-down text-muted"></i>
-                    </div>
-                  </div>
-                  <div className="card-body p-3">
-                    <div className="row g-3">
-                      {[
-                        {reason: 'Better Opportunity', percentage: 45},
-                        {reason: 'Career Growth', percentage: 25},
-                        {reason: 'Higher Studies', percentage: 15},
-                        {reason: 'Relocation', percentage: 10},
-                        {reason: 'Personal Reasons', percentage: 5}
-                      ].map((item, idx) => (
-                        <div key={idx} className="col-12 col-md-6">
-                          <div className="d-flex justify-content-between align-items-center mb-2">
-                            <span className="small text-muted">{item.reason}</span>
-                            <span className="badge bg-primary-subtle text-primary">{item.percentage}%</span>
-                          </div>
-                          <div className="progress" style={{height: '8px', borderRadius: '4px'}}>
-                            <div 
-                              className="progress-bar bg-primary" 
-                              role="progressbar" 
-                              style={{width: `${item.percentage}%`, borderRadius: '4px'}}
-                              aria-valuenow={item.percentage} 
-                              aria-valuemin="0" 
-                              aria-valuemax="100"
-                            ></div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Department-wise Exit Distribution Section */}
-                <div className="card border shadow-sm" style={{borderRadius: '6px'}}>
-                  <div className="card-header bg-transparent border-bottom py-2 px-3">
-                    <h6 className="mb-0 fw-medium text-dark">Department-wise Exit Distribution</h6>
-                  </div>
-                  <div className="card-body p-3">
-                    <div className="row g-3">
-                      {[
-                        {dept: 'Engineering', exits: 12},
-                        {dept: 'Marketing', exits: 8},
-                        {dept: 'Sales', exits: 6},
-                        {dept: 'HR', exits: 4},
-                        {dept: 'Finance', exits: 3}
-                      ].map((item, idx) => (
-                        <div key={idx} className="col-12 col-md-6">
-                          <div className="d-flex justify-content-between align-items-center mb-2">
-                            <span className="small text-muted">{item.dept}</span>
-                            <span className="badge bg-info-subtle text-info">{item.exits} exits</span>
-                          </div>
-                          <div className="progress" style={{height: '8px', borderRadius: '4px'}}>
-                            <div 
-                              className="progress-bar bg-info" 
-                              role="progressbar" 
-                              style={{width: `${(item.exits / 12) * 100}%`, borderRadius: '4px'}}
-                              aria-valuenow={item.exits} 
-                              aria-valuemin="0" 
-                              aria-valuemax="12"
-                            ></div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer bg-light border-top py-3 px-4">
-                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={handleCloseModal}>Close</button>
-                <button type="button" className="btn btn-primary btn-sm">
-                  <Download size={14} className="me-1" />
-                  Export Report
-                </button>
               </div>
             </div>
           </div>
-        </div>
+        </ModalWrapper>
       )}
 
       {/* Clearance Certificate Modal */}
       {showCertificateModal && selectedExit && (
-        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1051}}>
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1051 }}>
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div className="modal-content">
               <div className="modal-header bg-success text-white">

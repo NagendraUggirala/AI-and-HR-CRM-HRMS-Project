@@ -540,10 +540,38 @@ export default function Deals() {
                                     <div className="action-icon d-inline-flex">
                                         <button
                                             type="button"
-                                            className="btn btn-sm btn-outline-primary"
+                                            className="btn btn-sm btn-link p-0"
                                             onClick={() => openAddModal(stageIndex)}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.color = '#0d6efd';
+                                                e.currentTarget.style.transform = 'scale(1.1)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.color = '#6c757d';
+                                                e.currentTarget.style.transform = 'scale(1)';
+                                            }}
+                                            style={{ 
+                                                width: 'auto', 
+                                                height: 'auto', 
+                                                padding: '2px 4px',
+                                                minWidth: 'auto',
+                                                border: 'none',
+                                                background: 'transparent',
+                                                cursor: 'pointer',
+                                                color: '#6c757d',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                transition: 'all 0.2s ease'
+                                              }}
+                                            title="Add Deal"
                                         >
-                                            <i className="ti ti-circle-plus" />
+                                            <span style={{ 
+                                                fontSize: '18px', 
+                                                lineHeight: '1',
+                                                letterSpacing: '2px',
+                                                fontWeight: 'bold'
+                                            }}>⋯</span>
                                         </button>
                                     </div>
                                 </div>
@@ -853,3 +881,4 @@ export default function Deals() {
         </div>
     );
 }
+

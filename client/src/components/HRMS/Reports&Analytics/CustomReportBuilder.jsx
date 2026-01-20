@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Search,
   Download,
@@ -10,1234 +10,2237 @@ import {
   Users,
   Calendar,
   FileText,
-  Settings,
   Share2,
   Database,
   Layout,
   BarChart3,
-  Mail,
   Clock,
-  Zap,
-  GripVertical,
-  Trash2,
   Edit,
-  Copy,
-  Save,
-  Play,
-  ChevronDown,
-  ChevronUp,
-  ArrowUpDown,
-  TrendingUp,
-  PieChart,
-  BarChart2,
-  LineChart,
-  Save as SaveIcon,
-  RefreshCw,
-  Code,
-  Globe,
-  Lock,
-  Unlock,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
-  Hash,
-  Percent,
-  TrendingDown
+  User,
+  MapPin,
+  File,
+  FileSpreadsheet,
+  Settings,
 } from "lucide-react";
 
-/* ---------------- Data Sources and Fields ---------------- */
-const dataSources = {
-  employee: {
-    name: "Employee",
-    icon: <Users size={16} />,
-    fields: [
-      { id: "emp_id", label: "Employee ID", type: "text" },
-      { id: "name", label: "Name", type: "text" },
-      { id: "email", label: "Email", type: "email" },
-      { id: "department", label: "Department", type: "text" },
-      { id: "designation", label: "Designation", type: "text" },
-      { id: "location", label: "Location", type: "text" },
-      { id: "grade", label: "Grade", type: "text" },
-      { id: "joining_date", label: "Joining Date", type: "date" },
-      { id: "salary", label: "Salary", type: "number" },
-      { id: "employment_type", label: "Employment Type", type: "text" },
-      { id: "status", label: "Status", type: "text" },
-    ]
-  },
-  attendance: {
-    name: "Attendance",
-    icon: <Calendar size={16} />,
-    fields: [
-      { id: "date", label: "Date", type: "date" },
-      { id: "employee_id", label: "Employee ID", type: "text" },
-      { id: "check_in", label: "Check In", type: "time" },
-      { id: "check_out", label: "Check Out", type: "time" },
-      { id: "work_hours", label: "Work Hours", type: "number" },
-      { id: "status", label: "Status", type: "text" },
-      { id: "overtime", label: "Overtime Hours", type: "number" },
-      { id: "late_arrival", label: "Late Arrival (min)", type: "number" },
-    ]
-  },
-  payroll: {
-    name: "Payroll",
-    icon: <BarChart3 size={16} />,
-    fields: [
-      { id: "employee_id", label: "Employee ID", type: "text" },
-      { id: "month", label: "Month", type: "date" },
-      { id: "gross_salary", label: "Gross Salary", type: "number" },
-      { id: "basic", label: "Basic", type: "number" },
-      { id: "hra", label: "HRA", type: "number" },
-      { id: "allowances", label: "Allowances", type: "number" },
-      { id: "deductions", label: "Deductions", type: "number" },
-      { id: "net_salary", label: "Net Salary", type: "number" },
-      { id: "tds", label: "TDS", type: "number" },
-      { id: "pf", label: "PF", type: "number" },
-    ]
-  },
-  leave: {
-    name: "Leave",
-    icon: <Calendar size={16} />,
-    fields: [
-      { id: "employee_id", label: "Employee ID", type: "text" },
-      { id: "leave_type", label: "Leave Type", type: "text" },
-      { id: "from_date", label: "From Date", type: "date" },
-      { id: "to_date", label: "To Date", type: "date" },
-      { id: "days", label: "Days", type: "number" },
-      { id: "status", label: "Status", type: "text" },
-      { id: "applied_date", label: "Applied Date", type: "date" },
-      { id: "balance", label: "Balance", type: "number" },
-    ]
-  }
+/* ---------------- PDF Generation Library ---------------- */
+import jsPDF from "jspdf";
+// IMPORTANT: Import autotable correctly
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
+
+/* ---------------- Helpers ---------------- */
+const statusBadge = (status) => {
+  const map = {
+    Draft: "bg-secondary-subtle text-secondary",
+    Published: "bg-success-subtle text-success",
+    "In Progress": "bg-info-subtle text-info",
+    Scheduled: "bg-primary-subtle text-primary",
+    Archived: "bg-dark-subtle text-dark",
+    Error: "bg-danger-subtle text-danger",
+  };
+  return map[status] || "bg-light text-muted";
 };
 
-const calculationTypes = [
-  { id: "sum", label: "Sum", icon: <Plus size={14} /> },
-  { id: "average", label: "Average", icon: <BarChart2 size={14} /> },
-  { id: "count", label: "Count", icon: <Hash size={14} /> },
-  { id: "percentage", label: "Percentage", icon: <Percent size={14} /> },
-  { id: "min", label: "Minimum", icon: <TrendingDown size={14} /> },
-  { id: "max", label: "Maximum", icon: <TrendingUp size={14} /> },
+// Get icon based on category
+const getIconByCategory = (category) => {
+  const iconMap = {
+    Builder: <Layout size={16} />,
+    Data: <Database size={16} />,
+    Filter: <Filter size={16} />,
+    Analysis: <BarChart3 size={16} />,
+    Template: <FileText size={16} />,
+    Automation: <Clock size={16} />,
+    Sharing: <Share2 size={16} />,
+    Export: <Download size={16} />,
+    Subscription: <Calendar size={16} />,
+    API: <Database size={16} />,
+    Employee: <User size={16} />,
+  };
+  return iconMap[category] || <FileText size={16} />;
+};
+
+/* ---------------- Employee Data ---------------- */
+const generateEmployeeData = () => {
+  const employees = [
+    {
+      name: "John Smith",
+      email: "john.smith@company.com",
+      phone: "+1 (555) 123-4567",
+    },
+    {
+      name: "Emma Johnson",
+      email: "emma.j@company.com",
+      phone: "+1 (555) 234-5678",
+    },
+    {
+      name: "Michael Brown",
+      email: "michael.b@company.com",
+      phone: "+1 (555) 345-6789",
+    },
+    {
+      name: "Sarah Davis",
+      email: "sarah.d@company.com",
+      phone: "+1 (555) 456-7890",
+    },
+    {
+      name: "Robert Wilson",
+      email: "robert.w@company.com",
+      phone: "+1 (555) 567-8901",
+    },
+    {
+      name: "Lisa Miller",
+      email: "lisa.m@company.com",
+      phone: "+1 (555) 678-9012",
+    },
+    {
+      name: "David Moore",
+      email: "david.m@company.com",
+      phone: "+1 (555) 789-0123",
+    },
+    {
+      name: "Jennifer Taylor",
+      email: "jennifer.t@company.com",
+      phone: "+1 (555) 890-1234",
+    },
+    {
+      name: "James Anderson",
+      email: "james.a@company.com",
+      phone: "+1 (555) 901-2345",
+    },
+    {
+      name: "Patricia Thomas",
+      email: "patricia.t@company.com",
+      phone: "+1 (555) 012-3456",
+    },
+  ];
+
+  const locations = [
+    "New York",
+    "London",
+    "Tokyo",
+    "Sydney",
+    "Berlin",
+    "Toronto",
+    "Paris",
+    "Singapore",
+    "Dubai",
+    "Mumbai",
+  ];
+  const costCenters = ["CC-100", "CC-200", "CC-300", "CC-400", "CC-500"];
+  const designations = [
+    "Manager",
+    "Developer",
+    "Analyst",
+    "Designer",
+    "Director",
+    "Engineer",
+    "Consultant",
+  ];
+  const managers = [
+    "Alex Johnson",
+    "Maria Garcia",
+    "David Lee",
+    "Sophia Chen",
+    "Robert Kim",
+    "Jessica Wang",
+    "Thomas Brown",
+  ];
+  const departments = ["IT", "HR", "Finance", "Marketing", "Operations"];
+  const currencies = [
+    "USD",
+    "EUR",
+    "GBP",
+    "JPY",
+    "CAD",
+    "AUD",
+    "INR",
+    "CNY",
+    "AED",
+  ];
+
+  return Array.from({ length: 50 }, (_, i) => {
+    const employee = employees[Math.floor(Math.random() * employees.length)];
+    const manager = managers[Math.floor(Math.random() * managers.length)];
+    const department =
+      departments[Math.floor(Math.random() * departments.length)];
+    const currency = currencies[Math.floor(Math.random() * currencies.length)];
+
+    // Generate email based on department
+    const emailDomains = {
+      IT: "it.company.com",
+      HR: "hr.company.com",
+      Finance: "finance.company.com",
+      Marketing: "marketing.company.com",
+      Operations: "operations.company.com",
+    };
+
+    const domain = emailDomains[department] || "company.com";
+    const firstName = employee.name.split(" ")[0].toLowerCase();
+    const lastName = employee.name.split(" ")[1].toLowerCase();
+    const email = `${firstName}.${lastName}@${domain}`;
+
+    // Generate date for last updated (within last 30 days)
+    const today = new Date();
+    const randomDaysAgo = Math.floor(Math.random() * 30);
+    const lastUpdatedDate = new Date(today);
+    lastUpdatedDate.setDate(today.getDate() - randomDaysAgo);
+    const lastUpdated = lastUpdatedDate.toISOString().split("T")[0];
+
+    return {
+      id: i + 1000,
+      employeeName: employee.name,
+      employeeId: `EMP-${String(1000 + i).padStart(4, "0")}`,
+      designation:
+        designations[Math.floor(Math.random() * designations.length)],
+      location: locations[Math.floor(Math.random() * locations.length)],
+      costCenter: costCenters[Math.floor(Math.random() * costCenters.length)],
+      dateTime: `2025-${String(Math.floor(Math.random() * 12) + 1).padStart(
+        2,
+        "0"
+      )}-${String(Math.floor(Math.random() * 28) + 1).padStart(
+        2,
+        "0"
+      )} ${String(Math.floor(Math.random() * 24)).padStart(2, "0")}:${String(
+        Math.floor(Math.random() * 60)
+      ).padStart(2, "0")}`,
+      payDays: Math.floor(Math.random() * 30) + 1,
+      salary: Math.floor(Math.random() * 100000) + 50000,
+      currency: currency,
+      department: department,
+      status: ["Active", "On Leave", "Inactive", "Probation", "Contract"][
+        Math.floor(Math.random() * 5)
+      ],
+      email: email,
+      phone: employee.phone,
+      manager: manager,
+      lastUpdated: lastUpdated,
+    };
+  });
+};
+/* ---------------- Main Data ---------------- */
+const reportBuilderFeaturesList = [
+  {
+    id: 1,
+    name: "Drag-and-drop interface",
+    category: "Builder",
+    status: "Published",
+    lastUpdated: "2025-11-25",
+    icon: getIconByCategory("Builder"),
+  },
+  {
+    id: 2,
+    name: "Select data sources",
+    category: "Data",
+    status: "Published",
+    lastUpdated: "2025-11-24",
+    icon: getIconByCategory("Data"),
+  },
+  {
+    id: 3,
+    name: "Choose fields to include",
+    category: "Data",
+    status: "Published",
+    lastUpdated: "2025-11-23",
+    icon: getIconByCategory("Data"),
+  },
+  {
+    id: 4,
+    name: "Apply filters",
+    category: "Filter",
+    status: "Published",
+    lastUpdated: "2025-11-22",
+    icon: getIconByCategory("Filter"),
+  },
+  {
+    id: 5,
+    name: "Group by dimensions",
+    category: "Analysis",
+    status: "In Progress",
+    lastUpdated: "2025-11-21",
+    icon: getIconByCategory("Analysis"),
+  },
+  {
+    id: 6,
+    name: "Add calculations",
+    category: "Analysis",
+    status: "Published",
+    lastUpdated: "2025-11-20",
+    icon: getIconByCategory("Analysis"),
+  },
+  {
+    id: 7,
+    name: "Sort and order options",
+    category: "Builder",
+    status: "Published",
+    lastUpdated: "2025-11-19",
+    icon: getIconByCategory("Builder"),
+  },
+  {
+    id: 8,
+    name: "Save report templates",
+    category: "Template",
+    status: "Published",
+    lastUpdated: "2025-11-18",
+    icon: getIconByCategory("Template"),
+  },
+  {
+    id: 9,
+    name: "Schedule automated generation",
+    category: "Automation",
+    status: "Scheduled",
+    lastUpdated: "2025-11-17",
+    icon: getIconByCategory("Automation"),
+  },
+  {
+    id: 10,
+    name: "Email distribution list",
+    category: "Sharing",
+    status: "Published",
+    lastUpdated: "2025-11-16",
+    icon: getIconByCategory("Sharing"),
+  },
+  {
+    id: 11,
+    name: "Export formats",
+    category: "Export",
+    status: "Published",
+    lastUpdated: "2025-11-15",
+    icon: getIconByCategory("Export"),
+  },
 ];
 
-const sortOrders = ["Ascending", "Descending"];
-
-const exportFormats = [
-  { id: "excel", label: "Excel", icon: <FileText size={16} />, extension: ".xlsx" },
-  { id: "pdf", label: "PDF", icon: <FileText size={16} />, extension: ".pdf" },
-  { id: "csv", label: "CSV", icon: <FileText size={16} />, extension: ".csv" },
-];
-
-/* ---------------- Saved Templates ---------------- */
-const savedTemplates = [
-  { id: 1, name: "Employee Summary Report", description: "Basic employee information with department and location", dataSource: "employee", createdAt: "2024-01-15", lastUsed: "2024-01-20" },
-  { id: 2, name: "Monthly Attendance Summary", description: "Monthly attendance report by department", dataSource: "attendance", createdAt: "2024-01-10", lastUsed: "2024-01-19" },
-  { id: 3, name: "Payroll Cost Analysis", description: "Department-wise payroll cost breakdown", dataSource: "payroll", createdAt: "2024-01-08", lastUsed: "2024-01-18" },
+const reportSharingList = [
+  {
+    id: 12,
+    name: "Share with specific users/roles",
+    category: "Sharing",
+    status: "Published",
+    lastUpdated: "2025-11-14",
+    icon: getIconByCategory("Sharing"),
+  },
+  {
+    id: 13,
+    name: "Public dashboard publication",
+    category: "Sharing",
+    status: "In Progress",
+    lastUpdated: "2025-11-13",
+    icon: getIconByCategory("Sharing"),
+  },
+  {
+    id: 14,
+    name: "Report subscription service",
+    category: "Subscription",
+    status: "Published",
+    lastUpdated: "2025-11-12",
+    icon: getIconByCategory("Subscription"),
+  },
+  {
+    id: 15,
+    name: "Embed reports in emails",
+    category: "Sharing",
+    status: "Draft",
+    lastUpdated: "2025-11-11",
+    icon: getIconByCategory("Sharing"),
+  },
+  {
+    id: 16,
+    name: "API access for report data",
+    category: "API",
+    status: "Published",
+    lastUpdated: "2025-11-10",
+    icon: getIconByCategory("API"),
+  },
 ];
 
 /* ---------------- Component ---------------- */
 const CustomReportBuilder = () => {
-  const [activeTab, setActiveTab] = useState("builder"); // builder, templates, scheduled, shared
-  const [currentReport, setCurrentReport] = useState({
-    id: Date.now(),
-    name: "New Report",
-    description: "",
-    dataSource: "employee",
-    selectedFields: [],
-    filters: [],
-    groupBy: [],
-    calculations: [],
-    sortBy: [],
-    templateId: null,
-    schedule: null,
-    emailDistribution: [],
-    exportFormat: "excel",
-    shareSettings: {
-      public: false,
-      users: [],
-      roles: [],
-      apiAccess: false
-    }
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [features, setFeatures] = useState(reportBuilderFeaturesList);
+  const [sharing, setSharing] = useState(reportSharingList);
+  const [employeeData, setEmployeeData] = useState(generateEmployeeData());
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedFeature, setSelectedFeature] = useState(null);
+  const [isBuilderView, setIsBuilderView] = useState(true);
+
+  const [addReportModalOpen, setAddReportModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [newReportData, setNewReportData] = useState({
+    id: null,
+    name: "",
+    category: "Builder",
+    status: "Draft",
   });
 
-  const [draggedField, setDraggedField] = useState(null);
-  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
-  const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [templates, setTemplates] = useState(savedTemplates);
-  const [scheduledReports, setScheduledReports] = useState([]);
-  const [sharedReports, setSharedReports] = useState([]);
-  const [templateName, setTemplateName] = useState("");
-  const [templateDescription, setTemplateDescription] = useState("");
+  // Add these state variables to your component
+  const [employeeModalOpen, setEmployeeModalOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [addEmployeeModalOpen, setAddEmployeeModalOpen] = useState(false);
+  const [isEditingEmployee, setIsEditingEmployee] = useState(false);
+  const [newEmployeeData, setNewEmployeeData] = useState({
+    id: null,
+    employeeName: "",
+    designation: "",
+    department: "",
+    location: "",
+    costCenter: "",
+    dateTime: new Date().toISOString().split("T")[0] + " 09:00",
+    payDays: 21,
+    salary: 50000,
+    currency: "USD", // Add currency field
+    status: "Active",
+    lastUpdated: new Date().toISOString().split("T")[0],
+    employeeId: "", // Additional fields
+    email: "",
+    phone: "",
+    manager: "",
+  });
 
-  // Get available fields for selected data source
-  const availableFields = useMemo(() => {
-    return dataSources[currentReport.dataSource]?.fields || [];
-  }, [currentReport.dataSource]);
+  const [selectedEmployees, setSelectedEmployees] = useState([]);
+  const [employeeFilters, setEmployeeFilters] = useState({
+    employeeName: "",
+    location: "",
+    department: "",
+    status: "",
+  });
 
-  // Handle data source change
-  const handleDataSourceChange = (source) => {
-    setCurrentReport(prev => ({
-      ...prev,
-      dataSource: source,
-      selectedFields: [], // Clear selected fields when source changes
-      filters: [],
-      groupBy: []
-    }));
+  const [activeTab, setActiveTab] = useState("features"); // "features" or "employees"
+
+  const perPage = 8;
+
+  const dataSource = isBuilderView ? features : sharing;
+  const getCategoryOptions = () => [
+    ...new Set(dataSource.map((item) => item.category)),
+  ];
+
+  // Filter features
+  const filteredFeatures = dataSource.filter((item) => {
+    const matchesSearch = item.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesStatus = !statusFilter || item.status === statusFilter;
+    const matchesCategory = !categoryFilter || item.category === categoryFilter;
+    return matchesSearch && matchesStatus && matchesCategory;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredFeatures.length / perPage));
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(1);
+  }, [filteredFeatures.length, totalPages, currentPage]);
+
+  const startIndex = (currentPage - 1) * perPage;
+  const displayFeatures = filteredFeatures.slice(
+    startIndex,
+    startIndex + perPage
+  );
+
+  const allData = [...features, ...sharing];
+  const kpis = {
+    total: allData.length,
+    published: allData.filter((r) => r.status === "Published").length,
+    inProgress: allData.filter((r) => r.status === "In Progress").length,
+    scheduled: allData.filter((r) => r.status === "Scheduled").length,
   };
 
-  // Handle field selection (drag and drop)
-  const handleFieldDragStart = (e, field) => {
-    setDraggedField(field);
-    e.dataTransfer.effectAllowed = "move";
+  /* ---------------- Export Functions ---------------- */
+  const exportCSV = () => {
+    const headers = ["Feature Name", "Category", "Status", "Last Updated"];
+    const rows = filteredFeatures.map((r) => [
+      r.name,
+      r.category,
+      r.status,
+      r.lastUpdated,
+    ]);
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers, ...rows].map((e) => e.join(",")).join("\n");
+    const link = document.createElement("a");
+    link.href = encodeURI(csvContent);
+    link.download = "report_features.csv";
+    link.click();
   };
 
-  const handleFieldDrop = (e) => {
-    e.preventDefault();
-    if (draggedField && !currentReport.selectedFields.find(f => f.id === draggedField.id)) {
-      setCurrentReport(prev => ({
-        ...prev,
-        selectedFields: [...prev.selectedFields, { ...draggedField, order: prev.selectedFields.length }]
-      }));
+  const exportEmployeePDF = (employee) => {
+    const doc = new jsPDF();
+
+    // Title
+    doc.setFontSize(20);
+    doc.text("Employee Report", 105, 20, { align: "center" });
+
+    // Employee Details
+    doc.setFontSize(12);
+    doc.text("Employee Information", 14, 40);
+    doc.setFontSize(10);
+
+    const details = [
+      ["Employee ID:", employee.employeeId || `EMP-${employee.id}`],
+      ["Employee Name:", employee.employeeName],
+      ["Designation:", employee.designation],
+      ["Department:", employee.department],
+      ["Location:", employee.location],
+      ["Cost Center:", employee.costCenter],
+      ["Status:", employee.status],
+      ["Date & Time:", employee.dateTime],
+      ["Pay Days:", employee.payDays.toString()],
+      [
+        "Salary:",
+        `${employee.currency || "USD"} ${employee.salary.toLocaleString()}`,
+      ],
+      ["Email:", employee.email || "N/A"],
+      ["Phone:", employee.phone || "N/A"],
+      ["Reporting Manager:", employee.manager || "N/A"],
+    ];
+
+    details.forEach(([label, value], index) => {
+      doc.text(label, 14, 50 + index * 7);
+      doc.text(value, 60, 50 + index * 7);
+    });
+
+    // Footer
+    doc.setFontSize(8);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 150);
+    doc.text("Confidential", 190, 150, { align: "right" });
+
+    doc.save(
+      `Employee_Report_${employee.employeeName.replace(/\s+/g, "_")}.pdf`
+    );
+  };
+
+  const exportAllEmployeesPDF = () => {
+    const doc = new jsPDF();
+
+    // Title
+    doc.setFontSize(20);
+    doc.text("Employee Master Report", 105, 20, { align: "center" });
+    doc.setFontSize(10);
+    doc.text(
+      `Generated: ${new Date().toLocaleDateString()} | Total Employees: ${
+        filteredEmployees.length
+      }`,
+      105,
+      28,
+      { align: "center" }
+    );
+
+    // Table
+    const tableColumn = [
+      "Name",
+      "Designation",
+      "Department",
+      "Location",
+      "Cost Center",
+      "Salary",
+      "Status",
+    ];
+    const tableRows = filteredEmployees.map((emp) => [
+      emp.employeeName,
+      emp.designation,
+      emp.department,
+      emp.location,
+      emp.costCenter,
+      `$${emp.salary.toLocaleString()}`,
+      emp.status,
+    ]);
+
+    // Use autoTable function directly
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 40,
+      theme: "striped",
+      headStyles: { fillColor: [41, 128, 185] },
+      margin: { top: 40 },
+    });
+
+    // Get the final Y position from the autoTable result
+    const finalY = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(11);
+    doc.text("Summary:", 14, finalY);
+    doc.setFontSize(10);
+    doc.text(`• Total Employees: ${filteredEmployees.length}`, 14, finalY + 7);
+    doc.text(
+      `• Total Salary: $${filteredEmployees
+        .reduce((sum, emp) => sum + emp.salary, 0)
+        .toLocaleString()}`,
+      14,
+      finalY + 14
+    );
+    doc.text(
+      `• Average Salary: $${Math.round(
+        filteredEmployees.reduce((sum, emp) => sum + emp.salary, 0) /
+          filteredEmployees.length
+      ).toLocaleString()}`,
+      14,
+      finalY + 21
+    );
+
+    doc.save("All_Employees_Report.pdf");
+  };
+
+  const exportEmployeeExcel = (employee) => {
+    const worksheet = XLSX.utils.json_to_sheet([employee]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Employee Data");
+
+    XLSX.writeFile(
+      workbook,
+      `Employee_${employee.employeeName.replace(/\s+/g, "_")}.xlsx`
+    );
+  };
+
+  const exportAllEmployeesExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(filteredEmployees);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Employees");
+
+    XLSX.writeFile(workbook, "All_Employees.xlsx");
+  };
+
+  const exportSelectedEmployees = () => {
+    if (selectedEmployees.length === 0) {
+      alert("Please select employees to export");
+      return;
     }
-    setDraggedField(null);
+
+    const selectedData = employeeData.filter((emp) =>
+      selectedEmployees.includes(emp.id)
+    );
+    const worksheet = XLSX.utils.json_to_sheet(selectedData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Selected Employees");
+
+    XLSX.writeFile(workbook, "Selected_Employees.xlsx");
   };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
+  /* ---------------- Handlers ---------------- */
+  const openModal = (feature) => {
+    setSelectedFeature(feature);
+    setModalOpen(true);
   };
 
-  // Remove field from selection
-  const removeField = (fieldId) => {
-    setCurrentReport(prev => ({
-      ...prev,
-      selectedFields: prev.selectedFields.filter(f => f.id !== fieldId)
-    }));
+  const closeModal = () => {
+    setModalOpen(false);
+    setSelectedFeature(null);
   };
 
-  // Reorder fields
-  const moveField = (fieldId, direction) => {
-    setCurrentReport(prev => {
-      const fields = [...prev.selectedFields];
-      const index = fields.findIndex(f => f.id === fieldId);
-      if (index === -1) return prev;
-      
-      const newIndex = direction === 'up' ? index - 1 : index + 1;
-      if (newIndex < 0 || newIndex >= fields.length) return prev;
-      
-      [fields[index], fields[newIndex]] = [fields[newIndex], fields[index]];
-      return { ...prev, selectedFields: fields };
+  const openEditModal = (feature) => {
+    setNewReportData({
+      id: feature.id,
+      name: feature.name,
+      category: feature.category,
+      status: feature.status,
+    });
+    setIsEditing(true);
+    setAddReportModalOpen(true);
+  };
+
+  const closeAddReportModal = () => {
+    setAddReportModalOpen(false);
+    setIsEditing(false);
+    setNewReportData({
+      id: null,
+      name: "",
+      category: "Builder",
+      status: "Draft",
     });
   };
 
-  // Add filter
-  const addFilter = () => {
-    const newFilter = {
-      id: Date.now(),
-      field: "",
-      operator: "equals",
-      value: ""
-    };
-    setCurrentReport(prev => ({
-      ...prev,
-      filters: [...prev.filters, newFilter]
-    }));
+  const isFeatureInBuilderList = (id) => {
+    return features.some((f) => f.id === id);
   };
 
-  // Update filter
-  const updateFilter = (filterId, updates) => {
-    setCurrentReport(prev => ({
-      ...prev,
-      filters: prev.filters.map(f => f.id === filterId ? { ...f, ...updates } : f)
-    }));
+  const handlePublish = (f) => {
+    if (isFeatureInBuilderList(f.id)) {
+      setFeatures((prev) =>
+        prev.map((x) => (x.id === f.id ? { ...x, status: "Published" } : x))
+      );
+    } else {
+      setSharing((prev) =>
+        prev.map((x) => (x.id === f.id ? { ...x, status: "Published" } : x))
+      );
+    }
+    closeModal();
   };
 
-  // Remove filter
-  const removeFilter = (filterId) => {
-    setCurrentReport(prev => ({
-      ...prev,
-      filters: prev.filters.filter(f => f.id !== filterId)
-    }));
+  const handleSchedule = (f) => {
+    if (isFeatureInBuilderList(f.id)) {
+      setFeatures((prev) =>
+        prev.map((x) => (x.id === f.id ? { ...x, status: "Scheduled" } : x))
+      );
+    } else {
+      setSharing((prev) =>
+        prev.map((x) => (x.id === f.id ? { ...x, status: "Scheduled" } : x))
+      );
+    }
+    closeModal();
   };
 
-  // Add group by field
-  const addGroupBy = (fieldId) => {
-    if (!currentReport.groupBy.find(f => f === fieldId)) {
-      setCurrentReport(prev => ({
-        ...prev,
-        groupBy: [...prev.groupBy, fieldId]
-      }));
+  const handleDelete = (f) => {
+    if (isFeatureInBuilderList(f.id)) {
+      setFeatures((prev) => prev.filter((x) => x.id !== f.id));
+    } else {
+      setSharing((prev) => prev.filter((x) => x.id !== f.id));
+    }
+    closeModal();
+  };
+
+  const handleSaveReport = () => {
+    if (!newReportData.name.trim()) {
+      alert("Please enter a report name");
+      return;
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+    const icon = getIconByCategory(newReportData.category);
+
+    if (isEditing) {
+      const updatedReport = {
+        id: newReportData.id,
+        name: newReportData.name,
+        category: newReportData.category,
+        status: newReportData.status,
+        lastUpdated: today,
+        icon: icon,
+      };
+
+      if (isFeatureInBuilderList(newReportData.id)) {
+        setFeatures((prev) =>
+          prev.map((x) => (x.id === newReportData.id ? updatedReport : x))
+        );
+        setIsBuilderView(true);
+      } else {
+        setSharing((prev) =>
+          prev.map((x) => (x.id === newReportData.id ? updatedReport : x))
+        );
+        setIsBuilderView(false);
+      }
+    } else {
+      const newReport = {
+        id: Date.now(),
+        name: newReportData.name,
+        category: newReportData.category,
+        status: newReportData.status,
+        lastUpdated: today,
+        icon: icon,
+      };
+
+      if (
+        isBuilderView ||
+        [
+          "Builder",
+          "Data",
+          "Filter",
+          "Analysis",
+          "Template",
+          "Automation",
+          "Export",
+        ].includes(newReportData.category)
+      ) {
+        setFeatures((prev) => [newReport, ...prev]);
+        setIsBuilderView(true);
+      } else {
+        setSharing((prev) => [newReport, ...prev]);
+        setIsBuilderView(false);
+      }
+    }
+
+    closeAddReportModal();
+    setCurrentPage(1);
+  };
+
+  const handleAddNewReport = () => {
+    setIsEditing(false);
+    setNewReportData({
+      id: null,
+      name: "",
+      category: isBuilderView ? "Builder" : "Sharing",
+      status: "Draft",
+    });
+    setAddReportModalOpen(true);
+  };
+
+  const toggleView = (v) => {
+    setIsBuilderView(v === "builder");
+    setCurrentPage(1);
+  };
+
+  const toggleEmployeeSelection = (employeeId) => {
+    setSelectedEmployees((prev) =>
+      prev.includes(employeeId)
+        ? prev.filter((id) => id !== employeeId)
+        : [...prev, employeeId]
+    );
+  };
+
+  const selectAllEmployees = () => {
+    if (selectedEmployees.length === filteredEmployees.length) {
+      setSelectedEmployees([]);
+    } else {
+      setSelectedEmployees(filteredEmployees.map((emp) => emp.id));
     }
   };
 
-  // Remove group by
-  const removeGroupBy = (fieldId) => {
-    setCurrentReport(prev => ({
-      ...prev,
-      groupBy: prev.groupBy.filter(f => f !== fieldId)
-    }));
+  // Add these functions to your component
+
+  // Open employee details modal
+  const openEmployeeModal = (employee) => {
+    setSelectedEmployee(employee);
+    setEmployeeModalOpen(true);
   };
 
-  // Add calculation
-  const addCalculation = () => {
-    const newCalc = {
-      id: Date.now(),
-      type: "sum",
-      field: "",
-      label: ""
-    };
-    setCurrentReport(prev => ({
-      ...prev,
-      calculations: [...prev.calculations, newCalc]
-    }));
+  // Close employee modal
+  const closeEmployeeModal = () => {
+    setEmployeeModalOpen(false);
+    setSelectedEmployee(null);
   };
 
-  // Update calculation
-  const updateCalculation = (calcId, updates) => {
-    setCurrentReport(prev => ({
-      ...prev,
-      calculations: prev.calculations.map(c => c.id === calcId ? { ...c, ...updates } : c)
-    }));
+  // Open edit employee modal
+  // Update the openEditEmployeeModal function to include all fields
+  const openEditEmployeeModal = (employee) => {
+    setNewEmployeeData({
+      id: employee.id,
+      employeeName: employee.employeeName || "",
+      employeeId: employee.employeeId || "",
+      designation: employee.designation || "",
+      department: employee.department || "",
+      location: employee.location || "",
+      costCenter: employee.costCenter || "",
+      dateTime:
+        employee.dateTime || new Date().toISOString().split("T")[0] + " 09:00",
+      payDays: employee.payDays || 21,
+      salary: employee.salary || 50000,
+      currency: employee.currency || "USD",
+      status: employee.status || "Active",
+      lastUpdated:
+        employee.lastUpdated || new Date().toISOString().split("T")[0],
+      email: employee.email || "",
+      phone: employee.phone || "",
+      manager: employee.manager || "",
+    });
+    setIsEditingEmployee(true);
+    setAddEmployeeModalOpen(true);
   };
 
-  // Remove calculation
-  const removeCalculation = (calcId) => {
-    setCurrentReport(prev => ({
-      ...prev,
-      calculations: prev.calculations.filter(c => c.id !== calcId)
-    }));
+  // Update the handleAddNewEmployee function
+  const handleAddNewEmployee = () => {
+    setIsEditingEmployee(false);
+    setNewEmployeeData({
+      id: null,
+      employeeName: "",
+      designation: "",
+      department: "",
+      location: "",
+      costCenter: "",
+      dateTime: new Date().toISOString().split("T")[0] + " 09:00",
+      payDays: 21,
+      salary: 50000,
+      currency: "USD", // Default currency
+      status: "Active",
+      lastUpdated: new Date().toISOString().split("T")[0],
+      employeeId: "",
+      email: "",
+      phone: "",
+      manager: "",
+    });
+    setAddEmployeeModalOpen(true);
+  };
+  // Close add employee modal
+  const closeAddEmployeeModal = () => {
+    setAddEmployeeModalOpen(false);
+    setIsEditingEmployee(false);
+    setNewEmployeeData({
+      id: null,
+      employeeName: "",
+      employeeId: "",
+      designation: "",
+      department: "IT",
+      location: "New York",
+      costCenter: "CC-100",
+      dateTime: new Date().toISOString().split("T")[0] + " 09:00",
+      payDays: 21,
+      salary: 50000,
+      currency: "USD",
+      status: "Active",
+      lastUpdated: new Date().toISOString().split("T")[0],
+      email: "",
+      phone: "",
+      manager: "",
+    });
+  };
+  // Save employee (add or update)
+  // Update the handleSaveEmployee function to handle all fields
+  const handleSaveEmployee = () => {
+    if (!newEmployeeData.employeeName.trim()) {
+      alert("Please enter employee name");
+      return;
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+
+    if (isEditingEmployee && newEmployeeData.id) {
+      // Update existing employee
+      setEmployeeData((prev) =>
+        prev.map((emp) =>
+          emp.id === newEmployeeData.id
+            ? {
+                ...emp,
+                ...newEmployeeData,
+                lastUpdated: today,
+                // Keep original employeeId if not provided
+                employeeId: newEmployeeData.employeeId || emp.employeeId,
+              }
+            : emp
+        )
+      );
+    } else {
+      // Add new employee
+      const newEmployee = {
+        ...newEmployeeData,
+        id: Date.now(),
+        lastUpdated: today,
+        // Generate employee ID if not provided
+        employeeId:
+          newEmployeeData.employeeId ||
+          `EMP-${Date.now().toString().slice(-6)}`,
+        // Set default currency if not provided
+        currency: newEmployeeData.currency || "USD",
+      };
+      setEmployeeData((prev) => [newEmployee, ...prev]);
+    }
+
+    closeAddEmployeeModal();
+    setSelectedEmployees([]);
   };
 
-  // Add sort
-  const addSort = () => {
-    const newSort = {
-      id: Date.now(),
-      field: "",
-      order: "Ascending"
-    };
-    setCurrentReport(prev => ({
-      ...prev,
-      sortBy: [...prev.sortBy, newSort]
-    }));
-  };
-
-  // Update sort
-  const updateSort = (sortId, updates) => {
-    setCurrentReport(prev => ({
-      ...prev,
-      sortBy: prev.sortBy.map(s => s.id === sortId ? { ...s, ...updates } : s)
-    }));
-  };
-
-  // Remove sort
-  const removeSort = (sortId) => {
-    setCurrentReport(prev => ({
-      ...prev,
-      sortBy: prev.sortBy.filter(s => s.id !== sortId)
-    }));
-  };
-
-  // Save as template
-  const handleSaveTemplate = () => {
-    if (!templateName.trim()) return;
-    
-    const newTemplate = {
-      id: Date.now(),
-      name: templateName,
-      description: templateDescription,
-      dataSource: currentReport.dataSource,
-      createdAt: new Date().toISOString().split('T')[0],
-      lastUsed: new Date().toISOString().split('T')[0],
-      config: { ...currentReport }
-    };
-    
-    setTemplates(prev => [...prev, newTemplate]);
-    setShowSaveTemplateModal(false);
-    setTemplateName("");
-    setTemplateDescription("");
-  };
-
-  // Load template
-  const loadTemplate = (template) => {
-    if (template.config) {
-      setCurrentReport(template.config);
-      setActiveTab("builder");
+  // Delete employee
+  const handleDeleteEmployee = (employeeId) => {
+    if (window.confirm("Are you sure you want to delete this employee?")) {
+      setEmployeeData((prev) => prev.filter((emp) => emp.id !== employeeId));
+      setSelectedEmployees((prev) => prev.filter((id) => id !== employeeId));
     }
   };
 
-  // Generate report
-  const handleGenerateReport = () => {
-    // Simulate report generation
-    alert(`Generating report: ${currentReport.name}\nFields: ${currentReport.selectedFields.length}\nFormat: ${currentReport.exportFormat}`);
+  // Also update the filter function to include costCenter
+  const filteredEmployees = employeeData.filter((employee) => {
+    const matchesName =
+      !employeeFilters.employeeName ||
+      employee.employeeName
+        .toLowerCase()
+        .includes(employeeFilters.employeeName.toLowerCase());
+    const matchesLocation =
+      !employeeFilters.location ||
+      employee.location
+        .toLowerCase()
+        .includes(employeeFilters.location.toLowerCase());
+    const matchesDepartment =
+      !employeeFilters.department ||
+      employee.department
+        .toLowerCase()
+        .includes(employeeFilters.department.toLowerCase());
+    const matchesCostCenter =
+      !employeeFilters.costCenter ||
+      employee.costCenter
+        .toLowerCase()
+        .includes(employeeFilters.costCenter.toLowerCase());
+    const matchesStatus =
+      !employeeFilters.status || employee.status === employeeFilters.status;
+
+    return (
+      matchesName &&
+      matchesLocation &&
+      matchesDepartment &&
+      matchesCostCenter &&
+      matchesStatus
+    );
+  });
+
+  // Update resetEmployeeFilters to include costCenter
+  const resetEmployeeFilters = () => {
+    setEmployeeFilters({
+      employeeName: "",
+      location: "",
+      department: "",
+      costCenter: "",
+      status: "",
+    });
   };
 
-  // Export report
-  const handleExportReport = (format) => {
-    const filename = `${currentReport.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.${format}`;
-    alert(`Exporting report as ${format.toUpperCase()}: ${filename}`);
-  };
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, categoryFilter, isBuilderView]);
 
   return (
-    <div className="container-fluid p-4">
-      {/* Page Header */}
-      <div className="mb-4">
-        <div className="d-flex justify-content-between align-items-center mb-2">
-          <h4 className="mb-0">Custom Report Builder</h4>
-          <div className="d-flex gap-2">
-            <button 
-              className="btn btn-outline-primary" 
-              onClick={() => setShowSaveTemplateModal(true)}
-              disabled={currentReport.selectedFields.length === 0}
-            >
-              <SaveIcon size={16} className="me-2" />
-              Save Template
-            </button>
-            <button 
-              className="btn btn-primary" 
-              onClick={handleGenerateReport}
-              disabled={currentReport.selectedFields.length === 0}
-            >
-              <Play size={16} className="me-2" />
-              Generate Report
-            </button>
+    <>
+      <div className="container-fluid p-4">
+        {/* Header */}
+        <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+          <div>
+            <h4 className="mb-0">Custom Report Builder</h4>
+            <small className="text-muted">
+              Manage report features and generate employee reports
+            </small>
           </div>
         </div>
-        <p className="text-muted mb-0">Build custom reports with drag-and-drop interface, filters, calculations, and more</p>
-      </div>
 
-      {/* Tab Navigation */}
-      <div className="card mb-4 border shadow-none">
-        <div className="card-body">
-          <ul className="nav nav-tabs">
-            <li className="nav-item">
-              <button 
-                className={`nav-link ${activeTab === 'builder' ? 'active' : ''}`}
-                onClick={() => setActiveTab('builder')}
-              >
-                <Layout className="me-2" size={16} />
-                Report Builder
-              </button>
-            </li>
-            <li className="nav-item">
-              <button 
-                className={`nav-link ${activeTab === 'templates' ? 'active' : ''}`}
-                onClick={() => setActiveTab('templates')}
-              >
-                <FileText className="me-2" size={16} />
-                Saved Templates
-              </button>
-            </li>
-            <li className="nav-item">
-              <button 
-                className={`nav-link ${activeTab === 'scheduled' ? 'active' : ''}`}
-                onClick={() => setActiveTab('scheduled')}
-              >
-                <Clock className="me-2" size={16} />
-                Scheduled Reports
-              </button>
-            </li>
-            <li className="nav-item">
-              <button 
-                className={`nav-link ${activeTab === 'shared' ? 'active' : ''}`}
-                onClick={() => setActiveTab('shared')}
-              >
-                <Share2 className="me-2" size={16} />
-                Shared Reports
-              </button>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      {/* Report Builder Tab */}
-      {activeTab === 'builder' && (
-        <div className="row">
-          {/* Left Panel - Data Source & Fields */}
-          <div className="col-md-3">
-            <div className="card border shadow-none mb-4">
-              <div className="card-header bg-light">
-                <h6 className="mb-0">Data Sources</h6>
-              </div>
-              <div className="card-body">
-                {Object.entries(dataSources).map(([key, source]) => (
-                  <button
-                    key={key}
-                    className={`btn w-100 mb-2 text-start ${
-                      currentReport.dataSource === key ? 'btn-primary' : 'btn-outline-primary'
-                    }`}
-                    onClick={() => handleDataSourceChange(key)}
-                  >
-                    <span className="me-2">{source.icon}</span>
-                    {source.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="card border shadow-none">
-              <div className="card-header bg-light">
-                <h6 className="mb-0">Available Fields</h6>
-                <small className="text-muted">Drag to add</small>
-              </div>
-              <div className="card-body" style={{ maxHeight: '500px', overflowY: 'auto' }}>
-                {availableFields.map(field => (
-                  <div
-                    key={field.id}
-                    draggable
-                    onDragStart={(e) => handleFieldDragStart(e, field)}
-                    className="card mb-2 p-2 cursor-pointer border"
-                    style={{ cursor: 'grab' }}
-                  >
-                    <div className="d-flex align-items-center">
-                      <GripVertical size={16} className="me-2 text-muted" />
-                      <div className="flex-grow-1">
-                        <div className="fw-medium small">{field.label}</div>
-                        <small className="text-muted">{field.type}</small>
-                      </div>
-                    </div>
+        {/* KPIs - Always visible */}
+        <div className="row g-2 g-md-3 mb-4">
+          <div className="col-6 col-md-3">
+            <div className="card h-100 border-0 shadow-sm">
+              <div className="card-body p-3">
+                <div className="d-flex align-items-center justify-content-between">
+                  <div>
+                    <p className="mb-1 text-muted small">Total Features</p>
+                    <h4 className="mb-0">{kpis.total}</h4>
                   </div>
-                ))}
+                  <div className="bg-primary bg-opacity-10 p-2 rounded">
+                    <Database size={20} className="text-primary" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-
-          {/* Center Panel - Report Configuration */}
-          <div className="col-md-6">
-            {/* Report Basic Info */}
-            <div className="card border shadow-none mb-4">
-              <div className="card-header bg-light">
-                <h6 className="mb-0">Report Configuration</h6>
-              </div>
-              <div className="card-body">
-                <div className="mb-3">
-                  <label className="form-label">Report Name</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={currentReport.name}
-                    onChange={(e) => setCurrentReport(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Enter report name"
-                  />
+          <div className="col-6 col-md-3">
+            <div className="card h-100 border-0 shadow-sm">
+              <div className="card-body p-3">
+                <div className="d-flex align-items-center justify-content-between">
+                  <div>
+                    <p className="mb-1 text-muted small">Published</p>
+                    <h4 className="mb-0 text-success">{kpis.published}</h4>
+                  </div>
+                  <div className="bg-success bg-opacity-10 p-2 rounded">
+                    <Check size={20} className="text-success" />
+                  </div>
                 </div>
-                <div className="mb-3">
-                  <label className="form-label">Description</label>
-                  <textarea
-                    className="form-control"
-                    rows="2"
-                    value={currentReport.description}
-                    onChange={(e) => setCurrentReport(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Enter report description"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Selected Fields */}
-            <div className="card border shadow-none mb-4">
-              <div className="card-header bg-light d-flex justify-content-between align-items-center">
-                <h6 className="mb-0">Selected Fields</h6>
-                <small className="text-muted">{currentReport.selectedFields.length} selected</small>
-              </div>
-              <div 
-                className="card-body min-height-200"
-                onDrop={handleFieldDrop}
-                onDragOver={handleDragOver}
-                style={{ minHeight: '200px', border: '2px dashed #ddd', borderRadius: '4px' }}
-              >
-                {currentReport.selectedFields.length === 0 ? (
-                  <div className="text-center text-muted py-5">
-                    <p>Drag fields from the left panel to add them</p>
-                  </div>
-                ) : (
-                  <div className="d-flex flex-column gap-2">
-                    {currentReport.selectedFields.map((field, index) => (
-                      <div key={field.id} className="card p-2">
-                        <div className="d-flex align-items-center justify-content-between">
-                          <div className="d-flex align-items-center">
-                            <GripVertical size={16} className="me-2 text-muted" />
-                            <div>
-                              <div className="fw-medium small">{field.label}</div>
-                              <small className="text-muted">{field.type}</small>
-                            </div>
-                          </div>
-                          <div className="d-flex gap-1">
-                            <button
-                              className="btn btn-sm btn-link p-0"
-                              onClick={() => moveField(field.id, 'up')}
-                              disabled={index === 0}
-                            >
-                              <ChevronUp size={16} />
-                            </button>
-                            <button
-                              className="btn btn-sm btn-link p-0"
-                              onClick={() => moveField(field.id, 'down')}
-                              disabled={index === currentReport.selectedFields.length - 1}
-                            >
-                              <ChevronDown size={16} />
-                            </button>
-                            <button
-                              className="btn btn-sm btn-link text-danger p-0"
-                              onClick={() => removeField(field.id)}
-                            >
-                              <X size={16} />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Filters */}
-            <div className="card border shadow-none mb-4">
-              <div className="card-header bg-light d-flex justify-content-between align-items-center">
-                <h6 className="mb-0">Filters</h6>
-                <button className="btn btn-sm btn-primary" onClick={addFilter}>
-                  <Plus size={14} className="me-1" />
-                  Add Filter
-                </button>
-              </div>
-              <div className="card-body">
-                {currentReport.filters.length === 0 ? (
-                  <p className="text-muted text-center py-3">No filters applied</p>
-                ) : (
-                  <div className="d-flex flex-column gap-3">
-                    {currentReport.filters.map(filter => (
-                      <div key={filter.id} className="card p-3">
-                        <div className="row g-2">
-                          <div className="col-md-4">
-                            <select
-                              className="form-select form-select-sm"
-                              value={filter.field}
-                              onChange={(e) => updateFilter(filter.id, { field: e.target.value })}
-                            >
-                              <option value="">Select Field</option>
-                              {availableFields.map(f => (
-                                <option key={f.id} value={f.id}>{f.label}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="col-md-3">
-                            <select
-                              className="form-select form-select-sm"
-                              value={filter.operator}
-                              onChange={(e) => updateFilter(filter.id, { operator: e.target.value })}
-                            >
-                              <option value="equals">Equals</option>
-                              <option value="not_equals">Not Equals</option>
-                              <option value="contains">Contains</option>
-                              <option value="greater_than">Greater Than</option>
-                              <option value="less_than">Less Than</option>
-                              <option value="between">Between</option>
-                            </select>
-                          </div>
-                          <div className="col-md-4">
-                            <input
-                              type="text"
-                              className="form-control form-control-sm"
-                              value={filter.value}
-                              onChange={(e) => updateFilter(filter.id, { value: e.target.value })}
-                              placeholder="Value"
-                            />
-                          </div>
-                          <div className="col-md-1">
-                            <button
-                              className="btn btn-sm btn-danger"
-                              onClick={() => removeFilter(filter.id)}
-                            >
-                              <X size={14} />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Group By */}
-            <div className="card border shadow-none mb-4">
-              <div className="card-header bg-light">
-                <h6 className="mb-0">Group By Dimensions</h6>
-              </div>
-              <div className="card-body">
-                <div className="mb-2">
-                  <select
-                    className="form-select form-select-sm"
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        addGroupBy(e.target.value);
-                        e.target.value = "";
-                      }
-                    }}
-                  >
-                    <option value="">Add grouping field...</option>
-                    {currentReport.selectedFields.filter(f => 
-                      !currentReport.groupBy.includes(f.id)
-                    ).map(f => (
-                      <option key={f.id} value={f.id}>{f.label}</option>
-                    ))}
-                  </select>
-                </div>
-                {currentReport.groupBy.length > 0 && (
-                  <div className="d-flex flex-wrap gap-2">
-                    {currentReport.groupBy.map(fieldId => {
-                      const field = currentReport.selectedFields.find(f => f.id === fieldId);
-                      return field ? (
-                        <span key={fieldId} className="badge bg-primary d-flex align-items-center gap-1">
-                          {field.label}
-                          <button
-                            className="btn btn-sm p-0 text-white"
-                            onClick={() => removeGroupBy(fieldId)}
-                            style={{ background: 'none', border: 'none' }}
-                          >
-                            <X size={12} />
-                          </button>
-                        </span>
-                      ) : null;
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Calculations */}
-            <div className="card border shadow-none mb-4">
-              <div className="card-header bg-light d-flex justify-content-between align-items-center">
-                <h6 className="mb-0">Calculations</h6>
-                <button className="btn btn-sm btn-primary" onClick={addCalculation}>
-                  <Plus size={14} className="me-1" />
-                  Add Calculation
-                </button>
-              </div>
-              <div className="card-body">
-                {currentReport.calculations.length === 0 ? (
-                  <p className="text-muted text-center py-3">No calculations added</p>
-                ) : (
-                  <div className="d-flex flex-column gap-3">
-                    {currentReport.calculations.map(calc => (
-                      <div key={calc.id} className="card p-3">
-                        <div className="row g-2">
-                          <div className="col-md-4">
-                            <select
-                              className="form-select form-select-sm"
-                              value={calc.type}
-                              onChange={(e) => updateCalculation(calc.id, { type: e.target.value })}
-                            >
-                              {calculationTypes.map(ct => (
-                                <option key={ct.id} value={ct.id}>{ct.label}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="col-md-4">
-                            <select
-                              className="form-select form-select-sm"
-                              value={calc.field}
-                              onChange={(e) => updateCalculation(calc.id, { field: e.target.value })}
-                            >
-                              <option value="">Select Field</option>
-                              {currentReport.selectedFields.filter(f => f.type === 'number').map(f => (
-                                <option key={f.id} value={f.id}>{f.label}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="col-md-3">
-                            <input
-                              type="text"
-                              className="form-control form-control-sm"
-                              value={calc.label}
-                              onChange={(e) => updateCalculation(calc.id, { label: e.target.value })}
-                              placeholder="Label"
-                            />
-                          </div>
-                          <div className="col-md-1">
-                            <button
-                              className="btn btn-sm btn-danger"
-                              onClick={() => removeCalculation(calc.id)}
-                            >
-                              <X size={14} />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Sort */}
-            <div className="card border shadow-none mb-4">
-              <div className="card-header bg-light d-flex justify-content-between align-items-center">
-                <h6 className="mb-0">Sort & Order</h6>
-                <button className="btn btn-sm btn-primary" onClick={addSort}>
-                  <Plus size={14} className="me-1" />
-                  Add Sort
-                </button>
-              </div>
-              <div className="card-body">
-                {currentReport.sortBy.length === 0 ? (
-                  <p className="text-muted text-center py-3">No sorting applied</p>
-                ) : (
-                  <div className="d-flex flex-column gap-3">
-                    {currentReport.sortBy.map(sort => (
-                      <div key={sort.id} className="card p-3">
-                        <div className="row g-2">
-                          <div className="col-md-6">
-                            <select
-                              className="form-select form-select-sm"
-                              value={sort.field}
-                              onChange={(e) => updateSort(sort.id, { field: e.target.value })}
-                            >
-                              <option value="">Select Field</option>
-                              {currentReport.selectedFields.map(f => (
-                                <option key={f.id} value={f.id}>{f.label}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="col-md-4">
-                            <select
-                              className="form-select form-select-sm"
-                              value={sort.order}
-                              onChange={(e) => updateSort(sort.id, { order: e.target.value })}
-                            >
-                              {sortOrders.map(order => (
-                                <option key={order} value={order}>{order}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="col-md-2">
-                            <button
-                              className="btn btn-sm btn-danger"
-                              onClick={() => removeSort(sort.id)}
-                            >
-                              <X size={14} />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           </div>
-
-          {/* Right Panel - Export & Sharing */}
-          <div className="col-md-3">
-            {/* Export Format */}
-            <div className="card border shadow-none mb-4">
-              <div className="card-header bg-light">
-                <h6 className="mb-0">Export Format</h6>
-              </div>
-              <div className="card-body">
-                {exportFormats.map(format => (
-                  <button
-                    key={format.id}
-                    className={`btn w-100 mb-2 text-start ${
-                      currentReport.exportFormat === format.id ? 'btn-primary' : 'btn-outline-primary'
-                    }`}
-                    onClick={() => setCurrentReport(prev => ({ ...prev, exportFormat: format.id }))}
-                  >
-                    <span className="me-2">{format.icon}</span>
-                    {format.label}
-                  </button>
-                ))}
-                <button
-                  className="btn btn-success w-100 mt-3"
-                  onClick={() => handleExportReport(currentReport.exportFormat)}
-                  disabled={currentReport.selectedFields.length === 0}
-                >
-                  <Download size={16} className="me-2" />
-                  Export Report
-                </button>
-              </div>
-            </div>
-
-            {/* Email Distribution */}
-            <div className="card border shadow-none mb-4">
-              <div className="card-header bg-light d-flex justify-content-between align-items-center">
-                <h6 className="mb-0">Email Distribution</h6>
-                <button 
-                  className="btn btn-sm btn-primary"
-                  onClick={() => {
-                    const email = prompt("Enter email address:");
-                    if (email) {
-                      setCurrentReport(prev => ({
-                        ...prev,
-                        emailDistribution: [...prev.emailDistribution, email]
-                      }));
-                    }
-                  }}
-                >
-                  <Plus size={14} />
-                </button>
-              </div>
-              <div className="card-body">
-                {currentReport.emailDistribution.length === 0 ? (
-                  <p className="text-muted small">No emails added</p>
-                ) : (
-                  <div className="d-flex flex-column gap-2">
-                    {currentReport.emailDistribution.map((email, index) => (
-                      <div key={index} className="d-flex justify-content-between align-items-center">
-                        <small>{email}</small>
-                        <button
-                          className="btn btn-sm btn-link text-danger p-0"
-                          onClick={() => setCurrentReport(prev => ({
-                            ...prev,
-                            emailDistribution: prev.emailDistribution.filter((_, i) => i !== index)
-                          }))}
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
+          <div className="col-6 col-md-3">
+            <div className="card h-100 border-0 shadow-sm">
+              <div className="card-body p-3">
+                <div className="d-flex align-items-center justify-content-between">
+                  <div>
+                    <p className="mb-1 text-muted small">In Progress</p>
+                    <h4 className="mb-0 text-warning">{kpis.inProgress}</h4>
                   </div>
-                )}
-              </div>
-            </div>
-
-            {/* Schedule */}
-            <div className="card border shadow-none mb-4">
-              <div className="card-header bg-light">
-                <h6 className="mb-0">Schedule</h6>
-              </div>
-              <div className="card-body">
-                <button
-                  className="btn btn-outline-primary w-100"
-                  onClick={() => setShowScheduleModal(true)}
-                >
-                  <Clock size={16} className="me-2" />
-                  {currentReport.schedule ? 'Edit Schedule' : 'Set Schedule'}
-                </button>
-                {currentReport.schedule && (
-                  <div className="mt-2">
-                    <small className="text-muted">
-                      {currentReport.schedule.frequency} at {currentReport.schedule.time}
-                    </small>
+                  <div className="bg-warning bg-opacity-10 p-2 rounded">
+                    <Clock size={20} className="text-warning" />
                   </div>
-                )}
-              </div>
-            </div>
-
-            {/* Sharing */}
-            <div className="card border shadow-none">
-              <div className="card-header bg-light">
-                <h6 className="mb-0">Sharing Options</h6>
-              </div>
-              <div className="card-body">
-                <button
-                  className="btn btn-outline-primary w-100 mb-2"
-                  onClick={() => setShowShareModal(true)}
-                >
-                  <Share2 size={16} className="me-2" />
-                  Configure Sharing
-                </button>
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={currentReport.shareSettings.public}
-                    onChange={(e) => setCurrentReport(prev => ({
-                      ...prev,
-                      shareSettings: { ...prev.shareSettings, public: e.target.checked }
-                    }))}
-                  />
-                  <label className="form-check-label small">
-                    Public Dashboard
-                  </label>
                 </div>
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={currentReport.shareSettings.apiAccess}
-                    onChange={(e) => setCurrentReport(prev => ({
-                      ...prev,
-                      shareSettings: { ...prev.shareSettings, apiAccess: e.target.checked }
-                    }))}
-                  />
-                  <label className="form-check-label small">
-                    API Access
-                  </label>
+              </div>
+            </div>
+          </div>
+          <div className="col-6 col-md-3">
+            <div className="card h-100 border-0 shadow-sm">
+              <div className="card-body p-3">
+                <div className="d-flex align-items-center justify-content-between">
+                  <div>
+                    <p className="mb-1 text-muted small">Scheduled</p>
+                    <h4 className="mb-0 text-primary">{kpis.scheduled}</h4>
+                  </div>
+                  <div className="bg-info bg-opacity-10 p-2 rounded">
+                    <Calendar size={20} className="text-info" />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      )}
 
-      {/* Templates Tab */}
-      {activeTab === 'templates' && (
-        <div className="row">
-          {templates.map(template => (
-            <div key={template.id} className="col-md-4 mb-4">
-              <div className="card border shadow-none h-100">
-                <div className="card-body">
-                  <h6 className="card-title">{template.name}</h6>
-                  <p className="card-text small text-muted">{template.description}</p>
-                  <div className="mb-2">
-                    <span className="badge bg-info">
-                      {dataSources[template.dataSource]?.name}
-                    </span>
-                  </div>
-                  <div className="small text-muted mb-3">
-                    <div>Created: {template.createdAt}</div>
-                    <div>Last Used: {template.lastUsed}</div>
-                  </div>
-                  <div className="d-flex gap-2">
-                    <button
-                      className="btn btn-sm btn-primary"
-                      onClick={() => loadTemplate(template)}
-                    >
-                      <Play size={14} className="me-1" />
-                      Use Template
-                    </button>
-                    <button className="btn btn-sm btn-outline-danger">
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-          {templates.length === 0 && (
-            <div className="col-12 text-center py-5">
-              <p className="text-muted">No saved templates</p>
-            </div>
-          )}
-        </div>
-      )}
+        {/* Navigation Tabs */}
+<div className="mb-4">
+  <div className="d-flex overflow-auto">
+    <div className="d-flex flex-nowrap gap-2 w-100">
 
-      {/* Scheduled Reports Tab */}
-      {activeTab === 'scheduled' && (
-        <div className="card border shadow-none">
-          <div className="card-body">
-            <div className="text-center py-5">
-              <Clock size={48} className="text-muted mb-3" />
-              <h6>No Scheduled Reports</h6>
-              <p className="text-muted">Schedule reports to run automatically at specified times</p>
-              <button className="btn btn-primary" onClick={() => setActiveTab('builder')}>
-                Create Scheduled Report
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Report Builder */}
+      <button
+        type="button"
+        onClick={() => {
+          setActiveTab("features");
+          setIsBuilderView(true);
+        }}
+        className={`btn d-flex align-items-center gap-2 px-4 py-2.5 rounded flex-shrink-0 ${
+          activeTab === "features" && isBuilderView
+            ? "btn-primary text-white"
+            : "btn-outline-primary"
+        }`}
+      >
+        <Settings size={18} />
+        <span>Report Builder</span>
+      </button>
 
-      {/* Shared Reports Tab */}
-      {activeTab === 'shared' && (
-        <div className="card border shadow-none">
-          <div className="card-body">
-            <div className="text-center py-5">
-              <Share2 size={48} className="text-muted mb-3" />
-              <h6>No Shared Reports</h6>
-              <p className="text-muted">Reports shared with other users will appear here</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Report Sharing */}
+      <button
+        type="button"
+        onClick={() => {
+          setActiveTab("features");
+          setIsBuilderView(false);
+        }}
+        className={`btn d-flex align-items-center gap-2 px-4 py-2.5 rounded flex-shrink-0 ${
+          activeTab === "features" && !isBuilderView
+            ? "btn-primary text-white"
+            : "btn-outline-primary"
+        }`}
+      >
+        <Share2 size={18} />
+        <span>Report Sharing</span>
+      </button>
 
-      {/* Save Template Modal */}
-      {showSaveTemplateModal && (
-        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Save Report Template</h5>
-                <button type="button" className="btn-close" onClick={() => setShowSaveTemplateModal(false)}></button>
-              </div>
-              <div className="modal-body">
-                <div className="mb-3">
-                  <label className="form-label">Template Name</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={templateName}
-                    onChange={(e) => setTemplateName(e.target.value)}
-                    placeholder="Enter template name"
-                  />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Description</label>
-                  <textarea
-                    className="form-control"
-                    rows="3"
-                    value={templateDescription}
-                    onChange={(e) => setTemplateDescription(e.target.value)}
-                    placeholder="Enter template description"
-                  />
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowSaveTemplateModal(false)}>
-                  Cancel
-                </button>
-                <button className="btn btn-primary" onClick={handleSaveTemplate}>
-                  <SaveIcon size={16} className="me-2" />
-                  Save Template
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Employee Reports */}
+      <button
+        type="button"
+        onClick={() => setActiveTab("employees")}
+        className={`btn d-flex align-items-center gap-2 px-4 py-2.5 rounded flex-shrink-0 ${
+          activeTab === "employees"
+            ? "btn-primary text-white"
+            : "btn-outline-primary"
+        }`}
+      >
+        <Users size={18} />
+        <span>Employee Reports</span>
+      </button>
 
-      {/* Schedule Modal */}
-      {showScheduleModal && (
-        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Schedule Report</h5>
-                <button type="button" className="btn-close" onClick={() => setShowScheduleModal(false)}></button>
-              </div>
-              <div className="modal-body">
-                <div className="mb-3">
-                  <label className="form-label">Frequency</label>
-                  <select
-                    className="form-select"
-                    value={currentReport.schedule?.frequency || 'daily'}
-                    onChange={(e) => setCurrentReport(prev => ({
-                      ...prev,
-                      schedule: { ...prev.schedule, frequency: e.target.value, time: prev.schedule?.time || '09:00' }
-                    }))}
-                  >
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="quarterly">Quarterly</option>
-                  </select>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Time</label>
-                  <input
-                    type="time"
-                    className="form-control"
-                    value={currentReport.schedule?.time || '09:00'}
-                    onChange={(e) => setCurrentReport(prev => ({
-                      ...prev,
-                      schedule: { ...prev.schedule, time: e.target.value, frequency: prev.schedule?.frequency || 'daily' }
-                    }))}
-                  />
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowScheduleModal(false)}>
-                  Cancel
-                </button>
-                <button className="btn btn-primary" onClick={() => {
-                  setShowScheduleModal(false);
-                  setScheduledReports(prev => [...prev, { ...currentReport, id: Date.now() }]);
-                }}>
-                  <Clock size={16} className="me-2" />
-                  Schedule Report
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Share Modal */}
-      {showShareModal && (
-        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Share Report</h5>
-                <button type="button" className="btn-close" onClick={() => setShowShareModal(false)}></button>
-              </div>
-              <div className="modal-body">
-                <div className="mb-3">
-                  <label className="form-label">Share with Users</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Enter user emails (comma separated)"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        const emails = e.target.value.split(',').map(e => e.trim()).filter(e => e);
-                        if (emails.length > 0) {
-                          setCurrentReport(prev => ({
-                            ...prev,
-                            shareSettings: {
-                              ...prev.shareSettings,
-                              users: [...new Set([...prev.shareSettings.users, ...emails])]
-                            }
-                          }));
-                          e.target.value = '';
-                        }
-                      }
-                    }}
-                  />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Share with Roles</label>
-                  <select
-                    className="form-select"
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        setCurrentReport(prev => ({
-                          ...prev,
-                          shareSettings: {
-                            ...prev.shareSettings,
-                            roles: [...new Set([...prev.shareSettings.roles, e.target.value])]
-                          }
-                        }));
-                        e.target.value = '';
-                      }
-                    }}
-                  >
-                    <option value="">Select role...</option>
-                    <option value="HR">HR</option>
-                    <option value="Manager">Manager</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Admin">Admin</option>
-                  </select>
-                  {currentReport.shareSettings.roles.length > 0 && (
-                    <div className="mt-2 d-flex flex-wrap gap-2">
-                      {currentReport.shareSettings.roles.map((role, index) => (
-                        <span key={index} className="badge bg-primary">
-                          {role}
-                          <button
-                            className="btn btn-sm p-0 text-white ms-1"
-                            onClick={() => setCurrentReport(prev => ({
-                              ...prev,
-                              shareSettings: {
-                                ...prev.shareSettings,
-                                roles: prev.shareSettings.roles.filter((_, i) => i !== index)
-                              }
-                            }))}
-                          >
-                            <X size={12} />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowShareModal(false)}>
-                  Cancel
-                </button>
-                <button className="btn btn-primary" onClick={() => {
-                  setShowShareModal(false);
-                  setSharedReports(prev => [...prev, { ...currentReport, id: Date.now() }]);
-                }}>
-                  <Share2 size={16} className="me-2" />
-                  Share Report
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
+  </div>
+</div>
+
+
+        {/* FEATURES TAB CONTENT */}
+        {activeTab === "features" && (
+          <>
+            {/* FILTER BAR */}
+            <div className="card mb-3">
+              <div className="card-body">
+                <div className="row g-2">
+                  {/* Top Row: Filters on mobile, all in one row on desktop */}
+                  <div className="col-12 col-lg-9">
+                    <div className="row g-2">
+                      {/* Search - Full width on xs, 6 columns on sm+, 4 on lg+ */}
+                      <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <div className="input-group input-group-sm">
+                          <span className="input-group-text bg-white">
+                            <Search size={14} />
+                          </span>
+                          <input
+                            className="form-control"
+                            placeholder="Search features..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Category Filter */}
+                      <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <select
+                          className="form-select form-select-sm"
+                          value={categoryFilter}
+                          onChange={(e) => setCategoryFilter(e.target.value)}
+                        >
+                          <option value="">All Categories</option>
+                          {getCategoryOptions().map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Status Filter */}
+                      <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <select
+                          className="form-select form-select-sm"
+                          value={statusFilter}
+                          onChange={(e) => setStatusFilter(e.target.value)}
+                        >
+                          <option value="">All Status</option>
+                          <option value="Draft">Draft</option>
+                          <option value="Published">Published</option>
+                          <option value="In Progress">In Progress</option>
+                          <option value="Scheduled">Scheduled</option>
+                          <option value="Archived">Archived</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Buttons Column - Always on right side */}
+                  <div className="col-12 col-lg-3">
+                    <div className="d-flex flex-column flex-md-row flex-lg-column flex-xl-row gap-2 h-100">
+                      <button
+                        className="btn btn-dark btn-sm flex-fill"
+                        onClick={exportCSV}
+                      >
+                        <Download size={14} className="me-1" />
+                        <span className="d-none d-sm-inline">Export CSV</span>
+                        <span className="d-sm-none">Export CSV</span>
+                      </button>
+                      <button
+                        className="btn btn-primary btn-sm flex-fill"
+                        onClick={handleAddNewReport}
+                      >
+                        <Plus size={14} className="me-1" />
+                        <span className="d-none d-sm-inline">
+                          Add New Report
+                        </span>
+                        <span className="d-sm-none">Add New Report</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* TABLE DESKTOP */}
+            <div className="card desktop-table mb-3">
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Icon</th>
+                      <th>Feature Name</th>
+                      <th>Category</th>
+                      <th>Last Updated</th>
+                      <th>Status</th>
+                      <th className="text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {displayFeatures.map((item) => (
+                      <tr key={item.id}>
+                        <td>{item.icon}</td>
+                        <td>
+                          <strong>{item.name}</strong>
+                        </td>
+                        <td>
+                          <span className="badge bg-light text-dark">
+                            {item.category}
+                          </span>
+                        </td>
+                        <td>{item.lastUpdated}</td>
+                        <td>
+                          <span className={`badge ${statusBadge(item.status)}`}>
+                            {item.status}
+                          </span>
+                        </td>
+                        <td className="text-center">
+                          <div className="btn-group btn-group-sm">
+                            <button
+                              className="btn btn-outline-primary"
+                              onClick={() => openModal(item)}
+                            >
+                              <Eye size={14} />
+                            </button>
+                            <button
+                              className="btn btn-outline-info"
+                              onClick={() => openEditModal(item)}
+                              title="Edit"
+                            >
+                              <Edit size={14} />
+                            </button>
+                            <button
+                              className="btn btn-outline-success"
+                              onClick={() => handlePublish(item)}
+                            >
+                              <Check size={14} />
+                            </button>
+                            <button
+                              className="btn btn-outline-warning"
+                              onClick={() => handleSchedule(item)}
+                            >
+                              <Calendar size={14} />
+                            </button>
+                            <button
+                              className="btn btn-outline-danger"
+                              onClick={() => handleDelete(item)}
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {displayFeatures.length === 0 && (
+                      <tr>
+                        <td colSpan="6" className="text-center text-muted py-5">
+                          No matching features.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* PAGINATION */}
+            {filteredFeatures.length > perPage && (
+              <div className="card mb-3">
+                <div className="card-body">
+                  <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                      <small className="text-muted">
+                        Showing{" "}
+                        <strong>
+                          {Math.min(startIndex + 1, filteredFeatures.length)}-
+                          {Math.min(
+                            startIndex + perPage,
+                            filteredFeatures.length
+                          )}
+                        </strong>{" "}
+                        of <strong>{filteredFeatures.length}</strong> features
+                      </small>
+                    </div>
+
+                    <div className="d-flex align-items-center gap-2">
+                      <button
+                        className="btn btn-outline-primary btn-sm"
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(prev - 1, 1))
+                        }
+                        disabled={currentPage === 1}
+                      >
+                        Previous
+                      </button>
+
+                      <div className="mx-2">
+                        <span className="badge bg-light text-dark px-3 py-1">
+                          {currentPage} / {totalPages}
+                        </span>
+                      </div>
+
+                      <button
+                        className="btn btn-outline-primary btn-sm"
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(prev + 1, totalPages)
+                          )
+                        }
+                        disabled={currentPage === totalPages}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* EMPLOYEES TAB CONTENT */}
+        {activeTab === "employees" && (
+          <div id="employeeReportsSection">
+<div className="mb-3">
+  <div className="row g-2 align-items-center">
+
+    {/* Title */}
+    <div className="col-12 col-md-auto">
+      <h5 className="mb-0">Employee Reports</h5>
+    </div>
+
+    {/* Actions */}
+    <div className="col-12 col-md">
+      <div className="d-flex flex-column flex-sm-row flex-wrap gap-2 justify-content-md-end">
+
+        <button
+          className="btn btn-success d-flex align-items-center justify-content-center"
+          onClick={handleAddNewEmployee}
+        >
+          <Plus size={16} className="me-1" />
+          Add Employee
+        </button>
+
+        <button
+          className="btn btn-outline-success btn-sm d-flex align-items-center justify-content-center"
+          onClick={exportSelectedEmployees}
+        >
+          <Download size={14} className="me-1" />
+          Export Selected
+        </button>
+
+        <button
+          className="btn btn-success btn-sm d-flex align-items-center justify-content-center"
+          onClick={exportAllEmployeesExcel}
+        >
+          <FileSpreadsheet size={14} className="me-1" />
+          Export All Excel
+        </button>
+
+        <button
+          className="btn btn-primary btn-sm d-flex align-items-center justify-content-center"
+          onClick={exportAllEmployeesPDF}
+        >
+          <File size={14} className="me-1" />
+          Export All PDF
+        </button>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+            {/* Employee Filters */}
+            <div className="card mb-3">
+              <div className="card-body">
+                <div className="row g-2">
+                  <div className="col-md-2">
+                    <div className="input-group input-group-sm">
+                      <span className="input-group-text">
+                        <User size={14} />
+                      </span>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Employee Name"
+                        value={employeeFilters.employeeName}
+                        onChange={(e) =>
+                          setEmployeeFilters((prev) => ({
+                            ...prev,
+                            employeeName: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-2">
+                    <div className="input-group input-group-sm">
+                      <span className="input-group-text">
+                        <MapPin size={14} />
+                      </span>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Location"
+                        value={employeeFilters.location}
+                        onChange={(e) =>
+                          setEmployeeFilters((prev) => ({
+                            ...prev,
+                            location: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-2">
+                    <div className="input-group input-group-sm">
+                      <span className="input-group-text">
+                        <Users size={14} />
+                      </span>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Department"
+                        value={employeeFilters.department}
+                        onChange={(e) =>
+                          setEmployeeFilters((prev) => ({
+                            ...prev,
+                            department: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-2">
+                    <div className="input-group input-group-sm">
+                      <span className="input-group-text">
+                        <Database size={14} />
+                      </span>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Cost Center"
+                        value={employeeFilters.costCenter}
+                        onChange={(e) =>
+                          setEmployeeFilters((prev) => ({
+                            ...prev,
+                            costCenter: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-2">
+                    <select
+                      className="form-select form-select-sm"
+                      value={employeeFilters.status}
+                      onChange={(e) =>
+                        setEmployeeFilters((prev) => ({
+                          ...prev,
+                          status: e.target.value,
+                        }))
+                      }
+                    >
+                      <option value="">All Status</option>
+                      <option value="Active">Active</option>
+                      <option value="On Leave">On Leave</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                  </div>
+                  <div className="col-md-2 d-flex gap-2">
+                    <button
+                      className="btn btn-outline-secondary btn-sm"
+                      onClick={resetEmployeeFilters}
+                    >
+                      <Filter size={14} /> Reset
+                    </button>
+                    <button
+                      className="btn btn-outline-primary btn-sm"
+                      onClick={selectAllEmployees}
+                    >
+                      {selectedEmployees.length === filteredEmployees.length
+                        ? "Deselect All"
+                        : "Select All"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Employee Table */}
+            <div className="card">
+              <div className="table-responsive">
+                <table className="table table-hover mb-0">
+                  <thead className="table-light">
+                    <tr>
+                      <th style={{ width: "40px" }}>
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          checked={
+                            selectedEmployees.length ===
+                              filteredEmployees.length &&
+                            filteredEmployees.length > 0
+                          }
+                          onChange={selectAllEmployees}
+                        />
+                      </th>
+                      <th>Employee Name</th>
+                      <th>Designation</th>
+                      <th>Department</th>
+                      <th>Location</th>
+                      <th>Cost Center</th>
+                      <th>Date & Time</th>
+                      <th>Pay Days</th>
+                      <th>Salary</th>
+                      <th>Status</th>
+                      <th>Last Updated</th>
+                      <th className="text-center">Actions</th>
+                      <th className="text-center">Export</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredEmployees.map((employee) => (
+                      <tr key={employee.id}>
+                        <td>
+                          <input
+                            type="checkbox"
+                            className="form-check-input"
+                            checked={selectedEmployees.includes(employee.id)}
+                            onChange={() =>
+                              toggleEmployeeSelection(employee.id)
+                            }
+                          />
+                        </td>
+                        <td>
+                          <div className="d-flex align-items-center gap-2">
+                            <User size={14} />
+                            <strong>{employee.employeeName}</strong>
+                          </div>
+                        </td>
+                        <td>
+                          <span className="badge bg-primary">
+                            {employee.designation}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="badge bg-info text-white">
+                            {employee.department}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="badge bg-warning text-dark">
+                            {employee.location}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="badge bg-secondary">
+                            {employee.costCenter}
+                          </span>
+                        </td>
+                        <td>
+                          <small>{employee.dateTime}</small>
+                        </td>
+                        <td>{employee.payDays} days</td>
+                        <td>
+                          <strong>
+                            {employee.currency || "USD"}{" "}
+                            {employee.salary.toLocaleString()}
+                          </strong>
+                        </td>
+                        <td>
+                          <span
+                            className={`badge ${
+                              employee.status === "Active"
+                                ? "bg-success"
+                                : employee.status === "On Leave"
+                                ? "bg-warning"
+                                : "bg-danger"
+                            }`}
+                          >
+                            {employee.status}
+                          </span>
+                        </td>
+                        <td>
+                          <small>
+                            {employee.lastUpdated ||
+                              employee.dateTime.split(" ")[0]}
+                          </small>
+                        </td>
+                        <td className="text-center">
+                          <div className="btn-group btn-group-sm">
+                            <button
+                              className="btn btn-outline-primary"
+                              onClick={() => openEmployeeModal(employee)}
+                              title="View"
+                            >
+                              <Eye size={14} />
+                            </button>
+                            <button
+                              className="btn btn-outline-info"
+                              onClick={() => openEditEmployeeModal(employee)}
+                              title="Edit"
+                            >
+                              <Edit size={14} />
+                            </button>
+                            <button
+                              className="btn btn-outline-danger"
+                              onClick={() => handleDeleteEmployee(employee.id)}
+                              title="Delete"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        </td>
+                        <td className="text-center">
+                          <div className="btn-group btn-group-sm">
+                            <button
+                              className="btn btn-outline-primary"
+                              onClick={() => exportEmployeePDF(employee)}
+                              title="Download PDF"
+                            >
+                              <File size={14} />
+                            </button>
+                            <button
+                              className="btn btn-outline-success"
+                              onClick={() => exportEmployeeExcel(employee)}
+                              title="Download Excel"
+                            >
+                              <FileSpreadsheet size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredEmployees.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan="13"
+                          className="text-center text-muted py-5"
+                        >
+                          No employees found. Click "Add Employee" to create new
+                          records.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* FEATURE DETAILS MODAL */}
+        {modalOpen && (
+          <>
+            <div className="modal-backdrop show"></div>
+            <div
+              className="modal show d-block"
+              tabIndex="-1"
+              style={{ zIndex: 1050 }}
+            >
+              <div className="modal-dialog modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">{selectedFeature.name}</h5>
+                    <button
+                      type="button"
+                      className="btn-close"
+                      onClick={closeModal}
+                    ></button>
+                  </div>
+                  <div className="modal-body">
+                    <p>
+                      <strong>Category:</strong> {selectedFeature.category}
+                    </p>
+                    <p>
+                      <strong>Status:</strong> {selectedFeature.status}
+                    </p>
+                    <p>
+                      <strong>Last Updated:</strong>{" "}
+                      {selectedFeature.lastUpdated}
+                    </p>
+                  </div>
+                  <div className="modal-footer">
+                    <button
+                      className="btn btn-info"
+                      onClick={() => {
+                        openEditModal(selectedFeature);
+                        closeModal();
+                      }}
+                    >
+                      <Edit size={14} className="me-1" /> Edit
+                    </button>
+                    <button
+                      className="btn btn-success"
+                      onClick={() => handlePublish(selectedFeature)}
+                    >
+                      Publish
+                    </button>
+                    <button
+                      className="btn btn-warning"
+                      onClick={() => handleSchedule(selectedFeature)}
+                    >
+                      Schedule
+                    </button>
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => handleDelete(selectedFeature)}
+                    >
+                      Delete
+                    </button>
+                    <button className="btn btn-secondary" onClick={closeModal}>
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ADD/EDIT REPORT MODAL */}
+        {addReportModalOpen && (
+          <>
+            <div className="modal-backdrop show"></div>
+            <div
+              className="modal show d-block"
+              tabIndex="-1"
+              style={{ zIndex: 1050 }}
+            >
+              <div className="modal-dialog modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">
+                      {isEditing ? "Edit Report" : "Add New Report"}
+                    </h5>
+                    <button
+                      type="button"
+                      className="btn-close"
+                      onClick={closeAddReportModal}
+                    ></button>
+                  </div>
+                  <div className="modal-body d-flex flex-column gap-3">
+                    <input
+                      className="form-control"
+                      placeholder="Report Name"
+                      value={newReportData.name}
+                      onChange={(e) =>
+                        setNewReportData({
+                          ...newReportData,
+                          name: e.target.value,
+                        })
+                      }
+                    />
+                    <select
+                      className="form-select"
+                      value={newReportData.category}
+                      onChange={(e) =>
+                        setNewReportData({
+                          ...newReportData,
+                          category: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="Builder">Builder</option>
+                      <option value="Data">Data</option>
+                      <option value="Filter">Filter</option>
+                      <option value="Analysis">Analysis</option>
+                      <option value="Template">Template</option>
+                      <option value="Automation">Automation</option>
+                      <option value="Sharing">Sharing</option>
+                      <option value="Export">Export</option>
+                      <option value="Subscription">Subscription</option>
+                      <option value="API">API</option>
+                      <option value="Employee">Employee</option>
+                    </select>
+                    <select
+                      className="form-select"
+                      value={newReportData.status}
+                      onChange={(e) =>
+                        setNewReportData({
+                          ...newReportData,
+                          status: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="Draft">Draft</option>
+                      <option value="Published">Published</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Scheduled">Scheduled</option>
+                      <option value="Archived">Archived</option>
+                    </select>
+                  </div>
+                  <div className="modal-footer">
+                    <button
+                      className="btn btn-primary"
+                      onClick={handleSaveReport}
+                    >
+                      {isEditing ? "Update Report" : "Add Report"}
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={closeAddReportModal}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* EMPLOYEE DETAILS MODAL */}
+        {employeeModalOpen && selectedEmployee && (
+          <>
+            <div className="modal-backdrop show"></div>
+            <div
+              className="modal show d-block"
+              tabIndex="-1"
+              style={{ zIndex: 1050 }}
+            >
+              <div className="modal-dialog modal-dialog-centered modal-lg">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">Employee Details</h5>
+                    <button
+                      type="button"
+                      className="btn-close"
+                      onClick={closeEmployeeModal}
+                    ></button>
+                  </div>
+                  <div className="modal-body">
+                    <div className="row">
+                      <div className="col-md-6">
+                        <p>
+                          <strong>Employee Name:</strong>{" "}
+                          {selectedEmployee.employeeName}
+                        </p>
+                        <p>
+                          <strong>Designation:</strong>{" "}
+                          {selectedEmployee.designation}
+                        </p>
+                        <p>
+                          <strong>Department:</strong>{" "}
+                          {selectedEmployee.department}
+                        </p>
+                        <p>
+                          <strong>Location:</strong> {selectedEmployee.location}
+                        </p>
+                        <p>
+                          <strong>Cost Center:</strong>{" "}
+                          {selectedEmployee.costCenter}
+                        </p>
+                      </div>
+                      <div className="col-md-6">
+                        <p>
+                          <strong>Date & Time:</strong>{" "}
+                          {selectedEmployee.dateTime}
+                        </p>
+                        <p>
+                          <strong>Pay Days:</strong> {selectedEmployee.payDays}{" "}
+                          days
+                        </p>
+                        <p>
+                          <strong>Salary:</strong> $
+                          {selectedEmployee.salary.toLocaleString()}
+                        </p>
+                        <p>
+                          <strong>Status:</strong>
+                          <span
+                            className={`badge ms-2 ${
+                              selectedEmployee.status === "Active"
+                                ? "bg-success"
+                                : selectedEmployee.status === "On Leave"
+                                ? "bg-warning"
+                                : "bg-danger"
+                            }`}
+                          >
+                            {selectedEmployee.status}
+                          </span>
+                        </p>
+                        <p>
+                          <strong>Last Updated:</strong>{" "}
+                          {selectedEmployee.lastUpdated ||
+                            selectedEmployee.dateTime.split(" ")[0]}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button
+                      className="btn btn-info"
+                      onClick={() => {
+                        openEditEmployeeModal(selectedEmployee);
+                        closeEmployeeModal();
+                      }}
+                    >
+                      <Edit size={14} className="me-1" /> Edit
+                    </button>
+                    <button
+                      className="btn btn-success"
+                      onClick={() => exportEmployeePDF(selectedEmployee)}
+                    >
+                      <File size={14} className="me-1" /> Export PDF
+                    </button>
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => handleDeleteEmployee(selectedEmployee.id)}
+                    >
+                      Delete
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={closeEmployeeModal}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ADD/EDIT EMPLOYEE MODAL */}
+        {addEmployeeModalOpen && (
+          <>
+            <div className="modal-backdrop show"></div>
+            <div
+              className="modal show d-block"
+              tabIndex="-1"
+              style={{ zIndex: 1050 }}
+            >
+              <div className="modal-dialog modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">
+                      {isEditingEmployee ? "Edit Employee" : "Add New Employee"}
+                    </h5>
+                    <button
+                      type="button"
+                      className="btn-close"
+                      onClick={closeAddEmployeeModal}
+                    ></button>
+                  </div>
+                  <div className="modal-body">
+                    <div className="row g-3">
+                      <div className="col-md-6">
+                        <label className="form-label">Employee Name *</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Enter full name"
+                          value={newEmployeeData.employeeName}
+                          onChange={(e) =>
+                            setNewEmployeeData((prev) => ({
+                              ...prev,
+                              employeeName: e.target.value,
+                            }))
+                          }
+                          required
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Designation</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="e.g., Senior Developer, HR Manager"
+                          value={newEmployeeData.designation}
+                          onChange={(e) =>
+                            setNewEmployeeData((prev) => ({
+                              ...prev,
+                              designation: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Department</label>
+                        <select
+                          className="form-select"
+                          value={newEmployeeData.department}
+                          onChange={(e) =>
+                            setNewEmployeeData((prev) => ({
+                              ...prev,
+                              department: e.target.value,
+                            }))
+                          }
+                        >
+                          <option value="">Select Department</option>
+                          <option value="IT">IT</option>
+                          <option value="HR">HR</option>
+                          <option value="Finance">Finance</option>
+                          <option value="Marketing">Marketing</option>
+                          <option value="Operations">Operations</option>
+                          <option value="Sales">Sales</option>
+                          <option value="Engineering">Engineering</option>
+                          <option value="Customer Support">
+                            Customer Support
+                          </option>
+                          <option value="Research & Development">
+                            Research & Development
+                          </option>
+                        </select>
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Location</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="e.g., New York Office, Remote"
+                          value={newEmployeeData.location}
+                          onChange={(e) =>
+                            setNewEmployeeData((prev) => ({
+                              ...prev,
+                              location: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Cost Center</label>
+                        <select
+                          className="form-select"
+                          value={newEmployeeData.costCenter}
+                          onChange={(e) =>
+                            setNewEmployeeData((prev) => ({
+                              ...prev,
+                              costCenter: e.target.value,
+                            }))
+                          }
+                        >
+                          <option value="">Select Cost Center</option>
+                          <option value="CC-100">
+                            CC-100 (IT Infrastructure)
+                          </option>
+                          <option value="CC-200">
+                            CC-200 (Human Resources)
+                          </option>
+                          <option value="CC-300">
+                            CC-300 (Finance & Accounting)
+                          </option>
+                          <option value="CC-400">
+                            CC-400 (Marketing & Sales)
+                          </option>
+                          <option value="CC-500">CC-500 (Operations)</option>
+                          <option value="CC-600">
+                            CC-600 (Research & Development)
+                          </option>
+                          <option value="CC-700">
+                            CC-700 (Administration)
+                          </option>
+                        </select>
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Status</label>
+                        <select
+                          className="form-select"
+                          value={newEmployeeData.status}
+                          onChange={(e) =>
+                            setNewEmployeeData((prev) => ({
+                              ...prev,
+                              status: e.target.value,
+                            }))
+                          }
+                        >
+                          <option value="Active">Active</option>
+                          <option value="On Leave">On Leave</option>
+                          <option value="Inactive">Inactive</option>
+                          <option value="Probation">Probation</option>
+                          <option value="Contract">Contract</option>
+                        </select>
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Date & Time</label>
+                        <input
+                          type="datetime-local"
+                          className="form-control"
+                          value={newEmployeeData.dateTime.replace(" ", "T")}
+                          onChange={(e) =>
+                            setNewEmployeeData((prev) => ({
+                              ...prev,
+                              dateTime: e.target.value.replace("T", " "),
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="col-md-3">
+                        <label className="form-label">Pay Days</label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          value={newEmployeeData.payDays}
+                          onChange={(e) =>
+                            setNewEmployeeData((prev) => ({
+                              ...prev,
+                              payDays: parseInt(e.target.value) || 0,
+                            }))
+                          }
+                          min="1"
+                          max="31"
+                          placeholder="Days"
+                        />
+                      </div>
+                      <div className="col-md-3">
+                        <label className="form-label">Salary</label>
+                        <div className="input-group">
+                          <select
+                            className="form-select"
+                            style={{ width: "80px" }}
+                            value={newEmployeeData.currency || "USD"}
+                            onChange={(e) =>
+                              setNewEmployeeData((prev) => ({
+                                ...prev,
+                                currency: e.target.value,
+                              }))
+                            }
+                          >
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="JPY">JPY</option>
+                            <option value="CAD">CAD</option>
+                            <option value="AUD">AUD</option>
+                            <option value="INR">INR</option>
+                            <option value="CNY">CNY</option>
+                            <option value="AED">AED</option>
+                          </select>
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={newEmployeeData.salary}
+                            onChange={(e) =>
+                              setNewEmployeeData((prev) => ({
+                                ...prev,
+                                salary: parseInt(e.target.value) || 0,
+                              }))
+                            }
+                            min="0"
+                            placeholder="Amount"
+                          />
+                        </div>
+                      </div>
+                      {/* Additional fields for better data management */}
+                      <div className="col-md-6">
+                        <label className="form-label">Employee ID</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="EMP-001"
+                          value={newEmployeeData.employeeId || ""}
+                          onChange={(e) =>
+                            setNewEmployeeData((prev) => ({
+                              ...prev,
+                              employeeId: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Email Address</label>
+                        <input
+                          type="email"
+                          className="form-control"
+                          placeholder="employee@company.com"
+                          value={newEmployeeData.email || ""}
+                          onChange={(e) =>
+                            setNewEmployeeData((prev) => ({
+                              ...prev,
+                              email: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Phone Number</label>
+                        <input
+                          type="tel"
+                          className="form-control"
+                          placeholder="+1 (555) 123-4567"
+                          value={newEmployeeData.phone || ""}
+                          onChange={(e) =>
+                            setNewEmployeeData((prev) => ({
+                              ...prev,
+                              phone: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Reporting Manager</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Manager's name"
+                          value={newEmployeeData.manager || ""}
+                          onChange={(e) =>
+                            setNewEmployeeData((prev) => ({
+                              ...prev,
+                              manager: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button
+                      className="btn btn-primary"
+                      onClick={handleSaveEmployee}
+                    >
+                      {isEditingEmployee ? "Update Employee" : "Add Employee"}
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={closeAddEmployeeModal}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </>
   );
 };
 

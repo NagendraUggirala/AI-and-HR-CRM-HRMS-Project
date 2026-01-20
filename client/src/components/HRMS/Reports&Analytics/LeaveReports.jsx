@@ -4,7 +4,11 @@ import {
   Search, Download, Printer, Eye, Check, X, Trash2, 
   Calendar, TrendingUp, TrendingDown, AlertTriangle, Users, 
   BarChart3, PieChart, Clock, FileText, DollarSign, Filter,
-  ChevronDown, ChevronUp, Clock as ClockIcon
+  ChevronDown, ChevronUp, Clock as ClockIcon, User, Mail, Phone,
+  CreditCard, Calendar as CalendarIcon, Briefcase, MapPin,
+  BookOpen, Heart, Shield, Banknote, PhoneCall, Smartphone, Home,
+  Award, GraduationCap, Building, Globe, Hash, Tag, UserCheck,
+  PhoneOutgoing, Mailbox
 } from "lucide-react";
 
 /* -----------------------------------------------
@@ -25,6 +29,10 @@ const sidebarContent = (
     <a className="nav-link d-block py-2 px-3 rounded hover-bg-light" href="#approvals">
       <i className="ri-file-chart-line me-2"></i> Leave Approval Reports
     </a>
+
+    <a className="nav-link d-block py-2 px-3 rounded hover-bg-light" href="#demographics">
+      <i className="ri-user-line me-2"></i> Employee Demographics
+    </a>
   </nav>
 );
 
@@ -39,13 +47,39 @@ const userInfo = {
 };
 
 /* -----------------------------------------------
-   SAMPLE DATA
+   SAMPLE DATA WITH ENHANCED EMPLOYEE FIELDS
 ------------------------------------------------ */
 const initialLeaves = [
   {
     id: 1,
     employee: "Priya Sharma",
+    employeeCode: "EMP001",
+    gender: "Female",
+    dob: "1990-05-15",
+    doj: "2020-01-01",
+    doe: "",
+    location: "Hyderabad",
+    costCenter: "ENG001",
     department: "Engineering",
+    grade: "Senior",
+    designation: "Software Engineer",
+    pan: "ABCDE1234F",
+    esi: "1234567890",
+    pfUan: "123456789012",
+    aadhaar: "123456789012",
+    officeEmail: "priya.sharma@company.com",
+    officePhone: "+91-40-12345678",
+    mobile: "+91-9876543210",
+    bankName: "HDFC Bank",
+    bankIfsc: "HDFC0001234",
+    bankAccount: "1234567890123456",
+    homePhone: "+91-40-87654321",
+    personalEmail: "priya.sharma.personal@gmail.com",
+    emergencyContact: "Rahul Sharma (Husband)",
+    bloodGroup: "O+",
+    maritalStatus: "Married",
+    spouseName: "Rahul Sharma",
+    children: "2",
     leaveType: "Casual Leave",
     fromDate: "2025-11-20",
     toDate: "2025-11-22",
@@ -56,7 +90,33 @@ const initialLeaves = [
   {
     id: 2,
     employee: "Vikas Rao",
+    employeeCode: "EMP002",
+    gender: "Male",
+    dob: "1988-11-22",
+    doj: "2019-03-15",
+    doe: "",
+    location: "Bangalore",
+    costCenter: "QA001",
     department: "QA",
+    grade: "Senior",
+    designation: "QA Engineer",
+    pan: "FGHIJ5678K",
+    esi: "0987654321",
+    pfUan: "987654321098",
+    aadhaar: "987654321098",
+    officeEmail: "vikas.rao@company.com",
+    officePhone: "+91-80-12345678",
+    mobile: "+91-9876543211",
+    bankName: "ICICI Bank",
+    bankIfsc: "ICIC0001234",
+    bankAccount: "9876543210987654",
+    homePhone: "+91-80-87654321",
+    personalEmail: "vikas.rao.personal@gmail.com",
+    emergencyContact: "Sunita Rao (Wife)",
+    bloodGroup: "A+",
+    maritalStatus: "Married",
+    spouseName: "Sunita Rao",
+    children: "1",
     leaveType: "Sick Leave",
     fromDate: "2025-10-05",
     toDate: "2025-10-06",
@@ -67,7 +127,33 @@ const initialLeaves = [
   {
     id: 3,
     employee: "Sneha Reddy",
+    employeeCode: "EMP003",
+    gender: "Female",
+    dob: "1992-07-10",
+    doj: "2021-06-01",
+    doe: "",
+    location: "Hyderabad",
+    costCenter: "DES001",
     department: "Design",
+    grade: "Junior",
+    designation: "UI/UX Designer",
+    pan: "KLMNO9012P",
+    esi: "2345678901",
+    pfUan: "234567890123",
+    aadhaar: "234567890123",
+    officeEmail: "sneha.reddy@company.com",
+    officePhone: "+91-40-23456789",
+    mobile: "+91-9876543212",
+    bankName: "Axis Bank",
+    bankIfsc: "UTIB0001234",
+    bankAccount: "2345678901234567",
+    homePhone: "+91-40-76543210",
+    personalEmail: "sneha.reddy.personal@gmail.com",
+    emergencyContact: "Raj Reddy (Father)",
+    bloodGroup: "B+",
+    maritalStatus: "Single",
+    spouseName: "",
+    children: "0",
     leaveType: "Casual Leave",
     fromDate: "2025-09-12",
     toDate: "2025-09-12",
@@ -78,7 +164,33 @@ const initialLeaves = [
   {
     id: 4,
     employee: "Arjun Singh",
+    employeeCode: "EMP004",
+    gender: "Male",
+    dob: "1985-12-05",
+    doj: "2018-08-20",
+    doe: "",
+    location: "Bangalore",
+    costCenter: "ENG002",
     department: "Engineering",
+    grade: "Lead",
+    designation: "Tech Lead",
+    pan: "PQRST3456U",
+    esi: "3456789012",
+    pfUan: "345678901234",
+    aadhaar: "345678901234",
+    officeEmail: "arjun.singh@company.com",
+    officePhone: "+91-80-34567890",
+    mobile: "+91-9876543213",
+    bankName: "SBI",
+    bankIfsc: "SBIN0001234",
+    bankAccount: "3456789012345678",
+    homePhone: "+91-80-65432109",
+    personalEmail: "arjun.singh.personal@gmail.com",
+    emergencyContact: "Meera Singh (Wife)",
+    bloodGroup: "AB+",
+    maritalStatus: "Married",
+    spouseName: "Meera Singh",
+    children: "2",
     leaveType: "Sick Leave",
     fromDate: "2025-08-01",
     toDate: "2025-08-03",
@@ -89,123 +201,39 @@ const initialLeaves = [
   {
     id: 5,
     employee: "Neha Gupta",
+    employeeCode: "EMP005",
+    gender: "Female",
+    dob: "1991-03-25",
+    doj: "2020-11-10",
+    doe: "",
+    location: "Hyderabad",
+    costCenter: "HR001",
     department: "HR",
+    grade: "Manager",
+    designation: "HR Manager",
+    pan: "UVWXY6789Z",
+    esi: "4567890123",
+    pfUan: "456789012345",
+    aadhaar: "456789012345",
+    officeEmail: "neha.gupta@company.com",
+    officePhone: "+91-40-45678901",
+    mobile: "+91-9876543214",
+    bankName: "Kotak Mahindra",
+    bankIfsc: "KKBK0001234",
+    bankAccount: "4567890123456789",
+    homePhone: "+91-40-54321098",
+    personalEmail: "neha.gupta.personal@gmail.com",
+    emergencyContact: "Amit Gupta (Husband)",
+    bloodGroup: "O-",
+    maritalStatus: "Married",
+    spouseName: "Amit Gupta",
+    children: "1",
     leaveType: "Casual Leave",
     fromDate: "2025-11-18",
     toDate: "2025-11-18",
     appliedOn: "2025-11-16",
     status: "Pending",
     reason: "Personal work",
-  },
-  {
-    id: 6,
-    employee: "Karthik Kumar",
-    department: "Support",
-    leaveType: "Earned Leave",
-    fromDate: "2025-07-10",
-    toDate: "2025-07-15",
-    appliedOn: "2025-07-01",
-    status: "Approved",
-    reason: "Vacation trip",
-  },
-  {
-    id: 7,
-    employee: "Meera Joshi",
-    department: "Finance",
-    leaveType: "Sick Leave",
-    fromDate: "2025-09-20",
-    toDate: "2025-09-21",
-    appliedOn: "2025-09-19",
-    status: "Pending",
-    reason: "Migraine",
-  },
-  {
-    id: 8,
-    employee: "Rohit Verma",
-    department: "Engineering",
-    leaveType: "Casual Leave",
-    fromDate: "2025-06-05",
-    toDate: "2025-06-06",
-    appliedOn: "2025-06-01",
-    status: "Approved",
-    reason: "Travel",
-  },
-  {
-    id: 9,
-    employee: "Ananya Patel",
-    department: "Design",
-    leaveType: "Earned Leave",
-    fromDate: "2025-12-20",
-    toDate: "2025-12-25",
-    appliedOn: "2025-12-01",
-    status: "Pending",
-    reason: "Holiday vacation",
-  },
-  {
-    id: 10,
-    employee: "Suresh Babu",
-    department: "Support",
-    leaveType: "Paternity Leave",
-    fromDate: "2025-10-10",
-    toDate: "2025-10-20",
-    appliedOn: "2025-10-01",
-    status: "Approved",
-    reason: "New baby arrival",
-  },
-  {
-    id: 11,
-    employee: "Divya Sharma",
-    department: "HR",
-    leaveType: "Maternity Leave",
-    fromDate: "2025-05-01",
-    toDate: "2025-08-01",
-    appliedOn: "2025-04-01",
-    status: "Approved",
-    reason: "Maternity",
-  },
-  {
-    id: 12,
-    employee: "Harsha Nair",
-    department: "QA",
-    leaveType: "Casual Leave",
-    fromDate: "2025-09-14",
-    toDate: "2025-09-14",
-    appliedOn: "2025-09-13",
-    status: "Rejected",
-    reason: "Urgency not justified",
-  },
-  {
-    id: 13,
-    employee: "Vinay Kumar",
-    department: "Engineering",
-    leaveType: "Sick Leave",
-    fromDate: "2025-04-10",
-    toDate: "2025-04-12",
-    appliedOn: "2025-04-08",
-    status: "Approved",
-    reason: "Cold & fever",
-  },
-  {
-    id: 14,
-    employee: "Ayesha Khan",
-    department: "Finance",
-    leaveType: "Casual Leave",
-    fromDate: "2025-07-02",
-    toDate: "2025-07-02",
-    appliedOn: "2025-06-30",
-    status: "Pending",
-    reason: "Bank work",
-  },
-  {
-    id: 15,
-    employee: "Nikhil Sharma",
-    department: "Support",
-    leaveType: "Earned Leave",
-    fromDate: "2025-03-15",
-    toDate: "2025-03-20",
-    appliedOn: "2025-03-01",
-    status: "Approved",
-    reason: "Family function",
   },
 ];
 
@@ -230,6 +258,31 @@ const statusBadge = (status) => {
   return map[status] || "bg-secondary-subtle text-secondary";
 };
 
+const getAge = (dob) => {
+  const birthDate = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+};
+
+const getTenure = (doj) => {
+  const joinDate = new Date(doj);
+  const today = new Date();
+  let years = today.getFullYear() - joinDate.getFullYear();
+  let months = today.getMonth() - joinDate.getMonth();
+  
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+  
+  return { years, months };
+};
+
 /* -----------------------------------------------
    MAIN COMPONENT
 ------------------------------------------------ */
@@ -239,10 +292,24 @@ const LeaveReports = () => {
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [deptFilter, setDeptFilter] = useState("");
-  const [activeTab, setActiveTab] = useState("balance"); // balance, utilization, approvals, list
+  const [locationFilter, setLocationFilter] = useState("");
+  const [gradeFilter, setGradeFilter] = useState("");
+  const [designationFilter, setDesignationFilter] = useState("");
+  const [genderFilter, setGenderFilter] = useState("");
+  const [activeTab, setActiveTab] = useState("balance");
 
   const [selected, setSelected] = useState([]);
   const [modalLeave, setModalLeave] = useState(null);
+
+  // prevent background scroll when modal is open
+  useEffect(() => {
+    if (modalLeave) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = prev; };
+    }
+    return undefined;
+  }, [modalLeave]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const perPage = 10;
@@ -354,18 +421,45 @@ const LeaveReports = () => {
     { employee: "Arjun Singh", employeeId: "EMP003", department: "Engineering", leaveType: "Earned Leave", originalFrom: "2024-09-05", originalTo: "2024-09-10", cancelledOn: "2024-09-03", reason: "Project deadline", cancelledBy: "Manager" },
   ];
 
+  // Demographic Data
+  const demographicData = [
+    { department: "Engineering", totalEmployees: 150, male: 110, female: 38, other: 2, avgAge: 29.5, avgTenure: "2.8 years" },
+    { department: "QA", totalEmployees: 45, male: 28, female: 16, other: 1, avgAge: 30.2, avgTenure: "3.1 years" },
+    { department: "Design", totalEmployees: 25, male: 10, female: 14, other: 1, avgAge: 28.7, avgTenure: "2.5 years" },
+    { department: "HR", totalEmployees: 30, male: 10, female: 20, other: 0, avgAge: 32.1, avgTenure: "4.2 years" },
+    { department: "Finance", totalEmployees: 35, male: 15, female: 20, other: 0, avgAge: 33.5, avgTenure: "5.0 years" },
+    { department: "Support", totalEmployees: 40, male: 25, female: 15, other: 0, avgAge: 31.2, avgTenure: "3.8 years" },
+  ];
+
+  // Bank Information Summary
+  const bankInfoSummary = [
+    { bankName: "HDFC Bank", employees: 85, percentage: 25.8 },
+    { bankName: "ICICI Bank", employees: 72, percentage: 21.8 },
+    { bankName: "SBI", employees: 68, percentage: 20.6 },
+    { bankName: "Axis Bank", employees: 45, percentage: 13.6 },
+    { bankName: "Kotak Mahindra", employees: 35, percentage: 10.6 },
+    { bankName: "Others", employees: 25, percentage: 7.6 },
+  ];
+
   /* -------- FILTERING -------- */
   const filtered = leaves.filter((l) => {
     const matchesSearch =
       l.employee.toLowerCase().includes(filter.toLowerCase()) ||
       l.department.toLowerCase().includes(filter.toLowerCase()) ||
-      l.leaveType.toLowerCase().includes(filter.toLowerCase());
+      l.leaveType.toLowerCase().includes(filter.toLowerCase()) ||
+      l.employeeCode.toLowerCase().includes(filter.toLowerCase()) ||
+      l.designation.toLowerCase().includes(filter.toLowerCase());
 
     const matchesType = !typeFilter || l.leaveType === typeFilter;
     const matchesStatus = !statusFilter || l.status === statusFilter;
     const matchesDept = !deptFilter || l.department === deptFilter;
+    const matchesLocation = !locationFilter || l.location === locationFilter;
+    const matchesGrade = !gradeFilter || l.grade === gradeFilter;
+    const matchesDesignation = !designationFilter || l.designation === designationFilter;
+    const matchesGender = !genderFilter || l.gender === genderFilter;
 
-    return matchesSearch && matchesType && matchesStatus && matchesDept;
+    return matchesSearch && matchesType && matchesStatus && matchesDept && 
+           matchesLocation && matchesGrade && matchesDesignation && matchesGender;
   });
 
   /* -------- PAGINATION -------- */
@@ -379,6 +473,8 @@ const LeaveReports = () => {
     pending: leaves.filter((l) => l.status === "Pending").length,
     approved: leaves.filter((l) => l.status === "Approved").length,
     rejected: leaves.filter((l) => l.status === "Rejected").length,
+    totalEmployees: new Set(leaves.map(l => l.employeeCode)).size,
+    avgAge: Math.round(leaves.reduce((sum, l) => sum + getAge(l.dob), 0) / leaves.length),
   };
 
   // Helper function to render distribution chart
@@ -438,14 +534,21 @@ const LeaveReports = () => {
   /* -------- EXPORT CSV -------- */
   const exportCSV = () => {
     const rows = [
-      ["Employee", "Department", "Leave Type", "From", "To", "Status"],
+      ["Employee Code", "Employee", "Department", "Leave Type", "From", "To", "Status", "Gender", "Grade", "Designation", "Location", "Mobile", "Email"],
       ...filtered.map((l) => [
+        l.employeeCode,
         l.employee,
         l.department,
         l.leaveType,
         l.fromDate,
         l.toDate,
         l.status,
+        l.gender,
+        l.grade,
+        l.designation,
+        l.location,
+        l.mobile,
+        l.personalEmail,
       ]),
     ];
 
@@ -455,7 +558,7 @@ const LeaveReports = () => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "leave-reports.csv";
+    a.download = "leave-reports-enhanced.csv";
     a.click();
   };
 
@@ -466,7 +569,7 @@ const LeaveReports = () => {
         {/* ----------------- TITLE ----------------- */}
         <div className="mb-4">
           <h4 className="mb-2">Leave Reports & Analytics</h4>
-          <p className="text-muted">Comprehensive leave management reports and analytics dashboard</p>
+          <p className="text-muted">Comprehensive leave management reports and analytics dashboard with employee demographics</p>
         </div>
 
         {/* ----------------- TAB NAVIGATION ----------------- */}
@@ -500,31 +603,117 @@ const LeaveReports = () => {
                   Leave Approval Reports
                 </button>
               </li>
+              <li className="nav-item">
+                <button 
+                  className={`nav-link ${activeTab === 'demographics' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('demographics')}
+                >
+                  <Users className="me-2" size={16} />
+                  Employee Demographics
+                </button>
+              </li>
             </ul>
+          </div>
+        </div>
+
+        {/* ----------------- ENHANCED FILTERS ----------------- */}
+        <div className="card mb-4">
+          <div className="card-body">
+            <div className="row g-3">
+              <div className="col-md-2">
+                <label className="form-label small">Search</label>
+                <div className="input-group">
+                  <span className="input-group-text"><Search size={14} /></span>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Search..."
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="col-md-2">
+                <label className="form-label small">Department</label>
+                <select className="form-select" value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}>
+                  <option value="">All Departments</option>
+                  {[...new Set(leaves.map((l) => l.department))].map((dept) => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-md-2">
+                <label className="form-label small">Location</label>
+                <select className="form-select" value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)}>
+                  <option value="">All Locations</option>
+                  {[...new Set(leaves.map((l) => l.location))].map((loc) => (
+                    <option key={loc} value={loc}>{loc}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-md-2">
+                <label className="form-label small">Grade</label>
+                <select className="form-select" value={gradeFilter} onChange={(e) => setGradeFilter(e.target.value)}>
+                  <option value="">All Grades</option>
+                  {[...new Set(leaves.map((l) => l.grade))].map((grade) => (
+                    <option key={grade} value={grade}>{grade}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-md-2">
+                <label className="form-label small">Gender</label>
+                <select className="form-select" value={genderFilter} onChange={(e) => setGenderFilter(e.target.value)}>
+                  <option value="">All Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+              <div className="col-md-2">
+                <label className="form-label small">Status</label>
+                <select className="form-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                  <option value="">All Status</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Approved">Approved</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* ----------------- KPIs ----------------- */}
         <div className="row g-3 mb-4">
-          <div className="col-sm-3">
+          <div className="col-sm-2">
+            <div className="card p-3">
+              <div className="small text-muted">Total Employees</div>
+              <div className="h5">{kpis.totalEmployees}</div>
+            </div>
+          </div>
+          <div className="col-sm-2">
+            <div className="card p-3">
+              <div className="small text-muted">Avg Age</div>
+              <div className="h5">{kpis.avgAge} years</div>
+            </div>
+          </div>
+          <div className="col-sm-2">
             <div className="card p-3">
               <div className="small text-muted">Total Leaves</div>
               <div className="h5">{kpis.total}</div>
             </div>
           </div>
-          <div className="col-sm-3">
+          <div className="col-sm-2">
             <div className="card p-3">
               <div className="small text-muted">Pending</div>
               <div className="h5 text-warning">{kpis.pending}</div>
             </div>
           </div>
-          <div className="col-sm-3">
+          <div className="col-sm-2">
             <div className="card p-3">
               <div className="small text-muted">Approved</div>
               <div className="h5 text-success">{kpis.approved}</div>
             </div>
           </div>
-          <div className="col-sm-3">
+          <div className="col-sm-2">
             <div className="card p-3">
               <div className="small text-muted">Rejected</div>
               <div className="h5 text-danger">{kpis.rejected}</div>
@@ -541,9 +730,11 @@ const LeaveReports = () => {
                 <h5 className="mb-0">Employee-wise Leave Balance</h5>
                 <button className="btn btn-sm btn-outline-dark" onClick={() => {
                   const csv = [
-                    ['Employee', 'Employee ID', 'Department', 'Casual Leave (Balance)', 'Sick Leave (Balance)', 'Earned Leave (Balance)', 'Total Balance'],
+                    ['Employee', 'Employee ID', 'Department', 'Grade', 'Designation', 'Casual Leave (Balance)', 'Sick Leave (Balance)', 'Earned Leave (Balance)', 'Total Balance'],
                     ...leaveBalanceData.map(l => [
                       l.employee, l.employeeId, l.department, 
+                      leaves.find(e => e.employeeCode === l.employeeId)?.grade || '',
+                      leaves.find(e => e.employeeCode === l.employeeId)?.designation || '',
                       l.casualLeave.balance, l.sickLeave.balance, l.earnedLeave.balance, l.totalBalance
                     ])
                   ].map(r => r.join(',')).join('\n');
@@ -563,7 +754,10 @@ const LeaveReports = () => {
                     <thead>
                       <tr>
                         <th>Employee</th>
+                        <th>Employee ID</th>
                         <th>Department</th>
+                        <th>Grade</th>
+                        <th>Designation</th>
                         <th>Casual Leave</th>
                         <th>Sick Leave</th>
                         <th>Earned Leave</th>
@@ -571,28 +765,34 @@ const LeaveReports = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {leaveBalanceData.map((emp, idx) => (
-                        <tr key={idx}>
-                          <td><strong>{emp.employee}</strong><br /><small className="text-muted">{emp.employeeId}</small></td>
-                          <td>{emp.department}</td>
-                          <td>
-                            <small>Used: {emp.casualLeave.used}/{emp.casualLeave.allocated}</small><br />
-                            <strong>Balance: {emp.casualLeave.balance}</strong>
-                            {emp.casualLeave.carryForward > 0 && <small className="text-info"> (CF: {emp.casualLeave.carryForward})</small>}
-                          </td>
-                          <td>
-                            <small>Used: {emp.sickLeave.used}/{emp.sickLeave.allocated}</small><br />
-                            <strong>Balance: {emp.sickLeave.balance}</strong>
-                            {emp.sickLeave.carryForward > 0 && <small className="text-info"> (CF: {emp.sickLeave.carryForward})</small>}
-                          </td>
-                          <td>
-                            <small>Used: {emp.earnedLeave.used}/{emp.earnedLeave.allocated}</small><br />
-                            <strong>Balance: {emp.earnedLeave.balance}</strong>
-                            {emp.earnedLeave.carryForward > 0 && <small className="text-info"> (CF: {emp.earnedLeave.carryForward})</small>}
-                          </td>
-                          <td><strong className="text-primary">{emp.totalBalance}</strong></td>
-                        </tr>
-                      ))}
+                      {leaveBalanceData.map((emp, idx) => {
+                        const employeeDetails = leaves.find(e => e.employeeCode === emp.employeeId);
+                        return (
+                          <tr key={idx}>
+                            <td><strong>{emp.employee}</strong></td>
+                            <td><small className="text-muted">{emp.employeeId}</small></td>
+                            <td>{emp.department}</td>
+                            <td><span className="badge bg-info">{employeeDetails?.grade}</span></td>
+                            <td>{employeeDetails?.designation}</td>
+                            <td>
+                              <small>Used: {emp.casualLeave.used}/{emp.casualLeave.allocated}</small><br />
+                              <strong>Balance: {emp.casualLeave.balance}</strong>
+                              {emp.casualLeave.carryForward > 0 && <small className="text-info"> (CF: {emp.casualLeave.carryForward})</small>}
+                            </td>
+                            <td>
+                              <small>Used: {emp.sickLeave.used}/{emp.sickLeave.allocated}</small><br />
+                              <strong>Balance: {emp.sickLeave.balance}</strong>
+                              {emp.sickLeave.carryForward > 0 && <small className="text-info"> (CF: {emp.sickLeave.carryForward})</small>}
+                            </td>
+                            <td>
+                              <small>Used: {emp.earnedLeave.used}/{emp.earnedLeave.allocated}</small><br />
+                              <strong>Balance: {emp.earnedLeave.balance}</strong>
+                              {emp.earnedLeave.carryForward > 0 && <small className="text-info"> (CF: {emp.earnedLeave.carryForward})</small>}
+                            </td>
+                            <td><strong className="text-primary">{emp.totalBalance}</strong></td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -660,7 +860,9 @@ const LeaveReports = () => {
                     <thead>
                       <tr>
                         <th>Employee</th>
+                        <th>Employee ID</th>
                         <th>Department</th>
+                        <th>Grade</th>
                         <th>Accrual Date</th>
                         <th>Leave Type</th>
                         <th>Days Accrued</th>
@@ -669,17 +871,22 @@ const LeaveReports = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {leaveAccrualData.map((accrual, idx) => (
-                        <tr key={idx}>
-                          <td><strong>{accrual.employee}</strong><br /><small className="text-muted">{accrual.employeeId}</small></td>
-                          <td>{accrual.department}</td>
-                          <td>{accrual.accrualDate}</td>
-                          <td>{accrual.leaveType}</td>
-                          <td><strong className="text-success">+{accrual.daysAccrued}</strong></td>
-                          <td>{accrual.balanceBefore}</td>
-                          <td><strong>{accrual.balanceAfter}</strong></td>
-                        </tr>
-                      ))}
+                      {leaveAccrualData.map((accrual, idx) => {
+                        const employeeDetails = leaves.find(e => e.employeeCode === accrual.employeeId);
+                        return (
+                          <tr key={idx}>
+                            <td><strong>{accrual.employee}</strong></td>
+                            <td><small className="text-muted">{accrual.employeeId}</small></td>
+                            <td>{accrual.department}</td>
+                            <td><span className="badge bg-secondary">{employeeDetails?.grade}</span></td>
+                            <td>{accrual.accrualDate}</td>
+                            <td>{accrual.leaveType}</td>
+                            <td><strong className="text-success">+{accrual.daysAccrued}</strong></td>
+                            <td>{accrual.balanceBefore}</td>
+                            <td><strong>{accrual.balanceAfter}</strong></td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -697,7 +904,9 @@ const LeaveReports = () => {
                     <thead>
                       <tr>
                         <th>Employee</th>
+                        <th>Employee ID</th>
                         <th>Department</th>
+                        <th>Grade</th>
                         <th>Leave Type</th>
                         <th>Previous Year Balance</th>
                         <th>Carried Forward</th>
@@ -706,17 +915,22 @@ const LeaveReports = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {carryForwardData.map((cf, idx) => (
-                        <tr key={idx}>
-                          <td><strong>{cf.employee}</strong><br /><small className="text-muted">{cf.employeeId}</small></td>
-                          <td>{cf.department}</td>
-                          <td>{cf.leaveType}</td>
-                          <td>{cf.previousYearBalance}</td>
-                          <td><strong className="text-info">{cf.carriedForward}</strong></td>
-                          <td>{cf.currentYearAllocated}</td>
-                          <td><strong className="text-primary">{cf.totalAvailable}</strong></td>
-                        </tr>
-                      ))}
+                      {carryForwardData.map((cf, idx) => {
+                        const employeeDetails = leaves.find(e => e.employeeCode === cf.employeeId);
+                        return (
+                          <tr key={idx}>
+                            <td><strong>{cf.employee}</strong></td>
+                            <td><small className="text-muted">{cf.employeeId}</small></td>
+                            <td>{cf.department}</td>
+                            <td><span className="badge bg-info">{employeeDetails?.grade}</span></td>
+                            <td>{cf.leaveType}</td>
+                            <td>{cf.previousYearBalance}</td>
+                            <td><strong className="text-info">{cf.carriedForward}</strong></td>
+                            <td>{cf.currentYearAllocated}</td>
+                            <td><strong className="text-primary">{cf.totalAvailable}</strong></td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -735,6 +949,9 @@ const LeaveReports = () => {
                       <div className="card border">
                         <div className="card-body">
                           <h6 className="card-title">{dept.department}</h6>
+                          <div className="mb-2">
+                            <small className="text-muted">Employees: {dept.totalEmployees}</small>
+                          </div>
                           <div className="mb-2">
                             <small className="text-muted">Total Balance: {dept.totalBalance} days</small>
                           </div>
@@ -927,7 +1144,9 @@ const LeaveReports = () => {
                     <thead>
                       <tr>
                         <th>Employee</th>
+                        <th>Employee ID</th>
                         <th>Department</th>
+                        <th>Grade</th>
                         <th>Leave Type</th>
                         <th>Balance</th>
                         <th>Threshold</th>
@@ -935,20 +1154,25 @@ const LeaveReports = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {unutilizedLeaveAlerts.map((alert, idx) => (
-                        <tr key={idx}>
-                          <td><strong>{alert.employee}</strong><br /><small className="text-muted">{alert.employeeId}</small></td>
-                          <td>{alert.department}</td>
-                          <td>{alert.leaveType}</td>
-                          <td><strong>{alert.balance}</strong></td>
-                          <td>{alert.threshold}</td>
-                          <td>
-                            <span className={`badge bg-${alert.riskLevel === 'High' ? 'danger' : 'warning'}`}>
-                              {alert.riskLevel}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
+                      {unutilizedLeaveAlerts.map((alert, idx) => {
+                        const employeeDetails = leaves.find(e => e.employeeCode === alert.employeeId);
+                        return (
+                          <tr key={idx}>
+                            <td><strong>{alert.employee}</strong></td>
+                            <td><small className="text-muted">{alert.employeeId}</small></td>
+                            <td>{alert.department}</td>
+                            <td><span className="badge bg-info">{employeeDetails?.grade}</span></td>
+                            <td>{alert.leaveType}</td>
+                            <td><strong>{alert.balance}</strong></td>
+                            <td>{alert.threshold}</td>
+                            <td>
+                              <span className={`badge bg-${alert.riskLevel === 'High' ? 'danger' : 'warning'}`}>
+                                {alert.riskLevel}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -1016,7 +1240,9 @@ const LeaveReports = () => {
                     <thead>
                       <tr>
                         <th>Employee</th>
+                        <th>Employee ID</th>
                         <th>Department</th>
+                        <th>Grade</th>
                         <th>Leave Type</th>
                         <th>From - To</th>
                         <th>Applied On</th>
@@ -1026,25 +1252,30 @@ const LeaveReports = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {leaveApprovalData.filter(l => l.status === 'Pending').map((leave) => (
-                        <tr key={leave.id}>
-                          <td><strong>{leave.employee}</strong></td>
-                          <td>{leave.department}</td>
-                          <td>{leave.leaveType}</td>
-                          <td>{leave.fromDate} - {leave.toDate}</td>
-                          <td>{leave.appliedOn}</td>
-                          <td>{leave.approver}</td>
-                          <td><span className="badge bg-warning">{leave.status}</span></td>
-                          <td>
-                            <button className="btn btn-sm btn-success me-1" onClick={() => updateStatus(leave.id, "Approved")}>
-                              <Check size={14} />
-                            </button>
-                            <button className="btn btn-sm btn-danger" onClick={() => updateStatus(leave.id, "Rejected")}>
-                              <X size={14} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                      {leaveApprovalData.filter(l => l.status === 'Pending').map((leave) => {
+                        const employeeDetails = leaves.find(e => e.employee === leave.employee);
+                        return (
+                          <tr key={leave.id}>
+                            <td><strong>{leave.employee}</strong></td>
+                            <td><small className="text-muted">{employeeDetails?.employeeCode}</small></td>
+                            <td>{leave.department}</td>
+                            <td><span className="badge bg-secondary">{employeeDetails?.grade}</span></td>
+                            <td>{leave.leaveType}</td>
+                            <td>{leave.fromDate} - {leave.toDate}</td>
+                            <td>{leave.appliedOn}</td>
+                            <td>{leave.approver}</td>
+                            <td><span className="badge bg-warning">{leave.status}</span></td>
+                            <td>
+                              <button className="btn btn-sm btn-success me-1" onClick={() => updateStatus(leave.id, "Approved")}>
+                                <Check size={14} />
+                              </button>
+                              <button className="btn btn-sm btn-danger" onClick={() => updateStatus(leave.id, "Rejected")}>
+                                <X size={14} />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -1130,7 +1361,9 @@ const LeaveReports = () => {
                     <thead>
                       <tr>
                         <th>Employee</th>
+                        <th>Employee ID</th>
                         <th>Department</th>
+                        <th>Grade</th>
                         <th>Leave Type</th>
                         <th>Rejection Reason</th>
                         <th>Rejection Rate</th>
@@ -1138,16 +1371,21 @@ const LeaveReports = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {leaveRejectionData.map((rejection, idx) => (
-                        <tr key={idx}>
-                          <td><strong>{rejection.employee}</strong></td>
-                          <td>{rejection.department}</td>
-                          <td>{rejection.leaveType}</td>
-                          <td>{rejection.reason}</td>
-                          <td><span className="badge bg-danger">{rejection.rejectionRate}</span></td>
-                          <td><small className="text-muted">{rejection.pattern}</small></td>
-                        </tr>
-                      ))}
+                      {leaveRejectionData.map((rejection, idx) => {
+                        const employeeDetails = leaves.find(e => e.employee === rejection.employee);
+                        return (
+                          <tr key={idx}>
+                            <td><strong>{rejection.employee}</strong></td>
+                            <td><small className="text-muted">{employeeDetails?.employeeCode}</small></td>
+                            <td>{rejection.department}</td>
+                            <td><span className="badge bg-secondary">{employeeDetails?.grade}</span></td>
+                            <td>{rejection.leaveType}</td>
+                            <td>{rejection.reason}</td>
+                            <td><span className="badge bg-danger">{rejection.rejectionRate}</span></td>
+                            <td><small className="text-muted">{rejection.pattern}</small></td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -1194,7 +1432,9 @@ const LeaveReports = () => {
                     <thead>
                       <tr>
                         <th>Employee</th>
+                        <th>Employee ID</th>
                         <th>Department</th>
+                        <th>Grade</th>
                         <th>Leave Type</th>
                         <th>Original Period</th>
                         <th>Cancelled On</th>
@@ -1203,17 +1443,22 @@ const LeaveReports = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {leaveCancellationData.map((cancel, idx) => (
-                        <tr key={idx}>
-                          <td><strong>{cancel.employee}</strong><br /><small className="text-muted">{cancel.employeeId}</small></td>
-                          <td>{cancel.department}</td>
-                          <td>{cancel.leaveType}</td>
-                          <td>{cancel.originalFrom} - {cancel.originalTo}</td>
-                          <td>{cancel.cancelledOn}</td>
-                          <td>{cancel.reason}</td>
-                          <td><span className="badge bg-info">{cancel.cancelledBy}</span></td>
-                        </tr>
-                      ))}
+                      {leaveCancellationData.map((cancel, idx) => {
+                        const employeeDetails = leaves.find(e => e.employee === cancel.employee);
+                        return (
+                          <tr key={idx}>
+                            <td><strong>{cancel.employee}</strong></td>
+                            <td><small className="text-muted">{cancel.employeeId}</small></td>
+                            <td>{cancel.department}</td>
+                            <td><span className="badge bg-info">{employeeDetails?.grade}</span></td>
+                            <td>{cancel.leaveType}</td>
+                            <td>{cancel.originalFrom} - {cancel.originalTo}</td>
+                            <td>{cancel.cancelledOn}</td>
+                            <td>{cancel.reason}</td>
+                            <td><span className="badge bg-info">{cancel.cancelledBy}</span></td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -1222,225 +1467,929 @@ const LeaveReports = () => {
           </div>
         )}
 
-        {/* ----------------- FILTER BAR (For general leave list - can be shown separately if needed) ----------------- */}
-        {activeTab === 'list' && (
-          <>
-            <div className="card mb-3">
-              <div className="card-body d-flex flex-wrap gap-2 align-items-center">
-                {/* Search */}
-            <div className="input-group" style={{ maxWidth: 350 }}>
-              <span className="input-group-text bg-white border-end-0"><Search size={14} /></span>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Search employee or leave type..."
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-              />
-            </div>
-
-            {/* Filters */}
-            <select className="form-select w-auto" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-              <option value="">All Leave Types</option>
-              {["Casual Leave", "Sick Leave", "Earned Leave", "Paternity Leave", "Maternity Leave"].map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-
-            <select className="form-select w-auto" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-              <option value="">All Status</option>
-              <option value="Pending">Pending</option>
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
-            </select>
-
-            <select className="form-select w-auto" value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}>
-              <option value="">All Departments</option>
-              {[...new Set(leaves.map((l) => l.department))].map((dept) => (
-                <option key={dept} value={dept}>{dept}</option>
-              ))}
-            </select>
-
-                {/* Export + Print */}
-                <div className="ms-auto d-flex gap-2">
-                  <button className="btn btn-dark btn-sm" onClick={exportCSV}><Download size={14} className="me-1" />Export</button>
-                  <button className="btn btn-outline-secondary btn-sm" onClick={() => window.print()}><Printer size={14} /></button>
+        {/* ----------------- EMPLOYEE DEMOGRAPHICS REPORTS ----------------- */}
+        {activeTab === 'demographics' && (
+          <div>
+            {/* Department-wise Gender Distribution */}
+            <div className="card mb-4">
+              <div className="card-header d-flex justify-content-between align-items-center">
+                <h5 className="mb-0">Department-wise Employee Demographics</h5>
+                <button className="btn btn-sm btn-outline-dark" onClick={() => {
+                  const csv = [
+                    ['Department', 'Total Employees', 'Male', 'Female', 'Other', 'Gender Ratio', 'Avg Age', 'Avg Tenure'],
+                    ...demographicData.map(d => [
+                      d.department, d.totalEmployees, d.male, d.female, d.other, 
+                      `${d.male}:${d.female}`, d.avgAge, d.avgTenure
+                    ])
+                  ].map(r => r.join(',')).join('\n');
+                  const blob = new Blob([csv], { type: 'text/csv' });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'employee-demographics.csv';
+                  a.click();
+                }}>
+                  <Download size={14} className="me-1" /> Export
+                </button>
+              </div>
+              <div className="card-body">
+                <div className="table-responsive">
+                  <table className="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Department</th>
+                        <th>Total Employees</th>
+                        <th>Male</th>
+                        <th>Female</th>
+                        <th>Other</th>
+                        <th>Gender Ratio</th>
+                        <th>Avg Age</th>
+                        <th>Avg Tenure</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {demographicData.map((dept, idx) => (
+                        <tr key={idx}>
+                          <td><strong>{dept.department}</strong></td>
+                          <td>{dept.totalEmployees}</td>
+                          <td>{dept.male}</td>
+                          <td>{dept.female}</td>
+                          <td>{dept.other}</td>
+                          <td><strong>{dept.male}:{dept.female}</strong></td>
+                          <td>{dept.avgAge} years</td>
+                          <td>{dept.avgTenure}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
 
-              {/* ----------------- BULK ACTIONS ----------------- */}
-            {selected.length > 0 && (
-              <div className="alert alert-info d-flex justify-content-between align-items-center mb-3">
-            <div className="d-flex align-items-center gap-3">
-              <span><strong>{selected.length}</strong> selected</span>
+            {/* Employee Age Distribution */}
+            <div className="row mb-4">
+              <div className="col-md-6">
+                <div className="card h-100">
+                  <div className="card-header d-flex align-items-center">
+                    <User className="me-2" size={18} />
+                    <h6 className="mb-0">Employee Age Distribution</h6>
+                  </div>
+                  <div className="card-body">
+                    <div className="row text-center">
+                      <div className="col-md-3 mb-3">
+                        <div className="border rounded p-3">
+                          <div className="h4 text-primary">65</div>
+                          <small className="text-muted">20-25 years</small>
+                        </div>
+                      </div>
+                      <div className="col-md-3 mb-3">
+                        <div className="border rounded p-3">
+                          <div className="h4 text-success">120</div>
+                          <small className="text-muted">26-30 years</small>
+                        </div>
+                      </div>
+                      <div className="col-md-3 mb-3">
+                        <div className="border rounded p-3">
+                          <div className="h4 text-warning">85</div>
+                          <small className="text-muted">31-35 years</small>
+                        </div>
+                      </div>
+                      <div className="col-md-3 mb-3">
+                        <div className="border rounded p-3">
+                          <div className="h4 text-info">60</div>
+                          <small className="text-muted">36+ years</small>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <h6 className="mb-3">Age Group by Department</h6>
+                      <div className="table-responsive">
+                        <table className="table table-sm">
+                          <thead>
+                            <tr>
+                              <th>Department</th>
+                              <th>20-25</th>
+                              <th>26-30</th>
+                              <th>31-35</th>
+                              <th>36+</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr><td>Engineering</td><td>45</td><td>65</td><td>30</td><td>10</td></tr>
+                            <tr><td>QA</td><td>10</td><td>20</td><td>12</td><td>3</td></tr>
+                            <tr><td>HR</td><td>2</td><td>8</td><td>12</td><td>8</td></tr>
+                            <tr><td>Finance</td><td>1</td><td>5</td><td>15</td><td>14</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-              <button className="btn btn-success btn-sm" onClick={() => bulkAction("Approved")}>
-                <Check size={14} className="me-1" /> Approve
-              </button>
-
-              <button className="btn btn-warning btn-sm" onClick={() => bulkAction("Rejected")}>
-                <X size={14} className="me-1" /> Reject
-              </button>
-
-              <button className="btn btn-danger btn-sm" onClick={bulkDelete}>
-                <Trash2 size={14} className="me-1" /> Delete
-              </button>
+              <div className="col-md-6">
+                <div className="card h-100">
+                  <div className="card-header d-flex align-items-center">
+                    <CalendarIcon className="me-2" size={18} />
+                    <h6 className="mb-0">Employee Tenure Analysis</h6>
+                  </div>
+                  <div className="card-body">
+                    <div className="row text-center">
+                      <div className="col-md-3 mb-3">
+                        <div className="border rounded p-3">
+                          <div className="h4 text-primary">45%</div>
+                          <small className="text-muted">0-2 years</small>
+                        </div>
+                      </div>
+                      <div className="col-md-3 mb-3">
+                        <div className="border rounded p-3">
+                          <div className="h4 text-success">35%</div>
+                          <small className="text-muted">2-5 years</small>
+                        </div>
+                      </div>
+                      <div className="col-md-3 mb-3">
+                        <div className="border rounded p-3">
+                          <div className="h4 text-warning">15%</div>
+                          <small className="text-muted">5-10 years</small>
+                        </div>
+                      </div>
+                      <div className="col-md-3 mb-3">
+                        <div className="border rounded p-3">
+                          <div className="h4 text-info">5%</div>
+                          <small className="text-muted">10+ years</small>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <h6 className="mb-3">Avg Tenure by Department</h6>
+                      {renderDistributionChart(
+                        demographicData.map(d => ({ department: d.department, value: parseFloat(d.avgTenure) })),
+                        'department',
+                        'value',
+                        '#8b5cf6'
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-                <button className="btn btn-link p-0" onClick={() => setSelected([])}>Clear</button>
-              </div>
-            )}
-
-            {/* ----------------- TABLE ----------------- */}
+            {/* Employee Contact Information Summary */}
             <div className="card mb-4">
-          <div className="table-responsive">
-            <table className="table table-hover align-middle">
-              <thead className="table-light">
-                <tr>
-                  <th><input type="checkbox"
-                    checked={selected.length === display.length && display.length > 0}
-                    onChange={(e) =>
-                      setSelected(e.target.checked ? display.map((d) => d.id) : [])
-                    }
-                  /></th>
-                  <th>Employee</th>
-                  <th>Department</th>
-                  <th>Leave Type</th>
-                  <th className="text-center">From — To</th>
-                  <th className="text-center">Days</th>
-                  <th className="text-center">Status</th>
-                  <th className="text-center">Action</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {display.map((l) => (
-                  <tr key={l.id}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={selected.includes(l.id)}
-                        onChange={() =>
-                          setSelected((prev) =>
-                            prev.includes(l.id)
-                              ? prev.filter((id) => id !== l.id)
-                              : [...prev, l.id]
-                          )
-                        }
-                      />
-                    </td>
-
-                    <td><strong>{l.employee}</strong></td>
-                    <td>{l.department}</td>
-                    <td>{l.leaveType}</td>
-
-                    <td className="text-center">
-                      {l.fromDate} → {l.toDate}
-                    </td>
-
-                    <td className="text-center">{diffDays(l.fromDate, l.toDate)}</td>
-
-                    <td className="text-center">
-                      <span className={`badge ${statusBadge(l.status)}`}>{l.status}</span>
-                    </td>
-
-                    <td className="text-center">
-                      <button className="btn btn-sm btn-light" onClick={() => setModalLeave(l)}>
-                        <Eye size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-
-                {display.length === 0 && (
-                  <tr>
-                    <td colSpan="8" className="text-center text-muted py-4">
-                      No leave records found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+              <div className="card-header d-flex align-items-center">
+                <Phone className="me-2" size={18} />
+                <h6 className="mb-0">Employee Contact Information Summary</h6>
+              </div>
+              <div className="card-body">
+                <div className="table-responsive">
+                  <table className="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Department</th>
+                        <th>Total Employees</th>
+                        <th>Mobile Numbers</th>
+                        <th>Personal Emails</th>
+                        <th>Emergency Contacts</th>
+                        <th>Missing Info</th>
+                        <th>Contact Coverage</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {demographicData.map((dept, idx) => {
+                        const mobileCoverage = Math.round((dept.totalEmployees - 2) / dept.totalEmployees * 100);
+                        const emailCoverage = Math.round((dept.totalEmployees - 3) / dept.totalEmployees * 100);
+                        const emergencyCoverage = Math.round((dept.totalEmployees - 1) / dept.totalEmployees * 100);
+                        return (
+                          <tr key={idx}>
+                            <td><strong>{dept.department}</strong></td>
+                            <td>{dept.totalEmployees}</td>
+                            <td>{dept.totalEmployees - 2} ({mobileCoverage}%)</td>
+                            <td>{dept.totalEmployees - 3} ({emailCoverage}%)</td>
+                            <td>{dept.totalEmployees - 1} ({emergencyCoverage}%)</td>
+                            <td><span className="badge bg-warning">3</span></td>
+                            <td>
+                              <div className="progress" style={{ height: '20px' }}>
+                                <div 
+                                  className="progress-bar bg-success" 
+                                  style={{ width: `${mobileCoverage}%` }}
+                                ></div>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
-            {/* ----------------- PAGINATION ----------------- */}
-            <div className="d-flex justify-content-between align-items-center mb-5">
-          <small className="text-muted">
-            Showing <strong>{start + 1}</strong> – <strong>{Math.min(start + perPage, filtered.length)}</strong> of <strong>{filtered.length}</strong>
-          </small>
+            {/* Bank Information Distribution */}
+            <div className="row mb-4">
+              <div className="col-md-6">
+                <div className="card h-100">
+                  <div className="card-header d-flex align-items-center">
+                    <Banknote className="me-2" size={18} />
+                    <h6 className="mb-0">Bank Information Distribution</h6>
+                  </div>
+                  <div className="card-body">
+                    <div className="table-responsive">
+                      <table className="table table-sm">
+                        <thead>
+                          <tr>
+                            <th>Bank Name</th>
+                            <th>Employees</th>
+                            <th>Percentage</th>
+                            <th>Distribution</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {bankInfoSummary.map((bank, idx) => (
+                            <tr key={idx}>
+                              <td><strong>{bank.bankName}</strong></td>
+                              <td>{bank.employees}</td>
+                              <td>{bank.percentage}%</td>
+                              <td>
+                                <div className="progress" style={{ height: '15px' }}>
+                                  <div 
+                                    className="progress-bar" 
+                                    style={{ width: `${bank.percentage}%`, backgroundColor: '#3b82f6' }}
+                                  ></div>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-          <div className="btn-group">
-            <button className="btn btn-outline-secondary" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>Previous</button>
+              <div className="col-md-6">
+                <div className="card h-100">
+                  <div className="card-header d-flex align-items-center">
+                    <Shield className="me-2" size={18} />
+                    <h6 className="mb-0">Government ID Coverage</h6>
+                  </div>
+                  <div className="card-body">
+                    <div className="row text-center">
+                      <div className="col-md-4 mb-3">
+                        <div className="border rounded p-3">
+                          <div className="h4 text-success">98%</div>
+                          <small className="text-muted">PAN Coverage</small>
+                        </div>
+                      </div>
+                      <div className="col-md-4 mb-3">
+                        <div className="border rounded p-3">
+                          <div className="h4 text-primary">95%</div>
+                          <small className="text-muted">Aadhaar Coverage</small>
+                        </div>
+                      </div>
+                      <div className="col-md-4 mb-3">
+                        <div className="border rounded p-3">
+                          <div className="h4 text-info">92%</div>
+                          <small className="text-muted">PF UAN Coverage</small>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <h6 className="mb-3">ID Coverage by Department</h6>
+                      <div className="table-responsive">
+                        <table className="table table-sm">
+                          <thead>
+                            <tr>
+                              <th>Department</th>
+                              <th>PAN</th>
+                              <th>Aadhaar</th>
+                              <th>PF UAN</th>
+                              <th>ESI</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr><td>Engineering</td><td>99%</td><td>98%</td><td>95%</td><td>90%</td></tr>
+                            <tr><td>QA</td><td>98%</td><td>96%</td><td>94%</td><td>88%</td></tr>
+                            <tr><td>HR</td><td>100%</td><td>100%</td><td>100%</td><td>100%</td></tr>
+                            <tr><td>Finance</td><td>100%</td><td>97%</td><td>96%</td><td>92%</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i}
-                className={currentPage === i + 1 ? "btn btn-primary" : "btn btn-outline-secondary"}
-                onClick={() => setCurrentPage(i + 1)}
-              >
-                {i + 1}
-              </button>
-            ))}
+            {/* Location-wise Employee Distribution */}
+            <div className="card mb-4">
+              <div className="card-header d-flex align-items-center">
+                <MapPin className="me-2" size={18} />
+                <h6 className="mb-0">Location-wise Employee Distribution</h6>
+              </div>
+              <div className="card-body">
+                <div className="row">
+                  <div className="col-md-4">
+                    <div className="card border">
+                      <div className="card-body text-center">
+                        <div className="h2 text-primary">180</div>
+                        <div className="text-muted">Hyderabad</div>
+                        <small>60% of total workforce</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-md-4">
+                    <div className="card border">
+                      <div className="card-body text-center">
+                        <div className="h2 text-success">120</div>
+                        <div className="text-muted">Bangalore</div>
+                        <small>40% of total workforce</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-md-4">
+                    <div className="card border">
+                      <div className="card-body text-center">
+                        <div className="h2 text-info">0</div>
+                        <div className="text-muted">Other Locations</div>
+                        <small>Remote/Other offices</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <h6 className="mb-3">Location Distribution by Department</h6>
+                  <div className="table-responsive">
+                    <table className="table table-sm">
+                      <thead>
+                        <tr>
+                          <th>Department</th>
+                          <th>Hyderabad</th>
+                          <th>Bangalore</th>
+                          <th>Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr><td>Engineering</td><td>100</td><td>50</td><td>150</td></tr>
+                        <tr><td>QA</td><td>30</td><td>15</td><td>45</td></tr>
+                        <tr><td>Design</td><td>15</td><td>10</td><td>25</td></tr>
+                        <tr><td>HR</td><td>20</td><td>10</td><td>30</td></tr>
+                        <tr><td>Finance</td><td>15</td><td>20</td><td>35</td></tr>
+                        <tr><td>Support</td><td>0</td><td>15</td><td>15</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-              <button className="btn btn-outline-secondary" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>Next</button>
+            {/* Employee Grade & Designation Distribution */}
+            <div className="card mb-4">
+              <div className="card-header d-flex align-items-center">
+                <Briefcase className="me-2" size={18} />
+                <h6 className="mb-0">Employee Grade & Designation Distribution</h6>
+              </div>
+              <div className="card-body">
+                <div className="row mb-4">
+                  <div className="col-md-3">
+                    <div className="card border text-center">
+                      <div className="card-body">
+                        <div className="h4 text-primary">45%</div>
+                        <small className="text-muted">Junior Level</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-md-3">
+                    <div className="card border text-center">
+                      <div className="card-body">
+                        <div className="h4 text-success">35%</div>
+                        <small className="text-muted">Senior Level</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-md-3">
+                    <div className="card border text-center">
+                      <div className="card-body">
+                        <div className="h4 text-warning">15%</div>
+                        <small className="text-muted">Lead/Manager</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-md-3">
+                    <div className="card border text-center">
+                      <div className="card-body">
+                        <div className="h4 text-info">5%</div>
+                        <small className="text-muted">Director+</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="table-responsive">
+                  <table className="table table-sm">
+                    <thead>
+                      <tr>
+                        <th>Department</th>
+                        <th>Junior</th>
+                        <th>Senior</th>
+                        <th>Lead/Manager</th>
+                        <th>Director+</th>
+                        <th>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr><td>Engineering</td><td>60</td><td>65</td><td>20</td><td>5</td><td>150</td></tr>
+                      <tr><td>QA</td><td>20</td><td>18</td><td>5</td><td>2</td><td>45</td></tr>
+                      <tr><td>Design</td><td>15</td><td>8</td><td>2</td><td>0</td><td>25</td></tr>
+                      <tr><td>HR</td><td>5</td><td>15</td><td>8</td><td>2</td><td>30</td></tr>
+                      <tr><td>Finance</td><td>8</td><td>15</td><td>10</td><td>2</td><td>35</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
-          </>
         )}
 
-        {/* ----------------- MODAL (FULL DETAILS) ----------------- */}
+        {/* ----------------- EMPLOYEE LIST TABLE ----------------- */}
+        <div className="card mb-4">
+          <div className="card-header">
+            <h5 className="mb-0">Employee Leave Records</h5>
+          </div>
+          <div className="card-body">
+            <div className="table-responsive">
+              <table className="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Employee Code</th>
+                    <th>Employee Name</th>
+                    <th>Department</th>
+                    <th>Grade</th>
+                    <th>Designation</th>
+                    <th>Location</th>
+                    <th>Gender</th>
+                    <th>Mobile</th>
+                    <th>Leave Type</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {display.map((employee) => (
+                    <tr key={employee.id}>
+                      <td><strong>{employee.employeeCode}</strong></td>
+                      <td>{employee.employee}</td>
+                      <td>{employee.department}</td>
+                      <td><span className="badge bg-info">{employee.grade}</span></td>
+                      <td>{employee.designation}</td>
+                      <td>{employee.location}</td>
+                      <td>{employee.gender}</td>
+                      <td>{employee.mobile}</td>
+                      <td>{employee.leaveType}</td>
+                      <td>
+                        <span className={`badge ${statusBadge(employee.status)}`}>
+                          {employee.status}
+                        </span>
+                      </td>
+                      <td>
+                        <button 
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => setModalLeave(employee)}
+                        >
+                          <Eye size={14} /> View
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Pagination */}
+            <div className="d-flex justify-content-between align-items-center mt-3">
+              <small className="text-muted">
+                Showing <strong>{start + 1}</strong> – <strong>{Math.min(start + perPage, filtered.length)}</strong> of <strong>{filtered.length}</strong>
+              </small>
+              <div className="btn-group">
+                <button className="btn btn-outline-secondary" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>Previous</button>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i}
+                    className={currentPage === i + 1 ? "btn btn-primary" : "btn btn-outline-secondary"}
+                    onClick={() => setCurrentPage(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button className="btn btn-outline-secondary" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>Next</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ----------------- ENHANCED EMPLOYEE DETAILS MODAL ----------------- */}
         {modalLeave && (
-          <div className="modal fade show d-block" style={{ background: "rgba(0,0,0,0.5)" }}>
-            <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content">
-
-                <div className="modal-header">
-                  <h5 className="modal-title">Leave Details</h5>
-                  <button type="button" className="btn-close" onClick={() => setModalLeave(null)}></button>
+          <div className="modal fade show d-block" style={{ 
+            background: "rgba(0,0,0,0.5)",
+            position: "fixed",
+            inset: 0,
+            zIndex: 1050,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 0,
+            overflow: "auto"
+          }}>
+            <div className="modal-dialog modal-xl modal-dialog-centered" style={{ 
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: '100vh',
+              maxWidth: "1200px",
+              width: "95%",
+              margin: 0,
+              padding: '20px'
+            }}>
+              <div className="modal-content border-0 shadow-lg" style={{ 
+                borderRadius: "12px",
+                maxHeight: "calc(100vh - 80px)",
+                overflowY: "auto",
+                width: '100%'
+              }}>
+                {/* Modal Header */}
+                <div className="modal-header bg-primary text-white" style={{ 
+                  padding: "1.2rem 1.5rem",
+                  borderBottom: "none"
+                }}>
+                  <div className="d-flex align-items-center w-100">
+                    <div className="d-flex align-items-center flex-grow-1">
+                      <User className="me-3" size={28} />
+                      <div>
+                        <h5 className="modal-title mb-0 fw-bold">
+                          {modalLeave.employee} ({modalLeave.employeeCode})
+                        </h5>
+                        <small className="text-white-80">
+                          {modalLeave.designation} • {modalLeave.department} • {modalLeave.location}
+                        </small>
+                      </div>
+                    </div>
+                    <button 
+                      type="button" 
+                      className="btn-close btn-close-white" 
+                      onClick={() => setModalLeave(null)}
+                      style={{ opacity: 1 }}
+                    ></button>
+                  </div>
                 </div>
 
-                <div className="modal-body">
-                  <p><strong>Employee:</strong> {modalLeave.employee}</p>
-                  <p><strong>Department:</strong> {modalLeave.department}</p>
-                  <p><strong>Leave Type:</strong> {modalLeave.leaveType}</p>
-                  <p><strong>Applied On:</strong> {modalLeave.appliedOn}</p>
+                {/* Modal Body */}
+                <div className="modal-body p-0">
+                  <div className="container-fluid">
+                    {/* Employee Overview Cards */}
+                    <div className="row gx-3 gy-3 align-items-stretch border-bottom bg-light px-4 py-3">
+                      <div className="col-md-3 mb-3">
+                        <div className="card border-0 shadow-sm h-100 d-flex flex-column">
+                          <div className="card-body text-center p-3 d-flex flex-column justify-content-center">
+                            <User className="text-primary mb-2" size={24} />
+                            <div className="h5 mb-1">{modalLeave.gender}</div>
+                            <small className="text-muted">Gender</small>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-md-3 mb-3">
+                        <div className="card border-0 shadow-sm h-100 d-flex flex-column">
+                          <div className="card-body text-center p-3 d-flex flex-column justify-content-center">
+                            <CalendarIcon className="text-success mb-2" size={24} />
+                            <div className="h5 mb-1">{getAge(modalLeave.dob)} years</div>
+                            <small className="text-muted">Age</small>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-md-3 mb-3">
+                        <div className="card border-0 shadow-sm h-100 d-flex flex-column">
+                          <div className="card-body text-center p-3 d-flex flex-column justify-content-center">
+                            <Award className="text-warning mb-2" size={24} />
+                            <div className="h5 mb-1">{modalLeave.grade}</div>
+                            <small className="text-muted">Grade</small>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-md-3 mb-3">
+                        <div className="card border-0 shadow-sm h-100 d-flex flex-column">
+                          <div className="card-body text-center p-3 d-flex flex-column justify-content-center">
+                            <Briefcase className="text-info mb-2" size={24} />
+                            <div className="h5 mb-1">{getTenure(modalLeave.doj).years}y {getTenure(modalLeave.doj).months}m</div>
+                            <small className="text-muted">Tenure</small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-                  <p><strong>Period:</strong>  
-                    <br />{modalLeave.fromDate} → {modalLeave.toDate}
-                    <br /><strong>Days:</strong> {diffDays(modalLeave.fromDate, modalLeave.toDate)}
-                  </p>
+                    {/* Main Content Grid */}
+                    <div className="row gx-4 gy-4 px-4 py-4">
+                      {/* Left Column */}
+                      <div className="col-lg-6">
+                        {/* Basic Information */}
+                        <div className="card mb-4 border-0 shadow-sm">
+                          <div className="card-header bg-light d-flex align-items-center py-3">
+                            <UserCheck className="me-2" size={18} />
+                            <h6 className="mb-0 fw-semibold">Basic Information</h6>
+                          </div>
+                          <div className="card-body">
+                            <div className="row g-3">
+                              <div className="col-md-6">
+                                <div className="d-flex align-items-center mb-3">
+                                  <div className="text-muted me-3" style={{ width: "120px" }}>Date of Birth:</div>
+                                  <div className="fw-medium">{modalLeave.dob}</div>
+                                </div>
+                                <div className="d-flex align-items-center mb-3">
+                                  <div className="text-muted me-3" style={{ width: "120px" }}>Date of Joining:</div>
+                                  <div className="fw-medium">{modalLeave.doj}</div>
+                                </div>
+                                {modalLeave.doe && (
+                                  <div className="d-flex align-items-center mb-3">
+                                    <div className="text-muted me-3" style={{ width: "120px" }}>Date of Exit:</div>
+                                    <div className="fw-medium">{modalLeave.doe}</div>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="col-md-6">
+                                <div className="d-flex align-items-center mb-3">
+                                  <div className="text-muted me-3" style={{ width: "120px" }}>Marital Status:</div>
+                                  <div className="fw-medium">{modalLeave.maritalStatus}</div>
+                                </div>
+                                {modalLeave.spouseName && (
+                                  <div className="d-flex align-items-center mb-3">
+                                    <div className="text-muted me-3" style={{ width: "120px" }}>Spouse Name:</div>
+                                    <div className="fw-medium">{modalLeave.spouseName}</div>
+                                  </div>
+                                )}
+                                <div className="d-flex align-items-center mb-3">
+                                  <div className="text-muted me-3" style={{ width: "120px" }}>Blood Group:</div>
+                                  <div className="fw-medium">{modalLeave.bloodGroup}</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
 
-                  <p><strong>Reason:</strong> {modalLeave.reason}</p>
+                        {/* Contact Information */}
+                        <div className="card mb-4 border-0 shadow-sm">
+                          <div className="card-header bg-light d-flex align-items-center py-3">
+                            <PhoneCall className="me-2" size={18} />
+                            <h6 className="mb-0 fw-semibold">Contact Information</h6>
+                          </div>
+                          <div className="card-body">
+                            <div className="row g-3">
+                              <div className="col-md-6">
+                                <div className="d-flex align-items-center mb-3">
+                                  <Smartphone className="me-2 text-muted" size={16} />
+                                  <div className="text-muted me-3" style={{ width: "100px" }}>Mobile:</div>
+                                  <div className="fw-medium">{modalLeave.mobile}</div>
+                                </div>
+                                <div className="d-flex align-items-center mb-3">
+                                  <PhoneOutgoing className="me-2 text-muted" size={16} />
+                                  <div className="text-muted me-3" style={{ width: "100px" }}>Office Phone:</div>
+                                  <div className="fw-medium">{modalLeave.officePhone}</div>
+                                </div>
+                              </div>
+                              <div className="col-md-6">
+                                <div className="d-flex align-items-center mb-3">
+                                  <Home className="me-2 text-muted" size={16} />
+                                  <div className="text-muted me-3" style={{ width: "100px" }}>Home Phone:</div>
+                                  <div className="fw-medium">{modalLeave.homePhone}</div>
+                                </div>
+                                <div className="d-flex align-items-center mb-3">
+                                  <Mailbox className="me-2 text-muted" size={16} />
+                                  <div className="text-muted me-3" style={{ width: "100px" }}>Emergency Contact:</div>
+                                  <div className="fw-medium">{modalLeave.emergencyContact}</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
 
-                  <p>
-                    <strong>Status:</strong>{" "}
-                    <span className={`badge ${statusBadge(modalLeave.status)}`}>
-                      {modalLeave.status}
-                    </span>
-                  </p>
+                        {/* Government IDs */}
+                        <div className="card mb-4 border-0 shadow-sm">
+                          <div className="card-header bg-light d-flex align-items-center py-3">
+                            <Shield className="me-2" size={18} />
+                            <h6 className="mb-0 fw-semibold">Government IDs</h6>
+                          </div>
+                          <div className="card-body">
+                            <div className="row g-3">
+                              <div className="col-md-6">
+                                <div className="d-flex align-items-center mb-3">
+                                  <div className="text-muted me-3" style={{ width: "80px" }}>PAN:</div>
+                                  <div className="fw-medium">{modalLeave.pan}</div>
+                                </div>
+                                <div className="d-flex align-items-center mb-3">
+                                  <div className="text-muted me-3" style={{ width: "80px" }}>Aadhaar:</div>
+                                  <div className="fw-medium">{modalLeave.aadhaar}</div>
+                                </div>
+                              </div>
+                              <div className="col-md-6">
+                                <div className="d-flex align-items-center mb-3">
+                                  <div className="text-muted me-3" style={{ width: "80px" }}>PF UAN:</div>
+                                  <div className="fw-medium">{modalLeave.pfUan}</div>
+                                </div>
+                                {modalLeave.esi && (
+                                  <div className="d-flex align-items-center mb-3">
+                                    <div className="text-muted me-3" style={{ width: "80px" }}>ESI:</div>
+                                    <div className="fw-medium">{modalLeave.esi}</div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right Column */}
+                      <div className="col-lg-6">
+                        {/* Email Information */}
+                        <div className="card mb-4 border-0 shadow-sm">
+                          <div className="card-header bg-light d-flex align-items-center py-3">
+                            <Mail className="me-2" size={18} />
+                            <h6 className="mb-0 fw-semibold">Email Information</h6>
+                          </div>
+                          <div className="card-body">
+                            <div className="mb-3">
+                              <div className="d-flex align-items-center mb-2">
+                                <div className="text-muted me-3" style={{ width: "120px" }}>Office Email:</div>
+                                <div className="fw-medium text-truncate">{modalLeave.officeEmail}</div>
+                              </div>
+                              <div className="d-flex align-items-center">
+                                <div className="text-muted me-3" style={{ width: "120px" }}>Personal Email:</div>
+                                <div className="fw-medium text-truncate">{modalLeave.personalEmail}</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Bank Information */}
+                        <div className="card mb-4 border-0 shadow-sm">
+                          <div className="card-header bg-light d-flex align-items-center py-3">
+                            <Banknote className="me-2" size={18} />
+                            <h6 className="mb-0 fw-semibold">Bank Information</h6>
+                          </div>
+                          <div className="card-body">
+                            <div className="row g-3">
+                              <div className="col-md-6">
+                                <div className="d-flex align-items-center mb-3">
+                                  <div className="text-muted me-3" style={{ width: "100px" }}>Bank Name:</div>
+                                  <div className="fw-medium">{modalLeave.bankName}</div>
+                                </div>
+                                <div className="d-flex align-items-center mb-3">
+                                  <div className="text-muted me-3" style={{ width: "100px" }}>IFSC Code:</div>
+                                  <div className="fw-medium">{modalLeave.bankIfsc}</div>
+                                </div>
+                              </div>
+                              <div className="col-md-6">
+                                <div className="d-flex align-items-center mb-3">
+                                  <div className="text-muted me-3" style={{ width: "100px" }}>Account No:</div>
+                                  <div className="fw-medium text-truncate">{modalLeave.bankAccount}</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Work Information */}
+                        <div className="card mb-4 border-0 shadow-sm">
+                          <div className="card-header bg-light d-flex align-items-center py-3">
+                            <Building className="me-2" size={18} />
+                            <h6 className="mb-0 fw-semibold">Work Information</h6>
+                          </div>
+                          <div className="card-body">
+                            <div className="row g-3">
+                              <div className="col-md-6">
+                                <div className="d-flex align-items-center mb-3">
+                                  <div className="text-muted me-3" style={{ width: "120px" }}>Cost Center:</div>
+                                  <div className="fw-medium">{modalLeave.costCenter}</div>
+                                </div>
+                                <div className="d-flex align-items-center mb-3">
+                                  <div className="text-muted me-3" style={{ width: "120px" }}>Location:</div>
+                                  <div className="fw-medium">{modalLeave.location}</div>
+                                </div>
+                              </div>
+                              <div className="col-md-6">
+                                <div className="d-flex align-items-center mb-3">
+                                  <div className="text-muted me-3" style={{ width: "120px" }}>Department:</div>
+                                  <div className="fw-medium">{modalLeave.department}</div>
+                                </div>
+                                <div className="d-flex align-items-center mb-3">
+                                  <div className="text-muted me-3" style={{ width: "120px" }}>Designation:</div>
+                                  <div className="fw-medium">{modalLeave.designation}</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Leave Information Section */}
+                    <div className="row px-4 pb-4">
+                      <div className="col-12">
+                        <div className="card border-0 shadow-sm" style={{ 
+                          borderLeft: "4px solid #0d6efd",
+                          backgroundColor: "#f8f9fa"
+                        }}>
+                          <div className="card-header bg-white d-flex align-items-center py-3">
+                            <Calendar className="me-2 text-primary" size={18} />
+                            <h6 className="mb-0 fw-semibold text-primary">Leave Information</h6>
+                          </div>
+                          <div className="card-body">
+                            <div className="row">
+                              <div className="col-md-3">
+                                <div className="d-flex flex-column mb-3">
+                                  <small className="text-muted mb-1">Leave Type</small>
+                                  <div className="fw-semibold">{modalLeave.leaveType}</div>
+                                </div>
+                              </div>
+                              <div className="col-md-3">
+                                <div className="d-flex flex-column mb-3">
+                                  <small className="text-muted mb-1">Applied On</small>
+                                  <div className="fw-semibold">{modalLeave.appliedOn}</div>
+                                </div>
+                              </div>
+                              <div className="col-md-3">
+                                <div className="d-flex flex-column mb-3">
+                                  <small className="text-muted mb-1">Leave Period</small>
+                                  <div className="fw-semibold">
+                                    {modalLeave.fromDate} → {modalLeave.toDate}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="col-md-3">
+                                <div className="d-flex flex-column mb-3">
+                                  <small className="text-muted mb-1">Total Days</small>
+                                  <div className="fw-semibold">{diffDays(modalLeave.fromDate, modalLeave.toDate)} days</div>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="row mt-2">
+                              <div className="col-md-6">
+                                <div className="d-flex flex-column mb-3">
+                                  <small className="text-muted mb-1">Reason</small>
+                                  <div className="fw-semibold">{modalLeave.reason}</div>
+                                </div>
+                              </div>
+                              <div className="col-md-3">
+                                <div className="d-flex flex-column mb-3">
+                                  <small className="text-muted mb-1">Status</small>
+                                  <div>
+                                    <span className={`badge ${statusBadge(modalLeave.status)}`}>
+                                      {modalLeave.status}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="col-md-3">
+                                <div className="d-flex flex-column mb-3">
+                                  <small className="text-muted mb-1">Children</small>
+                                  <div className="fw-semibold">{modalLeave.children}</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="modal-footer d-flex justify-content-between">
-
-                  {/* Status Update Buttons */}
+                {/* Modal Footer */}
+                <div className="modal-footer d-flex justify-content-between align-items-center py-3 px-4 bg-light border-top">
+                  <div className="text-muted small">
+                    Last updated: {modalLeave.appliedOn}
+                  </div>
                   <div className="d-flex gap-2">
-                    <button className="btn btn-success" onClick={() => updateStatus(modalLeave.id, "Approved")}>
-                      <Check size={16} className="me-1" /> Approve
-                    </button>
-
-                    <button className="btn btn-warning" onClick={() => updateStatus(modalLeave.id, "Rejected")}>
-                      <X size={16} className="me-1" /> Reject
+                    {modalLeave.status === "Pending" && (
+                      <>
+                        <button 
+                          className="btn btn-success px-4 py-2 d-flex align-items-center"
+                          onClick={() => updateStatus(modalLeave.id, "Approved")}
+                          style={{ borderRadius: "6px" }}
+                        >
+                          <Check size={18} className="me-2" /> Approve Leave
+                        </button>
+                        <button 
+                          className="btn btn-warning px-4 py-2 d-flex align-items-center"
+                          onClick={() => updateStatus(modalLeave.id, "Rejected")}
+                          style={{ borderRadius: "6px" }}
+                        >
+                          <X size={18} className="me-2" /> Reject Leave
+                        </button>
+                      </>
+                    )}
+                    <button 
+                      className="btn btn-outline-secondary px-4 py-2"
+                      onClick={() => setModalLeave(null)}
+                      style={{ borderRadius: "6px" }}
+                    >
+                      Close
                     </button>
                   </div>
-
-                  <button className="btn btn-secondary" onClick={() => setModalLeave(null)}>
-                    Close
-                  </button>
-
                 </div>
-
               </div>
             </div>
           </div>

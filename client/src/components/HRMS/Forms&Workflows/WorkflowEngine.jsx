@@ -9,13 +9,27 @@ import {
   Cpu, Cloud, CheckSquare, X, GitBranch
 } from "lucide-react";
 
+// Import jsPDF
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+
 const WorkflowEngine = () => {
   const [activeSection, setActiveSection] = useState("config");
   const [workflowType, setWorkflowType] = useState("linear");
   const [selectedApprovers, setSelectedApprovers] = useState([]);
+  
+  // Auto-approval rules state
+  const [newAutoRule, setNewAutoRule] = useState({
+    condition: "amount",
+    operator: "<=",
+    value: "",
+    action: "auto-approve"
+  });
   const [autoApprovalRules, setAutoApprovalRules] = useState([
     { id: 1, condition: "amount", operator: "<=", value: "1000", action: "auto-approve" }
   ]);
+  
+  // Escalation rules state
   const [escalationRules, setEscalationRules] = useState([
     { 
       id: 1, 
@@ -38,6 +52,7 @@ const WorkflowEngine = () => {
       isEnabled: true 
     }
   ]);
+  
   const [workflowStages, setWorkflowStages] = useState([
     { id: 1, level: "direct-manager", approvers: [], timeout: 24, isEnabled: true }
   ]);
@@ -87,6 +102,9 @@ const WorkflowEngine = () => {
     limitDelegationDuration: true,
     maxDelegationDays: 30
   });
+  
+  // Add state for export menu
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   // Add CSS for spin animation
   useEffect(() => {
@@ -206,21 +224,39 @@ const WorkflowEngine = () => {
     setConditionalRules(conditionalRules.filter(rule => rule.id !== ruleId));
   };
 
-  const handleUpdateAutoApprovalRule = (ruleId, field, value) => {
-    setAutoApprovalRules(autoApprovalRules.map(rule => 
-      rule.id === ruleId ? { ...rule, [field]: value } : rule
-    ));
+  // Fixed: Auto-approval rule handlers
+  const handleUpdateNewAutoRule = (field, value) => {
+    setNewAutoRule({
+      ...newAutoRule,
+      [field]: value
+    });
   };
 
   const handleAddAutoApprovalRule = () => {
+    // Validate the new rule
+    if (!newAutoRule.value || newAutoRule.value.trim() === "") {
+      alert("Please enter a value for the rule");
+      return;
+    }
+
     const newRule = {
       id: autoApprovalRules.length + 1,
+      condition: newAutoRule.condition,
+      operator: newAutoRule.operator,
+      value: newAutoRule.value,
+      action: newAutoRule.action
+    };
+    
+    setAutoApprovalRules([...autoApprovalRules, newRule]);
+    
+    // Reset new rule form
+    setNewAutoRule({
       condition: "amount",
       operator: "<=",
       value: "",
       action: "auto-approve"
-    };
-    setAutoApprovalRules([...autoApprovalRules, newRule]);
+    });
+    
     console.log("Added new auto-approval rule:", newRule);
   };
 
@@ -230,6 +266,7 @@ const WorkflowEngine = () => {
     console.log("Deleted auto-approval rule:", ruleId);
   };
 
+  // Fixed: Escalation rule handlers
   const handleAddEscalationRule = () => {
     const newRule = {
       id: escalationRules.length + 1,
@@ -264,7 +301,7 @@ const WorkflowEngine = () => {
     setIsSaving(true);
     console.log("Saving configuration...");
     
-      const config = {
+    const config = {
       workflowType,
       workflowStages,
       autoApprovalRules,
@@ -309,7 +346,232 @@ const WorkflowEngine = () => {
     console.log("Preview workflow:", showPreview ? "closed" : "opened");
   };
 
-  const handleExportConfiguration = () => {
+  // Helper function to generate PDF content
+  const generatePDFContent = (config) => {
+    return `
+      <div style="font-family: Arial, sans-serif; color: #333; max-width: 800px; margin: 0 auto;">
+        <h1 style="text-align: center; color: #3b82f6; margin-bottom: 10px; font-size: 28px;">Workflow Configuration</h1>
+        <p style="text-align: center; color: #64748b; margin-bottom: 30px; font-size: 14px;">
+          Generated on: ${new Date().toLocaleString()}
+        </p>
+        
+        <h2 style="color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; font-size: 20px; margin-top: 30px;">
+          Workflow Settings
+        </h2>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <tr>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: bold; width: 30%;">
+              Workflow Type:
+            </td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; width: 70%;">
+              ${config.workflowType.charAt(0).toUpperCase() + config.workflowType.slice(1)}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: bold;">
+              Created:
+            </td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;">
+              ${new Date(config.exportedAt).toLocaleString()}
+            </td>
+          </tr>
+        </table>
+        
+        <h2 style="color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; font-size: 20px; margin-top: 30px;">
+          Workflow Stages (${config.workflowStages.length})
+        </h2>
+        ${config.workflowStages.map((stage, index) => `
+          <div style="margin-bottom: 15px; padding: 15px; border-left: 4px solid #3b82f6; background: #f0f9ff; border-radius: 4px;">
+            <h3 style="margin: 0 0 8px 0; color: #1e293b; font-size: 16px;">
+              Stage ${index + 1}: ${stage.level.replace(/-/g, ' ').toUpperCase()}
+            </h3>
+            <p style="margin: 0; color: #64748b; font-size: 14px;">
+              <strong>Timeout:</strong> ${stage.timeout} hours | 
+              <strong>Approvers:</strong> ${stage.approvers?.length || 0} | 
+              <strong>Status:</strong> ${stage.isEnabled ? 'Enabled' : 'Disabled'}
+            </p>
+          </div>
+        `).join('')}
+        
+        <h2 style="color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; font-size: 20px; margin-top: 30px;">
+          Auto-Approval Rules (${config.autoApprovalRules.length})
+        </h2>
+        ${config.autoApprovalRules.length === 0 ? 
+          '<p style="color: #64748b; padding: 10px; background: #f8fafc; border-radius: 4px;">No auto-approval rules configured.</p>' : 
+          `
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <thead>
+              <tr style="background: #f1f5f9;">
+                <th style="padding: 10px; border: 1px solid #e2e8f0; text-align: left;">Rule</th>
+                <th style="padding: 10px; border: 1px solid #e2e8f0; text-align: left;">Condition</th>
+                <th style="padding: 10px; border: 1px solid #e2e8f0; text-align: left;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${config.autoApprovalRules.map(rule => `
+                <tr>
+                  <td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: bold;">
+                    Rule #${rule.id}
+                  </td>
+                  <td style="padding: 10px; border: 1px solid #e2e8f0;">
+                    ${rule.condition} ${rule.operator} ${rule.value}
+                  </td>
+                  <td style="padding: 10px; border: 1px solid #e2e8f0;">
+                    <span style="color: ${rule.action === 'auto-approve' ? '#10b981' : '#ef4444'}; font-weight: bold;">
+                      ${rule.action}
+                    </span>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          `
+        }
+        
+        <h2 style="color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; font-size: 20px; margin-top: 30px;">
+          Escalation Rules (${config.escalationRules.length})
+        </h2>
+        ${config.escalationRules.map(rule => `
+          <div style="margin-bottom: 15px; padding: 15px; border-left: 4px solid #f59e0b; background: #fef3c7; border-radius: 4px;">
+            <h3 style="margin: 0 0 8px 0; color: #1e293b; font-size: 16px;">
+              ${rule.name}
+            </h3>
+            <p style="margin: 0; color: #64748b; font-size: 14px;">
+              <strong>Trigger:</strong> ${rule.trigger === 'timeout' ? `${rule.timeout} ${rule.unit} timeout` : 'Out of Office'} | 
+              <strong>Action:</strong> ${rule.action} | 
+              <strong>Target:</strong> ${rule.target.replace(/-/g, ' ')} | 
+              <strong>Status:</strong> ${rule.isEnabled ? 'Active' : 'Inactive'}
+            </p>
+          </div>
+        `).join('')}
+        
+        <h2 style="color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; font-size: 20px; margin-top: 30px;">
+          Integration Settings
+        </h2>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+          <thead>
+            <tr style="background: #f1f5f9;">
+              <th style="padding: 10px; border: 1px solid #e2e8f0; text-align: left;">Integration</th>
+              <th style="padding: 10px; border: 1px solid #e2e8f0; text-align: left;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${Object.entries(config.integrationSettings).map(([key, value]) => `
+              <tr>
+                <td style="padding: 10px; border: 1px solid #e2e8f0;">
+                  ${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                </td>
+                <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: center;">
+                  ${value ? 
+                    '<span style="color: #10b981; font-weight: bold;">✓ Enabled</span>' : 
+                    '<span style="color: #ef4444; font-weight: bold;">✗ Disabled</span>'
+                  }
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #64748b; font-size: 12px; text-align: center;">
+          <p style="margin: 5px 0;">Generated by Approval Workflow System</p>
+          <p style="margin: 5px 0;">Document ID: WF-${Date.now().toString().slice(-8)}</p>
+          <p style="margin: 5px 0;">This is an automatically generated configuration document</p>
+        </div>
+      </div>
+    `;
+  };
+
+  // Main PDF Export Function
+  const handleExportConfiguration = async () => {
+    setIsSaving(true);
+    
+    const config = {
+      workflowType,
+      workflowStages,
+      autoApprovalRules,
+      escalationRules,
+      conditionalRules,
+      workflowActions,
+      delegationSettings,
+      notifications,
+      auditSettings,
+      integrationSettings,
+      exportedAt: new Date().toISOString()
+    };
+    
+    try {
+      // Create a temporary element to hold the PDF content
+      const element = document.createElement('div');
+      element.style.width = '210mm'; // A4 width
+      element.style.padding = '20mm';
+      element.style.background = 'white';
+      element.style.boxSizing = 'border-box';
+      element.innerHTML = generatePDFContent(config);
+      document.body.appendChild(element);
+      
+      // Generate canvas from the element
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+      
+      // Remove the temporary element
+      document.body.removeChild(element);
+      
+      // Create PDF
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      let position = 0;
+      
+      // Add first page
+      pdf.addImage(canvas, 'PNG', 0, position, imgWidth, imgHeight);
+      
+      // Add additional pages if needed
+      let heightLeft = imgHeight;
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(canvas, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      
+      // Save the PDF
+      const fileName = `workflow-configuration-${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(fileName);
+      
+      console.log("Exported configuration as PDF:", config);
+      alert(`Configuration exported as ${fileName}`);
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again or export as JSON instead.');
+      
+      // Fallback to JSON export if PDF generation fails
+      const dataStr = JSON.stringify(config, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      const exportFileDefaultName = `workflow-config-${new Date().toISOString().split('T')[0]}.json`;
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+    } finally {
+      setIsSaving(false);
+      setShowExportMenu(false);
+    }
+  };
+
+  // Alternative JSON Export Function
+  const handleExportJSON = () => {
     const config = {
       workflowType,
       workflowStages,
@@ -326,7 +588,6 @@ const WorkflowEngine = () => {
     
     const dataStr = JSON.stringify(config, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
     const exportFileDefaultName = `workflow-config-${new Date().toISOString().split('T')[0]}.json`;
     
     const linkElement = document.createElement('a');
@@ -334,7 +595,8 @@ const WorkflowEngine = () => {
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
     
-    console.log("Exported configuration:", config);
+    console.log("Exported configuration as JSON:", config);
+    setShowExportMenu(false);
   };
 
   const handleImportConfiguration = () => {
@@ -430,6 +692,15 @@ const WorkflowEngine = () => {
         syncWithCRM: false,
         updateProjectManagement: false
       });
+      
+      // Reset new auto rule form
+      setNewAutoRule({
+        condition: "amount",
+        operator: "<=",
+        value: "",
+        action: "auto-approve"
+      });
+      
       console.log("Reset all settings to defaults");
     }
   };
@@ -629,7 +900,8 @@ const WorkflowEngine = () => {
       borderRadius: "6px",
       border: "1px solid #d1d5db",
       fontSize: "14px",
-      background: "white"
+      background: "white",
+      cursor: "pointer"
     },
     input: {
       width: "100%",
@@ -755,6 +1027,35 @@ const WorkflowEngine = () => {
     inactiveBadge: {
       background: "#f3f4f6",
       color: "#6b7280"
+    },
+    exportMenu: {
+      position: "absolute",
+      top: "100%",
+      right: 0,
+      background: "white",
+      border: "1px solid #d1d5db",
+      borderRadius: "6px",
+      boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+      zIndex: 100,
+      marginTop: "8px",
+      minWidth: "180px",
+      overflow: "hidden"
+    },
+    exportMenuItem: {
+      padding: "12px 16px",
+      border: "none",
+      background: "transparent",
+      width: "100%",
+      textAlign: "left",
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      fontSize: "14px",
+      transition: "all 0.2s",
+      "&:hover": {
+        background: "#f8fafc"
+      }
     }
   };
 
@@ -1078,7 +1379,11 @@ const WorkflowEngine = () => {
         <div style={styles.grid2Col}>
           <div style={styles.formGroup}>
             <label style={styles.label}>Condition Field</label>
-            <select style={styles.select}>
+            <select 
+              style={styles.select}
+              value={newAutoRule.condition}
+              onChange={(e) => handleUpdateNewAutoRule("condition", e.target.value)}
+            >
               <option value="">Select field</option>
               {conditions.map(cond => (
                 <option key={cond.id} value={cond.id}>{cond.label}</option>
@@ -1087,7 +1392,11 @@ const WorkflowEngine = () => {
           </div>
           <div style={styles.formGroup}>
             <label style={styles.label}>Operator</label>
-            <select style={styles.select}>
+            <select 
+              style={styles.select}
+              value={newAutoRule.operator}
+              onChange={(e) => handleUpdateNewAutoRule("operator", e.target.value)}
+            >
               <option value="<=">Less than or equal (≤)</option>
               <option value=">=">Greater than or equal (≥)</option>
               <option value="=">Equals (=)</option>
@@ -1102,11 +1411,21 @@ const WorkflowEngine = () => {
         <div style={styles.grid2Col}>
           <div style={styles.formGroup}>
             <label style={styles.label}>Value</label>
-            <input type="text" style={styles.input} placeholder="Enter condition value" />
+            <input 
+              type="text" 
+              style={styles.input} 
+              placeholder="Enter condition value"
+              value={newAutoRule.value}
+              onChange={(e) => handleUpdateNewAutoRule("value", e.target.value)}
+            />
           </div>
           <div style={styles.formGroup}>
             <label style={styles.label}>Action</label>
-            <select style={styles.select}>
+            <select 
+              style={styles.select}
+              value={newAutoRule.action}
+              onChange={(e) => handleUpdateNewAutoRule("action", e.target.value)}
+            >
               <option value="auto-approve">Auto-approve</option>
               <option value="auto-reject">Auto-reject</option>
               <option value="route">Route to specific approver</option>
@@ -1139,11 +1458,13 @@ const WorkflowEngine = () => {
                     background: rule.action === "auto-approve" ? "#d1fae5" : "#fee2e2",
                     color: rule.action === "auto-approve" ? "#065f46" : "#991b1b"
                   }}>
-                    {rule.action === "auto-approve" ? "Auto-Approve" : rule.action}
+                    {rule.action === "auto-approve" ? "Auto-Approve" : 
+                     rule.action === "auto-reject" ? "Auto-Reject" : 
+                     rule.action === "route" ? "Route" : "Skip"}
                   </span>
                 </div>
                 <div style={{ fontSize: "13px", color: "#6b7280" }}>
-                  {rule.condition} {rule.operator} {rule.value || "[Not set]"}
+                  {conditions.find(c => c.id === rule.condition)?.label || rule.condition} {rule.operator} {rule.value || "[Not set]"}
                 </div>
               </div>
               <button 
@@ -1680,12 +2001,35 @@ const WorkflowEngine = () => {
           >
             <Upload size={16} /> Import
           </button>
-          <button 
-            style={{ ...styles.button, ...styles.secondaryButton }}
-            onClick={handleExportConfiguration}
-          >
-            <Download size={16} /> Export
-          </button>
+          
+          {/* Export Button with Menu */}
+          <div style={{ position: "relative" }}>
+            <button 
+              style={{ ...styles.button, ...styles.secondaryButton }}
+              onClick={() => setShowExportMenu(!showExportMenu)}
+            >
+              <Download size={16} /> Export
+            </button>
+            
+            {showExportMenu && (
+              <div style={styles.exportMenu}>
+                <button 
+                  style={styles.exportMenuItem}
+                  onClick={handleExportConfiguration}
+                  disabled={isSaving}
+                >
+                  <FileTextIcon size={16} /> Export as PDF
+                </button>
+                <button 
+                  style={styles.exportMenuItem}
+                  onClick={handleExportJSON}
+                >
+                  <Database size={16} /> Export as JSON
+                </button>
+              </div>
+            )}
+          </div>
+          
           <button 
             style={{ ...styles.button, ...styles.secondaryButton }}
             onClick={handleResetToDefaults}
