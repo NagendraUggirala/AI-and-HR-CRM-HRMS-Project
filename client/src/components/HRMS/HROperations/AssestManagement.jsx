@@ -388,8 +388,41 @@ const AssestManagement = () => {
   const [showInsuranceModal, setShowInsuranceModal] = useState(false);
   const [showDamageModal, setShowDamageModal] = useState(false);
   const [showReportsModal, setShowReportsModal] = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   
+  // Filter states
+  const [filters, setFilters] = useState({
+    category: '',
+    status: '',
+    condition: '',
+    department: '',
+    location: '',
+    minValue: '',
+    maxValue: '',
+    dateFrom: '',
+    dateTo: ''
+  });
+
+  // Departments
+  const departments = [
+    'Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 
+    'Operations', 'IT', 'Design', 'Product', 'Support'
+  ];
+
+  // Locations
+  const locations = [
+    'Head Office - Floor 1',
+    'Head Office - Floor 2',
+    'Head Office - Floor 3',
+    'Branch Office - Mumbai',
+    'Branch Office - Bangalore',
+    'Branch Office - Delhi',
+    'IT Store Room',
+    'Repair Center',
+    'Warehouse'
+  ];
+
   // Menu items for the dashboard layout
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <BarChart3 size={20} />, active: true },
@@ -963,25 +996,6 @@ const AssestManagement = () => {
     expiringInsurance: 1
   };
 
-  // Departments
-  const departments = [
-    'Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 
-    'Operations', 'IT', 'Design', 'Product', 'Support'
-  ];
-
-  // Locations
-  const locations = [
-    'Head Office - Floor 1',
-    'Head Office - Floor 2',
-    'Head Office - Floor 3',
-    'Branch Office - Mumbai',
-    'Branch Office - Bangalore',
-    'Branch Office - Delhi',
-    'IT Store Room',
-    'Repair Center',
-    'Warehouse'
-  ];
-
   // Utility Functions
   const formatCurrency = (amount) => {
     if (!amount) return '₹0';
@@ -1017,6 +1031,104 @@ const AssestManagement = () => {
     const cat = assetCategories.find(c => c.value === category);
     return cat ? cat.icon : <Package size={16} />;
   };
+
+  // Extract numeric value from currency string
+  const extractNumericValue = (value) => {
+    if (!value) return 0;
+    if (typeof value === 'number') return value;
+    return parseInt(value.toString().replace(/[^0-9]/g, '')) || 0;
+  };
+
+  // Filter assets based on search term and filters
+  const filterAssets = (assetsList) => {
+    return assetsList.filter(asset => {
+      // Search term filter
+      if (searchTerm && !(
+        asset.assetName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        asset.assetTag?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        asset.serialNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        asset.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (asset.allocatedTo && asset.allocatedTo.toLowerCase().includes(searchTerm.toLowerCase()))
+      )) {
+        return false;
+      }
+
+      // Category filter
+      if (filters.category && asset.category !== filters.category) {
+        return false;
+      }
+
+      // Status filter
+      if (filters.status && asset.status !== filters.status) {
+        return false;
+      }
+
+      // Condition filter
+      if (filters.condition && asset.condition !== filters.condition) {
+        return false;
+      }
+
+      // Department filter
+      if (filters.department && asset.department !== filters.department) {
+        return false;
+      }
+
+      // Location filter
+      if (filters.location && asset.location !== filters.location) {
+        return false;
+      }
+
+      // Value range filter
+      const assetValue = extractNumericValue(asset.currentValue);
+      if (filters.minValue && assetValue < parseInt(filters.minValue)) {
+        return false;
+      }
+      if (filters.maxValue && assetValue > parseInt(filters.maxValue)) {
+        return false;
+      }
+
+      // Date range filter (purchase date)
+      if (filters.dateFrom && asset.purchaseDate && new Date(asset.purchaseDate) < new Date(filters.dateFrom)) {
+        return false;
+      }
+      if (filters.dateTo && asset.purchaseDate && new Date(asset.purchaseDate) > new Date(filters.dateTo)) {
+        return false;
+      }
+
+      return true;
+    });
+  };
+
+  // Reset filters
+  const resetFilters = () => {
+    setFilters({
+      category: '',
+      status: '',
+      condition: '',
+      department: '',
+      location: '',
+      minValue: '',
+      maxValue: '',
+      dateFrom: '',
+      dateTo: ''
+    });
+    setSearchTerm('');
+  };
+
+  // Handle filter change
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Active filters count
+  const activeFiltersCount = Object.values(filters).filter(val => val !== '').length + (searchTerm ? 1 : 0);
+
+  // Filtered assets
+  const filteredAssets = filterAssets(assetMaster);
 
   // Handlers
   const handleAddAsset = (assetData) => {
@@ -1222,6 +1334,184 @@ const AssestManagement = () => {
     
     alert('Depreciation report downloaded!');
   };
+
+  // Filter Modal Component
+  const FilterModal = () => (
+    <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+      <div className="modal-dialog modal-dialog-centered modal-lg">
+        <div className="modal-content">
+          <div className="modal-header bg-primary text-white">
+            <h5 className="modal-title fw-bold">
+              <Filter className="me-2" />
+              Advanced Filters
+            </h5>
+            <button className="btn-close btn-close-white" onClick={() => setShowFilterModal(false)}></button>
+          </div>
+          
+          <div className="modal-body">
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Asset Category</label>
+                <select
+                  name="category"
+                  value={filters.category}
+                  onChange={handleFilterChange}
+                  className="form-select"
+                >
+                  <option value="">All Categories</option>
+                  {assetCategories.map(category => (
+                    <option key={category.value} value={category.value}>
+                      {category.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Status</label>
+                <select
+                  name="status"
+                  value={filters.status}
+                  onChange={handleFilterChange}
+                  className="form-select"
+                >
+                  <option value="">All Statuses</option>
+                  {assetStatuses.map(status => (
+                    <option key={status.value} value={status.value}>
+                      {status.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Condition</label>
+                <select
+                  name="condition"
+                  value={filters.condition}
+                  onChange={handleFilterChange}
+                  className="form-select"
+                >
+                  <option value="">All Conditions</option>
+                  {assetConditions.map(condition => (
+                    <option key={condition.value} value={condition.value}>
+                      {condition.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Department</label>
+                <select
+                  name="department"
+                  value={filters.department}
+                  onChange={handleFilterChange}
+                  className="form-select"
+                >
+                  <option value="">All Departments</option>
+                  {departments.map(dept => (
+                    <option key={dept} value={dept}>
+                      {dept}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Location</label>
+                <select
+                  name="location"
+                  value={filters.location}
+                  onChange={handleFilterChange}
+                  className="form-select"
+                >
+                  <option value="">All Locations</option>
+                  {locations.map(location => (
+                    <option key={location} value={location}>
+                      {location}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Value Range (₹)</label>
+                <div className="row">
+                  <div className="col-6">
+                    <input
+                      type="number"
+                      name="minValue"
+                      value={filters.minValue}
+                      onChange={handleFilterChange}
+                      className="form-control"
+                      placeholder="Min"
+                      min="0"
+                    />
+                  </div>
+                  <div className="col-6">
+                    <input
+                      type="number"
+                      name="maxValue"
+                      value={filters.maxValue}
+                      onChange={handleFilterChange}
+                      className="form-control"
+                      placeholder="Max"
+                      min="0"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Purchase Date Range</label>
+                <div className="row">
+                  <div className="col-6">
+                    <input
+                      type="date"
+                      name="dateFrom"
+                      value={filters.dateFrom}
+                      onChange={handleFilterChange}
+                      className="form-control"
+                      placeholder="From"
+                    />
+                  </div>
+                  <div className="col-6">
+                    <input
+                      type="date"
+                      name="dateTo"
+                      value={filters.dateTo}
+                      onChange={handleFilterChange}
+                      className="form-control"
+                      placeholder="To"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="modal-footer">
+            <button type="button" className="btn btn-outline-danger" onClick={resetFilters}>
+              Reset All Filters
+            </button>
+            <button type="button" className="btn btn-secondary" onClick={() => setShowFilterModal(false)}>
+              Cancel
+            </button>
+            <button type="button" className="btn btn-primary" onClick={() => setShowFilterModal(false)}>
+              Apply Filters
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   // Modal Components
   const AssetMasterModal = () => {
@@ -2081,16 +2371,6 @@ const AssestManagement = () => {
     );
   };
 
-  // Filter assets based on search term
-  const filteredAssets = assetMaster.filter(asset =>
-    searchTerm === '' ||
-    asset.assetName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    asset.assetTag.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    asset.serialNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    asset.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (asset.allocatedTo && asset.allocatedTo.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
   // Main Component
   const mainContent = (
     <div className="container-fluid px-3 px-md-4 py-3">
@@ -2173,13 +2453,13 @@ const AssestManagement = () => {
             <div className="d-flex justify-content-between align-items-center">
               <div>
                 <div className="text-muted small mb-1">Total Assets</div>
-                <div className="h3 mb-0 fw-bold text-primary">{statistics.totalAssets}</div>
+                <div className="h3 mb-0 fw-bold text-primary">{filteredAssets.length}</div>
               </div>
               <Package size={24} className="text-primary opacity-75" />
             </div>
             <div className="small text-success mt-2">
               <TrendingUp size={12} className="me-1" />
-              {formatCurrency(statistics.totalValue)} total value
+              {formatCurrency(filteredAssets.reduce((sum, asset) => sum + parseInt(asset.currentValue.replace(/[^0-9]/g, '')), 0))} total value
             </div>
           </div>
         </div>
@@ -2189,12 +2469,12 @@ const AssestManagement = () => {
             <div className="d-flex justify-content-between align-items-center">
               <div>
                 <div className="text-muted small mb-1">Allocated Assets</div>
-                <div className="h3 mb-0 fw-bold text-success">{statistics.allocatedAssets}</div>
+                <div className="h3 mb-0 fw-bold text-success">{filteredAssets.filter(a => a.status === 'Allocated').length}</div>
               </div>
               <Truck size={24} className="text-success opacity-75" />
             </div>
             <div className="small text-muted mt-2">
-              {Math.round((statistics.allocatedAssets / statistics.totalAssets) * 100)}% utilization
+              {filteredAssets.length > 0 ? Math.round((filteredAssets.filter(a => a.status === 'Allocated').length / filteredAssets.length) * 100) : 0}% utilization
             </div>
           </div>
         </div>
@@ -2204,7 +2484,7 @@ const AssestManagement = () => {
             <div className="d-flex justify-content-between align-items-center">
               <div>
                 <div className="text-muted small mb-1">Under Repair</div>
-                <div className="h3 mb-0 fw-bold text-warning">{statistics.underRepair}</div>
+                <div className="h3 mb-0 fw-bold text-warning">{filteredAssets.filter(a => a.status === 'Under Repair').length}</div>
               </div>
               <Wrench size={24} className="text-warning opacity-75" />
             </div>
@@ -2216,12 +2496,12 @@ const AssestManagement = () => {
           <div className="p-3 bg-white border rounded">
             <div className="d-flex justify-content-between align-items-center">
               <div>
-                <div className="text-muted small mb-1">Pending Returns</div>
-                <div className="h3 mb-0 fw-bold text-info">{statistics.pendingReturns}</div>
+                <div className="text-muted small mb-1">Available</div>
+                <div className="h3 mb-0 fw-bold text-info">{filteredAssets.filter(a => a.status === 'Available').length}</div>
               </div>
               <ArchiveRestore size={24} className="text-info opacity-75" />
             </div>
-            <div className="small text-muted mt-2">Follow-up required</div>
+            <div className="small text-muted mt-2">Ready for allocation</div>
           </div>
         </div>
       </div>
@@ -2266,9 +2546,15 @@ const AssestManagement = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <button className="btn btn-outline-primary">
+              <button 
+                className="btn btn-outline-primary"
+                onClick={() => setShowFilterModal(true)}
+              >
                 <Filter size={16} className="me-2" />
-                Filter
+                Filters
+                {activeFiltersCount > 0 && (
+                  <span className="badge bg-danger ms-1">{activeFiltersCount}</span>
+                )}
               </button>
             </div>
           </div>
@@ -2297,6 +2583,50 @@ const AssestManagement = () => {
         </div>
       </div>
 
+      {/* Active Filters Display */}
+      {activeFiltersCount > 0 && (
+        <div className="alert alert-info py-2 mb-3">
+          <div className="d-flex justify-content-between align-items-center">
+            <div>
+              <Filter size={16} className="me-2" />
+              <strong>Active Filters:</strong>
+              {searchTerm && (
+                <span className="badge bg-primary ms-2">
+                  Search: "{searchTerm}" <X size={12} className="ms-1" style={{cursor: 'pointer'}} onClick={() => setSearchTerm('')} />
+                </span>
+              )}
+              {filters.category && (
+                <span className="badge bg-info ms-2">
+                  Category: {filters.category} <X size={12} className="ms-1" style={{cursor: 'pointer'}} onClick={() => setFilters({...filters, category: ''})} />
+                </span>
+              )}
+              {filters.status && (
+                <span className="badge bg-warning ms-2">
+                  Status: {filters.status} <X size={12} className="ms-1" style={{cursor: 'pointer'}} onClick={() => setFilters({...filters, status: ''})} />
+                </span>
+              )}
+              {filters.condition && (
+                <span className="badge bg-success ms-2">
+                  Condition: {filters.condition} <X size={12} className="ms-1" style={{cursor: 'pointer'}} onClick={() => setFilters({...filters, condition: ''})} />
+                </span>
+              )}
+              {filters.department && (
+                <span className="badge bg-danger ms-2">
+                  Department: {filters.department} <X size={12} className="ms-1" style={{cursor: 'pointer'}} onClick={() => setFilters({...filters, department: ''})} />
+                </span>
+              )}
+            </div>
+            <button 
+              className="btn btn-sm btn-outline-danger"
+              onClick={resetFilters}
+            >
+              <X size={14} className="me-1" />
+              Clear All
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Asset Master Section */}
       {activeSection === 'master' && (
         <div className="row g-4">
@@ -2308,7 +2638,7 @@ const AssestManagement = () => {
                   Asset Master
                 </h6>
                 <div className="d-flex gap-2">
-                  <span className="badge bg-primary">{statistics.totalAssets} assets</span>
+                  <span className="badge bg-primary">{filteredAssets.length} assets</span>
                   <button 
                     className="btn btn-sm btn-outline-primary"
                     onClick={() => setShowAssetModal(true)}
@@ -2329,7 +2659,7 @@ const AssestManagement = () => {
                             className="form-check-input"
                             onChange={(e) => {
                               if (e.target.checked) {
-                                setSelectedAssets(assetMaster.map(a => a.id));
+                                setSelectedAssets(filteredAssets.map(a => a.id));
                               } else {
                                 setSelectedAssets([]);
                               }
@@ -2348,98 +2678,110 @@ const AssestManagement = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredAssets.map(asset => (
-                        <tr key={asset.id}>
-                          <td>
-                            <input 
-                              type="checkbox" 
-                              className="form-check-input"
-                              checked={selectedAssets.includes(asset.id)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedAssets(prev => [...prev, asset.id]);
-                                } else {
-                                  setSelectedAssets(prev => prev.filter(id => id !== asset.id));
-                                }
-                              }}
-                            />
-                          </td>
-                          <td>
-                            <div className="fw-medium">{asset.assetName}</div>
-                            <small className="text-muted">{asset.assetTag}</small>
-                            <div className="small">
-                              <span className="me-2">{asset.make}</span>
-                              <span>{asset.model}</span>
-                            </div>
-                          </td>
-                          <td>
-                            <div className="d-flex align-items-center gap-2">
-                              {getCategoryIcon(asset.category)}
-                              <span>{asset.category}</span>
-                            </div>
-                          </td>
-                          <td>
-                            <code>{asset.serialNumber}</code>
-                          </td>
-                          <td>
-                            <div className="small">
-                              <div>Date: {asset.purchaseDate}</div>
-                              <div>Price: {asset.purchasePrice}</div>
-                            </div>
-                          </td>
-                          <td className="fw-bold text-success">
-                            {asset.currentValue}
-                          </td>
-                          <td>
-                            {getConditionBadge(asset.condition)}
-                          </td>
-                          <td>
-                            {getStatusBadge(asset.status)}
-                          </td>
-                          <td>
-                            {asset.allocatedTo ? (
-                              <div className="small">
-                                <div className="fw-medium">{asset.allocatedTo}</div>
-                                <div className="text-muted">Since: {asset.allocationDate}</div>
-                              </div>
-                            ) : (
-                              <span className="text-muted">Not allocated</span>
-                            )}
-                          </td>
-                          <td>
-                            <div className="btn-group btn-group-sm">
-                              <button 
-                                className="btn btn-outline-primary"
-                                onClick={() => {
-                                  setSelectedAsset(asset);
-                                  // Show details modal
-                                }}
-                              >
-                                <Eye size={12} />
-                              </button>
-                              <button 
-                                className="btn btn-outline-success"
-                                onClick={() => {
-                                  setSelectedAsset(asset);
-                                  setShowAllocationModal(true);
-                                }}
-                                disabled={asset.status !== 'Available'}
-                              >
-                                <Truck size={12} />
-                              </button>
-                              <button 
-                                className="btn btn-outline-info"
-                                onClick={() => {
-                                  setSelectedAsset(asset);
-                                  setShowMaintenanceModal(true);
-                                }}
-                              >
-                                <Wrench size={12} />
-                              </button>
-                            </div>
+                      {filteredAssets.length === 0 ? (
+                        <tr>
+                          <td colSpan="10" className="text-center py-4">
+                            <Package size={48} className="text-muted mb-2" />
+                            <h6 className="text-muted">No assets found</h6>
+                            <p className="text-muted small mb-0">
+                              {activeFiltersCount > 0 ? 'Try changing your filters' : 'Add your first asset'}
+                            </p>
                           </td>
                         </tr>
-                      ))}
+                      ) : (
+                        filteredAssets.map(asset => (
+                          <tr key={asset.id}>
+                            <td>
+                              <input 
+                                type="checkbox" 
+                                className="form-check-input"
+                                checked={selectedAssets.includes(asset.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedAssets(prev => [...prev, asset.id]);
+                                  } else {
+                                    setSelectedAssets(prev => prev.filter(id => id !== asset.id));
+                                  }
+                                }}
+                              />
+                            </td>
+                            <td>
+                              <div className="fw-medium">{asset.assetName}</div>
+                              <small className="text-muted">{asset.assetTag}</small>
+                              <div className="small">
+                                <span className="me-2">{asset.make}</span>
+                                <span>{asset.model}</span>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="d-flex align-items-center gap-2">
+                                {getCategoryIcon(asset.category)}
+                                <span>{asset.category}</span>
+                              </div>
+                            </td>
+                            <td>
+                              <code>{asset.serialNumber}</code>
+                            </td>
+                            <td>
+                              <div className="small">
+                                <div>Date: {asset.purchaseDate}</div>
+                                <div>Price: {asset.purchasePrice}</div>
+                              </div>
+                            </td>
+                            <td className="fw-bold text-success">
+                              {asset.currentValue}
+                            </td>
+                            <td>
+                              {getConditionBadge(asset.condition)}
+                            </td>
+                            <td>
+                              {getStatusBadge(asset.status)}
+                            </td>
+                            <td>
+                              {asset.allocatedTo ? (
+                                <div className="small">
+                                  <div className="fw-medium">{asset.allocatedTo}</div>
+                                  <div className="text-muted">Since: {asset.allocationDate}</div>
+                                </div>
+                              ) : (
+                                <span className="text-muted">Not allocated</span>
+                              )}
+                            </td>
+                            <td>
+                              <div className="btn-group btn-group-sm">
+                                <button 
+                                  className="btn btn-outline-primary"
+                                  onClick={() => {
+                                    setSelectedAsset(asset);
+                                    // Show details modal
+                                  }}
+                                >
+                                  <Eye size={12} />
+                                </button>
+                                <button 
+                                  className="btn btn-outline-success"
+                                  onClick={() => {
+                                    setSelectedAsset(asset);
+                                    setShowAllocationModal(true);
+                                  }}
+                                  disabled={asset.status !== 'Available'}
+                                >
+                                  <Truck size={12} />
+                                </button>
+                                <button 
+                                  className="btn btn-outline-info"
+                                  onClick={() => {
+                                    setSelectedAsset(asset);
+                                    setShowMaintenanceModal(true);
+                                  }}
+                                >
+                                  <Wrench size={12} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -3089,7 +3431,7 @@ const AssestManagement = () => {
                 <div className="text-muted small">Total Asset Value</div>
                 <DollarSign size={20} className="text-success" />
               </div>
-              <div className="h4 fw-bold">{formatCurrency(statistics.totalValue)}</div>
+              <div className="h4 fw-bold">{formatCurrency(filteredAssets.reduce((sum, asset) => sum + extractNumericValue(asset.currentValue), 0))}</div>
             </div>
           </div>
           <div className="col-6 col-md-3">
@@ -3099,7 +3441,7 @@ const AssestManagement = () => {
                 <PercentIcon size={20} className="text-primary" />
               </div>
               <div className="h4 fw-bold">
-                {Math.round((statistics.allocatedAssets / statistics.totalAssets) * 100)}%
+                {filteredAssets.length > 0 ? Math.round((filteredAssets.filter(a => a.status === 'Allocated').length / filteredAssets.length) * 100) : 0}%
               </div>
             </div>
           </div>
@@ -3129,6 +3471,7 @@ const AssestManagement = () => {
       {showAllocationModal && <AssetAllocationModal />}
       {showReturnModal && <AssetReturnModal />}
       {showMaintenanceModal && <MaintenanceModal />}
+      {showFilterModal && <FilterModal />}
     </div>
   );
 

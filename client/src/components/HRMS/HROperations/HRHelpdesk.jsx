@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-
 const HRHelpdesk = () => {
-  // States
+  // Existing states
   const [tickets, setTickets] = useState([]);
   const [newTicket, setNewTicket] = useState({
     title: '',
@@ -30,6 +29,21 @@ const HRHelpdesk = () => {
   const [userRole] = useState('hr_admin');
   const [selectedAgent, setSelectedAgent] = useState('');
 
+  // NEW STATES from Helpdesk component
+  const [locationFilter, setLocationFilter] = useState('All Locations');
+  const [recordsPerPage, setRecordsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({
+    location: 'All Locations',
+    status: 'all',
+    category: 'all',
+    priority: 'all',
+    agent: ''
+  });
+
   // Mock data
   const mockTickets = [
     {
@@ -45,7 +59,8 @@ const HRHelpdesk = () => {
       employeeId: 'EMP001',
       department: 'Engineering',
       resolutionTime: null,
-      lastUpdated: '2024-01-15T10:30:00Z'
+      lastUpdated: '2024-01-15T10:30:00Z',
+      location: 'Hyderabad'
     },
     {
       id: 2,
@@ -60,7 +75,8 @@ const HRHelpdesk = () => {
       employeeId: 'EMP002',
       department: 'Sales',
       resolutionTime: null,
-      lastUpdated: '2024-01-15T09:15:00Z'
+      lastUpdated: '2024-01-15T09:15:00Z',
+      location: 'Hyderabad'
     },
     {
       id: 3,
@@ -75,7 +91,8 @@ const HRHelpdesk = () => {
       employeeId: 'EMP003',
       department: 'Marketing',
       resolutionTime: '2024-01-13T16:45:00Z',
-      lastUpdated: '2024-01-13T16:45:00Z'
+      lastUpdated: '2024-01-13T16:45:00Z',
+      location: 'Bangalore'
     },
     {
       id: 4,
@@ -90,7 +107,8 @@ const HRHelpdesk = () => {
       employeeId: 'EMP004',
       department: 'HR',
       resolutionTime: null,
-      lastUpdated: '2024-01-16T11:20:00Z'
+      lastUpdated: '2024-01-16T11:20:00Z',
+      location: 'Hyderabad'
     },
     {
       id: 5,
@@ -105,7 +123,8 @@ const HRHelpdesk = () => {
       employeeId: 'EMP005',
       department: 'Operations',
       resolutionTime: null,
-      lastUpdated: '2024-01-15T14:30:00Z'
+      lastUpdated: '2024-01-15T14:30:00Z',
+      location: 'Delhi'
     },
     {
       id: 6,
@@ -120,7 +139,72 @@ const HRHelpdesk = () => {
       employeeId: 'EMP006',
       department: 'Engineering',
       resolutionTime: '2024-01-11T11:30:00Z',
-      lastUpdated: '2024-01-11T11:30:00Z'
+      lastUpdated: '2024-01-11T11:30:00Z',
+      location: 'Chennai'
+    },
+    {
+      id: 7,
+      title: 'Laptop Repair Request',
+      category: 'IT access issues',
+      priority: 'high',
+      status: 'open',
+      description: 'Company laptop screen cracked, need urgent repair.',
+      createdAt: '2024-01-17T09:00:00Z',
+      assignedTo: 'IT Support',
+      employeeName: 'Vikram Singh',
+      employeeId: 'EMP007',
+      department: 'Engineering',
+      resolutionTime: null,
+      lastUpdated: '2024-01-17T09:00:00Z',
+      location: 'Bangalore'
+    },
+    {
+      id: 8,
+      title: 'Insurance Claim Process',
+      category: 'Policy clarifications',
+      priority: 'medium',
+      status: 'in-progress',
+      description: 'Need guidance on health insurance claim process.',
+      createdAt: '2024-01-16T14:30:00Z',
+      assignedTo: 'John HR',
+      employeeName: 'Priya Sharma',
+      employeeId: 'EMP008',
+      department: 'Finance',
+      resolutionTime: null,
+      lastUpdated: '2024-01-17T10:15:00Z',
+      location: 'Hyderabad'
+    },
+    {
+      id: 9,
+      title: 'Training Request',
+      category: 'General HR queries',
+      priority: 'low',
+      status: 'open',
+      description: 'Request for advanced Excel training workshop.',
+      createdAt: '2024-01-18T11:00:00Z',
+      assignedTo: null,
+      employeeName: 'Ravi Kumar',
+      employeeId: 'EMP009',
+      department: 'Sales',
+      resolutionTime: null,
+      lastUpdated: '2024-01-18T11:00:00Z',
+      location: 'Mumbai'
+    },
+    {
+      id: 10,
+      title: 'Salary Certificate Request',
+      category: 'Document requests',
+      priority: 'medium',
+      status: 'resolved',
+      description: 'Need salary certificate for visa application.',
+      createdAt: '2024-01-10T10:00:00Z',
+      assignedTo: 'Finance Team',
+      employeeName: 'Anjali Mehta',
+      employeeId: 'EMP010',
+      department: 'Marketing',
+      resolutionTime: '2024-01-12T15:30:00Z',
+      lastUpdated: '2024-01-12T15:30:00Z',
+      location: 'Delhi'
     }
   ];
 
@@ -134,6 +218,23 @@ const HRHelpdesk = () => {
     'Personal data updates',
     'General HR queries',
     'Grievances and complaints'
+  ];
+
+  // NEW: Mock locations for filtering
+  const locations = ['All Locations', 'Hyderabad', 'Bangalore', 'Delhi', 'Mumbai', 'Chennai'];
+
+  // NEW: Mock employees for autocomplete
+  const employeesData = [
+    { id: 1, name: 'Rahul Sharma (EMP001)' },
+    { id: 2, name: 'Priya Kumar (EMP002)' },
+    { id: 3, name: 'Amit Patel (EMP003)' },
+    { id: 4, name: 'Sneha Reddy (EMP004)' },
+    { id: 5, name: 'Rajesh Kumar (EMP005)' },
+    { id: 6, name: 'Meera Singh (EMP006)' },
+    { id: 7, name: 'Vikram Singh (EMP007)' },
+    { id: 8, name: 'Priya Sharma (EMP008)' },
+    { id: 9, name: 'Ravi Kumar (EMP009)' },
+    { id: 10, name: 'Anjali Mehta (EMP010)' },
   ];
 
   // Initialize with mock data
@@ -168,14 +269,14 @@ const HRHelpdesk = () => {
   function calculateAverageResolutionTime() {
     const resolvedTickets = tickets.filter(t => t.resolutionTime && t.status === 'resolved');
     if (resolvedTickets.length === 0) return 0;
-    
+
     const totalHours = resolvedTickets.reduce((sum, ticket) => {
       const created = new Date(ticket.createdAt);
       const resolved = new Date(ticket.resolutionTime);
       const hours = (resolved - created) / (1000 * 60 * 60);
       return sum + hours;
     }, 0);
-    
+
     return Math.round(totalHours / resolvedTickets.length);
   }
 
@@ -194,7 +295,8 @@ const HRHelpdesk = () => {
       createdAt: new Date().toISOString(),
       assignedTo: null,
       resolutionTime: null,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      location: 'Hyderabad' // Default location
     };
 
     setTickets([newTicketObj, ...tickets]);
@@ -226,43 +328,43 @@ const HRHelpdesk = () => {
           status: newStatus,
           lastUpdated: new Date().toISOString()
         };
-        
+
         if (newStatus === 'resolved' && !ticket.resolutionTime) {
           updatedTicket.resolutionTime = new Date().toISOString();
         }
-        
+
         if (selectedTicket && selectedTicket.id === ticketId) {
           setSelectedTicket(updatedTicket);
         }
-        
+
         return updatedTicket;
       }
       return ticket;
     });
-    
+
     setTickets(updatedTickets);
   };
 
   // Assign ticket to agent
   const assignTicket = (ticketId, agentName) => {
-    const updatedTickets = tickets.map(ticket => 
-      ticket.id === ticketId ? { 
-        ...ticket, 
+    const updatedTickets = tickets.map(ticket =>
+      ticket.id === ticketId ? {
+        ...ticket,
         assignedTo: agentName,
         lastUpdated: new Date().toISOString()
       } : ticket
     );
     setTickets(updatedTickets);
-    
+
     if (selectedTicket && selectedTicket.id === ticketId) {
-      setSelectedTicket({...selectedTicket, assignedTo: agentName});
+      setSelectedTicket({ ...selectedTicket, assignedTo: agentName });
     }
   };
 
   // Add internal note
   const addInternalNote = (ticketId, note) => {
     if (!note.trim()) return;
-    
+
     const noteObj = {
       id: Date.now(),
       content: note,
@@ -270,11 +372,44 @@ const HRHelpdesk = () => {
       author: userRole === 'hr_admin' ? 'You' : 'HR Support',
       ticketId: ticketId
     };
-    
+
     setInternalNotes(prev => ({
       ...prev,
       [ticketId]: [...(prev[ticketId] || []), noteObj]
     }));
+  };
+
+  // NEW: Handle download/export
+  const handleDownload = () => {
+    const dataStr = JSON.stringify(filteredAndSortedTickets, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `hr-tickets-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    alert('📄 Tickets exported successfully!');
+  };
+
+  // NEW: Handle search
+  const handleSearch = () => {
+    setShowSearchSuggestions(false);
+    setCurrentPage(1); // Reset to first page on new search
+  };
+
+  // NEW: Handle clear filters
+  const handleClearFilters = () => {
+    setStatusFilter('all');
+    setCategoryFilter('all');
+    setPriorityFilter('all');
+    setLocationFilter('All Locations');
+    setSelectedAgent('');
+    setFromDate('');
+    setToDate('');
+    setSearchTerm('');
+    setCurrentPage(1);
   };
 
   // Filter and sort tickets
@@ -284,7 +419,16 @@ const HRHelpdesk = () => {
       if (categoryFilter !== 'all' && ticket.category !== categoryFilter) return false;
       if (priorityFilter !== 'all' && ticket.priority !== priorityFilter) return false;
       if (selectedAgent && ticket.assignedTo !== selectedAgent) return false;
-      
+
+      // NEW: Location filter
+      if (locationFilter !== 'All Locations' && ticket.location !== locationFilter) return false;
+
+      // NEW: Date range filter
+      if (fromDate && toDate) {
+        const ticketDate = new Date(ticket.createdAt).toISOString().split('T')[0];
+        if (ticketDate < fromDate || ticketDate > toDate) return false;
+      }
+
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         return (
@@ -295,12 +439,12 @@ const HRHelpdesk = () => {
           ticket.id.toString().includes(searchLower)
         );
       }
-      
+
       return true;
     })
     .sort((a, b) => {
       let aVal, bVal;
-      
+
       switch (sortBy) {
         case 'priority':
           const priorityOrder = { high: 3, medium: 2, low: 1 };
@@ -319,11 +463,35 @@ const HRHelpdesk = () => {
           aVal = a[sortBy];
           bVal = b[sortBy];
       }
-      
-      return sortOrder === 'asc' ? 
+
+      return sortOrder === 'asc' ?
         (aVal < bVal ? -1 : aVal > bVal ? 1 : 0) :
         (aVal > bVal ? -1 : aVal < bVal ? 1 : 0);
     });
+
+  // NEW: Pagination logic
+  const startIndex = (currentPage - 1) * recordsPerPage;
+  const endIndex = startIndex + recordsPerPage;
+  const paginatedTickets = filteredAndSortedTickets.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(filteredAndSortedTickets.length / recordsPerPage);
+
+  // NEW: Pagination handlers
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   // Get priority color
   const getPriorityColor = (priority) => {
@@ -487,58 +655,6 @@ const HRHelpdesk = () => {
     fontWeight: '700'
   };
 
-  // Menu items for the layout
-  const menuItems = [
-    {
-      title: 'Dashboard',
-      link: '/hr/dashboard',
-      active: false
-    },
-    {
-      title: 'Employee Master',
-      link: '/hr/employees'
-    },
-    {
-      title: 'HR Operations',
-      link: '/hr/operations'
-    },
-    {
-      title: 'HR Helpdesk',
-      link: '/hr/helpdesk',
-      active: true
-    },
-    {
-      title: 'Attendance',
-      link: '/hr/attendance'
-    },
-    {
-      title: 'Leave Management',
-      link: '/hr/leave'
-    },
-    {
-      title: 'Payroll',
-      link: '/hr/payroll'
-    },
-    {
-      title: 'Performance',
-      link: '/hr/performance'
-    },
-    {
-      title: 'Reports',
-      link: '/hr/reports'
-    },
-    {
-      title: 'Settings',
-      link: '/hr/settings'
-    }
-  ];
-
-  const userInfo = {
-    name: 'HR Manager',
-    role: 'Human Resources',
-    email: 'hr@company.com'
-  };
-
   // Modal component
   const TicketModal = ({ ticket, onClose }) => {
     const [note, setNote] = useState('');
@@ -555,13 +671,13 @@ const HRHelpdesk = () => {
     return (
       <div style={styles.modalOverlay} onClick={onClose}>
         <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
-          <div style={{padding: '24px', borderBottom: '1px solid #e9ecef'}}>
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px'}}>
+          <div style={{ padding: '24px', borderBottom: '1px solid #e9ecef' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
               <div>
-                <h2 style={{margin: 0, color: '#212529'}}>Ticket #{ticket.id}</h2>
-                <h3 style={{margin: '8px 0 0', color: '#495057'}}>{ticket.title}</h3>
+                <h2 style={{ margin: 0, color: '#212529' }}>Ticket #{ticket.id}</h2>
+                <h3 style={{ margin: '8px 0 0', color: '#495057' }}>{ticket.title}</h3>
               </div>
-              <button 
+              <button
                 onClick={onClose}
                 style={{
                   background: 'none',
@@ -575,8 +691,8 @@ const HRHelpdesk = () => {
                 ×
               </button>
             </div>
-            
-            <div style={{display: 'flex', gap: '12px', flexWrap: 'wrap'}}>
+
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               <span style={{
                 ...styles.priorityBadge,
                 backgroundColor: getPriorityColor(ticket.priority) + '20',
@@ -598,23 +714,31 @@ const HRHelpdesk = () => {
               }}>
                 {ticket.category}
               </span>
+              <span style={{
+                ...styles.priorityBadge,
+                backgroundColor: '#e7f1ff',
+                color: '#0d6efd'
+              }}>
+                {ticket.location}
+              </span>
             </div>
           </div>
 
-          <div style={{padding: '24px'}}>
+          <div style={{ padding: '24px' }}>
             {/* Ticket Details */}
-            <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px'}}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
               <div>
-                <h4 style={{color: '#495057', marginBottom: '12px'}}>Employee Details</h4>
-                <div style={{color: '#6c757d', lineHeight: '1.8'}}>
+                <h4 style={{ color: '#495057', marginBottom: '12px' }}>Employee Details</h4>
+                <div style={{ color: '#6c757d', lineHeight: '1.8' }}>
                   <div><strong>Name:</strong> {ticket.employeeName || 'Not provided'}</div>
                   <div><strong>ID:</strong> {ticket.employeeId || 'N/A'}</div>
                   <div><strong>Department:</strong> {ticket.department || 'N/A'}</div>
+                  <div><strong>Location:</strong> {ticket.location || 'N/A'}</div>
                 </div>
               </div>
               <div>
-                <h4 style={{color: '#495057', marginBottom: '12px'}}>Ticket Details</h4>
-                <div style={{color: '#6c757d', lineHeight: '1.8'}}>
+                <h4 style={{ color: '#495057', marginBottom: '12px' }}>Ticket Details</h4>
+                <div style={{ color: '#6c757d', lineHeight: '1.8' }}>
                   <div><strong>Created:</strong> {new Date(ticket.createdAt).toLocaleString()}</div>
                   <div><strong>Last Updated:</strong> {new Date(ticket.lastUpdated).toLocaleString()}</div>
                   <div><strong>Assigned To:</strong> {ticket.assignedTo || 'Unassigned'}</div>
@@ -626,8 +750,8 @@ const HRHelpdesk = () => {
             </div>
 
             {/* Description */}
-            <div style={{marginBottom: '24px'}}>
-              <h4 style={{color: '#495057', marginBottom: '12px'}}>Description</h4>
+            <div style={{ marginBottom: '24px' }}>
+              <h4 style={{ color: '#495057', marginBottom: '12px' }}>Description</h4>
               <div style={{
                 backgroundColor: '#f8f9fa',
                 padding: '16px',
@@ -642,9 +766,9 @@ const HRHelpdesk = () => {
 
             {/* Assignment Section */}
             {userRole === 'hr_admin' && (
-              <div style={{marginBottom: '24px'}}>
-                <h4 style={{color: '#495057', marginBottom: '12px'}}>Assign Ticket</h4>
-                <div style={{display: 'flex', gap: '12px'}}>
+              <div style={{ marginBottom: '24px' }}>
+                <h4 style={{ color: '#495057', marginBottom: '12px' }}>Assign Ticket</h4>
+                <div style={{ display: 'flex', gap: '12px' }}>
                   <select
                     value={assignTo}
                     onChange={(e) => setAssignTo(e.target.value)}
@@ -677,8 +801,8 @@ const HRHelpdesk = () => {
             )}
 
             {/* Internal Notes */}
-            <div style={{marginBottom: '24px'}}>
-              <h4 style={{color: '#495057', marginBottom: '12px'}}>Internal Notes</h4>
+            <div style={{ marginBottom: '24px' }}>
+              <h4 style={{ color: '#495057', marginBottom: '12px' }}>Internal Notes</h4>
               <div style={{
                 maxHeight: '200px',
                 overflowY: 'auto',
@@ -688,7 +812,7 @@ const HRHelpdesk = () => {
                 padding: '12px'
               }}>
                 {ticketNotes.length === 0 ? (
-                  <div style={{color: '#adb5bd', textAlign: 'center', padding: '20px'}}>No internal notes yet</div>
+                  <div style={{ color: '#adb5bd', textAlign: 'center', padding: '20px' }}>No internal notes yet</div>
                 ) : (
                   ticketNotes.map(note => (
                     <div key={note.id} style={{
@@ -698,18 +822,18 @@ const HRHelpdesk = () => {
                       marginBottom: '12px',
                       borderLeft: '4px solid #0d6efd'
                     }}>
-                      <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '12px'}}>
-                        <span style={{fontWeight: '600', color: '#0d6efd'}}>{note.author}</span>
-                        <span style={{color: '#6c757d'}}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '12px' }}>
+                        <span style={{ fontWeight: '600', color: '#0d6efd' }}>{note.author}</span>
+                        <span style={{ color: '#6c757d' }}>
                           {new Date(note.timestamp).toLocaleString()}
                         </span>
                       </div>
-                      <div style={{color: '#212529', lineHeight: '1.5'}}>{note.content}</div>
+                      <div style={{ color: '#212529', lineHeight: '1.5' }}>{note.content}</div>
                     </div>
                   ))
                 )}
               </div>
-              
+
               <div>
                 <textarea
                   value={note}
@@ -739,8 +863,8 @@ const HRHelpdesk = () => {
             </div>
 
             {/* Action Buttons */}
-            <div style={{display: 'flex', justifyContent: 'space-between', paddingTop: '24px', borderTop: '1px solid #e9ecef'}}>
-              <div style={{display: 'flex', gap: '12px'}}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '24px', borderTop: '1px solid #e9ecef' }}>
+              <div style={{ display: 'flex', gap: '12px' }}>
                 {ticket.status === 'open' && (
                   <button
                     onClick={() => updateTicketStatus(ticket.id, 'in-progress')}
@@ -778,7 +902,7 @@ const HRHelpdesk = () => {
                   </button>
                 )}
               </div>
-              <div style={{display: 'flex', gap: '12px'}}>
+              <div style={{ display: 'flex', gap: '12px' }}>
                 <button style={{
                   ...styles.button,
                   backgroundColor: 'white',
@@ -786,6 +910,21 @@ const HRHelpdesk = () => {
                   border: '1px solid #dee2e6'
                 }}>
                   Escalate
+                </button>
+                <button
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to delete this ticket?')) {
+                      setTickets(tickets.filter(t => t.id !== ticket.id));
+                      onClose();
+                    }
+                  }}
+                  style={{
+                    ...styles.button,
+                    backgroundColor: '#dc3545',
+                    color: 'white'
+                  }}
+                >
+                  Delete
                 </button>
               </div>
             </div>
@@ -798,23 +937,23 @@ const HRHelpdesk = () => {
   return (
     <>
       <div style={styles.container}>
-        {/* Header */}
-     <div>
-  <h5 className="mb-2 d-flex align-items-center">
-    <Icon
-      icon="heroicons-outline:lifebuoy"
-      className="me-2"
-      width={24}
-      height={24}
-    />
-    HR Helpdesk & Ticketing System
-  </h5>
+        {/* NEW: Breadcrumb Navigation */}
 
-  <p className="text-muted d-none d-md-block">
-    Manage all HR queries and support requests in one place
-  </p>
-</div>
-
+        {/* Header - Updated */}
+        <div className="mt-3 mb-4">
+          <h4 className="fw-semibold mb-2 d-flex align-items-center">
+            <Icon
+              icon="heroicons-outline:lifebuoy"
+              className="me-2"
+              width={24}
+              height={24}
+            />
+            HR Helpdesk & Ticketing System
+          </h4>
+          <p className="text-muted">
+            Manage all HR queries and support requests in one place
+          </p>
+        </div>
 
         {/* Statistics Cards Grid */}
         <div style={{ marginBottom: '24px', overflowX: 'auto' }}>
@@ -875,35 +1014,37 @@ const HRHelpdesk = () => {
           </div>
         </div>
 
+
+
         {/* Main Content */}
         <div style={styles.mainContent}>
           {/* Left Column */}
           <div>
             {/* Create Ticket Form */}
             <div style={styles.ticketForm}>
-              <h5 style={{color: '#212529', marginBottom: '20px', fontSize: '1.5rem'}}>Create New Ticket</h5>
+              <h5 style={{ color: '#212529', marginBottom: '20px', fontSize: '1.5rem' }}>Create New Ticket</h5>
               <form onSubmit={handleCreateTicket}>
                 <div style={styles.formGrid}>
                   <div>
-                    <label style={{display: 'block', color: '#495057', marginBottom: '8px', fontSize: '14px'}}>
+                    <label style={{ display: 'block', color: '#495057', marginBottom: '8px', fontSize: '14px' }}>
                       <strong>Title *</strong>
                     </label>
                     <input
                       type="text"
                       value={newTicket.title}
-                      onChange={(e) => setNewTicket({...newTicket, title: e.target.value})}
+                      onChange={(e) => setNewTicket({ ...newTicket, title: e.target.value })}
                       placeholder="Brief description of issue"
                       required
                       style={styles.input}
                     />
                   </div>
                   <div>
-                    <label style={{display: 'block', color: '#495057', marginBottom: '8px', fontSize: '14px'}}>
+                    <label style={{ display: 'block', color: '#495057', marginBottom: '8px', fontSize: '14px' }}>
                       <strong>Category *</strong>
                     </label>
                     <select
                       value={newTicket.category}
-                      onChange={(e) => setNewTicket({...newTicket, category: e.target.value})}
+                      onChange={(e) => setNewTicket({ ...newTicket, category: e.target.value })}
                       required
                       style={styles.input}
                     >
@@ -914,12 +1055,12 @@ const HRHelpdesk = () => {
                     </select>
                   </div>
                   <div>
-                    <label style={{display: 'block', color: '#495057', marginBottom: '8px', fontSize: '14px'}}>
+                    <label style={{ display: 'block', color: '#495057', marginBottom: '8px', fontSize: '14px' }}>
                       <strong>Priority</strong>
                     </label>
                     <select
                       value={newTicket.priority}
-                      onChange={(e) => setNewTicket({...newTicket, priority: e.target.value})}
+                      onChange={(e) => setNewTicket({ ...newTicket, priority: e.target.value })}
                       style={styles.input}
                     >
                       <option value="low">Low</option>
@@ -928,32 +1069,32 @@ const HRHelpdesk = () => {
                     </select>
                   </div>
                   <div>
-                    <label style={{display: 'block', color: '#495057', marginBottom: '8px', fontSize: '14px'}}>
+                    <label style={{ display: 'block', color: '#495057', marginBottom: '8px', fontSize: '14px' }}>
                       <strong>Employee Name</strong>
                     </label>
                     <input
                       type="text"
                       value={newTicket.employeeName}
-                      onChange={(e) => setNewTicket({...newTicket, employeeName: e.target.value})}
+                      onChange={(e) => setNewTicket({ ...newTicket, employeeName: e.target.value })}
                       placeholder="Optional"
                       style={styles.input}
                     />
                   </div>
                 </div>
-                
-                <div style={{marginTop: '16px'}}>
-                  <label style={{display: 'block', color: '#495057', marginBottom: '8px', fontSize: '14px'}}>
+
+                <div style={{ marginTop: '16px' }}>
+                  <label style={{ display: 'block', color: '#495057', marginBottom: '8px', fontSize: '14px' }}>
                     <strong>Description *</strong>
                   </label>
                   <textarea
                     value={newTicket.description}
-                    onChange={(e) => setNewTicket({...newTicket, description: e.target.value})}
+                    onChange={(e) => setNewTicket({ ...newTicket, description: e.target.value })}
                     placeholder="Detailed description of the issue..."
                     required
                     style={styles.textarea}
                   />
                 </div>
-                
+
                 <button
                   type="submit"
                   style={{
@@ -970,119 +1111,335 @@ const HRHelpdesk = () => {
               </form>
             </div>
 
-            {/* Tickets Table */}
-            <div style={{background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.08)'}}>
-              <div style={{padding: '24px', borderBottom: '1px solid #e9ecef'}}>
-                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
-                  <h5 style={{color: '#212529', margin: 0, fontSize: '1.25rem'}}>
-                    All Tickets <span style={{color: '#6c757d'}}>({filteredAndSortedTickets.length})</span>
-                  </h5>
-                  <div style={{display: 'flex', gap: '12px'}}>
-                    <input
-                      type="text"
-                      placeholder="Search tickets..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      style={{
-                        padding: '10px 12px',
-                        border: '1px solid #dee2e6',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        width: '200px'
-                      }}
-                    />
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      style={{
-                        padding: '10px 12px',
-                        border: '1px solid #dee2e6',
-                        borderRadius: '8px',
-                        fontSize: '14px'
-                      }}
-                    >
-                      <option value="all">All Status</option>
-                      <option value="open">Open</option>
-                      <option value="in-progress">In Progress</option>
-                      <option value="resolved">Resolved</option>
-                      <option value="closed">Closed</option>
-                    </select>
-                  </div>
+
+
+            {/* NEW: Pagination Component */}
+            {totalPages > 1 && (
+              <div className="d-flex justify-content-between align-items-center mt-4">
+                <div className="small text-muted">
+                  Showing {startIndex + 1} to {Math.min(endIndex, filteredAndSortedTickets.length)} of {filteredAndSortedTickets.length} tickets
                 </div>
-                
-                <div style={{display: 'flex', gap: '12px', flexWrap: 'wrap'}}>
-                  <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    style={{
-                      padding: '10px 12px',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '8px',
-                      fontSize: '14px'
+                <nav aria-label="Page navigation">
+                  <ul className="pagination mb-0">
+                    <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                      <button
+                        className="page-link"
+                        onClick={handlePrevPage}
+                        disabled={currentPage === 1}
+                      >
+                        <i className="bi bi-chevron-left"></i>
+                      </button>
+                    </li>
+
+                    {[...Array(totalPages)].map((_, index) => {
+                      const pageNum = index + 1;
+                      if (
+                        pageNum === 1 ||
+                        pageNum === totalPages ||
+                        (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                      ) {
+                        return (
+                          <li
+                            key={pageNum}
+                            className={`page-item ${currentPage === pageNum ? 'active' : ''}`}
+                          >
+                            <button
+                              className="page-link"
+                              onClick={() => handlePageChange(pageNum)}
+                            >
+                              {pageNum}
+                            </button>
+                          </li>
+                        );
+                      } else if (
+                        (pageNum === currentPage - 2 && currentPage > 3) ||
+                        (pageNum === currentPage + 2 && currentPage < totalPages - 2)
+                      ) {
+                        return (
+                          <li key={pageNum} className="page-item disabled">
+                            <span className="page-link">...</span>
+                          </li>
+                        );
+                      }
+                      return null;
+                    })}
+
+                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                      <button
+                        className="page-link"
+                        onClick={handleNextPage}
+                        disabled={currentPage === totalPages}
+                      >
+                        <i className="bi bi-chevron-right"></i>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+            )}
+          </div>
+          {/* Category Breakdown */}
+            <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+              {categories.map(category => {
+                const count = tickets.filter(t => t.category === category).length;
+                const percentage = tickets.length > 0 ? ((count / tickets.length) * 100).toFixed(1) : 0;
+                return (
+                  <div key={category} style={{ marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <span style={{ color: '#495057', fontSize: '14px' }}>{category}</span>
+                      <div>
+                        <span style={{ color: '#212529', fontWeight: '500', fontSize: '14px' }}>{count}</span>
+                        <span style={{ color: '#6c757d', fontSize: '12px', marginLeft: '8px' }}>({percentage}%)</span>
+                      </div>
+                    </div>
+                    <div style={{
+                      width: '100%',
+                      height: '8px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '4px',
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        width: `${percentage}%`,
+                        height: '100%',
+                        backgroundColor: '#0d6efd',
+                        borderRadius: '4px'
+                      }}></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          <div>
+           
+
+            
+
+            
+          </div>
+        </div>
+
+       
+
+        {/* Tickets Table */}
+        <div style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+          <div style={{ padding: '24px', borderBottom: '1px solid #e9ecef' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h5 style={{ color: '#212529', margin: 0, fontSize: '1.25rem' }}>
+                All Tickets <span style={{ color: '#6c757d' }}>({filteredAndSortedTickets.length})</span>
+              </h5>
+              
+            </div>
+             {/* NEW: Enhanced Filters Section */}
+        <div className="card mb-4 border-0 shadow-sm">
+          <div className="card-body">
+            <h6 className="card-title mb-3">Filters & Search</h6>
+            <div className="row g-3">
+              {/* Location Filter */}
+              <div className="col-lg-2 col-md-4 col-sm-6">
+                <label className="form-label small fw-semibold">Location</label>
+                <select
+                  className="form-select form-select-sm"
+                  value={locationFilter}
+                  onChange={(e) => {
+                    setLocationFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                >
+                  {locations.map(loc => (
+                    <option key={loc} value={loc}>{loc}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Status Filter */}
+              <div className="col-lg-2 col-md-4 col-sm-6">
+                <label className="form-label small fw-semibold">Status</label>
+                <select
+                  className="form-select form-select-sm"
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                >
+                  <option value="all">All Status</option>
+                  <option value="open">Open</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="closed">Closed</option>
+                </select>
+              </div>
+
+              {/* Date Range Filter */}
+              <div className="col-lg-3 col-md-6 col-sm-12">
+                <label className="form-label small fw-semibold">
+                  Date Range
+                  <i
+                    className="bi bi-info-circle-fill text-primary ms-1"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    title="Filter tickets by creation date"
+                  ></i>
+                </label>
+                <div className="d-flex gap-2">
+                  <input
+                    type="date"
+                    className="form-control form-control-sm"
+                    value={fromDate}
+                    onChange={(e) => {
+                      setFromDate(e.target.value);
+                      setCurrentPage(1);
                     }}
-                  >
-                    <option value="all">All Categories</option>
-                    {categories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                  
-                  <select
-                    value={priorityFilter}
-                    onChange={(e) => setPriorityFilter(e.target.value)}
-                    style={{
-                      padding: '10px 12px',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '8px',
-                      fontSize: '14px'
+                  />
+                  <input
+                    type="date"
+                    className="form-control form-control-sm"
+                    value={toDate}
+                    onChange={(e) => {
+                      setToDate(e.target.value);
+                      setCurrentPage(1);
                     }}
-                  >
-                    <option value="all">All Priorities</option>
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
-                  </select>
-                  
-                  <select
-                    value={selectedAgent}
-                    onChange={(e) => setSelectedAgent(e.target.value)}
-                    style={{
-                      padding: '10px 12px',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '8px',
-                      fontSize: '14px'
-                    }}
-                  >
-                    <option value="">All Agents</option>
-                    {assignedAgents.map(agent => (
-                      <option key={agent} value={agent}>{agent}</option>
-                    ))}
-                  </select>
+                  />
                 </div>
               </div>
 
-              <table style={styles.ticketsTable}>
-                <thead>
+              {/* Search with Autocomplete */}
+              <div className="col-lg-3 col-md-6 col-sm-12 position-relative">
+                <label className="form-label small fw-semibold">Search</label>
+                <div className="input-group input-group-sm">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Search tickets, employees..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setShowSearchSuggestions(e.target.value.length > 0);
+                      setCurrentPage(1);
+                    }}
+                    onFocus={() => searchTerm.length > 0 && setShowSearchSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSearchSuggestions(false), 200)}
+                  />
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleSearch}
+                  >
+                    <i className="bi bi-search"></i>
+                  </button>
+                </div>
+
+                {/* Autocomplete Suggestions */}
+                {showSearchSuggestions && (
+                  <div
+                    className="position-absolute w-100 mt-1"
+                    style={{ zIndex: 1000 }}
+                  >
+                    <div className="card border shadow-sm">
+                      <div className="card-body p-0">
+                        <div className="list-group list-group-flush" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                          {employeesData
+                            .filter(emp =>
+                              emp.name.toLowerCase().includes(searchTerm.toLowerCase())
+                            )
+                            .slice(0, 5)
+                            .map(emp => (
+                              <button
+                                key={emp.id}
+                                type="button"
+                                className="list-group-item list-group-item-action text-start small py-2"
+                                onClick={() => {
+                                  setSearchTerm(emp.name);
+                                  setShowSearchSuggestions(false);
+                                  setCurrentPage(1);
+                                }}
+                              >
+                                {emp.name}
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Records per page */}
+              <div className="col-lg-2 col-md-4 col-sm-6">
+                <label className="form-label small fw-semibold">Records per page</label>
+                <select
+                  className="form-select form-select-sm"
+                  value={recordsPerPage}
+                  onChange={(e) => {
+                    setRecordsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <option value={5}>5 Records</option>
+                  <option value={10}>10 Records</option>
+                  <option value={20}>20 Records</option>
+                  <option value={50}>50 Records</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Filter Actions */}
+            <div className="d-flex justify-content-between align-items-center mt-3">
+              <div>
+                <span className="small text-muted">
+                  Showing {filteredAndSortedTickets.length} of {tickets.length} tickets
+                </span>
+              </div>
+              <div className="d-flex gap-2">
+                <button
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={handleClearFilters}
+                >
+                  <i className="bi bi-x-circle me-1"></i> Clear Filters
+                </button>
+                <button
+                  className="btn btn-outline-primary btn-sm"
+                  onClick={handleDownload}
+                >
+                  <i className="bi bi-download me-1"></i> Export
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+          </div>
+
+          <div style={{ overflowX: 'auto', margin: "10px" }}>
+            <table style={styles.ticketsTable}>
+              <thead>
+                <tr>
+                  <th style={styles.tableHeader}>ID</th>
+                  <th style={styles.tableHeader}>Title</th>
+                  <th style={styles.tableHeader}>Category</th>
+                  <th style={styles.tableHeader}>Priority</th>
+                  <th style={styles.tableHeader}>Status</th>
+                  <th style={styles.tableHeader}>Location</th>
+                  <th style={styles.tableHeader}>Created</th>
+                  <th style={styles.tableHeader}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedTickets.length === 0 ? (
                   <tr>
-                    <th style={styles.tableHeader}>ID</th>
-                    <th style={styles.tableHeader}>Title</th>
-                    <th style={styles.tableHeader}>Category</th>
-                    <th style={styles.tableHeader}>Priority</th>
-                    <th style={styles.tableHeader}>Status</th>
-                    <th style={styles.tableHeader}>Created</th>
-                    <th style={styles.tableHeader}>Actions</th>
+                    <td colSpan="8" style={{ ...styles.tableCell, textAlign: 'center', color: '#6c757d' }}>
+                      No tickets found. Try adjusting your filters.
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {filteredAndSortedTickets.map(ticket => (
-                    <tr key={ticket.id} style={{borderBottom: '1px solid #e9ecef'}}>
+                ) : (
+                  paginatedTickets.map(ticket => (
+                    <tr key={ticket.id} style={{ borderBottom: '1px solid #e9ecef' }}>
                       <td style={styles.tableCell}>
-                        <strong style={{color: '#212529'}}>#{ticket.id}</strong>
+                        <strong style={{ color: '#212529' }}>#{ticket.id}</strong>
                       </td>
                       <td style={styles.tableCell}>
                         <div>
-                          <strong style={{color: '#212529'}}>{ticket.title}</strong>
-                          <div style={{color: '#6c757d', fontSize: '13px', marginTop: '4px'}}>
+                          <strong style={{ color: '#212529' }}>{ticket.title}</strong>
+                          <div style={{ color: '#6c757d', fontSize: '13px', marginTop: '4px' }}>
                             {ticket.description.substring(0, 60)}...
                           </div>
                         </div>
@@ -1119,15 +1476,28 @@ const HRHelpdesk = () => {
                         </span>
                       </td>
                       <td style={styles.tableCell}>
-                        <div style={{color: '#6c757d', fontSize: '13px'}}>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '4px 10px',
+                          backgroundColor: '#f8f9fa',
+                          color: '#495057',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: '500'
+                        }}>
+                          {ticket.location}
+                        </span>
+                      </td>
+                      <td style={styles.tableCell}>
+                        <div style={{ color: '#6c757d', fontSize: '13px' }}>
                           {new Date(ticket.createdAt).toLocaleDateString()}
-                          <div style={{fontSize: '11px', color: '#adb5bd'}}>
-                            {new Date(ticket.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                          <div style={{ fontSize: '11px', color: '#adb5bd' }}>
+                            {new Date(ticket.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </div>
                         </div>
                       </td>
                       <td style={styles.tableCell}>
-                        <div style={{display: 'flex', gap: '8px'}}>
+                        <div style={{ display: 'flex', gap: '8px' }}>
                           <button
                             onClick={() => handleViewTicket(ticket)}
                             style={{
@@ -1157,109 +1527,10 @@ const HRHelpdesk = () => {
                         </div>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Right Column */}
-          <div>
-            {/* Quick Actions */}
-            <div style={{background: 'white', borderRadius: '12px', padding: '24px', marginBottom: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)'}}>
-              <h5 style={{color: '#212529', marginBottom: '20px', fontSize: '1.25rem'}}>Quick Actions</h5>
-              <div style={{display: 'grid', gap: '12px'}}>
-                <button style={{...styles.button, ...styles.secondaryButton, textAlign: 'left'}}>
-                  Export Tickets to Excel
-                </button>
-                <button style={{...styles.button, ...styles.secondaryButton, textAlign: 'left'}}>
-                  View Unassigned Tickets
-                </button>
-                <button style={{...styles.button, ...styles.secondaryButton, textAlign: 'left'}}>
-                  Generate Weekly Report
-                </button>
-                <button style={{...styles.button, ...styles.secondaryButton, textAlign: 'left'}}>
-                  View All Agents
-                </button>
-              </div>
-            </div>
-
-            {/* Category Breakdown */}
-            <div style={{background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)'}}>
-              <h5 style={{color: '#212529', marginBottom: '20px', fontSize: '1.25rem'}}>Category Breakdown</h5>
-              {categories.map(category => {
-                const count = tickets.filter(t => t.category === category).length;
-                return (
-                  <div key={category} style={{marginBottom: '12px'}}>
-                    <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '6px'}}>
-                      <span style={{color: '#495057', fontSize: '14px'}}>{category}</span>
-                      <span style={{color: '#212529', fontWeight: '500', fontSize: '14px'}}>{count}</span>
-                    </div>
-                    <div style={{
-                      width: '100%',
-                      height: '8px',
-                      backgroundColor: '#f8f9fa',
-                      borderRadius: '4px',
-                      overflow: 'hidden'
-                    }}>
-                      <div style={{
-                        width: `${(count / tickets.length) * 100}%`,
-                        height: '100%',
-                        backgroundColor: '#0d6efd',
-                        borderRadius: '4px'
-                      }}></div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Agent Performance */}
-            <div style={{background: 'white', borderRadius: '12px', padding: '24px', marginTop: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)'}}>
-              <h5 style={{color: '#212529', marginBottom: '20px', fontSize: '1.25rem'}}>Agent Performance</h5>
-              <div style={{display: 'grid', gap: '16px'}}>
-                {assignedAgents.map(agent => {
-                  const agentTickets = tickets.filter(t => t.assignedTo === agent);
-                  const resolvedTickets = agentTickets.filter(t => t.status === 'resolved' || t.status === 'closed').length;
-                  const avgResolution = agentTickets.length > 0 ? 
-                    Math.round(agentTickets.reduce((sum, t) => {
-                      if (t.resolutionTime) {
-                        const created = new Date(t.createdAt);
-                        const resolved = new Date(t.resolutionTime);
-                        return sum + ((resolved - created) / (1000 * 60 * 60));
-                      }
-                      return sum;
-                    }, 0) / agentTickets.length) : 0;
-                  
-                  return (
-                    <div key={agent} style={{
-                      padding: '12px',
-                      border: '1px solid #e9ecef',
-                      borderRadius: '8px',
-                      backgroundColor: '#f8f9fa'
-                    }}>
-                      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                        <span style={{fontWeight: '500', color: '#212529'}}>{agent}</span>
-                        <span style={{
-                          backgroundColor: resolvedTickets > 0 ? '#d1e7dd' : '#f8d7da',
-                          color: resolvedTickets > 0 ? '#0f5132' : '#842029',
-                          padding: '4px 8px',
-                          borderRadius: '12px',
-                          fontSize: '12px',
-                          fontWeight: '500'
-                        }}>
-                          {resolvedTickets} resolved
-                        </span>
-                      </div>
-                      <div style={{display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '12px', color: '#6c757d'}}>
-                        <span>Total: {agentTickets.length}</span>
-                        <span>Avg: {avgResolution}h</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
 

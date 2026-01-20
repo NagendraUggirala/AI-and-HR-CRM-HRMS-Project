@@ -19,10 +19,20 @@ import {
   XCircle,
   CheckCircle2,
   FileCheck,
-  Upload
+  Upload,
+  Filter,
+  File,
+  FileText as FileTextIcon,
+  Calculator,
+  DollarSign,
+  Receipt,
+  Wallet,
+  Percent,
+  Shield,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-
 
 const ExitManagement = () => {
   const [selectedExits, setSelectedExits] = useState([]);
@@ -39,15 +49,147 @@ const ExitManagement = () => {
   const [selectedExit, setSelectedExit] = useState(null);
   const [viewMode, setViewMode] = useState('exitCases');
   const [showFilters, setShowFilters] = useState(false);
-  const [activeModalTab, setActiveModalTab] = useState('clearance');
+  const [activeModalTab, setActiveModalTab] = useState('IT');
   const [showExitInterviewModal, setShowExitInterviewModal] = useState(false);
   const [showKnowledgeTransferModal, setShowKnowledgeTransferModal] = useState(false);
   const [showAlumniModal, setShowAlumniModal] = useState(false);
   const [showTrendsModal, setShowTrendsModal] = useState(false);
   const [showCertificateModal, setShowCertificateModal] = useState(false);
+  const [showSettlementModal, setShowSettlementModal] = useState(false);
   const [exitInterviewData, setExitInterviewData] = useState({});
   const [knowledgeTransferData, setKnowledgeTransferData] = useState({});
   const [clearanceDetails, setClearanceDetails] = useState({});
+  const [showEmployeeExitsReport, setShowEmployeeExitsReport] = useState(false);
+
+  // Employee Exits Report Filters State
+  const [employeeExitsFilters, setEmployeeExitsFilters] = useState({
+    location: "",
+    department: "",
+    exitReason: "",
+    fromDate: "",
+    toDate: ""
+  });
+
+  // Settlement Detail State
+  const [settlementDetail, setSettlementDetail] = useState({
+    basicSalary: 0,
+    leaveEncashment: 0,
+    bonusIncentives: 0,
+    otherEarnings: 0,
+    loanDeductions: 0,
+    advanceDeductions: 0,
+    taxDeductions: 0,
+    otherDeductions: 0,
+    netPayable: 0,
+    paymentMethod: 'Bank Transfer',
+    paymentDate: '',
+    bankDetails: {
+      accountNumber: '',
+      bankName: '',
+      ifscCode: '',
+      accountHolder: ''
+    },
+    approvals: {
+      finance: false,
+      hr: false,
+      department: false,
+      ceo: false
+    },
+    status: 'Pending',
+    notes: ''
+  });
+
+  // Employee Exits Report Data
+  const [employeeExitsData, setEmployeeExitsData] = useState([
+    {
+      id: 1,
+      name: "Bogala Chandramouli",
+      code: "LEV096",
+      location: "Hyderabad",
+      department: "Technical Support",
+      designation: "Associate Software Engineer",
+      joining: "2023-01-15",
+      exit: "2024-03-01",
+      reason: "Resignation"
+    },
+    {
+      id: 2,
+      name: "Dorasala Nagendra",
+      code: "LEV097",
+      location: "Hyderabad",
+      department: "Technical Support",
+      designation: "Associate Software Engineer",
+      joining: "2023-02-10",
+      exit: "2024-02-15",
+      reason: "Resignation"
+    },
+    {
+      id: 3,
+      name: "Abhilash Gurrampally",
+      code: "LEV098",
+      location: "Chennai",
+      department: "HR Executive",
+      designation: "HR Executive",
+      joining: "2022-11-01",
+      exit: "2024-01-20",
+      reason: "Termination"
+    },
+    {
+      id: 4,
+      name: "Rajesh Kumar",
+      code: "LEV099",
+      location: "Mumbai",
+      department: "Product Development Team",
+      designation: "Software Engineer",
+      joining: "2022-08-15",
+      exit: "2024-02-28",
+      reason: "Retirement"
+    },
+    {
+      id: 5,
+      name: "Priya Sharma",
+      code: "LEV100",
+      location: "Hyderabad",
+      department: "Technical Support",
+      designation: "Senior Associate",
+      joining: "2021-06-01",
+      exit: "2024-03-05",
+      reason: "Resignation"
+    },
+    {
+      id: 6,
+      name: "Amit Patel",
+      code: "LEV101",
+      location: "Chennai",
+      department: "Product Development Team",
+      designation: "Lead Developer",
+      joining: "2020-03-10",
+      exit: "2024-02-10",
+      reason: "Resignation"
+    },
+    {
+      id: 7,
+      name: "Sneha Reddy",
+      code: "LEV102",
+      location: "Hyderabad",
+      department: "HR Executive",
+      designation: "HR Manager",
+      joining: "2022-09-15",
+      exit: "2024-03-12",
+      reason: "Resignation"
+    },
+    {
+      id: 8,
+      name: "Vikram Singh",
+      code: "LEV103",
+      location: "Mumbai",
+      department: "Technical Support",
+      designation: "Team Lead",
+      joining: "2021-12-01",
+      exit: "2024-01-31",
+      reason: "Termination"
+    }
+  ]);
 
   // Helper function to get default clearance structure
   const getDefaultClearanceStructure = () => ({
@@ -153,7 +295,8 @@ const ExitManagement = () => {
     if (e.target.checked) {
       const currentItems = viewMode === 'exitCases' ? filteredExits : 
                           viewMode === 'alumni' ? filteredAlumni : 
-                          filteredSettlements;
+                          viewMode === 'settlements' ? filteredSettlements :
+                          filteredEmployeeExits;
       setSelectedExits(currentItems.map(item => item.id));
     } else {
       setSelectedExits([]);
@@ -193,7 +336,7 @@ const ExitManagement = () => {
     return colors[level] || 'bg-secondary-subtle text-secondary';
   };
 
-  // Filter data
+  // Filter data for different views
   const filteredExits = exitCases.filter(exit => {
     const matchesSearch = exit.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          exit.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -230,11 +373,104 @@ const ExitManagement = () => {
     return matchesSearch && matchesDepartment && matchesStatus;
   });
 
+  // Employee Exits Report Functions
+  const handleEmployeeExitsFilterChange = (e) => {
+    const { name, value } = e.target;
+    setEmployeeExitsFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  const filteredEmployeeExits = employeeExitsData.filter(emp => {
+    const fromDate = employeeExitsFilters.fromDate ? new Date(employeeExitsFilters.fromDate) : null;
+    const toDate = employeeExitsFilters.toDate ? new Date(employeeExitsFilters.toDate) : null;
+    const exitDate = emp.exit ? new Date(emp.exit) : null;
+
+    const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         emp.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         emp.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         emp.designation.toLowerCase().includes(searchTerm.toLowerCase());
+
+    return (
+      matchesSearch &&
+      (employeeExitsFilters.location === "" || emp.location === employeeExitsFilters.location) &&
+      (employeeExitsFilters.department === "" || emp.department === employeeExitsFilters.department) &&
+      (employeeExitsFilters.exitReason === "" || emp.reason === employeeExitsFilters.exitReason) &&
+      (!fromDate || !exitDate || exitDate >= fromDate) &&
+      (!toDate || !exitDate || exitDate <= toDate)
+    );
+  });
+
+  const handleExportEmployeeExitsExcel = () => {
+    if (filteredEmployeeExits.length === 0) {
+      alert("No records to export!");
+      return;
+    }
+
+    const headers = [
+      "Name",
+      "Code",
+      "Location",
+      "Department",
+      "Designation",
+      "Joining",
+      "Exit",
+      "Reason of Exit",
+    ];
+
+    const rows = filteredEmployeeExits.map((emp) => [
+      emp.name,
+      emp.code,
+      emp.location,
+      emp.department,
+      emp.designation,
+      emp.joining,
+      emp.exit,
+      emp.reason,
+    ]);
+
+    const csvContent =
+      [headers, ...rows].map((e) => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "Employee_Exits.csv";
+    link.click();
+    URL.revokeObjectURL(link.href);
+
+    alert("Excel (CSV) file downloaded!");
+  };
+
+  const handleExportEmployeeExitsPDF = () => {
+    if (filteredEmployeeExits.length === 0) {
+      alert("No records to export!");
+      return;
+    }
+
+    let content = "Employee Exits Report\n\n";
+    content += "Name | Code | Location | Department | Designation | Joining | Exit | Reason\n";
+    content += filteredEmployeeExits
+      .map(
+        (emp) =>
+          `${emp.name} | ${emp.code} | ${emp.location} | ${emp.department} | ${emp.designation} | ${emp.joining} | ${emp.exit} | ${emp.reason}`
+      )
+      .join("\n");
+
+    const blob = new Blob([content], { type: "application/pdf" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "Employee_Exits.pdf";
+    link.click();
+    URL.revokeObjectURL(link.href);
+
+    alert("PDF file downloaded!");
+  };
+
   // Get current items
   const getCurrentItems = () => {
     if (viewMode === 'exitCases') return filteredExits;
     if (viewMode === 'alumni') return filteredAlumni;
-    return filteredSettlements;
+    if (viewMode === 'settlements') return filteredSettlements;
+    if (viewMode === 'employeeExits') return filteredEmployeeExits;
+    return [];
   };
 
   const currentItems = getCurrentItems();
@@ -245,11 +481,14 @@ const ExitManagement = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filters, viewMode]);
+  }, [searchTerm, filters, viewMode, employeeExitsFilters]);
 
   const handleExport = () => {
-    // Export logic
-    alert('Export functionality');
+    if (viewMode === 'employeeExits') {
+      handleExportEmployeeExitsExcel();
+    } else {
+      alert('Export functionality for ' + viewMode);
+    }
   };
 
   const handlePrint = () => {
@@ -279,8 +518,9 @@ const ExitManagement = () => {
     setShowAlumniModal(false);
     setShowTrendsModal(false);
     setShowCertificateModal(false);
+    setShowSettlementModal(false);
     setSelectedExit(null);
-    setActiveModalTab('clearance');
+    setActiveModalTab('IT');
   };
 
   const handleOpenExitInterview = (exitId) => {
@@ -301,11 +541,108 @@ const ExitManagement = () => {
     }
   };
 
+  const handleOpenSettlement = (exitId) => {
+    const exit = exitCases.find(e => e.id === exitId);
+    if (exit) {
+      setSelectedExit(exit);
+      // Calculate sample settlement values based on role and department
+      const roleBasedSalary = exit.role.includes('Senior') || exit.role.includes('Lead') || exit.role.includes('Manager') ? 75000 : 45000;
+      const leaveDays = 12;
+      const leaveEncashmentVal = leaveDays * (roleBasedSalary / 30);
+      const bonus = exit.role.includes('Senior') || exit.role.includes('Lead') || exit.role.includes('Manager') ? 25000 : 15000;
+      const loanDeduction = exit.department === 'Finance' ? 15000 : 5000;
+      const tax = roleBasedSalary * 0.1;
+      const netPayable = roleBasedSalary + leaveEncashmentVal + bonus - loanDeduction - tax;
+      
+      setSettlementDetail({
+        basicSalary: roleBasedSalary,
+        leaveEncashment: leaveEncashmentVal,
+        bonusIncentives: bonus,
+        otherEarnings: 0,
+        loanDeductions: loanDeduction,
+        advanceDeductions: 0,
+        taxDeductions: tax,
+        otherDeductions: 0,
+        netPayable: netPayable,
+        paymentMethod: 'Bank Transfer',
+        paymentDate: exit.lastWorkingDay,
+        bankDetails: {
+          accountNumber: 'XXXXXX7890',
+          bankName: 'HDFC Bank',
+          ifscCode: 'HDFC0001234',
+          accountHolder: exit.employeeName
+        },
+        approvals: {
+          finance: exit.department === 'Finance' ? true : false,
+          hr: false,
+          department: true,
+          ceo: false
+        },
+        status: exit.settlement || 'Pending',
+        notes: 'Settlement calculation based on company policy'
+      });
+      setShowSettlementModal(true);
+    }
+  };
+
   const handleGenerateCertificate = () => {
     if (selectedExit) {
       setShowCertificateModal(true);
     }
   };
+
+  const handleSettlementChange = (e) => {
+    const { name, value } = e.target;
+    setSettlementDetail(prev => ({
+      ...prev,
+      [name]: name.includes('Deductions') || name.includes('Encashment') || name.includes('Salary') || name.includes('bonus') || name.includes('Earnings') ? parseFloat(value) || 0 : value
+    }));
+  };
+
+  const handleBankDetailChange = (e) => {
+    const { name, value } = e.target;
+    setSettlementDetail(prev => ({
+      ...prev,
+      bankDetails: {
+        ...prev.bankDetails,
+        [name]: value
+      }
+    }));
+  };
+
+  const handleApprovalChange = (approvalType) => {
+    setSettlementDetail(prev => ({
+      ...prev,
+      approvals: {
+        ...prev.approvals,
+        [approvalType]: !prev.approvals[approvalType]
+      }
+    }));
+  };
+
+  const calculateNetPayable = () => {
+    const totalEarnings = settlementDetail.basicSalary + settlementDetail.leaveEncashment + settlementDetail.bonusIncentives + settlementDetail.otherEarnings;
+    const totalDeductions = settlementDetail.loanDeductions + settlementDetail.advanceDeductions + settlementDetail.taxDeductions + settlementDetail.otherDeductions;
+    return totalEarnings - totalDeductions;
+  };
+
+  // Update net payable when settlement details change
+  useEffect(() => {
+    const netPayable = calculateNetPayable();
+    setSettlementDetail(prev => ({
+      ...prev,
+      netPayable: netPayable
+    }));
+  }, [
+    settlementDetail.basicSalary,
+    settlementDetail.leaveEncashment,
+    settlementDetail.bonusIncentives,
+    settlementDetail.otherEarnings,
+    settlementDetail.loanDeductions,
+    settlementDetail.advanceDeductions,
+    settlementDetail.taxDeductions,
+    settlementDetail.otherDeductions
+  ]);
 
   // Responsive table rendering functions
   const renderExitCasesTable = () => (
@@ -434,6 +771,14 @@ const ExitManagement = () => {
                     onClick={() => handleOpenKnowledgeTransfer(exit.id)}
                   >
                     <Share2 size={14} />
+                  </button>
+                  <button 
+                    type="button" 
+                    className="btn btn-icon btn-light p-1 d-none d-md-inline" 
+                    title="Settlement"
+                    onClick={() => handleOpenSettlement(exit.id)}
+                  >
+                    <CreditCard size={14} />
                   </button>
                 </div>
               </td>
@@ -605,7 +950,7 @@ const ExitManagement = () => {
               </td>
               <td className="text-center">
                 <div className="btn-group btn-group-sm" role="group">
-                  <button type="button" className="btn btn-icon btn-light p-1" title="View">
+                  <button type="button" className="btn btn-icon btn-light p-1" title="View" onClick={() => { setSelectedExit(settlement); handleOpenSettlement(settlement.id); }}>
                     <Eye size={14} />
                   </button>
                   <button type="button" className="btn btn-icon btn-light p-1 d-none d-md-inline" title="Download">
@@ -620,21 +965,170 @@ const ExitManagement = () => {
     </div>
   );
 
-  const mainContent = (
+  const renderEmployeeExitsTable = () => (
+    <div className="card border shadow-none">
+      <div className="card-body">
+        {/* Employee Exits Report Filters */}
+        <div className="row g-3 mb-4">
+          <div className="col-12 col-md-3">
+            <label className="form-label small">Location</label>
+            <select
+              className="form-select form-select-sm"
+              name="location"
+              value={employeeExitsFilters.location}
+              onChange={handleEmployeeExitsFilterChange}
+            >
+              <option value="">All Locations</option>
+              <option value="Hyderabad">Hyderabad</option>
+              <option value="Chennai">Chennai</option>
+              <option value="Mumbai">Mumbai</option>
+            </select>
+          </div>
+          <div className="col-12 col-md-3">
+            <label className="form-label small">Department</label>
+            <select
+              className="form-select form-select-sm"
+              name="department"
+              value={employeeExitsFilters.department}
+              onChange={handleEmployeeExitsFilterChange}
+            >
+              <option value="">All Departments</option>
+              <option value="Technical Support">Technical Support</option>
+              <option value="HR Executive">HR Executive</option>
+              <option value="Product Development Team">Product Development Team</option>
+            </select>
+          </div>
+          <div className="col-12 col-md-3">
+            <label className="form-label small">Exit Reason</label>
+            <select
+              className="form-select form-select-sm"
+              name="exitReason"
+              value={employeeExitsFilters.exitReason}
+              onChange={handleEmployeeExitsFilterChange}
+            >
+              <option value="">All Reasons</option>
+              <option value="Resignation">Resignation</option>
+              <option value="Termination">Termination</option>
+              <option value="Retirement">Retirement</option>
+            </select>
+          </div>
+          <div className="col-12 col-md-3">
+            <div className="row g-2">
+              <div className="col-6">
+                <label className="form-label small">From</label>
+                <input
+                  type="date"
+                  className="form-control form-control-sm"
+                  name="fromDate"
+                  value={employeeExitsFilters.fromDate}
+                  onChange={handleEmployeeExitsFilterChange}
+                />
+              </div>
+              <div className="col-6">
+                <label className="form-label small">To</label>
+                <input
+                  type="date"
+                  className="form-control form-control-sm"
+                  name="toDate"
+                  value={employeeExitsFilters.toDate}
+                  onChange={handleEmployeeExitsFilterChange}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Employee Exits Table */}
+        <div className="table-responsive">
+          <table className="table table-hover align-middle mb-0">
+            <thead className="table-light">
+              <tr>
+                <th className="text-center">SN</th>
+                <th className="text-start">EMPLOYEE</th>
+                <th className="text-start">LOCATION</th>
+                <th className="text-start">DEPARTMENT</th>
+                <th className="text-start">DESIGNATION</th>
+                <th className="text-start">JOINING</th>
+                <th className="text-start">EXIT</th>
+                <th className="text-start">REASON OF EXIT</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredEmployeeExits.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="text-center text-muted py-4">
+                    No employee data found. Try different filters.
+                  </td>
+                </tr>
+              ) : (
+                currentItemsPage.map((emp, index) => (
+                  <tr key={emp.id}>
+                    <td className="text-center">{startIndex + index + 1}</td>
+                    <td className="text-start">
+                      <div className="d-flex flex-column">
+                        <div className="fw-medium small">{emp.name}</div>
+                        <small className="text-muted">{emp.code}</small>
+                      </div>
+                    </td>
+                    <td className="text-start">
+                      <span className="badge bg-light text-dark small">{emp.location}</span>
+                    </td>
+                    <td className="text-start small">{emp.department}</td>
+                    <td className="text-start small">{emp.designation}</td>
+                    <td className="text-start small">{emp.joining}</td>
+                    <td className="text-start">
+                      <span className="badge bg-danger-subtle text-danger small">{emp.exit}</span>
+                    </td>
+                    <td className="text-start">
+                      <span className={`badge ${
+                        emp.reason === 'Resignation' ? 'bg-warning-subtle text-warning' :
+                        emp.reason === 'Termination' ? 'bg-danger-subtle text-danger' :
+                        'bg-info-subtle text-info'
+                      } small`}>
+                        {emp.reason}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Export Buttons */}
+        <div className="d-flex gap-2 mt-4">
+          <button 
+            type="button" 
+            className="btn btn-success btn-sm" 
+            onClick={handleExportEmployeeExitsExcel}
+            disabled={filteredEmployeeExits.length === 0}
+          >
+            <FileTextIcon size={14} className="me-1" />
+            Download (Excel)
+          </button>
+          <button 
+            type="button" 
+            className="btn btn-danger btn-sm" 
+            onClick={handleExportEmployeeExitsPDF}
+            disabled={filteredEmployeeExits.length === 0}
+          >
+            <File size={14} className="me-1" />
+            Download (PDF)
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
     <div className="container-fluid px-2 px-sm-3 px-md-4 py-3">
       {/* Page Header */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
         <div className="mb-3 mb-md-0 flex-grow-1">
           <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-2">
             <h5 className="fw-bold mb-0">Exit Management & Clearance</h5>
-            <span className="text-muted d-none d-md-block">|</span>
-            <p className="text-muted mb-0 small d-none d-md-block">
-              Manage employee exits, clearances, and alumni network
-            </p>
           </div>
-          <p className="text-muted mb-0 small d-md-none mt-1">
-            Manage employee exits, clearances, and alumni network
-          </p>
+         
         </div>
 
         <div className="d-flex flex-wrap gap-2 ms-auto">
@@ -692,6 +1186,13 @@ const ExitManagement = () => {
             >
               <i className="bi bi-cash d-none d-sm-inline me-1"></i>
               <span>Settlements</span>
+            </button>
+            <button
+              className={`btn ${viewMode === 'employeeExits' ? 'btn-primary' : 'btn-outline-primary'} btn-sm flex-grow-1 flex-md-grow-0`}
+              onClick={() => setViewMode('employeeExits')}
+            >
+              <i className="bi bi-file-earmark-text d-none d-sm-inline me-1"></i>
+              <span>Employee Exits</span>
             </button>
             <button
               className="btn btn-outline-primary btn-sm d-none d-md-inline-flex flex-grow-1 flex-lg-grow-0"
@@ -771,67 +1272,26 @@ const ExitManagement = () => {
         </div>
       </div>
 
-      {/* Search and Filters - Responsive */}
-      <div className="card border shadow-none mb-4">
-        <div className="card-body p-2 p-sm-3">
-          <div className="row g-2 g-sm-3 align-items-center">
-            <div className="col-12 col-md-6">
-              <div className="input-group input-group-sm">
-                <span className="input-group-text bg-white">
-                  <Search size={14} className="text-muted" />
-                </span>
-                <input 
-                  className="form-control" 
-                  placeholder="Search..." 
-                  value={searchTerm} 
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+      {/* Search and Filters - Responsive - Hidden for Employee Exits */}
+      {viewMode !== 'employeeExits' && (
+        <div className="card border shadow-none mb-4">
+          <div className="card-body p-2 p-sm-3">
+            <div className="row g-2 g-sm-3 align-items-center">
+              <div className="col-12 col-md-6">
+                <div className="input-group input-group-sm">
+                  <span className="input-group-text bg-white">
+                    <Search size={14} className="text-muted" />
+                  </span>
+                  <input 
+                    className="form-control" 
+                    placeholder="Search..." 
+                    value={searchTerm} 
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
               </div>
-            </div>
-            
-            <div className="col-6 col-md-3 d-none d-md-block">
-              <select 
-                className="form-select form-select-sm" 
-                value={filters.department}
-                onChange={(e) => setFilters(prev => ({ ...prev, department: e.target.value }))}
-              >
-                <option value="">All Departments</option>
-                <option value="engineering">Engineering</option>
-                <option value="marketing">Marketing</option>
-                <option value="sales">Sales</option>
-                <option value="hr">HR</option>
-                <option value="finance">Finance</option>
-              </select>
-            </div>
-            
-            <div className="col-6 col-md-3 d-none d-md-block">
-              <select 
-                className="form-select form-select-sm"
-                value={filters.status}
-                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-              >
-                <option value="">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="in progress">In Progress</option>
-                <option value="completed">Completed</option>
-              </select>
-            </div>
-            
-            <div className="col-12 d-md-none">
-              <button 
-                className="btn btn-outline-secondary w-100 btn-sm"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <i className="bi bi-funnel me-1"></i>
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
-              </button>
-            </div>
-          </div>
-          
-          {/* Mobile Filters Dropdown */}
-          {showFilters && (
-            <div className="row g-2 mt-3">
-              <div className="col-6">
+              
+              <div className="col-6 col-md-3 d-none d-md-block">
                 <select 
                   className="form-select form-select-sm" 
                   value={filters.department}
@@ -846,7 +1306,7 @@ const ExitManagement = () => {
                 </select>
               </div>
               
-              <div className="col-6">
+              <div className="col-6 col-md-3 d-none d-md-block">
                 <select 
                   className="form-select form-select-sm"
                   value={filters.status}
@@ -859,42 +1319,85 @@ const ExitManagement = () => {
                 </select>
               </div>
               
-              {viewMode === 'exitCases' && (
-                <>
-                  <div className="col-6">
-                    <select 
-                      className="form-select form-select-sm"
-                      value={filters.clearanceType}
-                      onChange={(e) => setFilters(prev => ({ ...prev, clearanceType: e.target.value }))}
-                    >
-                      <option value="">Exit Type</option>
-                      <option value="resignation">Resignation</option>
-                      <option value="termination">Termination</option>
-                      <option value="retirement">Retirement</option>
-                    </select>
-                  </div>
-                  
-                  <div className="col-6">
-                    <select 
-                      className="form-select form-select-sm"
-                      value={filters.exitReason}
-                      onChange={(e) => setFilters(prev => ({ ...prev, exitReason: e.target.value }))}
-                    >
-                      <option value="">Exit Reason</option>
-                      <option value="better opportunity">Better Opportunity</option>
-                      <option value="career growth">Career Growth</option>
-                      <option value="higher studies">Higher Studies</option>
-                    </select>
-                  </div>
-                </>
-              )}
+              <div className="col-12 d-md-none">
+                <button 
+                  className="btn btn-outline-secondary w-100 btn-sm"
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <i className="bi bi-funnel me-1"></i>
+                  {showFilters ? 'Hide Filters' : 'Show Filters'}
+                </button>
+              </div>
             </div>
-          )}
+            
+            {/* Mobile Filters Dropdown */}
+            {showFilters && (
+              <div className="row g-2 mt-3">
+                <div className="col-6">
+                  <select 
+                    className="form-select form-select-sm" 
+                    value={filters.department}
+                    onChange={(e) => setFilters(prev => ({ ...prev, department: e.target.value }))}
+                  >
+                    <option value="">All Departments</option>
+                    <option value="engineering">Engineering</option>
+                    <option value="marketing">Marketing</option>
+                    <option value="sales">Sales</option>
+                    <option value="hr">HR</option>
+                    <option value="finance">Finance</option>
+                  </select>
+                </div>
+                
+                <div className="col-6">
+                  <select 
+                    className="form-select form-select-sm"
+                    value={filters.status}
+                    onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                  >
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="in progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+                
+                {viewMode === 'exitCases' && (
+                  <>
+                    <div className="col-6">
+                      <select 
+                        className="form-select form-select-sm"
+                        value={filters.clearanceType}
+                        onChange={(e) => setFilters(prev => ({ ...prev, clearanceType: e.target.value }))}
+                      >
+                        <option value="">Exit Type</option>
+                        <option value="resignation">Resignation</option>
+                        <option value="termination">Termination</option>
+                        <option value="retirement">Retirement</option>
+                      </select>
+                    </div>
+                    
+                    <div className="col-6">
+                      <select 
+                        className="form-select form-select-sm"
+                        value={filters.exitReason}
+                        onChange={(e) => setFilters(prev => ({ ...prev, exitReason: e.target.value }))}
+                      >
+                        <option value="">Exit Reason</option>
+                        <option value="better opportunity">Better Opportunity</option>
+                        <option value="career growth">Career Growth</option>
+                        <option value="higher studies">Higher Studies</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Bulk Actions Bar - Responsive */}
-      {selectedExits.length > 0 && (
+      {/* Bulk Actions Bar - Responsive - Hidden for Employee Exits */}
+      {selectedExits.length > 0 && viewMode !== 'employeeExits' && (
         <div className="alert alert-info d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-4 p-2 p-sm-3">
           <div className="d-flex flex-wrap align-items-center gap-2 mb-2 mb-sm-0">
             <span className="fw-medium small">
@@ -928,79 +1431,120 @@ const ExitManagement = () => {
       )}
 
       {/* Table */}
-      <div className="card border shadow-none mb-4">
-        <div className="card-body p-0">
-          {viewMode === 'exitCases' && renderExitCasesTable()}
-          {viewMode === 'alumni' && renderAlumniTable()}
-          {viewMode === 'settlements' && renderSettlementsTable()}
-        </div>
+      <div className="mb-4">
+        {viewMode === 'exitCases' && (
+          <div className="card border shadow-none">
+            <div className="card-body p-0">
+              {renderExitCasesTable()}
+            </div>
+          </div>
+        )}
+        {viewMode === 'alumni' && (
+          <div className="card border shadow-none">
+            <div className="card-body p-0">
+              {renderAlumniTable()}
+            </div>
+          </div>
+        )}
+        {viewMode === 'settlements' && (
+          <div className="card border shadow-none">
+            <div className="card-body p-0">
+              {renderSettlementsTable()}
+            </div>
+          </div>
+        )}
+        {viewMode === 'employeeExits' && renderEmployeeExitsTable()}
       </div>
 
       {/* Pagination - Responsive */}
-      <div className="d-flex flex-column flex-sm-row align-items-center justify-content-between mb-4 gap-3">
-        <div className="order-2 order-sm-1">
-          <small className="text-secondary-light">
-            Showing <strong>{startIndex+1}</strong> to <strong>{Math.min(endIndex, currentItems.length)}</strong> of <strong>{currentItems.length}</strong>
-          </small>
-        </div>
-
-        <div className="d-flex flex-column flex-sm-row align-items-center gap-3 order-1 order-sm-2">
-          <div className="d-flex align-items-center gap-2">
-            <button 
-              className="btn btn-outline-secondary btn-sm" 
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} 
-              disabled={currentPage === 1}
-            >
-              <i className="bi bi-chevron-left"></i>
-            </button>
-            
-            <div className="d-none d-sm-flex gap-1">
-              {[...Array(Math.min(3, totalPages))].map((_, idx) => {
-                const pageNum = idx + 1;
-                return (
-                  <button 
-                    key={pageNum}
-                    className={pageNum === currentPage ? 'btn btn-primary btn-sm' : 'btn btn-outline-secondary btn-sm'} 
-                    onClick={() => setCurrentPage(pageNum)}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
-              {totalPages > 3 && (
-                <>
-                  <span className="px-2">...</span>
-                  <button 
-                    className={totalPages === currentPage ? 'btn btn-primary btn-sm' : 'btn btn-outline-secondary btn-sm'} 
-                    onClick={() => setCurrentPage(totalPages)}
-                  >
-                    {totalPages}
-                  </button>
-                </>
-              )}
-            </div>
-            
-            <button 
-              className="btn btn-outline-secondary btn-sm" 
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} 
-              disabled={currentPage === totalPages}
-            >
-              <i className="bi bi-chevron-right"></i>
-            </button>
+      {viewMode !== 'employeeExits' && (
+        <div className="d-flex flex-column flex-sm-row align-items-center justify-content-between mb-4 gap-3">
+          <div className="order-2 order-sm-1">
+            <small className="text-secondary-light">
+              Showing <strong>{startIndex+1}</strong> to <strong>{Math.min(endIndex, currentItems.length)}</strong> of <strong>{currentItems.length}</strong>
+            </small>
           </div>
 
-          <select 
-            className="form-select form-select-sm w-auto" 
-            value={itemsPerPage} 
-            onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
-          >
-            <option value="5">5</option>
-            <option value="10">10</option>
-            <option value="20">20</option>
-            <option value="50">50</option>
-          </select>
+          <div className="d-flex flex-column flex-sm-row align-items-center gap-3 order-1 order-sm-2">
+            <div className="d-flex align-items-center gap-2">
+              <button 
+                className="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center" 
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} 
+                disabled={currentPage === 1}
+                style={{width: '36px', height: '36px', padding: 0}}
+              >
+                <ChevronLeft size={18} />
+              </button>
+              
+              <div className="d-none d-sm-flex gap-1">
+                {[...Array(Math.min(3, totalPages))].map((_, idx) => {
+                  const pageNum = idx + 1;
+                  return (
+                    <button 
+                      key={pageNum}
+                      className={pageNum === currentPage ? 'btn btn-primary btn-sm' : 'btn btn-outline-secondary btn-sm'} 
+                      onClick={() => setCurrentPage(pageNum)}
+                      style={{minWidth: '36px', height: '36px'}}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                {totalPages > 3 && (
+                  <>
+                    <span className="px-2 d-flex align-items-center">...</span>
+                    <button 
+                      className={totalPages === currentPage ? 'btn btn-primary btn-sm' : 'btn btn-outline-secondary btn-sm'} 
+                      onClick={() => setCurrentPage(totalPages)}
+                      style={{minWidth: '36px', height: '36px'}}
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
+              </div>
+              
+              <button 
+                className="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center" 
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} 
+                disabled={currentPage === totalPages}
+                style={{width: '36px', height: '36px', padding: 0}}
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+
+            <select 
+              className="form-select form-select-sm w-auto" 
+              value={itemsPerPage} 
+              onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
+            >
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+            </select>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Employee Exits Report Info */}
+      {viewMode === 'employeeExits' && (
+        <div className="alert alert-info mb-0">
+          <div className="d-flex">
+            <div className="me-3">
+              <i className="bi bi-info-circle fs-4"></i>
+            </div>
+            <div>
+              <h6 className="alert-heading">Employee Exits Report</h6>
+              <p className="mb-0 small">
+                View employees exiting during a given date range. Filter by location, department, exit reason, and date range. 
+                Export data to Excel (CSV) or PDF format.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Comprehensive Clearance Details Modal */}
       {showClearanceModal && selectedExit && (
@@ -1370,9 +1914,12 @@ const ExitManagement = () => {
                     </button>
                   </div>
                   <div className="col-12 col-md-4">
-                    <button className="btn btn-outline-success w-100 btn-sm">
+                    <button 
+                      className="btn btn-outline-success w-100 btn-sm"
+                      onClick={() => { setShowClearanceModal(false); handleOpenSettlement(selectedExit.id); }}
+                    >
                       <CreditCard size={14} className="me-2" />
-                      Settlement
+                      Full & Final Settlement
                     </button>
                   </div>
                 </div>
@@ -1656,19 +2203,359 @@ const ExitManagement = () => {
         </div>
       )}
 
+      {/* Full & Final Settlement Detail Modal - NEW */}
+      {showSettlementModal && selectedExit && (
+        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1051}}>
+          <div className="modal-dialog modal-dialog-centered" style={{maxWidth: '95%', width: '1400px'}}>
+            <div className="modal-content">
+              <div className="modal-header bg-success text-white">
+                <h5 className="modal-title">Full & Final Settlement - {selectedExit.employeeName}</h5>
+                <button type="button" className="btn-close btn-close-white" onClick={handleCloseModal}></button>
+              </div>
+              <div className="modal-body" style={{maxHeight: '75vh', overflowY: 'auto', padding: '2rem'}}>
+                <div className="row g-4 mb-4">
+                  <div className="col-12 col-lg-8">
+                    <div className="card border shadow-sm">
+                      <div className="card-header bg-success-subtle py-3">
+                        <h6 className="mb-0 fw-bold">Settlement Calculation</h6>
+                      </div>
+                      <div className="card-body p-4">
+                        {/* Earnings Section */}
+                        <div className="mb-4">
+                          <h6 className="fw-bold text-success mb-4">
+                            <DollarSign size={20} className="me-2" />
+                            Earnings
+                          </h6>
+                          <div className="row g-4">
+                            <div className="col-12 col-md-6">
+                              <label className="form-label fw-medium mb-2">Basic Salary</label>
+                              <div className="input-group">
+                                <span className="input-group-text bg-light">₹</span>
+                                <input 
+                                  type="number" 
+                                  className="form-control form-control-lg" 
+                                  name="basicSalary" 
+                                  value={settlementDetail.basicSalary}
+                                  onChange={handleSettlementChange}
+                                />
+                              </div>
+                            </div>
+                            <div className="col-12 col-md-6">
+                              <label className="form-label fw-medium mb-2">Leave Encashment</label>
+                              <div className="input-group">
+                                <span className="input-group-text bg-light">₹</span>
+                                <input 
+                                  type="number" 
+                                  className="form-control form-control-lg" 
+                                  name="leaveEncashment" 
+                                  value={settlementDetail.leaveEncashment}
+                                  onChange={handleSettlementChange}
+                                />
+                              </div>
+                            </div>
+                            <div className="col-12 col-md-6">
+                              <label className="form-label fw-medium mb-2">Bonus & Incentives</label>
+                              <div className="input-group">
+                                <span className="input-group-text bg-light">₹</span>
+                                <input 
+                                  type="number" 
+                                  className="form-control form-control-lg" 
+                                  name="bonusIncentives" 
+                                  value={settlementDetail.bonusIncentives}
+                                  onChange={handleSettlementChange}
+                                />
+                              </div>
+                            </div>
+                            <div className="col-12 col-md-6">
+                              <label className="form-label fw-medium mb-2">Other Earnings</label>
+                              <div className="input-group">
+                                <span className="input-group-text bg-light">₹</span>
+                                <input 
+                                  type="number" 
+                                  className="form-control form-control-lg" 
+                                  name="otherEarnings" 
+                                  value={settlementDetail.otherEarnings}
+                                  onChange={handleSettlementChange}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Deductions Section */}
+                        <div className="mb-4">
+                          <h6 className="fw-bold text-danger mb-4">
+                            <Calculator size={20} className="me-2" />
+                            Deductions
+                          </h6>
+                          <div className="row g-4">
+                            <div className="col-12 col-md-6">
+                              <label className="form-label fw-medium mb-2">Loan Deductions</label>
+                              <div className="input-group">
+                                <span className="input-group-text bg-light">₹</span>
+                                <input 
+                                  type="number" 
+                                  className="form-control form-control-lg" 
+                                  name="loanDeductions" 
+                                  value={settlementDetail.loanDeductions}
+                                  onChange={handleSettlementChange}
+                                />
+                              </div>
+                            </div>
+                            <div className="col-12 col-md-6">
+                              <label className="form-label fw-medium mb-2">Advance Deductions</label>
+                              <div className="input-group">
+                                <span className="input-group-text bg-light">₹</span>
+                                <input 
+                                  type="number" 
+                                  className="form-control form-control-lg" 
+                                  name="advanceDeductions" 
+                                  value={settlementDetail.advanceDeductions}
+                                  onChange={handleSettlementChange}
+                                />
+                              </div>
+                            </div>
+                            <div className="col-12 col-md-6">
+                              <label className="form-label fw-medium mb-2">Tax Deductions</label>
+                              <div className="input-group">
+                                <span className="input-group-text bg-light">₹</span>
+                                <input 
+                                  type="number" 
+                                  className="form-control form-control-lg" 
+                                  name="taxDeductions" 
+                                  value={settlementDetail.taxDeductions}
+                                  onChange={handleSettlementChange}
+                                />
+                              </div>
+                            </div>
+                            <div className="col-12 col-md-6">
+                              <label className="form-label fw-medium mb-2">Other Deductions</label>
+                              <div className="input-group">
+                                <span className="input-group-text bg-light">₹</span>
+                                <input 
+                                  type="number" 
+                                  className="form-control form-control-lg" 
+                                  name="otherDeductions" 
+                                  value={settlementDetail.otherDeductions}
+                                  onChange={handleSettlementChange}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Summary Section */}
+                        <div className="card border mt-4 shadow-sm">
+                          <div className="card-body p-4">
+                            <h6 className="fw-bold mb-4">Settlement Summary</h6>
+                            <div className="row">
+                              <div className="col-6">
+                                <div className="mb-2">
+                                  <small className="text-muted">Total Earnings</small>
+                                  <div className="fw-bold h5 text-success">
+                                    ₹{settlementDetail.basicSalary + settlementDetail.leaveEncashment + settlementDetail.bonusIncentives + settlementDetail.otherEarnings}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="col-6">
+                                <div className="mb-2">
+                                  <small className="text-muted">Total Deductions</small>
+                                  <div className="fw-bold h5 text-danger">
+                                    ₹{settlementDetail.loanDeductions + settlementDetail.advanceDeductions + settlementDetail.taxDeductions + settlementDetail.otherDeductions}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="col-12">
+                                <hr />
+                                <div className="d-flex justify-content-between align-items-center">
+                                  <div>
+                                    <small className="text-muted">Net Payable Amount</small>
+                                    <div className="fw-bold h4 text-primary">₹{settlementDetail.netPayable}</div>
+                                  </div>
+                                  <span className={`badge ${settlementDetail.status === 'Completed' ? 'bg-success' : settlementDetail.status === 'In Progress' ? 'bg-warning' : 'bg-secondary'}`}>
+                                    {settlementDetail.status}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="col-12 col-lg-4">
+                    {/* Payment Details */}
+                    <div className="card border mb-4 shadow-sm">
+                      <div className="card-header bg-primary-subtle py-3">
+                        <h6 className="mb-0 fw-bold">
+                          <CreditCard size={20} className="me-2" />
+                          Payment Details
+                        </h6>
+                      </div>
+                      <div className="card-body p-4">
+                        <div className="mb-4">
+                          <label className="form-label fw-medium mb-2">Payment Method</label>
+                          <select 
+                            className="form-select form-select-lg" 
+                            name="paymentMethod"
+                            value={settlementDetail.paymentMethod}
+                            onChange={handleSettlementChange}
+                          >
+                            <option>Bank Transfer</option>
+                            <option>Cheque</option>
+                            <option>Cash</option>
+                            <option>Online Payment</option>
+                          </select>
+                        </div>
+                        <div className="mb-4">
+                          <label className="form-label fw-medium mb-2">Payment Date</label>
+                          <input 
+                            type="date" 
+                            className="form-control form-control-lg" 
+                            name="paymentDate"
+                            value={settlementDetail.paymentDate}
+                            onChange={handleSettlementChange}
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label className="form-label fw-medium mb-2">Bank Account Number</label>
+                          <input 
+                            type="text" 
+                            className="form-control form-control-lg" 
+                            name="accountNumber"
+                            value={settlementDetail.bankDetails.accountNumber}
+                            onChange={handleBankDetailChange}
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label className="form-label fw-medium mb-2">Bank Name</label>
+                          <input 
+                            type="text" 
+                            className="form-control form-control-lg" 
+                            name="bankName"
+                            value={settlementDetail.bankDetails.bankName}
+                            onChange={handleBankDetailChange}
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label className="form-label fw-medium mb-2">IFSC Code</label>
+                          <input 
+                            type="text" 
+                            className="form-control form-control-lg" 
+                            name="ifscCode"
+                            value={settlementDetail.bankDetails.ifscCode}
+                            onChange={handleBankDetailChange}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Approvals */}
+                    <div className="card border shadow-sm">
+                      <div className="card-header bg-warning-subtle py-3">
+                        <h6 className="mb-0 fw-bold">
+                          <Shield size={20} className="me-2" />
+                          Approvals Required
+                        </h6>
+                      </div>
+                      <div className="card-body p-4">
+                        <div className="form-check mb-2">
+                          <input 
+                            className="form-check-input" 
+                            type="checkbox" 
+                            id="financeApproval"
+                            checked={settlementDetail.approvals.finance}
+                            onChange={() => handleApprovalChange('finance')}
+                          />
+                          <label className="form-check-label small" htmlFor="financeApproval">
+                            Finance Department
+                          </label>
+                        </div>
+                        <div className="form-check mb-2">
+                          <input 
+                            className="form-check-input" 
+                            type="checkbox" 
+                            id="hrApproval"
+                            checked={settlementDetail.approvals.hr}
+                            onChange={() => handleApprovalChange('hr')}
+                          />
+                          <label className="form-check-label small" htmlFor="hrApproval">
+                            HR Department
+                          </label>
+                        </div>
+                        <div className="form-check mb-2">
+                          <input 
+                            className="form-check-input" 
+                            type="checkbox" 
+                            id="deptApproval"
+                            checked={settlementDetail.approvals.department}
+                            onChange={() => handleApprovalChange('department')}
+                          />
+                          <label className="form-check-label small" htmlFor="deptApproval">
+                            Department Head
+                          </label>
+                        </div>
+                        <div className="form-check mb-2">
+                          <input 
+                            className="form-check-input" 
+                            type="checkbox" 
+                            id="ceoApproval"
+                            checked={settlementDetail.approvals.ceo}
+                            onChange={() => handleApprovalChange('ceo')}
+                          />
+                          <label className="form-check-label small" htmlFor="ceoApproval">
+                            CEO/Management
+                          </label>
+                        </div>
+                        <div className="mt-4">
+                          <label className="form-label fw-medium mb-2">Settlement Notes</label>
+                          <textarea 
+                            className="form-control" 
+                            rows="4" 
+                            name="notes"
+                            value={settlementDetail.notes}
+                            onChange={handleSettlementChange}
+                            placeholder="Additional notes or comments..."
+                          ></textarea>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>Close</button>
+                <button type="button" className="btn btn-primary">Save Draft</button>
+                <button type="button" className="btn btn-warning">Calculate Settlement</button>
+                <button type="button" className="btn btn-success">
+                  <Receipt size={14} className="me-1" />
+                  Generate Settlement Slip
+                </button>
+                <button type="button" className="btn btn-info">
+                  <Wallet size={14} className="me-1" />
+                  Initiate Payment
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Exit Trends Analysis Modal */}
       {showTrendsModal && (
         <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1051}}>
           <div className="modal-dialog modal-dialog-centered modal-xl">
-            <div className="modal-content">
-              <div className="modal-header bg-info text-white">
-                <h5 className="modal-title">Exit Trend Analysis</h5>
+            <div className="modal-content" style={{borderRadius: '8px', overflow: 'hidden'}}>
+              <div className="modal-header bg-primary text-white py-3" style={{borderBottom: 'none'}}>
+                <h5 className="modal-title fw-bold">Exit Trend Analysis</h5>
                 <button type="button" className="btn-close btn-close-white" onClick={handleCloseModal}></button>
               </div>
-              <div className="modal-body" style={{maxHeight: '70vh', overflowY: 'auto'}}>
+              <div className="modal-body" style={{maxHeight: '75vh', overflowY: 'auto', padding: '1.5rem'}}>
+                {/* Filters Section */}
                 <div className="row g-3 mb-4">
                   <div className="col-12 col-md-6">
-                    <label className="form-label fw-medium">Analysis Period</label>
+                    <label className="form-label fw-medium small mb-2">Analysis Period</label>
                     <select className="form-select form-select-sm">
                       <option>Last 3 Months</option>
                       <option>Last 6 Months</option>
@@ -1677,7 +2564,7 @@ const ExitManagement = () => {
                     </select>
                   </div>
                   <div className="col-12 col-md-6">
-                    <label className="form-label fw-medium">Filter By Department</label>
+                    <label className="form-label fw-medium small mb-2">Filter By Department</label>
                     <select className="form-select form-select-sm">
                       <option>All Departments</option>
                       <option>Engineering</option>
@@ -1688,86 +2575,154 @@ const ExitManagement = () => {
                     </select>
                   </div>
                 </div>
-                <div className="row g-3">
+
+                {/* Key Metrics Cards */}
+                <div className="row g-3 mb-4">
+                  {/* Exit Rate Card */}
                   <div className="col-12 col-md-4">
-                    <div className="card border">
-                      <div className="card-body text-center">
-                        <TrendingUp size={24} className="text-primary mb-2" />
-                        <h6 className="text-muted small">Exit Rate</h6>
-                        <h4 className="fw-bold text-primary">8.5%</h4>
-                        <small className="text-muted">↗ +2.1% from last period</small>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-12 col-md-4">
-                    <div className="card border">
-                      <div className="card-body text-center">
-                        <Users size={24} className="text-warning mb-2" />
-                        <h6 className="text-muted small">Top Exit Reason</h6>
-                        <h4 className="fw-bold text-warning">Better Opportunity</h4>
-                        <small className="text-muted">45% of exits</small>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-12 col-md-4">
-                    <div className="card border">
-                      <div className="card-body text-center">
-                        <Clock size={24} className="text-danger mb-2" />
-                        <h6 className="text-muted small">Avg. Notice Period</h6>
-                        <h4 className="fw-bold text-danger">38 days</h4>
-                        <small className="text-muted">↓ -5 days from last period</small>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-12">
-                    <div className="card border">
-                      <div className="card-header">
-                        <h6 className="mb-0">Exit Reasons Breakdown</h6>
-                      </div>
-                      <div className="card-body">
-                        <div className="row g-2">
-                          {['Better Opportunity', 'Career Growth', 'Higher Studies', 'Relocation', 'Personal Reasons'].map((reason, idx) => (
-                            <div key={idx} className="col-12 col-md-6">
-                              <div className="d-flex justify-content-between align-items-center mb-2">
-                                <span className="small">{reason}</span>
-                                <span className="badge bg-primary">{idx + 1}8%</span>
-                              </div>
-                              <div className="progress" style={{height: '6px'}}>
-                                <div className="progress-bar bg-primary" style={{width: `${(idx + 1) * 15}%`}}></div>
-                              </div>
-                            </div>
-                          ))}
+                    <div className="card border shadow-sm h-100" style={{borderRadius: '6px'}}>
+                      <div className="card-body p-3">
+                        <div className="d-flex align-items-start mb-3">
+                          <div className="bg-primary-subtle rounded p-2 me-2">
+                            <TrendingUp size={20} className="text-primary" />
+                          </div>
+                          <div className="flex-grow-1">
+                            <h6 className="text-muted small mb-1 fw-medium">Exit Rate</h6>
+                          </div>
+                        </div>
+                        <div className="mb-2">
+                          <h3 className="fw-bold text-primary mb-0" style={{fontSize: '2rem'}}>8.5%</h3>
+                        </div>
+                        <div className="d-flex align-items-center">
+                          <ArrowUp size={14} className="text-success me-1" />
+                          <small className="text-muted">+2.1% from last period</small>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="col-12">
-                    <div className="card border">
-                      <div className="card-header">
-                        <h6 className="mb-0">Department-wise Exit Distribution</h6>
+
+                  {/* Top Exit Reason Card */}
+                  <div className="col-12 col-md-4">
+                    <div className="card border shadow-sm h-100" style={{borderRadius: '6px'}}>
+                      <div className="card-body p-3">
+                        <div className="d-flex align-items-start mb-3">
+                          <div className="bg-warning-subtle rounded p-2 me-2">
+                            <Users size={20} className="text-warning" />
+                          </div>
+                          <div className="flex-grow-1">
+                            <h6 className="text-muted small mb-1 fw-medium">Top Exit Reason</h6>
+                          </div>
+                        </div>
+                        <div className="mb-2">
+                          <h4 className="fw-bold text-warning mb-0" style={{fontSize: '1.25rem', lineHeight: '1.4', wordBreak: 'break-word'}}>Better Opportunity</h4>
+                        </div>
+                        <div>
+                          <small className="text-muted">45% of exits</small>
+                        </div>
                       </div>
-                      <div className="card-body">
-                        <div className="row g-2">
-                          {['Engineering', 'Marketing', 'Sales', 'HR', 'Finance'].map((dept, idx) => (
-                            <div key={idx} className="col-12 col-md-6">
-                              <div className="d-flex justify-content-between align-items-center mb-2">
-                                <span className="small">{dept}</span>
-                                <span className="badge bg-info">{idx + 2} exits</span>
-                              </div>
-                              <div className="progress" style={{height: '6px'}}>
-                                <div className="progress-bar bg-info" style={{width: `${(idx + 2) * 12}%`}}></div>
-                              </div>
-                            </div>
-                          ))}
+                    </div>
+                  </div>
+
+                  {/* Avg. Notice Period Card */}
+                  <div className="col-12 col-md-4">
+                    <div className="card border shadow-sm h-100" style={{borderRadius: '6px'}}>
+                      <div className="card-body p-3">
+                        <div className="d-flex align-items-start mb-3">
+                          <div className="bg-danger-subtle rounded p-2 me-2">
+                            <Clock size={20} className="text-danger" />
+                          </div>
+                          <div className="flex-grow-1">
+                            <h6 className="text-muted small mb-1 fw-medium">Avg. Notice Period</h6>
+                          </div>
+                        </div>
+                        <div className="mb-2">
+                          <h3 className="fw-bold text-danger mb-0" style={{fontSize: '2rem'}}>38 days</h3>
+                        </div>
+                        <div className="d-flex align-items-center">
+                          <ArrowUp size={14} className="text-danger me-1" style={{transform: 'rotate(180deg)'}} />
+                          <small className="text-muted">-5 days from last period</small>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Exit Reasons Breakdown Section */}
+                <div className="card border shadow-sm mb-4" style={{borderRadius: '6px'}}>
+                  <div className="card-header bg-transparent border-bottom py-2 px-3" style={{cursor: 'pointer'}}>
+                    <div className="d-flex justify-content-between align-items-center">
+                      <h6 className="mb-0 fw-medium text-dark">Exit Reasons Breakdown</h6>
+                      <i className="bi bi-chevron-down text-muted"></i>
+                    </div>
+                  </div>
+                  <div className="card-body p-3">
+                    <div className="row g-3">
+                      {[
+                        {reason: 'Better Opportunity', percentage: 45},
+                        {reason: 'Career Growth', percentage: 25},
+                        {reason: 'Higher Studies', percentage: 15},
+                        {reason: 'Relocation', percentage: 10},
+                        {reason: 'Personal Reasons', percentage: 5}
+                      ].map((item, idx) => (
+                        <div key={idx} className="col-12 col-md-6">
+                          <div className="d-flex justify-content-between align-items-center mb-2">
+                            <span className="small text-muted">{item.reason}</span>
+                            <span className="badge bg-primary-subtle text-primary">{item.percentage}%</span>
+                          </div>
+                          <div className="progress" style={{height: '8px', borderRadius: '4px'}}>
+                            <div 
+                              className="progress-bar bg-primary" 
+                              role="progressbar" 
+                              style={{width: `${item.percentage}%`, borderRadius: '4px'}}
+                              aria-valuenow={item.percentage} 
+                              aria-valuemin="0" 
+                              aria-valuemax="100"
+                            ></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Department-wise Exit Distribution Section */}
+                <div className="card border shadow-sm" style={{borderRadius: '6px'}}>
+                  <div className="card-header bg-transparent border-bottom py-2 px-3">
+                    <h6 className="mb-0 fw-medium text-dark">Department-wise Exit Distribution</h6>
+                  </div>
+                  <div className="card-body p-3">
+                    <div className="row g-3">
+                      {[
+                        {dept: 'Engineering', exits: 12},
+                        {dept: 'Marketing', exits: 8},
+                        {dept: 'Sales', exits: 6},
+                        {dept: 'HR', exits: 4},
+                        {dept: 'Finance', exits: 3}
+                      ].map((item, idx) => (
+                        <div key={idx} className="col-12 col-md-6">
+                          <div className="d-flex justify-content-between align-items-center mb-2">
+                            <span className="small text-muted">{item.dept}</span>
+                            <span className="badge bg-info-subtle text-info">{item.exits} exits</span>
+                          </div>
+                          <div className="progress" style={{height: '8px', borderRadius: '4px'}}>
+                            <div 
+                              className="progress-bar bg-info" 
+                              role="progressbar" 
+                              style={{width: `${(item.exits / 12) * 100}%`, borderRadius: '4px'}}
+                              aria-valuenow={item.exits} 
+                              aria-valuemin="0" 
+                              aria-valuemax="12"
+                            ></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>Close</button>
-                <button type="button" className="btn btn-primary">
+              <div className="modal-footer bg-light border-top py-3 px-4">
+                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={handleCloseModal}>Close</button>
+                <button type="button" className="btn btn-primary btn-sm">
                   <Download size={14} className="me-1" />
                   Export Report
                 </button>
@@ -1821,12 +2776,6 @@ const ExitManagement = () => {
         </div>
       )}
     </div>
-  );
-
-  return (
-    <>
-      {mainContent}
-    </>
   );
 };
 

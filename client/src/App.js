@@ -887,7 +887,7 @@ const App = () => {
         }
       />
       <Route
-        path='/attendance/payroll-integration'
+        path='/payroll/payroll-integration'
         element={
           <ProtectedRoute>
             <RecruiterDashboardLayout>

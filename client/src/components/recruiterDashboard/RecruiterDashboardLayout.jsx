@@ -542,7 +542,7 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
                       <Icon icon='heroicons:user-group' className='icon text-sm me-2 fs-5' />
                       Buddy/Mentor Program
                     </NavLink>
-                  </li>d
+                  </li>
                 </ul>
               </li>
 
@@ -622,12 +622,7 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
                     </NavLink>
                   </li>
 
-                  <li>
-                    <NavLink to='/attendance/payroll-integration' className={(navData) => navData.isActive ? "active-page" : ""}>
-                      <Icon icon='heroicons:gift' className='icon text-sm me-2 fs-5' />
-                      Payroll Integration
-                    </NavLink>
-                  </li>
+                  
                   <li>
                     <NavLink to='/attendance/reports' className={(navData) => navData.isActive ? "active-page" : ""}>
                       <Icon icon='heroicons:chart-bar' className='icon text-sm me-2 fs-5' />
@@ -741,7 +736,13 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
                       Payroll Reports
                     </NavLink>
                   </li>
-                </ul>
+                  <li>
+                    <NavLink to='/payroll/payroll-integration' className={(navData) => navData.isActive ? "active-page" : ""}>
+                      <Icon icon='heroicons:gift' className='icon text-sm me-2 fs-5' />
+                      Payroll Integration
+                    </NavLink>
+                  </li>
+                </ul> 
               </li>
 
 
