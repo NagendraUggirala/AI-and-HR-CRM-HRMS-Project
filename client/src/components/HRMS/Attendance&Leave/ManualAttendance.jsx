@@ -1,8 +1,8 @@
- 
+
 import React, { useState } from "react";
 import Breadcrump from "../../Layout/Breadcrump";
- 
- 
+
+
 const ManualAttendance = () => {
   const [attendance, setAttendance] = useState([
     { id: 1, name: "Abhilash Gurrampally", code: "LEV029", P: 0, A: 0, H: 0, W: 0, CO: 0, CL: 0, LW: 0 },
@@ -11,26 +11,26 @@ const ManualAttendance = () => {
     { id: 4, name: "Bogala Chandramouli", code: "LEV027", P: 0, A: 0, H: 0, W: 0, CO: 0, CL: 0, LW: 0 },
     { id: 5, name: "Burri Gowtham", code: "LEV023", P: 0, A: 0, H: 0, W: 0, CO: 0, CL: 0, LW: 0 },
   ]);
- 
+
   const [financialYear, setFinancialYear] = useState("SEP-2025");
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
- 
+
   const handleYearChange = (direction) => {
-    const months = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+    const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
     const [currentMonth, currentYearStr] = financialYear.split("-");
     let year = parseInt(currentYearStr);
     let monthIndex = months.indexOf(currentMonth);
- 
+
     if (direction === "prev") {
       if (monthIndex === 0) { monthIndex = 11; year--; } else { monthIndex--; }
     } else if (direction === "next") {
       if (monthIndex === 11) { monthIndex = 0; year++; } else { monthIndex++; }
     }
- 
+
     setFinancialYear(`${months[monthIndex]}-${year}`);
   };
- 
+
   const handleChange = (id, field, value) => {
     setAttendance((prev) =>
       prev.map((row) =>
@@ -38,16 +38,16 @@ const ManualAttendance = () => {
       )
     );
   };
- 
+
   const handleSave = (id) => {
     const emp = attendance.find((e) => e.id === id);
     alert(`✅ Attendance saved for ${emp.name}`);
   };
- 
+
   return (
     <div className="mt-4">
-         
-      <div className="d-flex justify-content-between align-items-center mb-3 mt-3">
+
+      <div className="d-flex justify-content-between align-items-center">
         <div>
           <h4 className="fw-bold mb-1">Manual Attendance</h4>
           <p className="text-muted mb-0">
@@ -76,40 +76,60 @@ const ManualAttendance = () => {
           </ul>
         </div>
       </div>
- 
+
       {/* Filters */}
-      <div className="row mb-3">
-        <div className="col-md-3">
-          <label className="form-label small">Business Unit</label>
-          <select className="form-select form-select-sm">
-            <option>All Units</option>
-          </select>
-        </div>
-        <div className="col-md-3">
-          <label className="form-label small">Location</label>
-          <select className="form-select form-select-sm">
-            <option>All Locations</option>
-          </select>
-        </div>
-        <div className="col-md-3">
-          <label className="form-label small">Cost Center</label>
-          <select className="form-select form-select-sm">
-            <option>All Cost Centers</option>
-          </select>
-        </div>
-        <div className="col-md-3">
-          <label className="form-label small">Department</label>
-          <select className="form-select form-select-sm">
-            <option>All Departments</option>
-          </select>
+      <div
+        className="mb-3 p-3 rounded"
+        style={{
+          backgroundColor: "#f8fafc",
+          border: "1px solid #e5e7eb",
+        }}
+      >
+        <div className="row g-3">
+          <div className="col-md-3">
+            <label className="form-label small fw-semibold">
+              Business Unit
+            </label>
+            <select className="form-select">
+              <option>All Units</option>
+            </select>
+          </div>
+
+          <div className="col-md-3">
+            <label className="form-label small fw-semibold">
+              Location
+            </label>
+            <select className="form-select">
+              <option>All Locations</option>
+            </select>
+          </div>
+
+          <div className="col-md-3">
+            <label className="form-label small fw-semibold">
+              Cost Center
+            </label>
+            <select className="form-select">
+              <option>All Cost Centers</option>
+            </select>
+          </div>
+
+          <div className="col-md-3">
+            <label className="form-label small fw-semibold">
+              Department
+            </label>
+            <select className="form-select">
+              <option>All Departments</option>
+            </select>
+          </div>
         </div>
       </div>
- 
+
+
       {/* Month Selector */}
       <div className="d-flex align-items-center mb-3 gap-3">
         <div className="d-flex align-items-center border rounded overflow-hidden" style={{ height: "38px" }}>
-          <button 
-            className="btn btn-secondary border-0 rounded-0" 
+          <button
+            className="btn btn-secondary border-0 rounded-0"
             onClick={() => handleYearChange("prev")}
             style={{ height: "38px", width: "38px" }}
           >
@@ -118,8 +138,8 @@ const ManualAttendance = () => {
           <div className="px-4 py-2 bg-light fw-semibold text-center d-flex align-items-center justify-content-center" style={{ minWidth: "100px" }}>
             {financialYear}
           </div>
-          <button 
-            className="btn btn-secondary border-0 rounded-0" 
+          <button
+            className="btn btn-secondary border-0 rounded-0"
             onClick={() => handleYearChange("next")}
             style={{ height: "38px", width: "38px" }}
           >
@@ -128,10 +148,10 @@ const ManualAttendance = () => {
         </div>
 
         <div className="input-group" style={{ width: "250px" }}>
-          <input 
-            type="text" 
-            className="form-control" 
-            defaultValue="All Employees" 
+          <input
+            type="text"
+            className="form-control"
+            defaultValue="All Employees"
             style={{ height: "38px" }}
           />
           <button className="btn btn-primary" style={{ height: "38px" }}>
@@ -139,7 +159,7 @@ const ManualAttendance = () => {
           </button>
         </div>
       </div>
- 
+
       {/* Attendance Table */}
       <table className="table table-bordered align-middle text-center">
         <thead className="table-light">
@@ -178,14 +198,14 @@ const ManualAttendance = () => {
           ))}
         </tbody>
       </table>
- 
+
       {/* Pagination */}
       <div className="d-flex justify-content-between mt-3">
         <button className="btn btn-outline-secondary btn-sm">Previous</button>
         <span className="small">Page 1 of 1</span>
         <button className="btn btn-outline-secondary btn-sm">Next</button>
       </div>
- 
+
       {/* ✅ Download Attendance Modal */}
       {showDownloadModal && (
         <div className="modal fade show d-block" tabIndex="-1" style={{ background: "rgba(0,0,0,0.5)" }}>
@@ -220,7 +240,7 @@ const ManualAttendance = () => {
           </div>
         </div>
       )}
- 
+
       {/* ✅ Upload Attendance Modal */}
       {showUploadModal && (
         <div className="modal fade show d-block" tabIndex="-1" style={{ background: "rgba(0,0,0,0.5)" }}>
@@ -250,7 +270,6 @@ const ManualAttendance = () => {
     </div>
   );
 };
- 
+
 export default ManualAttendance;
- 
- 
+

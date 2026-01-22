@@ -10,9 +10,55 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Load company logo from localStorage, fallback to default
+  const [companyLogo, setCompanyLogo] = useState(() => {
+    const savedLogo = localStorage.getItem('companyLogo');
+    if (savedLogo) {
+      try {
+        const logoData = JSON.parse(savedLogo);
+        return logoData.preview || 'assets/images/asset/NewLogo.png';
+      } catch (e) {
+        return 'assets/images/asset/NewLogo.png';
+      }
+    }
+    return 'assets/images/asset/NewLogo.png';
+  });
+
   const toggleAssessmentMenu = () => {
     setAssessmentMenuOpen(!assessmentMenuOpen);
   };
+
+  // Listen for logo updates from CompanySettings
+  useEffect(() => {
+    const handleLogoUpdate = () => {
+      const savedLogo = localStorage.getItem('companyLogo');
+      if (savedLogo) {
+        try {
+          const logoData = JSON.parse(savedLogo);
+          setCompanyLogo(logoData.preview || 'assets/images/asset/NewLogo.png');
+        } catch (e) {
+          setCompanyLogo('assets/images/asset/NewLogo.png');
+        }
+      } else {
+        setCompanyLogo('assets/images/asset/NewLogo.png');
+      }
+    };
+
+    // Listen for custom event
+    window.addEventListener('companyLogoUpdated', handleLogoUpdate);
+    
+    // Also listen for storage events (in case logo is updated in another tab)
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'companyLogo') {
+        handleLogoUpdate();
+      }
+    });
+
+    return () => {
+      window.removeEventListener('companyLogoUpdated', handleLogoUpdate);
+      window.removeEventListener('storage', handleLogoUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     const handleDropdownClick = (event) => {
@@ -204,10 +250,8 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
           </button>
           <div>
             <Link to='/dashboard' className='sidebar-logo'>
-              <img src='assets/images/auth/auth-img.png' alt='site logo' className='light-logo' />
-
-
-              <img src='assets/images/auth/auth-img.png' alt='site logo' className='logo-icon' />
+              <img src={companyLogo} alt='site logo' className='light-logo' />
+              <img src={companyLogo} alt='site logo' className='logo-icon' />
             </Link>
           </div>
           <div className='sidebar-menu-area'>

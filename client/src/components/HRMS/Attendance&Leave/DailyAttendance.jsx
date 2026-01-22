@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import Breadcrump from "../../Layout/Breadcrump";
 
@@ -18,7 +18,17 @@ const DailyAttendance = () => {
     search: "",
   });
   const [selectedPunchFilter, setSelectedPunchFilter] = useState("all");
-  const [date, setDate] = useState("08-Oct-2025");
+  
+  // Initialize date to today
+  const getFormattedDate = (dateObj) => {
+    const day = String(dateObj.getDate()).padStart(2, "0");
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = monthNames[dateObj.getMonth()];
+    const year = dateObj.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+  
+  const [date, setDate] = useState(getFormattedDate(new Date()));
   const [showPunchModal, setShowPunchModal] = useState(false);
   const [showAddPunchModal, setShowAddPunchModal] = useState(false);
   const [punchDate, setPunchDate] = useState("");
@@ -26,9 +36,22 @@ const DailyAttendance = () => {
   const [punchType, setPunchType] = useState("selfie");
   const [remarks, setRemarks] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [employeePunches, setEmployeePunches] = useState({});
+
+  // Prevent body scroll when modals are open
+  useEffect(() => {
+    if (showPunchModal || showAddPunchModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showPunchModal, showAddPunchModal]);
 
   // Dummy Data
-  const attendanceData = [
+  const [attendanceData, setAttendanceData] = useState([
     {
       id: 209187,
       name: "Anusha Engilala",
@@ -37,6 +60,8 @@ const DailyAttendance = () => {
       status: "Present",
       note: "Present marked as at least one time-punch was found",
       location: "Hyderabad",
+      businessUnit: "Development",
+      costCenter: "Cost-1",
       designation: "Associate Software Engineer",
       department: "Technical Support",
       punchIn: "09:17A",
@@ -44,12 +69,146 @@ const DailyAttendance = () => {
       punchType: "Selfie",
       timeline: { start: "03:00A", general: "09:00A - 06:00P", end: "12:00A" },
     },
-  ];
+    {
+      id: 209188,
+      name: "Ravi Kumar",
+      code: "LEV040",
+      date: "08-Oct-2025",
+      status: "Present",
+      note: "Employee completed full shift",
+      location: "Bengaluru",
+      businessUnit: "Development",
+      costCenter: "Cost-1",
+      designation: "Frontend Developer",
+      department: "Engineering",
+      punchIn: "09:05A",
+      punchOut: "06:12P",
+      punchType: "Manual",
+      timeline: { start: "03:00A", general: "09:00A - 06:00P", end: "12:00A" },
+    },
+    {
+      id: 209189,
+      name: "Sneha Reddy",
+      code: "LEV041",
+      date: "08-Oct-2025",
+      status: "Late",
+      note: "Late punch-in recorded",
+      location: "Chennai",
+      businessUnit: "Support",
+      costCenter: "Cost-2",
+      designation: "QA Engineer",
+      department: "Quality Assurance",
+      punchIn: "09:42A",
+      punchOut: "06:00P",
+      punchType: "Selfie",
+      timeline: { start: "03:00A", general: "09:00A - 06:00P", end: "12:00A" },
+    },
+    {
+      id: 209190,
+      name: "Arjun Patel",
+      code: "LEV042",
+      date: "08-Oct-2025",
+      status: "Half Day",
+      note: "Employee worked half day",
+      location: "Pune",
+      businessUnit: "Development",
+      costCenter: "Cost-1",
+      designation: "Backend Developer",
+      department: "Engineering",
+      punchIn: "09:10A",
+      punchOut: "01:45P",
+      punchType: "Manual",
+      timeline: { start: "03:00A", general: "09:00A - 06:00P", end: "12:00A" },
+    },
+    {
+      id: 209191,
+      name: "Priya Sharma",
+      code: "LEV043",
+      date: "08-Oct-2025",
+      status: "Absent",
+      note: "No punch-in or punch-out found",
+      location: "Delhi",
+      businessUnit: "Support",
+      costCenter: "Cost-2",
+      designation: "HR Executive",
+      department: "Human Resources",
+      punchIn: "--",
+      punchOut: "--",
+      punchType: "-",
+      timeline: { start: "03:00A", general: "09:00A - 06:00P", end: "12:00A" },
+    },
+  ]);
+
+  // Initialize employee punches data
+  useEffect(() => {
+    setEmployeePunches((prev) => {
+      const updated = { ...prev };
+      attendanceData.forEach((emp) => {
+        if (!updated[emp.id]) {
+          updated[emp.id] = [
+            { time: emp.punchIn !== "--" ? emp.punchIn : "08:40:16", type: `${emp.punchType} Punch`, direction: "IN" },
+            { time: emp.punchOut !== "--" ? emp.punchOut : "18:00:12", type: `${emp.punchType} Punch`, direction: "OUT" },
+          ];
+        }
+      });
+      return updated;
+    });
+  }, [attendanceData.length]);
+
+
 
   const businessUnit = ["All Units", "Development", "Support"];
-  const locations = ["All", "Hyderabad", "Chennai"];
+  const locations = ["All", "Hyderabad", "Chennai", "Bengaluru", "Pune", "Delhi"];
   const costCenters = ["All", "Cost-1", "Cost-2"];
-  const departments = ["All", "Technical", "Support", "HR"];
+  const departments = ["All", "Technical", "Support", "HR", "Engineering", "Quality Assurance", "Technical Support"];
+
+  // Filter attendance data
+  const filteredAttendanceData = attendanceData.filter((emp) => {
+    // Business Unit filter
+    if (filter.businessUnit !== "All Units" && emp.businessUnit !== filter.businessUnit) {
+      return false;
+    }
+
+    // Location filter
+    if (filter.location !== "All" && emp.location !== filter.location) {
+      return false;
+    }
+
+    // Cost Center filter
+    if (filter.costCenter !== "All" && emp.costCenter !== filter.costCenter) {
+      return false;
+    }
+
+    // Department filter
+    if (filter.department !== "All" && emp.department !== filter.department) {
+      return false;
+    }
+
+    // Search filter
+    if (filter.search) {
+      const searchLower = filter.search.toLowerCase();
+      if (
+        !emp.name.toLowerCase().includes(searchLower) &&
+        !emp.code.toLowerCase().includes(searchLower) &&
+        !emp.designation.toLowerCase().includes(searchLower)
+      ) {
+        return false;
+      }
+    }
+
+    // Status filter
+    if (selectedPunchFilter === "late" && emp.status !== "Late") {
+      return false;
+    }
+    if (selectedPunchFilter === "absent" && emp.status !== "Absent") {
+      return false;
+    }
+    if (selectedPunchFilter === "nopunch" && (emp.punchIn !== "--" && emp.punchOut !== "--")) {
+      return false;
+    }
+
+    return true;
+  });
 
   // Filter Change
   const handleFilterChange = (e) => {
@@ -58,25 +217,105 @@ const DailyAttendance = () => {
   };
 
   const handleDateChange = (type) => {
-    setDate(type === "next" ? "09-Oct-2025" : "07-Oct-2025");
+    // Parse current date (format: DD-MMM-YYYY)
+    const dateParts = date.split("-");
+    const day = parseInt(dateParts[0]);
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = monthNames.indexOf(dateParts[1]);
+    const year = parseInt(dateParts[2]);
+    
+    const currentDate = new Date(year, month, day);
+    const newDate = new Date(currentDate);
+    
+    if (type === "next") {
+      newDate.setDate(newDate.getDate() + 1);
+    } else {
+      newDate.setDate(newDate.getDate() - 1);
+    }
+    
+    setDate(getFormattedDate(newDate));
   };
 
   const handleView = () => {
     toast.info("Filter applied successfully");
   };
 
-  const handleFileUpload = () => {
-    toast.success("File uploaded successfully");
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target.result;
+      const lines = text.split("\n").filter((line) => line.trim() !== "");
+      const headers = lines[0].split(",").map((h) => h.trim());
+      const rows = lines.slice(1);
+
+      const importedData = rows.map((line, idx) => {
+        const values = line.split(",").map((v) => v.trim());
+        const record = {};
+        headers.forEach((header, i) => {
+          record[header] = values[i] || "";
+        });
+
+        return {
+          id: attendanceData.length + idx + 1,
+          name: record.name || `Employee ${idx + 1}`,
+          code: record.code || `EMP${idx + 1}`,
+          date: date,
+          status: record.status || "Present",
+          note: record.note || "",
+          location: record.location || "All",
+          businessUnit: record.businessUnit || "All Units",
+          costCenter: record.costCenter || "All",
+          designation: record.designation || "",
+          department: record.department || "All",
+          punchIn: record.punchIn || "--",
+          punchOut: record.punchOut || "--",
+          punchType: record.punchType || "-",
+          timeline: { start: "03:00A", general: "09:00A - 06:00P", end: "12:00A" },
+        };
+      });
+
+      setAttendanceData((prev) => [...prev, ...importedData]);
+      toast.success("File uploaded successfully");
+    };
+
+    reader.readAsText(file);
   };
 
   const handleExport = () => {
+    if (!filteredAttendanceData.length) {
+      toast.error("No data to export!");
+      return;
+    }
+
+    const headers = ["id", "name", "code", "date", "status", "location", "designation", "department", "punchIn", "punchOut", "punchType"];
+    const csvRows = [headers.join(",")];
+
+    filteredAttendanceData.forEach((row) => {
+      const values = headers.map((header) => {
+        const val = row[header] ? row[header].toString() : "";
+        return `"${val.replace(/"/g, '""')}"`;
+      });
+      csvRows.push(values.join(","));
+    });
+
+    const csvString = csvRows.join("\n");
+    const blob = new Blob([csvString], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `daily_attendance_${date.replace(/-/g, "_")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
     toast.success("Exported successfully");
   };
 
   return (
-    <div className="page-content" style={{ padding: "25px 0" }}>
+    <div className="page-content">
       <ToastContainer />
-      
+
       <div className="container-fluid">
         {/* Header */}
         <div className="d-md-flex d-block align-items-center justify-content-between mb-3 mt-3">
@@ -145,49 +384,66 @@ const DailyAttendance = () => {
         </div>
 
         {/* Radio Filters */}
-        <div className="mt-3">
+        <div className="mt-3 d-flex flex-wrap gap-3">
           {[
             { label: "Show All", value: "all" },
             { label: "Late Coming Only", value: "late" },
             { label: "Absent Only", value: "absent" },
             { label: "No Punches", value: "nopunch" },
           ].map((f) => (
-            <div key={f.value} className="form-check form-check-inline">
+            <div key={f.value}>
               <input
                 type="radio"
+                id={`filter-${f.value}`}
                 name="selectedPunchFilter"
                 value={f.value}
-                className="form-check-input"
+                className="d-none"
                 checked={selectedPunchFilter === f.value}
                 onChange={(e) => setSelectedPunchFilter(e.target.value)}
               />
-              <label className="form-check-label">{f.label}</label>
+              <label
+                htmlFor={`filter-${f.value}`}
+                className={`px-3 py-1 rounded-pill border small cursor-pointer
+          ${selectedPunchFilter === f.value
+                    ? "bg-primary text-white border-primary"
+                    : "bg-light text-dark"
+                  }`}
+                style={{ cursor: "pointer" }}
+              >
+                {f.label}
+              </label>
             </div>
           ))}
         </div>
 
         {/* Date Navigation + Search */}
-        <div className="d-flex gap-3 mt-3">
+        <div className="d-flex align-items-center  mt-3 gap-3 flex-wrap">
+          {/* Date Navigation */}
           <div
-            className="d-inline-flex border rounded overflow-hidden"
-            style={{ height: "35px" }}
+            className="d-flex align-items-center border rounded overflow-hidden"
+            style={{ height: "40px" }}
           >
             <button
-              className="btn btn-primary"
+              className="btn btn-primary h-100 px-3"
               onClick={() => handleDateChange("prev")}
             >
-              <i className="fe fe-arrow-left-circle"></i>
+              <i className="fa fa-arrow-left"></i>
             </button>
-            <div className="px-4 py-2 bg-light fw-semibold">{date}</div>
+
+            <div className="px-4 bg-light fw-semibold d-flex align-items-center h-100">
+              {date}
+            </div>
+
             <button
-              className="btn btn-primary"
+              className="btn btn-primary h-100 px-3"
               onClick={() => handleDateChange("next")}
             >
-              <i className="fe fe-arrow-right-circle"></i>
+              <i className="fa fa-arrow-right"></i>
             </button>
           </div>
 
-          <div className="input-group w-25">
+          {/* Search + View */}
+          <div className="input-group" style={{ maxWidth: "320px", height: "40px" }}>
             <input
               type="text"
               className="form-control"
@@ -197,137 +453,171 @@ const DailyAttendance = () => {
               onChange={handleFilterChange}
             />
             <button className="btn btn-primary" onClick={handleView}>
-              <i className="fe fe-search"></i> View
+              <i className="fa fa-search me-1"></i> View
             </button>
           </div>
         </div>
 
         {/* Attendance Cards */}
         <div className="mt-4">
-          {attendanceData.map((emp) => (
+          {filteredAttendanceData.length > 0 ? (
+            filteredAttendanceData.map((emp) => (
             <div
               key={emp.id}
               className="card mb-3 shadow-sm"
-              style={{ width: "100%", borderRadius: 10 }}
+              style={{ borderRadius: 12 }}
             >
               <div className="card-body">
-                <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap">
-                  <div className="text-dark">
-                    <strong>{emp.name}</strong> ({emp.code})
+
+                {/* ===== Header ===== */}
+                <div className="d-flex justify-content-between align-items-center flex-wrap mb-3">
+                  <div className="fw-semibold text-dark">
+                    {emp.name} <span className="text-muted">({emp.code})</span>
                   </div>
-                  <div className="text-dark d-flex flex-wrap">
-                    <span className="me-3">
-                      <i className="fe fe-map-pin text-danger me-1"></i>
+
+                  <div className="d-flex align-items-center flex-wrap gap-3 text-dark">
+                    <span>
+                      <i className="fa-solid fa-location-dot text-danger me-1"></i>
                       {emp.location}
                     </span>
-                    <span className="me-3">
-                      <i className="fe fe-briefcase text-warning me-1"></i>
+                    <span>
+                      <i className="fa-solid fa-briefcase text-warning me-1"></i>
                       {emp.designation}
                     </span>
-                    <span className="me-3">
-                      <i className="fe fe-home text-primary me-1"></i>
+                    <span>
+                      <i className="fa-solid fa-building text-primary me-1"></i>
                       {emp.department}
                     </span>
                   </div>
                 </div>
 
-                {/* Timeline */}
-                <div className="border-top mt-2 pt-2">
+                {/* ===== Timeline Section ===== */}
+                <div className="border-top pt-3">
                   <div className="row align-items-center">
+
+                    {/* Left Info */}
                     <div className="col-md-3 mb-2">
-                      <span className="text-primary">{emp.date}</span>
-                      <br />
+                      <div className="text-primary fw-semibold">{emp.date}</div>
                       <small>
                         <strong>{emp.status}</strong>
                         <br />
                         {emp.note}
                       </small>
                     </div>
+
+                    {/* Timeline */}
                     <div className="col-md-6 mb-2">
-                      <div className="text-center text-dark mb-1">
-                        <small>General</small>
+                      <div className="text-center mb-1">
+                        <small className="text-muted">General</small>
                       </div>
-                      <div className="d-flex">
-                        <div style={{ width: "15%" }}>
+
+                      <div className="d-flex align-items-center">
+                        {/* Start */}
+                        <div className="text-start" style={{ width: "15%" }}>
                           <div className="small">{emp.timeline.start}</div>
-                          <div
-                            className="bg-success"
-                            style={{ height: 5 }}
-                          ></div>
-                          <div className="small text-primary mt-1">
-                            {emp.punchIn}
-                          </div>
+                          <div className="bg-success rounded" style={{ height: 5 }}></div>
+                          <div className="small text-primary mt-1">{emp.punchIn}</div>
                         </div>
+
+                        {/* Middle */}
                         <div style={{ width: "70%" }}>
-                          <div className="d-flex justify-content-between">
-                            <div className="small">09:00A</div>
-                            <div className="small">06:00P</div>
+                          <div className="d-flex justify-content-between small text-muted">
+                            <span>09:00A</span>
+                            <span>06:00P</span>
                           </div>
-                          <div
-                            className="bg-primary"
-                            style={{ height: 5 }}
-                          ></div>
+                          <div className="bg-primary rounded" style={{ height: 5 }}></div>
                         </div>
-                        <div style={{ width: "15%" }}>
-                          <div className="small text-end">
-                            {emp.timeline.end}
-                          </div>
-                          <div
-                            className="bg-warning"
-                            style={{ height: 5 }}
-                          ></div>
-                          <div className="small text-end text-success mt-1">
+
+                        {/* End */}
+                        <div className="text-end" style={{ width: "15%" }}>
+                          <div className="small">{emp.timeline.end}</div>
+                          <div className="bg-warning rounded" style={{ height: 5 }}></div>
+                          <div className="small text-success mt-1">
                             {emp.punchOut} ({emp.punchType})
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="col-md-3 d-flex gap-3 justify-content-end">
-                      <div className="text-start">
+                    {/* Right Actions */}
+                    <div className="col-md-3 d-flex justify-content-end align-items-center gap-3">
+                      <div>
                         In-Time:{" "}
                         <strong className="text-primary">8 h 35 m</strong>
                       </div>
-                      <div className="text-end">
+
+                      <div className="d-flex">
                         <button
-                          className="btn btn-outline-success rounded-pill btn-sm me-2"
+                          className="btn btn-outline-success rounded-circle btn-sm me-2"
                           onClick={() => {
                             setSelectedEmployee(emp);
+                            setPunchDate(new Date().toISOString().split("T")[0]);
+                            setPunchTime({ hh: "", mm: "", ss: "" });
+                            setRemarks("");
+                            setPunchType("selfie");
                             setShowAddPunchModal(true);
                           }}
                         >
-                          <i className="fe fe-plus"></i>
+                          <i className="fa-solid fa-plus"></i>
                         </button>
+
                         <button
-                          className="btn btn-outline-info rounded-pill btn-sm"
+                          className="btn btn-outline-info rounded-circle btn-sm"
                           onClick={() => {
                             setSelectedEmployee(emp);
                             setShowPunchModal(true);
                           }}
                         >
-                          <i className="fe fe-more-horizontal"></i>
+                          <i className="fa-solid fa-ellipsis"></i>
                         </button>
                       </div>
                     </div>
+
                   </div>
                 </div>
+
               </div>
             </div>
-          ))}
+            ))
+          ) : (
+            <div className="card p-4 text-center">
+              <p className="text-muted mb-0">No attendance records found for the selected filters.</p>
+            </div>
+          )}
         </div>
 
         {/* Punch Modal */}
         {showPunchModal && selectedEmployee && (
           <div
             className="modal fade show d-block"
-            style={{ background: "rgba(0,0,0,0.5)" }}
+            style={{ 
+              background: "rgba(0,0,0,0.5)",
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              zIndex: 1055
+            }}
+            tabIndex="-1"
+            role="dialog"
+            aria-modal="true"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowPunchModal(false);
+              }
+            }}
           >
-            <div className="modal-dialog modal-lg">
+            <div 
+              className="modal-dialog modal-md modal-dialog-centered"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="modal-content">
+
+                {/* ===== Header ===== */}
                 <div className="modal-header">
-                  <h5 className="modal-title">
-                    All Punches - {selectedEmployee.name} (
-                    {selectedEmployee.code})
+                  <h5 className="modal-title fw-semibold">
+                    All Punches - {selectedEmployee.name} ({selectedEmployee.code})
                   </h5>
                   <button
                     type="button"
@@ -335,50 +625,51 @@ const DailyAttendance = () => {
                     onClick={() => setShowPunchModal(false)}
                   ></button>
                 </div>
+
+                {/* ===== Body ===== */}
                 <div className="modal-body">
-                  <ul className="list-group list-group-bordered mb-2">
-                    <li className="list-group-item">
-                      <div className="row w-100">
-                        <div className="col-8">
-                          <strong>08:40:16</strong>
-                          <br />
-                          <small>Remote Punch</small>
-                        </div>
-                        <div className="col-2 text-center">
-                          <span className="badge bg-success">IN</span>
-                        </div>
-                        <div className="col-2 text-end">
-                          <button className="btn btn-sm btn-danger">
-                            <i className="fe fe-trash-2"></i>
-                          </button>
-                        </div>
-                      </div>
-                    </li>
-                    <li className="list-group-item">
-                      <div className="row w-100">
-                        <div className="col-8">
-                          <strong>18:00:12</strong>
-                          <br />
-                          <small>Remote Punch</small>
-                        </div>
-                        <div className="col-2 text-center">
-                          <span className="badge bg-warning text-dark">
-                            OUT
-                          </span>
-                        </div>
-                        <div className="col-2 text-end">
-                          <button className="btn btn-sm btn-danger">
-                            <i className="fe fe-trash-2"></i>
-                          </button>
-                        </div>
-                      </div>
-                    </li>
+                  <ul className="list-group mb-3">
+                    {employeePunches[selectedEmployee.id] && employeePunches[selectedEmployee.id].length > 0 ? (
+                      employeePunches[selectedEmployee.id].map((punch, idx) => (
+                        <li key={idx} className="list-group-item d-flex align-items-center justify-content-between">
+                          <div>
+                            <div className="fw-semibold">{punch.time}</div>
+                            <small className="text-muted">{punch.type}</small>
+                          </div>
+                          <div className="d-flex align-items-center gap-3">
+                            <span className={`badge px-3 ${punch.direction === "IN" ? "bg-success" : "bg-warning text-dark"}`}>
+                              {punch.direction}
+                            </span>
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => {
+                                const updatedPunches = employeePunches[selectedEmployee.id].filter((_, i) => i !== idx);
+                                setEmployeePunches((prev) => ({
+                                  ...prev,
+                                  [selectedEmployee.id]: updatedPunches,
+                                }));
+                                toast.success("Punch deleted successfully");
+                              }}
+                            >
+                              <i className="fa-solid fa-trash"></i>
+                            </button>
+                          </div>
+                        </li>
+                      ))
+                    ) : (
+                      <li className="list-group-item text-center text-muted">
+                        No punches found for this employee
+                      </li>
+                    )}
                   </ul>
-                  <div className="mt-3 small text-dark">
-                    <i className="fe fe-info me-1"></i> All punches for selected
-                    date are shown.
+
+                  <div className="small text-muted d-flex align-items-center">
+                    <i className="fa-solid fa-circle-info me-2 text-primary"></i>
+                    All punches for selected date are shown.
                   </div>
                 </div>
+
+                {/* ===== Footer ===== */}
                 <div className="modal-footer">
                   <button
                     className="btn btn-secondary"
@@ -387,25 +678,52 @@ const DailyAttendance = () => {
                     Close
                   </button>
                 </div>
+
               </div>
             </div>
           </div>
+
         )}
 
         {/* Add Punch Modal */}
         {showAddPunchModal && selectedEmployee && (
           <div
             className="modal fade show d-block"
-            style={{ background: "rgba(0,0,0,0.5)" }}
+            style={{ 
+              background: "rgba(0,0,0,0.5)",
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              zIndex: 1055
+            }}
+            tabIndex="-1"
+            role="dialog"
+            aria-modal="true"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowAddPunchModal(false);
+              }
+            }}
           >
-            <div className="modal-dialog modal-md">
+            <div 
+              className="modal-dialog modal-md modal-dialog-centered"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="modal-content">
                 <div className="modal-header">
                   <h5 className="modal-title">Add Time Punch </h5>
                   <button
                     type="button"
                     className="btn-close"
-                    onClick={() => setShowAddPunchModal(false)}
+                    onClick={() => {
+                      setShowAddPunchModal(false);
+                      setPunchDate("");
+                      setPunchTime({ hh: "", mm: "", ss: "" });
+                      setRemarks("");
+                      setPunchType("selfie");
+                    }}
                   ></button>
                 </div>
                 <div className="modal-body">
@@ -465,7 +783,27 @@ const DailyAttendance = () => {
                   <div className="row mb-2">
                     <div className="col-md-4">
                       <label className="form-label fw-semibold">
-                        Remarks <span className="text-danger">*</span>{" "}
+                        Punch Type <span className="text-danger">*</span>
+                      </label>
+                    </div>
+                    <div className="col-md-7">
+                      <select
+                        className="form-select"
+                        value={punchType}
+                        onChange={(e) => setPunchType(e.target.value)}
+                      >
+                        {punchTypes.map((type) => (
+                          <option key={type.value} value={type.value}>
+                            {type.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="row mb-2">
+                    <div className="col-md-4">
+                      <label className="form-label fw-semibold">
+                        Remarks
                       </label>
                     </div>
                     <div className="col-md-7">
@@ -475,7 +813,6 @@ const DailyAttendance = () => {
                         placeholder="Enter remarks (optional)"
                         value={remarks}
                         onChange={(e) => setRemarks(e.target.value)}
-                        required
                       />
                     </div>
                   </div>
@@ -494,16 +831,42 @@ const DailyAttendance = () => {
                       <button
                         className="btn btn-success"
                         onClick={() => {
-                          const finalTime = `${punchTime.hh.padStart(
-                            2,
-                            "0"
-                          )}:${punchTime.mm.padStart(
-                            2,
-                            "0"
-                          )}:${punchTime.ss.padStart(2, "0")}`;
+                          // Validation
+                          if (!punchDate) {
+                            toast.error("Please select a punch date");
+                            return;
+                          }
+                          if (!punchTime.hh || !punchTime.mm || !punchTime.ss) {
+                            toast.error("Please enter complete punch time (HH:MM:SS)");
+                            return;
+                          }
+
+                          const finalTime = `${String(punchTime.hh).padStart(2, "0")}:${String(punchTime.mm).padStart(2, "0")}:${String(punchTime.ss).padStart(2, "0")}`;
+                          const punchTypeLabel = punchTypes.find((pt) => pt.value === punchType)?.label || punchType;
+                          
+                          // Add punch to employee's punch list
+                          const newPunch = {
+                            time: finalTime,
+                            type: `${punchTypeLabel} Punch`,
+                            direction: "IN", // You can add logic to determine IN/OUT
+                          };
+
+                          setEmployeePunches((prev) => ({
+                            ...prev,
+                            [selectedEmployee.id]: [
+                              ...(prev[selectedEmployee.id] || []),
+                              newPunch,
+                            ],
+                          }));
+
                           toast.success(
-                            `Punch Added: ${punchDate} ${finalTime} (${punchType})`
+                            `Punch Added: ${punchDate} ${finalTime} (${punchTypeLabel})`
                           );
+                          
+                          // Reset form
+                          setPunchDate("");
+                          setPunchTime({ hh: "", mm: "", ss: "" });
+                          setRemarks("");
                           setShowAddPunchModal(false);
                         }}
                       >

@@ -1071,13 +1071,13 @@ const PayrollProcessingEngine = () => {
               </div>
               <div className="d-flex align-items-center gap-3">
                 <button 
-                  className={`btn ${payrollLocked ? 'btn-success' : 'btn-danger'}`}
+                  className={`btn ${payrollLocked ? 'btn-success' : 'btn-danger'} d-flex align-items-center`}
                   onClick={handleTogglePayrollLock}
                 >
                   <Icon icon={payrollLocked ? "heroicons:lock-open" : "heroicons:lock-closed"} className="me-2" />
                   {payrollLocked ? 'Unlock Payroll' : 'Lock Payroll'}
                 </button>
-                <button className="btn btn-primary" onClick={handleExportReport}>
+                <button className="btn btn-primary d-flex align-items-center" onClick={handleExportReport}>
                   <Icon icon="heroicons:arrow-down-tray" className="me-2" />
                   Export Config
                 </button>
@@ -1159,7 +1159,7 @@ const PayrollProcessingEngine = () => {
             <div className="d-flex justify-content-between align-items-center">
               <h6 className="mb-0">Payroll Schedule</h6>
               <button 
-                className="btn btn-sm btn-outline-primary"
+                className="btn btn-sm btn-outline-primary d-flex align-items-center"
                 onClick={() => setShowCalendarModal(true)}
                 disabled={payrollLocked}
               >
@@ -1197,29 +1197,31 @@ const PayrollProcessingEngine = () => {
                 </select>
               </div>
               <div className="col-12">
-                <div className="form-check">
+                <div>
                   <input 
-                    className="form-check-input"
+                    className="form-check-input" 
                     type="checkbox"
                     checked={payrollConfig.offCycleEnabled}
                     onChange={(e) => handleUpdateConfig('offCycleEnabled', e.target.checked)}
                     disabled={payrollLocked}
+                    id="offCycleEnabled"
                   />
-                  <label className="form-check-label">
+                  <label className="form-check-label" htmlFor="offCycleEnabled">
                     Enable Off-cycle Payroll (Bonuses, Advances, Exit Settlements)
                   </label>
                 </div>
               </div>
               <div className="col-12">
-                <div className="form-check">
+                <div>
                   <input 
                     className="form-check-input"
                     type="checkbox"
                     checked={payrollConfig.advanceScheduling.enabled}
                     onChange={(e) => handleUpdateConfig('advanceScheduling.enabled', e.target.checked)}
                     disabled={payrollLocked}
+                    id="advanceScheduling"
                   />
-                  <label className="form-check-label">
+                  <label className="form-check-label" htmlFor="advanceScheduling">
                     Enable Advance Payroll Scheduling
                   </label>
                 </div>
@@ -1253,15 +1255,16 @@ const PayrollProcessingEngine = () => {
           <div className="card-body">
             <div className="row g-3">
               <div className="col-12">
-                <div className="form-check">
+                <div>
                   <input 
                     className="form-check-input"
                     type="checkbox"
                     checked={payrollConfig.salesConfig.commissionEnabled}
                     onChange={(e) => handleUpdateConfig('salesConfig.commissionEnabled', e.target.checked)}
                     disabled={payrollLocked}
+                    id="commissionEnabled"
                   />
-                  <label className="form-check-label">
+                  <label className="form-check-label" htmlFor="commissionEnabled">
                     Enable Commission Calculation
                   </label>
                 </div>
@@ -1297,74 +1300,78 @@ const PayrollProcessingEngine = () => {
       </div>
 
       {/* Statutory Compliance */}
-    {/* Statutory Compliance */}
-<div className="col-md-6">
-  <div className="card border shadow-none h-100">
-    <div className="card-header bg-transparent border-0">
-      <h6 className="mb-0">Statutory Compliance Settings</h6>
-    </div>
-    <div className="card-body d-flex flex-column">
-      <div className="row g-3 flex-grow-1">
-        <div className="col-md-6">
-          <div className="form-check h-100">
-            <input 
-              className="form-check-input"
-              type="checkbox"
-              checked={payrollConfig.statutorySettings.taxEnabled}
-              onChange={(e) => handleUpdateConfig('statutorySettings.taxEnabled', e.target.checked)}
-              disabled={payrollLocked}
-            />
-            <label className="form-check-label d-block">
-              Tax Calculation
-            </label>
+      <div className="col-md-6">
+        <div className="card border shadow-none h-100">
+          <div className="card-header bg-transparent border-0">
+            <h6 className="mb-0">Statutory Compliance Settings</h6>
           </div>
-        </div>
-        <div className="col-md-6">
-          <div className="form-check h-100">
-            <input 
-              className="form-check-input"
-              type="checkbox"
-              checked={payrollConfig.statutorySettings.epfEnabled}
-              onChange={(e) => handleUpdateConfig('statutorySettings.epfEnabled', e.target.checked)}
-              disabled={payrollLocked}
-            />
-            <label className="form-check-label d-block">
-              EPF Contribution
-            </label>
-          </div>
-        </div>
-        <div className="col-md-6">
-          <div className="form-check h-100">
-            <input 
-              className="form-check-input"
-              type="checkbox"
-              checked={payrollConfig.statutorySettings.esiEnabled}
-              onChange={(e) => handleUpdateConfig('statutorySettings.esiEnabled', e.target.checked)}
-              disabled={payrollLocked}
-            />
-            <label className="form-check-label d-block">
-              ESI Contribution
-            </label>
-          </div>
-        </div>
-        <div className="col-md-6">
-          <div className="form-check h-100">
-            <input 
-              className="form-check-input"
-              type="checkbox"
-              checked={payrollConfig.statutorySettings.tdsEnabled}
-              onChange={(e) => handleUpdateConfig('statutorySettings.tdsEnabled', e.target.checked)}
-              disabled={payrollLocked}
-            />
-            <label className="form-check-label d-block">
-              TDS Deduction
-            </label>
+          <div className="card-body d-flex flex-column">
+            <div className="row g-3 flex-grow-1">
+              <div className="col-md-6">
+                <div className="h-100">
+                  <input 
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={payrollConfig.statutorySettings.taxEnabled}
+                    onChange={(e) => handleUpdateConfig('statutorySettings.taxEnabled', e.target.checked)}
+                    disabled={payrollLocked}
+                    id="taxEnabled"
+                  />
+                  <label className="form-check-label d-block" htmlFor="taxEnabled">
+                    Tax Calculation
+                  </label>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="h-100">
+                  <input 
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={payrollConfig.statutorySettings.epfEnabled}
+                    onChange={(e) => handleUpdateConfig('statutorySettings.epfEnabled', e.target.checked)}
+                    disabled={payrollLocked}
+                    id="epfEnabled"
+                  />
+                  <label className="form-check-label d-block" htmlFor="epfEnabled">
+                    EPF Contribution
+                  </label>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="h-100">
+                  <input 
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={payrollConfig.statutorySettings.esiEnabled}
+                    onChange={(e) => handleUpdateConfig('statutorySettings.esiEnabled', e.target.checked)}
+                    disabled={payrollLocked}
+                    id="esiEnabled"
+                  />
+                  <label className="form-check-label d-block" htmlFor="esiEnabled">
+                    ESI Contribution
+                  </label>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="h-100">
+                  <input 
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={payrollConfig.statutorySettings.tdsEnabled}
+                    onChange={(e) => handleUpdateConfig('statutorySettings.tdsEnabled', e.target.checked)}
+                    disabled={payrollLocked}
+                    id="tdsEnabled"
+                  />
+                  <label className="form-check-label d-block" htmlFor="tdsEnabled">
+                    TDS Deduction
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
+
       {/* Salary Components */}
       <div className="col-12">
         <div className="card border shadow-none">
@@ -1372,7 +1379,7 @@ const PayrollProcessingEngine = () => {
             <div className="d-flex justify-content-between align-items-center">
               <h6 className="mb-0">Salary Component Configuration</h6>
               <button 
-                className="btn btn-sm btn-success" 
+                className="btn btn-sm btn-success d-flex align-items-center" 
                 onClick={() => {
                   setNewSalaryComponent({
                     name: '',
@@ -1467,7 +1474,7 @@ const PayrollProcessingEngine = () => {
           <div className="d-flex gap-2">
             <button 
               onClick={handleRunPayroll}
-              className="btn btn-success"
+              className="btn btn-success d-flex align-items-center"
               disabled={isProcessing || payrollLocked}
             >
               {isProcessing ? (
@@ -1484,14 +1491,14 @@ const PayrollProcessingEngine = () => {
             </button>
             <button 
               onClick={handleRefreshData}
-              className="btn btn-outline-primary"
+              className="btn btn-outline-primary d-flex align-items-center"
             >
               <Icon icon="heroicons:arrow-path" className="me-2" />
               Refresh
             </button>
             <button 
               onClick={handleExportReport}
-              className="btn btn-primary"
+              className="btn btn-primary d-flex align-items-center"
             >
               <Icon icon="heroicons:document-arrow-down" className="me-2" />
               Export
@@ -1562,12 +1569,12 @@ const PayrollProcessingEngine = () => {
                         View Details
                       </button>
                       {run.status === 'processing' && (
-                        <button className="btn btn-sm btn-outline-warning">
+                        <button className="btn btn-sm btn-outline-warning d-flex align-items-center">
                           <Icon icon="heroicons:arrow-path" />
                         </button>
                       )}
                       {run.status === 'completed' && (
-                        <button className="btn btn-sm btn-outline-success" onClick={() => handleExportReport()}>
+                        <button className="btn btn-sm btn-outline-success d-flex align-items-center" onClick={() => handleExportReport()}>
                           <Icon icon="heroicons:document-arrow-down" />
                         </button>
                       )}
@@ -1667,7 +1674,7 @@ const PayrollProcessingEngine = () => {
           <h5 className="mb-0">Payroll Validation & Review</h5>
           <div className="d-flex gap-2">
             <button 
-              className="btn btn-success"
+              className="btn btn-success d-flex align-items-center"
               onClick={runValidationChecks}
             >
               <Icon icon="heroicons:shield-check" className="me-2" />
@@ -1675,14 +1682,14 @@ const PayrollProcessingEngine = () => {
             </button>
             <button 
               onClick={handleRefreshData}
-              className="btn btn-outline-primary"
+              className="btn btn-outline-primary d-flex align-items-center"
             >
               <Icon icon="heroicons:arrow-path" className="me-2" />
               Refresh
             </button>
             <button 
               onClick={handleExportReport}
-              className="btn btn-primary"
+              className="btn btn-primary d-flex align-items-center"
             >
               <Icon icon="heroicons:document-arrow-down" className="me-2" />
               Export
@@ -1858,7 +1865,7 @@ const PayrollProcessingEngine = () => {
             <div className="d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Payroll Calculation Logic</h5>
               <button 
-                className="btn btn-primary"
+                className="btn btn-primary d-flex align-items-center"
                 onClick={handleRunCalculations}
                 disabled={isProcessing || payrollLocked}
               >
@@ -2119,7 +2126,7 @@ const PayrollProcessingEngine = () => {
                       <h6 className="mb-0">Latest Calculation Results</h6>
                       <button 
                         onClick={() => handleExportReport()}
-                        className="btn btn-sm btn-primary"
+                        className="btn btn-sm btn-primary d-flex align-items-center"
                       >
                         <Icon icon="heroicons:document-arrow-down" className="me-1" />
                         Export Results
@@ -2182,14 +2189,14 @@ const PayrollProcessingEngine = () => {
           <div className="d-flex gap-2">
             <button 
               onClick={handleRefreshData}
-              className="btn btn-outline-primary"
+              className="btn btn-outline-primary d-flex align-items-center"
             >
               <Icon icon="heroicons:arrow-path" className="me-2" />
               Refresh
             </button>
             <button 
               onClick={handleExportReport}
-              className="btn btn-primary"
+              className="btn btn-primary d-flex align-items-center"
             >
               <Icon icon="heroicons:document-arrow-down" className="me-2" />
               Export
@@ -2463,7 +2470,7 @@ const PayrollProcessingEngine = () => {
                     <h6 className="fw-bold">Import Attendance</h6>
                     <p className="text-muted small mb-3">Upload attendance data for payroll processing</p>
                     <button 
-                      className="btn btn-outline-primary w-100"
+                      className="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center"
                       onClick={() => handleImportData('Attendance')}
                       disabled={isProcessing}
                     >
@@ -2478,7 +2485,7 @@ const PayrollProcessingEngine = () => {
                     <Icon icon="heroicons:arrow-down-tray" className="text-success fs-1 mb-3" />
                     <h6 className="fw-bold">Export Payroll Data</h6>
                     <p className="text-muted small mb-3">Download complete payroll data for reporting</p>
-                    <button className="btn btn-outline-success w-100" onClick={handleExportReport}>
+                    <button className="btn btn-outline-success w-100 d-flex align-items-center justify-content-center" onClick={handleExportReport}>
                       Export Data
                     </button>
                   </div>
@@ -2491,7 +2498,7 @@ const PayrollProcessingEngine = () => {
                     <h6 className="fw-bold">Generate Reports</h6>
                     <p className="text-muted small mb-3">Create custom payroll reports</p>
                     <button 
-                      className="btn btn-outline-info w-100"
+                      className="btn btn-outline-info w-100 d-flex align-items-center justify-content-center"
                       onClick={() => handleGenerateReport('Employee Data Report')}
                       disabled={isProcessing}
                     >
@@ -2575,7 +2582,7 @@ const PayrollProcessingEngine = () => {
                             <h6 className="fw-bold">Monthly Payroll Summary</h6>
                             <p className="text-muted small mb-3">Complete summary of monthly payroll</p>
                             <button 
-                              className="btn btn-outline-primary w-100"
+                              className="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center"
                               onClick={() => handleGenerateReport('Monthly Payroll Summary')}
                               disabled={isProcessing}
                             >
@@ -2590,7 +2597,7 @@ const PayrollProcessingEngine = () => {
                             <h6 className="fw-bold">Tax Compliance Report</h6>
                             <p className="text-muted small mb-3">Tax calculations and compliance details</p>
                             <button 
-                              className="btn btn-outline-success w-100"
+                              className="btn btn-outline-success w-100 d-flex align-items-center justify-content-center"
                               onClick={() => handleGenerateReport('Tax Compliance Report')}
                               disabled={isProcessing}
                             >
@@ -2605,7 +2612,7 @@ const PayrollProcessingEngine = () => {
                             <h6 className="fw-bold">Department-wise Analysis</h6>
                             <p className="text-muted small mb-3">Payroll analysis by department</p>
                             <button 
-                              className="btn btn-outline-info w-100"
+                              className="btn btn-outline-info w-100 d-flex align-items-center justify-content-center"
                               onClick={() => handleGenerateReport('Department-wise Analysis')}
                               disabled={isProcessing}
                             >
@@ -2620,7 +2627,7 @@ const PayrollProcessingEngine = () => {
                             <h6 className="fw-bold">Employee Earnings Statement</h6>
                             <p className="text-muted small mb-3">Detailed earnings statement per employee</p>
                             <button 
-                              className="btn btn-outline-warning w-100"
+                              className="btn btn-outline-warning w-100 d-flex align-items-center justify-content-center"
                               onClick={() => handleGenerateReport('Employee Earnings Statement')}
                               disabled={isProcessing}
                             >
@@ -2635,7 +2642,7 @@ const PayrollProcessingEngine = () => {
                             <h6 className="fw-bold">Statutory Compliance Report</h6>
                             <p className="text-muted small mb-3">PF, ESI, PT, and other statutory reports</p>
                             <button 
-                              className="btn btn-outline-danger w-100"
+                              className="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center"
                               onClick={() => handleGenerateReport('Statutory Compliance Report')}
                               disabled={isProcessing}
                             >
@@ -2650,7 +2657,7 @@ const PayrollProcessingEngine = () => {
                             <h6 className="fw-bold">Year-to-Date Analysis</h6>
                             <p className="text-muted small mb-3">Complete YTD payroll analysis</p>
                             <button 
-                              className="btn btn-outline-dark w-100"
+                              className="btn btn-outline-dark w-100 d-flex align-items-center justify-content-center"
                               onClick={() => handleGenerateReport('Year-to-Date Analysis')}
                               disabled={isProcessing}
                             >
@@ -2738,7 +2745,7 @@ const PayrollProcessingEngine = () => {
             </span>
           </div>
           <button 
-            className={`btn btn-sm ${payrollLocked ? 'btn-success' : 'btn-danger'}`}
+            className={`btn btn-sm ${payrollLocked ? 'btn-success' : 'btn-danger'} d-flex align-items-center`}
             onClick={handleTogglePayrollLock}
           >
             <Icon icon={payrollLocked ? "heroicons:lock-open" : "heroicons:lock-closed"} className="me-1" />
@@ -2822,7 +2829,7 @@ const PayrollProcessingEngine = () => {
                     </button>
                     <button 
                       type="button" 
-                      className="btn btn-primary"
+                      className="btn btn-primary d-flex align-items-center"
                       onClick={() => handleStartPayrollProcessing('regular')}
                       disabled={isProcessing}
                     >
@@ -2903,14 +2910,15 @@ const PayrollProcessingEngine = () => {
                       onChange={(e) => setNewSalaryComponent({...newSalaryComponent, value: e.target.value})}
                     />
                   </div>
-                  <div className="mb-3 form-check">
+                  <div className="mb-3">
                     <input
                       type="checkbox"
                       className="form-check-input"
                       checked={newSalaryComponent.taxable}
                       onChange={(e) => setNewSalaryComponent({...newSalaryComponent, taxable: e.target.checked})}
+                      id="taxableCheckbox"
                     />
-                    <label className="form-check-label">Taxable Component</label>
+                    <label className="form-check-label" htmlFor="taxableCheckbox">Taxable Component</label>
                   </div>
                 </div>
                 <div className="modal-footer">

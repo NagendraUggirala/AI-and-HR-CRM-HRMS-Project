@@ -643,6 +643,26 @@ const StatutoryCompliance = () => {
     }, 1000);
   };
 
+  // Helper components for consistent styling
+  const ButtonWithIcon = ({ icon, children, className = '', iconClassName = '', ...props }) => (
+    <button className={`btn d-flex align-items-center justify-content-center ${className}`} {...props}>
+      <Icon icon={icon} className={`${iconClassName} me-2`} style={{ fontSize: '1rem', lineHeight: 1 }} />
+      {children}
+    </button>
+  );
+
+  const QuickLinkCard = ({ icon, title, description, onClick, color = 'primary' }) => (
+    <div className="card border h-100" onClick={onClick} style={{ cursor: 'pointer' }}>
+      <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+        <div className={`bg-${color}-subtle text-${color} p-3 rounded-circle mb-3`}>
+          <Icon icon={icon} style={{ fontSize: '1.5rem' }} />
+        </div>
+        <h6 className="fw-bold mb-2">{title}</h6>
+        <p className="text-muted small mb-0">{description}</p>
+      </div>
+    </div>
+  );
+
   // Sidebar content
   const sidebarContent = (
     <nav className="space-y-1 p-3">
@@ -651,83 +671,83 @@ const StatutoryCompliance = () => {
       </div>
       
       <button 
-        className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${activeSection === 'pf' ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-100'}`}
+        className={`w-full d-flex align-items-center px-3 py-2 text-sm font-medium rounded-md ${activeSection === 'pf' ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-100'}`}
         onClick={() => setActiveSection('pf')}
       >
-        <Icon icon="heroicons:building-library" className="mr-3 h-5 w-5" />
+        <Icon icon="heroicons:building-library" className="me-3 h-5 w-5" />
         Provident Fund (PF)
       </button>
       
       <button 
-        className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${activeSection === 'esi' ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-100'}`}
+        className={`w-full d-flex align-items-center px-3 py-2 text-sm font-medium rounded-md ${activeSection === 'esi' ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-100'}`}
         onClick={() => setActiveSection('esi')}
       >
-        <Icon icon="heroicons:heart" className="mr-3 h-5 w-5" />
+        <Icon icon="heroicons:heart" className="me-3 h-5 w-5" />
         Employee State Insurance (ESI)
       </button>
       
       <button 
-        className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${activeSection === 'pt' ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-100'}`}
+        className={`w-full d-flex align-items-center px-3 py-2 text-sm font-medium rounded-md ${activeSection === 'pt' ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-100'}`}
         onClick={() => setActiveSection('pt')}
       >
-        <Icon icon="heroicons:briefcase" className="mr-3 h-5 w-5" />
+        <Icon icon="heroicons:briefcase" className="me-3 h-5 w-5" />
         Professional Tax (PT)
       </button>
       
       <button 
-        className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${activeSection === 'tds' ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-100'}`}
+        className={`w-full d-flex align-items-center px-3 py-2 text-sm font-medium rounded-md ${activeSection === 'tds' ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-100'}`}
         onClick={() => setActiveSection('tds')}
       >
-        <Icon icon="heroicons:banknotes" className="mr-3 h-5 w-5" />
+        <Icon icon="heroicons:banknotes" className="me-3 h-5 w-5" />
         TDS Management
       </button>
       
       <button 
-        className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${activeSection === 'lwf' ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-100'}`}
+        className={`w-full d-flex align-items-center px-3 py-2 text-sm font-medium rounded-md ${activeSection === 'lwf' ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-100'}`}
         onClick={() => setActiveSection('lwf')}
       >
-        <Icon icon="heroicons:users" className="mr-3 h-5 w-5" />
+        <Icon icon="heroicons:users" className="me-3 h-5 w-5" />
         Labour Welfare Fund
       </button>
       
       <button 
-        className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${activeSection === 'gratuity' ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-100'}`}
+        className={`w-full d-flex align-items-center px-3 py-2 text-sm font-medium rounded-md ${activeSection === 'gratuity' ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-100'}`}
         onClick={() => setActiveSection('gratuity')}
       >
-        <Icon icon="heroicons:gift" className="mr-3 h-5 w-5" />
+        <Icon icon="heroicons:gift" className="me-3 h-5 w-5" />
         Gratuity Management
       </button>
       
       <button 
-        className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${activeSection === 'bonus' ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-100'}`}
+        className={`w-full d-flex align-items-center px-3 py-2 text-sm font-medium rounded-md ${activeSection === 'bonus' ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-100'}`}
         onClick={() => setActiveSection('bonus')}
       >
-        <Icon icon="heroicons:sparkles" className="mr-3 h-5 w-5" />
+        <Icon icon="heroicons:sparkles" className="me-3 h-5 w-5" />
         Bonus Act Compliance
       </button>
       
-      <div className="pt-4 border-t border-gray-200 mt-4">
+      <div className="pt-4 border-top border-gray-200 mt-4">
         <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
           Compliance Status
         </div>
         <div className="space-y-2">
-          <div className="flex justify-between items-center">
+          <div className="d-flex justify-content-between align-items-center">
             <span className="text-sm text-gray-600">Total Employees:</span>
             <span className="font-semibold text-primary">{kpis.totalEmployees}</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="d-flex justify-content-between align-items-center">
             <span className="text-sm text-gray-600">PF Eligible:</span>
             <span className="font-semibold text-success">{kpis.eligiblePF}</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="d-flex justify-content-between align-items-center">
             <span className="text-sm text-gray-600">ESI Eligible:</span>
             <span className="font-semibold text-info">{kpis.eligibleESI}</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="d-flex justify-content-between align-items-center">
             <span className="text-sm text-gray-600">Pending Declarations:</span>
             <span className="font-semibold text-warning">{kpis.pendingDeclarations}</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="d-flex justify-content-between align-items-center">
             <span className="text-sm text-gray-600">Total PF Contribution:</span>
             <span className="font-semibold text-primary">{formatCurrency(kpis.totalPFContribution)}</span>
           </div>
@@ -735,14 +755,6 @@ const StatutoryCompliance = () => {
       </div>
     </nav>
   );
-
-  // User info for sidebar
-  const userInfo = {
-    name: 'Compliance Manager',
-    role: 'HR Compliance',
-    email: 'compliance@company.com',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Compliance'
-  };
 
   // Render different sections
   const renderPF = () => (
@@ -753,10 +765,13 @@ const StatutoryCompliance = () => {
           <div className="card-header bg-transparent border-0">
             <div className="d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Provident Fund (PF) Configuration</h5>
-              <button className="btn btn-primary" onClick={() => handleGenerateForm('PF')}>
-                <Icon icon="heroicons:document-plus" className="me-2" />
+              <ButtonWithIcon 
+                icon="heroicons:document-plus"
+                className="btn-primary"
+                onClick={() => handleGenerateForm('PF')}
+              >
                 Generate Form 5/10C
-              </button>
+              </ButtonWithIcon>
             </div>
           </div>
           <div className="card-body">
@@ -1006,12 +1021,13 @@ const StatutoryCompliance = () => {
                                 <td>{employee?.pfUAN || 'N/A'}</td>
                                 <td>{getStatusBadge(statement.status)}</td>
                                 <td>
-                                  <button 
-                                    className="btn btn-sm btn-outline-primary"
+                                  <ButtonWithIcon 
+                                    icon="heroicons:calculator"
+                                    className="btn-sm btn-outline-primary d-flex align-items-center"
                                     onClick={() => handleCalculatePF(employee?.id)}
                                   >
                                     Calculate
-                                  </button>
+                                  </ButtonWithIcon>
                                 </td>
                               </tr>
                             );
@@ -1029,16 +1045,16 @@ const StatutoryCompliance = () => {
                   <div className="card-header">
                     <div className="d-flex justify-content-between align-items-center">
                       <h6 className="mb-0">PF Remittance Summary</h6>
-                      <button 
-                        className="btn btn-sm btn-primary"
+                      <ButtonWithIcon
+                        icon="heroicons:plus"
+                        className="btn-sm btn-primary"
                         onClick={() => {
                           setRemittanceType('pf');
                           setShowRemittanceModal(true);
                         }}
                       >
-                        <Icon icon="heroicons:plus" className="me-1" />
                         Add Remittance
-                      </button>
+                      </ButtonWithIcon>
                     </div>
                   </div>
                   <div className="card-body">
@@ -1086,13 +1102,13 @@ const StatutoryCompliance = () => {
                   <div className="card-header">
                     <div className="d-flex justify-content-between align-items-center">
                       <h6 className="mb-0">ECR (Electronic Challan cum Return)</h6>
-                      <button 
-                        className="btn btn-sm btn-success"
+                      <ButtonWithIcon
+                        icon="heroicons:document-plus"
+                        className="btn-sm btn-success"
                         onClick={() => setShowECRModal(true)}
                       >
-                        <Icon icon="heroicons:document-plus" className="me-1" />
                         Generate ECR
-                      </button>
+                      </ButtonWithIcon>
                     </div>
                   </div>
                   <div className="card-body">
@@ -1148,13 +1164,13 @@ const StatutoryCompliance = () => {
                     <div className="card-header">
                       <div className="d-flex justify-content-between align-items-center">
                         <h6 className="mb-0">VPF (Voluntary Provident Fund) Management</h6>
-                        <button 
-                          className="btn btn-sm btn-primary"
+                        <ButtonWithIcon
+                          icon="heroicons:plus"
+                          className="btn-sm btn-primary"
                           onClick={() => setShowVPFModal(true)}
                         >
-                          <Icon icon="heroicons:plus" className="me-1" />
                           Add VPF
-                        </button>
+                        </ButtonWithIcon>
                       </div>
                     </div>
                     <div className="card-body">
@@ -1202,13 +1218,13 @@ const StatutoryCompliance = () => {
                   <div className="card-header">
                     <div className="d-flex justify-content-between align-items-center">
                       <h6 className="mb-0">UAN Activation & Management</h6>
-                      <button 
-                        className="btn btn-sm btn-primary"
+                      <ButtonWithIcon
+                        icon="heroicons:plus"
+                        className="btn-sm btn-primary"
                         onClick={() => setShowUANModal(true)}
                       >
-                        <Icon icon="heroicons:plus" className="me-1" />
                         Activate UAN
-                      </button>
+                      </ButtonWithIcon>
                     </div>
                   </div>
                   <div className="card-body">
@@ -1262,63 +1278,77 @@ const StatutoryCompliance = () => {
                   </div>
                   <div className="card-body">
                     <div className="row g-3">
-                      <div className="col-md-3">
+                      <div className="col-lg-3 col-md-6">
                         <div className="card border h-100">
-                          <div className="card-body text-center">
-                            <Icon icon="heroicons:document-text" className="text-primary fs-1 mb-3" />
-                            <h6 className="fw-bold">Form 5/10C</h6>
+                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+                            <div className="bg-primary-subtle text-primary p-3 rounded-circle mb-3">
+                              <Icon icon="heroicons:document-text" style={{ fontSize: '1.5rem' }} />
+                            </div>
+                            <h6 className="fw-bold mb-2">Form 5/10C</h6>
                             <p className="text-muted small mb-3">Monthly PF Return</p>
-                            <button 
-                              className="btn btn-outline-primary w-100"
+                            <ButtonWithIcon
+                              icon="heroicons:document-arrow-down"
+                              className="btn-outline-primary w-100"
                               onClick={() => handleGenerateForm('Form5')}
                             >
                               Generate
-                            </button>
+                            </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
-                      <div className="col-md-3">
+                      <div className="col-lg-3 col-md-6">
                         <div className="card border h-100">
-                          <div className="card-body text-center">
-                            <Icon icon="heroicons:document-duplicate" className="text-warning fs-1 mb-3" />
-                            <h6 className="fw-bold">Form 12A</h6>
+                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+                            <div className="bg-warning-subtle text-warning p-3 rounded-circle mb-3">
+                              <Icon icon="heroicons:document-duplicate" style={{ fontSize: '1.5rem' }} />
+                            </div>
+                            <h6 className="fw-bold mb-2">Form 12A</h6>
                             <p className="text-muted small mb-3">Exit/Transfer Form</p>
-                            <button 
-                              className="btn btn-outline-warning w-100"
+                            <ButtonWithIcon
+                              icon="heroicons:document-arrow-down"
+                              className="btn-outline-warning w-100"
                               onClick={() => handleGenerateForm('Form12A')}
                             >
                               Generate
-                            </button>
+                            </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
-                      <div className="col-md-3">
+                      <div className="col-lg-3 col-md-6">
                         <div className="card border h-100">
-                          <div className="card-body text-center">
-                            <Icon icon="heroicons:document-chart-bar" className="text-success fs-1 mb-3" />
-                            <h6 className="fw-bold">Reconciliation Report</h6>
+                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+                            <div className="bg-success-subtle text-success p-3 rounded-circle mb-3">
+                              <Icon icon="heroicons:document-chart-bar" style={{ fontSize: '1.5rem' }} />
+                            </div>
+                            <h6 className="fw-bold mb-2">ReconciliationReport</h6>
                             <p className="text-muted small mb-3">PF Contribution Reconciliation</p>
-                            <button 
-                              className="btn btn-outline-success w-100"
+                            <ButtonWithIcon
+                              icon="heroicons:document-arrow-down"
+                              className="btn-outline-success w-100"
                               onClick={() => {
                                 setShowReconciliationModal(true);
                                 setRemittanceType('pf');
                               }}
                             >
                               Generate
-                            </button>
+                            </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
-                      <div className="col-md-3">
+                      <div className="col-lg-3 col-md-6">
                         <div className="card border h-100">
-                          <div className="card-body text-center">
-                            <Icon icon="heroicons:arrow-down-tray" className="text-info fs-1 mb-3" />
-                            <h6 className="fw-bold">UAN Update</h6>
+                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+                            <div className="bg-info-subtle text-info p-3 rounded-circle mb-3">
+                              <Icon icon="heroicons:arrow-down-tray" style={{ fontSize: '1.5rem' }} />
+                            </div>
+                            <h6 className="fw-bold mb-2">UAN Update</h6>
                             <p className="text-muted small mb-3">Employee UAN Details</p>
-                            <button className="btn btn-outline-info w-100">
+                            <ButtonWithIcon
+                              icon="heroicons:arrow-down-tray"
+                              className="btn-outline-info w-100"
+                            >
                               Download Report
-                            </button>
+                            </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
@@ -1341,10 +1371,13 @@ const StatutoryCompliance = () => {
           <div className="card-header bg-transparent border-0">
             <div className="d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Employee State Insurance (ESI) Configuration</h5>
-              <button className="btn btn-primary" onClick={() => handleGenerateForm('ESI')}>
-                <Icon icon="heroicons:document-plus" className="me-2" />
+              <ButtonWithIcon 
+                icon="heroicons:document-plus"
+                className="btn-primary"
+                onClick={() => handleGenerateForm('ESI')}
+              >
                 Generate ESI Return
-              </button>
+              </ButtonWithIcon>
             </div>
           </div>
           <div className="card-body">
@@ -1469,12 +1502,13 @@ const StatutoryCompliance = () => {
                                 <td className="text-success">{formatCurrency(statement.employerContribution)}</td>
                                 <td className="fw-bold">{formatCurrency(statement.total)}</td>
                                 <td>
-                                  <button 
-                                    className="btn btn-sm btn-outline-primary"
+                                  <ButtonWithIcon 
+                                    icon="heroicons:calculator"
+                                    className="btn-sm btn-outline-primary"
                                     onClick={() => handleCalculateESI(employee?.id)}
                                   >
                                     Calculate
-                                  </button>
+                                  </ButtonWithIcon>
                                 </td>
                               </tr>
                             );
@@ -1492,16 +1526,16 @@ const StatutoryCompliance = () => {
                   <div className="card-header">
                     <div className="d-flex justify-content-between align-items-center">
                       <h6 className="mb-0">ESI Remittance Summary</h6>
-                      <button 
-                        className="btn btn-sm btn-primary"
+                      <ButtonWithIcon
+                        icon="heroicons:plus"
+                        className="btn-sm btn-primary"
                         onClick={() => {
                           setRemittanceType('esi');
                           setShowRemittanceModal(true);
                         }}
                       >
-                        <Icon icon="heroicons:plus" className="me-1" />
                         Add Remittance
-                      </button>
+                      </ButtonWithIcon>
                     </div>
                   </div>
                   <div className="card-body">
@@ -1588,52 +1622,61 @@ const StatutoryCompliance = () => {
                     <div className="row g-3">
                       <div className="col-md-4">
                         <div className="card border h-100">
-                          <div className="card-body text-center">
-                            <Icon icon="heroicons:document-text" className="text-info fs-1 mb-3" />
-                            <h6 className="fw-bold">ESI Return</h6>
+                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+                            <div className="bg-info-subtle text-info p-3 rounded-circle mb-3">
+                              <Icon icon="heroicons:document-text" style={{ fontSize: '1.5rem' }} />
+                            </div>
+                            <h6 className="fw-bold mb-2">ESI Return</h6>
                             <p className="text-muted small mb-3">Half-yearly ESI Return</p>
-                            <button 
-                              className="btn btn-outline-info w-100"
+                            <ButtonWithIcon
+                              icon="heroicons:document-arrow-down"
+                              className="btn-outline-info w-100"
                               onClick={() => handleGenerateForm('ESIReturn')}
                             >
                               Generate
-                            </button>
+                            </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
                       <div className="col-md-4">
                         <div className="card border h-100">
-                          <div className="card-body text-center">
-                            <Icon icon="heroicons:document-chart-bar" className="text-success fs-1 mb-3" />
-                            <h6 className="fw-bold">ESI Reconciliation</h6>
+                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+                            <div className="bg-success-subtle text-success p-3 rounded-circle mb-3">
+                              <Icon icon="heroicons:document-chart-bar" style={{ fontSize: '1.5rem' }} />
+                            </div>
+                            <h6 className="fw-bold mb-2">ESI Reconciliation</h6>
                             <p className="text-muted small mb-3">ESI Contribution Reconciliation</p>
-                            <button 
-                              className="btn btn-outline-success w-100"
+                            <ButtonWithIcon
+                              icon="heroicons:document-arrow-down"
+                              className="btn-outline-success w-100"
                               onClick={() => {
                                 setShowReconciliationModal(true);
                                 setRemittanceType('esi');
                               }}
                             >
                               Generate
-                            </button>
+                            </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
                       <div className="col-md-4">
                         <div className="card border h-100">
-                          <div className="card-body text-center">
-                            <Icon icon="heroicons:document-duplicate" className="text-warning fs-1 mb-3" />
-                            <h6 className="fw-bold">ESI Challan</h6>
+                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+                            <div className="bg-warning-subtle text-warning p-3 rounded-circle mb-3">
+                              <Icon icon="heroicons:document-duplicate" style={{ fontSize: '1.5rem' }} />
+                            </div>
+                            <h6 className="fw-bold mb-2">ESI Challan</h6>
                             <p className="text-muted small mb-3">Generate ESI Challan</p>
-                            <button 
-                              className="btn btn-outline-warning w-100"
+                            <ButtonWithIcon
+                              icon="heroicons:document-arrow-down"
+                              className="btn-outline-warning w-100"
                               onClick={() => {
                                 setShowChallanModal(true);
                                 setRemittanceType('esi');
                               }}
                             >
                               Generate
-                            </button>
+                            </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
@@ -1656,10 +1699,13 @@ const StatutoryCompliance = () => {
           <div className="card-header bg-transparent border-0">
             <div className="d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Professional Tax (PT) Configuration</h5>
-              <button className="btn btn-primary" onClick={() => handleGenerateForm('PT')}>
-                <Icon icon="heroicons:document-plus" className="me-2" />
+              <ButtonWithIcon 
+                icon="heroicons:document-plus"
+                className="btn-primary"
+                onClick={() => handleGenerateForm('PT')}
+              >
                 Generate PT Return
-              </button>
+              </ButtonWithIcon>
             </div>
           </div>
           <div className="card-body">
@@ -1771,12 +1817,13 @@ const StatutoryCompliance = () => {
                               <td className="fw-bold">{formatCurrency(employee.ptDeduction)}</td>
                               <td>PT{employee.employeeId}</td>
                               <td>
-                                <button 
-                                  className="btn btn-sm btn-outline-primary"
+                                <ButtonWithIcon 
+                                  icon="heroicons:calculator"
+                                  className="btn-sm btn-outline-primary"
                                   onClick={() => handleCalculatePT(employee.id)}
                                 >
                                   Calculate
-                                </button>
+                                </ButtonWithIcon>
                               </td>
                             </tr>
                           ))}
@@ -1801,10 +1848,13 @@ const StatutoryCompliance = () => {
           <div className="card-header bg-transparent border-0">
             <div className="d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Tax Deducted at Source (TDS) Management</h5>
-              <button className="btn btn-primary" onClick={() => handleGenerateForm('Form16')}>
-                <Icon icon="heroicons:document-plus" className="me-2" />
+              <ButtonWithIcon 
+                icon="heroicons:document-plus"
+                className="btn-primary"
+                onClick={() => handleGenerateForm('Form16')}
+              >
                 Generate Form 16
-              </button>
+              </ButtonWithIcon>
             </div>
           </div>
           <div className="card-body">
@@ -1941,12 +1991,13 @@ const StatutoryCompliance = () => {
                               </td>
                               <td>
                                 <div className="d-flex gap-2">
-                                  <button 
-                                    className="btn btn-sm btn-outline-primary"
+                                  <ButtonWithIcon 
+                                    icon="heroicons:calculator"
+                                    className="btn-sm btn-outline-primary"
                                     onClick={() => handleCalculateTDS(employee.id)}
                                   >
                                     Calculate TDS
-                                  </button>
+                                  </ButtonWithIcon>
                                   <button className="btn btn-sm btn-outline-success">
                                     Form 16
                                   </button>
@@ -1990,16 +2041,16 @@ const StatutoryCompliance = () => {
                   <div className="card-header">
                     <div className="d-flex justify-content-between align-items-center">
                       <h6 className="mb-0">TDS Challans</h6>
-                      <button 
-                        className="btn btn-sm btn-primary"
+                      <ButtonWithIcon
+                        icon="heroicons:plus"
+                        className="btn-sm btn-primary"
                         onClick={() => {
                           setShowChallanModal(true);
                           setRemittanceType('tds');
                         }}
                       >
-                        <Icon icon="heroicons:plus" className="me-1" />
                         Create Challan
-                      </button>
+                      </ButtonWithIcon>
                     </div>
                   </div>
                   <div className="card-body">
@@ -2115,16 +2166,16 @@ const StatutoryCompliance = () => {
                   <div className="card-header">
                     <div className="d-flex justify-content-between align-items-center">
                       <h6 className="mb-0">Tax Reconciliation & Adjustment</h6>
-                      <button 
-                        className="btn btn-sm btn-primary"
+                      <ButtonWithIcon
+                        icon="heroicons:document-chart-bar"
+                        className="btn-sm btn-primary"
                         onClick={() => {
                           setShowReconciliationModal(true);
                           setRemittanceType('tds');
                         }}
                       >
-                        <Icon icon="heroicons:document-chart-bar" className="me-1" />
                         Generate Reconciliation
-                      </button>
+                      </ButtonWithIcon>
                     </div>
                   </div>
                   <div className="card-body">
@@ -2172,63 +2223,77 @@ const StatutoryCompliance = () => {
                   </div>
                   <div className="card-body">
                     <div className="row g-3">
-                      <div className="col-md-3">
+                      <div className="col-lg-3 col-md-6">
                         <div className="card border h-100">
-                          <div className="card-body text-center">
-                            <Icon icon="heroicons:document-text" className="text-primary fs-1 mb-3" />
-                            <h6 className="fw-bold">Form 16</h6>
+                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+                            <div className="bg-primary-subtle text-primary p-3 rounded-circle mb-3">
+                              <Icon icon="heroicons:document-text" style={{ fontSize: '1.5rem' }} />
+                            </div>
+                            <h6 className="fw-bold mb-2">Form 16</h6>
                             <p className="text-muted small mb-3">Part A & B</p>
-                            <button 
-                              className="btn btn-outline-primary w-100"
+                            <ButtonWithIcon
+                              icon="heroicons:document-arrow-down"
+                              className="btn-outline-primary w-100"
                               onClick={() => handleGenerateForm('Form16')}
                             >
                               Generate
-                            </button>
+                            </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
-                      <div className="col-md-3">
+                      <div className="col-lg-3 col-md-6">
                         <div className="card border h-100">
-                          <div className="card-body text-center">
-                            <Icon icon="heroicons:document-chart-bar" className="text-success fs-1 mb-3" />
-                            <h6 className="fw-bold">Form 24Q</h6>
+                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+                            <div className="bg-success-subtle text-success p-3 rounded-circle mb-3">
+                              <Icon icon="heroicons:document-chart-bar" style={{ fontSize: '1.5rem' }} />
+                            </div>
+                            <h6 className="fw-bold mb-2">Form 24Q</h6>
                             <p className="text-muted small mb-3">Quarterly TDS Return</p>
-                            <button 
-                              className="btn btn-outline-success w-100"
+                            <ButtonWithIcon
+                              icon="heroicons:document-arrow-down"
+                              className="btn-outline-success w-100"
                               onClick={() => handleGenerateForm('Form24Q')}
                             >
                               Generate
-                            </button>
+                            </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
-                      <div className="col-md-3">
+                      <div className="col-lg-3 col-md-6">
                         <div className="card border h-100">
-                          <div className="card-body text-center">
-                            <Icon icon="heroicons:calculator" className="text-warning fs-1 mb-3" />
-                            <h6 className="fw-bold">TDS Calculator</h6>
+                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+                            <div className="bg-warning-subtle text-warning p-3 rounded-circle mb-3">
+                              <Icon icon="heroicons:calculator" style={{ fontSize: '1.5rem' }} />
+                            </div>
+                            <h6 className="fw-bold mb-2">TDS Calculator</h6>
                             <p className="text-muted small mb-3">Tax Calculation</p>
-                            <button className="btn btn-outline-warning w-100">
+                            <ButtonWithIcon
+                              icon="heroicons:calculator"
+                              className="btn-outline-warning w-100"
+                            >
                               Open Calculator
-                            </button>
+                            </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
-                      <div className="col-md-3">
+                      <div className="col-lg-3 col-md-6">
                         <div className="card border h-100">
-                          <div className="card-body text-center">
-                            <Icon icon="heroicons:arrow-down-tray" className="text-info fs-1 mb-3" />
-                            <h6 className="fw-bold">TDS Challan</h6>
+                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+                            <div className="bg-info-subtle text-info p-3 rounded-circle mb-3">
+                              <Icon icon="heroicons:document-duplicate" style={{ fontSize: '1.5rem' }} />
+                            </div>
+                            <h6 className="fw-bold mb-2">TDS Challan</h6>
                             <p className="text-muted small mb-3">Challan 281</p>
-                            <button 
-                              className="btn btn-outline-info w-100"
+                            <ButtonWithIcon
+                              icon="heroicons:document-arrow-down"
+                              className="btn-outline-info w-100"
                               onClick={() => {
                                 setShowChallanModal(true);
                                 setRemittanceType('tds');
                               }}
                             >
                               Generate
-                            </button>
+                            </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
@@ -2385,37 +2450,52 @@ const StatutoryCompliance = () => {
                     <div className="row g-3">
                       <div className="col-md-4">
                         <div className="card border h-100">
-                          <div className="card-body text-center">
-                            <Icon icon="heroicons:document-chart-bar" className="text-primary fs-1 mb-3" />
-                            <h6 className="fw-bold">Annual LWF Report</h6>
+                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+                            <div className="bg-primary-subtle text-primary p-3 rounded-circle mb-3">
+                              <Icon icon="heroicons:document-chart-bar" style={{ fontSize: '1.5rem' }} />
+                            </div>
+                            <h6 className="fw-bold mb-2">Annual LWF Report</h6>
                             <p className="text-muted small mb-3">State-wise LWF compliance</p>
-                            <button className="btn btn-outline-primary w-100">
+                            <ButtonWithIcon
+                              icon="heroicons:document-arrow-down"
+                              className="btn-outline-primary w-100"
+                            >
                               Generate
-                            </button>
+                            </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
                       <div className="col-md-4">
                         <div className="card border h-100">
-                          <div className="card-body text-center">
-                            <Icon icon="heroicons:document-text" className="text-success fs-1 mb-3" />
-                            <h6 className="fw-bold">LWF Payment Summary</h6>
+                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+                            <div className="bg-success-subtle text-success p-3 rounded-circle mb-3">
+                              <Icon icon="heroicons:document-text" style={{ fontSize: '1.5rem' }} />
+                            </div>
+                            <h6 className="fw-bold mb-2">LWF Payment Summary</h6>
                             <p className="text-muted small mb-3">Payment status report</p>
-                            <button className="btn btn-outline-success w-100">
+                            <ButtonWithIcon
+                              icon="heroicons:document-arrow-down"
+                              className="btn-outline-success w-100"
+                            >
                               Generate
-                            </button>
+                            </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
                       <div className="col-md-4">
                         <div className="card border h-100">
-                          <div className="card-body text-center">
-                            <Icon icon="heroicons:chart-bar" className="text-info fs-1 mb-3" />
-                            <h6 className="fw-bold">LWF Compliance Status</h6>
+                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+                            <div className="bg-info-subtle text-info p-3 rounded-circle mb-3">
+                              <Icon icon="heroicons:chart-bar" style={{ fontSize: '1.5rem' }} />
+                            </div>
+                            <h6 className="fw-bold mb-2">LWF Compliance Status</h6>
                             <p className="text-muted small mb-3">Compliance tracking report</p>
-                            <button className="btn btn-outline-info w-100">
+                            <ButtonWithIcon
+                              icon="heroicons:document-arrow-down"
+                              className="btn-outline-info w-100"
+                            >
                               Generate
-                            </button>
+                            </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
@@ -2574,12 +2654,13 @@ const StatutoryCompliance = () => {
                                   {isEligible ? formatCurrency(gratuityAmount) : 'N/A'}
                                 </td>
                                 <td>
-                                  <button 
-                                    className="btn btn-sm btn-outline-primary"
+                                  <ButtonWithIcon 
+                                    icon="heroicons:calculator"
+                                    className="btn-sm btn-outline-primary"
                                     onClick={() => handleCalculateGratuity(employee.id)}
                                   >
                                     Calculate
-                                  </button>
+                                  </ButtonWithIcon>
                                 </td>
                               </tr>
                             );
@@ -2738,12 +2819,13 @@ const StatutoryCompliance = () => {
                                   <span className="badge bg-warning-subtle text-warning">Pending</span>
                                 </td>
                                 <td>
-                                  <button 
-                                    className="btn btn-sm btn-outline-primary"
+                                  <ButtonWithIcon 
+                                    icon="heroicons:calculator"
+                                    className="btn-sm btn-outline-primary"
                                     onClick={() => handleCalculateBonus(employee.id)}
                                   >
                                     Calculate
-                                  </button>
+                                  </ButtonWithIcon>
                                 </td>
                               </tr>
                             );
@@ -2767,20 +2849,20 @@ const StatutoryCompliance = () => {
         <div className="d-flex justify-content-between align-items-center">
           <h5 className="mb-0">Employee Compliance Status</h5>
           <div className="d-flex gap-2">
-            <button 
+            <ButtonWithIcon 
+              icon="heroicons:document-arrow-down"
+              className="btn-primary"
               onClick={handleExportReport}
-              className="btn btn-primary"
             >
-              <Icon icon="heroicons:document-arrow-down" className="me-2" />
               Export
-            </button>
-            <button 
+            </ButtonWithIcon>
+            <ButtonWithIcon 
+              icon="heroicons:arrow-path"
+              className="btn-outline-primary"
               onClick={handleRefreshData}
-              className="btn btn-outline-primary"
             >
-              <Icon icon="heroicons:arrow-path" className="me-2" />
               Refresh
-            </button>
+            </ButtonWithIcon>
           </div>
         </div>
       </div>
@@ -2904,9 +2986,9 @@ const StatutoryCompliance = () => {
         {/* Compliance Summary */}
         <div className="p-4 border-top">
           <div className="row g-3">
-            <div className="col-md-3">
-              <div className="card border">
-                <div className="card-body text-center">
+            <div className="col-md-3 col-6">
+              <div className="card border h-100">
+                <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
                   <div className="text-primary mb-2">
                     <Icon icon="heroicons:building-library" className="fs-1" />
                   </div>
@@ -2915,9 +2997,9 @@ const StatutoryCompliance = () => {
                 </div>
               </div>
             </div>
-            <div className="col-md-3">
-              <div className="card border">
-                <div className="card-body text-center">
+            <div className="col-md-3 col-6">
+              <div className="card border h-100">
+                <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
                   <div className="text-info mb-2">
                     <Icon icon="heroicons:heart" className="fs-1" />
                   </div>
@@ -2926,9 +3008,9 @@ const StatutoryCompliance = () => {
                 </div>
               </div>
             </div>
-            <div className="col-md-3">
-              <div className="card border">
-                <div className="card-body text-center">
+            <div className="col-md-3 col-6">
+              <div className="card border h-100">
+                <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
                   <div className="text-success mb-2">
                     <Icon icon="heroicons:document-check" className="fs-1" />
                   </div>
@@ -2937,9 +3019,9 @@ const StatutoryCompliance = () => {
                 </div>
               </div>
             </div>
-            <div className="col-md-3">
-              <div className="card border">
-                <div className="card-body text-center">
+            <div className="col-md-3 col-6">
+              <div className="card border h-100">
+                <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
                   <div className="text-warning mb-2">
                     <Icon icon="heroicons:clock" className="fs-1" />
                   </div>
@@ -2998,20 +3080,20 @@ const StatutoryCompliance = () => {
         <div className="d-flex justify-content-between align-items-center">
           <h5 className="mb-0">Compliance Forms & Returns</h5>
           <div className="d-flex gap-2">
-            <button 
+            <ButtonWithIcon 
+              icon="heroicons:document-arrow-down"
+              className="btn-primary"
               onClick={handleExportReport}
-              className="btn btn-primary"
             >
-              <Icon icon="heroicons:document-arrow-down" className="me-2" />
               Export
-            </button>
-            <button 
+            </ButtonWithIcon>
+            <ButtonWithIcon 
+              icon="heroicons:arrow-path"
+              className="btn-outline-primary"
               onClick={handleRefreshData}
-              className="btn btn-outline-primary"
             >
-              <Icon icon="heroicons:arrow-path" className="me-2" />
               Refresh
-            </button>
+            </ButtonWithIcon>
           </div>
         </div>
       </div>
@@ -3105,49 +3187,41 @@ const StatutoryCompliance = () => {
         <div className="p-4 border-top">
           <h6 className="mb-3">Available Form Types</h6>
           <div className="row g-3">
-            <div className="col-md-3">
-              <div className="card border cursor-pointer" onClick={() => handleGenerateForm('Form16')}>
-                <div className="card-body text-center">
-                  <div className="text-primary mb-2">
-                    <Icon icon="heroicons:document-text" className="fs-1" />
-                  </div>
-                  <h6 className="fw-bold">Form 16</h6>
-                  <p className="text-muted small mb-0">TDS Certificate</p>
-                </div>
-              </div>
+            <div className="col-md-3 col-6">
+              <QuickLinkCard
+                icon="heroicons:document-text"
+                title="Form 16"
+                description="Generate TDS certificates"
+                onClick={() => handleGenerateForm('Form16')}
+                color="primary"
+              />
             </div>
-            <div className="col-md-3">
-              <div className="card border cursor-pointer" onClick={() => handleGenerateForm('Form5')}>
-                <div className="card-body text-center">
-                  <div className="text-success mb-2">
-                    <Icon icon="heroicons:document-chart-bar" className="fs-1" />
-                  </div>
-                  <h6 className="fw-bold">Form 5/10C</h6>
-                  <p className="text-muted small mb-0">PF Return</p>
-                </div>
-              </div>
+            <div className="col-md-3 col-6">
+              <QuickLinkCard
+                icon="heroicons:document-chart-bar"
+                title="Form 5/10C"
+                description="PF Return"
+                onClick={() => handleGenerateForm('Form5')}
+                color="success"
+              />
             </div>
-            <div className="col-md-3">
-              <div className="card border cursor-pointer" onClick={() => handleGenerateForm('ESI')}>
-                <div className="card-body text-center">
-                  <div className="text-info mb-2">
-                    <Icon icon="heroicons:document-duplicate" className="fs-1" />
-                  </div>
-                  <h6 className="fw-bold">ESI Return</h6>
-                  <p className="text-muted small mb-0">Half-yearly</p>
-                </div>
-              </div>
+            <div className="col-md-3 col-6">
+              <QuickLinkCard
+                icon="heroicons:document-duplicate"
+                title="ESI Return"
+                description="Half-yearly submission"
+                onClick={() => handleGenerateForm('ESI')}
+                color="info"
+              />
             </div>
-            <div className="col-md-3">
-              <div className="card border cursor-pointer" onClick={() => handleGenerateForm('PT')}>
-                <div className="card-body text-center">
-                  <div className="text-warning mb-2">
-                    <Icon icon="heroicons:document" className="fs-1" />
-                  </div>
-                  <h6 className="fw-bold">PT Return</h6>
-                  <p className="text-muted small mb-0">Monthly/Annual</p>
-                </div>
-              </div>
+            <div className="col-md-3 col-6">
+              <QuickLinkCard
+                icon="heroicons:document"
+                title="PT Return"
+                description="Monthly/Annual"
+                onClick={() => handleGenerateForm('PT')}
+                color="warning"
+              />
             </div>
           </div>
         </div>
@@ -3201,14 +3275,19 @@ const StatutoryCompliance = () => {
             <div className="d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Investment Declarations</h5>
               <div className="d-flex gap-2">
-                <button className="btn btn-primary" onClick={() => handleGenerateForm('Declaration')}>
-                  <Icon icon="heroicons:document-plus" className="me-2" />
+                <ButtonWithIcon 
+                  icon="heroicons:document-plus"
+                  className="btn-primary"
+                  onClick={() => handleGenerateForm('Declaration')}
+                >
                   New Declaration
-                </button>
-                <button className="btn btn-outline-primary">
-                  <Icon icon="heroicons:bell" className="me-2" />
+                </ButtonWithIcon>
+                <ButtonWithIcon 
+                  icon="heroicons:bell"
+                  className="btn-outline-primary"
+                >
                   Send Reminders
-                </button>
+                </ButtonWithIcon>
               </div>
             </div>
           </div>
@@ -3347,13 +3426,13 @@ const StatutoryCompliance = () => {
           <div className="card-header bg-transparent border-0">
             <div className="d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Compliance Reports & Reconciliation</h5>
-              <button 
+              <ButtonWithIcon 
+                icon="heroicons:document-arrow-down"
+                className="btn-primary"
                 onClick={handleExportReport}
-                className="btn btn-primary"
               >
-                <Icon icon="heroicons:document-arrow-down" className="me-2" />
                 Export Reports
-              </button>
+              </ButtonWithIcon>
             </div>
           </div>
           <div className="card-body">
@@ -3421,73 +3500,103 @@ const StatutoryCompliance = () => {
                     <div className="row g-3">
                       <div className="col-md-4">
                         <div className="card border h-100">
-                          <div className="card-body text-center">
-                            <Icon icon="heroicons:chart-bar" className="text-primary fs-1 mb-3" />
-                            <h6 className="fw-bold">PF Reconciliation</h6>
+                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+                            <div className="bg-primary-subtle text-primary p-3 rounded-circle mb-3">
+                              <Icon icon="heroicons:chart-bar" style={{ fontSize: '1.5rem' }} />
+                            </div>
+                            <h6 className="fw-bold mb-2">PF Reconciliation</h6>
                             <p className="text-muted small mb-3">Employee vs Employer contribution</p>
-                            <button className="btn btn-outline-primary w-100">
+                            <ButtonWithIcon
+                              icon="heroicons:document-arrow-down"
+                              className="btn-outline-primary w-100"
+                            >
                               Generate
-                            </button>
+                            </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
                       <div className="col-md-4">
                         <div className="card border h-100">
-                          <div className="card-body text-center">
-                            <Icon icon="heroicons:chart-pie" className="text-success fs-1 mb-3" />
-                            <h6 className="fw-bold">TDS Reconciliation</h6>
+                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+                            <div className="bg-success-subtle text-success p-3 rounded-circle mb-3">
+                              <Icon icon="heroicons:chart-pie" style={{ fontSize: '1.5rem' }} />
+                            </div>
+                            <h6 className="fw-bold mb-2">TDS Reconciliation</h6>
                             <p className="text-muted small mb-3">Quarterly TDS statement</p>
-                            <button className="btn btn-outline-success w-100">
+                            <ButtonWithIcon
+                              icon="heroicons:document-arrow-down"
+                              className="btn-outline-success w-100"
+                            >
                               Generate
-                            </button>
+                            </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
                       <div className="col-md-4">
                         <div className="card border h-100">
-                          <div className="card-body text-center">
-                            <Icon icon="heroicons:chart-bar" className="text-warning fs-1 mb-3" />
-                            <h6 className="fw-bold">Compliance Summary</h6>
+                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+                            <div className="bg-warning-subtle text-warning p-3 rounded-circle mb-3">
+                              <Icon icon="heroicons:chart-bar" style={{ fontSize: '1.5rem' }} />
+                            </div>
+                            <h6 className="fw-bold mb-2">Compliance Summary</h6>
                             <p className="text-muted small mb-3">All statutory compliance</p>
-                            <button className="btn btn-outline-warning w-100">
+                            <ButtonWithIcon
+                              icon="heroicons:document-arrow-down"
+                              className="btn-outline-warning w-100"
+                            >
                               Generate
-                            </button>
+                            </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
                       <div className="col-md-4">
                         <div className="card border h-100">
-                          <div className="card-body text-center">
-                            <Icon icon="heroicons:document-text" className="text-info fs-1 mb-3" />
-                            <h6 className="fw-bold">Annual Return</h6>
+                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+                            <div className="bg-info-subtle text-info p-3 rounded-circle mb-3">
+                              <Icon icon="heroicons:document-text" style={{ fontSize: '1.5rem' }} />
+                            </div>
+                            <h6 className="fw-bold mb-2">Annual Return</h6>
                             <p className="text-muted small mb-3">Year-end compliance report</p>
-                            <button className="btn btn-outline-info w-100">
+                            <ButtonWithIcon
+                              icon="heroicons:document-arrow-down"
+                              className="btn-outline-info w-100"
+                            >
                               Generate
-                            </button>
+                            </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
                       <div className="col-md-4">
                         <div className="card border h-100">
-                          <div className="card-body text-center">
-                            <Icon icon="heroicons:document-chart-bar" className="text-danger fs-1 mb-3" />
-                            <h6 className="fw-bold">Audit Report</h6>
+                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+                            <div className="bg-danger-subtle text-danger p-3 rounded-circle mb-3">
+                              <Icon icon="heroicons:document-chart-bar" style={{ fontSize: '1.5rem' }} />
+                            </div>
+                            <h6 className="fw-bold mb-2">Audit Report</h6>
                             <p className="text-muted small mb-3">Statutory audit compliance</p>
-                            <button className="btn btn-outline-danger w-100">
+                            <ButtonWithIcon
+                              icon="heroicons:document-arrow-down"
+                              className="btn-outline-danger w-100"
+                            >
                               Generate
-                            </button>
+                            </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
                       <div className="col-md-4">
                         <div className="card border h-100">
-                          <div className="card-body text-center">
-                            <Icon icon="heroicons:calculator" className="text-dark fs-1 mb-3" />
-                            <h6 className="fw-bold">Tax Projection</h6>
+                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
+                            <div className="bg-dark-subtle text-dark p-3 rounded-circle mb-3">
+                              <Icon icon="heroicons:calculator" style={{ fontSize: '1.5rem' }} />
+                            </div>
+                            <h6 className="fw-bold mb-2">Tax Projection</h6>
                             <p className="text-muted small mb-3">Next FY tax liability</p>
-                            <button className="btn btn-outline-dark w-100">
+                            <ButtonWithIcon
+                              icon="heroicons:document-arrow-down"
+                              className="btn-outline-dark w-100"
+                            >
                               Generate
-                            </button>
+                            </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
@@ -3544,24 +3653,134 @@ const StatutoryCompliance = () => {
   }
 
   return (
-    <div>
+    <>
+      {/* Add custom styles for better alignment */}
+      <style>{`
+        .btn-with-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.375rem;
+        }
+        
+        .btn-with-icon svg {
+          flex-shrink: 0;
+        }
+        
+        .card-body-center {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          padding: 1.5rem !important;
+        }
+        
+        .card-icon-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 64px;
+          height: 64px;
+          border-radius: 50%;
+          margin-bottom: 1rem;
+        }
+        
+        .quick-link-card {
+          transition: all 0.3s ease;
+          border: 1px solid var(--bs-border-color);
+          height: 100%;
+          cursor: pointer;
+        }
+        
+        .quick-link-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+          border-color: var(--bs-primary);
+        }
+        
+        .quick-link-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          margin-bottom: 0.75rem;
+        }
+        
+        .table-actions {
+          white-space: nowrap;
+        }
+        
+        .card-header-actions {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+        }
+        
+        .kpi-card {
+          height: 100%;
+          border-left: 4px solid transparent;
+        }
+        
+        .kpi-card.border-primary {
+          border-left-color: var(--bs-primary);
+        }
+        
+        .kpi-card.border-info {
+          border-left-color: var(--bs-info);
+        }
+        
+        .kpi-card.border-success {
+          border-left-color: var(--bs-success);
+        }
+        
+        .kpi-card.border-warning {
+          border-left-color: var(--bs-warning);
+        }
+        
+        @media (max-width: 768px) {
+          .card-header-actions {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          
+          .btn-group-responsive {
+            flex-direction: column;
+            width: 100%;
+          }
+          
+          .btn-group-responsive .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+          }
+          
+          .quick-link-card {
+            margin-bottom: 1rem;
+          }
+        }
+      `}</style>
+      
       <div className="container-fluid">
         {/* Header */}
         <div className="mb-4">
           <div className="d-flex align-items-center gap-3 mb-3">
             {activeSection !== 'pf' && (
-              <button
+              <ButtonWithIcon
+                icon="heroicons:arrow-left"
+                className="btn-link text-decoration-none p-0"
                 onClick={() => setActiveSection('pf')}
-                className="btn btn-link d-flex align-items-center gap-2"
               >
-                <Icon icon="heroicons:arrow-left" />
                 Back to Compliance
-              </button>
+              </ButtonWithIcon>
             )}
           </div>
           <h5 className="text-3xl fw-bold text-dark mb-2 mt-3 d-flex align-items-center gap-2">
-            <Icon icon="heroicons:shield-check" />
-            Statutory Compliance Engine v4.3
+            <Icon icon="heroicons:shield-check" className="text-primary" />
+            Statutory Compliance Engine 
           </h5>
           <p className="text-muted">
             Manage PF, ESI, TDS, Professional Tax, LWF, Gratuity, and Bonus compliance with automated calculations
@@ -3570,54 +3789,62 @@ const StatutoryCompliance = () => {
 
         {/* Compliance Status Summary */}
         <div className="row g-3 mb-4">
-          <div className="col-md-3">
-            <div className="card border border-primary">
+          <div className="col-md-3 col-6">
+            <div className="card kpi-card border border-primary">
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
                     <p className="text-muted small mb-1">Total PF Contribution</p>
                     <h4 className="fw-bold text-primary mb-0">{formatCurrency(kpis.totalPFContribution)}</h4>
                   </div>
-                  <Icon icon="heroicons:building-library" className="text-primary fs-3" />
+                  <div className="bg-primary-subtle text-primary p-2 rounded">
+                    <Icon icon="heroicons:building-library" style={{ fontSize: '1.25rem' }} />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          <div className="col-md-3">
-            <div className="card border border-info">
+          <div className="col-md-3 col-6">
+            <div className="card kpi-card border border-info">
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
                     <p className="text-muted small mb-1">Total ESI Contribution</p>
                     <h4 className="fw-bold text-info mb-0">{formatCurrency(kpis.totalESIContribution)}</h4>
                   </div>
-                  <Icon icon="heroicons:heart" className="text-info fs-3" />
+                  <div className="bg-info-subtle text-info p-2 rounded">
+                    <Icon icon="heroicons:heart" style={{ fontSize: '1.25rem' }} />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          <div className="col-md-3">
-            <div className="card border border-success">
+          <div className="col-md-3 col-6">
+            <div className="card kpi-card border border-success">
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
                     <p className="text-muted small mb-1">Total TDS Deduction</p>
                     <h4 className="fw-bold text-success mb-0">{formatCurrency(kpis.totalTDSDeduction)}</h4>
                   </div>
-                  <Icon icon="heroicons:banknotes" className="text-success fs-3" />
+                  <div className="bg-success-subtle text-success p-2 rounded">
+                    <Icon icon="heroicons:banknotes" style={{ fontSize: '1.25rem' }} />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          <div className="col-md-3">
-            <div className="card border border-warning">
+          <div className="col-md-3 col-6">
+            <div className="card kpi-card border border-warning">
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
                     <p className="text-muted small mb-1">Pending Declarations</p>
                     <h4 className="fw-bold text-warning mb-0">{kpis.pendingDeclarations}</h4>
                   </div>
-                  <Icon icon="heroicons:clock" className="text-warning fs-3" />
+                  <div className="bg-warning-subtle text-warning p-2 rounded">
+                    <Icon icon="heroicons:clock" style={{ fontSize: '1.25rem' }} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -3628,8 +3855,9 @@ const StatutoryCompliance = () => {
         {renderContent()}
 
         {/* Quick Links Footer */}
-      
+     
 
+        {/* Modals remain the same */}
         {/* Generate Form Modal */}
         {showFormModal && selectedForm && (
           <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -3699,18 +3927,17 @@ const StatutoryCompliance = () => {
                     >
                       Cancel
                     </button>
-                    <button 
-                      type="button" 
-                      className="btn btn-primary"
+                    <ButtonWithIcon 
+                      icon="heroicons:document-arrow-down"
+                      className="btn-primary"
                       onClick={() => {
                         alert(`Generating ${selectedForm} form... This may take a moment.`);
                         setShowFormModal(false);
                         setSelectedForm(null);
                       }}
                     >
-                      <Icon icon="heroicons:document-arrow-down" className="me-2" />
                       Generate & Download
-                    </button>
+                    </ButtonWithIcon>
                   </div>
                 </div>
               </div>
@@ -3889,36 +4116,38 @@ const StatutoryCompliance = () => {
         )}
 
         {/* ECR Generation Modal */}
-        {showECRModal && (
-          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-lg">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">Generate ECR (Electronic Challan cum Return)</h5>
-                  <button type="button" className="btn-close" onClick={() => setShowECRModal(false)}></button>
-                </div>
-                <div className="modal-body">
-                  <div className="mb-3">
-                    <label className="form-label">Select Month</label>
-                    <select className="form-select">
-                      <option>March 2024</option>
-                      <option>February 2024</option>
-                      <option>January 2024</option>
-                    </select>
-                  </div>
-                  <div className="alert alert-info">
-                    <Icon icon="heroicons:information-circle" className="me-2" />
-                    ECR will include all eligible employees with their wages, EPF, EPS, and EDLI contributions.
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowECRModal(false)}>Cancel</button>
-                  <button type="button" className="btn btn-primary">Generate ECR</button>
-                </div>
-              </div>
+       {showECRModal && (
+  <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+    <div className="modal-dialog modal-lg">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h5 className="modal-title">Generate ECR (Electronic Challan cum Return)</h5>
+          <button type="button" className="btn-close" onClick={() => setShowECRModal(false)}></button>
+        </div>
+        <div className="modal-body">
+          <div className="mb-3">
+            <label className="form-label">Select Month</label>
+            <select className="form-select">
+              <option>March 2024</option>
+              <option>February 2024</option>
+              <option>January 2024</option>
+            </select>
+          </div>
+          <div className="alert alert-info d-flex align-items-start">
+            <Icon icon="heroicons:information-circle" className="me-2 flex-shrink-0 mt-1" />
+            <div>
+              ECR will include all eligible employees with their wages, EPF, EPS, and EDLI contributions.
             </div>
           </div>
-        )}
+        </div>
+        <div className="modal-footer">
+          <button type="button" className="btn btn-secondary" onClick={() => setShowECRModal(false)}>Cancel</button>
+          <button type="button" className="btn btn-primary">Generate ECR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
         {/* Remittance Modal */}
         {showRemittanceModal && (
@@ -4095,7 +4324,7 @@ const StatutoryCompliance = () => {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 };
 

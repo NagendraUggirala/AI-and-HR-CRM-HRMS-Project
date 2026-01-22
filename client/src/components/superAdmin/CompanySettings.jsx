@@ -22,11 +22,22 @@ const CompanySettings = () => {
   });
 
   // ---------------- LOGO UPLOAD ----------------
-  const [logo, setLogo] = useState({
-    file: null,
-    preview: 'https://api.dicebear.com/7.x/shapes/svg?seed=TechCorp',
-    name: 'company_logo.png',
-    size: '1.2 MB'
+  // Load logo from localStorage on component mount
+  const [logo, setLogo] = useState(() => {
+    const savedLogo = localStorage.getItem('companyLogo');
+    if (savedLogo) {
+      try {
+        return JSON.parse(savedLogo);
+      } catch (e) {
+        // If parsing fails, use default
+      }
+    }
+    return {
+      file: null,
+      preview: 'assets/images/asset/NewLogo.png',
+      name: 'company_logo.png',
+      size: '1.2 MB'
+    };
   });
 
   // ---------------- CURRENCY SETTINGS ----------------
@@ -281,12 +292,17 @@ const CompanySettings = () => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setLogo({
+        const newLogo = {
           file: file,
           preview: reader.result,
           name: file.name,
           size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`
-        });
+        };
+        setLogo(newLogo);
+        // Save logo to localStorage immediately when uploaded
+        localStorage.setItem('companyLogo', JSON.stringify(newLogo));
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new Event('companyLogoUpdated'));
       };
       reader.readAsDataURL(file);
     }
@@ -295,6 +311,12 @@ const CompanySettings = () => {
 
   const handleCompanyProfileUpdate = (e) => {
     e.preventDefault();
+    // Save logo to localStorage when profile is updated
+    if (logo.preview) {
+      localStorage.setItem('companyLogo', JSON.stringify(logo));
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new Event('companyLogoUpdated'));
+    }
     // API call would go here
     console.log('Company profile updated:', companyProfile);
     alert('Company profile updated successfully!');

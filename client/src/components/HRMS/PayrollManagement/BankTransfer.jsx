@@ -5,7 +5,8 @@ import {
   Search, Plus, Eye, FileText, Trash2, Download,
   Clock, CheckCircle, XCircle, Lock, RefreshCw, Upload,
   AlertCircle, BanknoteIcon, CreditCard, FileCheck,
-  Filter, FileSpreadsheet, Settings, BarChart3, Send
+  Filter, FileSpreadsheet, Settings, BarChart3, Send,
+  TrendingUp, DollarSign, Users, Calendar, PieChart
 } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -17,8 +18,8 @@ const Breadcrumb = ({ items }) => {
     <nav aria-label="breadcrumb" className="mb-3">
       <ol className="breadcrumb mb-0">
         {items.map((item, index) => (
-          <li 
-            key={index} 
+          <li
+            key={index}
             className={`breadcrumb-item ${item.active ? 'active' : ''}`}
             aria-current={item.active ? 'page' : undefined}
           >
@@ -50,6 +51,7 @@ const BankTransfer = () => {
   const [bankFilter, setBankFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [showReconciliationPanel, setShowReconciliationPanel] = useState(false);
+  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false); // NEW: Analytics modal state
   const [reconciliationData, setReconciliationData] = useState([]);
   const [selectedEmployees, setSelectedEmployees] = useState(new Set());
   const [selectedPayments, setSelectedPayments] = useState(new Set());
@@ -292,6 +294,40 @@ const BankTransfer = () => {
     },
   ];
 
+  // Analytics data - NEW
+  const analyticsData = {
+    monthlySummary: [
+      { month: "Oct 2024", amount: "₹2.85Cr", count: 158, successRate: 98.1 },
+      { month: "Sep 2024", amount: "₹2.75Cr", count: 152, successRate: 97.5 },
+      { month: "Aug 2024", amount: "₹2.65Cr", count: 148, successRate: 98.5 },
+      { month: "Jul 2024", amount: "₹2.55Cr", count: 145, successRate: 96.8 },
+    ],
+    bankDistribution: [
+      { bank: "SBI", amount: "₹1.25Cr", percentage: 43.9, count: 85 },
+      { bank: "HDFC", amount: "₹75L", percentage: 26.3, count: 42 },
+      { bank: "ICICI", amount: "₹50L", percentage: 17.5, count: 28 },
+      { bank: "Others", amount: "₹35L", percentage: 12.3, count: 25 },
+    ],
+    paymentTypeDistribution: [
+      { type: "NEFT", count: 120, percentage: 75.9 },
+      { type: "RTGS", count: 25, percentage: 15.8 },
+      { type: "IMPS", count: 13, percentage: 8.2 },
+    ],
+    statusTrend: {
+      processed: 155,
+      failed: 7,
+      pending: 3,
+      generated: 5,
+    },
+    topEmployees: [
+      { name: "Abhilash Gurrampally", amount: "₹85,000", bank: "SBI", date: "25 Oct 2024" },
+      { name: "Anusha Enigalla", amount: "₹62,000", bank: "SBI", date: "25 Oct 2024" },
+      { name: "Ashok Kota", amount: "₹95,000", bank: "Canara", date: "25 Oct 2024" },
+      { name: "Burri Gowtham", amount: "₹1,10,000", bank: "HDFC", date: "25 Oct 2024" },
+      { name: "Bogala Chandramouli", amount: "₹78,000", bank: "SBI", date: "25 Oct 2024" },
+    ],
+  };
+
   // Initial reconciliation data
   useEffect(() => {
     const initialReconciliationData = [
@@ -364,23 +400,23 @@ const BankTransfer = () => {
   // Pagination calculations
   const indexOfLastPayment = currentPage * paymentsPerPage;
   const indexOfFirstPayment = indexOfLastPayment - paymentsPerPage;
-  
+
   // Filter payments
   const filteredPayments = payments.filter((payment) => {
     const matchesSearch =
       payment.fileName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       payment.bank.toLowerCase().includes(searchQuery.toLowerCase()) ||
       payment.referenceNumber?.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesBank = bankFilter === "All" || payment.bank === bankFilter;
     const matchesStatus = statusFilter === "All" || payment.status === statusFilter;
-    
+
     // Advanced filters
-    const matchesDate = !advancedFilters.dateFrom || 
-      (payment.generatedDate >= advancedFilters.dateFrom && 
-       (!advancedFilters.dateTo || payment.generatedDate <= advancedFilters.dateTo));
-    
-    const matchesPaymentMethod = advancedFilters.paymentMethod === "All" || 
+    const matchesDate = !advancedFilters.dateFrom ||
+      (payment.generatedDate >= advancedFilters.dateFrom &&
+        (!advancedFilters.dateTo || payment.generatedDate <= advancedFilters.dateTo));
+
+    const matchesPaymentMethod = advancedFilters.paymentMethod === "All" ||
       payment.paymentMethod === advancedFilters.paymentMethod;
 
     return matchesSearch && matchesBank && matchesStatus && matchesDate && matchesPaymentMethod;
@@ -431,13 +467,13 @@ const BankTransfer = () => {
       default:
         break;
     }
-    
+
     // Reset bulk action dropdown
     setBulkAction("");
   };
 
   const exportSelectedPayments = () => {
-    const selectedPaymentData = payments.filter(payment => 
+    const selectedPaymentData = payments.filter(payment =>
       selectedPayments.has(payment.id)
     );
 
@@ -447,7 +483,7 @@ const BankTransfer = () => {
     }
 
     const headers = [
-      "File Name", "Bank", "Payment Type", "Status", "Total Amount", 
+      "File Name", "Bank", "Payment Type", "Status", "Total Amount",
       "Employees", "Generated Date", "Processed Date", "Reference Number",
       "Batch ID", "Encrypted", "Failed Transactions"
     ];
@@ -489,7 +525,7 @@ const BankTransfer = () => {
     if (selectedCount === 0) return;
 
     if (window.confirm(`Retry ${selectedCount} failed payment(s)?`)) {
-      setPayments(payments.map(payment => 
+      setPayments(payments.map(payment =>
         selectedPayments.has(payment.id) && payment.status === "Failed"
           ? { ...payment, status: "In Progress", failedTransactions: 0 }
           : payment
@@ -497,7 +533,7 @@ const BankTransfer = () => {
 
       // Simulate retry process
       setTimeout(() => {
-        setPayments(payments.map(payment => 
+        setPayments(payments.map(payment =>
           selectedPayments.has(payment.id) && payment.status === "In Progress"
             ? { ...payment, status: "Processed", failedTransactions: 0 }
             : payment
@@ -525,18 +561,18 @@ const BankTransfer = () => {
     if (selectedCount === 0) return;
 
     if (window.confirm(`Mark ${selectedCount} selected payment(s) as processed?`)) {
-      setPayments(payments.map(payment => 
+      setPayments(payments.map(payment =>
         selectedPayments.has(payment.id)
-          ? { 
-              ...payment, 
-              status: "Processed",
-              processedDate: new Date().toLocaleDateString("en-GB", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              }),
-              acknowledgment: "Auto-processed"
-            }
+          ? {
+            ...payment,
+            status: "Processed",
+            processedDate: new Date().toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            }),
+            acknowledgment: "Auto-processed"
+          }
           : payment
       ));
 
@@ -547,10 +583,10 @@ const BankTransfer = () => {
 
   const downloadPaymentFile = (payment) => {
     // Find employees for this payment
-    const paymentEmployees = employees.filter(emp => 
+    const paymentEmployees = employees.filter(emp =>
       payment.includedEmployees && payment.includedEmployees.includes(emp.id)
     );
-    
+
     if (paymentEmployees.length === 0) {
       toast.warning("No employee data found for this payment");
       return;
@@ -579,19 +615,19 @@ const BankTransfer = () => {
     }
 
     setIsGenerating(true);
-    
+
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
       const bankInfo = banks.find((b) => b.id === parseInt(selectedBank));
       const selectedEmployeesData = employees.filter(emp => selectedEmployees.has(emp.id));
-      
+
       const totalAmount = selectedEmployeesData.reduce((sum, emp) => {
         const salary = parseFloat(emp.salary.replace(/[^0-9.]/g, ''));
         return sum + (isNaN(salary) ? 0 : salary);
       }, 0);
-      
+
       const newPayment = {
         id: payments.length + 1,
         fileName: `SALARY_${new Date()
@@ -623,14 +659,14 @@ const BankTransfer = () => {
       };
 
       setPayments([newPayment, ...payments]);
-      
+
       // Generate and download the payment file
       generatePaymentFile(newPayment, bankInfo, selectedEmployeesData);
-      
+
       toast.success(`Payment file generated for ${bankInfo.name} (${paymentType})`, {
         autoClose: 3000,
       });
-      
+
     } catch (error) {
       toast.error("Failed to generate payment file");
     } finally {
@@ -681,7 +717,7 @@ const BankTransfer = () => {
       return `02,${String(index + 1).padStart(6, '0')},${emp.accountNumber},${emp.ifscCode},${amount.padStart(13, '0')},${emp.name.substring(0, 30)}`;
     });
     const footer = `03,${employeeData.length},${payment.totalAmount.replace(/[^0-9.]/g, '').padStart(13, '0')}`;
-    
+
     const fileContent = [header, ...rows, footer].join('\n');
     downloadFile(fileContent, `${payment.fileName}.txt`, 'text/plain');
   };
@@ -707,7 +743,7 @@ const BankTransfer = () => {
     </transaction>`).join('')}
   </transactions>
 </paymentBatch>`;
-    
+
     downloadFile(xmlContent, `${payment.fileName}.xml`, 'application/xml');
   };
 
@@ -722,10 +758,10 @@ Total Amount: ${payment.totalAmount}
 Total Employees: ${payment.totalEmployees}
 
 EMPLOYEE PAYMENTS:
-${employeeData.map(emp => 
-  `${emp.code} | ${emp.name} | ${emp.bankName} | ${emp.ifscCode} | ${emp.accountNumber} | ${emp.salary}`
-).join('\n')}`;
-    
+${employeeData.map(emp =>
+      `${emp.code} | ${emp.name} | ${emp.bankName} | ${emp.ifscCode} | ${emp.accountNumber} | ${emp.salary}`
+    ).join('\n')}`;
+
     downloadFile(txtContent, `${payment.fileName}.txt`, 'text/plain');
   };
 
@@ -743,7 +779,7 @@ ${employeeData.map(emp =>
 
   const handleExportReport = (format = 'csv') => {
     const headers = [
-      "File Name", "Bank", "Payment Type", "Status", "Total Amount", 
+      "File Name", "Bank", "Payment Type", "Status", "Total Amount",
       "Employees", "Generated Date", "Processed Date", "Reference Number",
       "Batch ID", "Encrypted", "Failed Transactions"
     ];
@@ -779,24 +815,24 @@ ${employeeData.map(emp =>
 
   const generatePDFReport = (headers, data) => {
     const doc = new jsPDF();
-    
+
     // Title
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.text("Payment Processing Report", 14, 15);
-    
+
     // Report Info
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 25);
     doc.text(`Total Payments: ${payments.length}`, 14, 30);
-    
+
     // Simple table
     let y = 40;
     doc.setFontSize(12);
     doc.text("Payment Records", 14, y);
     y += 10;
-    
+
     // Draw table header
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
@@ -805,11 +841,11 @@ ${employeeData.map(emp =>
     doc.text("Status", 90, y);
     doc.text("Amount", 120, y);
     doc.text("Employees", 150, y);
-    
+
     y += 5;
     doc.line(14, y, 200, y);
     y += 5;
-    
+
     // Draw table data
     doc.setFont("helvetica", "normal");
     data.forEach((row, index) => {
@@ -817,7 +853,7 @@ ${employeeData.map(emp =>
         doc.addPage();
         y = 20;
       }
-      
+
       doc.text(row[0].substring(0, 20), 14, y);
       doc.text(row[1].substring(0, 15), 50, y);
       doc.text(row[3], 90, y);
@@ -825,7 +861,7 @@ ${employeeData.map(emp =>
       doc.text(row[5].toString(), 150, y);
       y += 6;
     });
-    
+
     doc.save("payment-processing-report.pdf");
   };
 
@@ -849,20 +885,20 @@ ${employeeData.map(emp =>
     try {
       // Simulate file processing
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       if (selectedPayment) {
         const updatedPayments = payments.map((payment) =>
           payment.id === selectedPayment.id
             ? {
-                ...payment,
-                acknowledgment: "Uploaded",
-                status: "Processed",
-                processedDate: new Date().toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                }),
-              }
+              ...payment,
+              acknowledgment: "Uploaded",
+              status: "Processed",
+              processedDate: new Date().toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              }),
+            }
             : payment
         );
 
@@ -910,7 +946,7 @@ ${employeeData.map(emp =>
       }
 
       toast.info("Retrying failed transactions...");
-      
+
       // Simulate retry process
       setTimeout(() => {
         setPayments(
@@ -931,10 +967,10 @@ ${employeeData.map(emp =>
   const handleReconcile = async () => {
     try {
       toast.info("Starting bank reconciliation...");
-      
+
       // Simulate reconciliation process
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       const newReconciliationData = [
         {
           id: 1,
@@ -1067,10 +1103,10 @@ ${employeeData.map(emp =>
       status === "In Progress"
         ? "Sent to Bank"
         : status === "Processed"
-        ? "Processed"
-        : status === "Failed"
-        ? "Failed"
-        : "Generated"
+          ? "Processed"
+          : status === "Failed"
+            ? "Failed"
+            : "Generated"
     );
 
     return (
@@ -1079,11 +1115,10 @@ ${employeeData.map(emp =>
           <React.Fragment key={step}>
             <div className="d-flex flex-column align-items-center">
               <div
-                className={`rounded-circle d-flex align-items-center justify-content-center border-2 ${
-                  index <= currentIndex
-                    ? "bg-success border-success text-white"
-                    : "bg-white border-secondary text-muted"
-                }`}
+                className={`rounded-circle d-flex align-items-center justify-content-center border-2 ${index <= currentIndex
+                  ? "bg-success border-success text-white"
+                  : "bg-white border-secondary text-muted"
+                  }`}
                 style={{ width: "32px", height: "32px" }}
               >
                 {step === "Generated" ? (
@@ -1100,9 +1135,8 @@ ${employeeData.map(emp =>
             </div>
             {index < steps.length - 1 && (
               <div
-                className={`border-top border-2 ${
-                  index < currentIndex ? "border-success" : "border-secondary"
-                }`}
+                className={`border-top border-2 ${index < currentIndex ? "border-success" : "border-secondary"
+                  }`}
                 style={{ width: "48px" }}
               />
             )}
@@ -1137,27 +1171,27 @@ ${employeeData.map(emp =>
 
   const renderPagination = () => {
     const pages = [];
-    
+
     if (totalPages <= 5) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
       pages.push(1);
-      
+
       if (currentPage > 3) pages.push("...");
-      
+
       const start = Math.max(2, currentPage - 1);
       const end = Math.min(totalPages - 1, currentPage + 1);
-      
+
       for (let i = start; i <= end; i++) {
         pages.push(i);
       }
-      
+
       if (currentPage < totalPages - 2) pages.push("...");
       pages.push(totalPages);
     }
-    
+
     return pages;
   };
 
@@ -1171,28 +1205,29 @@ ${employeeData.map(emp =>
         ]}
       />
 
-      {/* Header */}
+      {/* Header - FIXED */}
       <div className="card border shadow-none mb-4 mt-3">
         <div className="card-body">
           <div className="d-flex align-items-center justify-content-between mb-3">
-            <div>
-              <h5 className="mb-1">
-                <Icon icon="heroicons:banknotes" /> Bank Transfer & Payment Processing
-              </h5>
-              <p className="text-muted small mb-0">
-                Generate, track, and reconcile payment files for salary disbursement
-              </p>
+            <div className="d-flex align-items-start">
+              
+              <div>
+                <h5 className="text-3xl fw-bold text-dark mb-2 mt-3 d-flex align-items-center gap-2">   <Icon icon="heroicons:banknotes" />Bank Transfer & Payment Processing</h5>
+                <p className="text-muted small mb-0">
+                  Generate, track, and reconcile payment files for salary disbursement
+                </p>
+              </div>
             </div>
             <div className="d-flex gap-2">
               <button
-                className="btn btn-outline-primary"
+                className="btn btn-outline-primary d-flex align-items-center"
                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
               >
                 <Filter size={16} className="me-2" />
                 {showAdvancedFilters ? "Hide Filters" : "Advanced Filters"}
               </button>
               <button
-                className="btn btn-primary"
+                className="btn btn-primary d-flex align-items-center"
                 onClick={() => setShowGeneratePanel(true)}
               >
                 <Plus size={16} className="me-2" />
@@ -1258,7 +1293,7 @@ ${employeeData.map(emp =>
                       type="date"
                       className="form-control"
                       value={advancedFilters.dateFrom}
-                      onChange={(e) => setAdvancedFilters({...advancedFilters, dateFrom: e.target.value})}
+                      onChange={(e) => setAdvancedFilters({ ...advancedFilters, dateFrom: e.target.value })}
                     />
                   </div>
                   <div className="col-md-3">
@@ -1267,7 +1302,7 @@ ${employeeData.map(emp =>
                       type="date"
                       className="form-control"
                       value={advancedFilters.dateTo}
-                      onChange={(e) => setAdvancedFilters({...advancedFilters, dateTo: e.target.value})}
+                      onChange={(e) => setAdvancedFilters({ ...advancedFilters, dateTo: e.target.value })}
                     />
                   </div>
                   <div className="col-md-3">
@@ -1275,7 +1310,7 @@ ${employeeData.map(emp =>
                     <select
                       className="form-select"
                       value={advancedFilters.paymentMethod}
-                      onChange={(e) => setAdvancedFilters({...advancedFilters, paymentMethod: e.target.value})}
+                      onChange={(e) => setAdvancedFilters({ ...advancedFilters, paymentMethod: e.target.value })}
                     >
                       <option value="All">All Methods</option>
                       <option value="Bulk Transfer">Bulk Transfer</option>
@@ -1306,18 +1341,18 @@ ${employeeData.map(emp =>
         </div>
       </div>
 
-      {/* Payment Statistics */}
+      {/* Payment Statistics - FIXED */}
       <div className="row g-4 mb-4">
         <div className="col-md-3">
           <div className="card border shadow-none">
             <div className="card-body">
               <div className="d-flex align-items-center">
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 me-3">
                   <div className="w-48-px h-48-px bg-primary-subtle rounded-circle d-flex align-items-center justify-content-center">
                     <BanknoteIcon size={20} className="text-primary" />
                   </div>
                 </div>
-                <div className="flex-grow-1 ms-3">
+                <div className="flex-grow-1">
                   <h6 className="text-muted mb-1">Total Processed</h6>
                   <div className="fw-bold fs-4">₹2.85Cr</div>
                   <div className="small text-muted">This month</div>
@@ -1330,12 +1365,12 @@ ${employeeData.map(emp =>
           <div className="card border shadow-none">
             <div className="card-body">
               <div className="d-flex align-items-center">
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 me-3">
                   <div className="w-48-px h-48-px bg-success-subtle rounded-circle d-flex align-items-center justify-content-center">
                     <CheckCircle size={20} className="text-success" />
                   </div>
                 </div>
-                <div className="flex-grow-1 ms-3">
+                <div className="flex-grow-1">
                   <h6 className="text-muted mb-1">Successful</h6>
                   <div className="fw-bold fs-4">158</div>
                   <div className="small text-muted">Transactions</div>
@@ -1348,12 +1383,12 @@ ${employeeData.map(emp =>
           <div className="card border shadow-none">
             <div className="card-body">
               <div className="d-flex align-items-center">
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 me-3">
                   <div className="w-48-px h-48-px bg-warning-subtle rounded-circle d-flex align-items-center justify-content-center">
                     <AlertCircle size={20} className="text-warning" />
                   </div>
                 </div>
-                <div className="flex-grow-1 ms-3">
+                <div className="flex-grow-1">
                   <h6 className="text-muted mb-1">Pending</h6>
                   <div className="fw-bold fs-4">3</div>
                   <div className="small text-muted">Require action</div>
@@ -1366,12 +1401,12 @@ ${employeeData.map(emp =>
           <div className="card border shadow-none">
             <div className="card-body">
               <div className="d-flex align-items-center">
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 me-3">
                   <div className="w-48-px h-48-px bg-danger-subtle rounded-circle d-flex align-items-center justify-content-center">
                     <XCircle size={20} className="text-danger" />
                   </div>
                 </div>
-                <div className="flex-grow-1 ms-3">
+                <div className="flex-grow-1">
                   <h6 className="text-muted mb-1">Failed</h6>
                   <div className="fw-bold fs-4">7</div>
                   <div className="small text-muted">Need retry</div>
@@ -1382,7 +1417,7 @@ ${employeeData.map(emp =>
         </div>
       </div>
 
-      {/* Payments Table */}
+      {/* Payments Table - FIXED */}
       <div className="card border shadow-none mb-4">
         <div className="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
           <div className="d-flex align-items-center gap-3">
@@ -1402,7 +1437,7 @@ ${employeeData.map(emp =>
             )}
           </div>
           <div className="d-flex gap-2">
-            <select 
+            <select
               className="form-select form-select-sm w-auto"
               value={bulkAction}
               onChange={(e) => {
@@ -1418,8 +1453,8 @@ ${employeeData.map(emp =>
               <option value="delete">Delete Selected</option>
               <option value="mark_processed">Mark as Processed</option>
             </select>
-            <button 
-              className="btn btn-sm btn-outline-primary"
+            <button
+              className="btn btn-sm btn-outline-primary d-flex align-items-center"
               onClick={() => handleExportReport('csv')}
             >
               <Download size={14} className="me-1" />
@@ -1498,9 +1533,9 @@ ${employeeData.map(emp =>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <div className="d-flex align-items-center justify-content-center gap-2">
+                        <div className="d-flex align-items-center justify-content-center gap-1">
                           <button
-                            className="btn btn-sm btn-outline-primary"
+                            className="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center"
                             onClick={() => {
                               setSelectedPayment(payment);
                               setShowDetailModal(true);
@@ -1511,7 +1546,7 @@ ${employeeData.map(emp =>
                           </button>
                           {payment.status === "Failed" && (
                             <button
-                              className="btn btn-sm btn-outline-warning"
+                              className="btn btn-sm btn-outline-warning d-flex align-items-center justify-content-center"
                               onClick={() => handleRetryFailed(payment.id)}
                               title="Retry Failed"
                             >
@@ -1520,7 +1555,7 @@ ${employeeData.map(emp =>
                           )}
                           {payment.status === "Processed" && (
                             <button
-                              className="btn btn-sm btn-outline-success"
+                              className="btn btn-sm btn-outline-success d-flex align-items-center justify-content-center"
                               onClick={() => {
                                 setSelectedPayment(payment);
                                 setShowUploadModal(true);
@@ -1531,7 +1566,7 @@ ${employeeData.map(emp =>
                             </button>
                           )}
                           <button
-                            className="btn btn-sm btn-outline-info"
+                            className="btn btn-sm btn-outline-info d-flex align-items-center justify-content-center"
                             onClick={() => {
                               downloadPaymentFile(payment);
                             }}
@@ -1540,7 +1575,7 @@ ${employeeData.map(emp =>
                             <Download size={14} />
                           </button>
                           <button
-                            className="btn btn-sm btn-outline-danger"
+                            className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
                             onClick={() => {
                               if (
                                 window.confirm(
@@ -1583,7 +1618,7 @@ ${employeeData.map(emp =>
           <div className="text-muted">
             {selectedPayments.size > 0 ? (
               <span className="text-primary">
-                {selectedPayments.size} selected • 
+                {selectedPayments.size} selected •
               </span>
             ) : null}
             Showing {indexOfFirstPayment + 1} to {Math.min(indexOfLastPayment, filteredPayments.length)} of {filteredPayments.length} payments
@@ -1595,7 +1630,7 @@ ${employeeData.map(emp =>
                   Previous
                 </button>
               </li>
-              
+
               {renderPagination().map((page, idx) => (
                 <li key={idx} className={`page-item ${page === currentPage ? 'active' : ''} ${page === '...' ? 'disabled' : ''}`}>
                   {page === '...' ? (
@@ -1607,7 +1642,7 @@ ${employeeData.map(emp =>
                   )}
                 </li>
               ))}
-              
+
               <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
                 <button className="page-link" onClick={() => handleGoToPage(currentPage + 1)}>
                   Next
@@ -1618,7 +1653,7 @@ ${employeeData.map(emp =>
         </div>
       )}
 
-      {/* Quick Actions & Pending Payments */}
+      {/* Quick Actions & Pending Payments - FIXED */}
       <div className="row g-4">
         <div className="col-md-8">
           <div className="card border shadow-none">
@@ -1628,38 +1663,38 @@ ${employeeData.map(emp =>
             <div className="card-body">
               <div className="d-flex flex-wrap gap-3">
                 <button
-                  className="btn btn-light border text-muted d-flex align-items-center gap-2"
+                  className="btn btn-light border text-muted d-flex align-items-center"
                   onClick={() => handleExportReport('csv')}
                 >
-                  <FileSpreadsheet size={16} />
+                  <FileSpreadsheet size={16} className="me-2" />
                   Export CSV
                 </button>
                 <button
-                  className="btn btn-light border text-muted d-flex align-items-center gap-2"
+                  className="btn btn-light border text-muted d-flex align-items-center"
                   onClick={() => handleExportReport('pdf')}
                 >
-                  <FileText size={16} />
+                  <FileText size={16} className="me-2" />
                   Export PDF
                 </button>
                 <button
-                  className="btn btn-light border text-muted d-flex align-items-center gap-2"
-                  onClick={handleReconcile}
+                  className="btn btn-light border text-muted d-flex align-items-center"
+                  onClick={() => setShowReconciliationPanel(true)} // CHANGED: Bank Reconciliation opens reconciliation panel
                 >
-                  <FileCheck size={16} />
+                  <FileCheck size={16} className="me-2" />
                   Bank Reconciliation
                 </button>
                 <button
-                  className="btn btn-light border text-muted d-flex align-items-center gap-2"
-                  onClick={() => setShowReconciliationPanel(true)}
+                  className="btn btn-light border text-muted d-flex align-items-center"
+                  onClick={() => setShowAnalyticsModal(true)} // CHANGED: View Analytics opens analytics modal
                 >
-                  <BarChart3 size={16} />
+                  <BarChart3 size={16} className="me-2" />
                   View Analytics
                 </button>
                 <button
-                  className="btn btn-light border text-muted d-flex align-items-center gap-2"
+                  className="btn btn-light border text-muted d-flex align-items-center"
                   onClick={() => alert("Payment file encryption settings")}
                 >
-                  <Settings size={16} />
+                  <Settings size={16} className="me-2" />
                   Settings
                 </button>
               </div>
@@ -1671,7 +1706,7 @@ ${employeeData.map(emp =>
             <div className="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
               <h6 className="mb-0">Pending Payments ({pendingPayments.length})</h6>
               <button
-                className="btn btn-sm btn-outline-primary"
+                className="btn btn-sm btn-outline-primary d-flex align-items-center"
                 onClick={() => {
                   toast.info("Showing all pending payments");
                 }}
@@ -1703,7 +1738,7 @@ ${employeeData.map(emp =>
                           {payment.daysPending} days • {payment.retryCount} retries
                         </div>
                         <button
-                          className="btn btn-sm btn-outline-warning mt-1"
+                          className="btn btn-sm btn-outline-warning mt-1 d-flex align-items-center"
                           onClick={() => {
                             toast.info(`Retrying payment for ${payment.employeeName}`);
                           }}
@@ -1720,287 +1755,343 @@ ${employeeData.map(emp =>
         </div>
       </div>
 
-      {/* Generate Payment File Panel */}
+      {/* ================= Generate Payment File Modal ================= */}
       {showGeneratePanel && (
-        <div
-          className="modal fade show d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1050 }}
-        >
-          <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Generate Payment File</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => {
-                    setShowGeneratePanel(false);
-                    setSelectedBank("");
-                    setPaymentType("NEFT");
-                    setEncryptionEnabled(true);
-                    setSplitByBank(true);
-                    setSelectedEmployees(new Set());
-                  }}
-                ></button>
-              </div>
+        <>
+          {/* Backdrop */}
+          <div className="modal-backdrop fade show" style={{ zIndex: 1040 }} />
 
-              <div className="modal-body">
-                {/* Bank Selector */}
-                <div className="mb-4">
-                  <label className="form-label fw-semibold">Select Bank</label>
-                  <select
-                    className="form-select"
-                    value={selectedBank}
-                    onChange={(e) => setSelectedBank(e.target.value)}
-                  >
-                    <option value="">Choose a bank...</option>
-                    {banks.map((bank) => (
-                      <option key={bank.id} value={bank.id}>
-                        {bank.name} ({bank.code}) - Supports: {bank.supportedTypes.join(', ')}
-                      </option>
-                    ))}
-                  </select>
+          {/* Modal */}
+          <div
+            className="modal fade show d-block"
+            style={{
+              zIndex: 1050,
+              position: "fixed",
+              inset: 0,
+              overflowY: "auto",
+              paddingLeft: "500px",
+            }}
+          >
+            <div
+              className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+              style={{ maxWidth: "90%" }}
+            >
+              <div className="modal-content rounded-4">
+                {/* Header */}
+                <div className="modal-header">
+                  <h5 className="modal-title">Generate Payment File</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => {
+                      setShowGeneratePanel(false);
+                      setSelectedBank("");
+                      setPaymentType("NEFT");
+                      setEncryptionEnabled(true);
+                      setSplitByBank(true);
+                      setSelectedEmployees(new Set());
+                    }}
+                  />
                 </div>
 
-                {/* Payment Type Selector */}
-                <div className="mb-4">
-                  <label className="form-label fw-semibold">Payment Type</label>
-                  <div className="row g-3">
-                    {paymentTypes.map((type) => (
-                      <div key={type.id} className="col-md-4">
+                {/* Body */}
+                <div className="modal-body">
+                  {/* ================= Select Bank ================= */}
+                  <div className="mb-4">
+                    <h6 className="fw-semibold text-muted mb-2">Select Bank</h6>
+                    <select
+                      className="form-select"
+                      value={selectedBank}
+                      onChange={(e) => setSelectedBank(e.target.value)}
+                    >
+                      <option value="">Choose a bank...</option>
+                      {banks.map((bank) => (
+                        <option key={bank.id} value={bank.id}>
+                          {bank.name} ({bank.code}) – Supports:{" "}
+                          {bank.supportedTypes.join(", ")}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {/* ================= Payment Type ================= */}
+                  <div className="mb-4">
+                    <h6 className="fw-semibold text-muted mb-2">Payment Type</h6>
+
+                    <div className="d-flex flex-column gap-3">
+                      {paymentTypes.map((type) => (
                         <div
-                          className={`card border cursor-pointer ${
-                            paymentType === type.id ? "border-primary shadow-sm" : ""
-                          }`}
+                          key={type.id}
+                          className={`card cursor-pointer ${paymentType === type.id
+                            ? "border-primary shadow-sm"
+                            : "border"
+                            }`}
                           onClick={() => setPaymentType(type.id)}
-                          style={{ height: "100%" }}
                         >
-                          <div className="card-body text-center">
-                            <div className="mb-2">
-                              <div
-                                className={`rounded-circle d-inline-flex align-items-center justify-content-center ${
-                                  paymentType === type.id
-                                    ? "bg-primary"
-                                    : "bg-light"
+                          <div className="card-body d-flex align-items-center gap-3">
+                            {/* Icon */}
+                            <div
+                              className={`rounded-circle d-flex align-items-center justify-content-center ${paymentType === type.id ? "bg-primary" : "bg-light"
                                 }`}
-                                style={{ width: "48px", height: "48px" }}
-                              >
-                                <CreditCard
-                                  size={20}
-                                  className={
-                                    paymentType === type.id
-                                      ? "text-white"
-                                      : "text-muted"
-                                  }
-                                />
+                              style={{ width: 48, height: 48 }}
+                            >
+                              <CreditCard
+                                size={20}
+                                className={
+                                  paymentType === type.id ? "text-white" : "text-muted"
+                                }
+                              />
+                            </div>
+
+                            {/* Content */}
+                            <div className="flex-grow-1">
+                              <div className="fw-bold">{type.name}</div>
+                              <div className="small text-muted">
+                                {type.description}
+                              </div>
+
+                              <div className="d-flex gap-3 mt-1 flex-wrap">
+                                {type.cutoffTime && (
+                                  <span className="small text-warning">
+                                    Cut-off: {type.cutoffTime}
+                                  </span>
+                                )}
+                                {type.minAmount && (
+                                  <span className="small text-info">
+                                    Min: {type.minAmount}
+                                  </span>
+                                )}
+                                {type.maxAmount && (
+                                  <span className="small text-info">
+                                    Max: {type.maxAmount}
+                                  </span>
+                                )}
                               </div>
                             </div>
-                            <h6 className="fw-bold mb-1">{type.name}</h6>
-                            <p className="small text-muted mb-2">
-                              {type.description}
-                            </p>
-                            {type.cutoffTime && (
-                              <div className="small text-warning">
-                                Cut-off: {type.cutoffTime}
-                              </div>
-                            )}
-                            {type.minAmount && (
-                              <div className="small text-info">
-                                Min: {type.minAmount}
-                              </div>
-                            )}
-                            {type.maxAmount && (
-                              <div className="small text-info">
-                                Max: {type.maxAmount}
-                              </div>
-                            )}
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Employee Selection */}
-                <div className="mb-4">
-                  <label className="form-label fw-semibold">
-                    Select Employees ({selectedEmployees.size} selected)
-                  </label>
-                  <div className="card border">
-                    <div className="card-header bg-light d-flex justify-content-between align-items-center">
-                      <div>
-                        <input
-                          type="checkbox"
-                          className="form-check-input me-2"
-                          checked={selectedEmployees.size === employees.length}
-                          onChange={handleSelectAllEmployees}
-                        />
-                        <span className="small">Select All</span>
-                      </div>
-                      <div className="text-muted small">
-                        Total: {employees.length} employees
-                      </div>
+                      ))}
                     </div>
-                    <div className="card-body" style={{ maxHeight: "200px", overflowY: "auto" }}>
-                      <div className="row g-2">
-                        {employees.map((emp) => (
-                          <div key={emp.id} className="col-md-6">
-                            <div className="form-check">
+                  </div>
+
+                  {/* ================= Employee Selection ================= */}
+                  <div className="mb-4">
+                    <h6 className="fw-semibold text-muted mb-2">
+                      Select Employees ({selectedEmployees.size} selected)
+                    </h6>
+
+                    <div className="card border">
+                      <div className="card-header bg-light d-flex justify-content-between align-items-center">
+                        <div>
+                          <input
+                            type="checkbox"
+                            className="form-check-input me-2"
+                            checked={selectedEmployees.size === employees.length}
+                            onChange={handleSelectAllEmployees}
+                          />
+                          <span className="small">Select All</span>
+                        </div>
+                        <span className="small text-muted">
+                          Total: {employees.length}
+                        </span>
+                      </div>
+
+                      <div
+                        className="card-body"
+                        style={{ maxHeight: 220, overflowY: "auto" }}
+                      >
+                        <div className="d-flex flex-column gap-2">
+                          {employees.map((emp) => (
+                            <div
+                              key={emp.id}
+                              className="border rounded p-2 d-flex align-items-center gap-3"
+                            >
+                              {/* Checkbox */}
                               <input
-                                className="form-check-input"
+                                className="form-check-input mt-0"
                                 type="checkbox"
                                 checked={selectedEmployees.has(emp.id)}
                                 onChange={() => handleSelectEmployee(emp.id)}
                                 id={`emp-${emp.id}`}
                               />
-                              <label className="form-check-label w-100" htmlFor={`emp-${emp.id}`}>
-                                <div className="d-flex justify-content-between">
+
+                              {/* Content */}
+                              <label
+                                htmlFor={`emp-${emp.id}`}
+                                className="flex-grow-1 mb-0 cursor-pointer"
+                              >
+                                <div className="d-flex justify-content-between align-items-center">
                                   <div>
                                     <div className="fw-medium small">{emp.name}</div>
                                     <div className="text-muted smaller">{emp.code}</div>
                                   </div>
+
                                   <div className="text-end">
                                     <div className="text-primary small">{emp.salary}</div>
-                                    <div className="smaller text-muted">{emp.bankName}</div>
+                                    <div className="text-muted smaller">{emp.bankName}</div>
                                   </div>
                                 </div>
                               </label>
                             </div>
-                          </div>
-                        ))}
+
+                          ))}
+                        </div>
+
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Advanced Settings */}
-                <div className="mb-4">
-                  <label className="form-label fw-semibold">
-                    Advanced Settings
-                  </label>
-                  <div className="bg-light border rounded p-4">
-                    <div className="form-check mb-3">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        checked={encryptionEnabled}
-                        onChange={(e) => setEncryptionEnabled(e.target.checked)}
-                        id="encryptionCheck"
-                      />
-                      <label
-                        className="form-check-label"
-                        htmlFor="encryptionCheck"
-                      >
-                        Enable File Encryption
-                      </label>
-                      <div className="small text-muted">
-                        Encrypt payment file for security (AES-256)
-                      </div>
-                    </div>
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        checked={splitByBank}
-                        onChange={(e) => setSplitByBank(e.target.checked)}
-                        id="splitCheck"
-                      />
-                      <label className="form-check-label" htmlFor="splitCheck">
-                        Split Payment File by Bank
-                      </label>
-                      <div className="small text-muted">
-                        Generate separate files for each bank branch
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  {/* ================= Advanced Settings ================= */}
+                  <div className="mb-4">
+                    <h6 className="fw-semibold text-muted mb-2">
+                      Advanced Settings
+                    </h6>
 
-                {/* File Preview */}
-                {selectedBank && selectedEmployees.size > 0 && (
-                  <div>
-                    <label className="form-label fw-semibold">
-                      File Preview
-                    </label>
                     <div className="bg-light border rounded p-4">
+                      <div className="mb-3">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          checked={encryptionEnabled}
+                          onChange={(e) =>
+                            setEncryptionEnabled(e.target.checked)
+                          }
+                          id="encryptionCheck"
+                        />
+                        <label
+                          className="form-check-label fw-medium"
+                          htmlFor="encryptionCheck"
+                        >
+                          Enable File Encryption
+                        </label>
+                        <div className="small text-muted">
+                          Encrypt payment file using AES-256
+                        </div>
+                      </div>
+
+                      <div>
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          checked={splitByBank}
+                          onChange={(e) => setSplitByBank(e.target.checked)}
+                          id="splitCheck"
+                        />
+                        <label
+                          className="form-check-label fw-medium"
+                          htmlFor="splitCheck"
+                        >
+                          Split Payment File by Bank
+                        </label>
+                        <div className="small text-muted">
+                          Generate separate files for each bank
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ================= File Preview ================= */}
+                  {selectedBank && selectedEmployees.size > 0 && (
+                    <div>
+                      <h6 className="fw-semibold text-muted mb-2">
+                        File Preview
+                      </h6>
+
                       <pre
-                        className="mb-0"
+                        className="p-3 bg-light border rounded mb-0"
                         style={{
-                          whiteSpace: "pre-wrap",
+                          fontSize: 12,
                           fontFamily: "monospace",
-                          fontSize: "12px",
+                          whiteSpace: "pre-wrap",
                         }}
                       >
                         {`FILE TYPE: ${paymentType}
-BANK: ${banks.find((b) => b.id === parseInt(selectedBank))?.name}
+BANK: ${banks.find((b) => b.id === parseInt(selectedBank))?.name
+                          }
 EMPLOYEES: ${selectedEmployees.size}
 TOTAL AMOUNT: ₹${employees
-  .filter(emp => selectedEmployees.has(emp.id))
-  .reduce((sum, emp) => sum + parseFloat(emp.salary.replace(/[^0-9.]/g, '')), 0)
-  .toLocaleString('en-IN')}
+                            .filter((emp) => selectedEmployees.has(emp.id))
+                            .reduce(
+                              (sum, emp) =>
+                                sum + parseFloat(emp.salary.replace(/[^0-9.]/g, "")),
+                              0
+                            )
+                            .toLocaleString("en-IN")}
 ENCRYPTION: ${encryptionEnabled ? "ENABLED (AES-256)" : "DISABLED"}
 SPLIT BY BANK: ${splitByBank ? "YES" : "NO"}
 DATE: ${new Date().toLocaleDateString()}
-REFERENCE: REF${new Date().getTime()}${banks.find((b) => b.id === parseInt(selectedBank))?.code}`}
+REFERENCE: REF${Date.now()}${banks.find((b) => b.id === parseInt(selectedBank))?.code
+                          }`}
                       </pre>
                     </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="modal-footer d-flex justify-content-end gap-2">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setShowGeneratePanel(false);
-                    setSelectedBank("");
-                    setPaymentType("NEFT");
-                    setEncryptionEnabled(true);
-                    setSplitByBank(true);
-                    setSelectedEmployees(new Set());
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => {
-                    if (!selectedBank) {
-                      toast.error("Please select a bank");
-                      return;
-                    }
-                    if (selectedEmployees.size === 0) {
-                      toast.error("Please select at least one employee");
-                      return;
-                    }
-                    setShowConfirmModal(true);
-                  }}
-                  disabled={!selectedBank || selectedEmployees.size === 0}
-                >
-                  {isGenerating ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2"></span>
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <FileText size={16} className="me-2" />
-                      Generate File
-                    </>
                   )}
-                </button>
+                </div>
+
+                {/* Footer */}
+                <div className="modal-footer d-flex justify-content-end gap-2">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setShowGeneratePanel(false);
+                      setSelectedBank("");
+                      setPaymentType("NEFT");
+                      setEncryptionEnabled(true);
+                      setSplitByBank(true);
+                      setSelectedEmployees(new Set());
+                    }}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    className="btn btn-primary d-flex align-items-center gap-2"
+                    disabled={!selectedBank || selectedEmployees.size === 0}
+                    onClick={() => {
+                      if (!selectedBank) {
+                        toast.error("Please select a bank");
+                        return;
+                      }
+                      if (selectedEmployees.size === 0) {
+                        toast.error("Please select at least one employee");
+                        return;
+                      }
+                      setShowConfirmModal(true);
+                    }}
+                  >
+                    {isGenerating ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <FileText size={16} />
+                        Generate File
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
-      {/* Confirmation Modal */}
+      {/* Confirmation Modal - FIXED */}
+      {showConfirmModal && (
+        <div className="modal-backdrop fade show" style={{ zIndex: 1060 }}></div>
+      )}
       {showConfirmModal && (
         <div
           className="modal fade show d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1060 }}
+          style={{
+            zIndex: 1070,
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            overflowY: 'auto'
+          }}
         >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
@@ -2048,9 +2139,11 @@ REFERENCE: REF${new Date().getTime()}${banks.find((b) => b.id === parseInt(selec
                     </span>
                   </div>
                 </div>
-                <div className="alert alert-warning mt-3">
+                <div className="alert alert-warning mt-3 d-flex align-items-center">
                   <AlertCircle size={16} className="me-2" />
-                  <strong>Note:</strong> This action cannot be undone. The payment file will be generated and downloaded immediately.
+                  <div>
+                    <strong>Note:</strong> This action cannot be undone. The payment file will be generated and downloaded immediately.
+                  </div>
                 </div>
               </div>
               <div className="modal-footer d-flex justify-content-end gap-2">
@@ -2063,7 +2156,7 @@ REFERENCE: REF${new Date().getTime()}${banks.find((b) => b.id === parseInt(selec
                 </button>
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="btn btn-primary d-flex align-items-center"
                   onClick={handleGenerateFile}
                 >
                   {isGenerating ? (
@@ -2080,287 +2173,347 @@ REFERENCE: REF${new Date().getTime()}${banks.find((b) => b.id === parseInt(selec
           </div>
         </div>
       )}
-
-      {/* Payment Details Modal */}
+      {/* ================= Payment Details Modal ================= */}
       {showDetailModal && selectedPayment && (
-        <div
-          className="modal fade show d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1060 }}
-        >
-          <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Payment Details</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowDetailModal(false)}
-                ></button>
-              </div>
+        <>
+          {/* Backdrop */}
+          <div
+            className="modal-backdrop fade show"
+            style={{ zIndex: 1080 }}
+          />
 
-              <div className="modal-body">
-                {/* Payment Info */}
-                <div className="mb-4">
-                  <h6 className="small fw-semibold text-muted mb-2">
-                    Payment Information
-                  </h6>
-                  <div className="bg-light rounded p-3">
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <div className="d-flex justify-content-between mb-2">
-                          <span className="small text-muted">File Name:</span>
-                          <span className="small fw-medium">
-                            {selectedPayment.fileName}
-                          </span>
-                        </div>
-                        <div className="d-flex justify-content-between mb-2">
-                          <span className="small text-muted">Bank:</span>
-                          <span className="small fw-medium">
-                            {selectedPayment.bank}
-                          </span>
-                        </div>
-                        <div className="d-flex justify-content-between mb-2">
-                          <span className="small text-muted">
-                            Reference Number:
-                          </span>
-                          <span className="small fw-medium text-primary">
-                            {selectedPayment.referenceNumber}
-                          </span>
-                        </div>
-                        <div className="d-flex justify-content-between">
-                          <span className="small text-muted">
-                            Batch ID:
-                          </span>
-                          <span className="small fw-medium">
-                            {selectedPayment.batchId}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="d-flex justify-content-between mb-2">
-                          <span className="small text-muted">
-                            Total Amount:
-                          </span>
-                          <span className="small fw-bold text-primary">
-                            {selectedPayment.totalAmount}
-                          </span>
-                        </div>
-                        <div className="d-flex justify-content-between mb-2">
-                          <span className="small text-muted">Employees:</span>
-                          <span className="small fw-medium">
-                            {selectedPayment.totalEmployees}
-                          </span>
-                        </div>
-                        <div className="d-flex justify-content-between mb-2">
-                          <span className="small text-muted">
-                            Payment Method:
-                          </span>
-                          <span className="small fw-medium">
-                            {selectedPayment.paymentMethod}
-                          </span>
-                        </div>
-                        <div className="d-flex justify-content-between">
-                          <span className="small text-muted">
-                            Charges:
-                          </span>
-                          <span className="small fw-medium text-danger">
-                            {selectedPayment.charges}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Status Tracker */}
-                <div className="mb-4">
-                  <h6 className="small fw-semibold text-muted mb-2">
-                    Payment Progress
-                  </h6>
-                  <div className="bg-light rounded p-4 d-flex justify-content-center">
-                    <PaymentStatusTracker status={selectedPayment.status} />
-                  </div>
-                </div>
-
-                {/* Payment History */}
-                <div>
-                  <h6 className="small fw-semibold text-muted mb-2">
-                    Payment History
-                  </h6>
-                  <div className="bg-light rounded p-3">
-                    <div className="d-flex align-items-start gap-3 mb-3">
-                      <div
-                        className="rounded-circle bg-primary-subtle d-flex align-items-center justify-content-center flex-shrink-0"
-                        style={{ width: "32px", height: "32px" }}
-                      >
-                        <FileText size={16} className="text-primary" />
-                      </div>
-                      <div>
-                        <p className="small fw-medium mb-0">File Generated</p>
-                        <p className="small text-muted mb-0">
-                          {selectedPayment.generatedDate}
-                        </p>
-                        <div className="small text-muted">
-                          {selectedPayment.encrypted && (
-                            <span className="d-inline-flex align-items-center gap-1">
-                              <Lock size={12} /> Encrypted
-                            </span>
-                          )}
-                          {selectedPayment.splitByBank && (
-                            <span className="d-inline-flex align-items-center gap-1 ms-3">
-                              <RefreshCw size={12} /> Split by Bank
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    {selectedPayment.processedDate !== "Pending" && (
-                      <div className="d-flex align-items-start gap-3 mb-3">
-                        <div
-                          className="rounded-circle bg-success-subtle d-flex align-items-center justify-content-center flex-shrink-0"
-                          style={{ width: "32px", height: "32px" }}
-                        >
-                          <Send size={16} className="text-success" />
-                        </div>
-                        <div>
-                          <p className="small fw-medium mb-0">Sent to Bank</p>
-                          <p className="small text-muted mb-0">
-                            {selectedPayment.processedDate}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    {selectedPayment.acknowledgment === "Uploaded" && (
-                      <div className="d-flex align-items-start gap-3">
-                        <div
-                          className="rounded-circle bg-info-subtle d-flex align-items-center justify-content-center flex-shrink-0"
-                          style={{ width: "32px", height: "32px" }}
-                        >
-                          <Upload size={16} className="text-info" />
-                        </div>
-                        <div>
-                          <p className="small fw-medium mb-0">
-                            Acknowledgement Uploaded
-                          </p>
-                          <p className="small text-muted mb-0">
-                            Processed by bank
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    {selectedPayment.failedTransactions > 0 && (
-                      <div className="d-flex align-items-start gap-3 mt-3">
-                        <div
-                          className="rounded-circle bg-danger-subtle d-flex align-items-center justify-content-center flex-shrink-0"
-                          style={{ width: "32px", height: "32px" }}
-                        >
-                          <AlertCircle size={16} className="text-danger" />
-                        </div>
-                        <div>
-                          <p className="small fw-medium mb-0">
-                            Failed Transactions
-                          </p>
-                          <p className="small text-muted mb-0">
-                            {selectedPayment.failedTransactions} transactions
-                            failed
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Included Employees */}
-                {selectedPayment.includedEmployees && selectedPayment.includedEmployees.length > 0 && (
-                  <div className="mt-4">
-                    <h6 className="small fw-semibold text-muted mb-2">
-                      Included Employees ({selectedPayment.includedEmployees.length})
-                    </h6>
-                    <div className="table-responsive">
-                      <table className="table table-sm">
-                        <thead>
-                          <tr>
-                            <th>Code</th>
-                            <th>Name</th>
-                            <th>Bank</th>
-                            <th>Amount</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {employees
-                            .filter(emp => selectedPayment.includedEmployees.includes(emp.id))
-                            .map(emp => (
-                              <tr key={emp.id}>
-                                <td>{emp.code}</td>
-                                <td>{emp.name}</td>
-                                <td>{emp.bankName}</td>
-                                <td>{emp.salary}</td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="modal-footer d-flex justify-content-between">
-                <div>
-                  {selectedPayment.status === "Failed" && (
-                    <button
-                      type="button"
-                      className="btn btn-warning"
-                      onClick={() => handleRetryFailed(selectedPayment.id)}
-                    >
-                      <RefreshCw size={14} className="me-2" />
-                      Retry Failed
-                    </button>
-                  )}
-                  {selectedPayment.status === "Processed" && (
-                    <button
-                      type="button"
-                      className="btn btn-outline-success"
-                      onClick={() => {
-                        setSelectedPayment(selectedPayment);
-                        setShowUploadModal(true);
-                        setShowDetailModal(false);
-                      }}
-                    >
-                      <Upload size={14} className="me-2" />
-                      Upload Ack
-                    </button>
-                  )}
-                </div>
-                <div className="d-flex gap-2">
+          {/* Modal */}
+          <div
+            className="modal fade show d-block"
+            style={{
+              zIndex: 1090,
+              position: "fixed",
+              inset: 0,
+              overflowY: "auto",
+              paddingLeft: "500px",
+            }}
+          >
+            <div
+              className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+              style={{ maxWidth: "95%" }}
+            >
+              <div className="modal-content rounded-4">
+                {/* Header */}
+                <div className="modal-header">
+                  <h5 className="modal-title">Payment Details</h5>
                   <button
                     type="button"
-                    className="btn btn-outline-primary"
-                    onClick={() => {
-                      downloadPaymentFile(selectedPayment);
-                    }}
-                  >
-                    <Download size={14} className="me-2" />
-                    Download File
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
+                    className="btn-close"
                     onClick={() => setShowDetailModal(false)}
-                  >
-                    Close
-                  </button>
+                  />
+                </div>
+
+                {/* Body */}
+                <div className="modal-body">
+                  {/* ================= Payment Info ================= */}
+                  <div className="mb-4">
+                    <h6 className="small fw-semibold text-muted mb-2">
+                      Payment Information
+                    </h6>
+
+                    <div className="bg-light rounded p-3">
+                      <div className="row g-3">
+                        <div className="col-md-6">
+                          <div className="d-flex justify-content-between mb-2">
+                            <span className="small text-muted">File Name</span>
+                            <span className="small fw-medium">
+                              {selectedPayment.fileName}
+                            </span>
+                          </div>
+
+                          <div className="d-flex justify-content-between mb-2">
+                            <span className="small text-muted">Bank</span>
+                            <span className="small fw-medium">
+                              {selectedPayment.bank}
+                            </span>
+                          </div>
+
+                          <div className="d-flex justify-content-between mb-2">
+                            <span className="small text-muted">
+                              Reference Number
+                            </span>
+                            <span className="small fw-medium text-primary">
+                              {selectedPayment.referenceNumber}
+                            </span>
+                          </div>
+
+                          <div className="d-flex justify-content-between">
+                            <span className="small text-muted">Batch ID</span>
+                            <span className="small fw-medium">
+                              {selectedPayment.batchId}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="col-md-6">
+                          <div className="d-flex justify-content-between mb-2">
+                            <span className="small text-muted">Total Amount</span>
+                            <span className="small fw-bold text-primary">
+                              {selectedPayment.totalAmount}
+                            </span>
+                          </div>
+
+                          <div className="d-flex justify-content-between mb-2">
+                            <span className="small text-muted">Employees</span>
+                            <span className="small fw-medium">
+                              {selectedPayment.totalEmployees}
+                            </span>
+                          </div>
+
+                          <div className="d-flex justify-content-between mb-2">
+                            <span className="small text-muted">
+                              Payment Method
+                            </span>
+                            <span className="small fw-medium">
+                              {selectedPayment.paymentMethod}
+                            </span>
+                          </div>
+
+                          <div className="d-flex justify-content-between">
+                            <span className="small text-muted">Charges</span>
+                            <span className="small fw-medium text-danger">
+                              {selectedPayment.charges}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* ================= Status Tracker ================= */}
+                  <div className="mb-4">
+                    <h6 className="small fw-semibold text-muted mb-2">
+                      Payment Progress
+                    </h6>
+
+                    <div className="bg-light rounded p-4">
+                      <div
+                        className="d-flex justify-content-center align-items-center"
+                        style={{ width: "100%", overflowX: "auto" }}
+                      >
+                        <div style={{ maxWidth: "100%" }}>
+                          <PaymentStatusTracker status={selectedPayment.status} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+
+                  {/* ================= Payment History ================= */}
+                  <div className="mb-4">
+                    <h6 className="small fw-semibold text-muted mb-2">
+                      Payment History
+                    </h6>
+
+                    <div className="bg-light rounded p-3">
+                      {/* File Generated */}
+                      <div className="d-flex gap-3 mb-3">
+                        <div
+                          className="rounded-circle bg-primary-subtle d-flex align-items-center justify-content-center"
+                          style={{ width: 32, height: 32 }}
+                        >
+                          <FileText size={16} className="text-primary" />
+                        </div>
+                        <div>
+                          <p className="small fw-medium mb-0">
+                            File Generated
+                          </p>
+                          <p className="small text-muted mb-0">
+                            {selectedPayment.generatedDate}
+                          </p>
+                          <div className="small text-muted d-flex gap-3">
+                            {selectedPayment.encrypted && (
+                              <span className="d-flex align-items-center gap-1">
+                                <Lock size={12} /> Encrypted
+                              </span>
+                            )}
+                            {selectedPayment.splitByBank && (
+                              <span className="d-flex align-items-center gap-1">
+                                <RefreshCw size={12} /> Split by Bank
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Sent to Bank */}
+                      {selectedPayment.processedDate !== "Pending" && (
+                        <div className="d-flex gap-3 mb-3">
+                          <div
+                            className="rounded-circle bg-success-subtle d-flex align-items-center justify-content-center"
+                            style={{ width: 32, height: 32 }}
+                          >
+                            <Send size={16} className="text-success" />
+                          </div>
+                          <div>
+                            <p className="small fw-medium mb-0">
+                              Sent to Bank
+                            </p>
+                            <p className="small text-muted mb-0">
+                              {selectedPayment.processedDate}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Acknowledgement */}
+                      {selectedPayment.acknowledgment === "Uploaded" && (
+                        <div className="d-flex gap-3 mb-3">
+                          <div
+                            className="rounded-circle bg-info-subtle d-flex align-items-center justify-content-center"
+                            style={{ width: 32, height: 32 }}
+                          >
+                            <Upload size={16} className="text-info" />
+                          </div>
+                          <div>
+                            <p className="small fw-medium mb-0">
+                              Acknowledgement Uploaded
+                            </p>
+                            <p className="small text-muted mb-0">
+                              Processed by bank
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Failed Transactions */}
+                      {selectedPayment.failedTransactions > 0 && (
+                        <div className="d-flex gap-3">
+                          <div
+                            className="rounded-circle bg-danger-subtle d-flex align-items-center justify-content-center"
+                            style={{ width: 32, height: 32 }}
+                          >
+                            <AlertCircle
+                              size={16}
+                              className="text-danger"
+                            />
+                          </div>
+                          <div>
+                            <p className="small fw-medium mb-0">
+                              Failed Transactions
+                            </p>
+                            <p className="small text-muted mb-0">
+                              {selectedPayment.failedTransactions} transactions failed
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* ================= Included Employees ================= */}
+                  {selectedPayment.includedEmployees?.length > 0 && (
+                    <div>
+                      <h6 className="small fw-semibold text-muted mb-2">
+                        Included Employees ({selectedPayment.includedEmployees.length})
+                      </h6>
+
+                      <div className="table-responsive">
+                        <table className="table table-sm table-bordered">
+                          <thead className="table-light">
+                            <tr>
+                              <th>Code</th>
+                              <th>Name</th>
+                              <th>Bank</th>
+                              <th>Amount</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {employees
+                              .filter(emp =>
+                                selectedPayment.includedEmployees.includes(emp.id)
+                              )
+                              .map(emp => (
+                                <tr key={emp.id}>
+                                  <td>{emp.code}</td>
+                                  <td>{emp.name}</td>
+                                  <td>{emp.bankName}</td>
+                                  <td>{emp.salary}</td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className="modal-footer d-flex justify-content-between">
+                  <div>
+                    {selectedPayment.status === "Failed" && (
+                      <button
+                        className="btn btn-warning d-flex align-items-center gap-2"
+                        onClick={() =>
+                          handleRetryFailed(selectedPayment.id)
+                        }
+                      >
+                        <RefreshCw size={14} />
+                        Retry Failed
+                      </button>
+                    )}
+
+                    {selectedPayment.status === "Processed" && (
+                      <button
+                        className="btn btn-outline-success d-flex align-items-center gap-2"
+                        onClick={() => {
+                          setSelectedPayment(selectedPayment);
+                          setShowUploadModal(true);
+                          setShowDetailModal(false);
+                        }}
+                      >
+                        <Upload size={14} />
+                        Upload Ack
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="d-flex gap-2">
+                    <button
+                      className="btn btn-outline-primary d-flex align-items-center gap-2"
+                      onClick={() =>
+                        downloadPaymentFile(selectedPayment)
+                      }
+                    >
+                      <Download size={14} />
+                      Download File
+                    </button>
+
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => setShowDetailModal(false)}
+                    >
+                      Close
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
-      {/* Upload Acknowledgement Modal */}
+
+      {/* Upload Acknowledgement Modal - FIXED */}
+      {showUploadModal && (
+        <div className="modal-backdrop fade show" style={{ zIndex: 1100 }}></div>
+      )}
       {showUploadModal && (
         <div
           className="modal fade show d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1060 }}
+          style={{
+            zIndex: 1110,
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            overflowY: 'auto'
+          }}
         >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
@@ -2396,8 +2549,8 @@ REFERENCE: REF${new Date().getTime()}${banks.find((b) => b.id === parseInt(selec
 
                 {uploadFile && (
                   <div className="alert alert-info">
-                    <div className="d-flex align-items-center gap-2">
-                      <FileText size={16} />
+                    <div className="d-flex align-items-center">
+                      <FileText size={16} className="me-2" />
                       <div>
                         <strong>Selected file:</strong> {uploadFile.name}
                         <div className="small">
@@ -2409,20 +2562,24 @@ REFERENCE: REF${new Date().getTime()}${banks.find((b) => b.id === parseInt(selec
                 )}
 
                 {selectedPayment && (
-                  <div className="alert alert-warning">
-                    <AlertCircle size={16} className="me-2" />
-                    <strong>Payment:</strong> {selectedPayment.fileName}
-                    <div className="small mt-1">
-                      Reference: {selectedPayment.referenceNumber} | 
-                      Amount: {selectedPayment.totalAmount}
+                  <div className="alert alert-warning d-flex align-items-start">
+                    <AlertCircle size={16} className="me-2 mt-1" />
+                    <div>
+                      <strong>Payment:</strong> {selectedPayment.fileName}
+                      <div className="small mt-1">
+                        Reference: {selectedPayment.referenceNumber} |
+                        Amount: {selectedPayment.totalAmount}
+                      </div>
                     </div>
                   </div>
                 )}
 
-                <div className="alert alert-warning">
-                  <AlertCircle size={16} className="me-2" />
-                  <strong>Note:</strong> Uploading acknowledgement will mark the
-                  payment as processed and update transaction status.
+                <div className="alert alert-warning d-flex align-items-start">
+                  <AlertCircle size={16} className="me-2 mt-1" />
+                  <div>
+                    <strong>Note:</strong> Uploading acknowledgement will mark the
+                    payment as processed and update transaction status.
+                  </div>
                 </div>
               </div>
 
@@ -2439,7 +2596,7 @@ REFERENCE: REF${new Date().getTime()}${banks.find((b) => b.id === parseInt(selec
                 </button>
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="btn btn-primary d-flex align-items-center"
                   onClick={handleUploadAcknowledgement}
                   disabled={!uploadFile}
                 >
@@ -2452,106 +2609,473 @@ REFERENCE: REF${new Date().getTime()}${banks.find((b) => b.id === parseInt(selec
         </div>
       )}
 
-      {/* Reconciliation Panel */}
-      {showReconciliationPanel && (
-        <div
-          className="modal fade show d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1060 }}
-        >
-          <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Bank Statement Reconciliation</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowReconciliationPanel(false)}
-                ></button>
-              </div>
+      {/* ================= Analytics Modal (NEW) ================= */}
+      {showAnalyticsModal && (
+        <>
+          {/* Backdrop */}
+          <div className="modal-backdrop fade show" style={{ zIndex: 1120 }} />
 
-              <div className="modal-body">
-                {/* Reconciliation Stats */}
-                <div className="row g-4 mb-4">
-                  <div className="col-md-3">
-                    <div className="card border">
-                      <div className="card-body text-center">
-                        <div className="text-primary mb-2">
-                          <BanknoteIcon size={24} />
+          {/* Modal */}
+          <div
+            className="modal fade show d-block"
+            style={{
+              zIndex: 1130,
+              position: "fixed",
+              inset: 0,
+              overflowY: "auto",
+              paddingLeft: "500px",
+            }}
+          >
+            <div
+              className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+              style={{ maxWidth: "1100px" }}
+            >
+              <div className="modal-content rounded-4">
+                {/* ================= Header ================= */}
+                <div className="modal-header">
+                  <h5 className="modal-title d-flex align-items-center gap-2">
+                    <BarChart3 size={20} />
+                    Payment Analytics Dashboard
+                  </h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setShowAnalyticsModal(false)}
+                  />
+                </div>
+
+                {/* ================= Body ================= */}
+                <div className="modal-body">
+                  {/* ================= Summary Stats ================= */}
+                  <div className="row g-3 mb-4">
+                    {[
+                      {
+                        label: "Total Amount Processed",
+                        value: "₹2.85Cr",
+                        icon: <DollarSign size={22} />,
+                        color: "text-primary",
+                        bg: "bg-primary-subtle",
+                        description: "Last 30 days",
+                      },
+                      {
+                        label: "Success Rate",
+                        value: "98.1%",
+                        icon: <TrendingUp size={22} />,
+                        color: "text-success",
+                        bg: "bg-success-subtle",
+                        description: "Transaction success",
+                      },
+                      {
+                        label: "Total Transactions",
+                        value: "158",
+                        icon: <FileCheck size={22} />,
+                        color: "text-info",
+                        bg: "bg-info-subtle",
+                        description: "Processed payments",
+                      },
+                      {
+                        label: "Avg. Time",
+                        value: "2.4 hrs",
+                        icon: <Clock size={22} />,
+                        color: "text-warning",
+                        bg: "bg-warning-subtle",
+                        description: "Processing time",
+                      },
+                    ].map((stat, idx) => (
+                      <div key={idx} className="col-12">
+                        <div className="card border shadow-none">
+                          <div className="card-body">
+                            <div className="d-flex align-items-center gap-3">
+                              {/* Icon */}
+                              <div
+                                className={`rounded-circle ${stat.bg} d-flex align-items-center justify-content-center`}
+                                style={{ width: 48, height: 48 }}
+                              >
+                                <div className={stat.color}>{stat.icon}</div>
+                              </div>
+
+                              {/* Text */}
+                              <div>
+                                <div className="fw-bold fs-4">{stat.value}</div>
+                                <div className="small fw-medium">{stat.label}</div>
+                                <div className="small text-muted">{stat.description}</div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <h4 className="fw-bold">
-                          {reconciliationStats.totalAmount}
-                        </h4>
-                        <p className="text-muted small mb-0">Total Amount</p>
+                      </div>
+                    ))}
+                  </div>
+
+
+                  {/* ================= Monthly Trends ================= */}
+                  <div className="card border mb-4">
+                    <div className="card-header d-flex justify-content-between align-items-center">
+                      <h6 className="mb-0 d-flex align-items-center gap-2">
+                        <Calendar size={18} />
+                        Monthly Payment Trends
+                      </h6>
+                      <span className="badge bg-primary">Last 4 months</span>
+                    </div>
+                    <div className="card-body">
+                      <div className="table-responsive">
+                        <table className="table table-hover mb-0">
+                          <thead className="table-light">
+                            <tr>
+                              <th>Month</th>
+                              <th>Total Amount</th>
+                              <th>Transactions</th>
+                              <th>Success Rate</th>
+                              <th>Trend</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {analyticsData.monthlySummary.map((month, idx) => (
+                              <tr key={idx}>
+                                <td>
+                                  <div className="fw-medium">{month.month}</div>
+                                </td>
+                                <td>
+                                  <div className="fw-bold text-primary">{month.amount}</div>
+                                </td>
+                                <td>
+                                  <div className="fw-medium">{month.count}</div>
+                                </td>
+                                <td>
+                                  <div className="d-flex align-items-center gap-2">
+                                    <div className="progress flex-grow-1" style={{ height: "6px" }}>
+                                      <div
+                                        className="progress-bar bg-success"
+                                        style={{ width: `${month.successRate}%` }}
+                                      />
+                                    </div>
+                                    <span className="fw-medium">{month.successRate}%</span>
+                                  </div>
+                                </td>
+                                <td>
+                                  {idx > 0 && (
+                                    <span className={`badge ${parseFloat(month.successRate) > parseFloat(analyticsData.monthlySummary[idx - 1].successRate) ? "bg-success-subtle text-success" : "bg-danger-subtle text-danger"}`}>
+                                      {parseFloat(month.successRate) > parseFloat(analyticsData.monthlySummary[idx - 1].successRate) ? "↑" : "↓"}
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
                   </div>
-                  <div className="col-md-3">
-                    <div className="card border">
-                      <div className="card-body text-center">
-                        <div className="text-success mb-2">
-                          <CheckCircle size={24} />
+
+                  {/* ================= Bank Distribution ================= */}
+                  <div className="row g-4 mb-4">
+                    <div className="col-md-6">
+                      <div className="card border h-100">
+                        <div className="card-header">
+                          <h6 className="mb-0 d-flex align-items-center gap-2">
+                            <BanknoteIcon size={18} />
+                            Bank-wise Distribution
+                          </h6>
                         </div>
-                        <h4 className="fw-bold">
-                          {reconciliationStats.matchedTransactions}
-                        </h4>
-                        <p className="text-muted small mb-0">Matched</p>
+                        <div className="card-body">
+                          <div className="d-flex flex-column gap-3">
+                            {analyticsData.bankDistribution.map((bank, idx) => (
+                              <div key={idx}>
+                                <div className="d-flex justify-content-between mb-1">
+                                  <span className="fw-medium">{bank.bank}</span>
+                                  <span className="text-primary fw-bold">{bank.amount}</span>
+                                </div>
+                                <div className="d-flex align-items-center gap-3">
+                                  <div className="progress flex-grow-1" style={{ height: "8px" }}>
+                                    <div
+                                      className="progress-bar"
+                                      style={{
+                                        width: `${bank.percentage}%`,
+                                        backgroundColor: idx === 0 ? "#0d6efd" :
+                                          idx === 1 ? "#198754" :
+                                            idx === 2 ? "#ffc107" : "#6f42c1"
+                                      }}
+                                    />
+                                  </div>
+                                  <span className="small text-muted">{bank.percentage}%</span>
+                                </div>
+                                <div className="small text-muted mt-1">
+                                  {bank.count} transactions
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ================= Payment Type Distribution ================= */}
+                    <div className="col-md-6">
+                      <div className="card border h-100">
+                        <div className="card-header">
+                          <h6 className="mb-0 d-flex align-items-center gap-2">
+                            <PieChart size={18} />
+                            Payment Type Distribution
+                          </h6>
+                        </div>
+                        <div className="card-body">
+                          <div className="d-flex flex-column gap-3">
+                            {analyticsData.paymentTypeDistribution.map((type, idx) => (
+                              <div key={idx}>
+                                <div className="d-flex justify-content-between mb-1">
+                                  <span className="fw-medium">{type.type}</span>
+                                  <span className="fw-bold">{type.count} transactions</span>
+                                </div>
+                                <div className="d-flex align-items-center gap-3">
+                                  <div className="progress flex-grow-1" style={{ height: "8px" }}>
+                                    <div
+                                      className="progress-bar"
+                                      style={{
+                                        width: `${type.percentage}%`,
+                                        backgroundColor: idx === 0 ? "#0d6efd" :
+                                          idx === 1 ? "#198754" : "#ffc107"
+                                      }}
+                                    />
+                                  </div>
+                                  <span className="small text-muted">{type.percentage}%</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div className="col-md-3">
-                    <div className="card border">
-                      <div className="card-body text-center">
-                        <div className="text-danger mb-2">
-                          <XCircle size={24} />
+
+                  {/* ================= Status Breakdown ================= */}
+                  <div className="card border mb-4">
+                    <div className="card-header">
+                      <h6 className="mb-0 d-flex align-items-center gap-2">
+                        <CheckCircle size={18} />
+                        Transaction Status Breakdown
+                      </h6>
+                    </div>
+                    <div className="card-body">
+                      <div className="row g-3">
+                        <div className="col-md-3">
+                          <div className="text-center p-3 border rounded">
+                            <div className="fw-bold fs-3 text-success">{analyticsData.statusTrend.processed}</div>
+                            <div className="small fw-medium">Processed</div>
+                            <div className="small text-muted">Successful payments</div>
+                          </div>
                         </div>
-                        <h4 className="fw-bold">
-                          {reconciliationStats.unmatchedTransactions}
-                        </h4>
-                        <p className="text-muted small mb-0">Unmatched</p>
+                        <div className="col-md-3">
+                          <div className="text-center p-3 border rounded">
+                            <div className="fw-bold fs-3 text-danger">{analyticsData.statusTrend.failed}</div>
+                            <div className="small fw-medium">Failed</div>
+                            <div className="small text-muted">Requires retry</div>
+                          </div>
+                        </div>
+                        <div className="col-md-3">
+                          <div className="text-center p-3 border rounded">
+                            <div className="fw-bold fs-3 text-warning">{analyticsData.statusTrend.pending}</div>
+                            <div className="small fw-medium">Pending</div>
+                            <div className="small text-muted">Awaiting action</div>
+                          </div>
+                        </div>
+                        <div className="col-md-3">
+                          <div className="text-center p-3 border rounded">
+                            <div className="fw-bold fs-3 text-info">{analyticsData.statusTrend.generated}</div>
+                            <div className="small fw-medium">Generated</div>
+                            <div className="small text-muted">Files ready</div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div className="col-md-3">
-                    <div className="card border">
-                      <div className="card-body text-center">
-                        <div className="text-warning mb-2">
-                          <Clock size={24} />
-                        </div>
-                        <h4 className="fw-bold">
-                          {reconciliationStats.pendingVerification}
-                        </h4>
-                        <p className="text-muted small mb-0">Pending</p>
+
+                  {/* ================= Top Payments ================= */}
+                  <div className="card border">
+                    <div className="card-header d-flex justify-content-between align-items-center">
+                      <h6 className="mb-0 d-flex align-items-center gap-2">
+                        <Users size={18} />
+                        Top Employee Payments (This Month)
+                      </h6>
+                      <span className="badge bg-info">Highest amounts</span>
+                    </div>
+                    <div className="card-body p-0">
+                      <div className="table-responsive">
+                        <table className="table table-hover mb-0">
+                          <thead className="table-light">
+                            <tr>
+                              <th>Employee</th>
+                              <th>Amount</th>
+                              <th>Bank</th>
+                              <th>Date</th>
+                              <th>Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {analyticsData.topEmployees.map((emp, idx) => (
+                              <tr key={idx}>
+                                <td>
+                                  <div className="fw-medium">{emp.name}</div>
+                                </td>
+                                <td>
+                                  <div className="fw-bold text-primary">{emp.amount}</div>
+                                </td>
+                                <td>
+                                  <span className="badge bg-light text-dark">{emp.bank}</span>
+                                </td>
+                                <td>
+                                  <div className="text-muted">{emp.date}</div>
+                                </td>
+                                <td>
+                                  <span className="badge bg-success-subtle text-success">Processed</span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Reconciliation Table */}
-                <div className="card border">
-                  <div className="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
-                    <h6 className="mb-0">Reconciliation Details</h6>
-                    <div className="small text-muted">
-                      Success Rate: {reconciliationStats.successRate}
-                    </div>
+                {/* ================= Footer ================= */}
+                <div className="modal-footer d-flex justify-content-between">
+                  <div className="small text-muted">
+                    Data updated: {new Date().toLocaleDateString()} | Source: Payment Processing System
                   </div>
-                  <div className="card-body p-0">
+                  <div className="d-flex gap-2">
+                    <button
+                      className="btn btn-outline-primary d-flex align-items-center gap-2"
+                      onClick={() => handleExportReport('pdf')}
+                    >
+                      <Download size={16} />
+                      Export Report
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => setShowAnalyticsModal(false)}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ================= Reconciliation Panel ================= */}
+      {showReconciliationPanel && (
+        <>
+          {/* Backdrop */}
+          <div className="modal-backdrop fade show" style={{ zIndex: 1140 }} />
+
+          {/* Modal */}
+          <div
+            className="modal fade show d-block"
+            style={{
+              zIndex: 1150,
+              position: "fixed",
+              inset: 0,
+              overflowY: "auto",
+              paddingLeft: "500px",
+            }}
+          >
+            <div
+              className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+              style={{ maxWidth: "1100px" }}
+            >
+
+              <div className="modal-content rounded-4">
+                {/* ================= Header ================= */}
+                <div className="modal-header">
+                  <h5 className="modal-title">Bank Statement Reconciliation</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setShowReconciliationPanel(false)}
+                  />
+                </div>
+
+                {/* ================= Body ================= */}
+                <div className="modal-body">
+                  {/* ================= Stats ================= */}
+                  <div className="row g-3 mb-4">
+                    {[
+                      {
+                        label: "Total Amount",
+                        value: reconciliationStats.totalAmount,
+                        icon: <BanknoteIcon size={22} />,
+                        color: "text-primary",
+                      },
+                      {
+                        label: "Matched",
+                        value: reconciliationStats.matchedTransactions,
+                        icon: <CheckCircle size={22} />,
+                        color: "text-success",
+                      },
+                      {
+                        label: "Unmatched",
+                        value: reconciliationStats.unmatchedTransactions,
+                        icon: <XCircle size={22} />,
+                        color: "text-danger",
+                      },
+                      {
+                        label: "Pending",
+                        value: reconciliationStats.pendingVerification,
+                        icon: <Clock size={22} />,
+                        color: "text-warning",
+                      },
+                    ].map((stat, idx) => (
+                      <div key={idx} className="col-12">
+                        <div className="card">
+                          <div className="card-body d-flex align-items-center gap-3">
+                            {/* Icon */}
+                            <div
+                              className={`rounded-circle bg-light d-flex align-items-center justify-content-center ${stat.color}`}
+                              style={{ width: 44, height: 44 }}
+                            >
+                              {stat.icon}
+                            </div>
+
+                            {/* Text */}
+                            <div>
+                              <div className="fw-bold fs-5">{stat.value}</div>
+                              <div className="small text-muted">{stat.label}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+
+                  {/* ================= Table ================= */}
+                  <div className="card">
+                    <div className="card-header d-flex justify-content-between align-items-center">
+                      <h6 className="mb-0">Reconciliation Details</h6>
+                      <span className="small text-muted">
+                        Success Rate: {reconciliationStats.successRate}
+                      </span>
+                    </div>
+
                     <div className="table-responsive">
-                      <table className="table table-hover mb-0">
+                      <table className="table table-hover mb-0 align-middle">
                         <thead className="table-light">
                           <tr>
-                            <th className="px-4 py-3">Transaction ID</th>
-                            <th className="px-4 py-3">Employee</th>
-                            <th className="px-4 py-3">Amount</th>
-                            <th className="px-4 py-3">Status</th>
-                            <th className="px-4 py-3">Date</th>
-                            <th className="px-4 py-3">Bank Reference</th>
-                            <th className="px-4 py-3">Actions</th>
+                            <th>Transaction</th>
+                            <th>Employee</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Bank Ref</th>
+                            <th>Actions</th>
                           </tr>
                         </thead>
                         <tbody>
                           {reconciliationData.map((record) => (
                             <tr key={record.id}>
-                              <td className="px-4 py-3">
+                              <td>
                                 <div className="fw-medium">
                                   {record.transactionId}
                                 </div>
@@ -2559,7 +3083,8 @@ REFERENCE: REF${new Date().getTime()}${banks.find((b) => b.id === parseInt(selec
                                   Ref: {record.reference}
                                 </div>
                               </td>
-                              <td className="px-4 py-3">
+
+                              <td>
                                 <div className="fw-medium">
                                   {record.employeeName}
                                 </div>
@@ -2570,35 +3095,40 @@ REFERENCE: REF${new Date().getTime()}${banks.find((b) => b.id === parseInt(selec
                                   {record.bank} • {record.accountNumber}
                                 </div>
                               </td>
-                              <td className="px-4 py-3 fw-bold">
-                                {record.amount}
-                              </td>
-                              <td className="px-4 py-3">
+
+                              <td className="fw-bold">{record.amount}</td>
+
+                              <td>
                                 <span
-                                  className={`badge ${
-                                    record.status === "Matched"
-                                      ? "bg-success-subtle text-success"
-                                      : record.status === "Unmatched"
+                                  className={`badge d-inline-flex align-items-center px-2 py-1 ${record.status === "Matched"
+                                    ? "bg-success-subtle text-success"
+                                    : record.status === "Unmatched"
                                       ? "bg-danger-subtle text-danger"
                                       : "bg-warning-subtle text-warning"
-                                  }`}
+                                    }`}
                                 >
                                   {record.status}
                                 </span>
                               </td>
-                              <td className="px-4 py-3">{record.date}</td>
-                              <td className="px-4 py-3">
+
+                              <td>{record.date}</td>
+
+                              <td>
                                 {record.bankReference || (
                                   <span className="text-muted">N/A</span>
                                 )}
                               </td>
-                              <td className="px-4 py-3">
-                                <button 
-                                  className="btn btn-sm btn-outline-primary"
-                                  onClick={() => {
-                                    toast.info(`Viewing details for ${record.transactionId}`);
-                                  }}
+
+                              <td>
+                                <button
+                                  className="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1"
+                                  onClick={() =>
+                                    toast.info(
+                                      `Viewing details for ${record.transactionId}`
+                                    )
+                                  }
                                 >
+                                  <Eye size={14} />
                                   Details
                                 </button>
                               </td>
@@ -2608,79 +3138,78 @@ REFERENCE: REF${new Date().getTime()}${banks.find((b) => b.id === parseInt(selec
                       </table>
                     </div>
                   </div>
-                </div>
 
-                {/* Reconciliation Actions */}
-                <div className="mt-4">
-                  <h6 className="mb-3">Reconciliation Actions</h6>
-                  <div className="d-flex flex-wrap gap-3">
-                    <button 
-                      className="btn btn-outline-primary"
-                      onClick={() => {
-                        handleExportReport('pdf');
-                      }}
-                    >
-                      <Download size={16} className="me-2" />
-                      Export Report
-                    </button>
-                    <button 
-                      className="btn btn-outline-success"
-                      onClick={() => {
-                        setReconciliationData(reconciliationData.map(r => ({
-                          ...r,
-                          status: "Matched"
-                        })));
-                        toast.success("All transactions marked as verified");
-                      }}
-                    >
-                      <CheckCircle size={16} className="me-2" />
-                      Mark All as Verified
-                    </button>
-                    <button 
-                      className="btn btn-outline-warning"
-                      onClick={() => {
-                        toast.info("Transactions flagged for review");
-                      }}
-                    >
-                      <AlertCircle size={16} className="me-2" />
-                      Flag for Review
-                    </button>
-                    <button 
-                      className="btn btn-outline-danger"
-                      onClick={() => {
-                        toast.warning("Discrepancy reported to bank");
-                      }}
-                    >
-                      <XCircle size={16} className="me-2" />
-                      Report Discrepancy
-                    </button>
+                  {/* ================= Actions ================= */}
+                  <div className="mt-4">
+                    <h6 className="mb-3">Reconciliation Actions</h6>
+                    <div className="d-flex flex-wrap gap-2">
+                      <button
+                        className="btn btn-outline-primary d-flex align-items-center gap-2"
+                        onClick={() => handleExportReport("pdf")}
+                      >
+                        <Download size={16} />
+                        Export Report
+                      </button>
+
+                      <button
+                        className="btn btn-outline-success d-flex align-items-center gap-2"
+                        onClick={() => {
+                          setReconciliationData(
+                            reconciliationData.map((r) => ({
+                              ...r,
+                              status: "Matched",
+                            }))
+                          );
+                          toast.success("All transactions marked as verified");
+                        }}
+                      >
+                        <CheckCircle size={16} />
+                        Mark All as Verified
+                      </button>
+
+                      <button
+                        className="btn btn-outline-warning d-flex align-items-center gap-2"
+                        onClick={() => toast.info("Transactions flagged for review")}
+                      >
+                        <AlertCircle size={16} />
+                        Flag for Review
+                      </button>
+
+                      <button
+                        className="btn btn-outline-danger d-flex align-items-center gap-2"
+                        onClick={() => toast.warning("Discrepancy reported to bank")}
+                      >
+                        <XCircle size={16} />
+                        Report Discrepancy
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="modal-footer d-flex justify-content-end gap-2">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowReconciliationPanel(false)}
-                >
-                  Close
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={handleReconcile}
-                >
-                  <RefreshCw size={16} className="me-2" />
-                  Run Reconciliation
-                </button>
+                {/* ================= Footer ================= */}
+                <div className="modal-footer d-flex justify-content-end gap-2">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setShowReconciliationPanel(false)}
+                  >
+                    Close
+                  </button>
+
+                  <button
+                    className="btn btn-primary d-flex align-items-center gap-2"
+                    onClick={handleReconcile}
+                  >
+                    <RefreshCw size={16} />
+                    Run Reconciliation
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
-      <ToastContainer 
+      <ToastContainer
         position="top-right"
         autoClose={3000}
         hideProgressBar={false}

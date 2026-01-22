@@ -23,14 +23,14 @@ const MonthlyAttendance = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const firstDay = new Date(year, month, 1).getDay();
-    
+
     const days = [];
-    
+
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < firstDay; i++) {
       days.push({ day: "", status: "", hasPunch: false });
     }
-    
+
     // December 2025 data matching the image
     // December 1, 2025 is a Monday (firstDay = 1)
     const decemberData = [
@@ -66,10 +66,10 @@ const MonthlyAttendance = () => {
       { day: "30", status: "P", hasPunch: true },
       { day: "31", status: "P", hasPunch: true },
     ];
-    
+
     // Add the actual month data
     days.push(...decemberData);
-    
+
     // Fill remaining cells to complete the last week (if needed)
     const totalCells = days.length;
     const remainingCells = totalCells % 7;
@@ -78,7 +78,7 @@ const MonthlyAttendance = () => {
         days.push({ day: "", status: "", hasPunch: false });
       }
     }
-    
+
     return days;
   };
 
@@ -110,17 +110,9 @@ const MonthlyAttendance = () => {
   };
 
   return (
-    <div className="page-content" style={{ padding: "25px 0" }}>
+    <div className="page-content" >
       <ToastContainer />
       <div className="container-fluid">
-        {/* Breadcrumb */}
-        <Breadcrump
-          items={[
-            { label: "Attendance" },
-            { label: "Monthly Attendance", active: true },
-          ]}
-        />
-
         {/* Header */}
         <div className="d-flex justify-content-between align-items-center mt-3 mb-3">
           <div>
@@ -177,32 +169,41 @@ const MonthlyAttendance = () => {
         </div>
 
         {/* Date Picker and Employee Search */}
-        <div className="row mb-4">
+        <div className="row mb-4 align-items-end">
+
+          {/* ===== Month Picker ===== */}
           <div className="col-md-3">
             <label className="form-label">Month</label>
-            <div className="d-inline-flex border rounded overflow-hidden" style={{ height: "38px", width: "100%" }}>
+            <div
+              className="d-flex align-items-center border rounded overflow-hidden"
+              style={{ height: "38px" }}
+            >
               <button
-                className="btn btn-secondary"
+                className=" btn btn-primary d-flex align-items-center"
                 onClick={() => handleMonthChange("prev")}
-                style={{ borderRadius: 0, border: "none" }}
+                style={{ borderRadius: 0, width: "40px" }}
               >
-                <i className="fe fe-arrow-left"></i>
+                <i className="fa-solid fa-chevron-left"></i>
               </button>
-              <div className="px-3 py-2 bg-light fw-semibold text-center d-flex align-items-center justify-content-center" style={{ flex: 1 }}>
+
+              <div className="flex-fill bg-light fw-semibold d-flex align-items-center justify-content-center">
                 {formatMonthYear(currentDate)}
               </div>
+
               <button
-                className="btn btn-secondary"
+                className="btn btn-primary d-flex align-items-center"
                 onClick={() => handleMonthChange("next")}
-                style={{ borderRadius: 0, border: "none" }}
+                style={{ borderRadius: 0, width: "40px" }}
               >
-                <i className="fe fe-arrow-right"></i>
+                <i className="fa-solid fa-chevron-right"></i>
               </button>
             </div>
           </div>
+
+          {/* ===== Employee Search ===== */}
           <div className="col-md-9">
             <label className="form-label">Employee</label>
-            <div className="input-group">
+            <div className="input-group" style={{ height: "38px" }}>
               <input
                 type="text"
                 className="form-control"
@@ -210,15 +211,19 @@ const MonthlyAttendance = () => {
                 onChange={(e) => setSelectedEmployee(e.target.value)}
                 placeholder="Search employee..."
               />
-              <button className="btn btn-outline-secondary" type="button">
-                <i className="fe fe-arrow-right"></i>
-              </button>
-              <button className="btn btn-primary" onClick={handleView}>
-                <i className="fe fe-search me-1"></i>View
+
+              <button
+                className="btn btn-primary d-flex align-items-center"
+                onClick={handleView}
+              >
+                <i className="fa-solid fa-magnifying-glass me-2"></i>
+                View
               </button>
             </div>
           </div>
+
         </div>
+
 
         {/* Main Content - Side by Side Layout */}
         <div className="row">
@@ -285,27 +290,27 @@ const MonthlyAttendance = () => {
                             .slice(weekIndex * 7, weekIndex * 7 + 7)
                             .map((d, i) => {
                               const isSunday = (weekIndex * 7 + i) % 7 === 0;
-                              const bgColor = 
+                              const bgColor =
                                 d.status === "P"
                                   ? "#d1f5ee" // Light blue for Present
                                   : d.status === "A"
-                                  ? "#fcdada" // Light red for Absent
-                                  : d.status === "W"
-                                  ? "#e0e0e0" // Grey for Week Off
-                                  : d.status === "H"
-                                  ? "#d4edda" // Light green for Holiday
-                                  : "#ffffff"; // White for empty
-                              
+                                    ? "#fcdada" // Light red for Absent
+                                    : d.status === "W"
+                                      ? "#e0e0e0" // Grey for Week Off
+                                      : d.status === "H"
+                                        ? "#d4edda" // Light green for Holiday
+                                        : "#ffffff"; // White for empty
+
                               const textColor =
                                 d.status === "P"
                                   ? "#007b83"
                                   : d.status === "A"
-                                  ? "#c82333"
-                                  : d.status === "W"
-                                  ? "#555"
-                                  : d.status === "H"
-                                  ? "#155724"
-                                  : "#000";
+                                    ? "#c82333"
+                                    : d.status === "W"
+                                      ? "#555"
+                                      : d.status === "H"
+                                        ? "#155724"
+                                        : "#000";
 
                               return (
                                 <td

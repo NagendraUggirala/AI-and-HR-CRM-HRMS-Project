@@ -1,7 +1,7 @@
+// src/components/HRMS/Onboarding&Joining/OfferManagement.jsx
 import React, { useState, useEffect, Fragment } from 'react';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
-
 
 const OfferManagement = () => {
   // State management
@@ -57,10 +57,8 @@ const OfferManagement = () => {
 
   // Departments
   const DEPARTMENTS = ['Engineering', 'Sales', 'Human Resources', 'Marketing', 'Finance', 'Operations', 'IT'];
-
   // Offer types
   const OFFER_TYPES = ['Full-time', 'Contract', 'Internship', 'Consultant'];
-
   // Enhanced Templates with role/level configuration
   const TEMPLATES = [
     { 
@@ -148,7 +146,6 @@ const OfferManagement = () => {
       conditions: { maxCTC: 1000000 }
     }
   ];
-
   // Menu items and user info
   const menuItems = [
     {
@@ -178,14 +175,12 @@ const OfferManagement = () => {
       link: '/settings'
     }
   ];
-
   const userInfo = {
     name: 'HR Manager',
     role: 'Human Resources',
     email: 'hr@company.com',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=HRManager'
   };
-
   // Form data
   const [formData, setFormData] = useState({
     candidateName: '',
@@ -225,7 +220,6 @@ const OfferManagement = () => {
     shiftPolicy: '',
     weekOffPolicy: ''
   });
-
   // Initialize sample data
   useEffect(() => {
     const sampleOffers = [
@@ -835,7 +829,6 @@ const OfferManagement = () => {
         return { color: 'secondary', text: 'Unknown', icon: 'heroicons:question-mark-circle' };
     }
   };
-
   // Calculate statistics
   const calculateStats = () => {
     return {
@@ -848,7 +841,6 @@ const OfferManagement = () => {
       expired: offers.filter(o => o.offerStatus === OFFER_STATUS.EXPIRED).length,
     };
   };
-
   // Calculate acceptance rate
   const calculateAcceptanceRate = () => {
     const stats = calculateStats();
@@ -858,7 +850,6 @@ const OfferManagement = () => {
   // Render CTC breakup
   const renderCTCBreakup = (breakup) => {
     if (!breakup) return null;
-    
     return (
       <div className="mt-2 small">
         {Object.entries(breakup).map(([key, value]) => (
@@ -874,7 +865,6 @@ const OfferManagement = () => {
   // Render offer history
   const renderHistory = (history) => {
     if (!history || history.length === 0) return null;
-    
     return (
       <div className="mt-2 small">
         {history.slice(-3).map((item, index) => (
@@ -885,18 +875,16 @@ const OfferManagement = () => {
       </div>
     );
   };
-
   // Calculate stats and acceptance rate for use in JSX
   const stats = calculateStats();
   const acceptanceRate = calculateAcceptanceRate();
-
   return (
     <>
       <div className="container-fluid">
         {/* Header */}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
-            <h5 className="mb-2 d-flex align-items-center">
+            <h5 className="text-3xl fw-bold text-dark mb-2 mt-3 d-flex align-items-center gap-2">
               <Icon icon="heroicons:document-text" className="me-2" width={24} height={24} />
               Offer Management
             </h5>
@@ -907,13 +895,11 @@ const OfferManagement = () => {
             onClick={() => {
               resetForm();
               setShowForm(true);
-            }}
-          >
+            }}          >
             <Icon icon="heroicons:plus" className="me-2" />
             Create New Offer
           </button>
         </div>
-
         {/* Statistics Dashboard */}
         <div className="row g-3 mb-4">
           <div className="col-xl-2 col-md-4 col-sm-6">
@@ -973,16 +959,14 @@ const OfferManagement = () => {
               {['all', ...Object.values(OFFER_STATUS)].map(status => {
                 const statusConfig = status === 'all' ? 
                   { color: 'primary', text: 'All Offers', icon: 'heroicons:queue-list' } : 
-                  getStatusConfig(status);
-                
+                  getStatusConfig(status);                
                 return (
                   <button
                     key={status}
                     className={`btn btn-sm d-flex align-items-center ${
                       activeTab === status ? `btn-${statusConfig.color}` : 'btn-outline-secondary'
                     }`}
-                    onClick={() => setActiveTab(status)}
-                  >
+                    onClick={() => setActiveTab(status)}                  >
                     <Icon icon={statusConfig.icon} className="me-1" />
                     {status === 'all' ? 'All Offers' : statusConfig.text}
                     {status !== 'all' && (
@@ -993,8 +977,7 @@ const OfferManagement = () => {
                   </button>
                 );
               })}
-            </div>
-            
+            </div>            
             <div className="row g-3">
               <div className="col-md-4">
                 <div className="input-group">
@@ -1009,14 +992,12 @@ const OfferManagement = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-              </div>
-              
+              </div>              
               <div className="col-md-2">
                 <select 
                   className="form-select"
                   value={filters.status}
-                  onChange={(e) => setFilters({...filters, status: e.target.value})}
-                >
+                  onChange={(e) => setFilters({...filters, status: e.target.value})}                >
                   <option value="all">All Status</option>
                   {Object.entries(OFFER_STATUS).map(([key, value]) => (
                     <option key={value} value={value}>
@@ -1025,26 +1006,22 @@ const OfferManagement = () => {
                   ))}
                 </select>
               </div>
-              
               <div className="col-md-3">
                 <select 
                   className="form-select"
                   value={filters.department}
-                  onChange={(e) => setFilters({...filters, department: e.target.value})}
-                >
+                  onChange={(e) => setFilters({...filters, department: e.target.value})}                >
                   <option value="all">All Departments</option>
                   {DEPARTMENTS.map(dept => (
                     <option key={dept} value={dept}>{dept}</option>
                   ))}
                 </select>
               </div>
-              
               <div className="col-md-3">
                 <select 
                   className="form-select"
                   value={filters.offerType}
-                  onChange={(e) => setFilters({...filters, offerType: e.target.value})}
-                >
+                  onChange={(e) => setFilters({...filters, offerType: e.target.value})}                >
                   <option value="all">All Offer Types</option>
                   {OFFER_TYPES.map(type => (
                     <option key={type} value={type}>{type}</option>
@@ -1054,7 +1031,6 @@ const OfferManagement = () => {
             </div>
           </div>
         </div>
-
         {/* Offers Table */}
         <div className="card border shadow-sm mb-4">
           <div className="card-body">
@@ -1066,13 +1042,13 @@ const OfferManagement = () => {
                 <p className="mt-2">Loading offers...</p>
               </div>
             ) : getOffersByStatus(activeTab).length === 0 ? (
-              <div className="text-center py-4">
+              <div className="text-center py-4 justify-items-center" >
                 <Icon icon="heroicons:document-magnifying-glass" className="text-muted fs-1 mb-3" />
                 <p className="text-muted">No offers found</p>
               </div>
             ) : (
               <div className="table-responsive">
-                <table className="table table-hover">
+                <table className="table table-hover">AZAZ
                   <thead>
                     <tr>
                       <th>Candidate</th>
@@ -1085,7 +1061,6 @@ const OfferManagement = () => {
                   <tbody>
                     {getOffersByStatus(activeTab).map(offer => {
                       const statusConfig = getStatusConfig(offer.offerStatus);
-                      
                       return (
                         <tr key={offer.id}>
                           <td>
@@ -1098,8 +1073,7 @@ const OfferManagement = () => {
                                   backgroundColor: '#e6f7ff',
                                   color: '#1890ff',
                                   fontWeight: 'bold'
-                                }}
-                              >
+                                }}                              >
                                 {offer.candidateName.charAt(0)}
                               </div>
                               <div>
@@ -1124,7 +1098,6 @@ const OfferManagement = () => {
                               </div>
                             </div>
                           </td>
-                          
                           <td>
                             <div>
                               <div className="fw-bold">{offer.position}</div>
@@ -1134,7 +1107,6 @@ const OfferManagement = () => {
                               </div>
                             </div>
                           </td>
-                          
                           <td>
                             <div>
                               <div className="fw-bold text-success">₹{offer.ctc}</div>
@@ -1144,7 +1116,6 @@ const OfferManagement = () => {
                               {renderCTCBreakup(offer.ctcBreakup)}
                             </div>
                           </td>
-                          
                           <td>
                             <div>
                               <span className={`badge bg-${statusConfig.color} d-inline-flex align-items-center gap-1`}>
@@ -1178,7 +1149,6 @@ const OfferManagement = () => {
                               {renderHistory(offer.history)}
                             </div>
                           </td>
-                          
                           <td>
                             <div className="d-flex flex-column gap-1">
                               <button 
@@ -1187,8 +1157,7 @@ const OfferManagement = () => {
                                   setSelectedOffer(offer);
                                   setShowPreview(true);
                                 }}
-                                title="View Details"
-                              >
+                                title="View Details">
                                 <Icon icon="heroicons:eye" />
                               </button>
                               {offer.bgvStatus && (
@@ -1198,8 +1167,7 @@ const OfferManagement = () => {
                                     setSelectedOffer(offer);
                                     setShowBGVModal(true);
                                   }}
-                                  title="Background Verification"
-                                >
+                                  title="Background Verification">
                                   <Icon icon="heroicons:shield-check" />
                                 </button>
                               )}
@@ -1210,8 +1178,7 @@ const OfferManagement = () => {
                                     setSelectedOffer(offer);
                                     setShowReferenceCheckModal(true);
                                   }}
-                                  title="Reference Check"
-                                >
+                                  title="Reference Check">
                                   <Icon icon="heroicons:user-group" />
                                 </button>
                               )}
@@ -1219,16 +1186,14 @@ const OfferManagement = () => {
                                 className="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center"
                                 onClick={() => handleEdit(offer)}
                                 disabled={[OFFER_STATUS.ACCEPTED, OFFER_STATUS.DECLINED, OFFER_STATUS.WITHDRAWN].includes(offer.offerStatus)}
-                                title="Edit Offer"
-                              >
+                                title="Edit Offer">
                                 <Icon icon="heroicons:pencil-square" />
                               </button>
                               {offer.offerStatus === OFFER_STATUS.DRAFT || offer.offerStatus === OFFER_STATUS.APPROVED ? (
                                 <button 
                                   className="btn btn-sm btn-secondary d-flex align-items-center justify-content-center"
                                   onClick={() => handleSendOffer(offer)}
-                                  title="Send Offer"
-                                >
+                                  title="Send Offer">
                                   <Icon icon="heroicons:paper-airplane" />
                                 </button>
                               ) : null}
@@ -1237,15 +1202,13 @@ const OfferManagement = () => {
                                   <button 
                                     className="btn btn-sm btn-success d-flex align-items-center justify-content-center"
                                     onClick={() => handleAcceptOffer(offer)}
-                                    title="Mark as Accepted"
-                                  >
+                                    title="Mark as Accepted">
                                     <Icon icon="heroicons:check-badge" />
                                   </button>
                                   <button 
                                     className="btn btn-sm btn-danger d-flex align-items-center justify-content-center"
                                     onClick={() => handleDeclineOffer(offer)}
-                                    title="Mark as Declined"
-                                  >
+                                    title="Mark as Declined">
                                     <Icon icon="heroicons:x-circle" />
                                   </button>
                                 </>
@@ -1257,8 +1220,7 @@ const OfferManagement = () => {
                                     setSelectedOffer(offer);
                                     setShowApprovalModal(true);
                                   }}
-                                  title="View Approval Status"
-                                >
+                                  title="View Approval Status">
                                   <Icon icon="heroicons:clipboard-document-check" />
                                 </button>
                               )}
@@ -1269,8 +1231,7 @@ const OfferManagement = () => {
                                     setSelectedOffer(offer);
                                     setShowVersionHistoryModal(true);
                                   }}
-                                  title="View Version History"
-                                >
+                                  title="View Version History">
                                   <Icon icon="heroicons:clock" />
                                 </button>
                               )}
@@ -1278,8 +1239,7 @@ const OfferManagement = () => {
                                 <button 
                                   className="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center"
                                   onClick={() => handleCreateRevisedOffer(offer)}
-                                  title="Create Revised Offer"
-                                >
+                                  title="Create Revised Offer">
                                   <Icon icon="heroicons:document-duplicate" />
                                 </button>
                               )}
@@ -1287,8 +1247,7 @@ const OfferManagement = () => {
                                 <button 
                                   className="btn btn-sm btn-warning d-flex align-items-center justify-content-center"
                                   onClick={() => handleWithdrawOffer(offer)}
-                                  title="Withdraw Offer"
-                                >
+                                  title="Withdraw Offer">
                                   <Icon icon="heroicons:arrow-uturn-left" />
                                 </button>
                               )}
@@ -1296,8 +1255,7 @@ const OfferManagement = () => {
                                 className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
                                 onClick={() => handleDelete(offer.id)}
                                 title="Delete Offer"
-                                disabled={offer.offerStatus === OFFER_STATUS.ACCEPTED}
-                              >
+                                disabled={offer.offerStatus === OFFER_STATUS.ACCEPTED}>
                                 <Icon icon="heroicons:trash" />
                               </button>
                             </div>
@@ -1311,7 +1269,6 @@ const OfferManagement = () => {
             )}
           </div>
         </div>
-
         {/* Analytics Section */}
         <div className="card border shadow-sm">
           <div className="card-body">
@@ -1325,16 +1282,15 @@ const OfferManagement = () => {
                     <div className="progress mt-2" style={{ height: '6px' }}>
                       <div 
                         className="progress-bar bg-success"
-                        style={{ width: `${acceptanceRate}%` }}
-                      ></div>
+                        style={{ width: `${acceptanceRate}%` }}>
+                      </div>
                     </div>
                     <small className="text-muted">
                       {stats.accepted} accepted out of {stats.total} offers
                     </small>
                   </div>
                 </div>
-              </div>
-              
+              </div>              
               <div className="col-md-3">
                 <div className="card border">
                   <div className="card-body">
@@ -1343,8 +1299,7 @@ const OfferManagement = () => {
                     <small className="text-muted">From offer sent to acceptance</small>
                   </div>
                 </div>
-              </div>
-              
+              </div>              
               <div className="col-md-3">
                 <div className="card border">
                   <div className="card-body">
@@ -1394,14 +1349,8 @@ const OfferManagement = () => {
             }}
           >
             <div 
-              className="modal-dialog modal-dialog-centered modal-dialog-scrollable"
-              style={{
-                maxWidth: '1400px',
-                width: '95%',
-                margin: '0 auto',
-                maxHeight: '90vh',
-                position: 'relative'
-              }}
+              className="modal-dialog modal-dialog-centered"
+              
             >
               <div className="modal-content" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
                 <div className="modal-header bg-light">
@@ -1845,8 +1794,7 @@ const OfferManagement = () => {
                               className="form-select"
                               name="weekOffPolicy"
                               value={formData.weekOffPolicy}
-                              onChange={handleInputChange}
-                            >
+                              onChange={handleInputChange}                            >
                               <option value="">- Select -</option>
                               <option value="Sunday">Sunday</option>
                               <option value="Saturday-Sunday">Saturday-Sunday</option>
@@ -2031,8 +1979,7 @@ const OfferManagement = () => {
               if (e.target === e.currentTarget) {
                 e.stopPropagation();
               }
-            }}
-          >
+            }}          >
             <div 
               className="modal-dialog modal-dialog-centered modal-dialog-scrollable"
               style={{
@@ -2041,12 +1988,11 @@ const OfferManagement = () => {
                 margin: '0 auto',
                 maxHeight: '90vh',
                 position: 'relative'
-              }}
-            >
-              <div className="modal-content" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+              }}            >
+              <div className="modal-content" style={{ maxHeight: '90vh',  display: 'flex', flexDirection: 'column' }}>
                 <div className="modal-header bg-light">
                   <h5 className="modal-title d-flex align-items-center">
-                    <Icon icon="heroicons:eye" className="me-2" />
+                    {/* <Icon icon="heroicons:eye" className="me-2" /> */}
                     Offer Letter Preview
                   </h5>
                   <button 
@@ -2060,15 +2006,14 @@ const OfferManagement = () => {
                   {/* Offer Letter Template */}
                   <div className="border p-4 bg-white">
                     <div className="text-center mb-4">
-                      <h2 className="fw-bold mb-2">TECHNOVATE SOLUTIONS PRIVATE LIMITED</h2>
+                      <h2 className="text-2xl fw-bold text-dark mb-1 mt-3 d-flex align-items-center gap-2">TECHNOVATE SOLUTIONS PRIVATE LIMITED</h2>
                       <p className="mb-1">123 Tech Park, Sector 62, Noida, Uttar Pradesh - 201309</p>
                       <p className="mb-1">📧 hr@technovate.com | 📱 +91 120 4567890 | 🌐 www.technovate.com</p>
                       <hr className="my-3" />
                     </div>
                     
                     <div>
-                      <h4 className="mb-3">LETTER OF EMPLOYMENT</h4>
-                      
+                      <h4 className="text-2xl fw-bold text-dark mb-1 mt-3 d-flex align-items-center gap-2">LETTER OF EMPLOYMENT</h4>
                       <p className="mb-3">
                         <strong>Date:</strong> {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </p>
@@ -2100,7 +2045,7 @@ const OfferManagement = () => {
                       
                       {/* Offer Details Table */}
                       <div className="bg-light p-4 rounded mb-4">
-                        <h5 className="mb-3">OFFER DETAILS</h5>
+                        <h5 className="text-2xl fw-bold text-dark mb-1 mt-3 d-flex align-items-center gap-2">OFFER DETAILS</h5>
                         <div className="row">
                           <div className="col-md-6">
                             <p><strong>Position:</strong> {selectedOffer.position}</p>
@@ -2141,7 +2086,7 @@ const OfferManagement = () => {
                       
                       {/* Terms and Conditions */}
                       <div className="mb-4">
-                        <h5 className="mb-3">TERMS AND CONDITIONS</h5>
+                        <h5 className="text-2xl fw-bold text-dark mb-1 mt-3 d-flex align-items-center gap-2">TERMS AND CONDITIONS</h5>
                         <div className="small">
                           <p>1. This offer is subject to satisfactory background verification.</p>
                           <p>2. You will be on probation for a period of 3 (three) months from the date of joining.</p>

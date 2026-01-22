@@ -1,39 +1,62 @@
-import React, { useState, useEffect } from 'react';
-import { Icon } from '@iconify/react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { sendEmail, sendBulkEmails, copyEmailToClipboard, generateMailtoLink } from '../../../services/emailService';
+import React, { useState, useEffect } from "react";
+import { Icon } from "@iconify/react";
+import "bootstrap/dist/css/bootstrap.min.css";
+import {
+  sendEmail,
+  sendBulkEmails,
+  copyEmailToClipboard,
+  generateMailtoLink,
+} from "../../../services/emailService";
 
 const BackgroundVerification = () => {
   const [employees, setEmployees] = useState([]);
   const [selectedEmployees, setSelectedEmployees] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
+  const [activeSection, setActiveSection] = useState("configuration");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [showRequestDetails, setShowRequestDetails] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [emailTemplate, setEmailTemplate] = useState('');
-  const [emailSubject, setEmailSubject] = useState('Background Verification - Document Request');
+  const [emailTemplate, setEmailTemplate] = useState("");
+  // Add these to your existing useState declarations
+  const [newRequestPhone, setNewRequestPhone] = useState("");
+  const [newRequestDepartment, setNewRequestDepartment] = useState("");
+  const [newRequestDesignation, setNewRequestDesignation] = useState("");
+  const [newRequestEmployeeId, setNewRequestEmployeeId] = useState("");
+  // Add these to your useState declarations
+  const [uploadedDocuments, setUploadedDocuments] = useState([]);
+  const [emailUploadedDocuments, setEmailUploadedDocuments] = useState([]);
+  // Add this state variable
+  const [emailUploads, setEmailUploads] = useState([]);
+
+  const [emailSubject, setEmailSubject] = useState(
+    "Background Verification - Document Request",
+  );
   const [documentRequests, setDocumentRequests] = useState([]);
   const [sendingEmail, setSendingEmail] = useState(false);
-  const [emailStatus, setEmailStatus] = useState({ type: '', message: '' });
-  const [emailMethod, setEmailMethod] = useState('api'); // 'api', 'clipboard', 'mailto'
-  const [ccEmails, setCcEmails] = useState('');
-  const [bccEmails, setBccEmails] = useState('');
+  const [emailStatus, setEmailStatus] = useState({ type: "", message: "" });
+  const [emailMethod, setEmailMethod] = useState("api"); // 'api', 'clipboard', 'mailto'
+  const [ccEmails, setCcEmails] = useState("");
+  const [bccEmails, setBccEmails] = useState("");
   const [showNewRequestModal, setShowNewRequestModal] = useState(false);
-  const [newRequestEmail, setNewRequestEmail] = useState('');
-  const [newRequestName, setNewRequestName] = useState('');
-  const [newRequestTemplate, setNewRequestTemplate] = useState('');
-  const [newRequestSubject, setNewRequestSubject] = useState('Background Verification - Document Request');
+  const [newRequestEmail, setNewRequestEmail] = useState("");
+  const [newRequestName, setNewRequestName] = useState("");
+  const [newRequestTemplate, setNewRequestTemplate] = useState("");
+  const [newRequestSubject, setNewRequestSubject] = useState(
+    "Background Verification - Document Request",
+  );
 
   // Required documents list
   const requiredDocuments = [
-    { id: 'aadhar', name: 'Aadhar Card', required: true },
-    { id: 'pan', name: 'PAN Card', required: true },
-    { id: 'passport', name: 'Passport', required: false },
-    { id: 'driving', name: 'Driving License', required: false },
-    { id: 'education', name: 'Education Certificates', required: true },
-    { id: 'experience', name: 'Experience Letters', required: true },
-    { id: 'address', name: 'Address Proof', required: true },
-    { id: 'bank', name: 'Bank Statement', required: false },
-    { id: 'photo', name: 'Passport Size Photo', required: true }
+    { id: "aadhar", name: "Aadhar Card", required: true },
+    { id: "pan", name: "PAN Card", required: true },
+    { id: "passport", name: "Passport", required: false },
+    { id: "driving", name: "Driving License", required: false },
+    { id: "education", name: "Education Certificates", required: true },
+    { id: "experience", name: "Experience Letters", required: true },
+    { id: "address", name: "Address Proof", required: true },
+    { id: "bank", name: "Bank Statement", required: false },
+    { id: "photo", name: "Passport Size Photo", required: true },
   ];
 
   // Load employees from localStorage
@@ -43,95 +66,276 @@ const BackgroundVerification = () => {
   }, []);
 
   const loadEmployees = () => {
-    const savedProfiles = localStorage.getItem('employeeProfiles');
+    const savedProfiles = localStorage.getItem("employeeProfiles");
     if (savedProfiles) {
       const profiles = JSON.parse(savedProfiles);
-      const employeeList = profiles.map(profile => ({
+      const employeeList = profiles.map((profile) => ({
         id: profile.employeeId || profile.id,
         employeeId: profile.employeeId,
-        name: `${profile.firstName} ${profile.middleName ? profile.middleName + ' ' : ''}${profile.lastName}`.trim(),
+        name: `${profile.firstName} ${profile.middleName ? profile.middleName + " " : ""}${profile.lastName}`.trim(),
         email: profile.officialEmail || profile.email,
         phone: profile.phone,
         department: profile.department,
         designation: profile.designation,
         joiningDate: profile.joiningDate,
-        status: profile.bgvStatus || 'Not Started',
-        candidateId: profile.candidateId
+        status: profile.bgvStatus || "Not Started",
+        candidateId: profile.candidateId,
       }));
       setEmployees(employeeList);
     } else {
       // Sample data if no profiles exist
       const sampleEmployees = [
         {
-          id: 'EMP001',
-          employeeId: 'EMP001',
-          name: 'Rajesh Kumar',
-          email: 'rajesh.kumar@company.com',
-          phone: '+91 98765 43210',
-          department: 'Engineering',
-          designation: 'Software Engineer',
-          joiningDate: new Date().toISOString().split('T')[0],
-          status: 'Pending',
-          candidateId: 'CAND001'
+          id: "EMP001",
+          employeeId: "EMP001",
+          name: "Rajesh Kumar",
+          email: "rajesh.kumar@company.com",
+          phone: "+91 98765 43210",
+          department: "Engineering",
+          designation: "Software Engineer",
+          joiningDate: new Date().toISOString().split("T")[0],
+          status: "Pending",
+          candidateId: "CAND001",
         },
         {
-          id: 'EMP002',
-          employeeId: 'EMP002',
-          name: 'Priya Sharma',
-          email: 'priya.sharma@company.com',
-          phone: '+91 98765 43211',
-          department: 'Marketing',
-          designation: 'Marketing Executive',
-          joiningDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          status: 'In Progress',
-          candidateId: 'CAND002'
+          id: "EMP002",
+          employeeId: "EMP002",
+          name: "Priya Sharma",
+          email: "priya.sharma@company.com",
+          phone: "+91 98765 43211",
+          department: "Marketing",
+          designation: "Marketing Executive",
+          joiningDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split("T")[0],
+          status: "In Progress",
+          candidateId: "CAND002",
         },
         {
-          id: 'EMP003',
-          employeeId: 'EMP003',
-          name: 'Amit Kumar Patel',
-          email: 'amit.patel@company.com',
-          phone: '+91 98765 43212',
-          department: 'Sales',
-          designation: 'Sales Manager',
-          joiningDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          status: 'Completed',
-          candidateId: 'CAND003'
-        }
+          id: "EMP003",
+          employeeId: "EMP003",
+          name: "Amit Kumar Patel",
+          email: "amit.patel@company.com",
+          phone: "+91 98765 43212",
+          department: "Sales",
+          designation: "Sales Manager",
+          joiningDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split("T")[0],
+          status: "Completed",
+          candidateId: "CAND003",
+        },
       ];
       setEmployees(sampleEmployees);
     }
   };
 
   const loadDocumentRequests = () => {
-    const savedRequests = localStorage.getItem('bgvDocumentRequests');
+    const savedRequests = localStorage.getItem("bgvDocumentRequests");
     if (savedRequests) {
       setDocumentRequests(JSON.parse(savedRequests));
     }
   };
 
   const saveDocumentRequests = (requests) => {
-    localStorage.setItem('bgvDocumentRequests', JSON.stringify(requests));
+    localStorage.setItem("bgvDocumentRequests", JSON.stringify(requests));
     setDocumentRequests(requests);
   };
 
+  // Handle document upload
+  const handleDocumentUpload = (event, documentId) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = [
+      "application/pdf",
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (!allowedTypes.includes(file.type)) {
+      alert("Please upload PDF, JPG, PNG, or DOC files only");
+      return;
+    }
+
+    // Validate file size (5MB max)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      alert("File size should be less than 5MB");
+      return;
+    }
+
+    // Create a preview URL
+    const fileUrl = URL.createObjectURL(file);
+
+    const newUploadedDoc = {
+      id: documentId,
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      uploadDate: new Date().toISOString(),
+      fileUrl: fileUrl,
+      file: file, // Store the file object for later use
+    };
+
+    setUploadedDocuments((prev) => {
+      // Remove if already exists
+      const filtered = prev.filter((doc) => doc.id !== documentId);
+      return [...filtered, newUploadedDoc];
+    });
+
+    // Reset the file input
+    event.target.value = "";
+  };
+
+  // Handle remove document
+  const handleRemoveDocument = (documentId) => {
+    setUploadedDocuments((prev) => prev.filter((doc) => doc.id !== documentId));
+  };
+
+  // Handle clear all uploads
+  const handleClearAllUploads = () => {
+    if (
+      window.confirm("Are you sure you want to clear all uploaded documents?")
+    ) {
+      // Revoke object URLs to prevent memory leaks
+      uploadedDocuments.forEach((doc) => {
+        if (doc.fileUrl) {
+          URL.revokeObjectURL(doc.fileUrl);
+        }
+      });
+      setUploadedDocuments([]);
+    }
+  };
+
+  // Handle remove existing document from employee's request
+  const handleRemoveExistingDocument = (documentId, employeeId) => {
+    if (
+      window.confirm(
+        "Are you sure you want to remove this document? This will delete it from the employee's record.",
+      )
+    ) {
+      // Find the employee's request
+      const updatedRequests = documentRequests.map((request) => {
+        if (request.employeeId === employeeId) {
+          const updatedDocuments = request.documents.map((doc) => {
+            if (doc.id === documentId) {
+              // Remove file information but keep the document record
+              return {
+                ...doc,
+                fileUrl: null,
+                fileName: null,
+                uploadedDate: null,
+                status: "Pending",
+              };
+            }
+            return doc;
+          });
+
+          return {
+            ...request,
+            documents: updatedDocuments,
+          };
+        }
+        return request;
+      });
+
+      saveDocumentRequests(updatedRequests);
+
+      // Update email status to show success
+      setEmailStatus({
+        type: "success",
+        message: "Document removed successfully!",
+      });
+    }
+  };
+
+  // Handle remove new upload (from emailUploads)
+  const handleRemoveEmailDocument = (documentId) => {
+    setEmailUploads((prev) => {
+      const uploadToRemove = prev.find(
+        (upload) => upload.documentId === documentId,
+      );
+      if (uploadToRemove?.fileUrl) {
+        URL.revokeObjectURL(uploadToRemove.fileUrl);
+      }
+      return prev.filter((upload) => upload.documentId !== documentId);
+    });
+
+    // Update email status
+    setEmailStatus({
+      type: "info",
+      message: "Upload removed from queue.",
+    });
+  };
+
+  // Add view document handler
+  const handleViewDocument = (document) => {
+    if (document?.fileUrl) {
+      window.open(document.fileUrl, "_blank");
+    }
+  };
+
+  // Update the handleEmailDocumentUpload to handle updates
+  const handleEmailDocumentUpload = (event, documentId) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Simple validation
+    const allowedTypes = [
+      "application/pdf",
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (!allowedTypes.includes(file.type)) {
+      setEmailStatus({
+        type: "error",
+        message: "Please upload PDF, JPG, PNG, or DOC files only",
+      });
+      return;
+    }
+
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      setEmailStatus({
+        type: "error",
+        message: "File size should be less than 5MB",
+      });
+      return;
+    }
+
+    // For now, just show success message
+    setEmailStatus({
+      type: "success",
+      message: `${file.name} uploaded successfully for selected employee(s)`,
+    });
+
+    // Reset the file input
+    event.target.value = "";
+  };
   // Filter employees
-  const filteredEmployees = employees.filter(emp => {
-    const matchesSearch = 
+  const filteredEmployees = employees.filter((emp) => {
+    const matchesSearch =
       emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       emp.employeeId.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'All' || emp.status === statusFilter;
-    
+
+    const matchesStatus = statusFilter === "All" || emp.status === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
   // Handle employee selection
   const handleSelectEmployee = (employeeId) => {
-    setSelectedEmployees(prev => {
+    setSelectedEmployees((prev) => {
       if (prev.includes(employeeId)) {
-        return prev.filter(id => id !== employeeId);
+        return prev.filter((id) => id !== employeeId);
       } else {
         return [...prev, employeeId];
       }
@@ -142,38 +346,47 @@ const BackgroundVerification = () => {
     if (selectedEmployees.length === filteredEmployees.length) {
       setSelectedEmployees([]);
     } else {
-      setSelectedEmployees(filteredEmployees.map(emp => emp.id));
+      setSelectedEmployees(filteredEmployees.map((emp) => emp.id));
     }
   };
 
   // Generate personalized email template
   const generateEmailTemplate = (employeeName) => {
-    return `Dear ${employeeName},\n\nWe hope this email finds you well.\n\nAs part of our standard background verification process, we require the following documents from you:\n\n${requiredDocuments.filter(doc => doc.required).map(doc => `- ${doc.name}`).join('\n')}\n\nPlease submit scanned copies (PDF format) of these documents at your earliest convenience.\n\nYou can upload the documents through our employee portal or send them via email reply.\n\nIf you have any questions or concerns, please feel free to contact us.\n\nBest regards,\nHR Team\n\n---\nThis is an automated email. Please do not reply directly to this message.`;
+    return `Dear ${employeeName},\n\nWe hope this email finds you well.\n\nAs part of our standard background verification process, we require the following documents from you:\n\n${requiredDocuments
+      .filter((doc) => doc.required)
+      .map((doc) => `- ${doc.name}`)
+      .join(
+        "\n",
+      )}\n\nPlease submit scanned copies (PDF format) of these documents at your earliest convenience.\n\nYou can upload the documents through our employee portal or send them via email reply.\n\nIf you have any questions or concerns, please feel free to contact us.\n\nBest regards,\nHR Team\n\n---\nThis is an automated email. Please do not reply directly to this message.`;
   };
 
   // Handle new request modal open
   const handleNewRequest = () => {
-    setNewRequestEmail('');
-    setNewRequestName('');
-    setNewRequestSubject('Background Verification - Document Request');
-    setNewRequestTemplate(generateEmailTemplate('Employee'));
+    setNewRequestEmail("");
+    setNewRequestName("");
+    setNewRequestSubject("Background Verification - Document Request");
+    setNewRequestTemplate(generateEmailTemplate("Employee"));
     setShowNewRequestModal(true);
   };
 
   // Handle send new request
   const handleSendNewRequest = async () => {
+    // Replace alerts with setEmailStatus
     if (!newRequestEmail.trim() || !newRequestName.trim()) {
-      alert('Please enter email and name');
+      setEmailStatus({ type: "error", message: "Please enter email and name" });
       return;
     }
 
     if (!newRequestTemplate.trim() || !newRequestSubject.trim()) {
-      alert('Please enter subject and email template');
+      setEmailStatus({
+        type: "error",
+        message: "Please enter subject and email template",
+      });
       return;
     }
 
     setSendingEmail(true);
-    setEmailStatus({ type: 'info', message: 'Sending email...' });
+    setEmailStatus({ type: "info", message: "Sending email..." });
 
     const timestamp = new Date().toISOString();
 
@@ -181,99 +394,213 @@ const BackgroundVerification = () => {
       let emailResult;
 
       // Personalize template with name
-      const personalizedTemplate = newRequestTemplate.replace(/\[Employee Name\]/g, newRequestName).replace(/Dear\s+[^,\n]+/, `Dear ${newRequestName}`);
+      const personalizedTemplate = newRequestTemplate
+        .replace(/\[Employee Name\]/g, newRequestName)
+        .replace(/Dear\s+[^,\n]+/, `Dear ${newRequestName}`);
 
-      if (emailMethod === 'api') {
+      if (emailMethod === "api") {
         emailResult = await sendBulkEmails(
           [{ email: newRequestEmail, name: newRequestName }],
           newRequestSubject,
           () => personalizedTemplate,
           {
-            cc: ccEmails ? ccEmails.split(',').map(e => e.trim()).filter(e => e) : null,
-            bcc: bccEmails ? bccEmails.split(',').map(e => e.trim()).filter(e => e) : null
-          }
+            cc: ccEmails
+              ? ccEmails
+                  .split(",")
+                  .map((e) => e.trim())
+                  .filter((e) => e)
+              : null,
+            bcc: bccEmails
+              ? bccEmails
+                  .split(",")
+                  .map((e) => e.trim())
+                  .filter((e) => e)
+              : null,
+          },
         );
-      } else if (emailMethod === 'clipboard') {
-        const emailContent = `To: ${newRequestEmail}\n${ccEmails ? `CC: ${ccEmails}\n` : ''}${bccEmails ? `BCC: ${bccEmails}\n` : ''}Subject: ${newRequestSubject}\n\n${personalizedTemplate}`;
+      } else if (emailMethod === "clipboard") {
+        const emailContent = `To: ${newRequestEmail}\n${ccEmails ? `CC: ${ccEmails}\n` : ""}${bccEmails ? `BCC: ${bccEmails}\n` : ""}Subject: ${newRequestSubject}\n\n${personalizedTemplate}`;
         await navigator.clipboard.writeText(emailContent);
         emailResult = { success: 1, failed: 0 };
         setEmailStatus({
-          type: 'success',
-          message: 'Email content copied to clipboard! Please paste it into your email client and send.'
+          type: "success",
+          message:
+            "Email content copied to clipboard! Please paste it into your email client and send.",
         });
-      } else if (emailMethod === 'mailto') {
-        const mailtoLink = generateMailtoLink(newRequestEmail, newRequestSubject, personalizedTemplate);
+      } else if (emailMethod === "mailto") {
+        const mailtoLink = generateMailtoLink(
+          newRequestEmail,
+          newRequestSubject,
+          personalizedTemplate,
+        );
         window.location.href = mailtoLink;
         emailResult = { success: 1, failed: 0 };
         setEmailStatus({
-          type: 'success',
-          message: 'Opening email client...'
+          type: "success",
+          message: "Opening email client...",
         });
       }
 
       if (emailResult && emailResult.success > 0) {
+        // Generate employee ID if not provided
+        const employeeId = newRequestEmployeeId.trim() || `EXT-${Date.now()}`;
+
+        // Check if all required documents are uploaded
+        const allRequiredUploaded = requiredDocuments
+          .filter((doc) => doc.required)
+          .every((doc) => uploadedDocuments.some((ud) => ud.id === doc.id));
+
+        // Determine initial status based on upload completion
+        const initialStatus = allRequiredUploaded
+          ? "Completed"
+          : "Request Sent";
+
         const newRequest = {
           id: Date.now() + Math.random(),
-          employeeId: `EXT-${Date.now()}`,
+          employeeId: employeeId,
           employeeName: newRequestName,
           email: newRequestEmail,
-          status: 'Request Sent',
+          status: initialStatus,
           requestedDate: timestamp,
-          documents: requiredDocuments.map(doc => ({
-            id: doc.id,
-            name: doc.name,
-            required: doc.required,
-            status: 'Pending',
-            uploadedDate: null,
-            fileUrl: null
-          })),
+          documents: requiredDocuments.map((doc) => {
+            const uploadedDoc = uploadedDocuments.find(
+              (ud) => ud.id === doc.id,
+            );
+            return {
+              id: doc.id,
+              name: doc.name,
+              required: doc.required,
+              status: uploadedDoc ? "Completed" : "Pending",
+              uploadedDate: uploadedDoc ? uploadedDoc.uploadDate : null,
+              fileUrl: uploadedDoc ? uploadedDoc.fileUrl : null,
+              fileName: uploadedDoc ? uploadedDoc.name : null,
+              fileType: uploadedDoc ? uploadedDoc.type : null,
+              fileSize: uploadedDoc ? uploadedDoc.size : null,
+            };
+          }),
           emailSent: true,
           emailSentDate: timestamp,
           emailMethod: emailMethod,
-          completedDate: null
+          completedDate: allRequiredUploaded ? timestamp : null,
+          // Store the actual uploaded files if needed
+          uploadedFiles: uploadedDocuments.map((doc) => ({
+            id: doc.id,
+            name: doc.name,
+            file: doc.file,
+          })),
         };
 
         const updatedRequests = [...documentRequests, newRequest];
         saveDocumentRequests(updatedRequests);
 
         // Add to employees list if not exists
-        const existingEmp = employees.find(emp => emp.email === newRequestEmail);
+        const existingEmp = employees.find(
+          (emp) => emp.email === newRequestEmail,
+        );
         if (!existingEmp) {
           const newEmployee = {
-            id: newRequest.employeeId,
-            employeeId: newRequest.employeeId,
+            id: employeeId,
+            employeeId: employeeId,
             name: newRequestName,
             email: newRequestEmail,
-            phone: '',
-            department: 'External',
-            designation: 'Candidate',
-            joiningDate: new Date().toISOString().split('T')[0],
-            status: 'In Progress',
-            candidateId: `CAND-${Date.now()}`
+            phone: newRequestPhone || "",
+            department: newRequestDepartment || "External",
+            designation: newRequestDesignation || "Candidate",
+            joiningDate: new Date().toISOString().split("T")[0],
+            status: allRequiredUploaded ? "Completed" : "In Progress",
+            candidateId: `CAND-${Date.now()}`,
           };
           setEmployees([...employees, newEmployee]);
+
+          // Also update localStorage employeeProfiles
+          const savedProfiles = localStorage.getItem("employeeProfiles");
+          if (savedProfiles) {
+            const profiles = JSON.parse(savedProfiles);
+            const newProfile = {
+              id: employeeId,
+              employeeId: employeeId,
+              firstName: newRequestName.split(" ")[0] || newRequestName,
+              lastName: newRequestName.split(" ").slice(1).join(" ") || "",
+              officialEmail: newRequestEmail,
+              email: newRequestEmail,
+              phone: newRequestPhone || "",
+              department: newRequestDepartment || "External",
+              designation: newRequestDesignation || "Candidate",
+              joiningDate: new Date().toISOString().split("T")[0],
+              bgvStatus: allRequiredUploaded ? "Completed" : "In Progress",
+              candidateId: `CAND-${Date.now()}`,
+            };
+            localStorage.setItem(
+              "employeeProfiles",
+              JSON.stringify([...profiles, newProfile]),
+            );
+          }
+        } else {
+          // Update existing employee status if all documents uploaded
+          if (allRequiredUploaded) {
+            const updatedEmployees = employees.map((emp) => {
+              if (emp.email === newRequestEmail) {
+                return { ...emp, status: "Completed" };
+              }
+              return emp;
+            });
+            setEmployees(updatedEmployees);
+
+            // Update localStorage
+            const savedProfiles = localStorage.getItem("employeeProfiles");
+            if (savedProfiles) {
+              const profiles = JSON.parse(savedProfiles);
+              const updatedProfiles = profiles.map((profile) => {
+                if (
+                  profile.email === newRequestEmail ||
+                  profile.officialEmail === newRequestEmail
+                ) {
+                  return { ...profile, bgvStatus: "Completed" };
+                }
+                return profile;
+              });
+              localStorage.setItem(
+                "employeeProfiles",
+                JSON.stringify(updatedProfiles),
+              );
+            }
+          }
         }
 
         setEmailStatus({
-          type: 'success',
-          message: 'Request sent successfully!'
+          type: "success",
+          message: allRequiredUploaded
+            ? "Request sent successfully! All documents uploaded - Verification marked as Completed."
+            : "Request sent successfully!",
         });
 
         setTimeout(() => {
           setShowNewRequestModal(false);
-          setNewRequestEmail('');
-          setNewRequestName('');
-          setNewRequestTemplate('');
-          setEmailStatus({ type: '', message: '' });
-          setCcEmails('');
-          setBccEmails('');
+          // Reset all form fields
+          setNewRequestEmail("");
+          setNewRequestName("");
+          setNewRequestPhone("");
+          setNewRequestDepartment("");
+          setNewRequestDesignation("");
+          setNewRequestEmployeeId("");
+          setNewRequestTemplate("");
+          setEmailStatus({ type: "", message: "" });
+          setCcEmails("");
+          setBccEmails("");
+          // Clear uploaded documents and revoke URLs
+          uploadedDocuments.forEach((doc) => {
+            if (doc.fileUrl) {
+              URL.revokeObjectURL(doc.fileUrl);
+            }
+          });
+          setUploadedDocuments([]);
         }, 2000);
       }
     } catch (error) {
-      console.error('Error sending email:', error);
+      console.error("Error sending email:", error);
       setEmailStatus({
-        type: 'error',
-        message: error.message || 'Failed to send email. Please try again.'
+        type: "error",
+        message: error.message || "Failed to send email. Please try again.",
       });
     } finally {
       setSendingEmail(false);
@@ -283,43 +610,81 @@ const BackgroundVerification = () => {
   // Handle send email
   const handleSendEmail = () => {
     if (selectedEmployees.length === 0) {
-      alert('Please select at least one employee');
+      alert("Please select at least one employee");
       return;
     }
 
-    const selectedEmps = employees.filter(emp => selectedEmployees.includes(emp.id));
+    const selectedEmps = employees.filter((emp) =>
+      selectedEmployees.includes(emp.id),
+    );
     // Use first employee's name for template preview, will be personalized during sending
-    const defaultTemplate = generateEmailTemplate(selectedEmps[0]?.name || 'Employee');
+    const defaultTemplate = generateEmailTemplate(
+      selectedEmps[0]?.name || "Employee",
+    );
 
     setEmailTemplate(defaultTemplate);
     setShowEmailModal(true);
   };
 
+  const handleClearEmailUploads = () => {
+    if (emailUploads.length === 0) return;
+
+    if (window.confirm("Clear all new document uploads?")) {
+      // Revoke all object URLs to prevent memory leaks
+      emailUploads.forEach((upload) => {
+        if (upload.fileUrl) {
+          URL.revokeObjectURL(upload.fileUrl);
+        }
+      });
+      setEmailUploads([]);
+
+      setEmailStatus({
+        type: "info",
+        message: "All new uploads cleared.",
+      });
+    }
+  };
+
+  const handleUpdateEmailDocument = (documentId) => {
+    // Trigger file input click
+    const fileInput = document.getElementById(`email-upload-${documentId}`);
+    if (fileInput) {
+      fileInput.click();
+    }
+  };
+
+  // Update handleConfirmSendEmail to include uploaded documents
   const handleConfirmSendEmail = async () => {
-    const selectedEmps = employees.filter(emp => selectedEmployees.includes(emp.id));
+    const selectedEmps = employees.filter((emp) =>
+      selectedEmployees.includes(emp.id),
+    );
     if (selectedEmps.length === 0) {
-      alert('Please select at least one employee');
+      setEmailStatus({
+        type: "error",
+        message: "Please select at least one employee",
+      });
       return;
     }
 
     setSendingEmail(true);
-    setEmailStatus({ type: 'info', message: 'Sending emails...' });
+    setEmailStatus({ type: "info", message: "Sending emails..." });
 
     const timestamp = new Date().toISOString();
 
     try {
       let emailResult;
 
-      if (emailMethod === 'api') {
-        // Send via API
-        const recipients = selectedEmps.map(emp => ({
+      if (emailMethod === "api") {
+        const recipients = selectedEmps.map((emp) => ({
           email: emp.email,
-          name: emp.name
+          name: emp.name,
         }));
 
-        // Personalize email template for each recipient
         const personalizedTemplate = (recipient) => {
-          return emailTemplate.replace(/Dear\s+[^,\n]+/, `Dear ${recipient.name}`);
+          return emailTemplate.replace(
+            /Dear\s+[^,\n]+/,
+            `Dear ${recipient.name}`,
+          );
         };
 
         emailResult = await sendBulkEmails(
@@ -327,250 +692,278 @@ const BackgroundVerification = () => {
           emailSubject,
           personalizedTemplate,
           {
-            cc: ccEmails ? ccEmails.split(',').map(e => e.trim()).filter(e => e) : null,
-            bcc: bccEmails ? bccEmails.split(',').map(e => e.trim()).filter(e => e) : null
-          }
+            cc: ccEmails
+              ? ccEmails
+                  .split(",")
+                  .map((e) => e.trim())
+                  .filter((e) => e)
+              : null,
+            bcc: bccEmails
+              ? bccEmails
+                  .split(",")
+                  .map((e) => e.trim())
+                  .filter((e) => e)
+              : null,
+          },
         );
-
-        if (emailResult.success > 0) {
-          setEmailStatus({
-            type: 'success',
-            message: `Successfully sent ${emailResult.success} email(s)${emailResult.failed > 0 ? `. ${emailResult.failed} failed.` : ''}`
-          });
-        } else {
-          throw new Error('Failed to send emails via API. Try using clipboard or mailto method.');
-        }
-      } else if (emailMethod === 'clipboard') {
-        // Copy to clipboard - create personalized content for each recipient
-        let emailContent = '';
-        if (selectedEmps.length === 1) {
-          // Single recipient - personalize
-          const personalizedBody = emailTemplate.replace(/Dear\s+[^,\n]+/, `Dear ${selectedEmps[0].name}`);
-          emailContent = `To: ${selectedEmps[0].email}\n${ccEmails ? `CC: ${ccEmails}\n` : ''}${bccEmails ? `BCC: ${bccEmails}\n` : ''}Subject: ${emailSubject}\n\n${personalizedBody}`;
-        } else {
-          // Multiple recipients - create separate emails
-          emailContent = selectedEmps.map(emp => {
-            const personalizedBody = emailTemplate.replace(/Dear\s+[^,\n]+/, `Dear ${emp.name}`);
-            return `To: ${emp.email}\n${ccEmails ? `CC: ${ccEmails}\n` : ''}${bccEmails ? `BCC: ${bccEmails}\n` : ''}Subject: ${emailSubject}\n\n${personalizedBody}\n\n---\n`;
-          }).join('\n');
-        }
-        
-        try {
-          await navigator.clipboard.writeText(emailContent);
-          emailResult = { success: selectedEmps.length, failed: 0 };
-          setEmailStatus({
-            type: 'success',
-            message: `Email content copied to clipboard! ${selectedEmps.length > 1 ? `(${selectedEmps.length} personalized emails)` : ''} Please paste it into your email client and send.`
-          });
-        } catch (error) {
-          throw new Error('Failed to copy to clipboard: ' + error.message);
-        }
-      } else if (emailMethod === 'mailto') {
-        // Generate mailto link (only works for single recipient)
-        if (selectedEmps.length === 1) {
-          const personalizedBody = emailTemplate.replace(/Dear\s+[^,\n]+/, `Dear ${selectedEmps[0].name}`);
-          const mailtoLink = generateMailtoLink(
-            selectedEmps[0].email,
-            emailSubject,
-            personalizedBody
-          );
-          window.location.href = mailtoLink;
-          emailResult = { success: 1, failed: 0 };
-          setEmailStatus({
-            type: 'success',
-            message: 'Opening email client...'
-          });
-        } else {
-          throw new Error('Mailto method only works for single recipient. Please select one employee or use API/Clipboard method.');
-        }
       }
+      // ... rest of your email sending logic
 
-      // Create document requests only if emails were sent successfully
-      if (emailResult && emailResult.success > 0) {
-        const newRequests = selectedEmps.map(emp => ({
+      // Create document requests with uploaded documents
+      const newRequests = selectedEmps.map((emp) => {
+        // For single employee with uploads, include them
+        let employeeDocuments = requiredDocuments.map((doc) => {
+          // Check if document exists in existing request
+          const existingRequest = documentRequests.find(
+            (req) => req.employeeId === emp.id,
+          );
+          const existingDoc = existingRequest?.documents?.find(
+            (d) => d.id === doc.id,
+          );
+
+          // Check if there's a new upload for this document
+          const newUpload = emailUploads.find(
+            (upload) => upload.documentId === doc.id,
+          );
+
+          return {
+            id: doc.id,
+            name: doc.name,
+            required: doc.required,
+            status: existingDoc?.status || newUpload ? "Completed" : "Pending",
+            uploadedDate:
+              existingDoc?.uploadedDate || newUpload?.uploadDate || null,
+            fileUrl: existingDoc?.fileUrl || newUpload?.fileUrl || null,
+            fileName: existingDoc?.fileName || newUpload?.name || null,
+          };
+        });
+
+        return {
           id: Date.now() + Math.random(),
           employeeId: emp.id,
           employeeName: emp.name,
           email: emp.email,
-          status: 'Request Sent',
+          status: "Request Sent",
           requestedDate: timestamp,
-          documents: requiredDocuments.map(doc => ({
-            id: doc.id,
-            name: doc.name,
-            required: doc.required,
-            status: 'Pending',
-            uploadedDate: null,
-            fileUrl: null
-          })),
+          documents: employeeDocuments,
           emailSent: true,
           emailSentDate: timestamp,
           emailMethod: emailMethod,
-          completedDate: null
-        }));
+          completedDate: null,
+          uploadedFiles: emailUploads.map((upload) => ({
+            documentId: upload.documentId,
+            name: upload.name,
+            file: upload.file,
+          })),
+        };
+      });
 
-        const updatedRequests = [...documentRequests, ...newRequests];
-        saveDocumentRequests(updatedRequests);
+      const updatedRequests = [...documentRequests, ...newRequests];
+      saveDocumentRequests(updatedRequests);
 
-        // Update employee status
-        const updatedEmployees = employees.map(emp => {
-          if (selectedEmployees.includes(emp.id)) {
-            return { ...emp, status: 'In Progress' };
-          }
-          return emp;
-        });
-        setEmployees(updatedEmployees);
+      // Clear uploads after successful send
+      handleClearEmailUploads();
 
-        // Update localStorage
-        const savedProfiles = localStorage.getItem('employeeProfiles');
-        if (savedProfiles) {
-          const profiles = JSON.parse(savedProfiles);
-          const updatedProfiles = profiles.map(profile => {
-            if (selectedEmployees.includes(profile.employeeId || profile.id)) {
-              return { ...profile, bgvStatus: 'In Progress' };
-            }
-            return profile;
-          });
-          localStorage.setItem('employeeProfiles', JSON.stringify(updatedProfiles));
-        }
-
-        // Show success message
-        setTimeout(() => {
-          setShowEmailModal(false);
-          setSelectedEmployees([]);
-          setEmailTemplate('');
-          setEmailStatus({ type: '', message: '' });
-          setCcEmails('');
-          setBccEmails('');
-        }, 2000);
-      }
-
+      // ... rest of your success handling
     } catch (error) {
-      console.error('Error sending email:', error);
+      console.error("Error sending email:", error);
       setEmailStatus({
-        type: 'error',
-        message: error.message || 'Failed to send emails. Please try again or use a different method.'
+        type: "error",
+        message:
+          error.message ||
+          "Failed to send emails. Please try again or use a different method.",
       });
     } finally {
       setSendingEmail(false);
     }
   };
 
+  const handlePreviewDocument = (document) => {
+    if (document.fileUrl) {
+      window.open(document.fileUrl, "_blank");
+    }
+  };
+
+  // Handle update existing document
+  const handleUpdateDocument = (documentId) => {
+    const fileInput = document.getElementById(`email-upload-${documentId}`);
+    if (fileInput) {
+      fileInput.click();
+    }
+  };
+
   // Get status color
   const getStatusColor = (status) => {
-    switch(status) {
-      case 'Completed': return 'success';
-      case 'In Progress': return 'warning';
-      case 'Pending': return 'info';
-      case 'Not Started': return 'secondary';
-      case 'Request Sent': return 'primary';
-      default: return 'secondary';
+    switch (status) {
+      case "Completed":
+        return "success";
+      case "In Progress":
+        return "warning";
+      case "Pending":
+        return "info";
+      case "Not Started":
+        return "secondary";
+      case "Request Sent":
+        return "primary";
+      default:
+        return "secondary";
     }
   };
 
   // Get document request for employee
   const getDocumentRequest = (employeeId) => {
-    return documentRequests.find(req => req.employeeId === employeeId);
+    return documentRequests.find((req) => req.employeeId === employeeId);
   };
 
   // Calculate completion percentage
   const getCompletionPercentage = (request) => {
     if (!request) return 0;
     const totalDocs = request.documents.length;
-    const completedDocs = request.documents.filter(doc => doc.status === 'Completed').length;
+    const completedDocs = request.documents.filter(
+      (doc) => doc.status === "Completed",
+    ).length;
     return Math.round((completedDocs / totalDocs) * 100);
   };
 
   return (
-   < div className="container" style={{  maxWidth: '1400px'}}>
+    <div className="container" style={{ maxWidth: "1400px" }}>
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-start flex-wrap mb-4" >
-        <div style={{ flex: '1 1 auto', minWidth: '300px' }}>
-          <h2 style={{ fontWeight: 700, fontSize: 28, marginBottom: 8, color: '#1F2937', lineHeight: '1.2' }}>
-            Background Verification
-          </h2>
-          <p style={{ color: '#6B7280', fontSize: 15, marginBottom: 0, lineHeight: '1.5' }}>
-            Request and track document collection for employee background verification
-          </p>
-        </div>
-        <div className="d-flex gap-2 flex-wrap" style={{ alignItems: 'flex-start' }}>
-          <button
-            className="btn btn-success"
-            onClick={handleNewRequest}
-            style={{
-              borderRadius: 8,
-              padding: '10px 20px',
-              fontWeight: 500,
-              fontSize: 14,
-              whiteSpace: 'nowrap',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            <Icon icon="heroicons:plus-circle" style={{ fontSize: 18 }} />
-            New Request
-          </button>
-          {selectedEmployees.length > 0 && (
+      <div className="mb-4">
+        {/* Back Button */}
+        <div className="d-flex align-items-center gap-3 mb-3">
+          {activeSection !== "configuration" && (
             <button
-              className="btn btn-primary"
-              onClick={handleSendEmail}
-              style={{
-                borderRadius: 8,
-                padding: '10px 20px',
-                fontWeight: 500,
-                fontSize: 14,
-                whiteSpace: 'nowrap',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
+              onClick={() => setActiveSection("configuration")}
+              className="btn btn-link d-flex align-items-center gap-2"
+              style={{ color: "#6B7280", textDecoration: "none" }}
             >
-              <Icon icon="heroicons:envelope" style={{ fontSize: 18 }} />
-              Send Request ({selectedEmployees.length})
+              <Icon icon="heroicons:arrow-left" />
+              Back to Configuration
             </button>
           )}
-          <button
-            className="btn btn-secondary"
-            onClick={loadEmployees}
-            style={{
-              borderRadius: 8,
-              padding: '10px 20px',
-              fontWeight: 500,
-              fontSize: 14,
-              whiteSpace: 'nowrap',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
+        </div>
+
+        {/* Title and Action Buttons in same row */}
+        <div className="d-flex justify-content-between align-items-start flex-wrap gap-3">
+          <div style={{ flex: "1 1 auto", minWidth: "300px" }}>
+            <h5 className="text-3xl fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+              <Icon icon="heroicons:shield-check" />
+              Background Verification
+            </h5>
+            <p className="text-muted">
+              Request and track document collection for employee background
+              verification
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div
+            className="d-flex gap-2 flex-wrap"
+            style={{ alignItems: "flex-start" }}
           >
-            <Icon icon="heroicons:arrow-path" style={{ fontSize: 18 }} />
-            Refresh
-          </button>
+            <button
+              className="btn btn-success"
+              onClick={handleNewRequest}
+              style={{
+                borderRadius: 8,
+                padding: "10px 20px",
+                fontWeight: 500,
+                fontSize: 14,
+                whiteSpace: "nowrap",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              <Icon icon="heroicons:plus-circle" style={{ fontSize: 18 }} />
+              New Request
+            </button>
+            {selectedEmployees.length > 0 && (
+              <button
+                className="btn btn-primary"
+                onClick={handleSendEmail}
+                style={{
+                  borderRadius: 8,
+                  padding: "10px 20px",
+                  fontWeight: 500,
+                  fontSize: 14,
+                  whiteSpace: "nowrap",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <Icon icon="heroicons:envelope" style={{ fontSize: 18 }} />
+                Send Request ({selectedEmployees.length})
+              </button>
+            )}
+            <button
+              className="btn btn-secondary"
+              onClick={loadEmployees}
+              style={{
+                borderRadius: 8,
+                padding: "10px 20px",
+                fontWeight: 500,
+                fontSize: 14,
+                whiteSpace: "nowrap",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              <Icon icon="heroicons:arrow-path" style={{ fontSize: 18 }} />
+              Refresh
+            </button>
+          </div>
         </div>
       </div>
-
       {/* Filters */}
-      <div className="card mb-4" style={{ borderRadius: 12, border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-        <div className="card-body" style={{ padding: '20px' }}>
+      <div
+        className="card mb-4"
+        style={{
+          borderRadius: 12,
+          border: "1px solid #E5E7EB",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        }}
+      >
+        <div className="card-body" style={{ padding: "20px" }}>
           <div className="row g-3 align-items-end">
             <div className="col-md-8 col-lg-9">
-              <label style={{ fontSize: 14, color: '#374151', fontWeight: 500, marginBottom: 8, display: 'block' }}>
+              <label
+                style={{
+                  fontSize: 14,
+                  color: "#374151",
+                  fontWeight: 500,
+                  marginBottom: 8,
+                  display: "block",
+                }}
+              >
                 Search
               </label>
               <div className="input-group">
-                <span className="input-group-text" style={{ background: '#F9FAFB', border: '1px solid #D1D5DB', borderRight: 'none' }}>
-                  <Icon icon="heroicons:magnifying-glass" style={{ fontSize: 18, color: '#6B7280' }} />
+                <span
+                  className="input-group-text"
+                  style={{
+                    background: "#F9FAFB",
+                    border: "1px solid #D1D5DB",
+                    borderRight: "none",
+                  }}
+                >
+                  <Icon
+                    icon="heroicons:magnifying-glass"
+                    style={{ fontSize: 18, color: "#6B7280" }}
+                  />
                 </span>
                 <input
                   type="text"
                   className="form-control"
                   style={{
-                    borderRadius: '0 8px 8px 0',
-                    border: '1px solid #D1D5DB',
-                    borderLeft: 'none',
-                    padding: '10px 14px',
+                    borderRadius: "0 8px 8px 0",
+                    border: "1px solid #D1D5DB",
+                    borderLeft: "none",
+                    padding: "10px 14px",
                     fontSize: 14,
-                    transition: 'all 0.2s'
+                    transition: "all 0.2s",
                   }}
                   placeholder="Search by name, email, or employee ID..."
                   value={searchTerm}
@@ -579,17 +972,25 @@ const BackgroundVerification = () => {
               </div>
             </div>
             <div className="col-md-4 col-lg-3">
-              <label style={{ fontSize: 14, color: '#374151', fontWeight: 500, marginBottom: 8, display: 'block' }}>
+              <label
+                style={{
+                  fontSize: 14,
+                  color: "#374151",
+                  fontWeight: 500,
+                  marginBottom: 8,
+                  display: "block",
+                }}
+              >
                 Status Filter
               </label>
               <select
                 className="form-select"
                 style={{
                   borderRadius: 8,
-                  border: '1px solid #D1D5DB',
-                  padding: '10px 14px',
+                  border: "1px solid #D1D5DB",
+                  padding: "10px 14px",
                   fontSize: 14,
-                  transition: 'all 0.2s'
+                  transition: "all 0.2s",
                 }}
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -605,135 +1006,241 @@ const BackgroundVerification = () => {
           </div>
         </div>
       </div>
-
       {/* Statistics Cards */}
       <div className="row g-3 mb-4">
         <div className="col-6 col-md-3">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: 12, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-            <div className="card-body text-center text-white" style={{ padding: '20px' }}>
-              <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8, opacity: 0.9 }}>Total Employees</div>
-              <div style={{ fontSize: 32, fontWeight: 700, lineHeight: '1.2' }}>{employees.length}</div>
-            </div>
-          </div>
-        </div>
-        <div className="col-6 col-md-3">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: 12, background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
-            <div className="card-body text-center text-white" style={{ padding: '20px' }}>
-              <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8, opacity: 0.9 }}>Pending</div>
-              <div style={{ fontSize: 32, fontWeight: 700, lineHeight: '1.2' }}>
-                {employees.filter(e => e.status === 'Pending' || e.status === 'Not Started').length}
+          <div
+            className="card border-0 shadow-sm h-100"
+            style={{
+              borderRadius: 12,
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            }}
+          >
+            <div
+              className="card-body text-center text-white"
+              style={{ padding: "20px" }}
+            >
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 500,
+                  marginBottom: 8,
+                  opacity: 0.9,
+                }}
+              >
+                Total Employees
+              </div>
+              <div style={{ fontSize: 32, fontWeight: 700, lineHeight: "1.2" }}>
+                {employees.length}
               </div>
             </div>
           </div>
         </div>
         <div className="col-6 col-md-3">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: 12, background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }}>
-            <div className="card-body text-center text-white" style={{ padding: '20px' }}>
-              <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8, opacity: 0.9 }}>In Progress</div>
-              <div style={{ fontSize: 32, fontWeight: 700, lineHeight: '1.2' }}>
-                {employees.filter(e => e.status === 'In Progress' || e.status === 'Request Sent').length}
+          <div
+            className="card border-0 shadow-sm h-100"
+            style={{
+              borderRadius: 12,
+              background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+            }}
+          >
+            <div
+              className="card-body text-center text-white"
+              style={{ padding: "20px" }}
+            >
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 500,
+                  marginBottom: 8,
+                  opacity: 0.9,
+                }}
+              >
+                Pending
+              </div>
+              <div style={{ fontSize: 32, fontWeight: 700, lineHeight: "1.2" }}>
+                {
+                  employees.filter(
+                    (e) => e.status === "Pending" || e.status === "Not Started",
+                  ).length
+                }
               </div>
             </div>
           </div>
         </div>
         <div className="col-6 col-md-3">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: 12, background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' }}>
-            <div className="card-body text-center text-white" style={{ padding: '20px' }}>
-              <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8, opacity: 0.9 }}>Completed</div>
-              <div style={{ fontSize: 32, fontWeight: 700, lineHeight: '1.2' }}>
-                {employees.filter(e => e.status === 'Completed').length}
+          <div
+            className="card border-0 shadow-sm h-100"
+            style={{
+              borderRadius: 12,
+              background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+            }}
+          >
+            <div
+              className="card-body text-center text-white"
+              style={{ padding: "20px" }}
+            >
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 500,
+                  marginBottom: 8,
+                  opacity: 0.9,
+                }}
+              >
+                In Progress
+              </div>
+              <div style={{ fontSize: 32, fontWeight: 700, lineHeight: "1.2" }}>
+                {
+                  employees.filter(
+                    (e) =>
+                      e.status === "In Progress" || e.status === "Request Sent",
+                  ).length
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="col-6 col-md-3">
+          <div
+            className="card border-0 shadow-sm h-100"
+            style={{
+              borderRadius: 12,
+              background: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+            }}
+          >
+            <div
+              className="card-body text-center text-white"
+              style={{ padding: "20px" }}
+            >
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 500,
+                  marginBottom: 8,
+                  opacity: 0.9,
+                }}
+              >
+                Completed
+              </div>
+              <div style={{ fontSize: 32, fontWeight: 700, lineHeight: "1.2" }}>
+                {employees.filter((e) => e.status === "Completed").length}
               </div>
             </div>
           </div>
         </div>
       </div>
-
       {/* Document Requests Cards */}
       {documentRequests.length > 0 && (
         <div className="mb-4">
+          {/* Header */}
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h4 style={{ fontWeight: 600, fontSize: 20, marginBottom: 0, color: '#1F2937' }}>
+            <h4 className="fw-semibold fs-3 mb-0 text-dark">
               Document Requests
             </h4>
-            <span className="badge bg-secondary" style={{ fontSize: 13, padding: '6px 12px' }}>
-              {documentRequests.length} Request{documentRequests.length !== 1 ? 's' : ''}
+
+            <span className="badge bg-secondary px-3 py-2 fs-6">
+              {documentRequests.length} Request
+              {documentRequests.length !== 1 ? "s" : ""}
             </span>
           </div>
+
+          {/* Cards Grid */}
           <div className="row g-3">
             {documentRequests.map((request) => {
               const completion = getCompletionPercentage(request);
+
               return (
                 <div key={request.id} className="col-12 col-md-6 col-lg-4">
-                  <div className="card h-100 shadow-sm border-0" style={{ borderRadius: 12, border: '1px solid #E5E7EB', transition: 'transform 0.2s, box-shadow 0.2s' }}>
-                    <div className="card-body" style={{ padding: '20px' }}>
+                  <div className="card h-100 border-0 shadow-sm rounded-3">
+                    <div className="card-body p-4">
+                      {/* Employee + Status */}
                       <div className="d-flex justify-content-between align-items-start mb-3">
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <h6 style={{ fontWeight: 600, fontSize: 16, color: '#1F2937', marginBottom: 6, lineHeight: '1.3', wordBreak: 'break-word' }}>
+                        <div className="flex-grow-1 text-truncate">
+                          <h6 className="fw-semibold text-dark mb-1 text-truncate">
                             {request.employeeName}
                           </h6>
-                          <p style={{ color: '#6B7280', fontSize: 13, marginBottom: 0, wordBreak: 'break-word' }}>
+                          <p className="text-muted small mb-0 text-truncate">
                             {request.email}
                           </p>
                         </div>
+
                         <span
-                          className={`badge bg-${getStatusColor(request.status)}`}
-                          style={{
-                            fontWeight: 500,
-                            borderRadius: '20px',
-                            padding: '6px 12px',
-                            fontSize: 11,
-                            whiteSpace: 'nowrap',
-                            marginLeft: '12px'
-                          }}
+                          className={`badge bg-${getStatusColor(request.status)} rounded-pill ms-2 px-3 py-2 text-uppercase`}
                         >
                           {request.status}
                         </span>
                       </div>
-                      
+
+                      {/* Progress */}
                       <div className="mb-3">
                         <div className="d-flex justify-content-between align-items-center mb-2">
-                          <small style={{ color: '#6B7280', fontSize: 12, fontWeight: 500 }}>Progress</small>
-                          <small style={{ color: '#1F2937', fontSize: 12, fontWeight: 600 }}>
+                          <small className="text-muted fw-medium">
+                            Progress
+                          </small>
+                          <small className="fw-semibold text-dark">
                             {completion}%
                           </small>
                         </div>
-                        <div className="progress" style={{ height: '8px', borderRadius: '4px', backgroundColor: '#F3F4F6' }}>
-                          <div
-                            className={`progress-bar bg-${completion === 100 ? 'success' : 'info'}`}
-                            style={{ width: `${completion}%`, borderRadius: '4px', transition: 'width 0.3s' }}
-                          ></div>
-                        </div>
-                      </div>
 
-                      <div className="mb-3 pb-2" style={{ borderBottom: '1px solid #E5E7EB' }}>
-                        <small style={{ color: '#6B7280', fontSize: 12, display: 'block', marginBottom: 4 }}>Requested Date:</small>
-                        <div style={{ color: '#1F2937', fontSize: 13, fontWeight: 500 }}>
-                          {new Date(request.requestedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                        </div>
-                      </div>
-
-                      <div className="d-flex gap-2 mt-3">
-                        <button
-                          className="btn btn-sm btn-outline-primary flex-fill"
-                          onClick={() => {
-                            alert(`Document Request Details:\n\nEmployee: ${request.employeeName}\nEmail: ${request.email}\nStatus: ${request.status}\nCompletion: ${completion}%\n\nDocuments:\n${request.documents.map(doc => `- ${doc.name}: ${doc.status}`).join('\n')}`);
-                          }}
-                          style={{ fontSize: 13, padding: '6px 12px' }}
+                        <div
+                          className="progress rounded"
+                          style={{ height: "8px" }}
                         >
-                          <Icon icon="heroicons:eye" className="me-1" style={{ fontSize: 14 }} />
-                          View
-                        </button>
+                          <div
+                            className={`progress-bar bg-${completion === 100 ? "success" : "info"}`}
+                            role="progressbar"
+                            style={{ width: `${completion}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Requested Date */}
+                      <div className="border-bottom pb-2 mb-3">
+                        <small className="text-muted d-block mb-1">
+                          Requested Date:
+                        </small>
+                        <div className="fw-medium text-dark small">
+                          {new Date(request.requestedDate).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            },
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="d-flex justify-content-end gap-2 mt-3">
                         <button
-                          className="btn btn-sm btn-outline-danger"
+                          className="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center"
                           onClick={() => {
-                            if (window.confirm('Are you sure you want to delete this request?')) {
-                              const updatedRequests = documentRequests.filter(req => req.id !== request.id);
+                            setSelectedRequest(request);
+                            setShowRequestDetails(true);
+                          }}
+                          title="View Details"
+                        >
+                          <Icon icon="heroicons:eye" className="fs-6" />
+                        </button>
+
+                        <button
+                          className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
+                          onClick={() => {
+                            if (
+                              window.confirm(
+                                "Are you sure you want to delete this request?",
+                              )
+                            ) {
+                              const updatedRequests = documentRequests.filter(
+                                (req) => req.id !== request.id,
+                              );
                               saveDocumentRequests(updatedRequests);
                             }
                           }}
-                          style={{ fontSize: 13, padding: '6px 12px' }}
                         >
-                          <Icon icon="heroicons:trash" style={{ fontSize: 14 }} />
+                          <Icon icon="heroicons:trash" className="fs-6" />
                         </button>
                       </div>
                     </div>
@@ -744,161 +1251,375 @@ const BackgroundVerification = () => {
           </div>
         </div>
       )}
-
       {/* Employees Table */}
-      <div className="card border-0 shadow-sm" style={{ borderRadius: 12, overflow: 'hidden' }}>
-        <div className="card-header bg-white border-bottom" style={{ padding: '20px', borderBottom: '2px solid #E5E7EB' }}>
-          <h5 style={{ fontWeight: 600, fontSize: 18, color: '#1F2937', marginBottom: 0 }}>
+      <div
+        className="card border-0 shadow-sm"
+        style={{ borderRadius: 12, overflow: "hidden" }}
+      >
+        <div
+          className="card-header bg-white border-bottom"
+          style={{ padding: "20px", borderBottom: "2px solid #E5E7EB" }}
+        >
+          <h5
+            style={{
+              fontWeight: 600,
+              fontSize: 18,
+              color: "#1F2937",
+              marginBottom: 0,
+            }}
+          >
             Employees List
           </h5>
         </div>
         <div className="card-body p-0">
-          <div style={{ overflowX: 'auto' }}>
-            <table className="table table-hover mb-0" style={{ marginBottom: 0 }}>
-              <thead style={{ background: '#FAFBFC', fontWeight: 600 }}>
+          <div className="table-responsive">
+            <table className="table table-hover mb-0">
+              <thead className="table-light">
                 <tr>
-                  <th style={{ padding: '16px 20px', fontSize: 12, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '2px solid #E5E7EB', width: '50px', whiteSpace: 'nowrap' }}>
+                  <th className="min-width-50">
                     <input
                       type="checkbox"
-                      checked={selectedEmployees.length === filteredEmployees.length && filteredEmployees.length > 0}
+                      checked={
+                        selectedEmployees.length === filteredEmployees.length &&
+                        filteredEmployees.length > 0
+                      }
                       onChange={handleSelectAll}
-                      style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+                      className="form-check-input"
+                      style={{ cursor: "pointer" }}
                     />
                   </th>
-                  <th style={{ padding: '16px 20px', fontSize: 12, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '2px solid #E5E7EB', whiteSpace: 'nowrap' }}>
-                    Employee
-                  </th>
-                  <th style={{ padding: '16px 20px', fontSize: 12, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '2px solid #E5E7EB', whiteSpace: 'nowrap' }}>
-                    Contact
-                  </th>
-                  <th style={{ padding: '16px 20px', fontSize: 12, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '2px solid #E5E7EB', whiteSpace: 'nowrap' }}>
+                  <th className="min-width-150">Employee</th>
+                  <th className="min-width-150">Contact</th>
+                  <th className="d-none d-md-table-cell min-width-120">
                     Department
                   </th>
-                  <th style={{ padding: '16px 20px', fontSize: 12, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '2px solid #E5E7EB', whiteSpace: 'nowrap' }}>
+                  <th className="d-none d-lg-table-cell min-width-120">
                     Joining Date
                   </th>
-                  <th style={{ padding: '16px 20px', fontSize: 12, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '2px solid #E5E7EB', whiteSpace: 'nowrap' }}>
-                    Status
-                  </th>
-                  <th style={{ padding: '16px 20px', fontSize: 12, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '2px solid #E5E7EB', whiteSpace: 'nowrap' }}>
-                    Progress
-                  </th>
-                  <th style={{ padding: '16px 20px', fontSize: 12, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '2px solid #E5E7EB', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                    Actions
-                  </th>
+                  <th className="min-width-100">Status</th>
+                  <th className="min-width-150">Progress</th>
+                  <th className="min-width-180 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredEmployees.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="text-center py-5" style={{ color: '#9CA3AF' }}>
-                      <Icon icon="heroicons:inbox" style={{ fontSize: 48, marginBottom: 12, opacity: 0.5 }} />
-                      <div style={{ fontSize: 16, fontWeight: 500 }}>No employees found</div>
-                      <div style={{ fontSize: 14, marginTop: 4 }}>Try adjusting your search or filter criteria</div>
+                    <td colSpan="8" className="text-center py-4">
+                      <div className="text-muted">
+                        <Icon
+                          icon="heroicons:inbox"
+                          style={{ fontSize: 36, marginBottom: 12 }}
+                        />
+                        <p className="mb-1 fw-medium">No employees found</p>
+                        <small>
+                          Try adjusting your search or filter criteria
+                        </small>
+                      </div>
                     </td>
                   </tr>
                 ) : (
                   filteredEmployees.map((employee, idx) => {
                     const request = getDocumentRequest(employee.id);
                     const completion = getCompletionPercentage(request);
-                    
+
                     return (
                       <tr
                         key={employee.id}
-                        style={{
-                          background: idx % 2 === 1 ? '#FAFBFC' : '#FFF',
-                          borderBottom: '1px solid #E5E7EB'
-                        }}
+                        className={idx % 2 === 1 ? "table-light" : ""}
                       >
-                        <td style={{ padding: '16px 20px', verticalAlign: 'middle' }}>
+                        <td className="align-middle">
                           <input
                             type="checkbox"
                             checked={selectedEmployees.includes(employee.id)}
                             onChange={() => handleSelectEmployee(employee.id)}
-                            style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+                            className="form-check-input"
+                            style={{ cursor: "pointer" }}
                           />
                         </td>
-                        <td style={{ padding: '16px 20px', verticalAlign: 'middle' }}>
-                          <div style={{ fontWeight: 600, fontSize: 14, color: '#1F2937', marginBottom: 4, lineHeight: '1.4' }}>
-                            {employee.name}
-                          </div>
-                          <div style={{ color: '#6B7280', fontSize: 12 }}>
+                        <td className="align-middle">
+                          <div className="fw-semibold">{employee.name}</div>
+                          <small className="text-muted">
                             ID: {employee.employeeId}
-                          </div>
+                          </small>
                         </td>
-                        <td style={{ padding: '16px 20px', verticalAlign: 'middle' }}>
-                          <div style={{ color: '#1F2937', fontSize: 14, marginBottom: 4, lineHeight: '1.4' }}>
+                        <td className="align-middle">
+                          <div
+                            className="text-truncate"
+                            style={{ maxWidth: "150px" }}
+                          >
                             {employee.email}
                           </div>
-                          <div style={{ color: '#6B7280', fontSize: 12 }}>
-                            {employee.phone || 'N/A'}
-                          </div>
+                          <small className="text-muted">
+                            {employee.phone || "N/A"}
+                          </small>
                         </td>
-                        <td style={{ padding: '16px 20px', verticalAlign: 'middle' }}>
-                          <div style={{ color: '#1F2937', fontSize: 14, lineHeight: '1.4' }}>
-                            {employee.department}
-                          </div>
-                          <div style={{ color: '#6B7280', fontSize: 12 }}>
+                        <td className="d-none d-md-table-cell align-middle">
+                          <div>{employee.department}</div>
+                          <small className="text-muted">
                             {employee.designation}
-                          </div>
+                          </small>
                         </td>
-                        <td style={{ padding: '16px 20px', verticalAlign: 'middle', color: '#1F2937', fontSize: 14, whiteSpace: 'nowrap' }}>
-                          {new Date(employee.joiningDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                        <td className="d-none d-lg-table-cell align-middle">
+                          {new Date(employee.joiningDate).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            },
+                          )}
                         </td>
-                        <td style={{ padding: '16px 20px', verticalAlign: 'middle' }}>
+                        <td className="align-middle">
                           <span
                             className={`badge bg-${getStatusColor(employee.status)}`}
                             style={{
                               fontWeight: 500,
-                              borderRadius: '20px',
-                              padding: '6px 12px',
+                              borderRadius: "20px",
+                              padding: "6px 12px",
                               fontSize: 11,
-                              whiteSpace: 'nowrap'
+                              whiteSpace: "nowrap",
                             }}
                           >
                             {employee.status}
                           </span>
                         </td>
-                        <td style={{ padding: '16px 20px', verticalAlign: 'middle', minWidth: '150px' }}>
+                        <td className="align-middle">
                           {request ? (
                             <div>
-                              <div className="progress" style={{ height: '8px', marginBottom: '6px', borderRadius: '4px', backgroundColor: '#F3F4F6' }}>
-                                <div
-                                  className={`progress-bar bg-${completion === 100 ? 'success' : 'info'}`}
-                                  style={{ width: `${completion}%`, borderRadius: '4px' }}
-                                ></div>
+                              <div className="d-flex justify-content-between align-items-center mb-1">
+                                <small className="text-muted">
+                                  {completion}% Complete
+                                </small>
                               </div>
-                              <div style={{ fontSize: 12, color: '#6B7280', fontWeight: 500 }}>
-                                {completion}% Complete
+                              <div
+                                className="progress"
+                                style={{ height: "6px" }}
+                              >
+                                <div
+                                  className={`progress-bar bg-${completion === 100 ? "success" : "info"}`}
+                                  style={{ width: `${completion}%` }}
+                                ></div>
                               </div>
                             </div>
                           ) : (
-                            <span style={{ color: '#9CA3AF', fontSize: 13 }}>Not Started</span>
+                            <span className="text-muted small">
+                              Not Started
+                            </span>
                           )}
                         </td>
-                        <td style={{ padding: '16px 20px', verticalAlign: 'middle', textAlign: 'center' }}>
-                          <div className="d-flex gap-1 justify-content-center">
+                        <td className="align-middle text-center">
+                          <div className="btn-group btn-group-sm">
                             <button
-                              className="btn btn-sm btn-outline-primary"
+                              className="btn btn-outline-primary btn-sm"
                               onClick={() => {
                                 setSelectedEmployees([employee.id]);
                                 handleSendEmail();
                               }}
-                              style={{ padding: '6px 10px' }}
                               title="Send Document Request"
                             >
-                              <Icon icon="heroicons:envelope" style={{ fontSize: 16 }} />
+                              <Icon
+                                icon="heroicons:envelope"
+                                style={{ fontSize: 14 }}
+                              />
                             </button>
+
                             {request && (
                               <button
-                                className="btn btn-sm btn-outline-info"
+                                className="btn btn-outline-info btn-sm"
                                 onClick={() => {
-                                  alert(`Document Request Details:\n\nEmployee: ${employee.name}\nStatus: ${request.status}\nCompletion: ${completion}%\n\nDocuments:\n${request.documents.map(doc => `- ${doc.name}: ${doc.status}`).join('\n')}`);
+                                  setSelectedRequest(request);
+                                  setShowRequestDetails(true);
                                 }}
-                                style={{ padding: '6px 10px' }}
                                 title="View Details"
                               >
-                                <Icon icon="heroicons:eye" style={{ fontSize: 16 }} />
+                                <Icon
+                                  icon="heroicons:eye"
+                                  style={{ fontSize: 14 }}
+                                />
+                              </button>
+                            )}
+
+                            {/* Approve Button */}
+                            {request && employee.status === "In Progress" && (
+                              <button
+                                className="btn btn-outline-success btn-sm"
+                                onClick={() => {
+                                  if (
+                                    window.confirm(
+                                      `Approve background verification for ${employee.name}?`,
+                                    )
+                                  ) {
+                                    // Update employee status
+                                    const updatedEmployees = employees.map(
+                                      (emp) =>
+                                        emp.id === employee.id
+                                          ? { ...emp, status: "Completed" }
+                                          : emp,
+                                    );
+                                    setEmployees(updatedEmployees);
+
+                                    // Update document request status
+                                    const updatedRequests =
+                                      documentRequests.map((req) =>
+                                        req.employeeId === employee.id
+                                          ? {
+                                              ...req,
+                                              status: "Completed",
+                                              completedDate:
+                                                new Date().toISOString(),
+                                            }
+                                          : req,
+                                      );
+                                    saveDocumentRequests(updatedRequests);
+
+                                    // Update localStorage
+                                    const savedProfiles =
+                                      localStorage.getItem("employeeProfiles");
+                                    if (savedProfiles) {
+                                      const profiles =
+                                        JSON.parse(savedProfiles);
+                                      const updatedProfiles = profiles.map(
+                                        (profile) =>
+                                          (profile.employeeId || profile.id) ===
+                                          employee.id
+                                            ? {
+                                                ...profile,
+                                                bgvStatus: "Completed",
+                                              }
+                                            : profile,
+                                      );
+                                      localStorage.setItem(
+                                        "employeeProfiles",
+                                        JSON.stringify(updatedProfiles),
+                                      );
+                                    }
+
+                                    alert(
+                                      `Background verification approved for ${employee.name}`,
+                                    );
+                                  }
+                                }}
+                                title="Approve Verification"
+                              >
+                                <Icon
+                                  icon="heroicons:check"
+                                  style={{ fontSize: 14 }}
+                                />
+                              </button>
+                            )}
+
+                            {/* Reject Button */}
+                            {request &&
+                              (employee.status === "In Progress" ||
+                                employee.status === "Pending") && (
+                                <button
+                                  className="btn btn-outline-warning btn-sm"
+                                  onClick={() => {
+                                    if (
+                                      window.confirm(
+                                        `Reject background verification for ${employee.name}?`,
+                                      )
+                                    ) {
+                                      // Update employee status
+                                      const updatedEmployees = employees.map(
+                                        (emp) =>
+                                          emp.id === employee.id
+                                            ? { ...emp, status: "Rejected" }
+                                            : emp,
+                                      );
+                                      setEmployees(updatedEmployees);
+
+                                      // Update document request status
+                                      const updatedRequests =
+                                        documentRequests.map((req) =>
+                                          req.employeeId === employee.id
+                                            ? { ...req, status: "Rejected" }
+                                            : req,
+                                        );
+                                      saveDocumentRequests(updatedRequests);
+
+                                      // Update localStorage
+                                      const savedProfiles =
+                                        localStorage.getItem(
+                                          "employeeProfiles",
+                                        );
+                                      if (savedProfiles) {
+                                        const profiles =
+                                          JSON.parse(savedProfiles);
+                                        const updatedProfiles = profiles.map(
+                                          (profile) =>
+                                            (profile.employeeId ||
+                                              profile.id) === employee.id
+                                              ? {
+                                                  ...profile,
+                                                  bgvStatus: "Rejected",
+                                                }
+                                              : profile,
+                                        );
+                                        localStorage.setItem(
+                                          "employeeProfiles",
+                                          JSON.stringify(updatedProfiles),
+                                        );
+                                      }
+
+                                      alert(
+                                        `Background verification rejected for ${employee.name}`,
+                                      );
+                                    }
+                                  }}
+                                  title="Reject Verification"
+                                >
+                                  <Icon
+                                    icon="heroicons:x-mark"
+                                    style={{ fontSize: 14 }}
+                                  />
+                                </button>
+                              )}
+
+                            {request && (
+                              <button
+                                className="btn btn-outline-danger btn-sm"
+                                title="Delete Request Permanently"
+                                onClick={() => {
+                                  if (
+                                    window.confirm(
+                                      `Delete document request for ${employee.name} permanently? This action cannot be undone.`,
+                                    )
+                                  ) {
+                                    /* 1️⃣ Remove document request completely */
+                                    const updatedRequests =
+                                      documentRequests.filter(
+                                        (req) => req.employeeId !== employee.id,
+                                      );
+                                    saveDocumentRequests(updatedRequests);
+
+                                    /* 2️⃣ Remove employee profile entry from localStorage */
+                                    const savedProfiles =
+                                      localStorage.getItem("employeeProfiles");
+                                    if (savedProfiles) {
+                                      const profiles =
+                                        JSON.parse(savedProfiles);
+                                      const updatedProfiles = profiles.filter(
+                                        (profile) =>
+                                          (profile.employeeId || profile.id) !==
+                                          employee.id,
+                                      );
+
+                                      localStorage.setItem(
+                                        "employeeProfiles",
+                                        JSON.stringify(updatedProfiles),
+                                      );
+                                    }
+
+                                    /* 3️⃣ (Optional) Remove employee from employees list */
+                                    const updatedEmployees = employees.filter(
+                                      (emp) => emp.id !== employee.id,
+                                    );
+                                    setEmployees(updatedEmployees);
+                                  }
+                                }}
+                              >
+                                <Icon icon="heroicons:trash" />
                               </button>
                             )}
                           </div>
@@ -912,69 +1633,415 @@ const BackgroundVerification = () => {
           </div>
         </div>
       </div>
-
-      {/* Email Modal */}
-      {showEmailModal && (
+      ;{/* Document Request Details Modal */}
+      {showRequestDetails && selectedRequest && (
         <div
           className="modal fade show d-block"
+          tabIndex="-1"
           style={{
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            position: 'fixed',
+            backgroundColor: "rgba(0,0,0,0.5)",
+            position: "fixed",
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
             zIndex: 1055,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
           }}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
-              setShowEmailModal(false);
+              setShowRequestDetails(false);
             }
           }}
         >
-          <div className="modal-dialog modal-dialog-centered modal-lg" style={{ maxWidth: '900px' }}>
-            <div className="modal-content" style={{ borderRadius: 12, border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}>
-              <div className="modal-header bg-primary text-white" style={{ borderRadius: '12px 12px 0 0', padding: '20px 24px', borderBottom: 'none' }}>
-                <h5 className="modal-title d-flex align-items-center" style={{ fontWeight: 600, fontSize: 18, marginBottom: 0 }}>
-                  <Icon icon="heroicons:envelope" className="me-2" style={{ fontSize: 20 }} />
+          <div className="modal-dialog modal-dialog-centered modal-md">
+            <div className="modal-content border-0 shadow-lg rounded-3">
+              {/* Modal Header */}
+              <div className="modal-header bg-primary text-white rounded-top-3">
+                <div className="d-flex align-items-center">
+                  <Icon icon="heroicons:document-text" className="me-2" />
+                  <h5 className="modal-title mb-0 fw-semibold">
+                    Document Request
+                  </h5>
+                </div>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={() => setShowRequestDetails(false)}
+                ></button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="modal-body p-0">
+                {/* Employee Info Card */}
+                <div className="p-4 border-bottom">
+                  <div className="d-flex align-items-center mb-3">
+                    <div className="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                      <Icon
+                        icon="heroicons:user"
+                        className="text-primary fs-5"
+                      />
+                    </div>
+                    <div className="flex-grow-1">
+                      <h5 className="fw-bold mb-1">
+                        {selectedRequest.employeeName}
+                      </h5>
+                      <p className="text-muted small mb-0">
+                        <Icon icon="heroicons:envelope" className="me-1" />
+                        {selectedRequest.email}
+                      </p>
+                    </div>
+                    <span
+                      className={`badge bg-${getStatusColor(selectedRequest.status)} rounded-pill px-3 py-2`}
+                    >
+                      {selectedRequest.status}
+                    </span>
+                  </div>
+                  {/* Request Info */}
+                  <div className="card border-0 shadow-sm">
+                    <div className="card-body">
+                      <div className="row">
+                        <div className="col-md-6 mb-3">
+                          <h6 className="fw-semibold mb-3">
+                            Request Information
+                          </h6>
+                          <div className="d-flex mb-2">
+                            <span
+                              className="text-muted me-3"
+                              style={{ minWidth: "120px" }}
+                            >
+                              Requested:
+                            </span>
+                            <span className="fw-medium">
+                              {new Date(
+                                selectedRequest.requestedDate,
+                              ).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              })}
+                            </span>
+                          </div>
+                          <div className="d-flex mb-2">
+                            <span
+                              className="text-muted me-3"
+                              style={{ minWidth: "120px" }}
+                            >
+                              Email Sent:
+                            </span>
+                            <span className="fw-medium">
+                              {selectedRequest.emailSent ? "Yes" : "No"}
+                              {selectedRequest.emailSentDate && (
+                                <small className="text-muted ms-2">
+                                  (
+                                  {new Date(
+                                    selectedRequest.emailSentDate,
+                                  ).toLocaleDateString()}
+                                  )
+                                </small>
+                              )}
+                            </span>
+                          </div>
+                          <div className="d-flex">
+                            <span
+                              className="text-muted me-3"
+                              style={{ minWidth: "120px" }}
+                            >
+                              Email Method:
+                            </span>
+                            <span className="fw-medium text-capitalize">
+                              {selectedRequest.emailMethod}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress Section */}
+                <div className="p-4 border-bottom">
+                  <div className="mb-3">
+                    <div className="d-flex justify-content-between mb-2">
+                      <span className="text-muted">Document Collection</span>
+                      <span className="fw-semibold">
+                        {getCompletionPercentage(selectedRequest)}%
+                      </span>
+                    </div>
+                    <div
+                      className="progress rounded"
+                      style={{ height: "10px" }}
+                    >
+                      <div
+                        className={`progress-bar bg-${getCompletionPercentage(selectedRequest) === 100 ? "success" : "info"}`}
+                        style={{
+                          width: `${getCompletionPercentage(selectedRequest)}%`,
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div className="row text-center">
+                    <div className="col-4">
+                      <div className="fw-bold text-success fs-4">
+                        {
+                          selectedRequest.documents.filter(
+                            (d) => d.status === "Completed",
+                          ).length
+                        }
+                      </div>
+                      <div className="text-muted small">Completed</div>
+                    </div>
+                    <div className="col-4">
+                      <div className="fw-bold text-warning fs-4">
+                        {
+                          selectedRequest.documents.filter(
+                            (d) => d.status === "Pending",
+                          ).length
+                        }
+                      </div>
+                      <div className="text-muted small">Pending</div>
+                    </div>
+                    <div className="col-4">
+                      <div className="fw-bold text-dark fs-4">
+                        {selectedRequest.documents.length}
+                      </div>
+                      <div className="text-muted small">Total</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Documents List */}
+                <div className="p-4">
+                  <h6 className="fw-semibold mb-3">Documents Status</h6>
+                  <div className="list-group list-group-flush">
+                    {selectedRequest.documents.map((doc, index) => (
+                      <div
+                        key={doc.id}
+                        className="list-group-item border-0 px-0 py-2"
+                      >
+                        <div className="d-flex justify-content-between align-items-center">
+                          <div className="d-flex align-items-center">
+                            <div
+                              className={`rounded-circle p-1 me-3 bg-${doc.status === "Completed" ? "success" : "warning"}-subtle`}
+                            >
+                              <Icon
+                                icon={
+                                  doc.status === "Completed"
+                                    ? "heroicons:check-circle"
+                                    : "heroicons:clock"
+                                }
+                                className={`fs-6 text-${doc.status === "Completed" ? "success" : "warning"}`}
+                              />
+                            </div>
+                            <div>
+                              <div className="fw-medium">{doc.name}</div>
+                              <small
+                                className={`badge bg-${doc.required ? "danger" : "secondary"} rounded-pill`}
+                              >
+                                {doc.required ? "Required" : "Optional"}
+                              </small>
+                            </div>
+                          </div>
+                          <span
+                            className={`badge bg-${doc.status === "Completed" ? "success" : "warning"} rounded-pill`}
+                          >
+                            {doc.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="modal-footer border-top-0">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={() => setShowRequestDetails(false)}
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    // Find the employee and send email
+                    const employee = employees.find(
+                      (e) => e.id === selectedRequest.employeeId,
+                    );
+                    if (employee) {
+                      setSelectedEmployees([employee.id]);
+                      setShowRequestDetails(false);
+                      setTimeout(() => handleSendEmail(), 300);
+                    }
+                  }}
+                >
+                  <Icon icon="heroicons:envelope" className="me-2" />
+                  Send Email
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Email Modal */}
+      {showEmailModal && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{
+            backgroundColor: "rgba(0,0,0,0.5)",
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 1055,
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowRequestDetails(false);
+            }
+          }}
+        >
+          <div className="modal-dialog modal-dialog-centered modal-md">
+            <div className="modal-content border-0 shadow-lg rounded-3">
+              {/* Header */}
+              <div className="modal-header bg-primary text-white rounded-top-3 border-0 px-4 py-3">
+                <h5 className="modal-title d-flex align-items-center fw-semibold mb-0">
+                  <Icon icon="heroicons:envelope" className="me-2 fs-5" />
                   Send Document Request Email
                 </h5>
                 <button
                   type="button"
                   className="btn-close btn-close-white"
                   onClick={() => setShowEmailModal(false)}
-                  style={{ fontSize: 14 }}
-                ></button>
+                />
               </div>
-              <div className="modal-body" style={{ padding: '24px' }}>
+
+              {/* Body */}
+              <div className="modal-body p-4">
                 {/* Email Status */}
                 {emailStatus.message && (
-                  <div className={`alert alert-${emailStatus.type === 'success' ? 'success' : emailStatus.type === 'error' ? 'danger' : 'info'} mb-3`}>
-                    <Icon icon={emailStatus.type === 'success' ? 'heroicons:check-circle' : emailStatus.type === 'error' ? 'heroicons:exclamation-circle' : 'heroicons:information-circle'} className="me-2" />
-                    {emailStatus.message}
+                  <div
+                    className={`alert alert-${emailStatus.type === "success" ? "success" : emailStatus.type === "error" ? "danger" : "info"} d-flex align-items-center mb-4`}
+                  >
+                    <Icon
+                      icon={
+                        emailStatus.type === "success"
+                          ? "heroicons:check-circle"
+                          : emailStatus.type === "error"
+                            ? "heroicons:exclamation-circle"
+                            : "heroicons:information-circle"
+                      }
+                      className="me-2 flex-shrink-0"
+                    />
+                    <div className="w-100">{emailStatus.message}</div>
                   </div>
                 )}
 
                 {/* Recipients */}
-                <div className="mb-3">
-                  <label className="form-label fw-bold">To:</label>
-                  <div className="p-2 bg-light rounded">
-                    {employees
-                      .filter(emp => selectedEmployees.includes(emp.id))
-                      .map(emp => (
-                        <span key={emp.id} className="badge bg-primary me-2 mb-1">
-                          {emp.name} ({emp.email})
-                        </span>
-                      ))}
+                <div className="mb-4">
+                  <label className="form-label fw-semibold">To:</label>
+                  <div className="p-3 bg-light rounded">
+                    <div className="d-flex flex-wrap gap-2">
+                      {employees
+                        .filter((emp) => selectedEmployees.includes(emp.id))
+                        .map((emp) => {
+                          // Get existing request for this employee
+                          const existingRequest = documentRequests.find(
+                            (req) => req.employeeId === emp.id,
+                          );
+
+                          return (
+                            <span
+                              key={emp.id}
+                              className="badge bg-primary d-flex align-items-center"
+                            >
+                              <Icon
+                                icon="heroicons:user-circle"
+                                className="me-1"
+                              />
+                              <span className="d-none d-sm-inline">
+                                {emp.name}
+                              </span>
+                              <span
+                                className="d-inline d-sm-none text-truncate"
+                                style={{ maxWidth: "80px" }}
+                              >
+                                {emp.name.split(" ")[0]}
+                              </span>
+                              <small className="ms-1 opacity-75">
+                                ({emp.email})
+                              </small>
+                              {existingRequest && (
+                                <small className="ms-2 text-warning">
+                                  <Icon
+                                    icon="heroicons:document-text"
+                                    className="me-1"
+                                  />
+                                  Existing Request
+                                </small>
+                              )}
+                            </span>
+                          );
+                        })}
+                    </div>
                   </div>
                 </div>
 
-                {/* Email Method Selection */}
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Email Sending Method:</label>
+                {/* CC and BCC */}
+                <div className="row g-3 mb-4">
+                  <div className="col-12 col-md-6">
+                    <label className="form-label fw-semibold">
+                      CC (Optional):
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={ccEmails}
+                      onChange={(e) => setCcEmails(e.target.value)}
+                      placeholder="email1@example.com, email2@example.com"
+                      disabled={emailMethod === "mailto" || sendingEmail}
+                    />
+                    <small className="text-muted d-block mt-2">
+                      <Icon
+                        icon="heroicons:information-circle"
+                        className="me-1"
+                      />
+                      Separate multiple emails with commas
+                    </small>
+                  </div>
+
+                  <div className="col-12 col-md-6">
+                    <label className="form-label fw-semibold">
+                      BCC (Optional):
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={bccEmails}
+                      onChange={(e) => setBccEmails(e.target.value)}
+                      placeholder="email1@example.com, email2@example.com"
+                      disabled={emailMethod === "mailto" || sendingEmail}
+                    />
+                    <small className="text-muted d-block mt-2">
+                      <Icon
+                        icon="heroicons:information-circle"
+                        className="me-1"
+                      />
+                      Separate multiple emails with commas
+                    </small>
+                  </div>
+                </div>
+
+                {/* Email Method */}
+                <div className="mb-4">
+                  <label className="form-label fw-semibold">
+                    Email Sending Method:
+                  </label>
                   <div className="btn-group w-100" role="group">
                     <input
                       type="radio"
@@ -982,10 +2049,13 @@ const BackgroundVerification = () => {
                       name="emailMethod"
                       id="method-api"
                       value="api"
-                      checked={emailMethod === 'api'}
+                      checked={emailMethod === "api"}
                       onChange={(e) => setEmailMethod(e.target.value)}
                     />
-                    <label className="btn btn-outline-primary" htmlFor="method-api">
+                    <label
+                      className="btn btn-outline-primary"
+                      htmlFor="method-api"
+                    >
                       <Icon icon="heroicons:server" className="me-1" />
                       API Send
                     </label>
@@ -996,10 +2066,13 @@ const BackgroundVerification = () => {
                       name="emailMethod"
                       id="method-clipboard"
                       value="clipboard"
-                      checked={emailMethod === 'clipboard'}
+                      checked={emailMethod === "clipboard"}
                       onChange={(e) => setEmailMethod(e.target.value)}
                     />
-                    <label className="btn btn-outline-primary" htmlFor="method-clipboard">
+                    <label
+                      className="btn btn-outline-primary"
+                      htmlFor="method-clipboard"
+                    >
                       <Icon icon="heroicons:clipboard" className="me-1" />
                       Copy to Clipboard
                     </label>
@@ -1010,177 +2083,410 @@ const BackgroundVerification = () => {
                       name="emailMethod"
                       id="method-mailto"
                       value="mailto"
-                      checked={emailMethod === 'mailto'}
+                      checked={emailMethod === "mailto"}
                       onChange={(e) => setEmailMethod(e.target.value)}
                       disabled={selectedEmployees.length > 1}
                     />
-                    <label className={`btn btn-outline-primary ${selectedEmployees.length > 1 ? 'disabled' : ''}`} htmlFor="method-mailto">
+                    <label
+                      className={`btn btn-outline-primary ${selectedEmployees.length > 1 ? "disabled" : ""}`}
+                      htmlFor="method-mailto"
+                    >
                       <Icon icon="heroicons:envelope-open" className="me-1" />
                       Mailto (Single)
                     </label>
                   </div>
-                  {emailMethod === 'api' && (
+                  {emailMethod === "api" && (
                     <small className="text-muted d-block mt-1">
-                      <Icon icon="heroicons:information-circle" className="me-1" />
-                      Sends email directly via API. Requires backend email service configured.
+                      <Icon
+                        icon="heroicons:information-circle"
+                        className="me-1"
+                      />
+                      Sends email via API. Requires backend configured.
                     </small>
                   )}
-                  {emailMethod === 'clipboard' && (
+                  {emailMethod === "clipboard" && (
                     <small className="text-muted d-block mt-1">
-                      <Icon icon="heroicons:information-circle" className="me-1" />
-                      Copies email content to clipboard. Paste into your email client and send manually.
+                      <Icon
+                        icon="heroicons:information-circle"
+                        className="me-1"
+                      />
+                      Copies email content to clipboard for manual send.
                     </small>
                   )}
-                  {emailMethod === 'mailto' && (
+                  {emailMethod === "mailto" && (
                     <small className="text-muted d-block mt-1">
-                      <Icon icon="heroicons:information-circle" className="me-1" />
-                      Opens your default email client. Works only for single recipient.
+                      <Icon
+                        icon="heroicons:information-circle"
+                        className="me-1"
+                      />
+                      Opens default email client. Single recipient only.
                     </small>
                   )}
                 </div>
 
                 {/* Subject */}
-                <div className="mb-3">
-                  <label className="form-label fw-bold" style={{ fontSize: 14, color: '#374151', marginBottom: 8 }}>Subject:</label>
+                <div className="mb-4">
+                  <label className="form-label fw-semibold">Subject:</label>
                   <input
                     type="text"
                     className="form-control"
                     value={emailSubject}
                     onChange={(e) => setEmailSubject(e.target.value)}
                     placeholder="Email subject..."
-                    style={{ borderRadius: 8, border: '1px solid #D1D5DB', padding: '10px 14px', fontSize: 14 }}
+                    disabled={sendingEmail}
                   />
                 </div>
 
-                {/* CC and BCC */}
-                <div className="row mb-3">
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold" style={{ fontSize: 14, color: '#374151', marginBottom: 8 }}>CC (Optional):</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={ccEmails}
-                      onChange={(e) => setCcEmails(e.target.value)}
-                      placeholder="email1@example.com, email2@example.com"
-                      disabled={emailMethod === 'mailto'}
-                      style={{ borderRadius: 8, border: '1px solid #D1D5DB', padding: '10px 14px', fontSize: 14 }}
+                {/* Document Upload Section */}
+                <div className="mb-4">
+                  <label className="form-label fw-semibold">
+                    Upload Documents (Optional):
+                  </label>
+                  <div className="alert alert-warning mb-3">
+                    <Icon
+                      icon="heroicons:information-circle"
+                      className="me-2"
                     />
-                    <small className="text-muted" style={{ fontSize: 12, marginTop: 6, display: 'block' }}>Separate multiple emails with commas</small>
+                    <small>
+                      {selectedEmployees.length === 1
+                        ? "You can upload documents for this employee now."
+                        : "Document upload is only available for single employee selection."}
+                    </small>
                   </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold" style={{ fontSize: 14, color: '#374151', marginBottom: 8 }}>BCC (Optional):</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={bccEmails}
-                      onChange={(e) => setBccEmails(e.target.value)}
-                      placeholder="email1@example.com, email2@example.com"
-                      disabled={emailMethod === 'mailto'}
-                      style={{ borderRadius: 8, border: '1px solid #D1D5DB', padding: '10px 14px', fontSize: 14 }}
-                    />
-                    <small className="text-muted" style={{ fontSize: 12, marginTop: 6, display: 'block' }}>Separate multiple emails with commas</small>
-                  </div>
-                </div>
 
-                {/* Required Documents */}
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Required Documents:</label>
-                  <div className="p-3 bg-light rounded">
-                    <ul className="mb-0">
-                      {requiredDocuments.filter(doc => doc.required).map(doc => (
-                        <li key={doc.id}>{doc.name}</li>
-                      ))}
-                    </ul>
-                  </div>
+                  {selectedEmployees.length === 1 ? (
+                    <div className="bg-light rounded p-3">
+                      <div className="table-responsive">
+                        <table className="table table-borderless table-sm mb-0">
+                          <thead>
+                            <tr>
+                              <th
+                                className="fw-semibold text-muted"
+                                style={{ width: "40%" }}
+                              >
+                                Document Name
+                              </th>
+                              <th
+                                className="fw-semibold text-muted"
+                                style={{ width: "20%" }}
+                              >
+                                Type
+                              </th>
+                              <th
+                                className="fw-semibold text-muted"
+                                style={{ width: "20%" }}
+                              >
+                                Status
+                              </th>
+                              <th
+                                className="fw-semibold text-muted"
+                                style={{ width: "20%" }}
+                              >
+                                Action
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {requiredDocuments.map((doc, index) => {
+                              // Check if this document is already uploaded for the selected employee
+                              const employeeId = selectedEmployees[0];
+                              const empRequest = documentRequests.find(
+                                (req) => req.employeeId === employeeId,
+                              );
+                              const existingDoc = empRequest?.documents?.find(
+                                (d) => d.id === doc.id,
+                              );
+                              const isUploaded = !!existingDoc?.fileUrl;
+
+                              // Check if this document is in emailUploads (new uploads during this session)
+                              const newUpload = emailUploads.find(
+                                (up) => up.documentId === doc.id,
+                              );
+
+                              return (
+                                <tr
+                                  key={doc.id}
+                                  className={
+                                    index % 2 === 0 ? "bg-white" : "bg-light"
+                                  }
+                                >
+                                  <td className="align-middle">
+                                    <div className="d-flex align-items-center">
+                                      <Icon
+                                        icon={
+                                          isUploaded || newUpload
+                                            ? "heroicons:document-check"
+                                            : "heroicons:document"
+                                        }
+                                        className={`me-2 ${isUploaded || newUpload ? "text-success" : "text-secondary"}`}
+                                      />
+                                      <div>
+                                        <div className="fw-medium">
+                                          {doc.name}
+                                        </div>
+                                        {(existingDoc?.uploadedDate ||
+                                          newUpload?.uploadDate) && (
+                                          <small className="text-muted">
+                                            {newUpload
+                                              ? `New upload: ${new Date(newUpload.uploadDate).toLocaleDateString()}`
+                                              : `Uploaded: ${new Date(existingDoc.uploadedDate).toLocaleDateString()}`}
+                                          </small>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="align-middle">
+                                    <span
+                                      className={`badge bg-${doc.required ? "danger" : "secondary"}`}
+                                    >
+                                      {doc.required ? "Required" : "Optional"}
+                                    </span>
+                                  </td>
+                                  <td className="align-middle">
+                                    {isUploaded || newUpload ? (
+                                      <span className="badge bg-success">
+                                        <Icon
+                                          icon="heroicons:check"
+                                          className="me-1"
+                                        />
+                                        Uploaded
+                                      </span>
+                                    ) : existingDoc?.status === "Completed" ? (
+                                      <span className="badge bg-info">
+                                        <Icon
+                                          icon="heroicons:check-circle"
+                                          className="me-1"
+                                        />
+                                        Completed
+                                      </span>
+                                    ) : (
+                                      <span
+                                        className={`badge bg-${doc.required ? "warning" : "secondary"}`}
+                                      >
+                                        <Icon
+                                          icon="heroicons:clock"
+                                          className="me-1"
+                                        />
+                                        {doc.required ? "Pending" : "Optional"}
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="align-middle">
+                                    {isUploaded || newUpload ? (
+                                      <div className="d-flex gap-1">
+                                        {isUploaded ? (
+                                          // For existing documents, show view and update buttons
+                                          <>
+                                            <button
+                                              type="button"
+                                              className="btn btn-sm btn-outline-danger"
+                                              onClick={() =>
+                                                handleRemoveExistingDocument(
+                                                  doc.id,
+                                                  employeeId,
+                                                )
+                                              }
+                                              title="Remove Document"
+                                              disabled={sendingEmail}
+                                            >
+                                              <Icon
+                                                icon="heroicons:trash"
+                                                className="fs-6"
+                                              />
+                                            </button>
+                                          </>
+                                        ) : (
+                                          // For new uploads (emailUploads), show remove button only
+                                          <>
+                                            <button
+                                              type="button"
+                                              className="btn btn-sm btn-outline-danger"
+                                              onClick={() =>
+                                                handleRemoveEmailDocument(
+                                                  doc.id,
+                                                )
+                                              }
+                                              title="Remove New Upload"
+                                              disabled={sendingEmail}
+                                            >
+                                              <Icon
+                                                icon="heroicons:trash"
+                                                className="fs-6"
+                                              />
+                                            </button>
+                                          </>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      // Upload button for documents not uploaded
+                                      <div>
+                                        <input
+                                          type="file"
+                                          id={`email-upload-${doc.id}`}
+                                          className="d-none"
+                                          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                          onChange={(e) =>
+                                            handleEmailDocumentUpload(e, doc.id)
+                                          }
+                                          disabled={sendingEmail}
+                                        />
+                                        <label
+                                          htmlFor={`email-upload-${doc.id}`}
+                                          className={`btn btn-sm w-100 ${doc.required ? "btn-outline-success" : "btn-outline-secondary"}`}
+                                          style={{
+                                            cursor: sendingEmail
+                                              ? "not-allowed"
+                                              : "pointer",
+                                          }}
+                                        >
+                                          <Icon
+                                            icon="heroicons:arrow-up-tray"
+                                            className="me-1"
+                                          />
+                                          Upload
+                                        </label>
+                                      </div>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-3 bg-light rounded">
+                      <Icon
+                        icon="heroicons:user-group"
+                        className="text-muted mb-2"
+                        style={{ fontSize: "24px" }}
+                      />
+                      <p className="text-muted mb-0">
+                        Select a single employee to enable document upload
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Email Body */}
-                <div className="mb-3">
-                  <label className="form-label fw-bold" style={{ fontSize: 14, color: '#374151', marginBottom: 8 }}>Email Body:</label>
+                <div className="mb-4">
+                  <label className="form-label fw-semibold">Email Body:</label>
                   <textarea
                     className="form-control"
-                    rows="10"
+                    rows="8"
                     value={emailTemplate}
                     onChange={(e) => setEmailTemplate(e.target.value)}
                     placeholder="Enter email content..."
                     disabled={sendingEmail}
-                    style={{ borderRadius: 8, border: '1px solid #D1D5DB', padding: '12px 14px', fontSize: 14, fontFamily: 'inherit', resize: 'vertical' }}
+                    style={{ resize: "vertical" }}
                   />
                 </div>
 
                 {/* Info Alert */}
-                <div className="alert alert-info">
-                  <Icon icon="heroicons:information-circle" className="me-2" />
-                  <strong>Note:</strong> This email will request employees to submit scanned copies (PDF format) of the required documents.
+                <div className="alert alert-info d-flex align-items-start">
+                  <Icon
+                    icon="heroicons:information-circle"
+                    className="me-2 mt-1 flex-shrink-0"
+                  />
+                  <div>
+                    <strong className="d-block mb-1">Note:</strong>
+                    This email will request employees to submit scanned copies
+                    (PDF format) of the required documents.
+                    {selectedEmployees.length > 0 && (
+                      <div className="mt-2">
+                        <strong>
+                          Existing document status will be preserved.
+                        </strong>{" "}
+                        Uploaded documents will be updated for selected
+                        employees.
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div className="modal-footer" style={{ padding: '20px 24px', borderTop: '1px solid #E5E7EB', borderRadius: '0 0 12px 12px' }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setShowEmailModal(false);
-                    setEmailStatus({ type: '', message: '' });
-                    setCcEmails('');
-                    setBccEmails('');
-                  }}
-                  disabled={sendingEmail}
-                  style={{ borderRadius: 8, padding: '10px 20px', fontWeight: 500 }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={handleConfirmSendEmail}
-                  disabled={sendingEmail || !emailTemplate.trim() || !emailSubject.trim()}
-                  style={{ borderRadius: 8, padding: '10px 20px', fontWeight: 500 }}
-                >
-                  {sendingEmail ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <Icon icon="heroicons:paper-airplane" className="me-2" />
-                      {emailMethod === 'api' ? 'Send via API' : emailMethod === 'clipboard' ? 'Copy to Clipboard' : 'Open Email Client'}
-                    </>
-                  )}
-                </button>
+
+              {/* Footer */}
+              <div className="modal-footer bg-light rounded-bottom-3 px-4 py-3">
+                <div className="d-flex flex-column flex-md-row w-100 gap-2">
+                  <button
+                    type="button"
+                    className="btn btn-secondary order-2 order-md-1 flex-fill"
+                    onClick={() => {
+                      setShowEmailModal(false);
+                      setEmailStatus({ type: "", message: "" });
+                      setCcEmails("");
+                      setBccEmails("");
+                      // Clear any temporary uploads
+                      setEmailUploadedDocuments([]);
+                    }}
+                    disabled={sendingEmail}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary order-1 order-md-2 flex-fill d-flex align-items-center justify-content-center"
+                    onClick={handleConfirmSendEmail}
+                    disabled={
+                      sendingEmail ||
+                      !emailTemplate.trim() ||
+                      !emailSubject.trim()
+                    }
+                  >
+                    {sendingEmail ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2"></span>
+                        <span>Sending...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Icon
+                          icon="heroicons:paper-airplane"
+                          className="me-2"
+                        />
+                        <span>
+                          {emailMethod === "api"
+                            ? "Send via API"
+                            : emailMethod === "clipboard"
+                              ? "Copy to Clipboard"
+                              : "Open Email Client"}
+                        </span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       )}
-
       {/* New Request Modal */}
       {showNewRequestModal && (
         <div
           className="modal fade show d-block"
+          tabIndex="-1"
           style={{
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            position: 'fixed',
+            backgroundColor: "rgba(0,0,0,0.5)",
+            position: "fixed",
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
             zIndex: 1055,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
           }}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
-              setShowNewRequestModal(false);
+              setShowRequestDetails(false);
             }
           }}
         >
-          <div className="modal-dialog modal-dialog-centered modal-lg" style={{ maxWidth: '900px' }}>
-            <div className="modal-content" style={{ borderRadius: 12, border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}>
-              <div className="modal-header bg-success text-white" style={{ borderRadius: '12px 12px 0 0', padding: '20px 24px', borderBottom: 'none' }}>
-                <h5 className="modal-title d-flex align-items-center" style={{ fontWeight: 600, fontSize: 18, marginBottom: 0 }}>
-                  <Icon icon="heroicons:plus-circle" className="me-2" style={{ fontSize: 20 }} />
+          <div className="modal-dialog modal-dialog-centered modal-md">
+            <div className="modal-content border-0 shadow-lg rounded-3">
+              {/* Header */}
+              <div className="modal-header bg-success text-white rounded-top-3 border-0 px-4 py-3">
+                <h5 className="modal-title d-flex align-items-center fw-semibold mb-0">
+                  <Icon icon="heroicons:plus-circle" className="me-2 fs-5" />
                   New Document Request
                 </h5>
                 <button
@@ -1188,69 +2494,164 @@ const BackgroundVerification = () => {
                   className="btn-close btn-close-white"
                   onClick={() => {
                     setShowNewRequestModal(false);
-                    setEmailStatus({ type: '', message: '' });
-                    setCcEmails('');
-                    setBccEmails('');
+                    setEmailStatus({ type: "", message: "" });
+                    setCcEmails("");
+                    setBccEmails("");
                   }}
-                  style={{ fontSize: 14 }}
-                ></button>
+                />
               </div>
-              <div className="modal-body" style={{ padding: '24px' }}>
+
+              {/* Body */}
+              <div className="modal-body p-4">
                 {/* Email Status */}
                 {emailStatus.message && (
-                  <div className={`alert alert-${emailStatus.type === 'success' ? 'success' : emailStatus.type === 'error' ? 'danger' : 'info'} mb-3`}>
-                    <Icon icon={emailStatus.type === 'success' ? 'heroicons:check-circle' : emailStatus.type === 'error' ? 'heroicons:exclamation-circle' : 'heroicons:information-circle'} className="me-2" />
+                  <div
+                    className={`alert alert-${emailStatus.type === "success" ? "success" : emailStatus.type === "error" ? "danger" : "info"} d-flex align-items-center mb-3`}
+                  >
+                    <Icon
+                      icon={
+                        emailStatus.type === "success"
+                          ? "heroicons:check-circle"
+                          : emailStatus.type === "error"
+                            ? "heroicons:exclamation-circle"
+                            : "heroicons:information-circle"
+                      }
+                      className="me-2"
+                    />
                     {emailStatus.message}
                   </div>
                 )}
 
-                {/* Name */}
-                <div className="mb-3">
-                  <label className="form-label fw-bold" style={{ fontSize: 14, color: '#374151', marginBottom: 8 }}>
-                    Name <span className="text-danger">*</span>:
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={newRequestName}
-                    onChange={(e) => setNewRequestName(e.target.value)}
-                    placeholder="Enter candidate/employee name"
-                    disabled={sendingEmail}
-                    style={{ borderRadius: 8, border: '1px solid #D1D5DB', padding: '10px 14px', fontSize: 14 }}
-                  />
+                {/* Contact Information Row */}
+                <div className="row g-3 mb-3">
+                  {/* Name */}
+                  <div className="col-12 col-md-6">
+                    <label className="form-label fw-semibold">
+                      Name <span className="text-danger">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={newRequestName}
+                      onChange={(e) => setNewRequestName(e.target.value)}
+                      placeholder="Enter candidate/employee name"
+                      disabled={sendingEmail}
+                    />
+                  </div>
+
+                  {/* Phone Number */}
+                  <div className="col-12 col-md-6">
+                    <label className="form-label fw-semibold">
+                      Phone Number{" "}
+                      <span className="text-muted">(Optional)</span>
+                    </label>
+                    <input
+                      type="tel"
+                      className="form-control"
+                      value={newRequestPhone}
+                      onChange={(e) => setNewRequestPhone(e.target.value)}
+                      placeholder="+91 98765 43210"
+                      disabled={sendingEmail}
+                    />
+                    <small className="text-muted">
+                      Format: +91 98765 43210
+                    </small>
+                  </div>
                 </div>
 
-                {/* Email */}
-                <div className="mb-3">
-                  <label className="form-label fw-bold" style={{ fontSize: 14, color: '#374151', marginBottom: 8 }}>
-                    Email ID <span className="text-danger">*</span>:
-                  </label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    value={newRequestEmail}
-                    onChange={(e) => setNewRequestEmail(e.target.value)}
-                    placeholder="Enter email address"
-                    disabled={sendingEmail}
-                    style={{ borderRadius: 8, border: '1px solid #D1D5DB', padding: '10px 14px', fontSize: 14 }}
-                  />
+                {/* Email Row */}
+                <div className="row g-3 mb-3">
+                  {/* Email */}
+                  <div className="col-12 col-md-6">
+                    <label className="form-label fw-semibold">
+                      Email ID <span className="text-danger">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      value={newRequestEmail}
+                      onChange={(e) => setNewRequestEmail(e.target.value)}
+                      placeholder="Enter email address"
+                      disabled={sendingEmail}
+                    />
+                  </div>
+
+                  {/* Department/Designation */}
+                  <div className="col-12 col-md-6">
+                    <label className="form-label fw-semibold">
+                      Department <span className="text-muted">(Optional)</span>
+                    </label>
+                    <select
+                      className="form-select"
+                      value={newRequestDepartment}
+                      onChange={(e) => setNewRequestDepartment(e.target.value)}
+                      disabled={sendingEmail}
+                    >
+                      <option value="">Select Department</option>
+                      <option value="Engineering">Engineering</option>
+                      <option value="Marketing">Marketing</option>
+                      <option value="Sales">Sales</option>
+                      <option value="HR">HR</option>
+                      <option value="Finance">Finance</option>
+                      <option value="Operations">Operations</option>
+                      <option value="External">External</option>
+                    </select>
+                  </div>
                 </div>
 
-                {/* Email Method Selection */}
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Email Sending Method:</label>
-                  <div className="btn-group w-100" role="group">
+                {/* Additional Info Row */}
+                <div className="row g-3 mb-4">
+                  {/* Designation */}
+                  <div className="col-12 col-md-6">
+                    <label className="form-label fw-semibold">
+                      Designation <span className="text-muted">(Optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={newRequestDesignation}
+                      onChange={(e) => setNewRequestDesignation(e.target.value)}
+                      placeholder="e.g., Software Engineer, Marketing Executive"
+                      disabled={sendingEmail}
+                    />
+                  </div>
+
+                  {/* Employee ID */}
+                  <div className="col-12 col-md-6">
+                    <label className="form-label fw-semibold">
+                      Employee ID <span className="text-muted">(Optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={newRequestEmployeeId}
+                      onChange={(e) => setNewRequestEmployeeId(e.target.value)}
+                      placeholder="EMP001, CAND001, etc."
+                      disabled={sendingEmail}
+                    />
+                  </div>
+                </div>
+
+                {/* Email Method */}
+                <div className="mb-4">
+                  <label className="form-label fw-semibold">
+                    Email Sending Method
+                  </label>
+                  <div className="btn-group w-100 flex-wrap" role="group">
                     <input
                       type="radio"
                       className="btn-check"
                       name="newRequestEmailMethod"
-                      id="new-method-api"
+                      id="method-api"
                       value="api"
-                      checked={emailMethod === 'api'}
+                      checked={emailMethod === "api"}
                       onChange={(e) => setEmailMethod(e.target.value)}
                       disabled={sendingEmail}
                     />
-                    <label className="btn btn-outline-primary" htmlFor="new-method-api">
+                    <label
+                      className="btn btn-outline-primary d-flex align-items-center justify-content-center"
+                      htmlFor="method-api"
+                    >
                       <Icon icon="heroicons:server" className="me-1" />
                       API Send
                     </label>
@@ -1259,13 +2660,16 @@ const BackgroundVerification = () => {
                       type="radio"
                       className="btn-check"
                       name="newRequestEmailMethod"
-                      id="new-method-clipboard"
+                      id="method-clipboard"
                       value="clipboard"
-                      checked={emailMethod === 'clipboard'}
+                      checked={emailMethod === "clipboard"}
                       onChange={(e) => setEmailMethod(e.target.value)}
                       disabled={sendingEmail}
                     />
-                    <label className="btn btn-outline-primary" htmlFor="new-method-clipboard">
+                    <label
+                      className="btn btn-outline-primary d-flex align-items-center justify-content-center"
+                      htmlFor="method-clipboard"
+                    >
                       <Icon icon="heroicons:clipboard" className="me-1" />
                       Copy to Clipboard
                     </label>
@@ -1274,13 +2678,16 @@ const BackgroundVerification = () => {
                       type="radio"
                       className="btn-check"
                       name="newRequestEmailMethod"
-                      id="new-method-mailto"
+                      id="method-mailto"
                       value="mailto"
-                      checked={emailMethod === 'mailto'}
+                      checked={emailMethod === "mailto"}
                       onChange={(e) => setEmailMethod(e.target.value)}
                       disabled={sendingEmail}
                     />
-                    <label className="btn btn-outline-primary" htmlFor="new-method-mailto">
+                    <label
+                      className="btn btn-outline-primary d-flex align-items-center justify-content-center"
+                      htmlFor="method-mailto"
+                    >
                       <Icon icon="heroicons:envelope-open" className="me-1" />
                       Mailto
                     </label>
@@ -1289,8 +2696,8 @@ const BackgroundVerification = () => {
 
                 {/* Subject */}
                 <div className="mb-3">
-                  <label className="form-label fw-bold" style={{ fontSize: 14, color: '#374151', marginBottom: 8 }}>
-                    Subject <span className="text-danger">*</span>:
+                  <label className="form-label fw-semibold">
+                    Subject <span className="text-danger">*</span>
                   </label>
                   <input
                     type="text"
@@ -1299,114 +2706,427 @@ const BackgroundVerification = () => {
                     onChange={(e) => setNewRequestSubject(e.target.value)}
                     placeholder="Email subject..."
                     disabled={sendingEmail}
-                    style={{ borderRadius: 8, border: '1px solid #D1D5DB', padding: '10px 14px', fontSize: 14 }}
                   />
                 </div>
 
-                {/* CC and BCC */}
-                <div className="row mb-3">
+                {/* CC / BCC */}
+                <div className="row g-3 mb-3">
                   <div className="col-md-6">
-                    <label className="form-label fw-bold" style={{ fontSize: 14, color: '#374151', marginBottom: 8 }}>CC (Optional):</label>
+                    <label className="form-label fw-semibold">
+                      CC (Optional)
+                    </label>
                     <input
                       type="text"
                       className="form-control"
                       value={ccEmails}
                       onChange={(e) => setCcEmails(e.target.value)}
                       placeholder="email1@example.com, email2@example.com"
-                      disabled={emailMethod === 'mailto' || sendingEmail}
-                      style={{ borderRadius: 8, border: '1px solid #D1D5DB', padding: '10px 14px', fontSize: 14 }}
+                      disabled={emailMethod === "mailto" || sendingEmail}
                     />
-                    <small className="text-muted" style={{ fontSize: 12, marginTop: 6, display: 'block' }}>Separate multiple emails with commas</small>
+                    <small className="text-muted">
+                      Separate multiple emails with commas
+                    </small>
                   </div>
+
                   <div className="col-md-6">
-                    <label className="form-label fw-bold" style={{ fontSize: 14, color: '#374151', marginBottom: 8 }}>BCC (Optional):</label>
+                    <label className="form-label fw-semibold">
+                      BCC (Optional)
+                    </label>
                     <input
                       type="text"
                       className="form-control"
                       value={bccEmails}
-                      onChange={(e) => setBccEmails(e.target.value)}
                       placeholder="email1@example.com, email2@example.com"
-                      disabled={emailMethod === 'mailto' || sendingEmail}
-                      style={{ borderRadius: 8, border: '1px solid #D1D5DB', padding: '10px 14px', fontSize: 14 }}
+                      onChange={(e) => setBccEmails(e.target.value)}
+                      disabled={emailMethod === "mailto" || sendingEmail}
                     />
-                    <small className="text-muted" style={{ fontSize: 12, marginTop: 6, display: 'block' }}>Separate multiple emails with commas</small>
+                    <small className="text-muted">
+                      Separate multiple emails with commas
+                    </small>
                   </div>
                 </div>
 
                 {/* Required Documents */}
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Required Documents:</label>
-                  <div className="p-3 bg-light rounded">
-                    <ul className="mb-0">
-                      {requiredDocuments.filter(doc => doc.required).map(doc => (
-                        <li key={doc.id}>{doc.name}</li>
-                      ))}
-                    </ul>
+                <div className="mb-4">
+                  <label className="form-label fw-semibold">
+                    Required Documents
+                  </label>
+                  <div className="bg-light rounded p-3">
+                    <div className="table-responsive">
+                      <table className="table table-borderless table-sm mb-0">
+                        <thead>
+                          <tr>
+                            <th
+                              className="fw-semibold text-muted"
+                              style={{ width: "40%" }}
+                            >
+                              Document Name
+                            </th>
+                            <th
+                              className="fw-semibold text-muted"
+                              style={{ width: "20%" }}
+                            >
+                              Type
+                            </th>
+                            <th
+                              className="fw-semibold text-muted"
+                              style={{ width: "20%" }}
+                            >
+                              Upload Status
+                            </th>
+                            <th
+                              className="fw-semibold text-muted"
+                              style={{ width: "20%" }}
+                            >
+                              Action
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {requiredDocuments.map((doc, index) => {
+                            // Changed from filter to map for ALL documents
+                            // Check if this document is already uploaded
+                            const isUploaded = uploadedDocuments.some(
+                              (ud) => ud.id === doc.id,
+                            );
+                            const uploadedDoc = uploadedDocuments.find(
+                              (ud) => ud.id === doc.id,
+                            );
+
+                            return (
+                              <tr
+                                key={doc.id}
+                                className={
+                                  index % 2 === 0 ? "bg-white" : "bg-light"
+                                }
+                              >
+                                <td className="align-middle">
+                                  <div className="d-flex align-items-center">
+                                    <Icon
+                                      icon={
+                                        isUploaded
+                                          ? "heroicons:document-check"
+                                          : "heroicons:document"
+                                      }
+                                      className={`me-2 ${isUploaded ? "text-success" : "text-secondary"}`}
+                                    />
+                                    <div>
+                                      <div className="fw-medium">
+                                        {doc.name}
+                                      </div>
+                                      {uploadedDoc && (
+                                        <small className="text-muted">
+                                          Uploaded:{" "}
+                                          {new Date(
+                                            uploadedDoc.uploadDate,
+                                          ).toLocaleDateString()}
+                                        </small>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="align-middle">
+                                  <span
+                                    className={`badge bg-${doc.required ? "danger" : "secondary"}`}
+                                  >
+                                    {doc.required ? "Required" : "Optional"}
+                                  </span>
+                                </td>
+                                <td className="align-middle">
+                                  {isUploaded ? (
+                                    <span className="badge bg-success">
+                                      <Icon
+                                        icon="heroicons:check"
+                                        className="me-1"
+                                      />
+                                      Uploaded
+                                    </span>
+                                  ) : (
+                                    <span
+                                      className={`badge bg-${doc.required ? "warning" : "secondary"}`}
+                                    >
+                                      <Icon
+                                        icon="heroicons:clock"
+                                        className="me-1"
+                                      />
+                                      {doc.required ? "Pending" : "Optional"}
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="align-middle">
+                                  {isUploaded ? (
+                                    <div className="d-flex gap-1">
+                                      <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-primary"
+                                        onClick={() =>
+                                          handleViewDocument(uploadedDoc)
+                                        }
+                                        title="View Document"
+                                      >
+                                        <Icon
+                                          icon="heroicons:eye"
+                                          className="fs-6"
+                                        />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-danger"
+                                        onClick={() =>
+                                          handleRemoveDocument(doc.id)
+                                        }
+                                        title="Remove Document"
+                                      >
+                                        <Icon
+                                          icon="heroicons:trash"
+                                          className="fs-6"
+                                        />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div>
+                                      <input
+                                        type="file"
+                                        id={`upload-${doc.id}`}
+                                        className="d-none"
+                                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                        onChange={(e) =>
+                                          handleDocumentUpload(e, doc.id)
+                                        }
+                                        disabled={sendingEmail}
+                                      />
+                                      <label
+                                        htmlFor={`upload-${doc.id}`}
+                                        className={`btn btn-sm w-100 ${doc.required ? "btn-outline-success" : "btn-outline-secondary"}`}
+                                        style={{ cursor: "pointer" }}
+                                      >
+                                        <Icon
+                                          icon="heroicons:arrow-up-tray"
+                                          className="me-1"
+                                        />
+                                        Upload
+                                      </label>
+                                    </div>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Upload Summary */}
+                    {uploadedDocuments.length > 0 && (
+                      <div className="mt-3 pt-3 border-top">
+                        <div className="d-flex justify-content-between align-items-center">
+                          <div>
+                            <small className="text-muted">
+                              {uploadedDocuments.length} of{" "}
+                              {requiredDocuments.length} documents uploaded
+                            </small>
+                            <div
+                              className="progress mt-1"
+                              style={{ height: "6px", width: "200px" }}
+                            >
+                              <div
+                                className="progress-bar bg-success"
+                                style={{
+                                  width: `${(uploadedDocuments.length / requiredDocuments.length) * 100}%`,
+                                }}
+                              ></div>
+                            </div>
+
+                            {/* Required Documents Summary */}
+                            <div className="mt-2">
+                              <small className="text-muted d-block">
+                                Required:{" "}
+                                {
+                                  uploadedDocuments.filter((ud) =>
+                                    requiredDocuments.find(
+                                      (rd) => rd.id === ud.id && rd.required,
+                                    ),
+                                  ).length
+                                }{" "}
+                                of{" "}
+                                {
+                                  requiredDocuments.filter((d) => d.required)
+                                    .length
+                                }
+                              </small>
+                              <div
+                                className="progress mt-1"
+                                style={{
+                                  height: "4px",
+                                  width: "200px",
+                                  backgroundColor: "#e9ecef",
+                                }}
+                              >
+                                <div
+                                  className="progress-bar bg-danger"
+                                  style={{
+                                    width: `${(uploadedDocuments.filter((ud) => requiredDocuments.find((rd) => rd.id === ud.id && rd.required)).length / requiredDocuments.filter((d) => d.required).length) * 100}%`,
+                                  }}
+                                ></div>
+                              </div>
+                            </div>
+
+                            {/* Optional Documents Summary */}
+                            {requiredDocuments.filter((d) => !d.required)
+                              .length > 0 && (
+                              <div className="mt-2">
+                                <small className="text-muted d-block">
+                                  Optional:{" "}
+                                  {
+                                    uploadedDocuments.filter((ud) =>
+                                      requiredDocuments.find(
+                                        (rd) => rd.id === ud.id && !rd.required,
+                                      ),
+                                    ).length
+                                  }{" "}
+                                  of{" "}
+                                  {
+                                    requiredDocuments.filter((d) => !d.required)
+                                      .length
+                                  }
+                                </small>
+                                <div
+                                  className="progress mt-1"
+                                  style={{
+                                    height: "4px",
+                                    width: "200px",
+                                    backgroundColor: "#e9ecef",
+                                  }}
+                                >
+                                  <div
+                                    className="progress-bar bg-secondary"
+                                    style={{
+                                      width: `${(uploadedDocuments.filter((ud) => requiredDocuments.find((rd) => rd.id === ud.id && !rd.required)).length / requiredDocuments.filter((d) => !d.required).length) * 100}%`,
+                                    }}
+                                  ></div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => {
+                              if (
+                                window.confirm(
+                                  "Are you sure you want to clear all uploaded documents?",
+                                )
+                              ) {
+                                // Revoke object URLs to prevent memory leaks
+                                uploadedDocuments.forEach((doc) => {
+                                  if (doc.fileUrl) {
+                                    URL.revokeObjectURL(doc.fileUrl);
+                                  }
+                                });
+                                setUploadedDocuments([]);
+                              }
+                            }}
+                            disabled={
+                              uploadedDocuments.length === 0 || sendingEmail
+                            }
+                          >
+                            <Icon icon="heroicons:trash" className="me-1" />
+                            Clear All
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Email Template */}
                 <div className="mb-3">
-                  <label className="form-label fw-bold" style={{ fontSize: 14, color: '#374151', marginBottom: 8 }}>
-                    Email Template <span className="text-danger">*</span>:
+                  <label className="form-label fw-semibold">
+                    Email Template <span className="text-danger">*</span>
                   </label>
                   <textarea
                     className="form-control"
-                    rows="10"
+                    rows="8"
                     value={newRequestTemplate}
                     onChange={(e) => setNewRequestTemplate(e.target.value)}
-                    placeholder="Enter email content..."
                     disabled={sendingEmail}
-                    style={{ borderRadius: 8, border: '1px solid #D1D5DB', padding: '12px 14px', fontSize: 14, fontFamily: 'inherit', resize: 'vertical' }}
                   />
-                  <small className="text-muted" style={{ fontSize: 12, marginTop: 6, display: 'block' }}>
-                    You can use [Employee Name] placeholder which will be replaced automatically
+                  <small className="text-muted">
+                    You can use [Employee Name] placeholder which will be
+                    replaced automatically
                   </small>
                 </div>
 
-                {/* Info Alert */}
-                <div className="alert alert-info">
-                  <Icon icon="heroicons:information-circle" className="me-2" />
-                  <strong>Note:</strong> This email will request the candidate/employee to submit scanned copies (PDF format) of the required documents.
+                {/* Info */}
+                <div className="alert alert-info d-flex align-items-start">
+                  <Icon
+                    icon="heroicons:information-circle"
+                    className="me-2 mt-1"
+                  />
+                  <div>
+                    <strong>Note:</strong> This email will request the
+                    candidate/employee to submit scanned copies (PDF format) of
+                    the required documents.
+                  </div>
                 </div>
               </div>
-              <div className="modal-footer" style={{ padding: '20px 24px', borderTop: '1px solid #E5E7EB', borderRadius: '0 0 12px 12px' }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setShowNewRequestModal(false);
-                    setEmailStatus({ type: '', message: '' });
-                    setCcEmails('');
-                    setBccEmails('');
-                    setNewRequestEmail('');
-                    setNewRequestName('');
-                    setNewRequestTemplate('');
-                  }}
-                  disabled={sendingEmail}
-                  style={{ borderRadius: 8, padding: '10px 20px', fontWeight: 500 }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-success"
-                  onClick={handleSendNewRequest}
-                  disabled={sendingEmail || !newRequestTemplate.trim() || !newRequestSubject.trim() || !newRequestEmail.trim() || !newRequestName.trim()}
-                  style={{ borderRadius: 8, padding: '10px 20px', fontWeight: 500 }}
-                >
-                  {sendingEmail ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <Icon icon="heroicons:paper-airplane" className="me-2" />
-                      {emailMethod === 'api' ? 'Send via API' : emailMethod === 'clipboard' ? 'Copy to Clipboard' : 'Open Email Client'}
-                    </>
-                  )}
-                </button>
+
+              {/* Footer */}
+              <div className="modal-footer bg-light rounded-bottom-3 px-4 py-3">
+                <div className="d-flex flex-column flex-sm-row w-100 gap-2">
+                  <button
+                    type="button"
+                    className="btn btn-secondary flex-fill"
+                    onClick={() => {
+                      setShowNewRequestModal(false);
+                      setEmailStatus({ type: "", message: "" });
+                      setCcEmails("");
+                      setBccEmails("");
+                      setNewRequestEmail("");
+                      setNewRequestName("");
+                      setNewRequestPhone("");
+                      setNewRequestDepartment("");
+                      setNewRequestDesignation("");
+                      setNewRequestEmployeeId("");
+                      setNewRequestTemplate("");
+                    }}
+                    disabled={sendingEmail}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn btn-success flex-fill d-flex align-items-center justify-content-center"
+                    onClick={handleSendNewRequest}
+                    disabled={
+                      sendingEmail ||
+                      !newRequestTemplate.trim() ||
+                      !newRequestSubject.trim() ||
+                      !newRequestEmail.trim() ||
+                      !newRequestName.trim()
+                    }
+                  >
+                    {sendingEmail ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Icon
+                          icon="heroicons:paper-airplane"
+                          className="me-2"
+                        />
+                        {emailMethod === "api"
+                          ? "Send via API"
+                          : emailMethod === "clipboard"
+                            ? "Copy to Clipboard"
+                            : "Open Email Client"}
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
