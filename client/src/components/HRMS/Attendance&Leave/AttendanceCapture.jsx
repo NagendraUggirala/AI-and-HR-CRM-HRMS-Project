@@ -9,6 +9,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { Search,  Filter,  Download,  Printer,  Plus,  Edit,  Eye,  Home,  Calendar,  Trash2,  Clock,  CheckCircle,  XCircle,  AlertCircle,  MapPin,
         Camera,  Wifi,  WifiOff,  Smartphone,  LogOut,  Monitor,  Fingerprint,  BarChart3,  Users,  Calendar as CalendarIcon,  Settings,  RefreshCw,
         Upload,  FileText,  ExternalLink,  MoreVertical,  User,} from "lucide-react";
+import { Icon } from "@iconify/react";
 
 // ==================== CONTEXT API ====================
 const AttendanceContext = React.createContext();
@@ -2892,22 +2893,25 @@ const AttendanceCapture = () => {
 
               <div className="col-12">
                 <div className="d-grid gap-2 d-md-flex">
-                  <button
-                    className="btn btn-primary flex-fill"
-                    onClick={addBiometricDevice}
-                    disabled={!newDevice.model || !newDevice.ipAddress}
-                  >
-                    <Plus size={16} className="me-2" />
-                    Add Device
-                  </button>
+                 <button
+                  type="button"
+                  className="btn btn-primary flex-fill d-inline-flex align-items-center justify-content-center"
+                  onClick={addBiometricDevice}
+                  disabled={!newDevice.model || !newDevice.ipAddress}
+>
+                  <Plus size={16} className="me-2" />
+                  Add Device
+</button>
 
-                  <button
-                    className="btn btn-success flex-fill"
-                    onClick={() => syncBiometricData()}
-                  >
-                    <RefreshCw size={16} className="me-2" />
-                    Sync All Devices
-                  </button>
+                <button
+                  type="button"
+                  className="btn btn-success flex-fill d-inline-flex align-items-center justify-content-center"
+                  onClick={() => syncBiometricData()}
+>
+                  <RefreshCw size={16} className="me-2" />
+                  Sync All Devices
+</button>
+
                 </div>
               </div>
             </div>
@@ -3183,9 +3187,12 @@ const AttendanceCapture = () => {
                       );
                     }}
                   >
-                    <Fingerprint size={20} className="me-2" />
-                    Simulate Biometric{" "}
-                    {punchType.replace(/([A-Z])/g, " $1").toUpperCase()}
+                   <span className="d-inline-flex align-items-center">
+  <Fingerprint size={20} className="me-2" />
+  Simulate Biometric{" "}
+  {punchType.replace(/([A-Z])/g, " $1").toUpperCase()}
+</span>
+
                   </button>
 
                   <button
@@ -3414,13 +3421,7 @@ const AttendanceCapture = () => {
                           </td>
                           <td className="text-center">
                             <div className="d-flex gap-2 justify-content-center">
-                              <button
-                                className="btn btn-sm btn-outline-success"
-                                onClick={() => syncBiometricData(device.id)}
-                                title="Sync Device"
-                              >
-                                <RefreshCw size={12} />
-                              </button>
+                             
                               <button
                                 className="btn btn-sm btn-outline-primary"
                                 onClick={() => {
@@ -3505,8 +3506,11 @@ const AttendanceCapture = () => {
                   alert(reportText);
                 }}
               >
-                <Download size={14} className="me-1" />
-                Generate Report
+               <span className="d-inline-flex align-items-center">
+  <Download size={14} className="me-1" />
+  Generate Report
+</span>
+
               </button>
             </div>
           </div>
@@ -3599,8 +3603,11 @@ const AttendanceCapture = () => {
                             }
                           }}
                         >
-                          <Download size={14} className="me-1" />
-                          Export Device Report
+                        <span className="d-inline-flex align-items-center">
+  <Download size={14} className="me-1" />
+  Export Device Report
+</span>
+
                         </button>
                       </div>
                     </div>
@@ -3753,8 +3760,11 @@ const AttendanceCapture = () => {
                   window.URL.revokeObjectURL(url);
                 }}
               >
-                <Download size={14} className="me-1" />
-                Export Logs
+                <span className="d-inline-flex align-items-center">
+  <Download size={14} className="me-1" />
+  Export Logs
+</span>
+
               </button>
             </div>
           </div>
@@ -4703,8 +4713,10 @@ const AttendanceCapture = () => {
                 <div className="modal-header">
                   <h5 className="modal-title">Capture Selfie</h5>
                   <button
+                    type="button"
                     className="btn-close"
-                    onClick={() => setShowCamera && setShowCamera(false)}
+                    onClick={() => setShowCamera(false)}
+                    aria-label="Close"
                   ></button>
                 </div>
                 <div className="modal-body text-center">
@@ -4723,6 +4735,7 @@ const AttendanceCapture = () => {
                     </div>
                   </div>
                   <button
+                    type="button"
                     className="btn btn-primary w-100"
                     onClick={enhancedHandleSelfieCapture}
                   >
@@ -4994,6 +5007,7 @@ const AttendanceCapture = () => {
               <div className="row mb-3">
                 <div className="col-md-6 mb-2">
                   <button
+                    type="button"
                     className="btn btn-primary w-100"
                     onClick={enhancedGetCurrentLocation}
                     disabled={safeGpsState.isCapturing}
@@ -5016,6 +5030,7 @@ const AttendanceCapture = () => {
                 {state.settings.requireSelfie && (
                   <div className="col-md-6 mb-2">
                     <button
+                      type="button"
                       className={`btn w-100 ${
                         safeSelfieImage ? "btn-success" : "btn-info"
                       }`}
@@ -5032,6 +5047,7 @@ const AttendanceCapture = () => {
               <div className="row mb-3">
                 <div className="col-md-6 mb-2">
                   <button
+                    type="button"
                     className={`btn w-100 ${
                       employeeSession?.isCheckedIn
                         ? "btn-secondary"
@@ -5071,6 +5087,7 @@ const AttendanceCapture = () => {
 
                 <div className="col-md-6">
                   <button
+                    type="button"
                     className={`btn w-100 ${
                       employeeSession?.isCheckedIn
                         ? "btn-warning"
@@ -5113,6 +5130,7 @@ const AttendanceCapture = () => {
               {safeGpsOfflineQueue.length > 0 && (
                 <div className="mb-3">
                   <button
+                    type="button"
                     className="btn btn-outline-primary w-100"
                     onClick={enhancedSyncGPSOfflineData}
                     disabled={!safeIsOnline}
@@ -5242,6 +5260,7 @@ const AttendanceCapture = () => {
                 </div>
                 <div className="col-12">
                   <button
+                    type="button"
                     className="btn btn-primary w-100 btn-sm"
                     onClick={enhancedAddGeoLocation}
                     disabled={!safeUserLocation}
@@ -6068,6 +6087,7 @@ const AttendanceCapture = () => {
             <h6>Manual Attendance Entry</h6>
             <div className="d-flex gap-2">
               <button
+                type="button"
                 className="btn btn-sm btn-outline-info"
                 onClick={viewAuditTrail}
                 title="View Audit Trail"
@@ -6075,6 +6095,7 @@ const AttendanceCapture = () => {
                 <FileText size={14} />
               </button>
               <button
+                type="button"
                 className="btn btn-sm btn-outline-secondary"
                 onClick={viewImportHistory}
                 title="Import History"
@@ -6249,6 +6270,7 @@ const AttendanceCapture = () => {
                 <div className="col-12">
                   <div className="d-grid gap-2">
                     <button
+                      type="button"
                       className="btn btn-primary"
                       onClick={enhancedSaveManualEntry}
                       disabled={
@@ -6259,6 +6281,7 @@ const AttendanceCapture = () => {
                       Save Manual Entry
                     </button>
                     <button
+                      type="button"
                       className="btn btn-outline-secondary"
                       onClick={() => {
                         // Save as draft
@@ -6333,6 +6356,7 @@ const AttendanceCapture = () => {
 
               <div className="d-grid gap-2">
                 <button
+                  type="button"
                   className="btn btn-success"
                   onClick={() => enhancedDownloadTemplate("csv")}
                 >
@@ -6340,6 +6364,7 @@ const AttendanceCapture = () => {
                   Download CSV Template
                 </button>
                 <button
+                  type="button"
                   className="btn btn-outline-success"
                   onClick={() => enhancedDownloadTemplate("excel")}
                 >
@@ -6768,29 +6793,26 @@ const AttendanceCapture = () => {
     <AttendanceContext.Provider value={{ state, dispatch }}>
       <div className="container-fluid py-4">
         {/* Page Header */}
-        <div className="mb-4">
-          <h2 className="fw-bold h4 h2-md">Attendance Capture & Tracking</h2>
-          <p className="text-secondary-light mb-0">
-            Multiple check-in methods including biometric, GPS mobile, web
-            portal, and manual entry.
-          </p>
-        </div>
+     <div className="mb-4">
+  <h4 className="fw-bold h4 h2-md d-flex align-items-center">
+   <Icon
+  icon="heroicons:clipboard-document-check"
+  className="me-2 fs-4"
+  style={{ color: "#000" }}
+/>
+
+    Attendance Capture & Tracking
+  </h4>
+  <p className="text-secondary-light mb-0">
+    Multiple check-in methods including biometric, GPS mobile, web
+    portal, and manual entry.
+  </p>
+</div>
+
 
         {/* Status Bar */}
         <div className="d-flex align-items-center gap-3 mb-4">
-          <span className={`badge ${isOnline ? "bg-success" : "bg-danger"}`}>
-            {isOnline ? (
-              <>
-                <Wifi size={12} className="me-1" />
-                Online
-              </>
-            ) : (
-              <>
-                <WifiOff size={12} className="me-1" />
-                Offline
-              </>
-            )}
-          </span>
+        
           {offlineData.length > 0 && (
             <span className="badge bg-warning">
               <AlertCircle size={12} className="me-1" />
@@ -6803,10 +6825,7 @@ const AttendanceCapture = () => {
               Night Shift Active
             </span>
           )}
-          <span className="badge bg-info">
-            <CalendarIcon size={12} className="me-1" />
-            {currentTime.toLocaleDateString()}
-          </span>
+        
         </div>
 
         {/* KPI Summary */}
@@ -6840,53 +6859,7 @@ const AttendanceCapture = () => {
         </div>
 
         {/* Quick Check-in Section */}
-        <div className="card border shadow-none mb-4">
-          <div className="card-body">
-            <div className="row align-items-center">
-              <div className="col-md-3 mb-3 mb-md-0">
-                <label className="form-label">Select Employee</label>
-                <select
-                  className="form-select"
-                  value={selectedEmployee}
-                  onChange={(e) => setSelectedEmployee(e.target.value)}
-                >
-                  {employees.map((emp) => (
-                    <option key={emp.id} value={emp.id}>
-                      {emp.name} ({emp.id})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-md-9">
-                <div className="d-flex gap-2">
-                  <button
-                    className="btn btn-lg flex-fill d-flex align-items-center justify-content-center bg-primary-subtle text-primary"
-                    onClick={() => markAttendance("biometric")}
-                  >
-                    <Fingerprint size={18} className="me-2" />
-                    Biometric Check-in
-                  </button>
-                  <button
-                    className="btn btn-lg flex-fill d-flex align-items-center justify-content-center bg-success-subtle text-success"
-                    onClick={() => markAttendance("gps")}
-                    disabled={!settings.geoFencing}
-                  >
-                    <Smartphone size={18} className="me-2" />
-                    GPS Mobile
-                  </button>
-                  <button
-                    className="btn btn-lg flex-fill d-flex align-items-center justify-content-center bg-info-subtle text-info"
-                    onClick={() => handleWebAttendance("checkin")}
-                  >
-                    <Monitor size={18} className="me-2" />
-                    Web Portal
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
+       
         {/* Filters */}
         <div className="card border shadow-none mb-4">
           <div className="card-body d-flex gap-3 align-items-center">
@@ -6941,23 +6914,22 @@ const AttendanceCapture = () => {
             </select>
 
             <div className="d-flex gap-2">
-              <button
-                className="btn btn-success"
-                onClick={() => handleExport("attendance")}
-              >
-                <Download size={14} className="me-2" />
-                Export
-              </button>
-              <button className="btn btn-dark" onClick={handlePrint}>
-                <Printer size={14} />
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={syncOfflineData}
-                disabled={offlineData.length === 0 || !isOnline}
-              >
-                <RefreshCw size={14} />
-              </button>
+             <button
+  className="btn btn-success d-inline-flex align-items-center"
+  onClick={() => handleExport("attendance")}
+>
+  <Download size={14} className="me-2" />
+  Export
+</button>
+
+             <button
+  className="btn btn-dark d-inline-flex align-items-center"
+  onClick={handlePrint}
+>
+  <Printer size={14} className="me-2" />
+  Print
+</button>
+
             </div>
           </div>
         </div>
@@ -6999,68 +6971,70 @@ const AttendanceCapture = () => {
 
         {/* Main Tabs */}
         <div className="card border shadow-none mb-4">
-          <div className="card-body p-2">
+          <div className="card-body p-3">
             <div className="d-flex flex-column flex-sm-row gap-3">
               {[
-                {
-                  id: "attendance",
-                  name: "Attendance List",
-                  desc: "View all records",
-                  icon: <FileText size={20} />,
-                },
                 {
                   id: "biometric",
                   name: "Biometric",
                   desc: "Fingerprint/Face",
-                  icon: <Fingerprint size={20} />,
+                  icon: Fingerprint,
                 },
                 {
                   id: "gps",
                   name: "GPS Mobile",
                   desc: "Location Based",
-                  icon: <Smartphone size={20} />,
+                  icon: Smartphone,
                 },
                 {
                   id: "web",
                   name: "Web Portal",
                   desc: "Browser Based",
-                  icon: <Monitor size={20} />,
-                },
-                {
-                  id: "manual",
-                  name: "Manual Entry",
-                  desc: "HR/Admin",
-                  icon: <Edit size={20} />,
+                  icon: Monitor,
                 },
                 {
                   id: "settings",
                   name: "Settings",
                   desc: "Configuration",
-                  icon: <Settings size={20} />,
+                  icon: Settings,
                 },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  className={`btn btn-lg flex-fill d-flex align-items-center justify-content-center ${
-                    activeTab === tab.id
-                      ? `bg-white text-dark border-primary border-2 shadow-sm`
-                      : `bg-light text-primary border-0`
-                  }`}
-                  onClick={() => setActiveTab(tab.id)}
-                  style={{
-                    height: "80px",
-                    borderRadius: "12px",
-                    transition: "all 0.3s",
-                    fontSize: "1.1rem",
-                  }}
-                >
-                  <div className="text-center">
-                    <div className="mb-2">{tab.icon}</div>
-                    <div className="fw-bold">{tab.name}</div>
-                    <div className="small text-muted">{tab.desc}</div>
-                  </div>
-                </button>
-              ))}
+              ].map((tab) => {
+                const IconComponent = tab.icon;
+                const isActive = activeTab === tab.id;
+                
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    className={`btn flex-fill d-flex flex-column align-items-center justify-content-center ${
+                      isActive
+                        ? `bg-white text-dark border-primary border-2 shadow-sm`
+                        : `bg-white text-primary border`
+                    }`}
+                    onClick={() => setActiveTab(tab.id)}
+                    style={{
+                      minHeight: "100px",
+                      borderRadius: "12px",
+                      transition: "all 0.3s ease",
+                      padding: "16px 12px",
+                    }}
+                  >
+                    <div className="d-flex justify-content-center mb-2" style={{ height: "32px", alignItems: "center" }}>
+                      <IconComponent 
+                        size={24} 
+                        className={isActive ? "text-dark" : "text-primary"}
+                        style={{ display: "block" }}
+                      />
+                    </div>
+                    <div className={`fw-bold mb-1 ${isActive ? "text-dark" : "text-primary"}`} style={{ fontSize: "1rem" }}>
+                      {tab.name}
+                    </div>
+                    <div className="small text-muted" style={{ fontSize: "0.75rem" }}>
+                      {tab.desc}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -7121,6 +7095,7 @@ const AttendanceCapture = () => {
                       <div className="card-body py-3">
                         <div className="d-flex flex-wrap gap-3 align-items-center">
                           <button
+                            type="button"
                             className="btn btn-light text-primary d-flex align-items-center"
                             onClick={() => handleWebAttendance("checkin")}
                             disabled={webState.isCheckingIn}
@@ -7138,7 +7113,8 @@ const AttendanceCapture = () => {
                             )}
                           </button>
                           <button
-                            className="btn  btn-light text-primary d-flex align-items-center"
+                            type="button"
+                            className="btn btn-light text-primary d-flex align-items-center"
                             onClick={() => handleWebAttendance("checkout")}
                             disabled={webState.isCheckingOut}
                           >
@@ -7155,6 +7131,7 @@ const AttendanceCapture = () => {
                             )}
                           </button>
                           <button
+                            type="button"
                             className="btn btn-light text-primary d-flex align-items-center"
                             onClick={markWFHAttendance}
                           >
@@ -7163,6 +7140,7 @@ const AttendanceCapture = () => {
                           </button>
                           <div className="vr"></div>
                           <button
+                            type="button"
                             className="btn btn-outline-primary d-flex align-items-center"
                             onClick={() =>
                               setWebState((prev) => ({
@@ -7175,8 +7153,18 @@ const AttendanceCapture = () => {
                             Capture Webcam
                           </button>
                           <button
+                            type="button"
                             className="btn btn-outline-danger d-flex align-items-center"
-                            onClick={getCurrentLocation}
+                            onClick={() => {
+                              if (typeof getCurrentLocation === 'function') {
+                                getCurrentLocation().catch((error) => {
+                                  console.error('Error getting location:', error);
+                                  alert('Unable to get location. Please check your browser permissions.');
+                                });
+                              } else {
+                                alert('Location function not available');
+                              }
+                            }}
                           >
                             <MapPin size={16} className="me-2" />
                             Get Location

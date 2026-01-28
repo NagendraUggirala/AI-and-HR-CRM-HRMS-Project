@@ -1,57 +1,4 @@
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  BarChart3,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  AlertCircle,
-  Download,
-  Filter,
-  FileText,
-  Users,
-  Clock,
-  Calendar,
-  TrendingUp,
-  PieChart,
-  Building,
-  MapPin,
-  CheckCircle,
-  XCircle,
-  Printer,
-  Mail,
-  Bell,
-  Home,
-  Settings,
-  ChevronDown,
-  ChevronUp,
-  RefreshCw,
-  Eye,
-  Plus,
-  Info,
-  Zap,
-  Activity,
-  Target,
-  Award,
-  Thermometer,
-  Coffee,
-  Sun,
-  Moon,
-  UserCheck,
-  UserX,
-  Watch,
-  FileSpreadsheet,
-  FilePieChart,
-  FileBarChart,
-  MoreVertical,
-  Smartphone,
-  Monitor,
-  Laptop,
-  Globe,
-  Navigation,
-  Cloud,
-  Wind,
-  ThermometerSun
-} from "lucide-react";
 
 /* ===========================================================
    COMPLETE CSS STYLES
@@ -92,7 +39,7 @@ const styles = `
 
 /* SEARCH */
 .search-box {
-  padding: 10px 12px 10px 36px;
+  padding: 10px 12px 10px 40px;
   border-radius: 8px;
   border: 1px solid #cbd5e1;
   width: 280px;
@@ -123,18 +70,37 @@ const styles = `
 }
 
 .filter-row select {
-  padding: 10px 14px;
+  padding: 10px 36px 10px 14px;
   border-radius: 8px;
   border: 1px solid #cbd5e1;
   background: white;
   font-size: 14px;
   min-width: 180px;
   cursor: pointer;
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
 .filter-row select:focus {
   outline: none;
   border-color: #3b82f6;
+}
+
+.filter-select-container {
+  position: relative;
+  min-width: 180px;
+}
+
+.filter-select-arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  pointer-events: none;
+  font-size: 16px;
 }
 
 .filter-actions {
@@ -162,6 +128,11 @@ const styles = `
   background: #2563eb;
 }
 
+.btn-primary:disabled {
+  background: #93c5fd;
+  cursor: not-allowed;
+}
+
 .btn-secondary {
   padding: 10px 18px;
   background: white;
@@ -179,6 +150,13 @@ const styles = `
 .btn-secondary:hover {
   background: #f8fafc;
   border-color: #94a3b8;
+}
+
+.btn-secondary:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+  border-color: #e2e8f0;
 }
 
 /* KPI CARDS */
@@ -245,6 +223,7 @@ const styles = `
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 20px;
 }
 
 .kpi-icon.present { background: #d1fae5; color: #10b981; }
@@ -525,6 +504,7 @@ const styles = `
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 20px;
 }
 
 .report-icon.standard { background: #dbeafe; color: #3b82f6; }
@@ -648,6 +628,7 @@ const styles = `
 .status-absent { background: #fee2e2; color: #991b1b; }
 .status-late { background: #fef3c7; color: #92400e; }
 .status-leave { background: #e0f2fe; color: #075985; }
+.status-overtime { background: #e0f2fe; color: #075985; }
 
 /* ALERTS */
 .alerts-grid {
@@ -709,6 +690,87 @@ const styles = `
   border-color: #cbd5e1;
 }
 
+/* Custom Role Dropdown */
+.custom-role-dropdown {
+  position: relative;
+  min-width: 180px;
+}
+
+.custom-role-dropdown-btn {
+  padding: 10px 36px 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  font-size: 14px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.custom-role-dropdown-btn:hover {
+  border-color: #94a3b8;
+}
+
+.custom-role-dropdown-btn:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.custom-role-dropdown-arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  pointer-events: none;
+  font-size: 16px;
+}
+
+.custom-role-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  margin-top: 4px;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.custom-role-dropdown-item {
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  background-color: white;
+  color: #475569;
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.2s;
+}
+
+.custom-role-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.custom-role-dropdown-item:hover {
+  background-color: #f8fafc;
+  color: #3b82f6;
+}
+
+.custom-role-dropdown-item.selected {
+  background-color: #f0f9ff;
+  color: #3b82f6;
+}
+
 /* RESPONSIVE */
 @media (max-width: 1024px) {
   .dashboard-grid {
@@ -752,8 +814,502 @@ const styles = `
     padding: 12px 16px;
     font-size: 13px;
   }
+  
+  .custom-role-dropdown {
+    min-width: 100%;
+  }
+}
+
+/* GENERATE REPORTS MODAL */
+.generate-reports-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.generate-reports-content {
+  background: white;
+  border-radius: 16px;
+  padding: 28px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.report-checkbox-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.report-checkbox-item:hover {
+  background-color: #f8fafc;
+  border-color: #93c5fd;
+  transform: translateY(-2px);
+}
+
+.report-checkbox-item.selected {
+  background-color: #f0f9ff;
+  border-color: #3b82f6;
+}
+
+.report-checkbox-item input[type="checkbox"] {
+  margin-top: 4px;
+  margin-right: 12px;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+}
+
+.report-checkbox-info {
+  flex: 1;
+}
+
+.report-checkbox-info h4 {
+  margin: 0 0 6px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.report-checkbox-info p {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.report-checkbox-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.report-batch-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #f0f9ff;
+  border-radius: 10px;
+  margin: 20px 0;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* REPORT GENERATION MODAL */
+.report-generation-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.report-generation-content {
+  background: white;
+  border-radius: 16px;
+  padding: 28px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Print specific styles */
+@media print {
+  .page {
+    background: white !important;
+    padding: 0 !important;
+  }
+  
+  .header-top,
+  .filter-section,
+  .kpi-section,
+  .tabs,
+  .btn-secondary,
+  .btn-primary,
+  .report-card .btn-icon,
+  .action-buttons {
+    display: none !important;
+  }
+  
+  .tab-content {
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+  
+  .reports-grid {
+    grid-template-columns: repeat(1, 1fr) !important;
+    gap: 10px !important;
+  }
+  
+  .report-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border: 1px solid #ddd !important;
+    box-shadow: none !important;
+  }
+  
+  .report-card:hover {
+    transform: none !important;
+  }
+}
+
+/* EXPORT MODAL STYLES */
+.export-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.export-modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  width: 90%;
+  max-width: 500px;
+  animation: modalSlideIn 0.3s ease-out;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.export-options {
+  margin: 20px 0;
+}
+
+.export-option {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.export-option:hover {
+  background: #f8fafc;
+  border-color: #93c5fd;
+}
+
+.export-option.selected {
+  background: #f0f9ff;
+  border-color: #3b82f6;
+}
+
+.export-option-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  font-size: 20px;
+}
+
+.export-option-icon.pdf {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.export-option-icon.excel {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.export-option-icon.csv {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.export-option-info {
+  flex: 1;
+}
+
+.export-option-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #1e293b;
+}
+
+.export-option-desc {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.export-progress {
+  margin: 20px 0;
+  padding: 16px;
+  background: #f0f9ff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.export-progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.export-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* PATTERN MODAL STYLES */
+.pattern-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.pattern-modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow: auto;
+  animation: modalSlideIn 0.3s ease-out;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.pattern-analysis {
+  margin: 20px 0;
+}
+
+.pattern-day {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.pattern-day:last-child {
+  border-bottom: none;
+}
+
+.pattern-visualization {
+  margin: 20px 0;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 10px;
+}
+
+.pattern-timeline {
+  display: flex;
+  height: 60px;
+  align-items: center;
+  margin: 20px 0;
+  position: relative;
+}
+
+.timeline-item {
+  flex: 1;
+  text-align: center;
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.timeline-marker {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin: 0 auto 8px;
+}
+
+.timeline-marker.absent {
+  background: #ef4444;
+  box-shadow: 0 0 0 3px #fecaca;
+}
+
+.timeline-marker.late {
+  background: #f59e0b;
+  box-shadow: 0 0 0 3px #fef3c7;
+}
+
+.timeline-marker.present {
+  background: #10b981;
+  box-shadow: 0 0 0 3px #d1fae5;
+}
+
+/* ALERT ACKNOWLEDGE TOAST */
+.alert-toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #10b981;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  animation: slideInRight 0.3s ease-out;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Bootstrap Icons Fix */
+.bi {
+  display: inline-block;
+  vertical-align: -0.125em;
 }
 `;
+
+/* ===========================================================
+   CUSTOM ROLE DROPDOWN COMPONENT
+   =========================================================== */
+const CustomRoleDropdown = ({ value, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const roleOptions = [
+    { value: "employee", label: "Employee", icon: "bi-person" },
+    { value: "manager", label: "Manager", icon: "bi-person-badge" },
+    { value: "hr", label: "HR Admin", icon: "bi-building" },
+    { value: "admin", label: "System Admin", icon: "bi-gear" }
+  ];
+
+  const selectedOption = roleOptions.find(opt => opt.value === value);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isOpen && !event.target.closest('.custom-role-dropdown')) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  return (
+    <div className="custom-role-dropdown">
+      <button 
+        className="custom-role-dropdown-btn"
+        onClick={() => setIsOpen(!isOpen)}
+        type="button"
+      >
+        <i className={`bi ${selectedOption?.icon}`}></i>
+        <span>{selectedOption?.label}</span>
+      </button>
+      <i className="bi bi-chevron-down custom-role-dropdown-arrow"></i>
+      
+      {isOpen && (
+        <div className="custom-role-dropdown-menu">
+          {roleOptions.map(option => (
+            <div
+              key={option.value}
+              className={`custom-role-dropdown-item ${value === option.value ? 'selected' : ''}`}
+              onClick={() => {
+                onChange(option.value);
+                setIsOpen(false);
+              }}
+            >
+              <i className={`bi ${option.icon}`}></i>
+              <span>{option.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 /* ===========================================================
    CALENDAR COMPONENT
@@ -822,13 +1378,13 @@ const AttendanceCalendar = ({ attendanceData }) => {
         </div>
         <div className="cal-nav">
           <button className="cal-btn" onClick={prevMonth}>
-            <ChevronLeft size={18} />
+            <i className="bi bi-chevron-left"></i>
           </button>
           <button className="cal-btn" onClick={goToday}>
             Today
           </button>
           <button className="cal-btn" onClick={nextMonth}>
-            <ChevronRight size={18} />
+            <i className="bi bi-chevron-right"></i>
           </button>
         </div>
       </div>
@@ -895,6 +1451,33 @@ const AttendanceReports = () => {
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("manager");
   const [selectedReport, setSelectedReport] = useState(null);
+  const [showGenerateReports, setShowGenerateReports] = useState(false);
+  const [selectedReports, setSelectedReports] = useState([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [isGeneratingSingle, setIsGeneratingSingle] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
+  
+  // NEW STATE VARIABLES FOR EXPORT MODAL
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportFormat, setExportFormat] = useState('pdf');
+  const [isExportingExceptions, setIsExportingExceptions] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
+  
+  // NEW STATE VARIABLES FOR ALERTS FUNCTIONALITY
+  const [showPatternModal, setShowPatternModal] = useState(false);
+  const [selectedPatternAlert, setSelectedPatternAlert] = useState(null);
+  const [showAcknowledgeToast, setShowAcknowledgeToast] = useState(false);
+  const [acknowledgedAlert, setAcknowledgedAlert] = useState(null);
+  const [alerts, setAlerts] = useState([]);
+  
+  // Pattern analysis data
+  const [patternAnalysis, setPatternAnalysis] = useState({
+    days: [],
+    trend: '',
+    recommendation: ''
+  });
 
   const [filters, setFilters] = useState({
     date: "month",
@@ -907,7 +1490,6 @@ const AttendanceReports = () => {
   const [attendanceData, setAttendanceData] = useState([]);
   const [analyticsData, setAnalyticsData] = useState({});
   const [reports, setReports] = useState([]);
-  const [alerts, setAlerts] = useState([]);
   const [reportCategory, setReportCategory] = useState('all');
   const [exceptionType, setExceptionType] = useState('all');
 
@@ -1125,43 +1707,138 @@ const AttendanceReports = () => {
 
     // Generate alerts
     const alertList = [
-      { id: 1, type: 'anomaly', employee: 'Robert Chen', message: '3 consecutive late arrivals this week', severity: 'medium', date: '2024-01-19' },
-      { id: 2, type: 'pattern', employee: 'Sarah Johnson', message: 'High absenteeism on Mondays (4 out of last 6)', severity: 'high', date: '2024-01-18' },
-      { id: 3, type: 'threshold', department: 'Sales', message: 'Department absenteeism rate > 8% this month', severity: 'high', date: '2024-01-17' },
-      { id: 4, type: 'predictive', employee: 'David Kim', message: 'Likely absence pattern detected for next week', severity: 'low', date: '2024-01-16' },
-      { id: 5, type: 'overtime', employee: 'John Smith', message: 'Excessive overtime detected (45 hours this month)', severity: 'medium', date: '2024-01-15' }
+      { 
+        id: 1, 
+        type: 'anomaly', 
+        employee: 'Robert Chen', 
+        message: '3 consecutive late arrivals this week', 
+        severity: 'medium', 
+        date: '2024-01-19',
+        acknowledged: false,
+        patternData: {
+          days: ['2024-01-15', '2024-01-16', '2024-01-17'],
+          times: ['09:25', '09:32', '09:28'],
+          pattern: 'Monday-Wednesday consecutive lateness'
+        }
+      },
+      { 
+        id: 2, 
+        type: 'pattern', 
+        employee: 'Sarah Johnson', 
+        message: 'High absenteeism on Mondays (4 out of last 6)', 
+        severity: 'high', 
+        date: '2024-01-18',
+        acknowledged: false,
+        patternData: {
+          days: ['2024-01-01', '2024-01-08', '2024-01-15', '2024-01-22'],
+          times: [],
+          pattern: 'Monday absence pattern'
+        }
+      },
+      { 
+        id: 3, 
+        type: 'threshold', 
+        department: 'Sales', 
+        message: 'Department absenteeism rate > 8% this month', 
+        severity: 'high', 
+        date: '2024-01-17',
+        acknowledged: false,
+        patternData: {
+          days: [],
+          times: [],
+          pattern: 'Department-wide trend'
+        }
+      },
+      { 
+        id: 4, 
+        type: 'predictive', 
+        employee: 'David Kim', 
+        message: 'Likely absence pattern detected for next week', 
+        severity: 'low', 
+        date: '2024-01-16',
+        acknowledged: false,
+        patternData: {
+          days: ['2024-01-23', '2024-01-24'],
+          times: [],
+          pattern: 'Predicted Thursday-Friday absence'
+        }
+      },
+      { 
+        id: 5, 
+        type: 'overtime', 
+        employee: 'John Smith', 
+        message: 'Excessive overtime detected (45 hours this month)', 
+        severity: 'medium', 
+        date: '2024-01-15',
+        acknowledged: false,
+        patternData: {
+          days: ['2024-01-10', '2024-01-11', '2024-01-12', '2024-01-17', '2024-01-18'],
+          times: ['20:30', '21:15', '19:45', '20:00', '21:30'],
+          pattern: 'Weekend and evening overtime pattern'
+        }
+      }
     ];
     setAlerts(alertList);
   }, []);
 
   /* -----------------------
-     CALCULATE STATISTICS
+     CALCULATE STATISTICS with DATE FILTERING
      ----------------------- */
   const filteredData = useMemo(() => {
     let data = [...attendanceData];
     
+    // Apply date filter
+    const today = new Date();
+    let filteredByDate = [...data];
+    
+    if (filters.date === "today") {
+      const todayStr = today.toISOString().split("T")[0];
+      filteredByDate = data.filter(item => item.date === todayStr);
+    } else if (filters.date === "week") {
+      const weekAgo = new Date();
+      weekAgo.setDate(today.getDate() - 7);
+      const weekAgoStr = weekAgo.toISOString().split("T")[0];
+      filteredByDate = data.filter(item => item.date >= weekAgoStr);
+    } else if (filters.date === "month") {
+      const monthAgo = new Date();
+      monthAgo.setMonth(today.getMonth() - 1);
+      const monthAgoStr = monthAgo.toISOString().split("T")[0];
+      filteredByDate = data.filter(item => item.date >= monthAgoStr);
+    } else if (filters.date === "quarter") {
+      const quarterAgo = new Date();
+      quarterAgo.setMonth(today.getMonth() - 3);
+      const quarterAgoStr = quarterAgo.toISOString().split("T")[0];
+      filteredByDate = data.filter(item => item.date >= quarterAgoStr);
+    } else if (filters.date === "year") {
+      const yearAgo = new Date();
+      yearAgo.setFullYear(today.getFullYear() - 1);
+      const yearAgoStr = yearAgo.toISOString().split("T")[0];
+      filteredByDate = data.filter(item => item.date >= yearAgoStr);
+    }
+    
+    // Apply other filters
     if (filters.department !== "all") {
-      data = data.filter(item => item.department === filters.department);
+      filteredByDate = filteredByDate.filter(item => item.department === filters.department);
     }
     
     if (filters.location !== "all") {
-      data = data.filter(item => item.location === filters.location);
+      filteredByDate = filteredByDate.filter(item => item.location === filters.location);
     }
     
     if (filters.employee !== "all") {
-      data = data.filter(item => item.employeeId === filters.employee);
+      filteredByDate = filteredByDate.filter(item => item.employeeId === filters.employee);
     }
     
     if (search) {
       const query = search.toLowerCase();
-      data = data.filter(item =>
+      filteredByDate = filteredByDate.filter(item =>
         item.employeeName.toLowerCase().includes(query) ||
         item.employeeId.toLowerCase().includes(query) ||
         item.department.toLowerCase().includes(query)
       );
     }
     
-    return data;
+    return filteredByDate;
   }, [attendanceData, filters, search]);
 
   const statistics = useMemo(() => {
@@ -1191,6 +1868,1759 @@ const AttendanceReports = () => {
   }, [filteredData]);
 
   /* -----------------------
+     ALERT FUNCTIONALITIES
+     ----------------------- */
+  const handleAcknowledgeAlert = (alertId) => {
+    setAlerts(prevAlerts => 
+      prevAlerts.map(alert => 
+        alert.id === alertId 
+          ? { ...alert, acknowledged: true }
+          : alert
+      )
+    );
+    
+    const acknowledged = alerts.find(a => a.id === alertId);
+    setAcknowledgedAlert(acknowledged);
+    setShowAcknowledgeToast(true);
+    
+    // Auto-hide toast after 3 seconds
+    setTimeout(() => {
+      setShowAcknowledgeToast(false);
+      setAcknowledgedAlert(null);
+    }, 3000);
+  };
+
+  const handleViewPattern = (alert) => {
+    setSelectedPatternAlert(alert);
+    
+    // Generate pattern analysis data
+    const analysis = {
+      days: alert.patternData.days.map((day, index) => ({
+        date: day,
+        status: alert.type === 'anomaly' ? 'Late' : 
+                alert.type === 'pattern' ? 'Absent' : 
+                alert.type === 'overtime' ? 'Overtime' : 'Alert',
+        time: alert.patternData.times[index] || 'N/A',
+        details: alert.type === 'anomaly' ? `Late by ${Math.floor(Math.random() * 15) + 15} minutes` :
+                alert.type === 'pattern' ? 'Full day absence' :
+                alert.type === 'overtime' ? `${Math.floor(Math.random() * 3) + 2} hours overtime` : 'Pattern detected'
+      })),
+      trend: alert.patternData.pattern,
+      recommendation: alert.type === 'anomaly' ? 'Consider flexible start time for this employee' :
+                     alert.type === 'pattern' ? 'Schedule check-in meeting on affected days' :
+                     alert.type === 'overtime' ? 'Review workload and consider redistribution' :
+                     'Monitor pattern and take preventive action'
+    };
+    
+    setPatternAnalysis(analysis);
+    setShowPatternModal(true);
+  };
+
+  const PatternModal = () => {
+    if (!showPatternModal || !selectedPatternAlert) return null;
+
+    return (
+      <div className="pattern-modal-overlay">
+        <div className="pattern-modal-content">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div>
+              <h7 style={{ fontSize: '20px', fontWeight: 600, color: '#1e293b' }}>
+                Pattern Analysis: {selectedPatternAlert.employee || selectedPatternAlert.department}
+              </h7>
+              <div style={{ fontSize: '14px', color: '#64748b', marginTop: '4px' }}>
+                {selectedPatternAlert.message}
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowPatternModal(false)}
+              style={{ 
+                background: 'none', 
+                border: 'none', 
+                cursor: 'pointer', 
+                color: '#64748b',
+                padding: '8px',
+                borderRadius: '8px',
+                fontSize: '20px',
+                lineHeight: '1'
+              }}
+            >
+              ×
+            </button>
+          </div>
+
+          <div style={{ 
+            padding: '16px', 
+            backgroundColor: selectedPatternAlert.severity === 'high' ? '#fef2f2' : 
+                           selectedPatternAlert.severity === 'medium' ? '#fffbeb' : '#eff6ff',
+            borderRadius: '8px',
+            marginBottom: '20px',
+            border: `1px solid ${selectedPatternAlert.severity === 'high' ? '#fca5a5' : 
+                     selectedPatternAlert.severity === 'medium' ? '#fcd34d' : '#93c5fd'}`
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <i className="bi bi-exclamation-circle" style={{ 
+                color: selectedPatternAlert.severity === 'high' ? '#dc2626' : 
+                       selectedPatternAlert.severity === 'medium' ? '#d97706' : '#2563eb',
+                fontSize: '24px'
+              }}></i>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '16px', 
+                  color: selectedPatternAlert.severity === 'high' ? '#dc2626' : 
+                         selectedPatternAlert.severity === 'medium' ? '#d97706' : '#2563eb' }}>
+                  {selectedPatternAlert.severity.toUpperCase()} PRIORITY
+                </div>
+                <div style={{ fontSize: '14px', color: '#475569' }}>
+                  Detected on: {selectedPatternAlert.date}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="pattern-analysis">
+            <h7 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: '#1e293b' }}>
+              Pattern Details
+            </h7>
+            <div style={{ 
+              backgroundColor: '#f8fafc', 
+              padding: '16px', 
+              borderRadius: '8px',
+              marginBottom: '20px'
+            }}>
+              <div style={{ fontSize: '14px', marginBottom: '12px' }}>
+                <strong>Pattern Type:</strong> {patternAnalysis.trend}
+              </div>
+              <div style={{ fontSize: '14px' }}>
+                <strong>Recommendation:</strong> {patternAnalysis.recommendation}
+              </div>
+            </div>
+
+            <div className="pattern-visualization">
+              <h7 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: '#1e293b' }}>
+                Timeline Visualization
+              </h7>
+              <div className="pattern-timeline">
+                {patternAnalysis.days.map((day, index) => (
+                  <div key={index} className="timeline-item">
+                    <div className={`timeline-marker ${
+                      selectedPatternAlert.type === 'anomaly' ? 'late' :
+                      selectedPatternAlert.type === 'pattern' ? 'absent' : 'present'
+                    }`}></div>
+                    <div style={{ fontSize: '12px', color: '#475569' }}>
+                      {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                      {day.date.split('-')[2]}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginTop: '24px' }}>
+              <h7 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: '#1e293b' }}>
+                Detailed Occurrences
+              </h7>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f8fafc' }}>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, color: '#475569' }}>Date</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, color: '#475569' }}>Status</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, color: '#475569' }}>Time</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, color: '#475569' }}>Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {patternAnalysis.days.map((day, index) => (
+                    <tr key={index} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '12px' }}>{day.date}</td>
+                      <td style={{ padding: '12px' }}>
+                        <span style={{ 
+                          padding: '4px 8px', 
+                          borderRadius: '4px',
+                          backgroundColor: day.status === 'Late' ? '#fef3c7' : 
+                                         day.status === 'Absent' ? '#fee2e2' : '#dbeafe',
+                          color: day.status === 'Late' ? '#92400e' : 
+                                 day.status === 'Absent' ? '#991b1b' : '#1e40af',
+                          fontSize: '12px',
+                          fontWeight: 600
+                        }}>
+                          {day.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px' }}>{day.time}</td>
+                      <td style={{ padding: '12px' }}>{day.details}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+            <button 
+              className="btn-secondary"
+              onClick={() => setShowPatternModal(false)}
+            >
+              Close
+            </button>
+            <button 
+              className="btn-primary"
+              onClick={() => {
+                handleAcknowledgeAlert(selectedPatternAlert.id);
+                setShowPatternModal(false);
+              }}
+            >
+              <i className="bi bi-check-circle"></i>
+              Acknowledge & Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const AcknowledgeToast = () => {
+    if (!showAcknowledgeToast || !acknowledgedAlert) return null;
+
+    return (
+      <div className="alert-toast">
+        <i className="bi bi-check-circle-fill" style={{ fontSize: '20px' }}></i>
+        <div>
+          <div style={{ fontWeight: 600 }}>Alert Acknowledged</div>
+          <div style={{ fontSize: '13px' }}>
+            {acknowledgedAlert.employee || acknowledgedAlert.department} - {acknowledgedAlert.type}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  /* -----------------------
+     EXPORT EXCEPTIONS FUNCTION
+     ----------------------- */
+  const getExceptionType = (item) => {
+    if (item.status === 'absent') return 'Absent Without Leave';
+    if (item.late > 15) return 'Late Arrival';
+    if (item.overtime > 8) return 'Excessive Overtime';
+    return 'Unknown';
+  };
+
+  const getExceptionDetails = (item) => {
+    if (item.status === 'absent') return 'Full day absence';
+    if (item.late > 15) return `Late by ${item.late} minutes`;
+    if (item.overtime > 8) return `Overtime: ${item.overtime} hours`;
+    return '';
+  };
+
+  const getExceptionDuration = (item) => {
+    if (item.status === 'absent') return 'Full Day';
+    if (item.late > 15) return `${item.late} minutes`;
+    if (item.overtime > 8) return `${item.overtime} hours`;
+    return '';
+  };
+
+  const getExceptionStatus = (item) => {
+    if (item.status === 'absent') return 'Pending Review';
+    if (item.late > 15) return 'In Review';
+    if (item.overtime > 8) return 'Requires Approval';
+    return '';
+  };
+
+  const generatePDFContent = (data) => {
+    const today = new Date().toLocaleDateString();
+    const time = new Date().toLocaleTimeString();
+    
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Attendance Exceptions Report</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+            
+            body {
+              font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+              margin: 0;
+              padding: 40px;
+              color: #1e293b;
+              background: white;
+            }
+            
+            .header {
+              text-align: center;
+              margin-bottom: 40px;
+              padding-bottom: 20px;
+              border-bottom: 3px solid #dc2626;
+            }
+            
+            .header h1 {
+              color: #dc2626;
+              font-size: 32px;
+              margin: 0 0 10px 0;
+              font-weight: 700;
+            }
+            
+            .header .subtitle {
+              color: #64748b;
+              font-size: 16px;
+              margin-bottom: 15px;
+            }
+            
+            .metadata {
+              display: flex;
+              justify-content: space-between;
+              background: #f8fafc;
+              padding: 20px;
+              border-radius: 10px;
+              margin-bottom: 30px;
+              border: 1px solid #e2e8f0;
+              font-size: 14px;
+            }
+            
+            .metadata-item {
+              flex: 1;
+            }
+            
+            .metadata-label {
+              color: #64748b;
+              font-size: 12px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              margin-bottom: 5px;
+              font-weight: 600;
+            }
+            
+            .metadata-value {
+              color: #1e293b;
+              font-weight: 600;
+              font-size: 15px;
+            }
+            
+            .summary-cards {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 15px;
+              margin-bottom: 30px;
+            }
+            
+            .summary-card {
+              padding: 20px;
+              border-radius: 10px;
+              text-align: center;
+            }
+            
+            .summary-card.total {
+              background: #fee2e2;
+              border: 2px solid #fca5a5;
+            }
+            
+            .summary-card.late {
+              background: #fef3c7;
+              border: 2px solid #fde68a;
+            }
+            
+            .summary-card.absent {
+              background: #fee2e2;
+              border: 2px solid #fca5a5;
+            }
+            
+            .summary-card.overtime {
+              background: #dbeafe;
+              border: 2px solid #93c5fd;
+            }
+            
+            .summary-count {
+              font-size: 32px;
+              font-weight: 700;
+              margin-bottom: 8px;
+            }
+            
+            .summary-label {
+              font-size: 13px;
+              color: #475569;
+              font-weight: 600;
+            }
+            
+            .total .summary-count { color: #7f1d1d; }
+            .late .summary-count { color: #78350f; }
+            .absent .summary-count { color: #7f1d1d; }
+            .overtime .summary-count { color: #1e3a8a; }
+            
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 20px;
+              font-size: 13px;
+            }
+            
+            th {
+              background: #f1f5f9;
+              padding: 16px 12px;
+              text-align: left;
+              font-weight: 600;
+              color: #475569;
+              border-bottom: 2px solid #e2e8f0;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              font-size: 11px;
+            }
+            
+            td {
+              padding: 14px 12px;
+              border-bottom: 1px solid #f1f5f9;
+              vertical-align: top;
+            }
+            
+            tr:hover {
+              background: #f8fafc;
+            }
+            
+            .status-badge {
+              padding: 6px 12px;
+              border-radius: 20px;
+              font-size: 11px;
+              font-weight: 600;
+              display: inline-block;
+            }
+            
+            .status-pending { background: #fef3c7; color: #92400e; }
+            .status-review { background: #dbeafe; color: #1e40af; }
+            .status-approval { background: #e0f2fe; color: #075985; }
+            
+            .footer {
+              margin-top: 40px;
+              text-align: center;
+              color: #94a3b8;
+              font-size: 12px;
+              padding-top: 20px;
+              border-top: 1px solid #e2e8f0;
+            }
+            
+            .page-break {
+              page-break-before: always;
+            }
+            
+            @media print {
+              body {
+                padding: 20px;
+              }
+              
+              .summary-cards {
+                grid-template-columns: repeat(2, 1fr);
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>ATTENDANCE EXCEPTIONS REPORT</h1>
+            <div class="subtitle">Human Resources Management System</div>
+            <div style="color: #64748b; font-size: 14px;">
+              Generated on ${today} at ${time}
+            </div>
+          </div>
+          
+          <div class="metadata">
+            <div class="metadata-item">
+              <div class="metadata-label">Report Period</div>
+              <div class="metadata-value">${filters.date === 'all' ? 'All Time' : filters.date.charAt(0).toUpperCase() + filters.date.slice(1)}</div>
+            </div>
+            <div class="metadata-item">
+              <div class="metadata-label">Exception Type</div>
+              <div class="metadata-value">${exceptionType === 'all' ? 'All Types' : exceptionType.charAt(0).toUpperCase() + exceptionType.slice(1)}</div>
+            </div>
+            <div class="metadata-item">
+              <div class="metadata-label">Total Records</div>
+              <div class="metadata-value">${data.length} exceptions</div>
+            </div>
+            <div class="metadata-item">
+              <div class="metadata-label">Generated By</div>
+              <div class="metadata-value">${role === 'manager' ? 'Manager' : role === 'hr' ? 'HR Admin' : role === 'admin' ? 'System Admin' : 'Employee'}</div>
+            </div>
+          </div>
+          
+          <div class="summary-cards">
+            <div class="summary-card total">
+              <div class="summary-count">${data.length}</div>
+              <div class="summary-label">Total Exceptions</div>
+            </div>
+            <div class="summary-card late">
+              <div class="summary-count">${data.filter(r => r.late > 15).length}</div>
+              <div class="summary-label">Late Arrivals</div>
+            </div>
+            <div class="summary-card absent">
+              <div class="summary-count">${data.filter(r => r.status === 'absent').length}</div>
+              <div class="summary-label">Absent Records</div>
+            </div>
+            <div class="summary-card overtime">
+              <div class="summary-count">${data.filter(r => r.overtime > 8).length}</div>
+              <div class="summary-label">Overtime Violations</div>
+            </div>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th width="5%">#</th>
+                <th width="15%">Employee</th>
+                <th width="10%">Department</th>
+                <th width="10%">Exception Type</th>
+                <th width="15%">Date & Time</th>
+                <th width="10%">Duration</th>
+                <th width="15%">Details</th>
+                <th width="10%">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.map((item, index) => `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td>
+                    <div style="font-weight: 600; color: #1e293b;">${item.employeeName}</div>
+                    <div style="font-size: 11px; color: #64748b;">${item.employeeId}</div>
+                  </td>
+                  <td>
+                    <span style="
+                      padding: 4px 8px;
+                      background: #dbeafe;
+                      color: #1d4ed8;
+                      border-radius: 4px;
+                      font-size: 11px;
+                      font-weight: 600;
+                      display: inline-block;
+                    ">
+                      ${item.department}
+                    </span>
+                  </td>
+                  <td style="font-weight: 500; color: ${
+                    item.status === 'absent' ? '#dc2626' : 
+                    item.late > 15 ? '#d97706' : 
+                    '#1e40af'
+                  };">
+                    ${getExceptionType(item)}
+                  </td>
+                  <td>
+                    <div>${item.date}</div>
+                    <div style="font-size: 11px; color: #64748b;">
+                      ${item.inTime || '--'} - ${item.outTime || '--'}
+                    </div>
+                  </td>
+                  <td style="font-weight: 500;">
+                    ${getExceptionDuration(item)}
+                  </td>
+                  <td style="font-size: 12px; color: #475569;">
+                    ${getExceptionDetails(item)}
+                  </td>
+                  <td>
+                    <span class="status-badge ${
+                      item.status === 'absent' ? 'status-pending' : 
+                      item.late > 15 ? 'status-review' : 
+                      'status-approval'
+                    }">
+                      ${getExceptionStatus(item)}
+                    </span>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          <div class="footer">
+            <p>© ${new Date().getFullYear()} HRMS - Attendance Management System</p>
+            <p>This document contains confidential information. Unauthorized distribution is prohibited.</p>
+            <p>Page 1 of 1 • Report ID: EXC-${new Date().getFullYear()}${(new Date().getMonth() + 1).toString().padStart(2, '0')}${new Date().getDate().toString().padStart(2, '0')}</p>
+          </div>
+        </body>
+      </html>
+    `;
+  };
+
+  /* -----------------------
+     HANDLE SINGLE REPORT CLICK
+     ----------------------- */
+  const handleReportClick = (report) => {
+    setSelectedReport(report);
+    alert(`Selected: ${report.name}\n\nDescription: ${report.description}\n\nClick the download button to export this report.`);
+  };
+
+  /* -----------------------
+     EXPORT SINGLE REPORT
+     ----------------------- */
+  const handleExportSingleReport = (report) => {
+    setIsGeneratingSingle(true);
+    setSelectedReport(report);
+    setGenerationProgress(0);
+
+    // Simulate report generation progress
+    const interval = setInterval(() => {
+      setGenerationProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          
+          // Create and download the report file
+          const reportContent = generateSingleReportContent(report);
+          const blob = new Blob([reportContent], { type: 'application/pdf' });
+          const downloadUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.download = `${report.name.replace(/\s+/g, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.pdf`;
+          
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(downloadUrl);
+
+          // Show success message
+          setTimeout(() => {
+            alert(`✅ Report "${report.name}" has been downloaded!\n\nFile: ${link.download}`);
+            setIsGeneratingSingle(false);
+          }, 500);
+          
+          return 100;
+        }
+        return prev + 20;
+      });
+    }, 300);
+  };
+
+  /* -----------------------
+     GENERATE SINGLE REPORT CONTENT
+     ----------------------- */
+  const generateSingleReportContent = (report) => {
+    const today = new Date().toLocaleDateString();
+    const time = new Date().toLocaleTimeString();
+    
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>${report.name} - Attendance Report</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+            
+            body {
+              font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+              margin: 0;
+              padding: 40px;
+              color: #1e293b;
+              background: white;
+            }
+            
+            .header {
+              text-align: center;
+              margin-bottom: 40px;
+              padding-bottom: 20px;
+              border-bottom: 2px solid #3b82f6;
+            }
+            
+            .header h1 {
+              font-size: 28px;
+              font-weight: 700;
+              margin: 0 0 10px 0;
+              color: #1e293b;
+            }
+            
+            .metadata {
+              display: flex;
+              justify-content: space-between;
+              background: #f8fafc;
+              padding: 20px;
+              border-radius: 10px;
+              margin-bottom: 30px;
+              border: 1px solid #e2e8f0;
+              font-size: 14px;
+            }
+            
+            .metadata-label {
+              color: #64748b;
+              font-size: 12px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              margin-bottom: 5px;
+              font-weight: 600;
+            }
+            
+            .metadata-value {
+              color: #1e293b;
+              font-weight: 600;
+              font-size: 15px;
+            }
+            
+            .report-info {
+              margin-bottom: 30px;
+            }
+            
+            .section-title {
+              font-size: 18px;
+              font-weight: 600;
+              color: #1e293b;
+              margin-bottom: 16px;
+              padding-bottom: 8px;
+              border-bottom: 1px solid #e2e8f0;
+            }
+            
+            .columns-list {
+              display: grid;
+              grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+              gap: 10px;
+              margin-top: 10px;
+            }
+            
+            .column-item {
+              padding: 8px 12px;
+              background: #f1f5f9;
+              border-radius: 6px;
+              font-size: 13px;
+              color: #475569;
+            }
+            
+            .sample-data {
+              margin-top: 30px;
+            }
+            
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 10px;
+              font-size: 13px;
+            }
+            
+            th {
+              background: #f1f5f9;
+              padding: 12px;
+              text-align: left;
+              font-weight: 600;
+              color: #475569;
+              border-bottom: 2px solid #e2e8f0;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              font-size: 11px;
+            }
+            
+            td {
+              padding: 12px;
+              border-bottom: 1px solid #f1f5f9;
+              color: #475569;
+            }
+            
+            tr:hover {
+              background: #f8fafc;
+            }
+            
+            .footer {
+              margin-top: 40px;
+              text-align: center;
+              color: #94a3b8;
+              font-size: 12px;
+              padding-top: 20px;
+              border-top: 1px solid #e2e8f0;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>${report.name}</h1>
+            <div style="color: #64748b; font-size: 16px;">
+              Human Resources Management System
+            </div>
+            <div style="color: #64748b; font-size: 14px; margin-top: 10px;">
+              Generated on ${today} at ${time}
+            </div>
+          </div>
+          
+          <div class="metadata">
+            <div>
+              <div class="metadata-label">Report Type</div>
+              <div class="metadata-value">${report.type.toUpperCase()}</div>
+            </div>
+            <div>
+              <div class="metadata-label">Frequency</div>
+              <div class="metadata-value">${report.frequency.charAt(0).toUpperCase() + report.frequency.slice(1)}</div>
+            </div>
+            <div>
+              <div class="metadata-label">Last Generated</div>
+              <div class="metadata-value">${report.lastGenerated}</div>
+            </div>
+            <div>
+              <div class="metadata-label">Generated By</div>
+              <div class="metadata-value">${role === 'manager' ? 'Manager' : role === 'hr' ? 'HR Admin' : role === 'admin' ? 'System Admin' : 'Employee'}</div>
+            </div>
+          </div>
+          
+          <div class="report-info">
+            <div class="section-title">Report Description</div>
+            <p style="font-size: 14px; line-height: 1.6; color: #475569;">
+              ${report.description}
+            </p>
+          </div>
+          
+          <div class="report-info">
+            <div class="section-title">Columns Included</div>
+            <div class="columns-list">
+              ${report.columns.map(col => `
+                <div class="column-item">${col}</div>
+              `).join('')}
+            </div>
+          </div>
+          
+          <div class="sample-data">
+            <div class="section-title">Sample Data Preview</div>
+            <table>
+              <thead>
+                <tr>
+                  ${report.columns.map(col => `<th>${col}</th>`).join('')}
+                </tr>
+              </thead>
+              <tbody>
+                ${getSampleData(report).map(row => `
+                  <tr>
+                    ${row.map(cell => `<td>${cell}</td>`).join('')}
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="footer">
+            <p>© ${new Date().getFullYear()} HRMS - Attendance Management System</p>
+            <p>This document contains confidential information. Unauthorized distribution is prohibited.</p>
+            <p>Report ID: ${report.id}-${new Date().getFullYear()}${(new Date().getMonth() + 1).toString().padStart(2, '0')}</p>
+          </div>
+        </body>
+      </html>
+    `;
+  };
+
+  /* -----------------------
+     GET SAMPLE DATA FOR REPORT
+     ----------------------- */
+  const getSampleData = (report) => {
+    // Generate sample data based on report type
+    const sampleData = [];
+    const rowCount = 5;
+    
+    for (let i = 1; i <= rowCount; i++) {
+      const row = report.columns.map(column => {
+        switch (column.toLowerCase()) {
+          case 'employee':
+            return employees[i % employees.length]?.name || 'John Smith';
+          case 'department':
+            return ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance'][i % 5];
+          case 'date':
+            return new Date(Date.now() - i * 86400000).toISOString().split('T')[0];
+          case 'status':
+            return ['Present', 'Present', 'Absent', 'Late', 'Leave'][i % 5];
+          case 'in time':
+            return `09:${(i * 3).toString().padStart(2, '0')}`;
+          case 'out time':
+            return `18:${(i * 7).toString().padStart(2, '0')}`;
+          case 'overtime':
+            return `${i % 4} hours`;
+          case 'absent days':
+            return i % 3;
+          case 'late count':
+            return i % 4;
+          case 'total hours':
+            return `8.${i}`;
+          case 'attendance %':
+            return `${90 + i}%`;
+          default:
+            return 'Sample Data';
+        }
+      });
+      sampleData.push(row);
+    }
+    
+    return sampleData;
+  };
+
+  /* -----------------------
+     HANDLE EXPORT ALL REPORTS
+     ----------------------- */
+  const handleExportAll = () => {
+    const filteredReports = reportCategory === 'all' 
+      ? reports 
+      : reports.filter(r => r.type === reportCategory);
+    
+    if (filteredReports.length === 0) {
+      alert('No reports to export');
+      return;
+    }
+    
+    setIsExporting(true);
+    
+    // Simulate PDF generation delay
+    setTimeout(() => {
+      // Create PDF content
+      const pdfContent = generateAllReportsContent(filteredReports);
+      
+      // Create blob and download
+      const blob = new Blob([pdfContent], { type: 'application/pdf' });
+      const downloadUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `attendance_reports_${reportCategory}_${new Date().toISOString().split('T')[0]}.pdf`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      URL.revokeObjectURL(downloadUrl);
+      
+      setIsExporting(false);
+      
+      // Show success message
+      alert(`✅ Successfully exported ${filteredReports.length} reports as PDF!\n\nFile: attendance_reports_${reportCategory}_${new Date().toISOString().split('T')[0]}.pdf`);
+      
+    }, 1500);
+  };
+
+  /* -----------------------
+     GENERATE ALL REPORTS CONTENT
+     ----------------------- */
+  const generateAllReportsContent = (reportsList) => {
+    const today = new Date().toLocaleDateString();
+    const time = new Date().toLocaleTimeString();
+    
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Attendance Reports - ${reportCategory}</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+            
+            body {
+              font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+              margin: 0;
+              padding: 40px;
+              color: #1e293b;
+              background: white;
+            }
+            
+            .header {
+              text-align: center;
+              margin-bottom: 40px;
+              padding-bottom: 20px;
+              border-bottom: 2px solid #3b82f6;
+            }
+            
+            .header h1 {
+              font-size: 32px;
+              font-weight: 700;
+              margin: 0 0 10px 0;
+              color: #1e293b;
+            }
+            
+            .summary {
+              background: #f8fafc;
+              padding: 24px;
+              border-radius: 12px;
+              margin-bottom: 30px;
+              border: 1px solid #e2e8f0;
+            }
+            
+            .summary-grid {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 20px;
+              margin-top: 20px;
+            }
+            
+            .summary-item {
+              text-align: center;
+              padding: 16px;
+              background: white;
+              border-radius: 8px;
+              border: 1px solid #e2e8f0;
+            }
+            
+            .summary-value {
+              font-size: 28px;
+              font-weight: 700;
+              color: #3b82f6;
+              margin-bottom: 8px;
+            }
+            
+            .summary-label {
+              font-size: 13px;
+              color: #64748b;
+              font-weight: 500;
+            }
+            
+            .report-card {
+              margin-bottom: 30px;
+              padding: 24px;
+              border: 1px solid #e2e8f0;
+              border-radius: 12px;
+              page-break-inside: avoid;
+            }
+            
+            .report-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 16px;
+            }
+            
+            .report-title {
+              font-size: 20px;
+              font-weight: 600;
+              color: #1e293b;
+            }
+            
+            .report-badge {
+              padding: 6px 12px;
+              border-radius: 20px;
+              font-size: 12px;
+              font-weight: 600;
+            }
+            
+            .badge-standard {
+              background: #dbeafe;
+              color: #1d4ed8;
+            }
+            
+            .badge-exception {
+              background: #fee2e2;
+              color: #dc2626;
+            }
+            
+            .badge-analytics {
+              background: #d1fae5;
+              color: #047857;
+            }
+            
+            .report-desc {
+              font-size: 14px;
+              color: #475569;
+              line-height: 1.6;
+              margin-bottom: 20px;
+            }
+            
+            .report-meta {
+              display: flex;
+              gap: 20px;
+              font-size: 13px;
+              color: #64748b;
+              margin-bottom: 16px;
+            }
+            
+            .columns-list {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 8px;
+              margin-top: 10px;
+            }
+            
+            .column-tag {
+              padding: 4px 10px;
+              background: #f1f5f9;
+              border-radius: 6px;
+              font-size: 12px;
+              color: #475569;
+            }
+            
+            .footer {
+              margin-top: 40px;
+              text-align: center;
+              color: #94a3b8;
+              font-size: 12px;
+              padding-top: 20px;
+              border-top: 1px solid #e2e8f0;
+            }
+            
+            @media print {
+              .report-card {
+                break-inside: avoid;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Attendance Reports Collection</h1>
+            <div style="color: #64748b; font-size: 16px;">
+              ${reportCategory === 'all' ? 'All Report Categories' : reportCategory.charAt(0).toUpperCase() + reportCategory.slice(1) + ' Reports'}
+            </div>
+            <div style="color: #64748b; font-size: 14px; margin-top: 10px;">
+              Generated on ${today} at ${time}
+            </div>
+          </div>
+          
+          <div class="summary">
+            <h2 style="margin: 0 0 10px 0; color: #1e293b;">Export Summary</h2>
+            <div class="summary-grid">
+              <div class="summary-item">
+                <div class="summary-value">${reportsList.length}</div>
+                <div class="summary-label">Total Reports</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-value">${new Set(reportsList.map(r => r.frequency)).size}</div>
+                <div class="summary-label">Frequencies</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-value">${new Set(reportsList.map(r => r.type)).size}</div>
+                <div class="summary-label">Report Types</div>
+              </div>
+            </div>
+          </div>
+          
+          ${reportsList.map(report => `
+            <div class="report-card">
+              <div class="report-header">
+                <div class="report-title">${report.name}</div>
+                <div class="report-badge badge-${report.type}">
+                  ${report.type.toUpperCase()}
+                </div>
+              </div>
+              <div class="report-desc">
+                ${report.description}
+              </div>
+              <div class="report-meta">
+                <div><strong>Frequency:</strong> ${report.frequency}</div>
+                <div><strong>Last Generated:</strong> ${report.lastGenerated}</div>
+              </div>
+              <div>
+                <strong>Columns Included:</strong>
+                <div class="columns-list">
+                  ${report.columns.map(col => `<span class="column-tag">${col}</span>`).join('')}
+                </div>
+              </div>
+            </div>
+          `).join('')}
+          
+          <div class="footer">
+            <p>© ${new Date().getFullYear()} HRMS - Attendance Management System</p>
+            <p>This document contains confidential information. Unauthorized distribution is prohibited.</p>
+            <p>Document ID: REP-${reportCategory.slice(0, 3).toUpperCase()}-${new Date().getFullYear()}${(new Date().getMonth() + 1).toString().padStart(2, '0')}</p>
+          </div>
+        </body>
+      </html>
+    `;
+  };
+
+  /* -----------------------
+     HANDLE PRINT ALL REPORTS
+     ----------------------- */
+  const handlePrintAll = () => {
+    const filteredReports = reportCategory === 'all' 
+      ? reports 
+      : reports.filter(r => r.type === reportCategory);
+    
+    if (filteredReports.length === 0) {
+      alert('No reports to print');
+      return;
+    }
+    
+    setIsPrinting(true);
+    
+    // Create printable content
+    const printContent = generatePrintContent(filteredReports);
+    
+    // Open print window
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    
+    // Wait for content to load then print
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+      setIsPrinting(false);
+      
+      // Show success message
+      alert(`✅ Successfully printed ${filteredReports.length} reports!`);
+    }, 500);
+  };
+
+  /* -----------------------
+     GENERATE PRINT CONTENT
+     ----------------------- */
+  const generatePrintContent = (reportsList) => {
+    const today = new Date().toLocaleDateString();
+    
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Attendance Reports - Print</title>
+          <style>
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              padding: 20px;
+              color: #333;
+            }
+            h1 {
+              color: #1e293b;
+              text-align: center;
+              border-bottom: 2px solid #3b82f6;
+              padding-bottom: 10px;
+              margin-bottom: 20px;
+            }
+            .print-info {
+              display: flex;
+              justify-content: space-between;
+              font-size: 12px;
+              color: #666;
+              margin-bottom: 20px;
+            }
+            .report-item {
+              margin-bottom: 15px;
+              padding: 15px;
+              border: 1px solid #ddd;
+              border-radius: 8px;
+              page-break-inside: avoid;
+            }
+            .report-title {
+              font-weight: bold;
+              font-size: 16px;
+              color: #1e293b;
+              margin-bottom: 8px;
+            }
+            .report-type {
+              display: inline-block;
+              padding: 2px 8px;
+              border-radius: 3px;
+              font-size: 11px;
+              font-weight: bold;
+              margin-bottom: 10px;
+            }
+            .type-standard { background: #dbeafe; color: #1d4ed8; }
+            .type-exception { background: #fee2e2; color: #dc2626; }
+            .type-analytics { background: #d1fae5; color: #047857; }
+            .report-desc {
+              color: #666;
+              font-size: 13px;
+              margin: 8px 0;
+              line-height: 1.4;
+            }
+            .report-meta {
+              font-size: 11px;
+              color: #888;
+              margin-bottom: 8px;
+            }
+            .columns {
+              font-size: 12px;
+              color: #555;
+            }
+            .footer {
+              text-align: center;
+              font-size: 11px;
+              color: #999;
+              margin-top: 30px;
+              padding-top: 10px;
+              border-top: 1px solid #eee;
+            }
+            @media print {
+              .report-item {
+                break-inside: avoid;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Attendance Reports</h1>
+          <div class="print-info">
+            <div>
+              <strong>Printed on:</strong> ${today}<br>
+              <strong>Generated by:</strong> ${role}
+            </div>
+            <div>
+              <strong>Total Reports:</strong> ${reportsList.length}<br>
+              <strong>Category:</strong> ${reportCategory === 'all' ? 'All' : reportCategory}
+            </div>
+          </div>
+          
+          ${reportsList.map(report => `
+            <div class="report-item">
+              <div class="report-title">${report.name}</div>
+              <div class="report-type type-${report.type}">${report.type.toUpperCase()}</div>
+              <div class="report-desc">${report.description}</div>
+              <div class="report-meta">
+                <span><strong>Frequency:</strong> ${report.frequency}</span> | 
+                <span><strong>Last Generated:</strong> ${report.lastGenerated}</span>
+              </div>
+              <div class="columns">
+                <strong>Columns:</strong> ${report.columns.join(', ')}
+              </div>
+            </div>
+          `).join('')}
+          
+          <div class="footer">
+            HRMS Attendance Reports System | Page 1 of 1
+          </div>
+        </body>
+      </html>
+    `;
+  };
+
+  const handleExportExceptions = async () => {
+    if (exceptionData.length === 0) {
+      alert('No exceptions to export');
+      return;
+    }
+
+    setIsExportingExceptions(true);
+    setExportProgress(0);
+    setShowExportModal(false);
+
+    // Simulate export progress
+    const interval = setInterval(() => {
+      setExportProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          
+          if (exportFormat === 'pdf') {
+            // Create and download PDF
+            const pdfContent = generatePDFContent(exceptionData);
+            
+            // Create blob with proper PDF content
+            const blob = new Blob([pdfContent], { type: 'application/pdf' });
+            const downloadUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            
+            const filename = `attendance_exceptions_${new Date().toISOString().split('T')[0]}.pdf`;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(downloadUrl);
+            
+            // Show success message
+            setTimeout(() => {
+              alert(`✅ Successfully exported ${exceptionData.length} exceptions as PDF!\n\nFile: ${filename}`);
+            }, 500);
+            
+          } else if (exportFormat === 'csv') {
+            // Create CSV content
+            const headers = ['Employee ID', 'Employee Name', 'Department', 'Date', 'Exception Type', 'Details', 'Duration', 'Status'];
+            const rows = exceptionData.map(item => [
+              item.employeeId,
+              item.employeeName,
+              item.department,
+              item.date,
+              getExceptionType(item),
+              getExceptionDetails(item),
+              getExceptionDuration(item),
+              getExceptionStatus(item)
+            ]);
+            
+            const csvContent = [
+              headers.join(','),
+              ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+            ].join('\n');
+            
+            // Create and download CSV file
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const downloadUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            
+            const filename = `attendance_exceptions_${new Date().toISOString().split('T')[0]}.csv`;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(downloadUrl);
+            
+            // Show success message
+            setTimeout(() => {
+              alert(`✅ Successfully exported ${exceptionData.length} exceptions as CSV!\n\nFile: ${filename}`);
+            }, 500);
+          }
+          
+          setIsExportingExceptions(false);
+          setExportProgress(0);
+          
+          return 100;
+        }
+        return prev + 20;
+      });
+    }, 200);
+  };
+
+  /* -----------------------
+     EXPORT MODAL COMPONENT
+     ----------------------- */
+  const renderExportModal = () => {
+    if (!showExportModal) return null;
+
+    return (
+      <div className="export-modal-overlay">
+        <div className="export-modal-content">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h7 style={{ fontSize: '18px', fontWeight: 600, color: '#1e293b' }}>
+              Export Exceptions
+            </h7>
+            <button 
+              onClick={() => setShowExportModal(false)}
+              style={{ 
+                background: 'none', 
+                border: 'none', 
+                cursor: 'pointer', 
+                color: '#64748b',
+                padding: '4px',
+                borderRadius: '4px'
+              }}
+            >
+              ×
+            </button>
+          </div>
+
+          <div style={{ color: '#64748b', fontSize: '14px', marginBottom: '20px' }}>
+            Export {exceptionData.length} exceptions in selected format
+          </div>
+
+          <div className="export-options">
+            <div 
+              className={`export-option ${exportFormat === 'pdf' ? 'selected' : ''}`}
+              onClick={() => setExportFormat('pdf')}
+            >
+              <div className="export-option-icon pdf">
+                <i className="bi bi-file-pdf"></i>
+              </div>
+              <div className="export-option-info">
+                <div className="export-option-title">PDF Document</div>
+                <div className="export-option-desc">Best for printing and sharing</div>
+              </div>
+              {exportFormat === 'pdf' && <i className="bi bi-check-circle" style={{ color: '#3b82f6', fontSize: '20px' }}></i>}
+            </div>
+
+            <div 
+              className={`export-option ${exportFormat === 'csv' ? 'selected' : ''}`}
+              onClick={() => setExportFormat('csv')}
+            >
+              <div className="export-option-icon csv">
+                <i className="bi bi-file-earmark-bar-graph"></i>
+              </div>
+              <div className="export-option-info">
+                <div className="export-option-title">CSV File</div>
+                <div className="export-option-desc">Best for importing to other systems</div>
+              </div>
+              {exportFormat === 'csv' && <i className="bi bi-check-circle" style={{ color: '#3b82f6', fontSize: '20px' }}></i>}
+            </div>
+          </div>
+
+          {isExportingExceptions && (
+            <div className="export-progress">
+              <i className="bi bi-arrow-clockwise spin" style={{ fontSize: '20px' }}></i>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '4px' }}>
+                  Exporting exceptions...
+                </div>
+                <div className="export-progress-bar">
+                  <div className="export-progress-fill" style={{ width: `${exportProgress}%` }} />
+                </div>
+              </div>
+              <div style={{ fontSize: '14px', fontWeight: 600, color: '#3b82f6' }}>
+                {exportProgress}%
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
+            <button 
+              className="btn-secondary" 
+              onClick={() => setShowExportModal(false)}
+              disabled={isExportingExceptions}
+            >
+              Cancel
+            </button>
+            <button 
+              className="btn-primary"
+              onClick={handleExportExceptions}
+              disabled={isExportingExceptions || exceptionData.length === 0}
+            >
+              {isExportingExceptions ? (
+                <>
+                  <i className="bi bi-arrow-clockwise spin" style={{ fontSize: '16px' }}></i>
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <i className="bi bi-download"></i>
+                  Export ({exceptionData.length})
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  /* -----------------------
+     Calculate exception data
+     ----------------------- */
+  const exceptionData = useMemo(() => {
+    return filteredData.filter(record => {
+      if (exceptionType === 'all') {
+        return record.status === 'absent' || record.late > 15 || record.overtime > 8;
+      } else if (exceptionType === 'late') {
+        return record.late > 15;
+      } else if (exceptionType === 'absent') {
+        return record.status === 'absent';
+      } else if (exceptionType === 'overtime') {
+        return record.overtime > 8;
+      }
+      return false;
+    });
+  }, [filteredData, exceptionType]);
+
+  /* -----------------------
+     RENDER EXCEPTIONS TAB
+     ----------------------- */
+  const renderExceptions = () => {
+    return (
+      <>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h6 style={{ fontSize: 20, fontWeight: 600, color: '#1e293b' }}>
+            Attendance Exception Reports
+          </h6>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <div className="filter-select-container">
+              <select 
+                value={exceptionType}
+                onChange={(e) => setExceptionType(e.target.value)}
+                style={{ padding: '8px 36px 8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', width: '100%' }}
+              >
+                <option value="all">All Exception Types</option>
+                <option value="late">Late Arrivals (&gt;15 mins)</option>
+                <option value="absent">Absent Without Leave</option>
+                <option value="overtime">Excessive Overtime (&gt;8h)</option>
+              </select>
+              <i className="bi bi-chevron-down filter-select-arrow"></i>
+            </div>
+            <button 
+              className="btn-primary"
+              onClick={() => setShowExportModal(true)}
+              disabled={exceptionData.length === 0 || isExportingExceptions}
+            >
+              {isExportingExceptions ? (
+                <>
+                  <i className="bi bi-arrow-clockwise spin" style={{ fontSize: '16px' }}></i>
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <i className="bi bi-download"></i>
+                  Export ({exceptionData.length})
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Exception Summary Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+          <div style={{ 
+            padding: '16px', 
+            backgroundColor: '#fee2e2', 
+            borderRadius: '8px',
+            border: '1px solid #fca5a5'
+          }}>
+            <div style={{ fontSize: '12px', color: '#991b1b', marginBottom: '8px' }}>Total Exceptions</div>
+            <div style={{ fontSize: '24px', fontWeight: 700, color: '#7f1d1d' }}>
+              {exceptionData.length}
+            </div>
+          </div>
+          <div style={{ 
+            padding: '16px', 
+            backgroundColor: '#fef3c7', 
+            borderRadius: '8px',
+            border: '1px solid #fde68a'
+          }}>
+            <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '8px' }}>Late Arrivals</div>
+            <div style={{ fontSize: '24px', fontWeight: 700, color: '#78350f' }}>
+              {exceptionData.filter(r => r.late > 15).length}
+            </div>
+          </div>
+          <div style={{ 
+            padding: '16px', 
+            backgroundColor: '#fee2e2', 
+            borderRadius: '8px',
+            border: '1px solid #fca5a5'
+          }}>
+            <div style={{ fontSize: '12px', color: '#991b1b', marginBottom: '8px' }}>Absent Records</div>
+            <div style={{ fontSize: '24px', fontWeight: 700, color: '#7f1d1d' }}>
+              {exceptionData.filter(r => r.status === 'absent').length}
+            </div>
+          </div>
+          <div style={{ 
+            padding: '16px', 
+            backgroundColor: '#dbeafe', 
+            borderRadius: '8px',
+            border: '1px solid #93c5fd'
+          }}>
+            <div style={{ fontSize: '12px', color: '#1e40af', marginBottom: '8px' }}>Overtime Violations</div>
+            <div style={{ fontSize: '24px', fontWeight: 700, color: '#1e3a8a' }}>
+              {exceptionData.filter(r => r.overtime > 8).length}
+            </div>
+          </div>
+        </div>
+
+        {/* Export Status Indicator */}
+        {isExportingExceptions && (
+          <div style={{ 
+            backgroundColor: '#f0f9ff', 
+            padding: '12px 16px', 
+            borderRadius: '8px',
+            marginBottom: '20px',
+            border: '1px solid #bae6fd',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <i className="bi bi-arrow-clockwise spin" style={{ fontSize: '20px', color: '#3b82f6' }}></i>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600, color: '#0369a1' }}>
+                Exporting {exceptionData.length} exceptions...
+              </div>
+              <div style={{ fontSize: '13px', color: '#64748b' }}>
+                Progress: {exportProgress}% • Format: {exportFormat.toUpperCase()}
+              </div>
+            </div>
+            <div className="progress-bar" style={{ width: '200px' }}>
+              <div className="progress-fill" style={{ width: `${exportProgress}%` }} />
+            </div>
+          </div>
+        )}
+
+        <div style={{ overflowX: 'auto' }}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Department</th>
+                <th>Exception Type</th>
+                <th>Date & Time</th>
+                <th>Duration</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {exceptionData.length === 0 ? (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                    <i className="bi bi-exclamation-circle" style={{ fontSize: '32px', opacity: 0.3, marginBottom: '12px' }}></i>
+                    <div>No exceptions found for the selected criteria</div>
+                  </td>
+                </tr>
+              ) : (
+                exceptionData
+                .slice(0, 20)
+                .map((record, index) => (
+                  <tr key={index}>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{
+                          width: '32px',
+                          height: '32px',
+                          backgroundColor: '#3b82f6',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'white',
+                          fontWeight: 'bold',
+                          fontSize: '12px'
+                        }}>
+                          {record.employeeName.charAt(0)}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 500 }}>{record.employeeName}</div>
+                          <div style={{ fontSize: '12px', color: '#64748b' }}>{record.employeeId}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span style={{
+                        padding: '4px 8px',
+                        backgroundColor: '#dbeafe',
+                        color: '#1d4ed8',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        fontWeight: 500
+                      }}>
+                        {record.department}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {record.status === 'absent' ? (
+                          <>
+                            <i className="bi bi-x-circle" style={{ color: '#ef4444' }}></i>
+                            <span style={{ color: '#dc2626', fontWeight: 500 }}>Absent</span>
+                          </>
+                        ) : record.late > 15 ? (
+                          <>
+                            <i className="bi bi-clock" style={{ color: '#f59e0b' }}></i>
+                            <span style={{ color: '#d97706', fontWeight: 500 }}>
+                              Late by {record.late} mins
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <i className="bi bi-lightning" style={{ color: '#3b82f6' }}></i>
+                            <span style={{ color: '#1e40af', fontWeight: 500 }}>
+                              Overtime: {record.overtime}h
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                    <td>
+                      <div>{record.date}</div>
+                      <div style={{ fontSize: '12px', color: '#64748b' }}>
+                        {record.inTime} - {record.outTime}
+                      </div>
+                    </td>
+                    <td>
+                      {record.status === 'absent' ? 'Full Day' : 
+                       record.late > 15 ? `${record.late} mins` : 
+                       `${record.overtime} hours`}
+                    </td>
+                    <td>
+                      <span className={`status-badge ${
+                        record.status === 'absent' ? 'status-absent' : 
+                        record.late > 15 ? 'status-late' : 
+                        'status-overtime'
+                      }`}>
+                        {record.status === 'absent' ? 'Pending Review' : 
+                         record.late > 15 ? 'In Review' : 
+                         'Requires Approval'}
+                      </span>
+                    </td>
+                    <td>
+                      <button style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}>
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </>
+    );
+  };
+
+  /* -----------------------
      TAB RENDERING
      ----------------------- */
   const renderTabContent = () => {
@@ -1212,10 +3642,10 @@ const AttendanceReports = () => {
 
   const renderDashboard = () => (
     <>
-      <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 20, color: '#1e293b' }}>
+      <h6 style={{ fontSize: 20, fontWeight: 600, marginBottom: 20, color: '#1e293b' }}>
         Attendance Dashboard Overview
-      </h2>
-      
+      </h6>
+
       <div className="dashboard-grid">
         <div>
           <div className="chart-card">
@@ -1350,17 +3780,43 @@ const AttendanceReports = () => {
     return (
       <>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ fontSize: 20, fontWeight: 600, color: '#1e293b' }}>
+          <h6 style={{ fontSize: 20, fontWeight: 600, color: '#1e293b' }}>
             Standard Reports Library
-          </h2>
+          </h6>
           <div className="action-buttons">
-            <button className="btn-primary">
-              <Download size={16} />
-              Export All
+            <button 
+              className="btn-primary" 
+              onClick={handleExportAll}
+              disabled={isExporting || filteredReports.length === 0}
+            >
+              {isExporting ? (
+                <>
+                  <i className="bi bi-arrow-clockwise spin" style={{ fontSize: '16px' }}></i>
+                  Generating PDF...
+                </>
+              ) : (
+                <>
+                  <i className="bi bi-download"></i>
+                  Export All ({filteredReports.length})
+                </>
+              )}
             </button>
-            <button className="btn-secondary">
-              <Printer size={16} />
-              Print
+            <button 
+              className="btn-secondary" 
+              onClick={handlePrintAll}
+              disabled={isPrinting || filteredReports.length === 0}
+            >
+              {isPrinting ? (
+                <>
+                  <i className="bi bi-arrow-clockwise spin" style={{ fontSize: '16px' }}></i>
+                  Printing...
+                </>
+              ) : (
+                <>
+                  <i className="bi bi-printer"></i>
+                  Print
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -1389,7 +3845,7 @@ const AttendanceReports = () => {
               border: '1px solid #e2e8f0'
             }}
           >
-            All Reports ({reports.length})
+            <i className="bi bi-files"></i> All Reports ({reports.length})
           </button>
           <button
             onClick={() => setReportCategory('standard')}
@@ -1405,7 +3861,7 @@ const AttendanceReports = () => {
               border: '1px solid #e2e8f0'
             }}
           >
-            Standard ({reports.filter(r => r.type === 'standard').length})
+            <i className="bi bi-file-text"></i> Standard ({reports.filter(r => r.type === 'standard').length})
           </button>
           <button
             onClick={() => setReportCategory('exception')}
@@ -1421,7 +3877,7 @@ const AttendanceReports = () => {
               border: '1px solid #e2e8f0'
             }}
           >
-            Exception ({reports.filter(r => r.type === 'exception').length})
+            <i className="bi bi-exclamation-circle"></i> Exception ({reports.filter(r => r.type === 'exception').length})
           </button>
           <button
             onClick={() => setReportCategory('analytics')}
@@ -1437,64 +3893,143 @@ const AttendanceReports = () => {
               border: '1px solid #e2e8f0'
             }}
           >
-            Analytics ({reports.filter(r => r.type === 'analytics').length})
+            <i className="bi bi-bar-chart"></i> Analytics ({reports.filter(r => r.type === 'analytics').length})
           </button>
         </div>
 
-        <div className="reports-grid">
-          {filteredReports.length === 0 ? (
-            <div style={{ 
-              gridColumn: '1 / -1', 
-              textAlign: 'center', 
-              padding: '40px',
-              color: '#64748b'
-            }}>
-              <FileText size={48} style={{ opacity: 0.3, marginBottom: '16px' }} />
-              <div>No reports found in this category</div>
+        {filteredReports.length === 0 ? (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '60px 20px',
+            backgroundColor: '#f8fafc',
+            borderRadius: '12px',
+            border: '2px dashed #e2e8f0'
+          }}>
+            <i className="bi bi-file-text" style={{ fontSize: '48px', opacity: 0.3, marginBottom: '16px', color: '#64748b' }}></i>
+            <div style={{ fontSize: '16px', color: '#64748b', marginBottom: '8px' }}>
+              No reports found in this category
             </div>
-          ) : (
-            filteredReports.map(report => (
-              <div key={report.id} className="report-card" onClick={() => setSelectedReport(report)}>
-                <div className="report-header">
-                  <div className={`report-icon ${report.type}`}>
-                    {report.type === 'standard' ? <FileText size={20} /> :
-                     report.type === 'exception' ? <AlertCircle size={20} /> :
-                     <BarChart3 size={20} />}
-                  </div>
-                  <div>
-                    <div className="report-title">{report.name}</div>
-                    <span className={`report-type ${report.type}`}>
-                      {report.type.toUpperCase()}
-                    </span>
-                  </div>
+            <div style={{ fontSize: '14px', color: '#94a3b8' }}>
+              Try selecting a different category or check back later
+            </div>
+          </div>
+        ) : (
+          <>
+            <div style={{ 
+              backgroundColor: '#f0f9ff', 
+              padding: '12px 16px', 
+              borderRadius: '8px',
+              marginBottom: '20px',
+              border: '1px solid #bae6fd'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <span style={{ fontWeight: 600, color: '#0369a1' }}>
+                    Showing {filteredReports.length} report{filteredReports.length !== 1 ? 's' : ''}
+                  </span>
+                  <span style={{ color: '#64748b', fontSize: '13px', marginLeft: '12px' }}>
+                    • Export as PDF • Print available • Click any report for details
+                  </span>
                 </div>
-                <div className="report-desc">
-                  {report.description}
-                </div>
-                <div className="report-footer">
-                  <div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>
-                      Frequency: {report.frequency}
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>
-                      Last Generated: {report.lastGenerated}
-                    </div>
-                  </div>
-                  <button 
-                    className="btn-icon" 
-                    style={{ padding: '6px' }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedReport(report);
-                    }}
-                  >
-                    <Download size={14} />
-                  </button>
+                <div style={{ fontSize: '12px', color: '#64748b' }}>
+                  Last updated: {new Date().toLocaleDateString()}
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            </div>
+
+            <div className="reports-grid">
+              {filteredReports.map(report => (
+                <div key={report.id} className="report-card" onClick={() => handleReportClick(report)}>
+                  <div className="report-header">
+                    <div className={`report-icon ${report.type}`}>
+                      {report.type === 'standard' ? <i className="bi bi-file-text"></i> :
+                      report.type === 'exception' ? <i className="bi bi-exclamation-circle"></i> :
+                      <i className="bi bi-bar-chart"></i>}
+                    </div>
+                    <div>
+                      <div className="report-title">{report.name}</div>
+                      <span className={`report-type ${report.type}`}>
+                        {report.type.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="report-desc">
+                    {report.description}
+                  </div>
+                  <div className="report-footer">
+                    <div>
+                      <div style={{ fontSize: '11px', color: '#64748b' }}>
+                        <i className="bi bi-clock"></i> Frequency: {report.frequency}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#64748b' }}>
+                        <i className="bi bi-calendar"></i> Last Generated: {report.lastGenerated}
+                      </div>
+                    </div>
+                    <button 
+                      className="btn-icon" 
+                      style={{ padding: '6px' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleExportSingleReport(report);
+                      }}
+                    >
+                      <i className="bi bi-download"></i>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Single Report Generation Modal */}
+        {isGeneratingSingle && (
+          <div className="report-generation-modal">
+            <div className="report-generation-content">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h6 style={{ fontSize: '18px', fontWeight: 600, color: '#1e293b' }}>
+                  Generating Report
+                </h6>
+                <button 
+                  onClick={() => setIsGeneratingSingle(false)}
+                  style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    cursor: 'pointer', 
+                    color: '#64748b',
+                    padding: '4px',
+                    borderRadius: '4px'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+              <div style={{ textAlign: 'center', padding: '30px 0' }}>
+                <i className="bi bi-file-text" style={{ fontSize: '20px', color: '#3b82f6', marginBottom: '16px' }}></i>
+                <h7 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px', color: '#1e293b' }}>
+                  {selectedReport?.name}
+                </h7>
+                <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '24px' }}>
+                  Preparing your report for download...
+                </p>
+                <div style={{ width: '100%', height: '6px', backgroundColor: '#e2e8f0', borderRadius: '3px', margin: '20px 0' }}>
+                  <div 
+                    style={{ 
+                      width: `${generationProgress}%`, 
+                      height: '100%', 
+                      backgroundColor: '#3b82f6',
+                      borderRadius: '3px',
+                      transition: 'width 0.3s ease'
+                    }}
+                  />
+                </div>
+                <div style={{ fontSize: '14px', color: '#64748b' }}>
+                  Progress: {generationProgress}%
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </>
     );
   };
@@ -1705,108 +4240,107 @@ const AttendanceReports = () => {
   }, [filteredData]);
 
   const renderAnalytics = () => {
-
     return (
       <>
-        <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 20, color: '#1e293b' }}>
+        <h6 style={{ fontSize: 20, fontWeight: 600, marginBottom: 20, color: '#1e293b' }}>
           Analytics & Insights
-        </h2>
+        </h6>
 
-      <div className="analytics-grid">
-        <div className="metric-card">
-          <div className="metric-header">
-            <PieChart size={18} color="#8b5cf6" />
-            <div className="metric-title">Absenteeism Rate</div>
+        <div className="analytics-grid">
+          <div className="metric-card">
+            <div className="metric-header">
+              <i className="bi bi-pie-chart" style={{ color: '#8b5cf6', fontSize: '18px' }}></i>
+              <div className="metric-title">Absenteeism Rate</div>
+            </div>
+            <div className="metric-value">{analyticsData.metrics?.absenteeismRate || 0}%</div>
+            <div className="metric-trend">
+              <i className="bi bi-graph-up"></i>
+              Industry average: 3.5%
+            </div>
+            <div style={{ marginTop: '12px', fontSize: '13px', color: '#64748b' }}>
+              Lower than industry standard by 0.7%
+            </div>
           </div>
-          <div className="metric-value">{analyticsData.metrics?.absenteeismRate || 0}%</div>
-          <div className="metric-trend">
-            <TrendingUp size={14} />
-            Industry average: 3.5%
+
+          <div className="metric-card">
+            <div className="metric-header">
+              <i className="bi bi-bullseye" style={{ color: '#16a34a', fontSize: '18px' }}></i>
+              <div className="metric-title">Punctuality Score</div>
+            </div>
+            <div className="metric-value">{analyticsData.metrics?.punctualityScore || 0}%</div>
+            <div className="metric-trend">
+              <i className="bi bi-graph-up"></i>
+              Target: 90% ✓
+            </div>
+            <div style={{ marginTop: '12px', fontSize: '13px', color: '#64748b' }}>
+              Exceeding target by {analyticsData.metrics?.punctualityScore - 90 || 0}%
+            </div>
           </div>
-          <div style={{ marginTop: '12px', fontSize: '13px', color: '#64748b' }}>
-            Lower than industry standard by 0.7%
+
+          <div className="metric-card">
+            <div className="metric-header">
+              <i className="bi bi-clock" style={{ color: '#3b82f6', fontSize: '18px' }}></i>
+              <div className="metric-title">Overtime Rate</div>
+            </div>
+            <div className="metric-value">{analyticsData.metrics?.overtimeRate || 0}%</div>
+            <div className="metric-trend">
+              <i className="bi bi-graph-up"></i>
+              +2.3% from last month
+            </div>
+            <div style={{ marginTop: '12px', fontSize: '13px', color: '#64748b' }}>
+              Primarily in Engineering & Sales departments
+            </div>
+          </div>
+
+          <div className="metric-card">
+            <div className="metric-header">
+              <i className="bi bi-calendar" style={{ color: '#f59e0b', fontSize: '18px' }}></i>
+              <div className="metric-title">Leave Utilization</div>
+            </div>
+            <div className="metric-value">{analyticsData.metrics?.leaveUtilization || 0}%</div>
+            <div className="metric-trend">
+              Optimal range: 60-70%
+            </div>
+            <div style={{ marginTop: '12px', fontSize: '13px', color: '#64748b' }}>
+              Within optimal utilization range
+            </div>
+          </div>
+
+          <div className="metric-card">
+            <div className="metric-header">
+              <i className="bi bi-graph-up" style={{ color: '#0ea5e9', fontSize: '18px' }}></i>
+              <div className="metric-title">Attendance Consistency</div>
+            </div>
+            <div className="metric-value">{analyticsData.metrics?.attendanceConsistency || 0}%</div>
+            <div className="metric-trend">
+              <i className="bi bi-graph-up"></i>
+              Very Good
+            </div>
+            <div style={{ marginTop: '12px', fontSize: '13px', color: '#64748b' }}>
+              94% of employees have 85% consistency
+            </div>
+          </div>
+
+          <div className="metric-card">
+            <div className="metric-header">
+              <i className="bi bi-exclamation-circle" style={{ color: '#dc2626', fontSize: '18px' }}></i>
+              <div className="metric-title">Predictive Alerts</div>
+            </div>
+            <div className="metric-value">{analyticsData.metrics?.predictiveAlerts || 0}</div>
+            <div className="metric-trend">
+              <i className="bi bi-exclamation-circle"></i>
+              Requires attention
+            </div>
+            <div style={{ marginTop: '12px', fontSize: '13px', color: '#64748b' }}>
+              {analyticsData.metrics?.predictiveAlerts || 0} patterns detected this month
+            </div>
           </div>
         </div>
-
-        <div className="metric-card">
-          <div className="metric-header">
-            <Target size={18} color="#16a34a" />
-            <div className="metric-title">Punctuality Score</div>
-          </div>
-          <div className="metric-value">{analyticsData.metrics?.punctualityScore || 0}%</div>
-          <div className="metric-trend">
-            <TrendingUp size={14} />
-            Target: 90% ✓
-          </div>
-          <div style={{ marginTop: '12px', fontSize: '13px', color: '#64748b' }}>
-            Exceeding target by {analyticsData.metrics?.punctualityScore - 90 || 0}%
-          </div>
-        </div>
-
-        <div className="metric-card">
-          <div className="metric-header">
-            <Clock size={18} color="#3b82f6" />
-            <div className="metric-title">Overtime Rate</div>
-          </div>
-          <div className="metric-value">{analyticsData.metrics?.overtimeRate || 0}%</div>
-          <div className="metric-trend">
-            <TrendingUp size={14} />
-            +2.3% from last month
-          </div>
-          <div style={{ marginTop: '12px', fontSize: '13px', color: '#64748b' }}>
-            Primarily in Engineering & Sales departments
-          </div>
-        </div>
-
-        <div className="metric-card">
-          <div className="metric-header">
-            <Calendar size={18} color="#f59e0b" />
-            <div className="metric-title">Leave Utilization</div>
-          </div>
-          <div className="metric-value">{analyticsData.metrics?.leaveUtilization || 0}%</div>
-          <div className="metric-trend">
-            Optimal range: 60-70%
-          </div>
-          <div style={{ marginTop: '12px', fontSize: '13px', color: '#64748b' }}>
-            Within optimal utilization range
-          </div>
-        </div>
-
-        <div className="metric-card">
-          <div className="metric-header">
-            <TrendingUp size={18} color="#0ea5e9" />
-            <div className="metric-title">Attendance Consistency</div>
-          </div>
-          <div className="metric-value">{analyticsData.metrics?.attendanceConsistency || 0}%</div>
-          <div className="metric-trend">
-            <TrendingUp size={14} />
-            Very Good
-          </div>
-          <div style={{ marginTop: '12px', fontSize: '13px', color: '#64748b' }}>
-            94% of employees have 85% consistency
-          </div>
-        </div>
-
-        <div className="metric-card">
-          <div className="metric-header">
-            <AlertCircle size={18} color="#dc2626" />
-            <div className="metric-title">Predictive Alerts</div>
-          </div>
-          <div className="metric-value">{analyticsData.metrics?.predictiveAlerts || 0}</div>
-          <div className="metric-trend">
-            <AlertCircle size={14} />
-            Requires attention
-          </div>
-          <div style={{ marginTop: '12px', fontSize: '13px', color: '#64748b' }}>
-            {analyticsData.metrics?.predictiveAlerts || 0} patterns detected this month
-          </div>
-        </div>
-      </div>
 
         {/* Leave Pattern Analysis */}
         <div className="chart-card" style={{ marginTop: '24px' }}>
           <div className="chart-title">
-            <Calendar size={18} />
+            <i className="bi bi-calendar"></i>
             Leave Pattern Analysis
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginTop: '16px' }}>
@@ -1895,7 +4429,7 @@ const AttendanceReports = () => {
         {/* Overtime Analysis */}
         <div className="chart-card" style={{ marginTop: '24px' }}>
           <div className="chart-title">
-            <Zap size={18} />
+            <i className="bi bi-lightning"></i>
             Overtime Analysis
           </div>
           <div style={{ marginTop: '16px' }}>
@@ -2010,7 +4544,7 @@ const AttendanceReports = () => {
         {/* Attendance Anomaly Detection */}
         <div className="chart-card" style={{ marginTop: '24px' }}>
           <div className="chart-title">
-            <AlertCircle size={18} color="#dc2626" />
+            <i className="bi bi-exclamation-circle" style={{ color: '#dc2626' }}></i>
             Attendance Anomaly Detection
           </div>
           
@@ -2119,7 +4653,7 @@ const AttendanceReports = () => {
                   {attendanceAnomalies.anomalies?.length === 0 ? (
                     <tr>
                       <td colSpan="4" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
-                        <CheckCircle size={32} style={{ opacity: 0.3, marginBottom: '12px' }} />
+                        <i className="bi bi-check-circle" style={{ fontSize: '32px', opacity: 0.3, marginBottom: '12px' }}></i>
                         <div>No anomalies detected</div>
                       </td>
                     </tr>
@@ -2168,7 +4702,7 @@ const AttendanceReports = () => {
         {/* Department Comparison */}
         <div className="chart-card" style={{ marginTop: '24px' }}>
           <div className="chart-title">
-            <Building size={18} />
+            <i className="bi bi-building"></i>
             Department-wise Attendance Comparison
           </div>
           <div style={{ marginTop: '16px', overflowX: 'auto' }}>
@@ -2249,48 +4783,34 @@ const AttendanceReports = () => {
     );
   };
 
-  // Calculate exception data based on selected type
-  const exceptionData = useMemo(() => {
-    return filteredData.filter(record => {
-      if (exceptionType === 'all') {
-        return record.status === 'absent' || record.late > 15 || record.overtime > 8;
-      } else if (exceptionType === 'late') {
-        return record.late > 15;
-      } else if (exceptionType === 'absent') {
-        return record.status === 'absent';
-      } else if (exceptionType === 'overtime') {
-        return record.overtime > 8;
-      }
-      return false;
-    });
-  }, [filteredData, exceptionType]);
-
-  const renderExceptions = () => {
+  const renderAlerts = () => {
+    const unacknowledgedAlerts = alerts.filter(alert => !alert.acknowledged);
+    
     return (
       <>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ fontSize: 20, fontWeight: 600, color: '#1e293b' }}>
-            Attendance Exception Reports
-          </h2>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <select 
-              value={exceptionType}
-              onChange={(e) => setExceptionType(e.target.value)}
-              style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px' }}
-            >
-              <option value="all">All Exception Types</option>
-              <option value="late">Late Arrivals (&gt;15 mins)</option>
-              <option value="absent">Absent Without Leave</option>
-              <option value="overtime">Excessive Overtime (&gt;8h)</option>
-            </select>
-            <button className="btn-primary">
-              <Download size={16} />
-              Export
-            </button>
+          <div>
+            <h6 style={{ fontSize: 20, fontWeight: 600, color: '#1e293b' }}>
+              <i className="bi bi-bell"></i> Predictive Alerts & Anomaly Detection
+            </h6>
+            <div style={{ fontSize: '14px', color: '#64748b', marginTop: '4px' }}>
+              {unacknowledgedAlerts.length} unacknowledged alerts
+            </div>
           </div>
+          <button 
+            className="btn-secondary" 
+            style={{ backgroundColor: '#fee2e2', color: '#dc2626', borderColor: '#fca5a5' }}
+            onClick={() => {
+              // Configure alerts functionality
+              alert('Alert configuration panel would open here.\n\nYou can:\n• Set threshold values\n• Configure notification channels\n• Define escalation rules\n• Customize alert templates');
+            }}
+          >
+            <i className="bi bi-gear"></i>
+            Configure Alerts
+          </button>
         </div>
 
-        {/* Exception Summary Cards */}
+        {/* Alert Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
           <div style={{ 
             padding: '16px', 
@@ -2298,9 +4818,9 @@ const AttendanceReports = () => {
             borderRadius: '8px',
             border: '1px solid #fca5a5'
           }}>
-            <div style={{ fontSize: '12px', color: '#991b1b', marginBottom: '8px' }}>Total Exceptions</div>
+            <div style={{ fontSize: '12px', color: '#991b1b', marginBottom: '8px' }}>High Priority</div>
             <div style={{ fontSize: '24px', fontWeight: 700, color: '#7f1d1d' }}>
-              {exceptionData.length}
+              {alerts.filter(a => a.severity === 'high').length}
             </div>
           </div>
           <div style={{ 
@@ -2309,20 +4829,9 @@ const AttendanceReports = () => {
             borderRadius: '8px',
             border: '1px solid #fde68a'
           }}>
-            <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '8px' }}>Late Arrivals</div>
+            <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '8px' }}>Medium Priority</div>
             <div style={{ fontSize: '24px', fontWeight: 700, color: '#78350f' }}>
-              {exceptionData.filter(r => r.late > 15).length}
-            </div>
-          </div>
-          <div style={{ 
-            padding: '16px', 
-            backgroundColor: '#fee2e2', 
-            borderRadius: '8px',
-            border: '1px solid #fca5a5'
-          }}>
-            <div style={{ fontSize: '12px', color: '#991b1b', marginBottom: '8px' }}>Absent Records</div>
-            <div style={{ fontSize: '24px', fontWeight: 700, color: '#7f1d1d' }}>
-              {exceptionData.filter(r => r.status === 'absent').length}
+              {alerts.filter(a => a.severity === 'medium').length}
             </div>
           </div>
           <div style={{ 
@@ -2331,222 +4840,168 @@ const AttendanceReports = () => {
             borderRadius: '8px',
             border: '1px solid #93c5fd'
           }}>
-            <div style={{ fontSize: '12px', color: '#1e40af', marginBottom: '8px' }}>Overtime Violations</div>
+            <div style={{ fontSize: '12px', color: '#1e40af', marginBottom: '8px' }}>Unacknowledged</div>
             <div style={{ fontSize: '24px', fontWeight: 700, color: '#1e3a8a' }}>
-              {exceptionData.filter(r => r.overtime > 8).length}
+              {unacknowledgedAlerts.length}
+            </div>
+          </div>
+          <div style={{ 
+            padding: '16px', 
+            backgroundColor: '#d1fae5', 
+            borderRadius: '8px',
+            border: '1px solid #86efac'
+          }}>
+            <div style={{ fontSize: '12px', color: '#065f46', marginBottom: '8px' }}>Acknowledged</div>
+            <div style={{ fontSize: '24px', fontWeight: 700, color: '#064e3b' }}>
+              {alerts.filter(a => a.acknowledged).length}
             </div>
           </div>
         </div>
 
-      <div style={{ overflowX: 'auto' }}>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Employee</th>
-              <th>Department</th>
-              <th>Exception Type</th>
-              <th>Date & Time</th>
-              <th>Duration</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {exceptionData.length === 0 ? (
-              <tr>
-                <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
-                  <AlertCircle size={32} style={{ opacity: 0.3, marginBottom: '12px' }} />
-                  <div>No exceptions found for the selected criteria</div>
-                </td>
-              </tr>
-            ) : (
-              exceptionData
-              .slice(0, 20)
-              .map((record, index) => (
-                <tr key={index}>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{
-                        width: '32px',
-                        height: '32px',
-                        backgroundColor: '#3b82f6',
-                        borderRadius: '50%',
+        {unacknowledgedAlerts.length === 0 ? (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '60px 20px',
+            backgroundColor: '#f8fafc',
+            borderRadius: '12px',
+            border: '2px dashed #e2e8f0'
+          }}>
+            <i className="bi bi-check-circle" style={{ fontSize: '48px', color: '#10b981', marginBottom: '16px' }}></i>
+            <div style={{ fontSize: '16px', color: '#475569', marginBottom: '8px' }}>
+              All alerts have been acknowledged
+            </div>
+            <div style={{ fontSize: '14px', color: '#94a3b8' }}>
+              No pending alerts requiring your attention
+            </div>
+          </div>
+        ) : (
+          <>
+            <div style={{ 
+              backgroundColor: '#fef3c7', 
+              padding: '12px 16px', 
+              borderRadius: '8px',
+              marginBottom: '20px',
+              border: '1px solid #fde68a'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <i className="bi bi-exclamation-circle" style={{ color: '#d97706' }}></i>
+                <div>
+                  <span style={{ fontWeight: 600, color: '#92400e' }}>
+                    {unacknowledgedAlerts.length} alerts require your attention
+                  </span>
+                  <span style={{ color: '#64748b', fontSize: '13px', marginLeft: '12px' }}>
+                    • Click "View Pattern" to see detailed analysis • Click "Acknowledge" to mark as reviewed
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="alerts-grid">
+              {unacknowledgedAlerts.map(alert => (
+                <div key={alert.id} className={`alert-card alert-${alert.severity}`}>
+                  <div className="alert-header">
+                    <i className="bi bi-exclamation-circle"></i>
+                    <div className="alert-title">
+                      {alert.type.toUpperCase()} ALERT
+                    </div>
+                    <div style={{ marginLeft: 'auto', fontSize: '12px', color: '#64748b' }}>
+                      {alert.date}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '14px', marginBottom: '12px' }}>
+                    {alert.employee ? `${alert.employee}: ${alert.message}` : alert.message}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button 
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: 'white',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        flex: 1,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: 'white',
-                        fontWeight: 'bold',
-                        fontSize: '12px'
-                      }}>
-                        {record.employeeName.charAt(0)}
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: 500 }}>{record.employeeName}</div>
-                        <div style={{ fontSize: '12px', color: '#64748b' }}>{record.employeeId}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span style={{
-                      padding: '4px 8px',
-                      backgroundColor: '#dbeafe',
-                      color: '#1d4ed8',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      fontWeight: 500
-                    }}>
-                      {record.department}
-                    </span>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      {record.status === 'absent' ? (
-                        <>
-                          <XCircle size={14} color="#ef4444" />
-                          <span style={{ color: '#dc2626', fontWeight: 500 }}>Absent</span>
-                        </>
-                      ) : (
-                        <>
-                          <Clock size={14} color="#f59e0b" />
-                          <span style={{ color: '#d97706', fontWeight: 500 }}>
-                            Late by {record.late} mins
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                  <td>
-                    <div>{record.date}</div>
-                    <div style={{ fontSize: '12px', color: '#64748b' }}>
-                      {record.inTime} - {record.outTime}
-                    </div>
-                  </td>
-                  <td>
-                    {record.status === 'absent' ? 'Full Day' : `${record.late} mins`}
-                  </td>
-                  <td>
-                    <span className={`status-badge ${record.status === 'absent' ? 'status-absent' : 'status-late'}`}>
-                      {record.status === 'absent' ? 'Pending Review' : 'In Review'}
-                    </span>
-                  </td>
-                  <td>
-                    <button style={{
-                      padding: '6px 12px',
-                      backgroundColor: '#f8fafc',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '6px',
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}>
-                      View Details
+                        gap: '6px'
+                      }}
+                      onClick={() => handleAcknowledgeAlert(alert.id)}
+                    >
+                      <i className="bi bi-check-circle"></i>
+                      Acknowledge
                     </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </>
+                    <button 
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: 'white',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px'
+                      }}
+                      onClick={() => handleViewPattern(alert)}
+                    >
+                      <i className="bi bi-eye"></i>
+                      View Pattern
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        <div className="chart-card" style={{ marginTop: '24px' }}>
+          <div className="chart-title">
+            <i className="bi bi-shield-check"></i>
+            Anomaly Detection Rules
+          </div>
+          <div style={{ marginTop: '16px' }}>
+            {[
+              { rule: 'Consecutive Late Arrivals', threshold: '3 consecutive days', count: 12, color: '#ef4444', icon: 'bi-clock-history' },
+              { rule: 'Frequent Absence Pattern', threshold: 'Same day weekly absence', count: 8, color: '#f59e0b', icon: 'bi-calendar-week' },
+              { rule: 'Excessive Overtime', threshold: '>15 hours per week', count: 5, color: '#3b82f6', icon: 'bi-lightning' },
+              { rule: 'Department Threshold', threshold: 'Absenteeism rate > 8%', count: 2, color: '#8b5cf6', icon: 'bi-building' }
+            ].map((item, index) => (
+              <div key={index} style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '14px',
+                backgroundColor: '#f8fafc',
+                borderRadius: '8px',
+                marginBottom: '8px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <i className={`bi ${item.icon}`} style={{ color: item.color, fontSize: '18px' }}></i>
+                  <div>
+                    <div style={{ fontWeight: 500, fontSize: '14px' }}>{item.rule}</div>
+                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
+                      Trigger: {item.threshold}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '20px', fontWeight: 700, color: item.color }}>
+                    {item.count}
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#64748b' }}>
+                    This month
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </>
     );
   };
-
-  const renderAlerts = () => (
-    <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2 style={{ fontSize: 20, fontWeight: 600, color: '#1e293b' }}>
-          Predictive Alerts & Anomaly Detection
-        </h2>
-        <button className="btn-secondary" style={{ backgroundColor: '#fee2e2', color: '#dc2626', borderColor: '#fca5a5' }}>
-          <AlertCircle size={16} />
-          Configure Alerts
-        </button>
-      </div>
-
-      <div className="alerts-grid">
-        {alerts.map(alert => (
-          <div key={alert.id} className={`alert-card alert-${alert.severity}`}>
-            <div className="alert-header">
-              <AlertCircle size={18} />
-              <div className="alert-title">
-                {alert.type.toUpperCase()} ALERT
-              </div>
-              <div style={{ marginLeft: 'auto', fontSize: '12px', color: '#64748b' }}>
-                {alert.date}
-              </div>
-            </div>
-            <div style={{ fontSize: '14px', marginBottom: '12px' }}>
-              {alert.employee ? `${alert.employee}: ${alert.message}` : alert.message}
-            </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button style={{
-                padding: '6px 12px',
-                backgroundColor: 'white',
-                border: '1px solid #e2e8f0',
-                borderRadius: '6px',
-                fontSize: '13px',
-                cursor: 'pointer',
-                flex: 1
-              }}>
-                Acknowledge
-              </button>
-              <button style={{
-                padding: '6px 12px',
-                backgroundColor: 'white',
-                border: '1px solid #e2e8f0',
-                borderRadius: '6px',
-                fontSize: '13px',
-                cursor: 'pointer',
-                flex: 1
-              }}>
-                View Pattern
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="chart-card" style={{ marginTop: '24px' }}>
-        <div className="chart-title">
-          Anomaly Detection Rules
-        </div>
-        <div style={{ marginTop: '16px' }}>
-          {[
-            { rule: 'Consecutive Late Arrivals', threshold: '3 consecutive days', count: 12, color: '#ef4444' },
-            { rule: 'Frequent Absence Pattern', threshold: 'Same day weekly absence', count: 8, color: '#f59e0b' },
-            { rule: 'Excessive Overtime', threshold: '>15 hours per week', count: 5, color: '#3b82f6' },
-            { rule: 'Department Threshold', threshold: 'Absenteeism rate > 8%', count: 2, color: '#8b5cf6' }
-          ].map((item, index) => (
-            <div key={index} style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '14px',
-              backgroundColor: '#f8fafc',
-              borderRadius: '8px',
-              marginBottom: '8px'
-            }}>
-              <div>
-                <div style={{ fontWeight: 500, fontSize: '14px' }}>{item.rule}</div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
-                  Trigger: {item.threshold}
-                </div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '20px', fontWeight: 700, color: item.color }}>
-                  {item.count}
-                </div>
-                <div style={{ fontSize: '11px', color: '#64748b' }}>
-                  This month
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </>
-  );
 
   /* -----------------------
      MAIN RENDER
@@ -2554,6 +5009,12 @@ const AttendanceReports = () => {
   return (
     <>
       <style>{styles}</style>
+      
+      {/* Bootstrap Icons CSS */}
+      <link 
+        rel="stylesheet" 
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" 
+      />
 
       <div className="page">
         {/* HEADER */}
@@ -2562,22 +5023,20 @@ const AttendanceReports = () => {
             <div style={{
               width: '44px',
               height: '44px',
-              backgroundColor: '#3b82f6',
-              borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              <BarChart3 size={24} color="white" />
+              <i className="bi bi-bar-chart" style={{ fontSize: '24px', color: '#1e293b' }}></i>
             </div>
             <div>
               <div className="header-title">Attendance Reports & Analytics</div>
               <div className="header-sub">
-                <span>HRMS Dashboard</span>
+                <span><i className="bi bi-dashboard"></i> HRMS Dashboard</span>
                 <span>•</span>
-                <span>Version 3.8</span>
+                <span><i className="bi bi-tag"></i> Version 3.8</span>
                 <span>•</span>
-                <span>Comprehensive analytics and insights</span>
+                <span><i className="bi bi-graph-up"></i> Comprehensive analytics and insights</span>
               </div>
             </div>
           </div>
@@ -2585,89 +5044,114 @@ const AttendanceReports = () => {
           {/* SEARCH + ROLE */}
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
             <div style={{ position: "relative" }}>
-              <Search size={16} style={{ position: "absolute", left: 12, top: 12, color: "#94a3b8" }} />
+              <i className="bi bi-search" style={{ 
+                position: "absolute", 
+                left: "12px", 
+                top: "50%", 
+                transform: "translateY(-50%)", 
+                color: "#94a3b8", 
+                fontSize: "16px",
+                zIndex: 1
+              }}></i>
               <input
                 className="search-box"
                 placeholder="Search reports or employees..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                style={{ paddingLeft: "40px" }}
               />
             </div>
 
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              style={{ 
-                padding: "10px 14px", 
-                borderRadius: "8px", 
-                border: "1px solid #cbd5e1",
-                background: "white",
-                fontSize: "14px",
-                cursor: "pointer"
-              }}
-            >
-              <option value="employee">👤 Employee</option>
-              <option value="manager">👔 Manager</option>
-              <option value="hr">🏢 HR Admin</option>
-              <option value="admin">⚙️ System Admin</option>
-            </select>
+            <CustomRoleDropdown value={role} onChange={setRole} />
           </div>
         </div>
 
-        {/* FILTERS */}
+        {/* FILTERS SECTION WITH DROPDOWN ARROWS */}
         <div className="filter-section">
           <div className="filter-row">
-            <select
-              value={filters.date}
-              onChange={(e) => setFilters({ ...filters, date: e.target.value })}
-            >
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="quarter">This Quarter</option>
-              <option value="year">This Year</option>
-            </select>
+            <div className="filter-select-container">
+              <select
+                value={filters.date}
+                onChange={(e) => setFilters({ ...filters, date: e.target.value })}
+              >
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="quarter">This Quarter</option>
+                <option value="year">This Year</option>
+              </select>
+              <i className="bi bi-chevron-down filter-select-arrow"></i>
+            </div>
 
-            <select
-              value={filters.department}
-              onChange={(e) => setFilters({ ...filters, department: e.target.value })}
-            >
-              <option value="all">All Departments</option>
-              <option value="Engineering">Engineering</option>
-              <option value="Marketing">Marketing</option>
-              <option value="Sales">Sales</option>
-              <option value="HR">HR</option>
-              <option value="Finance">Finance</option>
-              <option value="Operations">Operations</option>
-            </select>
+            <div className="filter-select-container">
+              <select
+                value={filters.department}
+                onChange={(e) => setFilters({ ...filters, department: e.target.value })}
+              >
+                <option value="all">All Departments</option>
+                <option value="Engineering">Engineering</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Sales">Sales</option>
+                <option value="HR">HR</option>
+                <option value="Finance">Finance</option>
+                <option value="Operations">Operations</option>
+              </select>
+              <i className="bi bi-chevron-down filter-select-arrow"></i>
+            </div>
 
-            <select
-              value={filters.location}
-              onChange={(e) => setFilters({ ...filters, location: e.target.value })}
-            >
-              <option value="all">All Locations</option>
-              <option value="HQ">Headquarters</option>
-              <option value="Branch A">Branch A</option>
-              <option value="Branch B">Branch B</option>
-              <option value="Remote">Remote</option>
-            </select>
+            <div className="filter-select-container">
+              <select
+                value={filters.location}
+                onChange={(e) => setFilters({ ...filters, location: e.target.value })}
+              >
+                <option value="all">All Locations</option>
+                <option value="HQ">Headquarters</option>
+                <option value="Branch A">Branch A</option>
+                <option value="Branch B">Branch B</option>
+                <option value="Remote">Remote</option>
+              </select>
+              <i className="bi bi-chevron-down filter-select-arrow"></i>
+            </div>
 
-            <select
-              value={filters.employee}
-              onChange={(e) => setFilters({ ...filters, employee: e.target.value })}
-            >
-              <option value="all">All Employees</option>
-              {employees.map(emp => (
-                <option key={emp.id} value={emp.id}>{emp.name}</option>
-              ))}
-            </select>
+            <div className="filter-select-container">
+              <select
+                value={filters.employee}
+                onChange={(e) => setFilters({ ...filters, employee: e.target.value })}
+              >
+                <option value="all">All Employees</option>
+                {employees.map(emp => (
+                  <option key={emp.id} value={emp.id}>{emp.name}</option>
+                ))}
+              </select>
+              <i className="bi bi-chevron-down filter-select-arrow"></i>
+            </div>
 
             <div className="filter-actions">
-              <button className="btn-primary">
-                <Filter size={16} />
-                Apply Filters
-              </button>
-              <button className="btn-secondary">
+              <button 
+                className="btn-secondary"
+                onClick={(e) => {
+                  // Reset filters to initial state
+                  setFilters({
+                    date: "month",
+                    department: "all",
+                    location: "all",
+                    employee: "all",
+                  });
+                  setSearch(""); // Also reset search if needed
+                  
+                  // Show loading state on button
+                  const btn = e.currentTarget;
+                  const originalContent = btn.innerHTML;
+                  btn.innerHTML = '<span>Resetting...</span>';
+                  btn.disabled = true;
+                  
+                  setTimeout(() => {
+                    btn.innerHTML = originalContent;
+                    btn.disabled = false;
+                  }, 500);
+                }}
+              >
+                <i className="bi bi-arrow-counterclockwise"></i>
                 Reset
               </button>
             </div>
@@ -2682,12 +5166,12 @@ const AttendanceReports = () => {
                 <div className="kpi-label">Present Rate</div>
                 <div className="kpi-value">{statistics.presentRate || 0}%</div>
                 <div className="kpi-trend">
-                  <TrendingUp size={12} />
+                  <i className="bi bi-graph-up"></i>
                   +2.1% from last month
                 </div>
               </div>
               <div className="kpi-icon present">
-                <CheckCircle size={20} />
+                <i className="bi bi-check-circle"></i>
               </div>
             </div>
 
@@ -2696,12 +5180,12 @@ const AttendanceReports = () => {
                 <div className="kpi-label">Absent Rate</div>
                 <div className="kpi-value">{statistics.absentRate || 0}%</div>
                 <div className="kpi-trend" style={{ color: '#ef4444' }}>
-                  <TrendingUp size={12} />
+                  <i className="bi bi-graph-up"></i>
                   -0.3% from last month
                 </div>
               </div>
               <div className="kpi-icon absent">
-                <XCircle size={20} />
+                <i className="bi bi-x-circle"></i>
               </div>
             </div>
 
@@ -2710,12 +5194,12 @@ const AttendanceReports = () => {
                 <div className="kpi-label">Late Arrivals</div>
                 <div className="kpi-value">{statistics.lateRate || 0}%</div>
                 <div className="kpi-trend" style={{ color: '#f59e0b' }}>
-                  <AlertCircle size={12} />
+                  <i className="bi bi-exclamation-circle"></i>
                   Requires attention
                 </div>
               </div>
               <div className="kpi-icon late">
-                <Clock size={20} />
+                <i className="bi bi-clock"></i>
               </div>
             </div>
 
@@ -2724,12 +5208,12 @@ const AttendanceReports = () => {
                 <div className="kpi-label">Total Overtime</div>
                 <div className="kpi-value">{statistics.totalOvertime || 0}h</div>
                 <div className="kpi-trend">
-                  <Zap size={12} />
+                  <i className="bi bi-lightning"></i>
                   {statistics.avgOvertime || 0}h avg per employee
                 </div>
               </div>
               <div className="kpi-icon overtime">
-                <Zap size={20} />
+                <i className="bi bi-lightning"></i>
               </div>
             </div>
 
@@ -2738,12 +5222,12 @@ const AttendanceReports = () => {
                 <div className="kpi-label">Punctuality Score</div>
                 <div className="kpi-value">{analyticsData.metrics?.punctualityScore || 0}%</div>
                 <div className="kpi-trend">
-                  <Target size={12} />
+                  <i className="bi bi-bullseye"></i>
                   Target: 90% ✓
                 </div>
               </div>
               <div className="kpi-icon punctuality">
-                <Target size={20} />
+                <i className="bi bi-bullseye"></i>
               </div>
             </div>
 
@@ -2752,12 +5236,12 @@ const AttendanceReports = () => {
                 <div className="kpi-label">Consistency Score</div>
                 <div className="kpi-value">{analyticsData.metrics?.attendanceConsistency || 0}%</div>
                 <div className="kpi-trend">
-                  <TrendingUp size={12} />
+                  <i className="bi bi-graph-up"></i>
                   Very Good
                 </div>
               </div>
               <div className="kpi-icon consistency">
-                <Activity size={20} />
+                <i className="bi bi-activity"></i>
               </div>
             </div>
 
@@ -2766,12 +5250,12 @@ const AttendanceReports = () => {
                 <div className="kpi-label">Alerts</div>
                 <div className="kpi-value">{alerts.length}</div>
                 <div className="kpi-trend" style={{ color: '#d97706' }}>
-                  <Bell size={12} />
+                  <i className="bi bi-bell"></i>
                   Requires review
                 </div>
               </div>
               <div className="kpi-icon alerts">
-                <Bell size={20} />
+                <i className="bi bi-bell"></i>
               </div>
             </div>
 
@@ -2780,12 +5264,12 @@ const AttendanceReports = () => {
                 <div className="kpi-label">Leave Utilization</div>
                 <div className="kpi-value">{analyticsData.metrics?.leaveUtilization || 0}%</div>
                 <div className="kpi-trend" style={{ color: '#8b5cf6' }}>
-                  <Calendar size={12} />
+                  <i className="bi bi-calendar"></i>
                   Optimal range
                 </div>
               </div>
               <div className="kpi-icon leave">
-                <Calendar size={20} />
+                <i className="bi bi-calendar"></i>
               </div>
             </div>
           </div>
@@ -2797,35 +5281,35 @@ const AttendanceReports = () => {
             className={`tab-btn ${activeTab === "dashboard" ? "active" : ""}`}
             onClick={() => setActiveTab("dashboard")}
           >
-            <Home size={16} />
+            <i className="bi bi-house"></i>
             Dashboard
           </button>
           <button
             className={`tab-btn ${activeTab === "reports" ? "active" : ""}`}
             onClick={() => setActiveTab("reports")}
           >
-            <FileText size={16} />
+            <i className="bi bi-file-text"></i>
             Reports
           </button>
           <button
             className={`tab-btn ${activeTab === "analytics" ? "active" : ""}`}
             onClick={() => setActiveTab("analytics")}
           >
-            <BarChart3 size={16} />
+            <i className="bi bi-bar-chart"></i>
             Analytics
           </button>
           <button
             className={`tab-btn ${activeTab === "exceptions" ? "active" : ""}`}
             onClick={() => setActiveTab("exceptions")}
           >
-            <AlertCircle size={16} />
+            <i className="bi bi-exclamation-circle"></i>
             Exceptions
           </button>
           <button
             className={`tab-btn ${activeTab === "alerts" ? "active" : ""}`}
             onClick={() => setActiveTab("alerts")}
           >
-            <Bell size={16} />
+            <i className="bi bi-bell"></i>
             Alerts
           </button>
           {(role === "hr" || role === "admin") && (
@@ -2833,7 +5317,7 @@ const AttendanceReports = () => {
               className={`tab-btn ${activeTab === "settings" ? "active" : ""}`}
               onClick={() => setActiveTab("settings")}
             >
-              <Settings size={16} />
+              <i className="bi bi-gear"></i>
               Settings
             </button>
           )}
@@ -2844,101 +5328,14 @@ const AttendanceReports = () => {
           {renderTabContent()}
         </div>
 
-        {/* REPORT MODAL */}
-        {selectedReport && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000
-          }}>
-            <div style={{
-              background: 'white',
-              borderRadius: '16px',
-              padding: '24px',
-              width: '90%',
-              maxWidth: '600px',
-              maxHeight: '90vh',
-              overflow: 'auto'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1e293b' }}>
-                  {selectedReport.name}
-                </h3>
-                <button 
-                  onClick={() => setSelectedReport(null)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#64748b' }}
-                >
-                  ×
-                </button>
-              </div>
-              
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ color: '#64748b', fontSize: '14px', marginBottom: '16px' }}>
-                  {selectedReport.description}
-                </div>
-                
-                <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '8px', marginBottom: '16px' }}>
-                  <div style={{ fontSize: '13px', fontWeight: 500, color: '#475569', marginBottom: '8px' }}>
-                    Columns Included:
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                    {selectedReport.columns.map((col, idx) => (
-                      <span key={idx} style={{
-                        padding: '4px 8px',
-                        backgroundColor: '#e2e8f0',
-                        color: '#475569',
-                        borderRadius: '4px',
-                        fontSize: '12px'
-                      }}>
-                        {col}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#475569', marginBottom: '8px' }}>
-                    Date Range
-                  </label>
-                  <select style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-                    <option>This Month</option>
-                    <option>Last Month</option>
-                    <option>Custom Range</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#475569', marginBottom: '8px' }}>
-                    Format
-                  </label>
-                  <select style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-                    <option>PDF</option>
-                    <option>Excel (XLSX)</option>
-                    <option>CSV</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button className="btn-secondary" onClick={() => setSelectedReport(null)}>
-                  Cancel
-                </button>
-                <button className="btn-primary">
-                  <Download size={16} />
-                  Generate Report
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* EXPORT MODAL */}
+        {renderExportModal()}
+        
+        {/* PATTERN MODAL */}
+        <PatternModal />
+        
+        {/* ACKNOWLEDGE TOAST */}
+        <AcknowledgeToast />
       </div>
     </>
   );

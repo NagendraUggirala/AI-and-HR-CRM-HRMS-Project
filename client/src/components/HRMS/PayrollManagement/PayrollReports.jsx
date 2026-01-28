@@ -7,10 +7,10 @@ import 'jspdf-autotable';
 
 const PayrollReports = () => {
   // UI & navigation state
-  const [activeSection, setActiveSection] = useState('standard'); // standard | compliance | analytics | generated | scheduled | configure | builder
+  const [activeSection, setActiveSection] = useState('standard');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
   const [filterPeriod, setFilterPeriod] = useState('All');
@@ -19,6 +19,10 @@ const PayrollReports = () => {
   const [filterGrade, setFilterGrade] = useState('All');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
 
+const [filters, setFilters] = useState([]);
+const [sorting, setSorting] = useState([]);
+const [exportFormat, setExportFormat] = useState('csv');
+const [scheduleSettings, setScheduleSettings] = useState(null);
   // Enhanced state based on HRMS specification
   const [employeeData, setEmployeeData] = useState([]);
   const [payrollTransactions, setPayrollTransactions] = useState([]);
@@ -91,26 +95,6 @@ const PayrollReports = () => {
   const [selectedColumns, setSelectedColumns] = useState([]);
   const [selectedFilters, setSelectedFilters] = useState([]);
   const [builderStep, setBuilderStep] = useState(1);
-
-  // Sidebar navigation based on HRMS specification
-  const sidebarContent = [
-    { icon: "heroicons:home", label: "Dashboard", path: "/dashboard" },
-    { icon: "heroicons:document-report", label: "Reports", path: "/payroll-reports" },
-    { icon: "heroicons:users", label: "Employee Reports", path: "/reports/employee" },
-    { icon: "heroicons:clock", label: "Attendance Reports", path: "/reports/attendance" },
-    { icon: "heroicons:calendar", label: "Leave Reports", path: "/reports/leave" },
-    { icon: "heroicons:banknotes", label: "Payroll Reports", path: "/payroll-reports", active: true },
-    { icon: "heroicons:shield-check", label: "Compliance", path: "/compliance" },
-    { icon: "heroicons:chart-bar", label: "Analytics", path: "/analytics" },
-    { icon: "heroicons:cog", label: "Configuration", path: "/settings" }
-  ];
-
-  const userInfo = {
-    name: "Priya Sharma",
-    role: "Payroll Administrator",
-    avatar: "/assets/img/user.png",
-    permissions: ['view_all', 'generate_reports', 'schedule_reports', 'configure_templates']
-  };
 
   // Helper functions
   const formatCurrency = (value) => {
@@ -248,45 +232,153 @@ const PayrollReports = () => {
     return data;
   };
 
-  // Action Handlers
-  const handleExportData = (format = 'excel') => {
-    const data = getFilteredData();
-    
-    if (format === 'excel') {
-      const ws = XLSX.utils.json_to_sheet(data);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Report Data');
-      XLSX.writeFile(wb, `Payroll_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
-    } else if (format === 'pdf') {
-      const doc = new jsPDF();
-      doc.text(`Payroll Report - ${new Date().toLocaleDateString()}`, 10, 10);
+  // FIXED: Enhanced Export Data Handler
+  const handleExportData = (format = 'excel', data = null) => {
+    try {
+      const exportData = data || getFilteredData();
       
-      const headers = Object.keys(data[0] || {}).map(key => ({
-        title: key.toUpperCase(),
-        dataKey: key
-      }));
-      
-      doc.autoTable({
-        head: [headers.map(h => h.title)],
-        body: data.map(row => headers.map(h => row[h.dataKey])),
-        startY: 20
-      });
-      
-      doc.save(`Payroll_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+      if (exportData.length === 0) {
+        alert('No data to export');
+        return;
+      }
+
+      if (format === 'excel') {
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Report Data');
+        XLSX.writeFile(wb, `Payroll_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
+      } else if (format === 'pdf') {
+        const doc = new jsPDF();
+        doc.text(`Payroll Report - ${new Date().toLocaleDateString()}`, 10, 10);
+        
+        const headers = Object.keys(exportData[0] || {}).map(key => ({
+          title: key.toUpperCase(),
+          dataKey: key
+        }));
+        
+        if (headers.length > 0) {
+          doc.autoTable({
+            head: [headers.map(h => h.title)],
+            body: exportData.map(row => headers.map(h => row[h.dataKey])),
+            startY: 20
+          });
+        }
+        
+        doc.save(`Payroll_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Error exporting data: ' + error.message);
     }
   };
 
+  // FIXED: Handle Download Generated Report
+  const handleDownloadGeneratedReport = (report) => {
+    setIsLoading(true);
+    
+    // Simulate download
+    setTimeout(() => {
+      const updatedReports = generatedReports.map(r => 
+        r.id === report.id ? { ...r, downloadCount: (r.downloadCount || 0) + 1 } : r
+      );
+      setGeneratedReports(updatedReports);
+      
+      // Create and download sample data
+      const sampleData = [{
+        'Report Name': report.reportName,
+        'Period': report.period,
+        'Generated Date': formatDate(report.generatedDate),
+        'Generated By': report.generatedBy,
+        'File Format': report.format,
+        'File Size': report.size
+      }];
+      
+      const ws = XLSX.utils.json_to_sheet(sampleData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Report');
+      XLSX.writeFile(wb, `${report.reportName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.xlsx`);
+      
+      setIsLoading(false);
+    }, 1000);
+  };
+
+  // FIXED: Handle View Dashboard
+  const handleViewDashboard = (dashboard) => {
+    setSelectedReport(dashboard);
+    setShowModal(true);
+    alert(`Opening dashboard: ${dashboard.name}`);
+  };
+
+  // FIXED: Handle View Insight Details
+  const handleViewInsightDetails = (insight) => {
+    alert(`AI Insight Details:\n\nTitle: ${insight.title}\nSeverity: ${insight.severity}\nDescription: ${insight.description}\nRecommended Action: ${insight.recommendedAction}`);
+  };
+
+  // FIXED: Handle Edit Scheduled Report
+  const handleEditScheduledReport = (report) => {
+    setIsEditMode(true);
+    setReportForm({
+      id: report.id,
+      name: report.reportName,
+      category: 'scheduled',
+      description: `Scheduled report running ${report.frequency}`,
+      frequency: report.frequency,
+      format: report.format.split(' & '),
+      department: 'All',
+      scheduleType: 'auto',
+      recipients: report.recipients,
+      parameters: {}
+    });
+    setShowReportModal(true);
+  };
+
+  // FIXED: Handle Toggle Schedule Status
+  const handleToggleScheduleStatus = (report) => {
+    const updatedReports = scheduledReports.map(r => 
+      r.id === report.id 
+        ? { ...r, status: r.status === 'active' ? 'paused' : 'active' }
+        : r
+    );
+    setScheduledReports(updatedReports);
+    alert(`Schedule ${report.status === 'active' ? 'paused' : 'activated'} for "${report.reportName}"`);
+  };
+
+  // FIXED: Handle Download Compliance Report
+  const handleDownloadComplianceReport = (report) => {
+    setIsLoading(true);
+    
+    setTimeout(() => {
+      // Create compliance report data
+      const complianceData = [{
+        'Report Name': report.name,
+        'Type': report.type,
+        'Form Type': report.formType,
+        'Period': report.month || report.year || report.quarter,
+        'Due Date': formatDate(report.dueDate),
+        'Status': report.status,
+        'Generated Date': new Date().toISOString()
+      }];
+      
+      const ws = XLSX.utils.json_to_sheet(complianceData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Compliance Report');
+      XLSX.writeFile(wb, `${report.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.xlsx`);
+      
+      setIsLoading(false);
+    }, 1000);
+  };
+
+  // FIXED: Handle Generate Report
   const handleGenerateReport = (report) => {
     setIsLoading(true);
     
-    // Simulate report generation
     setTimeout(() => {
       const newGenerated = {
         id: `GR_${Date.now()}`,
         reportName: report.name || report.reportName,
         period: 'Current Month',
         generatedDate: new Date().toISOString(),
-        generatedBy: userInfo.name,
+        generatedBy: 'System',
         format: Array.isArray(report.format) ? report.format[0] : report.format,
         size: `${Math.random() * 2 + 0.5} MB`,
         status: 'completed',
@@ -301,11 +393,12 @@ const PayrollReports = () => {
       setGeneratedReports(prev => [newGenerated, ...prev]);
       setIsLoading(false);
       
-      // Show notification
-      alert(`Report "${report.name}" generated successfully and available for download.`);
+      // Auto-download the generated report
+      handleDownloadGeneratedReport(newGenerated);
     }, 1500);
   };
 
+  // FIXED: Handle Schedule Report
   const handleScheduleReport = (report) => {
     const scheduleEntry = {
       id: `SRC_${Date.now()}`,
@@ -323,6 +416,7 @@ const PayrollReports = () => {
     alert(`Report "${report.name}" scheduled successfully.`);
   };
 
+  // FIXED: Handle Add Report
   const handleAddReport = () => {
     setIsEditMode(false);
     setReportForm({
@@ -340,22 +434,33 @@ const PayrollReports = () => {
     setShowReportModal(true);
   };
 
+  // FIXED: Handle Edit Report
   const handleEditReport = (report, category) => {
     setIsEditMode(true);
     setReportForm({
-      ...report,
-      category: category || report.category
+      id: report.id,
+      name: report.name,
+      category: category || report.category,
+      description: report.description,
+      frequency: report.frequency || 'Monthly',
+      format: Array.isArray(report.format) ? report.format : [report.format],
+      department: report.department || 'All',
+      scheduleType: 'manual',
+      recipients: report.recipients || [],
+      parameters: report.parameters || {}
     });
     setShowReportModal(true);
   };
 
+  // FIXED: Handle Delete Report
   const handleDeleteReport = (reportId, category) => {
     if (!window.confirm('Are you sure you want to delete this report?')) return;
     
     const setters = {
       'standard': setStandardReports,
       'compliance': setComplianceReports,
-      'analytics': setAnalyticsDashboards
+      'analytics': setAnalyticsDashboards,
+      'scheduled': setScheduledReports
     };
     
     const setter = setters[category];
@@ -366,6 +471,7 @@ const PayrollReports = () => {
     alert('Report deleted successfully.');
   };
 
+  // FIXED: Handle Save Report
   const handleSaveReport = () => {
     if (!reportForm.name.trim()) {
       alert('Report name is required');
@@ -375,7 +481,7 @@ const PayrollReports = () => {
     const payload = { 
       ...reportForm, 
       lastModified: new Date().toISOString(),
-      modifiedBy: userInfo.name
+      modifiedBy: 'System'
     };
 
     // Update appropriate state based on category
@@ -396,6 +502,17 @@ const PayrollReports = () => {
         setAnalyticsDashboards(prev => {
           const exists = prev.find(r => r.id === payload.id);
           return exists ? prev.map(r => r.id === payload.id ? payload : r) : [...prev, payload];
+        });
+        break;
+      case 'scheduled':
+        setScheduledReports(prev => {
+          const exists = prev.find(r => r.id === payload.id);
+          return exists ? prev.map(r => r.id === payload.id ? {
+            ...r,
+            reportName: payload.name,
+            frequency: payload.frequency,
+            recipients: payload.recipients
+          } : r) : prev;
         });
         break;
     }
@@ -445,9 +562,9 @@ const PayrollReports = () => {
 
     // Compliance Reports (from HRMS spec section 4.9)
     setComplianceReports([
-      { id: 'CR001', name: 'Form 24Q (TDS quarterly return)', type: 'TDS', category: 'compliance', description: 'Quarterly TDS return for salaried employees (Form 24Q)', frequency: 'Quarterly', dueDate: '2024-04-30', status: 'pending', formType: 'TDS', year: '2023-24', quarter: 'Q4', statutory: true, autoGenerated: true },
+      { id: 'CR001', name: 'Form 24Q (TDS quarterly return)', type: 'TDS', category: 'compliance', description: 'Quarterly TDS return for salaried employees (Form 24Q)', frequency: 'Quarterly', dueDate: '2024-04-30', status: 'generated', formType: 'TDS', year: '2023-24', quarter: 'Q4', statutory: true, autoGenerated: true },
       { id: 'CR002', name: 'ECR (PF monthly return)', type: 'PF', category: 'compliance', description: 'ECR file for monthly PF contributions', frequency: 'Monthly', dueDate: '2024-04-15', status: 'submitted', formType: 'PF', month: 'March 2024', statutory: true, autoGenerated: true },
-      { id: 'CR003', name: 'ESI Monthly Return', type: 'ESI', category: 'compliance', description: 'Monthly ESI contribution return', frequency: 'Monthly', dueDate: '2024-04-15', status: 'submitted', formType: 'ESI', month: 'March 2024', statutory: true, autoGenerated: true },
+      { id: 'CR003', name: 'ESI Monthly Return', type: 'ESI', category: 'compliance', description: 'Monthly ESI contribution return', frequency: 'Monthly', dueDate: '2024-04-15', status: 'generated', formType: 'ESI', month: 'March 2024', statutory: true, autoGenerated: true },
       { id: 'CR004', name: 'PT Challan Reports', type: 'Professional Tax', category: 'compliance', description: 'Professional Tax challan and payment reports', frequency: 'Monthly', dueDate: '2024-04-21', status: 'generated', formType: 'PT', month: 'March 2024', statutory: true, autoGenerated: true },
       { id: 'CR005', name: 'Form 16 (Annual TDS certificate)', type: 'TDS Certificate', category: 'compliance', description: 'Form 16 annual TDS certificate for employees', frequency: 'Annual', dueDate: '2024-06-15', status: 'in-progress', formType: 'TDS', year: '2023-24', statutory: true, autoGenerated: true },
       { id: 'CR006', name: 'Salary Certificate', type: 'Certificate', category: 'compliance', description: 'Employee salary certificate for various purposes', frequency: 'On Demand', dueDate: 'N/A', status: 'available', formType: 'Certificate', statutory: false, autoGenerated: false },
@@ -532,20 +649,46 @@ const PayrollReports = () => {
     loadInitialData();
   }, []);
 
+  // Get icon for compliance report type
+  const getComplianceIcon = (formType) => {
+    switch(formType) {
+      case 'TDS': return 'heroicons:document-currency';
+      case 'PF': return 'heroicons:banknotes';
+      case 'ESI': return 'heroicons:heart';
+      case 'PT': return 'heroicons:receipt-percent';
+      case 'Certificate': return 'heroicons:document-check';
+      default: return 'heroicons:document-text';
+    }
+  };
+
+  // Group columns by category for better organization
+  const groupedColumns = useMemo(() => {
+    return availableColumns.reduce((groups, column) => {
+      if (!groups[column.category]) {
+        groups[column.category] = [];
+      }
+      groups[column.category].push(column);
+      return groups;
+    }, {});
+  }, [availableColumns]);
+
   // Render components
   const renderKPICards = () => (
     <div className="row g-3 mb-4">
       <div className="col-md-3">
-        <div className="card border-primary border-2">
-          <div className="card-body">
-            <div className="d-flex justify-content-between align-items-center">
+        <div className="card border-primary border-2 h-100">
+          <div className="card-body p-3">
+            <div className="d-flex align-items-center">
+              <div className="bg-primary-subtle p-2 rounded me-3 d-flex align-items-center justify-content-center">
+                <Icon icon="heroicons:banknotes" className="text-primary" width="20" />
+              </div>
               <div>
                 <h6 className="text-muted mb-1">Total Payroll Cost</h6>
-                <h4 className="fw-bold">{formatCurrency(kpis.totalPayrollCost)}</h4>
-                <div className="small text-success">↓ 2.3% from last month</div>
-              </div>
-              <div className="bg-primary-subtle p-3 rounded">
-                <Icon icon="heroicons:banknotes" className="text-primary" width="24" />
+                <h5 className="fw-bold mb-1">{formatCurrency(kpis.totalPayrollCost)}</h5>
+                <div className="small text-success d-flex align-items-center">
+                  <Icon icon="heroicons:arrow-trending-down" className="me-1" width="14" />
+                  <span>2.3% from last month</span>
+                </div>
               </div>
             </div>
           </div>
@@ -553,16 +696,19 @@ const PayrollReports = () => {
       </div>
 
       <div className="col-md-3">
-        <div className="card border-success border-2">
-          <div className="card-body">
-            <div className="d-flex justify-content-between align-items-center">
+        <div className="card border-success border-2 h-100">
+          <div className="card-body p-3">
+            <div className="d-flex align-items-center">
+              <div className="bg-success-subtle p-2 rounded me-3 d-flex align-items-center justify-content-center">
+                <Icon icon="heroicons:shield-check" className="text-success" width="20" />
+              </div>
               <div>
                 <h6 className="text-muted mb-1">Statutory Deductions</h6>
-                <h4 className="fw-bold">{formatCurrency(kpis.statutoryDeductions)}</h4>
-                <div className="small text-muted">{((kpis.statutoryDeductions / kpis.totalPayrollCost) * 100).toFixed(1)}% of total</div>
-              </div>
-              <div className="bg-success-subtle p-3 rounded">
-                <Icon icon="heroicons:shield-check" className="text-success" width="24" />
+                <h5 className="fw-bold mb-1">{formatCurrency(kpis.statutoryDeductions)}</h5>
+                <div className="small text-muted d-flex align-items-center">
+                  <Icon icon="heroicons:chart-pie" className="me-1" width="14" />
+                  <span>{((kpis.statutoryDeductions / kpis.totalPayrollCost) * 100).toFixed(1)}% of total</span>
+                </div>
               </div>
             </div>
           </div>
@@ -570,16 +716,19 @@ const PayrollReports = () => {
       </div>
 
       <div className="col-md-3">
-        <div className="card border-warning border-2">
-          <div className="card-body">
-            <div className="d-flex justify-content-between align-items-center">
+        <div className="card border-warning border-2 h-100">
+          <div className="card-body p-3">
+            <div className="d-flex align-items-center">
+              <div className="bg-warning-subtle p-2 rounded me-3 d-flex align-items-center justify-content-center">
+                <Icon icon="heroicons:chart-bar" className="text-warning" width="20" />
+              </div>
               <div>
                 <h6 className="text-muted mb-1">Average Salary</h6>
-                <h4 className="fw-bold">{formatCurrency(kpis.avgSalary)}</h4>
-                <div className="small text-warning">+5.2% year-on-year</div>
-              </div>
-              <div className="bg-warning-subtle p-3 rounded">
-                <Icon icon="heroicons:chart-bar" className="text-warning" width="24" />
+                <h5 className="fw-bold mb-1">{formatCurrency(kpis.avgSalary)}</h5>
+                <div className="small text-warning d-flex align-items-center">
+                  <Icon icon="heroicons:arrow-trending-up" className="me-1" width="14" />
+                  <span>+5.2% year-on-year</span>
+                </div>
               </div>
             </div>
           </div>
@@ -587,16 +736,19 @@ const PayrollReports = () => {
       </div>
 
       <div className="col-md-3">
-        <div className="card border-info border-2">
-          <div className="card-body">
-            <div className="d-flex justify-content-between align-items-center">
+        <div className="card border-info border-2 h-100">
+          <div className="card-body p-3">
+            <div className="d-flex align-items-center">
+              <div className="bg-info-subtle p-2 rounded me-3 d-flex align-items-center justify-content-center">
+                <Icon icon="heroicons:document-check" className="text-info" width="20" />
+              </div>
               <div>
                 <h6 className="text-muted mb-1">Compliance Status</h6>
-                <h4 className="fw-bold">{kpis.overdueCompliance === 0 ? '100%' : `${((complianceReports.length - kpis.overdueCompliance) / complianceReports.length * 100).toFixed(0)}%`}</h4>
-                <div className="small text-danger">{kpis.overdueCompliance > 0 ? `${kpis.overdueCompliance} overdue` : 'All compliant'}</div>
-              </div>
-              <div className="bg-info-subtle p-3 rounded">
-                <Icon icon="heroicons:document-check" className="text-info" width="24" />
+                <h5 className="fw-bold mb-1">{kpis.overdueCompliance === 0 ? '100%' : `${((complianceReports.length - kpis.overdueCompliance) / complianceReports.length * 100).toFixed(0)}%`}</h5>
+                <div className="small text-danger d-flex align-items-center">
+                  <Icon icon="heroicons:exclamation-circle" className="me-1" width="14" />
+                  <span>{kpis.overdueCompliance > 0 ? `${kpis.overdueCompliance} overdue` : 'All compliant'}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -608,25 +760,39 @@ const PayrollReports = () => {
   const renderAIInsights = () => (
     <div className="card border-0 shadow-sm mb-4">
       <div className="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
-        <h6 className="mb-0">AI-Driven Insights</h6>
+        <h6 className="fw-bold mb-0 d-flex align-items-center">
+          <Icon icon="heroicons:light-bulb" className="me-2 text-warning" width="20" />
+          AI-Driven Insights
+        </h6>
         <span className="badge bg-primary">Beta</span>
       </div>
       <div className="card-body">
         <div className="row g-3">
           {aiInsights.map(insight => (
             <div key={insight.id} className="col-md-4">
-              <div className={`card border-${insight.severity === 'high' ? 'danger' : insight.severity === 'medium' ? 'warning' : 'info'}`}>
-                <div className="card-body">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <h6 className="mb-0">{insight.title}</h6>
-                    <Icon icon="heroicons:light-bulb" className="text-warning" />
+              <div className={`card border-${insight.severity === 'high' ? 'danger' : insight.severity === 'medium' ? 'warning' : 'info'} h-100`}>
+                <div className="card-body p-3">
+                  <div className="d-flex align-items-start mb-2">
+                    <Icon icon="heroicons:light-bulb" className={`text-${insight.severity === 'high' ? 'danger' : insight.severity === 'medium' ? 'warning' : 'info'} me-2 mt-1`} width="18" />
+                    <div>
+                      <h6 className="mb-1 d-flex align-items-center">
+                        {insight.title}
+                      </h6>
+                      <p className="small text-muted mb-2">{insight.description}</p>
+                    </div>
                   </div>
-                  <p className="small text-muted mb-2">{insight.description}</p>
                   <div className="d-flex justify-content-between align-items-center">
-                    <span className={`badge bg-${insight.severity === 'high' ? 'danger' : insight.severity === 'medium' ? 'warning' : 'info'}-subtle text-${insight.severity === 'high' ? 'danger' : insight.severity === 'medium' ? 'warning' : 'info'}`}>
+                    <span className={`badge bg-${insight.severity === 'high' ? 'danger' : insight.severity === 'medium' ? 'warning' : 'info'}-subtle text-${insight.severity === 'high' ? 'danger' : insight.severity === 'medium' ? 'warning' : 'info'} d-flex align-items-center`}>
+                      <Icon icon={`heroicons:${insight.severity === 'high' ? 'exclamation-triangle' : insight.severity === 'medium' ? 'exclamation-circle' : 'information-circle'}`} className="me-1" width="14" />
                       {insight.severity}
                     </span>
-                    <button className="btn btn-sm btn-outline-primary">View Details</button>
+                    <button 
+                      className="btn btn-sm btn-outline-primary d-flex align-items-center"
+                      onClick={() => handleViewInsightDetails(insight)}
+                    >
+                      <Icon icon="heroicons:eye" className="me-1" width="14" />
+                      View Details
+                    </button>
                   </div>
                 </div>
               </div>
@@ -643,16 +809,22 @@ const PayrollReports = () => {
         <div className="card border shadow-none">
           <div className="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
             <div>
-              <h5 className="mb-0">Standard Payroll Reports</h5>
-              <div className="small text-muted">Core payroll & operational reports as per HRMS spec 4.9</div>
+              <h6 className="fw-bold mb-0 d-flex align-items-center">
+                <Icon icon="heroicons:document-text" className="me-2 text-primary" width="20" />
+                Standard Payroll Reports
+              </h6>
+              <div className="small text-muted d-flex align-items-center mt-1">
+                <Icon icon="heroicons:information-circle" className="me-1" width="14" />
+                Core payroll & operational reports as per HRMS spec 4.9
+              </div>
             </div>
             <div className="d-flex gap-2">
-              <button className="btn btn-outline-secondary" onClick={() => setIsLoading(true)}>
-                <Icon icon="heroicons:arrow-path" className={`me-2 ${isLoading ? 'animate-spin' : ''}`} />
+              <button className="btn btn-outline-secondary d-flex align-items-center" onClick={() => setIsLoading(true)}>
+                <Icon icon="heroicons:arrow-path" className={`me-2 ${isLoading ? 'animate-spin' : ''}`} width="16" />
                 Refresh
               </button>
-              <button className="btn btn-primary" onClick={handleAddReport}>
-                <Icon icon="heroicons:plus" className="me-2" />
+              <button className="btn btn-primary d-flex align-items-center" onClick={handleAddReport}>
+                <Icon icon="heroicons:plus" className="me-2" width="16" />
                 Add Report
               </button>
             </div>
@@ -686,8 +858,11 @@ const PayrollReports = () => {
                   </select>
                 </div>
                 <div className="col-md-2">
-                  <button className="btn btn-outline-primary w-100" onClick={handleExportData}>
-                    <Icon icon="heroicons:arrow-down-tray" className="me-2" />
+                  <button 
+                    className="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center" 
+                    onClick={() => handleExportData('excel')}
+                  >
+                    <Icon icon="heroicons:arrow-down-tray" className="me-2" width="16" />
                     Export
                   </button>
                 </div>
@@ -699,42 +874,63 @@ const PayrollReports = () => {
                 {standardReports.map(report => (
                   <div key={report.id} className="col-md-6 col-lg-4">
                     <div className="card h-100 hover-shadow">
-                      <div className="card-body">
+                      <div className="card-body p-3">
                         <div className="d-flex justify-content-between align-items-start">
                           <div>
-                            <h6 className="mb-1">{report.name}</h6>
+                            <h6 className="mb-1 d-flex align-items-center">
+                              {report.statutory && (
+                                <Icon icon="heroicons:shield-check" className="me-1 text-success" width="16" />
+                              )}
+                              {report.name}
+                            </h6>
                             <p className="text-muted small mb-2">{report.description}</p>
-                            <div className="small text-muted">
-                              <Icon icon="heroicons:calendar" className="me-1" />
-                              Frequency: {report.frequency}
+                            <div className="small text-muted d-flex align-items-center mb-1">
+                              <Icon icon="heroicons:calendar" className="me-1" width="14" />
+                              <span>Frequency: {report.frequency}</span>
                             </div>
-                            <div className="small text-muted">
-                              <Icon icon="heroicons:building-office" className="me-1" />
-                              Department: {report.department}
+                            <div className="small text-muted d-flex align-items-center">
+                              <Icon icon="heroicons:building-office" className="me-1" width="14" />
+                              <span>Department: {report.department}</span>
                             </div>
                           </div>
-                          <div>
-                            <div className="small text-muted">Last: {formatDate(report.lastGenerated)}</div>
+                          <div className="text-end">
+                            <div className="small text-muted d-flex align-items-center">
+                              <Icon icon="heroicons:clock" className="me-1" width="14" />
+                              <span>Last: {formatDate(report.lastGenerated)}</span>
+                            </div>
                             <div className="mt-2">{getStatusBadge(report.status)}</div>
                           </div>
                         </div>
                       </div>
-                      <div className="card-footer bg-transparent border-top d-flex justify-content-between">
-                        <div className="small text-muted">
-                          Formats: {Array.isArray(report.format) ? report.format.join(', ') : report.format}
+                      <div className="card-footer bg-transparent border-top d-flex justify-content-between align-items-center p-3">
+                        <div className="small text-muted d-flex align-items-center">
+                          <Icon icon="heroicons:document" className="me-1" width="14" />
+                          <span>Formats: {Array.isArray(report.format) ? report.format.join(', ') : report.format}</span>
                         </div>
                         <div className="d-flex gap-1">
-                          <button className="btn btn-sm btn-outline-primary" onClick={() => handleGenerateReport(report)}>
-                            <Icon icon="heroicons:play" />
+                          <button 
+                            className="btn btn-sm btn-outline-primary d-flex align-items-center" 
+                            onClick={() => handleGenerateReport(report)}
+                          >
+                            <Icon icon="heroicons:play" width="16" />
                           </button>
-                          <button className="btn btn-sm btn-outline-success" onClick={() => handleScheduleReport(report)}>
-                            <Icon icon="heroicons:clock" />
+                          <button 
+                            className="btn btn-sm btn-outline-success d-flex align-items-center" 
+                            onClick={() => handleScheduleReport(report)}
+                          >
+                            <Icon icon="heroicons:clock" width="16" />
                           </button>
-                          <button className="btn btn-sm btn-outline-warning" onClick={() => handleEditReport(report, 'standard')}>
-                            <Icon icon="heroicons:pencil-square" />
+                          <button 
+                            className="btn btn-sm btn-outline-warning d-flex align-items-center" 
+                            onClick={() => handleEditReport(report, 'standard')}
+                          >
+                            <Icon icon="heroicons:pencil-square" width="16" />
                           </button>
-                          <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteReport(report.id, 'standard')}>
-                            <Icon icon="heroicons:trash" />
+                          <button 
+                            className="btn btn-sm btn-outline-danger d-flex align-items-center" 
+                            onClick={() => handleDeleteReport(report.id, 'standard')}
+                          >
+                            <Icon icon="heroicons:trash" width="16" />
                           </button>
                         </div>
                       </div>
@@ -748,7 +944,7 @@ const PayrollReports = () => {
                   <Icon icon="heroicons:document-text" className="display-6 mb-3" />
                   <h5>No reports found</h5>
                   <p>No standard reports match your search criteria.</p>
-                  <button className="btn btn-primary mt-2" onClick={handleAddReport}>
+                  <button className="btn btn-primary mt-2 d-flex align-items-center mx-auto" onClick={handleAddReport}>
                     <Icon icon="heroicons:plus" className="me-2" />
                     Create Your First Report
                   </button>
@@ -758,16 +954,19 @@ const PayrollReports = () => {
 
             {standardReports.length > itemsPerPage && (
               <div className="px-4 py-3 border-top d-flex align-items-center justify-content-between">
-                <div className="small text-muted">
-                  Showing {Math.min(standardReports.length, itemsPerPage)} of {standardReports.length} reports
+                <div className="small text-muted d-flex align-items-center">
+                  <Icon icon="heroicons:list-bullet" className="me-1" width="14" />
+                  <span>Showing {Math.min(standardReports.length, itemsPerPage)} of {standardReports.length} reports</span>
                 </div>
                 <div className="d-flex gap-2">
-                  <button className="btn btn-sm btn-outline-secondary" disabled={currentPage === 1}>
+                  <button className="btn btn-sm btn-outline-secondary d-flex align-items-center" disabled={currentPage === 1}>
+                    <Icon icon="heroicons:chevron-left" className="me-1" width="14" />
                     Previous
                   </button>
                   <button className="btn btn-sm btn-primary">{currentPage}</button>
-                  <button className="btn btn-sm btn-outline-secondary">
+                  <button className="btn btn-sm btn-outline-secondary d-flex align-items-center">
                     Next
+                    <Icon icon="heroicons:chevron-right" className="ms-1" width="14" />
                   </button>
                 </div>
               </div>
@@ -784,12 +983,18 @@ const PayrollReports = () => {
         <div className="card border shadow-none">
           <div className="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
             <div>
-              <h5 className="mb-0">Statutory Compliance Reports</h5>
-              <div className="small text-muted">PF, ESI, PT, TDS filings and certificates</div>
+              <h6 className="fw-bold mb-0 d-flex align-items-center">
+                <Icon icon="heroicons:shield-check" className="me-2 text-success" width="20" />
+                Statutory Compliance Reports
+              </h6>
+              <div className="small text-muted d-flex align-items-center mt-1">
+                <Icon icon="heroicons:information-circle" className="me-1" width="14" />
+                PF, ESI, PT, TDS filings and certificates
+              </div>
             </div>
             <div className="d-flex gap-2">
-              <button className="btn btn-outline-danger">
-                <Icon icon="heroicons:exclamation-triangle" className="me-2" />
+              <button className="btn btn-outline-danger d-flex align-items-center">
+                <Icon icon="heroicons:exclamation-triangle" className="me-2" width="16" />
                 {kpis.overdueCompliance} Overdue
               </button>
             </div>
@@ -797,62 +1002,80 @@ const PayrollReports = () => {
 
           <div className="card-body">
             <div className="table-responsive">
-              <table className="table table-hover mb-0">
-                <thead className="bg-light">
+              <table className="table table-hover mb-0 align-middle">
+                <thead className="table-primary">
                   <tr>
-                    <th>Report Name</th>
-                    <th>Type</th>
-                    <th>Frequency</th>
-                    <th>Due Date</th>
-                    <th>Status</th>
-                    <th>Period</th>
-                    <th>Auto-Generated</th>
-                    <th>Actions</th>
+                    <th className="text-white bg-primary align-middle" style={{width: '25%'}}>Report Name</th>
+                    <th className="text-white bg-primary align-middle" style={{width: '10%'}}>Type</th>
+                    <th className="text-white bg-primary align-middle" style={{width: '10%'}}>Frequency</th>
+                    <th className="text-white bg-primary align-middle" style={{width: '12%'}}>Due Date</th>
+                    <th className="text-white bg-primary align-middle" style={{width: '10%'}}>Status</th>
+                    <th className="text-white bg-primary align-middle" style={{width: '10%'}}>Period</th>
+                    <th className="text-white bg-primary align-middle" style={{width: '8%'}}>Auto-Generated</th>
+                    <th className="text-white bg-primary align-middle" style={{width: '15%'}}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {complianceReports.map(report => {
+                  {complianceReports.map((report, index) => {
                     const isOverdue = report.dueDate !== 'N/A' && new Date(report.dueDate) < new Date() && report.status !== 'submitted';
+                    const rowClass = index % 2 === 0 ? 'table-primary-subtle' : 'table-info-subtle';
                     return (
-                      <tr key={report.id} className={isOverdue ? 'table-danger' : ''}>
-                        <td>
-                          <div className="fw-bold">{report.name}</div>
+                      <tr key={report.id} className={rowClass}>
+                        <td className="align-middle">
+                          <div className="fw-bold d-flex align-items-center">
+                            {report.statutory && (
+                              <Icon icon="heroicons:shield-check" className="me-2 text-success" width="16" />
+                            )}
+                            {report.name}
+                          </div>
                           <div className="small text-muted">{report.description}</div>
                         </td>
-                        <td><span className="badge bg-info-subtle text-info">{report.formType || report.type}</span></td>
-                        <td>{report.frequency}</td>
-                        <td>
-                          <div className={`fw-semibold ${isOverdue ? 'text-danger' : ''}`}>
+                        <td className="align-middle">
+                          <span className="badge bg-info-subtle text-info d-flex align-items-center">
+                            <Icon icon={getComplianceIcon(report.formType)} className="me-1" width="14" />
+                            {report.formType || report.type}
+                          </span>
+                        </td>
+                        <td className="align-middle">
+                          <div className="d-flex align-items-center">
+                            <Icon icon="heroicons:calendar" className="me-1 text-muted" width="14" />
+                            {report.frequency}
+                          </div>
+                        </td>
+                        <td className="align-middle">
+                          <div className={`fw-semibold d-flex align-items-center ${isOverdue ? 'text-danger' : ''}`}>
+                            <Icon icon="heroicons:calendar-days" className="me-1" width="14" />
                             {formatDate(report.dueDate)}
                           </div>
                           {isOverdue && (
-                            <div className="small text-danger">
+                            <div className="small text-danger d-flex align-items-center">
                               <Icon icon="heroicons:exclamation-circle" className="me-1" />
                               Overdue!
                             </div>
                           )}
                         </td>
-                        <td>{getStatusBadge(report.status)}</td>
-                        <td>{report.month || report.year || report.quarter || 'N/A'}</td>
-                        <td>
+                        <td className="align-middle">{getStatusBadge(report.status)}</td>
+                        <td className="align-middle">
+                          <div className="d-flex align-items-center">
+                            <Icon icon="heroicons:clock" className="me-1 text-muted" width="14" />
+                            {report.month || report.year || report.quarter || 'N/A'}
+                          </div>
+                        </td>
+                        <td className="align-middle text-center">
                           {report.autoGenerated ? (
                             <Icon icon="heroicons:check-circle" className="text-success" />
                           ) : (
                             <Icon icon="heroicons:x-circle" className="text-muted" />
                           )}
                         </td>
-                        <td>
+                        <td className="align-middle">
                           <div className="d-flex gap-2">
-                            <button className="btn btn-sm btn-outline-primary" onClick={() => handleGenerateReport(report)}>
-                              Generate
-                            </button>
-                            <button className="btn btn-sm btn-outline-success" 
-                              disabled={!(report.status === 'generated' || report.status === 'submitted')}>
+                            <button 
+                              className="btn btn-sm btn-success d-flex align-items-center"
+                              onClick={() => handleDownloadComplianceReport(report)}
+                            >
+                              <Icon icon="heroicons:arrow-down-tray" className="me-1" width="14" />
                               Download
-                            </button>
-                            <button className="btn btn-sm btn-outline-warning" 
-                              onClick={() => handleEditReport(report, 'compliance')}>
-                              Edit
                             </button>
                           </div>
                         </td>
@@ -874,12 +1097,18 @@ const PayrollReports = () => {
         <div className="card border shadow-none">
           <div className="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
             <div>
-              <h5 className="mb-0">Payroll Analytics Dashboards</h5>
-              <div className="small text-muted">Interactive dashboards and forecasts</div>
+              <h6 className="fw-bold mb-0 d-flex align-items-center">
+                <Icon icon="heroicons:chart-bar" className="me-2 text-warning" width="20" />
+                Payroll Analytics Dashboards
+              </h6>
+              <div className="small text-muted d-flex align-items-center mt-1">
+                <Icon icon="heroicons:information-circle" className="me-1" width="14" />
+                Interactive dashboards and forecasts
+              </div>
             </div>
             <div className="d-flex gap-2">
-              <button className="btn btn-outline-secondary">
-                <Icon icon="heroicons:arrow-path" className="me-2" />
+              <button className="btn btn-outline-secondary d-flex align-items-center">
+                <Icon icon="heroicons:arrow-path" className="me-2" width="16" />
                 Refresh All
               </button>
             </div>
@@ -890,50 +1119,71 @@ const PayrollReports = () => {
               {analyticsDashboards.map(dashboard => (
                 <div key={dashboard.id} className="col-md-6">
                   <div className="card h-100">
-                    <div className="card-body">
+                    <div className="card-body p-3">
                       <div className="d-flex justify-content-between align-items-start mb-3">
                         <div>
-                          <h6 className="mb-1">{dashboard.name}</h6>
+                          <h6 className="mb-1 d-flex align-items-center">
+                            <Icon icon="heroicons:chart-bar" className="me-2 text-primary" width="18" />
+                            {dashboard.name}
+                          </h6>
                           <p className="small text-muted mb-2">{dashboard.description}</p>
                         </div>
                         <div className="dropdown">
-                          <button className="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
-                            <Icon icon="heroicons:ellipsis-vertical" />
+                          <button className="btn btn-sm btn-outline-secondary d-flex align-items-center" type="button" data-bs-toggle="dropdown">
+                            <Icon icon="heroicons:ellipsis-vertical" width="16" />
                           </button>
                           <ul className="dropdown-menu">
-                            <li><button className="dropdown-item" onClick={() => handleEditReport(dashboard, 'analytics')}>Edit Dashboard</button></li>
-                            <li><button className="dropdown-item" onClick={() => handleScheduleReport(dashboard)}>Schedule</button></li>
-                            <li><button className="dropdown-item" onClick={() => handleDeleteReport(dashboard.id, 'analytics')}>Delete</button></li>
+                            <li><button 
+                              className="dropdown-item d-flex align-items-center" 
+                              onClick={() => handleEditReport(dashboard, 'analytics')}
+                            >
+                              <Icon icon="heroicons:pencil-square" className="me-2" width="16" />
+                              Edit Dashboard
+                            </button></li>
+                            <li><button 
+                              className="dropdown-item d-flex align-items-center" 
+                              onClick={() => handleScheduleReport(dashboard)}
+                            >
+                              <Icon icon="heroicons:clock" className="me-2" width="16" />
+                              Schedule
+                            </button></li>
+                            <li><button 
+                              className="dropdown-item d-flex align-items-center" 
+                              onClick={() => handleDeleteReport(dashboard.id, 'analytics')}
+                            >
+                              <Icon icon="heroicons:trash" className="me-2" width="16" />
+                              Delete
+                            </button></li>
                           </ul>
                         </div>
                       </div>
                       
                       <div className="mb-3">
                         <div className="d-flex gap-3">
-                          <div className="small">
-                            <Icon icon="heroicons:chart-bar" className="me-1" />
+                          <div className="small d-flex align-items-center">
+                            <Icon icon="heroicons:chart-bar" className="me-1" width="14" />
                             {dashboard.chartType}
                           </div>
-                          <div className="small">
-                            <Icon icon="heroicons:arrow-path" className="me-1" />
+                          <div className="small d-flex align-items-center">
+                            <Icon icon="heroicons:arrow-path" className="me-1" width="14" />
                             {dashboard.refreshRate}
                           </div>
-                          <div className="small">
-                            <Icon icon="heroicons:lock-closed" className="me-1" />
+                          <div className="small d-flex align-items-center">
+                            <Icon icon="heroicons:lock-closed" className="me-1" width="14" />
                             {dashboard.accessLevel}
                           </div>
                         </div>
                       </div>
 
                       <div className="d-flex justify-content-between align-items-center">
-                        <div className="small text-muted">
-                          Metrics: {(dashboard.metrics || []).slice(0, 3).join(', ')}
-                          {(dashboard.metrics || []).length > 3 && '...'}
+                        <div className="small text-muted d-flex align-items-center">
+                          <Icon icon="heroicons:chart-pie" className="me-1" width="14" />
+                          <span>Metrics: {(dashboard.metrics || []).slice(0, 3).join(', ')}{(dashboard.metrics || []).length > 3 && '...'}</span>
                         </div>
-                        <button className="btn btn-sm btn-primary">
-                          <Icon icon="heroicons:eye" className="me-1" />
-                          View Dashboard
-                        </button>
+                        <div className="small text-muted d-flex align-items-center">
+                          <Icon icon="heroicons:calendar" className="me-1" width="14" />
+                          <span>Last Updated: {formatDate(dashboard.lastUpdated)}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -947,218 +1197,635 @@ const PayrollReports = () => {
   );
 
   const renderReportBuilder = () => (
-    <div className="card mt-3">
+    <div className="card mt-3 border shadow-none">
+      <div className="card-header bg-transparent border-0">
+        <h6 className="fw-bold mb-0 d-flex align-items-center">
+          <Icon icon="heroicons:wrench-screwdriver" className="me-2 text-primary" width="22" />
+          Custom Report Builder
+        </h6>
+      </div>
       <div className="card-body">
-        <h4 className="fw-bold mb-3">Custom Report Builder</h4>
-        
         <div className="row">
           <div className="col-md-3">
-            <div className="list-group">
-              <button className={`list-group-item list-group-item-action ${builderStep === 1 ? 'active' : ''}`}
-                onClick={() => setBuilderStep(1)}>
-                <div className="d-flex align-items-center">
-                  <div className="bg-primary-subtle p-2 rounded me-3">
-                    <Icon icon="heroicons:document-text" className="text-primary" />
+            <div className="list-group mb-3">
+              <button 
+                className={`list-group-item list-group-item-action d-flex align-items-center ${builderStep === 1 ? 'active' : ''}`}
+                onClick={() => setBuilderStep(1)}
+              >
+                <div className="me-3">
+                  <div className={`rounded-circle p-2 d-flex align-items-center justify-content-center ${builderStep === 1 ? 'bg-white text-primary' : 'bg-primary-subtle text-primary'}`}
+                    style={{ width: '36px', height: '36px' }}>
+                    <Icon icon="heroicons:document-text" width="18" />
                   </div>
-                  <div>
-                    <div className="fw-semibold">Report Details</div>
-                    <div className="small text-muted">Name, category, description</div>
-                  </div>
+                </div>
+                <div className="text-start">
+                  <div className="fw-semibold">Report Details</div>
+                  <div className="small text-muted">Name, category, description</div>
                 </div>
               </button>
               
-              <button className={`list-group-item list-group-item-action ${builderStep === 2 ? 'active' : ''}`}
-                onClick={() => setBuilderStep(2)}>
-                <div className="d-flex align-items-center">
-                  <div className="bg-primary-subtle p-2 rounded me-3">
-                    <Icon icon="heroicons:table-cells" className="text-primary" />
-                  </div>
-                  <div>
-                    <div className="fw-semibold">Columns & Data</div>
-                    <div className="small text-muted">Select data fields</div>
-                  </div>
-                </div>
-              </button>
-              
-              <button className={`list-group-item list-group-item-action ${builderStep === 3 ? 'active' : ''}`}
-                onClick={() => setBuilderStep(3)}>
-                <div className="d-flex align-items-center">
-                  <div className="bg-primary-subtle p-2 rounded me-3">
-                    <Icon icon="heroicons:funnel" className="text-primary" />
-                  </div>
-                  <div>
-                    <div className="fw-semibold">Filters & Sorting</div>
-                    <div className="small text-muted">Apply filters and sorting</div>
-                  </div>
-                </div>
-              </button>
-              
-              <button className={`list-group-item list-group-item-action ${builderStep === 4 ? 'active' : ''}`}
-                onClick={() => setBuilderStep(4)}>
-                <div className="d-flex align-items-center">
-                  <div className="bg-primary-subtle p-2 rounded me-3">
-                    <Icon icon="heroicons:cog" className="text-primary" />
-                  </div>
-                  <div>
-                    <div className="fw-semibold">Format & Schedule</div>
-                    <div className="small text-muted">Export and scheduling options</div>
-                  </div>
-                </div>
-              </button>
+            <button 
+  className={`list-group-item list-group-item-action d-flex align-items-center ${builderStep === 2 ? 'active' : ''}`}
+  onClick={() => {
+    setBuilderStep(2);
+    // Reset checkbox selections for step 2
+    setSelectedColumns([]);
+  }}
+>
+  <div className="me-3">
+    <div className={`rounded-circle p-2 d-flex align-items-center justify-content-center ${builderStep === 2 ? 'bg-white text-primary' : 'bg-primary-subtle text-primary'}`}
+      style={{ width: '36px', height: '36px' }}>
+      <Icon icon="heroicons:table-cells" width="18" />
+    </div>
+  </div>
+  <div className="text-start">
+    <div className="fw-semibold">Columns & Data</div>
+    <div className="small text-muted">Select data fields</div>
+  </div>
+</button>
+
+<button 
+  className={`list-group-item list-group-item-action d-flex align-items-center ${builderStep === 3 ? 'active' : ''}`}
+  onClick={() => {
+    setBuilderStep(3);
+    // Reset filter selections for step 3
+    setFilters([]);
+    setSorting([]);
+  }}
+>
+  <div className="me-3">
+    <div className={`rounded-circle p-2 d-flex align-items-center justify-content-center ${builderStep === 3 ? 'bg-white text-primary' : 'bg-primary-subtle text-primary'}`}
+      style={{ width: '36px', height: '36px' }}>
+      <Icon icon="heroicons:funnel" width="18" />
+    </div>
+  </div>
+  <div className="text-start">
+    <div className="fw-semibold">Filters & Sorting</div>
+    <div className="small text-muted">Apply filters and sorting</div>
+  </div>
+</button>
+
+<button 
+  className={`list-group-item list-group-item-action d-flex align-items-center ${builderStep === 4 ? 'active' : ''}`}
+  onClick={() => {
+    setBuilderStep(4);
+    // Reset format and schedule selections for step 4
+    setExportFormat('csv');
+    setScheduleSettings(null);
+  }}
+>
+  <div className="me-3">
+    <div className={`rounded-circle p-2 d-flex align-items-center justify-content-center ${builderStep === 4 ? 'bg-white text-primary' : 'bg-primary-subtle text-primary'}`}
+      style={{ width: '36px', height: '36px' }}>
+      <Icon icon="heroicons:cog" width="18" />
+    </div>
+  </div>
+  <div className="text-start">
+    <div className="fw-semibold">Format & Schedule</div>
+    <div className="small text-muted">Export and scheduling options</div>
+  </div>
+</button>
             </div>
           </div>
 
           <div className="col-md-9">
-            {builderStep === 1 && (
-              <div>
-                <h6 className="mb-3">Report Details</h6>
-                <div className="mb-3">
-                  <label className="form-label">Report Name</label>
-                  <input type="text" className="form-control" placeholder="Enter report name" 
-                    value={reportBuilder.name} onChange={(e) => setReportBuilder({...reportBuilder, name: e.target.value})} />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Description</label>
-                  <textarea className="form-control" rows="3" placeholder="Describe this report"
-                    value={reportBuilder.description} onChange={(e) => setReportBuilder({...reportBuilder, description: e.target.value})} />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Category</label>
-                  <select className="form-select" value={reportBuilder.category}
-                    onChange={(e) => setReportBuilder({...reportBuilder, category: e.target.value})}>
-                    <option value="Payroll">Payroll</option>
-                    <option value="Compliance">Compliance</option>
-                    <option value="Analytics">Analytics</option>
-                    <option value="Custom">Custom</option>
-                  </select>
-                </div>
-              </div>
-            )}
-
-            {builderStep === 2 && (
-              <div>
-                <h6 className="mb-3">Select Data Columns</h6>
-                <div className="row">
-                  {availableColumns.map(column => (
-                    <div key={column.id} className="col-md-6 mb-2">
-                      <div className="form-check">
-                        <input className="form-check-input" type="checkbox" 
-                          checked={selectedColumns.includes(column.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedColumns([...selectedColumns, column.id]);
-                            } else {
-                              setSelectedColumns(selectedColumns.filter(id => id !== column.id));
-                            }
-                          }} />
-                        <label className="form-check-label">
-                          <div className="fw-semibold">{column.name}</div>
-                          <div className="small text-muted">{column.description}</div>
-                        </label>
-                      </div>
+            <div className="border rounded p-4 h-100">
+              {builderStep === 1 && (
+                <div>
+                  <h6 className="mb-4 d-flex align-items-center">
+                    <Icon icon="heroicons:document-text" className="me-2 text-primary" width="20" />
+                    Report Details
+                  </h6>
+                  <div className="row g-3">
+                    <div className="col-md-12">
+                      <label className="form-label d-flex align-items-center fw-semibold">
+                        <Icon icon="heroicons:tag" className="me-2 text-muted" width="16" />
+                        Report Name *
+                      </label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        placeholder="Enter report name" 
+                        value={reportBuilder.name} 
+                        onChange={(e) => setReportBuilder({...reportBuilder, name: e.target.value})} 
+                      />
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {builderStep === 3 && (
-              <div>
-                <h6 className="mb-3">Apply Filters</h6>
-                <div className="mb-3">
-                  <label className="form-label">Department</label>
-                  <select className="form-select" multiple>
-                    {departments.slice(1).map(dept => (
-                      <option key={dept} value={dept}>{dept}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Date Range</label>
-                  <div className="row g-2">
-                    <div className="col">
-                      <input type="date" className="form-control" placeholder="Start date" />
+                    <div className="col-md-12">
+                      <label className="form-label d-flex align-items-center fw-semibold">
+                        <Icon icon="heroicons:pencil" className="me-2 text-muted" width="16" />
+                        Description
+                      </label>
+                      <textarea 
+                        className="form-control" 
+                        rows="3" 
+                        placeholder="Describe this report"
+                        value={reportBuilder.description} 
+                        onChange={(e) => setReportBuilder({...reportBuilder, description: e.target.value})} 
+                      />
                     </div>
-                    <div className="col">
-                      <input type="date" className="form-control" placeholder="End date" />
+                    <div className="col-md-6">
+                      <label className="form-label d-flex align-items-center fw-semibold">
+                        <Icon icon="heroicons:folder" className="me-2 text-muted" width="16" />
+                        Category
+                      </label>
+                      <select 
+                        className="form-select" 
+                        value={reportBuilder.category}
+                        onChange={(e) => setReportBuilder({...reportBuilder, category: e.target.value})}
+                      >
+                        <option value="Payroll">Payroll</option>
+                        <option value="Compliance">Compliance</option>
+                        <option value="Analytics">Analytics</option>
+                        <option value="Custom">Custom</option>
+                      </select>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label d-flex align-items-center fw-semibold">
+                        <Icon icon="heroicons:database" className="me-2 text-muted" width="16" />
+                        Data Source
+                      </label>
+                      <select 
+                        className="form-select" 
+                        value={reportBuilder.dataSource}
+                        onChange={(e) => setReportBuilder({...reportBuilder, dataSource: e.target.value})}
+                      >
+                        <option value="payroll">Payroll Data</option>
+                        <option value="employee">Employee Master</option>
+                        <option value="attendance">Attendance Records</option>
+                        <option value="compliance">Compliance Data</option>
+                      </select>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {builderStep === 4 && (
-              <div>
-                <h6 className="mb-3">Format & Schedule</h6>
-                <div className="mb-3">
-                  <label className="form-label">Export Format</label>
-                  <div className="d-flex gap-3">
-                    {['pdf', 'excel', 'csv'].map(format => (
-                      <div key={format} className="form-check">
-                        <input className="form-check-input" type="checkbox" 
-                          checked={reportBuilder.format.includes(format)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setReportBuilder({...reportBuilder, format: [...reportBuilder.format, format]});
-                            } else {
-                              setReportBuilder({...reportBuilder, format: reportBuilder.format.filter(f => f !== format)});
-                            }
-                          }} />
-                        <label className="form-check-label text-uppercase">{format}</label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Schedule Frequency</label>
-                  <select className="form-select" value={reportBuilder.schedule}
-                    onChange={(e) => setReportBuilder({...reportBuilder, schedule: e.target.value})}>
-                    <option value="none">Don't schedule</option>
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="quarterly">Quarterly</option>
-                  </select>
-                </div>
-              </div>
-            )}
-
-            <div className="d-flex justify-content-between mt-4">
-              <button className="btn btn-outline-secondary" 
-                onClick={() => setBuilderStep(prev => Math.max(1, prev - 1))}
-                disabled={builderStep === 1}>
-                <Icon icon="heroicons:arrow-left" className="me-2" />
-                Previous
-              </button>
-              
-              <div>
-                {builderStep < 4 && (
-                  <button className="btn btn-primary" 
-                    onClick={() => setBuilderStep(prev => Math.min(4, prev + 1))}>
-                    Next
-                    <Icon icon="heroicons:arrow-right" className="ms-2" />
-                  </button>
-                )}
-                {builderStep === 4 && (
-                  <button className="btn btn-success" onClick={() => {
-                    setCustomReports([...customReports, {
-                      id: `CUSTOM_${Date.now()}`,
-                      name: reportBuilder.name || 'New Custom Report',
-                      description: reportBuilder.description,
-                      columns: selectedColumns,
-                      filters: selectedFilters,
-                      format: reportBuilder.format,
-                      schedule: reportBuilder.schedule,
-                      createdDate: new Date().toISOString(),
-                      isCustom: true
-                    }]);
-                    setActiveSection('configure');
-                    alert('Custom report created successfully!');
+             {builderStep === 2 && (
+  <div>
+    <h6 className="mb-4 d-flex align-items-center">
+      <Icon icon="heroicons:table-cells" className="me-2 text-primary" width="20" />
+      Select Data Columns
+    </h6>
+    <div className="mb-3">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <span className="text-muted">Select columns to include in your report</span>
+        <span className="badge bg-primary">
+          {selectedColumns.length} column(s) selected
+        </span>
+      </div>
+      
+      {Object.entries(groupedColumns).map(([category, columns]) => (
+        <div key={category} className="mb-4">
+          <div className="d-flex align-items-center mb-3">
+            <h6 className="mb-0 fw-semibold text-primary">{category}</h6>
+            <span className="badge bg-light text-dark ms-2">{columns.length} columns</span>
+          </div>
+          <div className="row g-2">
+            {columns.map(column => (
+              <div key={column.id} className="col-md-6">
+                <div 
+                  className="border rounded p-3 mb-2 d-flex align-items-start hover-shadow"
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    if (selectedColumns.includes(column.id)) {
+                      setSelectedColumns(selectedColumns.filter(id => id !== column.id));
+                    } else {
+                      setSelectedColumns([...selectedColumns, column.id]);
+                    }
+                  }}
+                >
+                  {/* Custom checkbox with tick mark */}
+                  <div style={{
+                    width: '20px',
+                    height: '20px',
+                    border: '2px solid #dee2e6',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: '12px',
+                    marginTop: '2px',
+                    backgroundColor: selectedColumns.includes(column.id) ? '#0d6efd' : 'white',
+                    flexShrink: 0
                   }}>
-                    <Icon icon="heroicons:check" className="me-2" />
-                    Create Report
-                  </button>
-                )}
+                    {selectedColumns.includes(column.id) && (
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </div>
+                  
+                  <div className="w-100">
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <div className="fw-semibold d-flex align-items-center">
+                        <Icon 
+                          icon={`heroicons:${column.category === 'Salary' ? 'banknotes' : column.category === 'Deductions' ? 'minus-circle' : column.category === 'Attendance' ? 'calendar' : 'user'}`} 
+                          className="me-2 text-muted" 
+                          width="16" 
+                        />
+                        {column.name}
+                      </div>
+                      <span className="badge bg-info-subtle text-info small">{column.type}</span>
+                    </div>
+                    <div className="small text-muted">{column.description}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
+          {builderStep === 3 && (
+  <div>
+    <h6 className="mb-4 d-flex align-items-center">
+      <Icon icon="heroicons:funnel" className="me-2 text-primary" width="20" />
+      Apply Filters
+    </h6>
+    <div className="row g-4">
+      <div className="col-md-12">
+        <div className="card border">
+          <div className="card-header bg-light">
+            <h6 className="mb-0 d-flex align-items-center">
+              <Icon icon="heroicons:building-office" className="me-2" width="16" />
+              Department Filter
+            </h6>
+          </div>
+          <div className="card-body">
+            <div className="row">
+              {departments.slice(1).map(dept => (
+                <div key={dept} className="col-md-4 mb-2">
+                  <div 
+                    className="d-flex align-items-center"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => {
+                      if (selectedFilters.includes(dept)) {
+                        setSelectedFilters(selectedFilters.filter(f => f !== dept));
+                      } else {
+                        setSelectedFilters([...selectedFilters, dept]);
+                      }
+                    }}
+                  >
+                    {/* Custom checkbox with tick mark */}
+                    <div style={{
+                      width: '20px',
+                      height: '20px',
+                      border: '2px solid #dee2e6',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: '12px',
+                      backgroundColor: selectedFilters.includes(dept) ? '#0d6efd' : 'white',
+                      flexShrink: 0
+                    }}>
+                      {selectedFilters.includes(dept) && (
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                          <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </div>
+                    <span>{dept}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="col-md-6">
+        <div className="card border">
+          <div className="card-header bg-light">
+            <h6 className="mb-0 d-flex align-items-center">
+              <Icon icon="heroicons:calendar" className="me-2" width="16" />
+              Date Range
+            </h6>
+          </div>
+          <div className="card-body">
+            <div className="row g-3">
+              <div className="col-12">
+                <label className="form-label small">Start Date</label>
+                <input type="date" className="form-control" />
+              </div>
+              <div className="col-12">
+                <label className="form-label small">End Date</label>
+                <input type="date" className="form-control" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="col-md-6">
+        <div className="card border">
+          <div className="card-header bg-light">
+            <h6 className="mb-0 d-flex align-items-center">
+              <Icon icon="heroicons:currency-rupee" className="me-2" width="16" />
+              Salary Range
+            </h6>
+          </div>
+          <div className="card-body">
+            <div className="row g-3">
+              <div className="col-12">
+                <label className="form-label small">Minimum Salary</label>
+                <input type="number" className="form-control" placeholder="0" min="0" />
+              </div>
+              <div className="col-12">
+                <label className="form-label small">Maximum Salary</label>
+                <input type="number" className="form-control" placeholder="500000" min="0" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+{builderStep === 4 && (
+  <div>
+    <h6 className="mb-4 d-flex align-items-center">
+      <Icon icon="heroicons:cog" className="me-2 text-primary" width="20" />
+      Format & Schedule
+    </h6>
+    <div className="row g-4">
+      <div className="col-md-12">
+        <div className="card border">
+          <div className="card-header bg-light">
+            <h6 className="mb-0 d-flex align-items-center">
+              <Icon icon="heroicons:document-arrow-down" className="me-2" width="16" />
+              Export Format
+            </h6>
+          </div>
+          <div className="card-body">
+            <div className="row g-3">
+              <div className="col-md-4">
+                <div 
+                  className="border rounded p-3 h-100 d-flex flex-column"
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    if (reportBuilder.format.includes('pdf')) {
+                      setReportBuilder({...reportBuilder, format: reportBuilder.format.filter(f => f !== 'pdf')});
+                    } else {
+                      setReportBuilder({...reportBuilder, format: [...reportBuilder.format, 'pdf']});
+                    }
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                    {/* Custom checkbox with tick mark */}
+                    <div style={{
+                      width: '20px',
+                      height: '20px',
+                      border: '2px solid #dee2e6',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: '12px',
+                      backgroundColor: reportBuilder.format.includes('pdf') ? '#0d6efd' : 'white',
+                      flexShrink: 0
+                    }}>
+                      {reportBuilder.format.includes('pdf') && (
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                          <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </div>
+                    
+                    <div className="d-flex align-items-center">
+                      <Icon icon="heroicons:document-text" className="me-2 text-danger" width="24" />
+                      <span className="fw-semibold">PDF</span>
+                    </div>
+                  </div>
+                  <div className="small text-muted">Portable Document Format</div>
+                </div>
+              </div>
+              
+              <div className="col-md-4">
+                <div 
+                  className="border rounded p-3 h-100 d-flex flex-column"
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    if (reportBuilder.format.includes('excel')) {
+                      setReportBuilder({...reportBuilder, format: reportBuilder.format.filter(f => f !== 'excel')});
+                    } else {
+                      setReportBuilder({...reportBuilder, format: [...reportBuilder.format, 'excel']});
+                    }
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                    {/* Custom checkbox with tick mark */}
+                    <div style={{
+                      width: '20px',
+                      height: '20px',
+                      border: '2px solid #dee2e6',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: '12px',
+                      backgroundColor: reportBuilder.format.includes('excel') ? '#0d6efd' : 'white',
+                      flexShrink: 0
+                    }}>
+                      {reportBuilder.format.includes('excel') && (
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                          <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </div>
+                    
+                    <div className="d-flex align-items-center">
+                      <Icon icon="heroicons:table-cells" className="me-2 text-success" width="24" />
+                      <span className="fw-semibold">Excel</span>
+                    </div>
+                  </div>
+                  <div className="small text-muted">Microsoft Excel Format</div>
+                </div>
+              </div>
+              
+              <div className="col-md-4">
+                <div 
+                  className="border rounded p-3 h-100 d-flex flex-column"
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    if (reportBuilder.format.includes('csv')) {
+                      setReportBuilder({...reportBuilder, format: reportBuilder.format.filter(f => f !== 'csv')});
+                    } else {
+                      setReportBuilder({...reportBuilder, format: [...reportBuilder.format, 'csv']});
+                    }
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                    {/* Custom checkbox with tick mark */}
+                    <div style={{
+                      width: '20px',
+                      height: '20px',
+                      border: '2px solid #dee2e6',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: '12px',
+                      backgroundColor: reportBuilder.format.includes('csv') ? '#0d6efd' : 'white',
+                      flexShrink: 0
+                    }}>
+                      {reportBuilder.format.includes('csv') && (
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                          <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </div>
+                    
+                    <div className="d-flex align-items-center">
+                      <Icon icon="heroicons:document" className="me-2 text-primary" width="24" />
+                      <span className="fw-semibold">CSV</span>
+                    </div>
+                  </div>
+                  <div className="small text-muted">Comma Separated Values</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="col-md-12">
+        <div className="card border">
+          <div className="card-header bg-light">
+            <h6 className="mb-0 d-flex align-items-center">
+              <Icon icon="heroicons:clock" className="me-2" width="16" />
+              Schedule Frequency
+            </h6>
+          </div>
+          <div className="card-body">
+            <select 
+              className="form-select" 
+              value={reportBuilder.schedule}
+              onChange={(e) => setReportBuilder({...reportBuilder, schedule: e.target.value})}
+            >
+              <option value="none">Don't schedule</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="quarterly">Quarterly</option>
+              <option value="annually">Annually</option>
+            </select>
+            {reportBuilder.schedule !== 'none' && (
+              <div className="alert alert-warning mt-3">
+                <div className="d-flex align-items-center">
+                  <Icon icon="heroicons:information-circle" className="me-2" width="18" />
+                  <span>Report will be automatically generated and sent to recipients on the scheduled frequency.</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="col-md-12">
+        <div 
+          className="d-flex align-items-center"
+          style={{ cursor: 'pointer' }}
+          onClick={() => setReportBuilder({...reportBuilder, dashboardWidget: !reportBuilder.dashboardWidget})}
+        >
+          {/* Custom checkbox with tick mark */}
+          <div style={{
+            width: '20px',
+            height: '20px',
+            border: '2px solid #dee2e6',
+            borderRadius: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginRight: '12px',
+            backgroundColor: reportBuilder.dashboardWidget ? '#0d6efd' : 'white',
+            flexShrink: 0
+          }}>
+            {reportBuilder.dashboardWidget && (
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
+          </div>
+          
+          <div className="d-flex align-items-center">
+            <Icon icon="heroicons:chart-bar" className="me-2" width="16" />
+            <span>Add as dashboard widget</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+              <div className="d-flex justify-content-between mt-4 pt-3 border-top">
+                <button 
+                  className="btn btn-outline-secondary d-flex align-items-center" 
+                  onClick={() => setBuilderStep(prev => Math.max(1, prev - 1))}
+                  disabled={builderStep === 1}
+                >
+                  <Icon icon="heroicons:arrow-left" className="me-2" width="16" />
+                  Previous
+                </button>
+                
+                <div>
+                  {builderStep < 4 && (
+                    <button 
+                      className="btn btn-primary d-flex align-items-center" 
+                      onClick={() => setBuilderStep(prev => Math.min(4, prev + 1))}
+                    >
+                      Next
+                      <Icon icon="heroicons:arrow-right" className="ms-2" width="16" />
+                    </button>
+                  )}
+                  {builderStep === 4 && (
+                    <button 
+                      className="btn btn-success d-flex align-items-center" 
+                      onClick={() => {
+                        const newCustomReport = {
+                          id: `CUSTOM_${Date.now()}`,
+                          name: reportBuilder.name || 'New Custom Report',
+                          description: reportBuilder.description,
+                          category: reportBuilder.category,
+                          columns: selectedColumns,
+                          filters: selectedFilters,
+                          format: reportBuilder.format,
+                          schedule: reportBuilder.schedule,
+                          createdDate: new Date().toISOString(),
+                          isCustom: true,
+                          dashboardWidget: reportBuilder.dashboardWidget
+                        };
+                        setCustomReports([...customReports, newCustomReport]);
+                        setActiveSection('configure');
+                        alert('Custom report created successfully!');
+                        
+                        // Reset builder
+                        setReportBuilder({
+                          step: 1,
+                          name: '',
+                          description: '',
+                          category: 'Payroll',
+                          dataSource: 'payroll',
+                          selectedColumns: [],
+                          selectedFilters: [],
+                          grouping: [],
+                          calculations: [],
+                          format: ['pdf', 'excel'],
+                          schedule: 'none',
+                          recipients: [],
+                          dashboardWidget: false
+                        });
+                        setSelectedColumns([]);
+                        setSelectedFilters([]);
+                        setBuilderStep(1);
+                      }}
+                    >
+                      <Icon icon="heroicons:check" className="me-2" width="16" />
+                      Create Report
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -1170,39 +1837,39 @@ const PayrollReports = () => {
   const renderNavigation = () => (
     <div className="mb-4">
       <div className="d-flex flex-wrap gap-2 mb-3">
-        <button className={`btn ${activeSection === 'standard' ? 'btn-primary' : 'btn-outline-primary'}`}
+        <button className={`btn ${activeSection === 'standard' ? 'btn-primary' : 'btn-outline-primary'} d-flex align-items-center`}
           onClick={() => setActiveSection('standard')}>
-          <Icon icon="heroicons:document-text" className="me-2" />
+          <Icon icon="heroicons:document-text" className="me-2" width="16" />
           Standard Reports
         </button>
-        <button className={`btn ${activeSection === 'compliance' ? 'btn-primary' : 'btn-outline-primary'}`}
+        <button className={`btn ${activeSection === 'compliance' ? 'btn-primary' : 'btn-outline-primary'} d-flex align-items-center`}
           onClick={() => setActiveSection('compliance')}>
-          <Icon icon="heroicons:shield-check" className="me-2" />
+          <Icon icon="heroicons:shield-check" className="me-2" width="16" />
           Compliance
         </button>
-        <button className={`btn ${activeSection === 'analytics' ? 'btn-primary' : 'btn-outline-primary'}`}
+        <button className={`btn ${activeSection === 'analytics' ? 'btn-primary' : 'btn-outline-primary'} d-flex align-items-center`}
           onClick={() => setActiveSection('analytics')}>
-          <Icon icon="heroicons:chart-bar" className="me-2" />
+          <Icon icon="heroicons:chart-bar" className="me-2" width="16" />
           Analytics
         </button>
-        <button className={`btn ${activeSection === 'generated' ? 'btn-primary' : 'btn-outline-primary'}`}
+        <button className={`btn ${activeSection === 'generated' ? 'btn-primary' : 'btn-outline-primary'} d-flex align-items-center`}
           onClick={() => setActiveSection('generated')}>
-          <Icon icon="heroicons:archive-box" className="me-2" />
+          <Icon icon="heroicons:archive-box" className="me-2" width="16" />
           Generated
         </button>
-        <button className={`btn ${activeSection === 'scheduled' ? 'btn-primary' : 'btn-outline-primary'}`}
+        <button className={`btn ${activeSection === 'scheduled' ? 'btn-primary' : 'btn-outline-primary'} d-flex align-items-center`}
           onClick={() => setActiveSection('scheduled')}>
-          <Icon icon="heroicons:clock" className="me-2" />
+          <Icon icon="heroicons:clock" className="me-2" width="16" />
           Scheduled
         </button>
-        <button className={`btn ${activeSection === 'configure' ? 'btn-primary' : 'btn-outline-primary'}`}
+        <button className={`btn ${activeSection === 'configure' ? 'btn-primary' : 'btn-outline-primary'} d-flex align-items-center`}
           onClick={() => setActiveSection('configure')}>
-          <Icon icon="heroicons:cog" className="me-2" />
+          <Icon icon="heroicons:cog" className="me-2" width="16" />
           Configuration
         </button>
-        <button className={`btn ${activeSection === 'builder' ? 'btn-primary' : 'btn-outline-primary'}`}
+        <button className={`btn ${activeSection === 'builder' ? 'btn-primary' : 'btn-outline-primary'} d-flex align-items-center`}
           onClick={() => setActiveSection('builder')}>
-          <Icon icon="heroicons:wrench-screwdriver" className="me-2" />
+          <Icon icon="heroicons:wrench-screwdriver" className="me-2" width="16" />
           Report Builder
         </button>
       </div>
@@ -1216,19 +1883,25 @@ const PayrollReports = () => {
       <div className="mb-4">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <div>
-            <h5 className="text-3xl fw-bold text-dark mb-2">
-              <Icon icon="heroicons:chart-bar" className="me-2" />
+            <h5 className="fw-bold mb-1 d-flex align-items-center">
+              <Icon icon="heroicons:chart-bar" className="me-2" width="22" />
               Payroll Reports & Analytics
             </h5>
-            <p className="text-muted">Comprehensive payroll reporting system with AI-driven insights</p>
+            <p className="text-muted mb-0 d-flex align-items-center">
+              <Icon icon="heroicons:information-circle" className="me-1" width="16" />
+              Comprehensive payroll reporting system with AI-driven insights
+            </p>
           </div>
           <div className="d-flex gap-2">
-            <button className="btn btn-primary" onClick={handleAddReport}>
-              <Icon icon="heroicons:plus" className="me-2" />
+            <button className="btn btn-primary d-flex align-items-center" onClick={handleAddReport}>
+              <Icon icon="heroicons:plus" className="me-2" width="16" />
               Add Report
             </button>
-            <button className="btn btn-outline-primary" onClick={() => handleExportData('excel')}>
-              <Icon icon="heroicons:document-arrow-down" className="me-2" />
+            <button 
+              className="btn btn-outline-primary d-flex align-items-center" 
+              onClick={() => handleExportData('excel')}
+            >
+              <Icon icon="heroicons:document-arrow-down" className="me-2" width="16" />
               Export Data
             </button>
           </div>
@@ -1253,38 +1926,78 @@ const PayrollReports = () => {
           {activeSection === 'builder' && renderReportBuilder()}
           
           {activeSection === 'generated' && (
-            <div className="card">
-              <div className="card-header">
-                <h5 className="mb-0">Generated Reports</h5>
+            <div className="card border shadow-none">
+              <div className="card-header bg-transparent border-0 d-flex align-items-center">
+                <Icon icon="heroicons:archive-box" className="me-2 text-primary" width="18" />
+                <h6 className="fw-bold mb-0">Generated Reports</h6>
               </div>
-              <div className="card-body">
+              <div className="card-body p-0">
                 <div className="table-responsive">
-                  <table className="table table-striped">
-                    <thead>
+                  <table className="table table-striped table-hover mb-0 align-middle">
+                    <thead className="table-primary">
                       <tr>
-                        <th>Report Name</th>
-                        <th>Period</th>
-                        <th>Generated Date</th>
-                        <th>Generated By</th>
-                        <th>Format</th>
-                        <th>Size</th>
-                        <th>Downloads</th>
-                        <th>Actions</th>
+                        <th className="text-white bg-primary align-middle" style={{width: '20%'}}>Report Name</th>
+                        <th className="text-white bg-primary align-middle" style={{width: '15%'}}>Period</th>
+                        <th className="text-white bg-primary align-middle" style={{width: '15%'}}>Generated Date</th>
+                        <th className="text-white bg-primary align-middle" style={{width: '15%'}}>Generated By</th>
+                        <th className="text-white bg-primary align-middle" style={{width: '10%'}}>Format</th>
+                        <th className="text-white bg-primary align-middle" style={{width: '10%'}}>Size</th>
+                        <th className="text-white bg-primary align-middle" style={{width: '10%'}}>Downloads</th>
+                        <th className="text-white bg-primary align-middle" style={{width: '15%'}}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {generatedReports.map(report => (
                         <tr key={report.id}>
-                          <td className="fw-semibold">{report.reportName}</td>
-                          <td>{report.period}</td>
-                          <td>{formatDate(report.generatedDate)}</td>
-                          <td>{report.generatedBy}</td>
-                          <td>{report.format}</td>
-                          <td>{report.size}</td>
-                          <td>{report.downloadCount}</td>
-                          <td>
-                            <button className="btn btn-sm btn-outline-primary">
-                              <Icon icon="heroicons:arrow-down-tray" />
+                          <td className="align-middle">
+                            <div className="fw-semibold d-flex align-items-center">
+                              <Icon icon="heroicons:document-text" className="me-2 text-muted" width="16" />
+                              {report.reportName}
+                            </div>
+                          </td>
+                          <td className="align-middle">
+                            <div className="d-flex align-items-center">
+                              <Icon icon="heroicons:calendar" className="me-1 text-muted" width="14" />
+                              {report.period}
+                            </div>
+                          </td>
+                          <td className="align-middle">
+                            <div className="d-flex align-items-center">
+                              <Icon icon="heroicons:clock" className="me-1 text-muted" width="14" />
+                              {formatDate(report.generatedDate)}
+                            </div>
+                          </td>
+                          <td className="align-middle">
+                            <div className="d-flex align-items-center">
+                              <Icon icon="heroicons:user" className="me-1 text-muted" width="14" />
+                              {report.generatedBy}
+                            </div>
+                          </td>
+                          <td className="align-middle">
+                            <div className="d-flex align-items-center">
+                              <Icon icon={`heroicons:${report.format === 'PDF' ? 'document-text' : 'table-cells'}`} className="me-1 text-muted" width="14" />
+                              {report.format}
+                            </div>
+                          </td>
+                          <td className="align-middle">
+                            <div className="d-flex align-items-center">
+                              <Icon icon="heroicons:archive-box" className="me-1 text-muted" width="14" />
+                              {report.size}
+                            </div>
+                          </td>
+                          <td className="align-middle">
+                            <div className="d-flex align-items-center">
+                              <Icon icon="heroicons:arrow-down-tray" className="me-1 text-muted" width="14" />
+                              {report.downloadCount}
+                            </div>
+                          </td>
+                          <td className="align-middle">
+                            <button 
+                              className="btn btn-sm btn-outline-primary d-flex align-items-center"
+                              onClick={() => handleDownloadGeneratedReport(report)}
+                            >
+                              <Icon icon="heroicons:arrow-down-tray" width="14" className="me-1" />
+                              Download
                             </button>
                           </td>
                         </tr>
@@ -1297,46 +2010,80 @@ const PayrollReports = () => {
           )}
 
           {activeSection === 'scheduled' && (
-            <div className="card">
-              <div className="card-header">
-                <h5 className="mb-0">Scheduled Reports</h5>
+            <div className="card border shadow-none">
+              <div className="card-header bg-transparent border-0 d-flex align-items-center">
+                <Icon icon="heroicons:clock" className="me-2 text-primary" width="18" />
+                <h6 className="fw-bold mb-0">Scheduled Reports</h6>
               </div>
-              <div className="card-body">
+              <div className="card-body p-0">
                 <div className="table-responsive">
-                  <table className="table table-striped">
-                    <thead>
+                  <table className="table table-striped table-hover mb-0 align-middle">
+                    <thead className="table-primary">
                       <tr>
-                        <th>Report Name</th>
-                        <th>Schedule</th>
-                        <th>Next Run</th>
-                        <th>Recipients</th>
-                        <th>Format</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th className="text-white bg-primary align-middle" style={{width: '20%'}}>Report Name</th>
+                        <th className="text-white bg-primary align-middle" style={{width: '15%'}}>Schedule</th>
+                        <th className="text-white bg-primary align-middle" style={{width: '15%'}}>Next Run</th>
+                        <th className="text-white bg-primary align-middle" style={{width: '20%'}}>Recipients</th>
+                        <th className="text-white bg-primary align-middle" style={{width: '10%'}}>Format</th>
+                        <th className="text-white bg-primary align-middle" style={{width: '10%'}}>Status</th>
+                        <th className="text-white bg-primary align-middle" style={{width: '20%'}}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {scheduledReports.map(report => (
                         <tr key={report.id}>
-                          <td className="fw-semibold">{report.reportName}</td>
-                          <td>{report.schedule}</td>
-                          <td>{formatDate(report.nextRun)}</td>
-                          <td>
+                          <td className="align-middle">
+                            <div className="fw-semibold d-flex align-items-center">
+                              <Icon icon="heroicons:document-text" className="me-2 text-muted" width="16" />
+                              {report.reportName}
+                            </div>
+                          </td>
+                          <td className="align-middle">
+                            <div className="d-flex align-items-center">
+                              <Icon icon="heroicons:calendar-days" className="me-1 text-muted" width="14" />
+                              {report.schedule}
+                            </div>
+                          </td>
+                          <td className="align-middle">
+                            <div className="d-flex align-items-center">
+                              <Icon icon="heroicons:clock" className="me-1 text-muted" width="14" />
+                              {formatDate(report.nextRun)}
+                            </div>
+                          </td>
+                          <td className="align-middle">
                             <div className="small">
                               {report.recipients.map((r, i) => (
-                                <div key={i}>{r}</div>
+                                <div key={i} className="d-flex align-items-center mb-1">
+                                  <Icon icon="heroicons:envelope" className="me-1 text-muted" width="12" />
+                                  {r}
+                                </div>
                               ))}
                             </div>
                           </td>
-                          <td>{report.format}</td>
-                          <td>{getStatusBadge(report.status)}</td>
-                          <td>
-                            <button className="btn btn-sm btn-outline-primary me-1">
-                              Edit
-                            </button>
-                            <button className="btn btn-sm btn-outline-warning">
-                              {report.status === 'active' ? 'Pause' : 'Activate'}
-                            </button>
+                          <td className="align-middle">
+                            <div className="d-flex align-items-center">
+                              <Icon icon="heroicons:document-text" className="me-1 text-muted" width="14" />
+                              {report.format}
+                            </div>
+                          </td>
+                          <td className="align-middle">{getStatusBadge(report.status)}</td>
+                          <td className="align-middle">
+                            <div className="d-flex gap-1">
+                              <button 
+                                className="btn btn-sm btn-outline-primary d-flex align-items-center"
+                                onClick={() => handleEditScheduledReport(report)}
+                              >
+                                <Icon icon="heroicons:pencil-square" className="me-1" width="14" />
+                                Edit
+                              </button>
+                              <button 
+                                className="btn btn-sm btn-outline-warning d-flex align-items-center"
+                                onClick={() => handleToggleScheduleStatus(report)}
+                              >
+                                <Icon icon={report.status === 'active' ? 'heroicons:pause' : 'heroicons:play'} className="me-1" width="14" />
+                                {report.status === 'active' ? 'Pause' : 'Activate'}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -1350,13 +2097,17 @@ const PayrollReports = () => {
           {activeSection === 'configure' && (
             <div className="row">
               <div className="col-md-8">
-                <div className="card mb-4">
-                  <div className="card-header">
-                    <h6 className="mb-0">Report Configuration</h6>
+                <div className="card mb-4 border shadow-none">
+                  <div className="card-header bg-transparent border-0 d-flex align-items-center">
+                    <Icon icon="heroicons:cog" className="me-2 text-primary" width="18" />
+                    <h6 className="fw-bold mb-0">Report Configuration</h6>
                   </div>
                   <div className="card-body">
                     <div className="mb-3">
-                      <label className="form-label">Default Report Format</label>
+                      <label className="form-label d-flex align-items-center">
+                        <Icon icon="heroicons:document-text" className="me-2 text-muted" width="16" />
+                        Default Report Format
+                      </label>
                       <select className="form-select">
                         <option>PDF</option>
                         <option>Excel</option>
@@ -1364,7 +2115,10 @@ const PayrollReports = () => {
                       </select>
                     </div>
                     <div className="mb-3">
-                      <label className="form-label">Retention Period (months)</label>
+                      <label className="form-label d-flex align-items-center">
+                        <Icon icon="heroicons:archive-box" className="me-2 text-muted" width="16" />
+                        Retention Period (months)
+                      </label>
                       <select className="form-select">
                         <option>3</option>
                         <option>6</option>
@@ -1373,15 +2127,17 @@ const PayrollReports = () => {
                         <option>36</option>
                       </select>
                     </div>
-                    <div className="form-check form-switch mb-3">
+                    <div className="form-check form-switch mb-3 d-flex align-items-center">
                       <input className="form-check-input" type="checkbox" id="autoGenerate" />
-                      <label className="form-check-label" htmlFor="autoGenerate">
+                      <label className="form-check-label d-flex align-items-center" htmlFor="autoGenerate">
+                        <Icon icon="heroicons:play-circle" className="me-2" width="16" />
                         Auto-generate scheduled reports
                       </label>
                     </div>
-                    <div className="form-check form-switch mb-3">
+                    <div className="form-check form-switch mb-3 d-flex align-items-center">
                       <input className="form-check-input" type="checkbox" id="emailNotification" />
-                      <label className="form-check-label" htmlFor="emailNotification">
+                      <label className="form-check-label d-flex align-items-center" htmlFor="emailNotification">
+                        <Icon icon="heroicons:envelope" className="me-2" width="16" />
                         Email notifications for completed reports
                       </label>
                     </div>
@@ -1390,21 +2146,25 @@ const PayrollReports = () => {
               </div>
 
               <div className="col-md-4">
-                <div className="card">
-                  <div className="card-header">
-                    <h6 className="mb-0">Quick Actions</h6>
+                <div className="card border shadow-none">
+                  <div className="card-header bg-transparent border-0 d-flex align-items-center">
+                    <Icon icon="heroicons:bolt" className="me-2 text-primary" width="18" />
+                    <h6 className="fw-bold mb-0">Quick Actions</h6>
                   </div>
                   <div className="card-body">
-                    <button className="btn btn-primary w-100 mb-2" onClick={() => setActiveSection('builder')}>
-                      <Icon icon="heroicons:plus" className="me-2" />
+                    <button className="btn btn-primary w-100 mb-2 d-flex align-items-center justify-content-center" onClick={() => setActiveSection('builder')}>
+                      <Icon icon="heroicons:plus" className="me-2" width="16" />
                       Create New Report
                     </button>
-                    <button className="btn btn-outline-primary w-100 mb-2" onClick={handleExportData}>
-                      <Icon icon="heroicons:document-arrow-down" className="me-2" />
+                    <button 
+                      className="btn btn-outline-primary w-100 mb-2 d-flex align-items-center justify-content-center" 
+                      onClick={() => handleExportData('excel', reportTemplates)}
+                    >
+                      <Icon icon="heroicons:document-arrow-down" className="me-2" width="16" />
                       Export Configuration
                     </button>
-                    <button className="btn btn-outline-secondary w-100 mb-2">
-                      <Icon icon="heroicons:arrow-path" className="me-2" />
+                    <button className="btn btn-outline-secondary w-100 mb-2 d-flex align-items-center justify-content-center">
+                      <Icon icon="heroicons:arrow-path" className="me-2" width="16" />
                       Reset to Defaults
                     </button>
                   </div>
@@ -1421,31 +2181,44 @@ const PayrollReports = () => {
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">{isEditMode ? 'Edit Report' : 'Add New Report'}</h5>
+                <h5 className="modal-title d-flex align-items-center">
+                  <Icon icon={isEditMode ? "heroicons:pencil-square" : "heroicons:plus"} className="me-2" width="20" />
+                  {isEditMode ? 'Edit Report' : 'Add New Report'}
+                </h5>
                 <button type="button" className="btn-close" onClick={() => setShowReportModal(false)}></button>
               </div>
               <div className="modal-body">
                 <div className="row g-3">
                   <div className="col-md-12">
-                    <label className="form-label">Report Name *</label>
+                    <label className="form-label d-flex align-items-center">
+                      <Icon icon="heroicons:tag" className="me-2 text-muted" width="16" />
+                      Report Name *
+                    </label>
                     <input type="text" className="form-control" 
                       value={reportForm.name} 
                       onChange={(e) => setReportForm({...reportForm, name: e.target.value})} />
                   </div>
                   
                   <div className="col-md-6">
-                    <label className="form-label">Category</label>
+                    <label className="form-label d-flex align-items-center">
+                      <Icon icon="heroicons:folder" className="me-2 text-muted" width="16" />
+                      Category
+                    </label>
                     <select className="form-select" 
                       value={reportForm.category}
                       onChange={(e) => setReportForm({...reportForm, category: e.target.value})}>
                       <option value="standard">Standard Report</option>
                       <option value="compliance">Compliance Report</option>
                       <option value="analytics">Analytics Dashboard</option>
+                      <option value="scheduled">Scheduled Report</option>
                     </select>
                   </div>
                   
                   <div className="col-md-6">
-                    <label className="form-label">Frequency</label>
+                    <label className="form-label d-flex align-items-center">
+                      <Icon icon="heroicons:calendar" className="me-2 text-muted" width="16" />
+                      Frequency
+                    </label>
                     <select className="form-select" 
                       value={reportForm.frequency}
                       onChange={(e) => setReportForm({...reportForm, frequency: e.target.value})}>
@@ -1459,14 +2232,20 @@ const PayrollReports = () => {
                   </div>
                   
                   <div className="col-md-12">
-                    <label className="form-label">Description</label>
+                    <label className="form-label d-flex align-items-center">
+                      <Icon icon="heroicons:pencil" className="me-2 text-muted" width="16" />
+                      Description
+                    </label>
                     <textarea className="form-control" rows="3"
                       value={reportForm.description}
                       onChange={(e) => setReportForm({...reportForm, description: e.target.value})} />
                   </div>
                   
                   <div className="col-md-6">
-                    <label className="form-label">Default Format</label>
+                    <label className="form-label d-flex align-items-center">
+                      <Icon icon="heroicons:document-text" className="me-2 text-muted" width="16" />
+                      Default Format
+                    </label>
                     <select className="form-select" 
                       value={Array.isArray(reportForm.format) ? reportForm.format[0] : reportForm.format}
                       onChange={(e) => setReportForm({...reportForm, format: [e.target.value]})}>
@@ -1477,7 +2256,10 @@ const PayrollReports = () => {
                   </div>
                   
                   <div className="col-md-6">
-                    <label className="form-label">Target Department</label>
+                    <label className="form-label d-flex align-items-center">
+                      <Icon icon="heroicons:building-office" className="me-2 text-muted" width="16" />
+                      Target Department
+                    </label>
                     <select className="form-select" 
                       value={reportForm.department}
                       onChange={(e) => setReportForm({...reportForm, department: e.target.value})}>
@@ -1486,20 +2268,25 @@ const PayrollReports = () => {
                   </div>
                   
                   <div className="col-md-12">
-                    <div className="form-check form-switch">
+                    <div className="form-check form-switch d-flex align-items-center">
                       <input className="form-check-input" type="checkbox" 
                         checked={reportForm.scheduleType === 'auto'}
                         onChange={(e) => setReportForm({...reportForm, scheduleType: e.target.checked ? 'auto' : 'manual'})} />
-                      <label className="form-check-label">Enable Auto-Scheduling</label>
+                      <label className="form-check-label d-flex align-items-center">
+                        <Icon icon="heroicons:clock" className="me-2" width="16" />
+                        Enable Auto-Scheduling
+                      </label>
                     </div>
                   </div>
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowReportModal(false)}>
+                <button type="button" className="btn btn-secondary d-flex align-items-center" onClick={() => setShowReportModal(false)}>
+                  <Icon icon="heroicons:x-mark" className="me-2" width="16" />
                   Cancel
                 </button>
-                <button type="button" className="btn btn-primary" onClick={handleSaveReport}>
+                <button type="button" className="btn btn-primary d-flex align-items-center" onClick={handleSaveReport}>
+                  <Icon icon="heroicons:check" className="me-2" width="16" />
                   {isEditMode ? 'Update Report' : 'Save Report'}
                 </button>
               </div>
@@ -1516,7 +2303,10 @@ const PayrollReports = () => {
             <div className="spinner-border text-primary mb-3" role="status">
               <span className="visually-hidden">Loading...</span>
             </div>
-            <div>Processing report...</div>
+            <div className="d-flex align-items-center">
+              <Icon icon="heroicons:arrow-path" className="me-2 animate-spin" />
+              Processing report...
+            </div>
           </div>
         </div>
       )}

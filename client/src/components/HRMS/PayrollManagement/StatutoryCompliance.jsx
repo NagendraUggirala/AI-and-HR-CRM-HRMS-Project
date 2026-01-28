@@ -19,7 +19,44 @@ const StatutoryCompliance = () => {
   const [selectedForm, setSelectedForm] = useState(null);
   const [selectedEmployeeForUAN, setSelectedEmployeeForUAN] = useState(null);
   const [remittanceType, setRemittanceType] = useState('pf');
+  const [viewModalData, setViewModalData] = useState(null);
   
+  // Modal form states
+  const [ecrFormData, setEcrFormData] = useState({
+    month: '',
+    totalWages: '',
+    epfContribution: '',
+    epsContribution: '',
+    edliContribution: ''
+  });
+
+  const [remittanceFormData, setRemittanceFormData] = useState({
+    month: '',
+    totalContribution: '',
+    employeeContribution: '',
+    employerContribution: '',
+    challanNo: '',
+    remittanceDate: ''
+  });
+
+  const [challanFormData, setChallanFormData] = useState({
+    period: '',
+    amount: '',
+    paymentDate: '',
+    format: 'PDF'
+  });
+
+  const [uanFormData, setUanFormData] = useState({
+    uanNumber: '',
+    activationDate: ''
+  });
+
+  const [vpfFormData, setVpfFormData] = useState({
+    employeeId: '',
+    vpfRate: '',
+    month: ''
+  });
+
   // PF Configuration State
   const [pfConfig, setPfConfig] = useState({
     employeeContribution: 12,
@@ -364,6 +401,36 @@ const StatutoryCompliance = () => {
       { id: 3, employeeId: 'EMP003', quarter: 'Q4 FY 2023-24', tdsAmount: 2500, depositedDate: '2024-04-15', challanNo: 'CH123458' }
     ]);
 
+    // PF Remittances
+    setPfRemittances([
+      { id: 1, month: 'March 2024', totalContribution: 36000, employeeContribution: 18000, employerContribution: 18000, challanNo: 'CH789012', remittanceDate: '2024-04-15', status: 'paid' }
+    ]);
+
+    // ESI Remittances
+    setEsiRemittances([
+      { id: 1, period: 'Oct 2023 - Mar 2024', totalContribution: 5920, employeeContribution: 1109, employerContribution: 4811, challanNo: 'CH789013', remittanceDate: '2024-04-10', status: 'paid' }
+    ]);
+
+    // TDS Challans
+    setTdsChallans([
+      { id: 1, quarter: 'Q4 FY 2023-24', tdsAmount: 19500, challanNo: 'CH281001', depositDate: '2024-04-15', status: 'paid' }
+    ]);
+
+    // ECR Data
+    setEcrData([
+      { id: 1, month: 'February 2024', totalEmployees: 5, totalWages: 308000, epfContribution: 25800, epsContribution: 11500, edliContribution: 1500, status: 'submitted', submittedDate: '2024-03-15' }
+    ]);
+
+    // VPF Data
+    setVpfData([
+      { id: 1, name: 'John Smith', employeeId: 'EMP001', vpfRate: 10, vpfAmount: 5000, month: 'March 2024', status: 'active' }
+    ]);
+
+    // UAN Activations
+    setUanActivations([
+      { id: 1, name: 'Mike Chen', employeeId: 'EMP003', uan: '100555666777', activationDate: '2024-01-15', status: 'active' }
+    ]);
+
     setIsLoading(false);
   };
 
@@ -378,7 +445,8 @@ const StatutoryCompliance = () => {
       'draft': 'bg-secondary-subtle text-secondary',
       'verified': 'bg-success-subtle text-success',
       'paid': 'bg-success-subtle text-success',
-      'overdue': 'bg-danger-subtle text-danger'
+      'overdue': 'bg-danger-subtle text-danger',
+      'active': 'bg-success-subtle text-success'
     };
 
     return (
@@ -409,12 +477,28 @@ const StatutoryCompliance = () => {
 
   // Format functions
   const formatCurrency = (amount) => {
+    if (amount >= 10000000) { // 1 crore
+      return `₹${(amount / 10000000).toFixed(1)}Cr`;
+    } else if (amount >= 100000) { // 1 lakh
+      return `₹${(amount / 100000).toFixed(1)}L`;
+    } else if (amount >= 1000) { // 1 thousand
+      return `₹${(amount / 1000).toFixed(1)}K`;
+    }
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
+  };
+
+  const formatNumber = (num) => {
+    if (num >= 1000000) {
+      return `${(num / 1000000).toFixed(1)}M`;
+    } else if (num >= 1000) {
+      return `${(num / 1000).toFixed(1)}K`;
+    }
+    return num.toString();
   };
 
   const formatDate = (dateString) => {
@@ -426,6 +510,118 @@ const StatutoryCompliance = () => {
     });
   };
 
+  // Helper function to download files
+  const downloadFile = (content, fileName, format = 'PDF') => {
+    let blob, url;
+    
+    if (format === 'PDF') {
+      // Create a simple PDF-like content
+      const pdfContent = `
+        <html>
+          <head>
+            <title>${fileName}</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; }
+              h1 { color: #333; }
+              .content { margin: 20px 0; }
+            </style>
+          </head>
+          <body>
+            <h1>${fileName}</h1>
+            <div class="content">${content}</div>
+            <p>Generated on: ${new Date().toLocaleDateString()}</p>
+          </body>
+        </html>
+      `;
+      blob = new Blob([pdfContent], { type: 'text/html' });
+      fileName = `${fileName}.html`;
+    } else if (format === 'Excel' || format === 'CSV') {
+      blob = new Blob([content], { type: 'text/csv' });
+      fileName = `${fileName}.csv`;
+    } else {
+      blob = new Blob([content], { type: 'text/plain' });
+      fileName = `${fileName}.txt`;
+    }
+    
+    url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  // Form content generation functions
+  const generateForm16Content = () => {
+    let content = "Form 16 - TDS Certificate\n";
+    content += "=============================\n\n";
+    content += "Financial Year: 2023-24\n";
+    content += "Generated Date: " + new Date().toLocaleDateString() + "\n\n";
+    
+    if (selectedItem) {
+      content += "Employee Details:\n";
+      content += "-----------------\n";
+      content += "Name: " + selectedItem.name + "\n";
+      content += "Employee ID: " + selectedItem.employeeId + "\n";
+      content += "PAN: AX" + selectedItem.employeeId + "YZ\n\n";
+      
+      content += "Salary Details:\n";
+      content += "----------------\n";
+      content += "Gross Salary: " + formatCurrency(selectedItem.grossSalary) + "\n";
+      content += "Basic Salary: " + formatCurrency(selectedItem.basicSalary) + "\n";
+      content += "TDS Deducted: " + formatCurrency(selectedItem.tdsDeduction) + "\n";
+    } else {
+      content += "This Form 16 certificate contains TDS details for the financial year.\n";
+      content += "Includes Part A and Part B with complete tax computation.\n";
+    }
+    
+    return content;
+  };
+
+  const generateForm5Content = () => {
+    let content = "Form 5 - PF Return\n";
+    content += "====================\n\n";
+    content += "Period: March 2024\n";
+    content += "Submission Date: " + new Date().toLocaleDateString() + "\n\n";
+    
+    content += "Total Employees: " + kpis.totalEmployees + "\n";
+    content += "Total PF Contribution: " + formatCurrency(kpis.totalPFContribution) + "\n";
+    content += "Employee Contribution: " + formatCurrency(kpis.totalPFContribution * 0.5) + "\n";
+    content += "Employer Contribution: " + formatCurrency(kpis.totalPFContribution * 0.5) + "\n\n";
+    
+    content += "Employee-wise PF Details:\n";
+    content += "-------------------------\n";
+    employees.forEach(emp => {
+      if (emp.pfEligible) {
+        content += emp.name + " (" + emp.employeeId + "): " + formatCurrency(emp.pfContribution) + "\n";
+      }
+    });
+    
+    return content;
+  };
+
+  const generateESIContent = () => {
+    let content = "ESI Return - Half Yearly\n";
+    content += "==========================\n\n";
+    content += "Period: Oct 2023 - Mar 2024\n";
+    content += "Registration No: " + esiConfig.registrationNumber + "\n";
+    content += "Branch Code: " + esiConfig.branchCode + "\n\n";
+    
+    content += "Total ESI Contribution: " + formatCurrency(kpis.totalESIContribution) + "\n";
+    content += "Employee Contribution: " + formatCurrency(kpis.totalESIContribution * 0.75 / 4) + "\n";
+    content += "Employer Contribution: " + formatCurrency(kpis.totalESIContribution * 3.25 / 4) + "\n\n";
+    
+    return content;
+  };
+
+  // NEW: View button handler for detailed data popup
+  const handleViewData = (data, type) => {
+    setViewModalData({ data, type });
+    setShowModal(true);
+  };
+
   // Action handlers
   const handleViewDetails = (item) => {
     setSelectedItem(item);
@@ -435,6 +631,34 @@ const StatutoryCompliance = () => {
   const handleGenerateForm = (formType) => {
     setSelectedForm(formType);
     setShowFormModal(true);
+  };
+
+  const handleDownloadForm = (formId) => {
+    const form = complianceForms.find(f => f.id === formId);
+    if (form) {
+      let content = "";
+      let fileName = "";
+      
+      switch(form.formName) {
+        case 'Form 16':
+          content = generateForm16Content();
+          fileName = `Form16_${form.employeeName.replace(/\s+/g, '_')}_${form.financialYear}`;
+          break;
+        case 'Form 5':
+          content = generateForm5Content();
+          fileName = `Form5_${form.employeeName.replace(/\s+/g, '_')}_March_2024`;
+          break;
+        case 'ESI Return':
+          content = generateESIContent();
+          fileName = `ESI_Return_${form.employeeName.replace(/\s+/g, '_')}_${form.period.replace(/\s+/g, '_')}`;
+          break;
+        default:
+          content = `${form.formName}\nEmployee: ${form.employeeName}\nPeriod: ${form.financialYear || form.period}\nStatus: ${form.status}`;
+          fileName = `${form.formName.replace(/\s+/g, '_')}_${form.employeeName.replace(/\s+/g, '_')}`;
+      }
+      
+      downloadFile(content, fileName, 'PDF');
+    }
   };
 
   const handleCalculatePF = (employeeId) => {
@@ -478,19 +702,16 @@ const StatutoryCompliance = () => {
   const handleCalculateTDS = (employeeId) => {
     const employee = employees.find(emp => emp.id === employeeId);
     if (employee) {
-      // Calculate annual salary with standard deduction
       const annualSalary = employee.grossSalary * 12;
       const taxableIncome = annualSalary - tdsConfig.standardDeduction;
       let tds = 0;
       
       if (tdsConfig.taxRegime === 'new') {
-        // New tax regime (no deductions except standard deduction)
         if (taxableIncome <= 700000) tds = 0;
         else if (taxableIncome <= 900000) tds = (taxableIncome - 700000) * 0.05 / 12;
         else if (taxableIncome <= 1200000) tds = (10000 + (taxableIncome - 900000) * 0.10) / 12;
         else tds = (25000 + (taxableIncome - 1200000) * 0.15) / 12;
       } else {
-        // Old regime calculation with deductions
         const totalDeductions = investmentDeclarations.section80C + 
                                 investmentDeclarations.section80D + 
                                 investmentDeclarations.hraExemption + 
@@ -578,6 +799,165 @@ const StatutoryCompliance = () => {
     }
   };
 
+  // Modal Handlers
+  const handleGenerateECR = () => {
+    if (!ecrFormData.month) {
+      alert('Please select a month');
+      return;
+    }
+
+    const newECR = {
+      id: ecrData.length + 1,
+      month: ecrFormData.month,
+      totalEmployees: employees.length,
+      totalWages: ecrFormData.totalWages || employees.reduce((sum, emp) => sum + emp.grossSalary, 0),
+      epfContribution: ecrFormData.epfContribution || kpis.totalPFContribution * 0.6667,
+      epsContribution: ecrFormData.epsContribution || kpis.totalPFContribution * 0.3333,
+      edliContribution: ecrFormData.edliContribution || kpis.totalPFContribution * 0.005,
+      status: 'generated',
+      submittedDate: new Date().toISOString().split('T')[0]
+    };
+
+    setEcrData([...ecrData, newECR]);
+    setShowECRModal(false);
+    setEcrFormData({
+      month: '',
+      totalWages: '',
+      epfContribution: '',
+      epsContribution: '',
+      edliContribution: ''
+    });
+    alert('ECR generated successfully!');
+  };
+
+  const handleAddRemittance = () => {
+    if (!remittanceFormData.month || !remittanceFormData.totalContribution) {
+      alert('Please fill all required fields');
+      return;
+    }
+
+    const newRemittance = {
+      id: remittanceType === 'pf' ? pfRemittances.length + 1 : esiRemittances.length + 1,
+      month: remittanceFormData.month,
+      totalContribution: parseFloat(remittanceFormData.totalContribution),
+      employeeContribution: parseFloat(remittanceFormData.employeeContribution) || parseFloat(remittanceFormData.totalContribution) / 2,
+      employerContribution: parseFloat(remittanceFormData.employerContribution) || parseFloat(remittanceFormData.totalContribution) / 2,
+      challanNo: remittanceFormData.challanNo || `CH${Math.floor(100000 + Math.random() * 900000)}`,
+      remittanceDate: remittanceFormData.remittanceDate || new Date().toISOString().split('T')[0],
+      status: 'paid'
+    };
+
+    if (remittanceType === 'pf') {
+      setPfRemittances([...pfRemittances, newRemittance]);
+    } else if (remittanceType === 'esi') {
+      setEsiRemittances([...esiRemittances, newRemittance]);
+    }
+
+    setShowRemittanceModal(false);
+    setRemittanceFormData({
+      month: '',
+      totalContribution: '',
+      employeeContribution: '',
+      employerContribution: '',
+      challanNo: '',
+      remittanceDate: ''
+    });
+    alert(`${remittanceType.toUpperCase()} remittance added successfully!`);
+  };
+
+  const handleGenerateChallan = () => {
+    if (!challanFormData.period || !challanFormData.amount) {
+      alert('Please fill all required fields');
+      return;
+    }
+
+    const newChallan = {
+      id: tdsChallans.length + 1,
+      quarter: challanFormData.period,
+      tdsAmount: parseFloat(challanFormData.amount),
+      challanNo: `CH281${Math.floor(1000 + Math.random() * 9000)}`,
+      depositDate: challanFormData.paymentDate || new Date().toISOString().split('T')[0],
+      status: 'generated'
+    };
+
+    setTdsChallans([...tdsChallans, newChallan]);
+    setShowChallanModal(false);
+    setChallanFormData({
+      period: '',
+      amount: '',
+      paymentDate: '',
+      format: 'PDF'
+    });
+    alert('Challan generated successfully!');
+  };
+
+  const handleActivateUAN = () => {
+    if (!selectedEmployeeForUAN || !uanFormData.uanNumber) {
+      alert('Please select employee and enter UAN number');
+      return;
+    }
+
+    const newUAN = {
+      id: uanActivations.length + 1,
+      name: selectedEmployeeForUAN.name,
+      employeeId: selectedEmployeeForUAN.employeeId,
+      uan: uanFormData.uanNumber,
+      activationDate: uanFormData.activationDate || new Date().toISOString().split('T')[0],
+      status: 'active'
+    };
+
+    setUanActivations([...uanActivations, newUAN]);
+    
+    // Update employee UAN
+    setEmployees(prev => prev.map(emp => 
+      emp.id === selectedEmployeeForUAN.id 
+        ? { ...emp, pfUAN: uanFormData.uanNumber }
+        : emp
+    ));
+
+    setShowUANModal(false);
+    setSelectedEmployeeForUAN(null);
+    setUanFormData({
+      uanNumber: '',
+      activationDate: ''
+    });
+    alert('UAN activated successfully!');
+  };
+
+  const handleAddVPF = () => {
+    if (!vpfFormData.employeeId || !vpfFormData.vpfRate) {
+      alert('Please select employee and enter VPF rate');
+      return;
+    }
+
+    const employee = employees.find(emp => emp.id === vpfFormData.employeeId);
+    if (!employee) {
+      alert('Employee not found');
+      return;
+    }
+
+    const vpfAmount = (employee.basicSalary * parseFloat(vpfFormData.vpfRate)) / 100;
+
+    const newVPF = {
+      id: vpfData.length + 1,
+      name: employee.name,
+      employeeId: employee.employeeId,
+      vpfRate: parseFloat(vpfFormData.vpfRate),
+      vpfAmount: vpfAmount,
+      month: vpfFormData.month || 'March 2024',
+      status: 'active'
+    };
+
+    setVpfData([...vpfData, newVPF]);
+    setShowVPFModal(false);
+    setVpfFormData({
+      employeeId: '',
+      vpfRate: '',
+      month: ''
+    });
+    alert('VPF added successfully!');
+  };
+
   const handleExportReport = () => {
     let csvData = [];
     let headers = [];
@@ -643,6 +1023,43 @@ const StatutoryCompliance = () => {
     }, 1000);
   };
 
+  const handleViewChallan = (challanNo) => {
+    const challan = tdsChallans.find(c => c.challanNo === challanNo) || 
+                   pfRemittances.find(c => c.challanNo === challanNo) ||
+                   esiRemittances.find(c => c.challanNo === challanNo);
+    
+    if (challan) {
+      setSelectedItem(challan);
+      setShowModal(true);
+    } else {
+      alert(`Challan ${challanNo} details not found.`);
+    }
+  };
+
+  const handleReconcileReport = (reportId) => {
+    const report = reconciliationReports.find(r => r.id === reportId);
+    if (report) {
+      let content = `${report.reportName} - Reconciliation Report\n`;
+      content += `Period: ${report.period}\n`;
+      content += `Generated: ${new Date().toLocaleDateString()}\n\n`;
+      
+      if (report.type === 'pf') {
+        content += `Total PF Contribution: ${formatCurrency(kpis.totalPFContribution)}\n`;
+        content += `Employee Contribution: ${formatCurrency(kpis.totalPFContribution * 0.5)}\n`;
+        content += `Employer Contribution: ${formatCurrency(kpis.totalPFContribution * 0.5)}\n`;
+      } else if (report.type === 'tds') {
+        content += `Total TDS Deducted: ${formatCurrency(kpis.totalTDSDeduction)}\n`;
+      }
+      
+      setReconciliationReports(prev => 
+        prev.map(r => r.id === reportId ? { ...r, status: 'completed', generatedDate: new Date().toISOString().split('T')[0] } : r)
+      );
+      
+      downloadFile(content, `Reconciliation_${report.reportName.replace(/\s+/g, '_')}`, 'PDF');
+      alert(`Reconciliation report for ${report.reportName} generated successfully!`);
+    }
+  };
+
   // Helper components for consistent styling
   const ButtonWithIcon = ({ icon, children, className = '', iconClassName = '', ...props }) => (
     <button className={`btn d-flex align-items-center justify-content-center ${className}`} {...props}>
@@ -662,6 +1079,303 @@ const StatutoryCompliance = () => {
       </div>
     </div>
   );
+
+  // NEW: Function to render view modal content based on data type
+  const renderViewModalContent = () => {
+    if (!viewModalData) return null;
+    
+    const { data, type } = viewModalData;
+    
+    switch(type) {
+      case 'employee':
+        return (
+          <div className="row g-3">
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Employee Name</label>
+              <p className="form-control-plaintext fw-bold">{data.name}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Employee ID</label>
+              <p className="form-control-plaintext">{data.employeeId}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Department</label>
+              <p className="form-control-plaintext">{data.department}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Date of Joining</label>
+              <p className="form-control-plaintext">{formatDate(data.doj)}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Basic Salary</label>
+              <p className="form-control-plaintext fw-bold text-primary">{formatCurrency(data.basicSalary)}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Gross Salary</label>
+              <p className="form-control-plaintext">{formatCurrency(data.grossSalary)}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">PF Contribution</label>
+              <p className="form-control-plaintext">{formatCurrency(data.pfContribution)}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">ESI Contribution</label>
+              <p className="form-control-plaintext">{formatCurrency(data.esiContribution)}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">TDS Deduction</label>
+              <p className="form-control-plaintext">{formatCurrency(data.tdsDeduction)}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Professional Tax</label>
+              <p className="form-control-plaintext">{formatCurrency(data.ptDeduction)}</p>
+            </div>
+            <div className="col-12">
+              <label className="form-label small fw-semibold">PF UAN Number</label>
+              <p className="form-control-plaintext">{data.pfUAN || 'N/A'}</p>
+            </div>
+            <div className="col-12">
+              <label className="form-label small fw-semibold">ESI Number</label>
+              <p className="form-control-plaintext">{data.esiNumber || 'N/A'}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">PF Eligible</label>
+              <p className="form-control-plaintext">{data.pfEligible ? 'Yes' : 'No'}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">ESI Eligible</label>
+              <p className="form-control-plaintext">{data.esiEligible ? 'Yes' : 'No'}</p>
+            </div>
+          </div>
+        );
+        
+      case 'pfStatement':
+        return (
+          <div className="row g-3">
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Employee ID</label>
+              <p className="form-control-plaintext fw-bold">{data.employeeId}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Month</label>
+              <p className="form-control-plaintext">{data.month}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Employee Contribution</label>
+              <p className="form-control-plaintext fw-bold text-primary">{formatCurrency(data.employeeContribution)}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Employer Contribution</label>
+              <p className="form-control-plaintext fw-bold text-success">{formatCurrency(data.employerContribution)}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Total PF</label>
+              <p className="form-control-plaintext fw-bold">{formatCurrency(data.total)}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Status</label>
+              <div>{getStatusBadge(data.status)}</div>
+            </div>
+          </div>
+        );
+        
+      case 'form':
+        return (
+          <div className="row g-3">
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Form Name</label>
+              <p className="form-control-plaintext fw-bold">{data.formName}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Employee Name</label>
+              <p className="form-control-plaintext">{data.employeeName}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">
+                {data.financialYear ? 'Financial Year' : 'Period'}
+              </label>
+              <p className="form-control-plaintext">{data.financialYear || data.period}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Status</label>
+              <div>{getStatusBadge(data.status)}</div>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">
+                {data.generatedDate ? 'Generated Date' : 
+                 data.submittedDate ? 'Submitted Date' : 'Date'}
+              </label>
+              <p className="form-control-plaintext">
+                {data.generatedDate || data.submittedDate || 'N/A'}
+              </p>
+            </div>
+            {data.dueDate && (
+              <div className="col-md-6">
+                <label className="form-label small fw-semibold">Due Date</label>
+                <p className="form-control-plaintext">{formatDate(data.dueDate)}</p>
+              </div>
+            )}
+          </div>
+        );
+        
+      case 'declaration':
+        return (
+          <div className="row g-3">
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Employee Name</label>
+              <p className="form-control-plaintext fw-bold">{data.employeeName}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Financial Year</label>
+              <p className="form-control-plaintext">{data.financialYear}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Status</label>
+              <div>{getStatusBadge(data.status)}</div>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Verified</label>
+              <p className="form-control-plaintext">
+                {data.verified ? 'Yes' : 'No'}
+              </p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Submitted Date</label>
+              <p className="form-control-plaintext">{formatDate(data.submittedDate)}</p>
+            </div>
+            {data.dueDate && (
+              <div className="col-md-6">
+                <label className="form-label small fw-semibold">Due Date</label>
+                <p className="form-control-plaintext">{formatDate(data.dueDate)}</p>
+              </div>
+            )}
+            {data.lastModified && (
+              <div className="col-md-6">
+                <label className="form-label small fw-semibold">Last Modified</label>
+                <p className="form-control-plaintext">{formatDate(data.lastModified)}</p>
+              </div>
+            )}
+          </div>
+        );
+        
+      case 'report':
+        return (
+          <div className="row g-3">
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Report Name</label>
+              <p className="form-control-plaintext fw-bold">{data.reportName}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Period</label>
+              <p className="form-control-plaintext">{data.period}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Type</label>
+              <div>{getTypeBadge(data.type)}</div>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Status</label>
+              <div>{getStatusBadge(data.status)}</div>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Generated Date</label>
+              <p className="form-control-plaintext">{formatDate(data.generatedDate)}</p>
+            </div>
+            {data.progress && (
+              <div className="col-md-6">
+                <label className="form-label small fw-semibold">Progress</label>
+                <div className="progress">
+                  <div 
+                    className="progress-bar" 
+                    role="progressbar" 
+                    style={{ width: `${data.progress}%` }}
+                  >
+                    {data.progress}%
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+        
+      case 'ecr':
+        return (
+          <div className="row g-3">
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Month</label>
+              <p className="form-control-plaintext fw-bold">{data.month}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Total Employees</label>
+              <p className="form-control-plaintext">{data.totalEmployees}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Total Wages</label>
+              <p className="form-control-plaintext fw-bold text-primary">{formatCurrency(data.totalWages)}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">EPF Contribution</label>
+              <p className="form-control-plaintext">{formatCurrency(data.epfContribution)}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">EPS Contribution</label>
+              <p className="form-control-plaintext">{formatCurrency(data.epsContribution)}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">EDLI Contribution</label>
+              <p className="form-control-plaintext">{formatCurrency(data.edliContribution)}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Status</label>
+              <div>{getStatusBadge(data.status)}</div>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Submitted Date</label>
+              <p className="form-control-plaintext">{formatDate(data.submittedDate)}</p>
+            </div>
+          </div>
+        );
+        
+      case 'vpf':
+        return (
+          <div className="row g-3">
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Employee Name</label>
+              <p className="form-control-plaintext fw-bold">{data.name}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Employee ID</label>
+              <p className="form-control-plaintext">{data.employeeId}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">VPF Rate</label>
+              <p className="form-control-plaintext fw-bold text-primary">{data.vpfRate}%</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">VPF Amount</label>
+              <p className="form-control-plaintext">{formatCurrency(data.vpfAmount)}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Month</label>
+              <p className="form-control-plaintext">{data.month}</p>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Status</label>
+              <div>{getStatusBadge(data.status)}</div>
+            </div>
+          </div>
+        );
+        
+      default:
+        return (
+          <div>
+            <pre className="bg-light p-3 rounded">
+              {JSON.stringify(data, null, 2)}
+            </pre>
+          </div>
+        );
+    }
+  };
 
   // Sidebar content
   const sidebarContent = (
@@ -733,19 +1447,19 @@ const StatutoryCompliance = () => {
         <div className="space-y-2">
           <div className="d-flex justify-content-between align-items-center">
             <span className="text-sm text-gray-600">Total Employees:</span>
-            <span className="font-semibold text-primary">{kpis.totalEmployees}</span>
+            <span className="font-semibold text-primary">{formatNumber(kpis.totalEmployees)}</span>
           </div>
           <div className="d-flex justify-content-between align-items-center">
             <span className="text-sm text-gray-600">PF Eligible:</span>
-            <span className="font-semibold text-success">{kpis.eligiblePF}</span>
+            <span className="font-semibold text-success">{formatNumber(kpis.eligiblePF)}</span>
           </div>
           <div className="d-flex justify-content-between align-items-center">
             <span className="text-sm text-gray-600">ESI Eligible:</span>
-            <span className="font-semibold text-info">{kpis.eligibleESI}</span>
+            <span className="font-semibold text-info">{formatNumber(kpis.eligibleESI)}</span>
           </div>
           <div className="d-flex justify-content-between align-items-center">
             <span className="text-sm text-gray-600">Pending Declarations:</span>
-            <span className="font-semibold text-warning">{kpis.pendingDeclarations}</span>
+            <span className="font-semibold text-warning">{formatNumber(kpis.pendingDeclarations)}</span>
           </div>
           <div className="d-flex justify-content-between align-items-center">
             <span className="text-sm text-gray-600">Total PF Contribution:</span>
@@ -756,7 +1470,47 @@ const StatutoryCompliance = () => {
     </nav>
   );
 
-  // Render different sections
+  // Function to generate form content from modal
+  const generateAndDownloadForm = (format = 'PDF') => {
+    if (!selectedForm) return;
+    
+    let formContent = '';
+    let fileName = '';
+    
+    switch(selectedForm) {
+      case 'Form16':
+        formContent = generateForm16Content();
+        fileName = `Form_16_${new Date().toISOString().split('T')[0]}`;
+        break;
+      case 'Form5':
+      case 'PF':
+        formContent = generateForm5Content();
+        fileName = `Form_5_${new Date().toISOString().split('T')[0]}`;
+        break;
+      case 'ESI':
+        formContent = generateESIContent();
+        fileName = `ESI_Return_${new Date().toISOString().split('T')[0]}`;
+        break;
+      case 'PT':
+        formContent = `Professional Tax Return\nPeriod: March 2024\nGenerated: ${new Date().toLocaleDateString()}\n\n`;
+        formContent += `Total PT Collection: ${formatCurrency(employees.reduce((sum, emp) => sum + emp.ptDeduction, 0))}\n`;
+        formContent += `State: ${ptConfig.state}\n`;
+        fileName = `PT_Return_${new Date().toISOString().split('T')[0]}`;
+        break;
+      case 'Form24Q':
+        formContent = `Form 24Q - Quarterly TDS Return\n`;
+        formContent += `Quarter: Q4 FY 2023-24\n`;
+        formContent += `Total TDS: ${formatCurrency(kpis.totalTDSDeduction)}\n`;
+        fileName = `Form24Q_Q4_2023_24`;
+        break;
+      default:
+        formContent = `Form: ${selectedForm}\nGenerated on: ${new Date().toLocaleDateString()}\n`;
+        fileName = `${selectedForm}_${new Date().toISOString().split('T')[0]}`;
+    }
+    
+    downloadFile(formContent, fileName, format);
+  };
+
   const renderPF = () => (
     <div className="row g-4">
       {/* PF Configuration */}
@@ -764,7 +1518,7 @@ const StatutoryCompliance = () => {
         <div className="card border shadow-none">
           <div className="card-header bg-transparent border-0">
             <div className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Provident Fund (PF) Configuration</h5>
+              <h5 className="fw-bold h6 h2-md">Provident Fund (PF) Configuration</h5>
               <ButtonWithIcon 
                 icon="heroicons:document-plus"
                 className="btn-primary"
@@ -780,7 +1534,7 @@ const StatutoryCompliance = () => {
               <div className="col-md-6">
                 <div className="card border h-100">
                   <div className="card-header">
-                    <h6 className="mb-0">Contribution Rates (%)</h6>
+                    <h6 className="fw-bold h6 h2-md">Contribution Rates (%)</h6>
                   </div>
                   <div className="card-body">
                     <div className="row g-3">
@@ -833,9 +1587,58 @@ const StatutoryCompliance = () => {
               <div className="col-md-6">
                 <div className="card border h-100">
                   <div className="card-header">
-                    <h6 className="mb-0">PF Settings</h6>
+                    <h6 className="fw-bold h6 h2-md">PF Settings</h6>
                   </div>
                   <div className="card-body">
+                    <style>
+                      {`
+                        .form-check-input.custom-checkbox-tick {
+                          width: 18px;
+                          height: 18px;
+                          border: 2px solid #6c757d;
+                          border-radius: 3px;
+                          cursor: pointer;
+                          appearance: none;
+                          -webkit-appearance: none;
+                          -moz-appearance: none;
+                          position: relative;
+                          background-color: white;
+                          transition: all 0.2s ease;
+                        }
+                        
+                        .form-check-input.custom-checkbox-tick:checked {
+                          background-color: #0d6efd;
+                          border-color: #0d6efd;
+                        }
+                        
+                        .form-check-input.custom-checkbox-tick:checked::after {
+                          content: '✓';
+                          position: absolute;
+                          top: 50%;
+                          left: 50%;
+                          transform: translate(-50%, -50%);
+                          color: white;
+                          font-size: 12px;
+                          font-weight: bold;
+                        }
+                        
+                        .form-check-input.custom-checkbox-tick:hover {
+                          border-color: #0d6efd;
+                        }
+                        
+                        .form-check-input.custom-checkbox-tick:focus {
+                          box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+                          outline: none;
+                        }
+                        
+                        .form-check-label {
+                          cursor: pointer;
+                          user-select: none;
+                          margin-left: 8px;
+                        }
+                      `}
+                    </style>
+                    
                     <div className="row g-3">
                       <div className="col-12">
                         <label className="form-label">Ceiling Limit (₹)</label>
@@ -848,36 +1651,39 @@ const StatutoryCompliance = () => {
                         <small className="text-muted">PF contribution calculated on basic up to this limit</small>
                       </div>
                       <div className="col-12">
-                        <div className="form-check">
+                        <div className="form-check d-flex align-items-center">
                           <input 
-                            className="form-check-input"
+                            className="form-check-input custom-checkbox-tick"
                             type="checkbox"
+                            id="autoPF"
                             checked={pfConfig.autoCalculation}
                             onChange={(e) => handleUpdateConfig('pf', 'autoCalculation', e.target.checked)}
                           />
-                          <label className="form-check-label">
+                          <label className="form-check-label" htmlFor="autoPF">
                             Auto PF Calculation
                           </label>
                         </div>
-                        <div className="form-check">
+                        <div className="form-check d-flex align-items-center mt-2">
                           <input 
-                            className="form-check-input"
+                            className="form-check-input custom-checkbox-tick"
                             type="checkbox"
+                            id="uanMandatory"
                             checked={pfConfig.uanMandatory}
                             onChange={(e) => handleUpdateConfig('pf', 'uanMandatory', e.target.checked)}
                           />
-                          <label className="form-check-label">
+                          <label className="form-check-label" htmlFor="uanMandatory">
                             UAN Number Mandatory
                           </label>
                         </div>
-                        <div className="form-check">
+                        <div className="form-check d-flex align-items-center mt-2">
                           <input 
-                            className="form-check-input"
+                            className="form-check-input custom-checkbox-tick"
                             type="checkbox"
+                            id="enableVPF"
                             checked={pfConfig.vpfEnabled}
                             onChange={(e) => handleUpdateConfig('pf', 'vpfEnabled', e.target.checked)}
                           />
-                          <label className="form-check-label">
+                          <label className="form-check-label" htmlFor="enableVPF">
                             Enable VPF (Voluntary Provident Fund)
                           </label>
                         </div>
@@ -906,9 +1712,58 @@ const StatutoryCompliance = () => {
               <div className="col-md-6">
                 <div className="card border h-100">
                   <div className="card-header">
-                    <h6 className="mb-0">PF Eligibility Rules</h6>
+                    <h6 className="fw-bold h6 h2-md">PF Eligibility Rules</h6>
                   </div>
                   <div className="card-body">
+                    <style>
+                      {`
+                        .form-check-input.custom-checkbox-tick {
+                          width: 18px;
+                          height: 18px;
+                          border: 2px solid #6c757d;
+                          border-radius: 3px;
+                          cursor: pointer;
+                          appearance: none;
+                          -webkit-appearance: none;
+                          -moz-appearance: none;
+                          position: relative;
+                          background-color: white;
+                          transition: all 0.2s ease;
+                        }
+                        
+                        .form-check-input.custom-checkbox-tick:checked {
+                          background-color: #0d6efd;
+                          border-color: #0d6efd;
+                        }
+                        
+                        .form-check-input.custom-checkbox-tick:checked::after {
+                          content: '✓';
+                          position: absolute;
+                          top: 50%;
+                          left: 50%;
+                          transform: translate(-50%, -50%);
+                          color: white;
+                          font-size: 12px;
+                          font-weight: bold;
+                        }
+                        
+                        .form-check-input.custom-checkbox-tick:hover {
+                          border-color: #0d6efd;
+                        }
+                        
+                        .form-check-input.custom-checkbox-tick:focus {
+                          box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+                          outline: none;
+                        }
+                        
+                        .form-check-label {
+                          cursor: pointer;
+                          user-select: none;
+                          margin-left: 8px;
+                        }
+                      `}
+                    </style>
+                    
                     <div className="row g-3">
                       <div className="col-md-6">
                         <label className="form-label">Minimum Salary (₹)</label>
@@ -931,10 +1786,11 @@ const StatutoryCompliance = () => {
                       </div>
                       <div className="col-12">
                         <label className="form-label">Employment Types</label>
-                        <div className="form-check">
+                        <div className="form-check d-flex align-items-center">
                           <input 
-                            className="form-check-input"
+                            className="form-check-input custom-checkbox-tick"
                             type="checkbox"
+                            id="empTypePermanent"
                             checked={pfConfig.eligibilityRules.employmentType.includes('permanent')}
                             onChange={(e) => {
                               const types = e.target.checked 
@@ -943,12 +1799,13 @@ const StatutoryCompliance = () => {
                               handleUpdateConfig('pf', 'eligibilityRules', { ...pfConfig.eligibilityRules, employmentType: types });
                             }}
                           />
-                          <label className="form-check-label">Permanent</label>
+                          <label className="form-check-label" htmlFor="empTypePermanent">Permanent</label>
                         </div>
-                        <div className="form-check">
+                        <div className="form-check d-flex align-items-center">
                           <input 
-                            className="form-check-input"
+                            className="form-check-input custom-checkbox-tick"
                             type="checkbox"
+                            id="empTypeContract"
                             checked={pfConfig.eligibilityRules.employmentType.includes('contract')}
                             onChange={(e) => {
                               const types = e.target.checked 
@@ -957,7 +1814,7 @@ const StatutoryCompliance = () => {
                               handleUpdateConfig('pf', 'eligibilityRules', { ...pfConfig.eligibilityRules, employmentType: types });
                             }}
                           />
-                          <label className="form-check-label">Contract</label>
+                          <label className="form-check-label" htmlFor="empTypeContract">Contract</label>
                         </div>
                       </div>
                       <div className="col-12">
@@ -970,14 +1827,15 @@ const StatutoryCompliance = () => {
                         />
                       </div>
                       <div className="col-12">
-                        <div className="form-check">
+                        <div className="form-check d-flex align-items-center">
                           <input 
-                            className="form-check-input"
+                            className="form-check-input custom-checkbox-tick"
                             type="checkbox"
+                            id="autoEnrollment"
                             checked={pfConfig.eligibilityRules.autoEnrollment}
                             onChange={(e) => handleUpdateConfig('pf', 'eligibilityRules', { ...pfConfig.eligibilityRules, autoEnrollment: e.target.checked })}
                           />
-                          <label className="form-check-label">
+                          <label className="form-check-label" htmlFor="autoEnrollment">
                             Auto-enroll eligible employees
                           </label>
                         </div>
@@ -991,7 +1849,7 @@ const StatutoryCompliance = () => {
               <div className="col-12">
                 <div className="card border">
                   <div className="card-header">
-                    <h6 className="mb-0">PF Statements - March 2024</h6>
+                    <h6 className="fw-bold h6 h2-md">PF Statements - March 2024</h6>
                   </div>
                   <div className="card-body">
                     <div className="table-responsive">
@@ -1021,13 +1879,22 @@ const StatutoryCompliance = () => {
                                 <td>{employee?.pfUAN || 'N/A'}</td>
                                 <td>{getStatusBadge(statement.status)}</td>
                                 <td>
-                                  <ButtonWithIcon 
-                                    icon="heroicons:calculator"
-                                    className="btn-sm btn-outline-primary d-flex align-items-center"
-                                    onClick={() => handleCalculatePF(employee?.id)}
-                                  >
-                                    Calculate
-                                  </ButtonWithIcon>
+                                  <div className="d-flex gap-2">
+                                    <ButtonWithIcon 
+                                      icon="heroicons:eye"
+                                      className="btn-sm btn-outline-primary d-flex align-items-center"
+                                      onClick={() => handleViewData(statement, 'pfStatement')}
+                                    >
+                                      View
+                                    </ButtonWithIcon>
+                                    <ButtonWithIcon 
+                                      icon="heroicons:calculator"
+                                      className="btn-sm btn-outline-success d-flex align-items-center"
+                                      onClick={() => handleCalculatePF(employee?.id)}
+                                    >
+                                      Calculate
+                                    </ButtonWithIcon>
+                                  </div>
                                 </td>
                               </tr>
                             );
@@ -1044,7 +1911,7 @@ const StatutoryCompliance = () => {
                 <div className="card border">
                   <div className="card-header">
                     <div className="d-flex justify-content-between align-items-center">
-                      <h6 className="mb-0">PF Remittance Summary</h6>
+                      <h6 className="fw-bold h6 h2-md">PF Remittance Summary</h6>
                       <ButtonWithIcon
                         icon="heroicons:plus"
                         className="btn-sm btn-primary"
@@ -1083,7 +1950,10 @@ const StatutoryCompliance = () => {
                               <td>{remittance.remittanceDate}</td>
                               <td>{getStatusBadge(remittance.status)}</td>
                               <td>
-                                <button className="btn btn-sm btn-outline-primary">
+                                <button 
+                                  className="btn btn-sm btn-outline-primary"
+                                  onClick={() => handleViewChallan(remittance.challanNo)}
+                                >
                                   View Challan
                                 </button>
                               </td>
@@ -1101,7 +1971,7 @@ const StatutoryCompliance = () => {
                 <div className="card border">
                   <div className="card-header">
                     <div className="d-flex justify-content-between align-items-center">
-                      <h6 className="mb-0">ECR (Electronic Challan cum Return)</h6>
+                      <h6 className="fw-bold h6 h2-md">ECR (Electronic Challan cum Return)</h6>
                       <ButtonWithIcon
                         icon="heroicons:document-plus"
                         className="btn-sm btn-success"
@@ -1140,10 +2010,19 @@ const StatutoryCompliance = () => {
                               <td>{ecr.submittedDate}</td>
                               <td>
                                 <div className="d-flex gap-2">
-                                  <button className="btn btn-sm btn-outline-primary">
+                                  <button 
+                                    className="btn btn-sm btn-outline-primary"
+                                    onClick={() => handleViewData(ecr, 'ecr')}
+                                  >
                                     View
                                   </button>
-                                  <button className="btn btn-sm btn-outline-success">
+                                  <button 
+                                    className="btn btn-sm btn-outline-success"
+                                    onClick={() => {
+                                      const content = `ECR Report for ${ecr.month}\nTotal Wages: ${formatCurrency(ecr.totalWages)}\nEPF Contribution: ${formatCurrency(ecr.epfContribution)}\nEPS Contribution: ${formatCurrency(ecr.epsContribution)}`;
+                                      downloadFile(content, `ECR_${ecr.month.replace(/\s+/g, '_')}`, 'PDF');
+                                    }}
+                                  >
                                     Download
                                   </button>
                                 </div>
@@ -1163,7 +2042,7 @@ const StatutoryCompliance = () => {
                   <div className="card border">
                     <div className="card-header">
                       <div className="d-flex justify-content-between align-items-center">
-                        <h6 className="mb-0">VPF (Voluntary Provident Fund) Management</h6>
+                        <h6 className="fw-bold h6 h2-md">VPF (Voluntary Provident Fund) Management</h6>
                         <ButtonWithIcon
                           icon="heroicons:plus"
                           className="btn-sm btn-primary"
@@ -1198,8 +2077,11 @@ const StatutoryCompliance = () => {
                                 <td>{vpf.month}</td>
                                 <td>{getStatusBadge(vpf.status)}</td>
                                 <td>
-                                  <button className="btn btn-sm btn-outline-primary">
-                                    Edit
+                                  <button 
+                                    className="btn btn-sm btn-outline-primary"
+                                    onClick={() => handleViewData(vpf, 'vpf')}
+                                  >
+                                    View
                                   </button>
                                 </td>
                               </tr>
@@ -1217,7 +2099,7 @@ const StatutoryCompliance = () => {
                 <div className="card border">
                   <div className="card-header">
                     <div className="d-flex justify-content-between align-items-center">
-                      <h6 className="mb-0">UAN Activation & Management</h6>
+                      <h6 className="fw-bold h6 h2-md">UAN Activation & Management</h6>
                       <ButtonWithIcon
                         icon="heroicons:plus"
                         className="btn-sm btn-primary"
@@ -1251,7 +2133,10 @@ const StatutoryCompliance = () => {
                               <td>{getStatusBadge(uan.status)}</td>
                               <td>
                                 <div className="d-flex gap-2">
-                                  <button className="btn btn-sm btn-outline-primary">
+                                  <button 
+                                    className="btn btn-sm btn-outline-primary"
+                                    onClick={() => handleViewData(uan, 'employee')}
+                                  >
                                     View Details
                                   </button>
                                   {uan.status === 'pending' && (
@@ -1274,7 +2159,7 @@ const StatutoryCompliance = () => {
               <div className="col-12">
                 <div className="card border">
                   <div className="card-header">
-                    <h6 className="mb-0">PF Reports & Forms</h6>
+                    <h6 className="fw-bold h6 h2-md">PF Reports & Forms</h6>
                   </div>
                   <div className="card-body">
                     <div className="row g-3">
@@ -1346,1492 +2231,16 @@ const StatutoryCompliance = () => {
                             <ButtonWithIcon
                               icon="heroicons:arrow-down-tray"
                               className="btn-outline-info w-100"
+                              onClick={() => {
+                                const content = employees.map(emp => `${emp.name},${emp.employeeId},${emp.pfUAN || 'N/A'}`).join('\n');
+                                downloadFile(`Name,Employee ID,UAN\n${content}`, 'UAN_Report', 'CSV');
+                              }}
                             >
                               Download Report
                             </ButtonWithIcon>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderESI = () => (
-    <div className="row g-4">
-      {/* ESI Configuration */}
-      <div className="col-12">
-        <div className="card border shadow-none">
-          <div className="card-header bg-transparent border-0">
-            <div className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Employee State Insurance (ESI) Configuration</h5>
-              <ButtonWithIcon 
-                icon="heroicons:document-plus"
-                className="btn-primary"
-                onClick={() => handleGenerateForm('ESI')}
-              >
-                Generate ESI Return
-              </ButtonWithIcon>
-            </div>
-          </div>
-          <div className="card-body">
-            <div className="row g-4">
-              {/* Contribution Rates */}
-              <div className="col-md-6">
-                <div className="card border h-100">
-                  <div className="card-header">
-                    <h6 className="mb-0">ESI Contribution Rates (%)</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <label className="form-label">Employee Contribution</label>
-                        <input 
-                          type="number" 
-                          className="form-control"
-                          value={esiConfig.employeeContribution}
-                          onChange={(e) => handleUpdateConfig('esi', 'employeeContribution', parseFloat(e.target.value))}
-                          step="0.01"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label">Employer Contribution</label>
-                        <input 
-                          type="number" 
-                          className="form-control"
-                          value={esiConfig.employerContribution}
-                          onChange={(e) => handleUpdateConfig('esi', 'employerContribution', parseFloat(e.target.value))}
-                          step="0.01"
-                        />
-                      </div>
-                      <div className="col-12">
-                        <label className="form-label">Salary Threshold</label>
-                        <input 
-                          type="number" 
-                          className="form-control"
-                          value={esiConfig.salaryThreshold}
-                          onChange={(e) => handleUpdateConfig('esi', 'salaryThreshold', parseFloat(e.target.value))}
-                        />
-                        <div className="form-text">Employees earning below this amount are eligible for ESI</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Settings */}
-              <div className="col-md-6">
-                <div className="card border h-100">
-                  <div className="card-header">
-                    <h6 className="mb-0">ESI Settings</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="row g-3">
-                      <div className="col-12">
-                        <div className="form-check">
-                          <input 
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={esiConfig.autoRegistration}
-                            onChange={(e) => handleUpdateConfig('esi', 'autoRegistration', e.target.checked)}
-                          />
-                          <label className="form-check-label">
-                            Auto-register eligible employees
-                          </label>
-                        </div>
-                        <div className="form-check">
-                          <input 
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={esiConfig.halfYearlyReturns}
-                            onChange={(e) => handleUpdateConfig('esi', 'halfYearlyReturns', e.target.checked)}
-                          />
-                          <label className="form-check-label">
-                            Half-yearly ESI Returns
-                          </label>
-                        </div>
-                      </div>
-                      <div className="col-12">
-                        <div className="alert alert-info">
-                          <Icon icon="heroicons:information-circle" className="me-2" />
-                          Current ESI rates: Employee 0.75%, Employer 3.25% of gross wages
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* ESI Statements */}
-              <div className="col-12">
-                <div className="card border">
-                  <div className="card-header">
-                    <h6 className="mb-0">ESI Statements - March 2024</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="table-responsive">
-                      <table className="table table-hover">
-                        <thead>
-                          <tr>
-                            <th>Employee ID</th>
-                            <th>Employee Name</th>
-                            <th>Gross Salary</th>
-                            <th>ESI Number</th>
-                            <th>Employee Contribution</th>
-                            <th>Employer Contribution</th>
-                            <th>Total ESI</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {esiStatements.map(statement => {
-                            const employee = employees.find(emp => emp.employeeId === statement.employeeId);
-                            return (
-                              <tr key={statement.id}>
-                                <td>{statement.employeeId}</td>
-                                <td>{employee?.name || 'N/A'}</td>
-                                <td>{employee ? formatCurrency(employee.grossSalary) : 'N/A'}</td>
-                                <td>{employee?.esiNumber || 'N/A'}</td>
-                                <td className="text-primary">{formatCurrency(statement.employeeContribution)}</td>
-                                <td className="text-success">{formatCurrency(statement.employerContribution)}</td>
-                                <td className="fw-bold">{formatCurrency(statement.total)}</td>
-                                <td>
-                                  <ButtonWithIcon 
-                                    icon="heroicons:calculator"
-                                    className="btn-sm btn-outline-primary"
-                                    onClick={() => handleCalculateESI(employee?.id)}
-                                  >
-                                    Calculate
-                                  </ButtonWithIcon>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* ESI Remittance Summary */}
-              <div className="col-12">
-                <div className="card border">
-                  <div className="card-header">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <h6 className="mb-0">ESI Remittance Summary</h6>
-                      <ButtonWithIcon
-                        icon="heroicons:plus"
-                        className="btn-sm btn-primary"
-                        onClick={() => {
-                          setRemittanceType('esi');
-                          setShowRemittanceModal(true);
-                        }}
-                      >
-                        Add Remittance
-                      </ButtonWithIcon>
-                    </div>
-                  </div>
-                  <div className="card-body">
-                    <div className="table-responsive">
-                      <table className="table table-hover">
-                        <thead>
-                          <tr>
-                            <th>Period</th>
-                            <th>Total Contribution</th>
-                            <th>Employee Contribution</th>
-                            <th>Employer Contribution</th>
-                            <th>Challan Number</th>
-                            <th>Remittance Date</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {esiRemittances.map(remittance => (
-                            <tr key={remittance.id}>
-                              <td>{remittance.period}</td>
-                              <td className="fw-bold">{formatCurrency(remittance.totalContribution)}</td>
-                              <td className="text-primary">{formatCurrency(remittance.employeeContribution)}</td>
-                              <td className="text-success">{formatCurrency(remittance.employerContribution)}</td>
-                              <td>{remittance.challanNo}</td>
-                              <td>{remittance.remittanceDate}</td>
-                              <td>{getStatusBadge(remittance.status)}</td>
-                              <td>
-                                <button className="btn btn-sm btn-outline-primary">
-                                  View Challan
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* ESI Registration */}
-              <div className="col-12">
-                <div className="card border">
-                  <div className="card-header">
-                    <h6 className="mb-0">ESI Registration Status</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="row g-3 mb-3">
-                      <div className="col-md-6">
-                        <label className="form-label">Registration Number</label>
-                        <input 
-                          type="text" 
-                          className="form-control"
-                          value={esiConfig.registrationNumber}
-                          onChange={(e) => handleUpdateConfig('esi', 'registrationNumber', e.target.value)}
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label">Branch Code</label>
-                        <input 
-                          type="text" 
-                          className="form-control"
-                          value={esiConfig.branchCode}
-                          onChange={(e) => handleUpdateConfig('esi', 'branchCode', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <div className="alert alert-info">
-                      <Icon icon="heroicons:information-circle" className="me-2" />
-                      Registration Number: {esiConfig.registrationNumber} | Branch Code: {esiConfig.branchCode}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* ESI Reports */}
-              <div className="col-12">
-                <div className="card border">
-                  <div className="card-header">
-                    <h6 className="mb-0">ESI Reports & Forms</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="row g-3">
-                      <div className="col-md-4">
-                        <div className="card border h-100">
-                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
-                            <div className="bg-info-subtle text-info p-3 rounded-circle mb-3">
-                              <Icon icon="heroicons:document-text" style={{ fontSize: '1.5rem' }} />
-                            </div>
-                            <h6 className="fw-bold mb-2">ESI Return</h6>
-                            <p className="text-muted small mb-3">Half-yearly ESI Return</p>
-                            <ButtonWithIcon
-                              icon="heroicons:document-arrow-down"
-                              className="btn-outline-info w-100"
-                              onClick={() => handleGenerateForm('ESIReturn')}
-                            >
-                              Generate
-                            </ButtonWithIcon>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="card border h-100">
-                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
-                            <div className="bg-success-subtle text-success p-3 rounded-circle mb-3">
-                              <Icon icon="heroicons:document-chart-bar" style={{ fontSize: '1.5rem' }} />
-                            </div>
-                            <h6 className="fw-bold mb-2">ESI Reconciliation</h6>
-                            <p className="text-muted small mb-3">ESI Contribution Reconciliation</p>
-                            <ButtonWithIcon
-                              icon="heroicons:document-arrow-down"
-                              className="btn-outline-success w-100"
-                              onClick={() => {
-                                setShowReconciliationModal(true);
-                                setRemittanceType('esi');
-                              }}
-                            >
-                              Generate
-                            </ButtonWithIcon>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="card border h-100">
-                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
-                            <div className="bg-warning-subtle text-warning p-3 rounded-circle mb-3">
-                              <Icon icon="heroicons:document-duplicate" style={{ fontSize: '1.5rem' }} />
-                            </div>
-                            <h6 className="fw-bold mb-2">ESI Challan</h6>
-                            <p className="text-muted small mb-3">Generate ESI Challan</p>
-                            <ButtonWithIcon
-                              icon="heroicons:document-arrow-down"
-                              className="btn-outline-warning w-100"
-                              onClick={() => {
-                                setShowChallanModal(true);
-                                setRemittanceType('esi');
-                              }}
-                            >
-                              Generate
-                            </ButtonWithIcon>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderPT = () => (
-    <div className="row g-4">
-      {/* PT Configuration */}
-      <div className="col-12">
-        <div className="card border shadow-none">
-          <div className="card-header bg-transparent border-0">
-            <div className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Professional Tax (PT) Configuration</h5>
-              <ButtonWithIcon 
-                icon="heroicons:document-plus"
-                className="btn-primary"
-                onClick={() => handleGenerateForm('PT')}
-              >
-                Generate PT Return
-              </ButtonWithIcon>
-            </div>
-          </div>
-          <div className="card-body">
-            <div className="row g-4">
-              {/* State Selection */}
-              <div className="col-md-6">
-                <div className="card border h-100">
-                  <div className="card-header">
-                    <h6 className="mb-0">State-wise Configuration</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="row g-3">
-                      <div className="col-12">
-                        <label className="form-label">State</label>
-                        <select 
-                          className="form-select"
-                          value={ptConfig.state}
-                          onChange={(e) => handleUpdateConfig('pt', 'state', e.target.value)}
-                        >
-                          <option value="Maharashtra">Maharashtra</option>
-                          <option value="Karnataka">Karnataka</option>
-                          <option value="Tamil Nadu">Tamil Nadu</option>
-                          <option value="Delhi">Delhi</option>
-                          <option value="Gujarat">Gujarat</option>
-                          <option value="West Bengal">West Bengal</option>
-                        </select>
-                      </div>
-                      <div className="col-12">
-                        <label className="form-label">Deduction Cycle</label>
-                        <select 
-                          className="form-select"
-                          value={ptConfig.deductionCycle}
-                          onChange={(e) => handleUpdateConfig('pt', 'deductionCycle', e.target.value)}
-                        >
-                          <option value="monthly">Monthly</option>
-                          <option value="annual">Annual</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* PT Slabs */}
-              <div className="col-md-6">
-                <div className="card border h-100">
-                  <div className="card-header">
-                    <h6 className="mb-0">PT Slabs for {ptConfig.state}</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="table-responsive">
-                      <table className="table table-hover">
-                        <thead>
-                          <tr>
-                            <th>From Salary</th>
-                            <th>To Salary</th>
-                            <th>PT Amount</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {ptConfig.slabs.map((slab, index) => (
-                            <tr key={index}>
-                              <td>{formatCurrency(slab.from)}</td>
-                              <td>{slab.to === Infinity ? 'Above' : formatCurrency(slab.to)}</td>
-                              <td className="fw-bold">{formatCurrency(slab.amount)}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Employee PT Details */}
-              <div className="col-12">
-                <div className="card border">
-                  <div className="card-header">
-                    <h6 className="mb-0">Employee Professional Tax Details</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="table-responsive">
-                      <table className="table table-hover">
-                        <thead>
-                          <tr>
-                            <th>Employee</th>
-                            <th>Gross Salary</th>
-                            <th>PT Applicable</th>
-                            <th>PT Amount</th>
-                            <th>PT Number</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {employees.map(employee => (
-                            <tr key={employee.id}>
-                              <td>
-                                <div className="fw-semibold">{employee.name}</div>
-                                <div className="small text-muted">{employee.department}</div>
-                              </td>
-                              <td>{formatCurrency(employee.grossSalary)}</td>
-                              <td>
-                                {employee.ptApplicable ? (
-                                  <span className="badge bg-success-subtle text-success">Yes</span>
-                                ) : (
-                                  <span className="badge bg-secondary-subtle text-secondary">No</span>
-                                )}
-                              </td>
-                              <td className="fw-bold">{formatCurrency(employee.ptDeduction)}</td>
-                              <td>PT{employee.employeeId}</td>
-                              <td>
-                                <ButtonWithIcon 
-                                  icon="heroicons:calculator"
-                                  className="btn-sm btn-outline-primary"
-                                  onClick={() => handleCalculatePT(employee.id)}
-                                >
-                                  Calculate
-                                </ButtonWithIcon>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderTDS = () => (
-    <div className="row g-4">
-      {/* TDS Configuration */}
-      <div className="col-12">
-        <div className="card border shadow-none">
-          <div className="card-header bg-transparent border-0">
-            <div className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Tax Deducted at Source (TDS) Management</h5>
-              <ButtonWithIcon 
-                icon="heroicons:document-plus"
-                className="btn-primary"
-                onClick={() => handleGenerateForm('Form16')}
-              >
-                Generate Form 16
-              </ButtonWithIcon>
-            </div>
-          </div>
-          <div className="card-body">
-            <div className="row g-4">
-              {/* Tax Regime Selection */}
-              <div className="col-md-6">
-                <div className="card border h-100">
-                  <div className="card-header">
-                    <h6 className="mb-0">Tax Regime Configuration</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="row g-3">
-                      <div className="col-12">
-                        <label className="form-label">Tax Regime</label>
-                        <div className="mb-3">
-                          <div className="form-check">
-                            <input 
-                              className="form-check-input"
-                              type="radio"
-                              name="taxRegime"
-                              value="new"
-                              checked={tdsConfig.taxRegime === 'new'}
-                              onChange={(e) => handleUpdateConfig('tds', 'taxRegime', e.target.value)}
-                            />
-                            <label className="form-check-label">
-                              New Tax Regime (Default)
-                            </label>
-                          </div>
-                          <div className="form-check">
-                            <input 
-                              className="form-check-input"
-                              type="radio"
-                              name="taxRegime"
-                              value="old"
-                              checked={tdsConfig.taxRegime === 'old'}
-                              onChange={(e) => handleUpdateConfig('tds', 'taxRegime', e.target.value)}
-                            />
-                            <label className="form-check-label">
-                              Old Tax Regime (With Deductions)
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-12">
-                        <label className="form-label">Financial Year</label>
-                        <select 
-                          className="form-select"
-                          value={tdsConfig.financialYear}
-                          onChange={(e) => handleUpdateConfig('tds', 'financialYear', e.target.value)}
-                        >
-                          <option value="2024-25">2024-25</option>
-                          <option value="2023-24">2023-24</option>
-                          <option value="2022-23">2022-23</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Investment Declarations */}
-              <div className="col-md-6">
-                <div className="card border h-100">
-                  <div className="card-header">
-                    <h6 className="mb-0">Investment Declarations (Old Regime)</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="row g-2">
-                      <div className="col-md-6">
-                        <label className="form-label small">Section 80C</label>
-                        <input type="number" className="form-control form-control-sm" placeholder="Max 150,000" />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label small">Section 80D</label>
-                        <input type="number" className="form-control form-control-sm" placeholder="Health Insurance" />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label small">HRA Exemption</label>
-                        <input type="number" className="form-control form-control-sm" placeholder="Rent paid" />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label small">LTA Exemption</label>
-                        <input type="number" className="form-control form-control-sm" placeholder="Leave Travel" />
-                      </div>
-                      <div className="col-12 mt-2">
-                        <button className="btn btn-sm btn-outline-primary w-100">
-                          Update Declarations
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Employee TDS Details */}
-              <div className="col-12">
-                <div className="card border">
-                  <div className="card-header">
-                    <h6 className="mb-0">Employee TDS Details - FY 2023-24</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="table-responsive">
-                      <table className="table table-hover">
-                        <thead>
-                          <tr>
-                            <th>Employee</th>
-                            <th>Gross Salary</th>
-                            <th>Annual Income</th>
-                            <th>TDS Deduction</th>
-                            <th>Tax Regime</th>
-                            <th>Form 16 Status</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {employees.map(employee => (
-                            <tr key={employee.id}>
-                              <td>
-                                <div className="fw-semibold">{employee.name}</div>
-                                <div className="small text-muted">{employee.employeeId}</div>
-                              </td>
-                              <td>{formatCurrency(employee.grossSalary)}</td>
-                              <td>{formatCurrency(employee.grossSalary * 12)}</td>
-                              <td className="fw-bold text-danger">{formatCurrency(employee.tdsDeduction)}</td>
-                              <td>
-                                <span className="badge bg-primary-subtle text-primary">
-                                  {tdsConfig.taxRegime === 'new' ? 'New' : 'Old'}
-                                </span>
-                              </td>
-                              <td>
-                                <span className="badge bg-success-subtle text-success">
-                                  Generated
-                                </span>
-                              </td>
-                              <td>
-                                <div className="d-flex gap-2">
-                                  <ButtonWithIcon 
-                                    icon="heroicons:calculator"
-                                    className="btn-sm btn-outline-primary"
-                                    onClick={() => handleCalculateTDS(employee.id)}
-                                  >
-                                    Calculate TDS
-                                  </ButtonWithIcon>
-                                  <button className="btn btn-sm btn-outline-success">
-                                    Form 16
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Standard Deduction */}
-              <div className="col-md-6">
-                <div className="card border h-100">
-                  <div className="card-header">
-                    <h6 className="mb-0">Standard Deduction</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="row g-3">
-                      <div className="col-12">
-                        <label className="form-label">Standard Deduction Amount (₹)</label>
-                        <input 
-                          type="number" 
-                          className="form-control"
-                          value={tdsConfig.standardDeduction}
-                          onChange={(e) => handleUpdateConfig('tds', 'standardDeduction', parseFloat(e.target.value))}
-                        />
-                        <small className="text-muted">Standard deduction applicable for all employees (currently ₹50,000)</small>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* TDS Challans */}
-              <div className="col-12">
-                <div className="card border">
-                  <div className="card-header">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <h6 className="mb-0">TDS Challans</h6>
-                      <ButtonWithIcon
-                        icon="heroicons:plus"
-                        className="btn-sm btn-primary"
-                        onClick={() => {
-                          setShowChallanModal(true);
-                          setRemittanceType('tds');
-                        }}
-                      >
-                        Create Challan
-                      </ButtonWithIcon>
-                    </div>
-                  </div>
-                  <div className="card-body">
-                    <div className="table-responsive">
-                      <table className="table table-hover">
-                        <thead>
-                          <tr>
-                            <th>Quarter</th>
-                            <th>TDS Amount</th>
-                            <th>Challan Number</th>
-                            <th>Deposit Date</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {tdsChallans.map(challan => (
-                            <tr key={challan.id}>
-                              <td>{challan.quarter}</td>
-                              <td className="fw-bold text-danger">{formatCurrency(challan.tdsAmount)}</td>
-                              <td>{challan.challanNo}</td>
-                              <td>{challan.depositDate}</td>
-                              <td>{getStatusBadge(challan.status)}</td>
-                              <td>
-                                <button className="btn btn-sm btn-outline-primary">
-                                  View Challan
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Advance Tax & Self-Assessment Tax */}
-              <div className="col-12">
-                <div className="card border">
-                  <div className="card-header">
-                    <h6 className="mb-0">Advance Tax & Self-Assessment Tax Tracking</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="row g-3 mb-3">
-                      <div className="col-md-6">
-                        <div className="form-check">
-                          <input 
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={tdsConfig.advanceTaxEnabled}
-                            onChange={(e) => handleUpdateConfig('tds', 'advanceTaxEnabled', e.target.checked)}
-                          />
-                          <label className="form-check-label">
-                            Enable Advance Tax Tracking
-                          </label>
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-check">
-                          <input 
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={tdsConfig.selfAssessmentTaxEnabled}
-                            onChange={(e) => handleUpdateConfig('tds', 'selfAssessmentTaxEnabled', e.target.checked)}
-                          />
-                          <label className="form-check-label">
-                            Enable Self-Assessment Tax Tracking
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="table-responsive">
-                      <table className="table table-hover">
-                        <thead>
-                          <tr>
-                            <th>Employee</th>
-                            <th>Advance Tax Amount</th>
-                            <th>Quarter</th>
-                            <th>Due Date</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {advanceTaxData.map(tax => (
-                            <tr key={tax.id}>
-                              <td>
-                                <div className="fw-semibold">{tax.name}</div>
-                                <div className="small text-muted">{tax.employeeId}</div>
-                              </td>
-                              <td className="fw-bold text-warning">{formatCurrency(tax.advanceTaxAmount)}</td>
-                              <td>{tax.quarter}</td>
-                              <td>{tax.dueDate}</td>
-                              <td>{getStatusBadge(tax.status)}</td>
-                              <td>
-                                <button className="btn btn-sm btn-outline-primary">
-                                  View Details
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tax Reconciliation */}
-              <div className="col-12">
-                <div className="card border">
-                  <div className="card-header">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <h6 className="mb-0">Tax Reconciliation & Adjustment</h6>
-                      <ButtonWithIcon
-                        icon="heroicons:document-chart-bar"
-                        className="btn-sm btn-primary"
-                        onClick={() => {
-                          setShowReconciliationModal(true);
-                          setRemittanceType('tds');
-                        }}
-                      >
-                        Generate Reconciliation
-                      </ButtonWithIcon>
-                    </div>
-                  </div>
-                  <div className="card-body">
-                    <div className="alert alert-info">
-                      <Icon icon="heroicons:information-circle" className="me-2" />
-                      Tax reconciliation helps identify discrepancies between TDS deducted and deposited amounts.
-                    </div>
-                    <div className="table-responsive">
-                      <table className="table table-hover">
-                        <thead>
-                          <tr>
-                            <th>Period</th>
-                            <th>TDS Deducted</th>
-                            <th>TDS Deposited</th>
-                            <th>Variance</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr>
-                            <td>Q4 FY 2023-24</td>
-                            <td className="fw-bold">{formatCurrency(150000)}</td>
-                            <td className="fw-bold text-success">{formatCurrency(150000)}</td>
-                            <td className="text-success">₹0</td>
-                            <td><span className="badge bg-success-subtle text-success">Reconciled</span></td>
-                            <td>
-                              <button className="btn btn-sm btn-outline-primary">
-                                View Details
-                              </button>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* TDS Reports */}
-              <div className="col-12">
-                <div className="card border">
-                  <div className="card-header">
-                    <h6 className="mb-0">TDS Reports & Forms</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="row g-3">
-                      <div className="col-lg-3 col-md-6">
-                        <div className="card border h-100">
-                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
-                            <div className="bg-primary-subtle text-primary p-3 rounded-circle mb-3">
-                              <Icon icon="heroicons:document-text" style={{ fontSize: '1.5rem' }} />
-                            </div>
-                            <h6 className="fw-bold mb-2">Form 16</h6>
-                            <p className="text-muted small mb-3">Part A & B</p>
-                            <ButtonWithIcon
-                              icon="heroicons:document-arrow-down"
-                              className="btn-outline-primary w-100"
-                              onClick={() => handleGenerateForm('Form16')}
-                            >
-                              Generate
-                            </ButtonWithIcon>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-lg-3 col-md-6">
-                        <div className="card border h-100">
-                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
-                            <div className="bg-success-subtle text-success p-3 rounded-circle mb-3">
-                              <Icon icon="heroicons:document-chart-bar" style={{ fontSize: '1.5rem' }} />
-                            </div>
-                            <h6 className="fw-bold mb-2">Form 24Q</h6>
-                            <p className="text-muted small mb-3">Quarterly TDS Return</p>
-                            <ButtonWithIcon
-                              icon="heroicons:document-arrow-down"
-                              className="btn-outline-success w-100"
-                              onClick={() => handleGenerateForm('Form24Q')}
-                            >
-                              Generate
-                            </ButtonWithIcon>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-lg-3 col-md-6">
-                        <div className="card border h-100">
-                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
-                            <div className="bg-warning-subtle text-warning p-3 rounded-circle mb-3">
-                              <Icon icon="heroicons:calculator" style={{ fontSize: '1.5rem' }} />
-                            </div>
-                            <h6 className="fw-bold mb-2">TDS Calculator</h6>
-                            <p className="text-muted small mb-3">Tax Calculation</p>
-                            <ButtonWithIcon
-                              icon="heroicons:calculator"
-                              className="btn-outline-warning w-100"
-                            >
-                              Open Calculator
-                            </ButtonWithIcon>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-lg-3 col-md-6">
-                        <div className="card border h-100">
-                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
-                            <div className="bg-info-subtle text-info p-3 rounded-circle mb-3">
-                              <Icon icon="heroicons:document-duplicate" style={{ fontSize: '1.5rem' }} />
-                            </div>
-                            <h6 className="fw-bold mb-2">TDS Challan</h6>
-                            <p className="text-muted small mb-3">Challan 281</p>
-                            <ButtonWithIcon
-                              icon="heroicons:document-arrow-down"
-                              className="btn-outline-info w-100"
-                              onClick={() => {
-                                setShowChallanModal(true);
-                                setRemittanceType('tds');
-                              }}
-                            >
-                              Generate
-                            </ButtonWithIcon>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderLWF = () => (
-    <div className="row g-4">
-      {/* LWF Configuration */}
-      <div className="col-12">
-        <div className="card border shadow-none">
-          <div className="card-header bg-transparent border-0">
-            <h5 className="mb-0">Labour Welfare Fund (LWF) Management</h5>
-          </div>
-          <div className="card-body">
-            <div className="row g-4">
-              {/* LWF Configuration */}
-              <div className="col-md-6">
-                <div className="card border h-100">
-                  <div className="card-header">
-                    <h6 className="mb-0">LWF Configuration - {lwfConfig.state}</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="row g-3">
-                      <div className="col-12">
-                        <label className="form-label">State</label>
-                        <select 
-                          className="form-select"
-                          value={lwfConfig.state}
-                          onChange={(e) => handleUpdateConfig('lwf', 'state', e.target.value)}
-                        >
-                          <option value="Maharashtra">Maharashtra</option>
-                          <option value="Karnataka">Karnataka</option>
-                          <option value="Gujarat">Gujarat</option>
-                          <option value="Tamil Nadu">Tamil Nadu</option>
-                        </select>
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label">Employee Contribution (₹)</label>
-                        <input 
-                          type="number" 
-                          className="form-control"
-                          value={lwfConfig.employeeContribution}
-                          onChange={(e) => handleUpdateConfig('lwf', 'employeeContribution', parseFloat(e.target.value))}
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label">Employer Contribution (₹)</label>
-                        <input 
-                          type="number" 
-                          className="form-control"
-                          value={lwfConfig.employerContribution}
-                          onChange={(e) => handleUpdateConfig('lwf', 'employerContribution', parseFloat(e.target.value))}
-                        />
-                      </div>
-                      <div className="col-12">
-                        <label className="form-label">Deduction Frequency</label>
-                        <select 
-                          className="form-select"
-                          value={lwfConfig.deductionFrequency}
-                          onChange={(e) => handleUpdateConfig('lwf', 'deductionFrequency', e.target.value)}
-                        >
-                          <option value="annual">Annual</option>
-                          <option value="half-yearly">Half-yearly</option>
-                          <option value="monthly">Monthly</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* LWF Information */}
-              <div className="col-md-6">
-                <div className="card border h-100">
-                  <div className="card-header">
-                    <h6 className="mb-0">LWF Information</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="alert alert-info">
-                      <h6 className="alert-heading">Labour Welfare Fund Details</h6>
-                      <p className="small mb-0">
-                        The Labour Welfare Fund is a statutory contribution paid by both employers and employees for the welfare of labourers.
-                      </p>
-                    </div>
-                    <div className="mt-3">
-                      <h6 className="fw-bold">Current Rates for {lwfConfig.state}:</h6>
-                      <ul className="list-unstyled">
-                        <li className="mb-2">• Employee Contribution: ₹{lwfConfig.employeeContribution}</li>
-                        <li className="mb-2">• Employer Contribution: ₹{lwfConfig.employerContribution}</li>
-                        <li>• Frequency: {lwfConfig.deductionFrequency === 'annual' ? 'Once a year' : lwfConfig.deductionFrequency}</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* LWF Report */}
-              <div className="col-12">
-                <div className="card border">
-                  <div className="card-header">
-                    <h6 className="mb-0">LWF Contribution Report - FY 2023-24</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="table-responsive">
-                      <table className="table table-hover">
-                        <thead>
-                          <tr>
-                            <th>Employee</th>
-                            <th>Employee ID</th>
-                            <th>Employee Contribution</th>
-                            <th>Employer Contribution</th>
-                            <th>Total LWF</th>
-                            <th>Payment Status</th>
-                            <th>Due Date</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {employees.map(employee => (
-                            <tr key={employee.id}>
-                              <td className="fw-semibold">{employee.name}</td>
-                              <td>{employee.employeeId}</td>
-                              <td className="text-primary">{formatCurrency(lwfConfig.employeeContribution)}</td>
-                              <td className="text-success">{formatCurrency(lwfConfig.employerContribution)}</td>
-                              <td className="fw-bold">{formatCurrency(lwfConfig.employeeContribution + lwfConfig.employerContribution)}</td>
-                              <td>
-                                <span className="badge bg-success-subtle text-success">Paid</span>
-                              </td>
-                              <td>31-Mar-2024</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* LWF Compliance Reports */}
-              <div className="col-12">
-                <div className="card border">
-                  <div className="card-header">
-                    <h6 className="mb-0">LWF Compliance Reports</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="row g-3">
-                      <div className="col-md-4">
-                        <div className="card border h-100">
-                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
-                            <div className="bg-primary-subtle text-primary p-3 rounded-circle mb-3">
-                              <Icon icon="heroicons:document-chart-bar" style={{ fontSize: '1.5rem' }} />
-                            </div>
-                            <h6 className="fw-bold mb-2">Annual LWF Report</h6>
-                            <p className="text-muted small mb-3">State-wise LWF compliance</p>
-                            <ButtonWithIcon
-                              icon="heroicons:document-arrow-down"
-                              className="btn-outline-primary w-100"
-                            >
-                              Generate
-                            </ButtonWithIcon>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="card border h-100">
-                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
-                            <div className="bg-success-subtle text-success p-3 rounded-circle mb-3">
-                              <Icon icon="heroicons:document-text" style={{ fontSize: '1.5rem' }} />
-                            </div>
-                            <h6 className="fw-bold mb-2">LWF Payment Summary</h6>
-                            <p className="text-muted small mb-3">Payment status report</p>
-                            <ButtonWithIcon
-                              icon="heroicons:document-arrow-down"
-                              className="btn-outline-success w-100"
-                            >
-                              Generate
-                            </ButtonWithIcon>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="card border h-100">
-                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
-                            <div className="bg-info-subtle text-info p-3 rounded-circle mb-3">
-                              <Icon icon="heroicons:chart-bar" style={{ fontSize: '1.5rem' }} />
-                            </div>
-                            <h6 className="fw-bold mb-2">LWF Compliance Status</h6>
-                            <p className="text-muted small mb-3">Compliance tracking report</p>
-                            <ButtonWithIcon
-                              icon="heroicons:document-arrow-down"
-                              className="btn-outline-info w-100"
-                            >
-                              Generate
-                            </ButtonWithIcon>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderGratuity = () => (
-    <div className="row g-4">
-      {/* Gratuity Configuration */}
-      <div className="col-12">
-        <div className="card border shadow-none">
-          <div className="card-header bg-transparent border-0">
-            <h5 className="mb-0">Gratuity Management</h5>
-          </div>
-          <div className="card-body">
-            <div className="row g-4">
-              {/* Configuration */}
-              <div className="col-md-6">
-                <div className="card border h-100">
-                  <div className="card-header">
-                    <h6 className="mb-0">Gratuity Configuration</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="row g-3">
-                      <div className="col-12">
-                        <label className="form-label">Eligibility Years</label>
-                        <input 
-                          type="number" 
-                          className="form-control"
-                          value={gratuityConfig.eligibilityYears}
-                          onChange={(e) => handleUpdateConfig('gratuity', 'eligibilityYears', parseInt(e.target.value))}
-                        />
-                        <div className="form-text">Minimum years of service required for gratuity eligibility</div>
-                      </div>
-                      <div className="col-12">
-                        <label className="form-label">Calculation Method</label>
-                        <select 
-                          className="form-select"
-                          value={gratuityConfig.calculationMethod}
-                          onChange={(e) => handleUpdateConfig('gratuity', 'calculationMethod', e.target.value)}
-                        >
-                          <option value="last_drawn">Last drawn salary</option>
-                          <option value="average_salary">Average of last 10 months</option>
-                        </select>
-                      </div>
-                      <div className="col-12">
-                        <label className="form-label">Ceiling Limit (₹)</label>
-                        <input 
-                          type="number" 
-                          className="form-control"
-                          value={gratuityConfig.ceilingLimit}
-                          onChange={(e) => handleUpdateConfig('gratuity', 'ceilingLimit', parseInt(e.target.value))}
-                        />
-                      </div>
-                      <div className="col-12">
-                        <div className="form-check">
-                          <input 
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={gratuityConfig.autoProvisioning}
-                            onChange={(e) => handleUpdateConfig('gratuity', 'autoProvisioning', e.target.checked)}
-                          />
-                          <label className="form-check-label">
-                            Auto-provisioning of gratuity liability
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Gratuity Formula */}
-              <div className="col-md-6">
-                <div className="card border h-100">
-                  <div className="card-header">
-                    <h6 className="mb-0">Gratuity Calculation Formula</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="alert alert-success">
-                      <h6 className="alert-heading">Gratuity Calculation</h6>
-                      <p className="mb-2 fw-bold">Formula:</p>
-                      <p className="mb-1">(Last drawn salary × 15 × Years of service) ÷ 26</p>
-                      <p className="small mb-0">Where 26 represents the number of working days in a month</p>
-                    </div>
-                    <div className="mt-3">
-                      <h6 className="fw-bold">Example:</h6>
-                      <ul className="list-unstyled">
-                        <li className="mb-1">• Last drawn salary: ₹50,000</li>
-                        <li className="mb-1">• Years of service: 10</li>
-                        <li className="mb-1">• Calculation: (50,000 × 15 × 10) ÷ 26</li>
-                        <li className="mb-1">• Gratuity amount: ₹2,88,462</li>
-                        <li>• Ceiling limit: ₹20,00,000 (maximum payable)</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Employee Gratuity Eligibility */}
-              <div className="col-12">
-                <div className="card border">
-                  <div className="card-header">
-                    <h6 className="mb-0">Employee Gratuity Eligibility & Calculation</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="table-responsive">
-                      <table className="table table-hover">
-                        <thead>
-                          <tr>
-                            <th>Employee</th>
-                            <th>Date of Joining</th>
-                            <th>Years of Service</th>
-                            <th>Last Drawn Salary</th>
-                            <th>Eligibility</th>
-                            <th>Projected Gratuity</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {employees.map(employee => {
-                            const doj = new Date(employee.doj);
-                            const now = new Date();
-                            const yearsOfService = (now - doj) / (1000 * 60 * 60 * 24 * 365.25);
-                            const isEligible = yearsOfService >= gratuityConfig.eligibilityYears;
-                            const gratuityAmount = isEligible ? 
-                              Math.min((employee.basicSalary * 15 * yearsOfService) / 26, gratuityConfig.ceilingLimit) : 0;
-                            
-                            return (
-                              <tr key={employee.id}>
-                                <td>
-                                  <div className="fw-semibold">{employee.name}</div>
-                                  <div className="small text-muted">{employee.department}</div>
-                                </td>
-                                <td>{employee.doj}</td>
-                                <td>{yearsOfService.toFixed(2)} years</td>
-                                <td>{formatCurrency(employee.basicSalary)}</td>
-                                <td>
-                                  {isEligible ? (
-                                    <span className="badge bg-success-subtle text-success">Eligible</span>
-                                  ) : (
-                                    <span className="badge bg-warning-subtle text-warning">
-                                      {Math.ceil(gratuityConfig.eligibilityYears - yearsOfService)} years to go
-                                    </span>
-                                  )}
-                                </td>
-                                <td className="fw-bold text-primary">
-                                  {isEligible ? formatCurrency(gratuityAmount) : 'N/A'}
-                                </td>
-                                <td>
-                                  <ButtonWithIcon 
-                                    icon="heroicons:calculator"
-                                    className="btn-sm btn-outline-primary"
-                                    onClick={() => handleCalculateGratuity(employee.id)}
-                                  >
-                                    Calculate
-                                  </ButtonWithIcon>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderBonus = () => (
-    <div className="row g-4">
-      {/* Bonus Configuration */}
-      <div className="col-12">
-        <div className="card border shadow-none">
-          <div className="card-header bg-transparent border-0">
-            <h5 className="mb-0">Bonus Act Compliance</h5>
-          </div>
-          <div className="card-body">
-            <div className="row g-4">
-              {/* Configuration */}
-              <div className="col-md-6">
-                <div className="card border h-100">
-                  <div className="card-header">
-                    <h6 className="mb-0">Bonus Configuration</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="row g-3">
-                      <div className="col-12">
-                        <label className="form-label">Eligibility Threshold (₹)</label>
-                        <input 
-                          type="number" 
-                          className="form-control"
-                          value={bonusConfig.eligibilityThreshold}
-                          onChange={(e) => handleUpdateConfig('bonus', 'eligibilityThreshold', parseInt(e.target.value))}
-                        />
-                        <div className="form-text">Employees earning below this amount are eligible for bonus</div>
-                      </div>
-                      <div className="col-12">
-                        <label className="form-label">Calculation Rate (%)</label>
-                        <input 
-                          type="number" 
-                          className="form-control"
-                          value={bonusConfig.calculationRate}
-                          onChange={(e) => handleUpdateConfig('bonus', 'calculationRate', parseFloat(e.target.value))}
-                          step="0.01"
-                        />
-                        <div className="form-text">Percentage of basic salary for bonus calculation</div>
-                      </div>
-                      <div className="col-12">
-                        <label className="form-label">Minimum Bonus (₹)</label>
-                        <input 
-                          type="number" 
-                          className="form-control"
-                          value={bonusConfig.minimumBonus}
-                          onChange={(e) => handleUpdateConfig('bonus', 'minimumBonus', parseInt(e.target.value))}
-                        />
-                      </div>
-                      <div className="col-12">
-                        <div className="form-check">
-                          <input 
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={bonusConfig.partialYearCalculation}
-                            onChange={(e) => handleUpdateConfig('bonus', 'partialYearCalculation', e.target.checked)}
-                          />
-                          <label className="form-check-label">
-                            Partial year bonus calculation
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bonus Information */}
-              <div className="col-md-6">
-                <div className="card border h-100">
-                  <div className="card-header">
-                    <h6 className="mb-0">Bonus Act Information</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="alert alert-warning">
-                      <h6 className="alert-heading">Payment of Bonus Act, 1965</h6>
-                      <p className="small mb-0">
-                        The Act applies to establishments with 20 or more employees. Eligible employees must be paid a minimum bonus of 8.33% of their salary or ₹100, whichever is higher.
-                      </p>
-                    </div>
-                    <div className="mt-3">
-                      <h6 className="fw-bold">Key Points:</h6>
-                      <ul className="list-unstyled">
-                        <li className="mb-1">• Eligibility: Employees earning ≤ ₹21,000 per month</li>
-                        <li className="mb-1">• Minimum Bonus: 8.33% of salary or ₹100</li>
-                        <li className="mb-1">• Maximum Bonus: 20% of salary</li>
-                        <li className="mb-1">• Payment Time: Within 8 months from accounting year end</li>
-                        <li>• Partial Year: Pro-rata calculation for employees who worked less than 30 days</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Employee Bonus Calculation */}
-              <div className="col-12">
-                <div className="card border">
-                  <div className="card-header">
-                    <h6 className="mb-0">Employee Bonus Calculation - FY 2023-24</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="table-responsive">
-                      <table className="table table-hover">
-                        <thead>
-                          <tr>
-                            <th>Employee</th>
-                            <th>Basic Salary</th>
-                            <th>Eligibility</th>
-                            <th>Bonus Rate</th>
-                            <th>Bonus Amount</th>
-                            <th>Payment Status</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {employees.map(employee => {
-                            const isEligible = employee.basicSalary <= bonusConfig.eligibilityThreshold;
-                            const bonusAmount = isEligible ? 
-                              Math.max((employee.basicSalary * bonusConfig.calculationRate) / 100, bonusConfig.minimumBonus) : 0;
-                            
-                            return (
-                              <tr key={employee.id}>
-                                <td>
-                                  <div className="fw-semibold">{employee.name}</div>
-                                  <div className="small text-muted">{employee.employeeId}</div>
-                                </td>
-                                <td>{formatCurrency(employee.basicSalary)}</td>
-                                <td>
-                                  {isEligible ? (
-                                    <span className="badge bg-success-subtle text-success">Eligible</span>
-                                  ) : (
-                                    <span className="badge bg-secondary-subtle text-secondary">Not Eligible</span>
-                                  )}
-                                </td>
-                                <td>{bonusConfig.calculationRate}%</td>
-                                <td className="fw-bold text-success">
-                                  {isEligible ? formatCurrency(bonusAmount) : 'N/A'}
-                                </td>
-                                <td>
-                                  <span className="badge bg-warning-subtle text-warning">Pending</span>
-                                </td>
-                                <td>
-                                  <ButtonWithIcon 
-                                    icon="heroicons:calculator"
-                                    className="btn-sm btn-outline-primary"
-                                    onClick={() => handleCalculateBonus(employee.id)}
-                                  >
-                                    Calculate
-                                  </ButtonWithIcon>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
                     </div>
                   </div>
                 </div>
@@ -2900,10 +2309,13 @@ const StatutoryCompliance = () => {
           <table className="table table-hover mb-0">
             <thead className="bg-light">
               <tr>
-                <th className="border-0 px-4 py-3 text-uppercase fw-bold text-dark">Employee</th>
-                <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">PF Status</th>
-                <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">ESI Status</th>
-                <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">TDS Status</th>
+                <th className="border-0 px-4 py-3 text-uppercase fw-bold text-dark">Employee ID</th>
+                <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">Name</th>
+                <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">Department</th>
+                <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">Basic Salary</th>
+                <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">PF</th>
+                <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">ESI</th>
+                <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">TDS</th>
                 <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">Last Declaration</th>
                 <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">Actions</th>
               </tr>
@@ -2912,61 +2324,82 @@ const StatutoryCompliance = () => {
               {paginatedData.map((employee) => (
                 <tr key={employee.id} className="border-bottom">
                   <td className="px-4 py-3">
-                    <div className="d-flex align-items-center">
-                      <div className="w-40-px h-40-px bg-light rounded-circle d-flex align-items-center justify-content-center me-3">
-                        <Icon icon="heroicons:user" className="text-muted" />
-                      </div>
-                      <div>
-                        <div className="fw-medium text-dark">{employee.name}</div>
-                        <div className="small text-muted">{employee.employeeId} • {employee.department}</div>
-                      </div>
+                    <div className="fw-medium text-dark">{employee.employeeId}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="fw-medium text-dark">{employee.name}</div>
+                    <div className="small text-muted">{employee.department}</div>
+                  </td>
+                  <td className="px-4 py-3">{employee.department}</td>
+                  <td className="px-4 py-3 fw-bold">{formatCurrency(employee.basicSalary)}</td>
+                  <td className="px-4 py-3">
+                    <div className={`badge ${employee.pfEligible ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}`}>
+                      {employee.pfEligible ? 'Eligible' : 'Not Eligible'}
                     </div>
+                    <div className="small text-muted">{formatCurrency(employee.pfContribution)}</div>
                   </td>
                   <td className="px-4 py-3">
-                    {employee.pfEligible ? (
-                      <>
-                        <div className="fw-semibold text-primary">{formatCurrency(employee.pfContribution)}</div>
-                        <div className="small text-muted">UAN: {employee.pfUAN}</div>
-                      </>
-                    ) : (
-                      <span className="badge bg-secondary-subtle text-secondary">Not Eligible</span>
-                    )}
+                    <div className={`badge ${employee.esiEligible ? 'bg-info-subtle text-info' : 'bg-secondary-subtle text-secondary'}`}>
+                      {employee.esiEligible ? 'Eligible' : 'Not Eligible'}
+                    </div>
+                    <div className="small text-muted">{formatCurrency(employee.esiContribution)}</div>
                   </td>
                   <td className="px-4 py-3">
-                    {employee.esiEligible ? (
-                      <>
-                        <div className="fw-semibold text-info">{formatCurrency(employee.esiContribution)}</div>
-                        <div className="small text-muted">ESI: {employee.esiNumber}</div>
-                      </>
-                    ) : (
-                      <span className="badge bg-secondary-subtle text-secondary">Not Eligible</span>
-                    )}
+                    <div className={`badge ${employee.tdsApplicable ? 'bg-warning-subtle text-warning' : 'bg-secondary-subtle text-secondary'}`}>
+                      {employee.tdsApplicable ? 'Applicable' : 'Not Applicable'}
+                    </div>
+                    <div className="small text-muted">{formatCurrency(employee.tdsDeduction)}</div>
                   </td>
                   <td className="px-4 py-3">
-                    {employee.tdsApplicable ? (
-                      <>
-                        <div className="fw-semibold text-success">{formatCurrency(employee.tdsDeduction)}</div>
-                        <div className="small text-muted">Monthly TDS</div>
-                      </>
-                    ) : (
-                      <span className="badge bg-secondary-subtle text-secondary">Not Applicable</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div>{employee.lastDeclaration}</div>
-                    <div className="small text-muted">Form 16: Generated</div>
+                    {formatDate(employee.lastDeclaration)}
                   </td>
                   <td className="px-4 py-3">
                     <div className="d-flex gap-2">
                       <button
-                        onClick={() => handleViewDetails(employee)}
+                        onClick={() => handleViewData(employee, 'employee')}
                         className="btn btn-sm btn-outline-primary"
                       >
                         View
                       </button>
-                      <button className="btn btn-sm btn-outline-warning">
-                        Update
-                      </button>
+                      <div className="dropdown">
+                        <button className="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                          Calculate
+                        </button>
+                        <ul className="dropdown-menu">
+                          <li>
+                            <button className="dropdown-item" onClick={() => handleCalculatePF(employee.id)}>
+                              PF Calculation
+                            </button>
+                          </li>
+                          {employee.esiEligible && (
+                            <li>
+                              <button className="dropdown-item" onClick={() => handleCalculateESI(employee.id)}>
+                                ESI Calculation
+                              </button>
+                            </li>
+                          )}
+                          <li>
+                            <button className="dropdown-item" onClick={() => handleCalculateTDS(employee.id)}>
+                              TDS Calculation
+                            </button>
+                          </li>
+                          <li>
+                            <button className="dropdown-item" onClick={() => handleCalculatePT(employee.id)}>
+                              PT Calculation
+                            </button>
+                          </li>
+                          <li>
+                            <button className="dropdown-item" onClick={() => handleCalculateGratuity(employee.id)}>
+                              Gratuity Calculation
+                            </button>
+                          </li>
+                          <li>
+                            <button className="dropdown-item" onClick={() => handleCalculateBonus(employee.id)}>
+                              Bonus Calculation
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -2977,61 +2410,11 @@ const StatutoryCompliance = () => {
 
         {paginatedData.length === 0 && (
           <div className="text-center py-5 text-muted">
-            <Icon icon="heroicons:users" className="text-4xl mb-3" />
+            <Icon icon="heroicons:user-group" className="text-4xl mb-3" />
             <h5>No employees found</h5>
             <p>No employees match your search criteria.</p>
           </div>
         )}
-
-        {/* Compliance Summary */}
-        <div className="p-4 border-top">
-          <div className="row g-3">
-            <div className="col-md-3 col-6">
-              <div className="card border h-100">
-                <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
-                  <div className="text-primary mb-2">
-                    <Icon icon="heroicons:building-library" className="fs-1" />
-                  </div>
-                  <h4 className="fw-bold">{kpis.eligiblePF}</h4>
-                  <p className="text-muted mb-0">PF Eligible Employees</p>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3 col-6">
-              <div className="card border h-100">
-                <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
-                  <div className="text-info mb-2">
-                    <Icon icon="heroicons:heart" className="fs-1" />
-                  </div>
-                  <h4 className="fw-bold">{kpis.eligibleESI}</h4>
-                  <p className="text-muted mb-0">ESI Eligible Employees</p>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3 col-6">
-              <div className="card border h-100">
-                <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
-                  <div className="text-success mb-2">
-                    <Icon icon="heroicons:document-check" className="fs-1" />
-                  </div>
-                  <h4 className="fw-bold">{declarations.filter(d => d.verified).length}</h4>
-                  <p className="text-muted mb-0">Verified Declarations</p>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3 col-6">
-              <div className="card border h-100">
-                <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
-                  <div className="text-warning mb-2">
-                    <Icon icon="heroicons:clock" className="fs-1" />
-                  </div>
-                  <h4 className="fw-bold">{kpis.pendingDeclarations}</h4>
-                  <p className="text-muted mb-0">Pending Declarations</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Pagination */}
         {totalPages > 1 && (
@@ -3152,18 +2535,24 @@ const StatutoryCompliance = () => {
                   <td className="px-4 py-3">
                     <div className="d-flex gap-2">
                       <button
-                        onClick={() => handleViewDetails(form)}
+                        onClick={() => handleViewData(form, 'form')}
                         className="btn btn-sm btn-outline-primary"
                       >
                         View
                       </button>
                       {form.status === 'generated' && (
-                        <button className="btn btn-sm btn-outline-success">
+                        <button 
+                          className="btn btn-sm btn-outline-success"
+                          onClick={() => handleDownloadForm(form.id)}
+                        >
                           Download
                         </button>
                       )}
                       {form.status === 'pending' && (
-                        <button className="btn btn-sm btn-outline-warning">
+                        <button 
+                          className="btn btn-sm btn-outline-warning"
+                          onClick={() => handleGenerateForm(form.formName)}
+                        >
                           Generate
                         </button>
                       )}
@@ -3268,345 +2657,297 @@ const StatutoryCompliance = () => {
   );
 
   const renderDeclarations = () => (
-    <div className="row g-4">
-      <div className="col-12">
-        <div className="card border shadow-none">
-          <div className="card-header bg-transparent border-0">
-            <div className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Investment Declarations</h5>
-              <div className="d-flex gap-2">
-                <ButtonWithIcon 
-                  icon="heroicons:document-plus"
-                  className="btn-primary"
-                  onClick={() => handleGenerateForm('Declaration')}
-                >
-                  New Declaration
-                </ButtonWithIcon>
-                <ButtonWithIcon 
-                  icon="heroicons:bell"
-                  className="btn-outline-primary"
-                >
-                  Send Reminders
-                </ButtonWithIcon>
-              </div>
-            </div>
+    <div className="card border shadow-none">
+      <div className="card-header bg-transparent border-0">
+        <div className="d-flex justify-content-between align-items-center">
+          <h5 className="mb-0">Investment Declarations</h5>
+          <div className="d-flex gap-2">
+            <ButtonWithIcon 
+              icon="heroicons:document-arrow-down"
+              className="btn-primary"
+              onClick={handleExportReport}
+            >
+              Export
+            </ButtonWithIcon>
+            <ButtonWithIcon 
+              icon="heroicons:arrow-path"
+              className="btn-outline-primary"
+              onClick={handleRefreshData}
+            >
+              Refresh
+            </ButtonWithIcon>
           </div>
-          <div className="card-body">
-            <div className="row g-4">
-              {/* Declaration Status */}
-              <div className="col-md-6">
-                <div className="card border h-100">
-                  <div className="card-header">
-                    <h6 className="mb-0">Declaration Status - FY 2024-25</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="table-responsive">
-                      <table className="table table-hover">
-                        <thead>
-                          <tr>
-                            <th>Employee</th>
-                            <th>Status</th>
-                            <th>Submitted Date</th>
-                            <th>Verified</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {declarations.map(declaration => (
-                            <tr key={declaration.id}>
-                              <td className="fw-semibold">{declaration.employeeName}</td>
-                              <td>{getStatusBadge(declaration.status)}</td>
-                              <td>{declaration.submittedDate || declaration.lastModified || 'N/A'}</td>
-                              <td>
-                                {declaration.verified ? (
-                                  <span className="badge bg-success-subtle text-success">Yes</span>
-                                ) : (
-                                  <span className="badge bg-warning-subtle text-warning">Pending</span>
-                                )}
-                              </td>
-                              <td>
-                                <button className="btn btn-sm btn-outline-primary">
-                                  View
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Investment Sections */}
-              <div className="col-md-6">
-                <div className="card border h-100">
-                  <div className="card-header">
-                    <h6 className="mb-0">Investment Declaration Sections</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="row g-2">
-                      <div className="col-12">
-                        <label className="form-label small">Section 80C (Max ₹1,50,000)</label>
-                        <input 
-                          type="number" 
-                          className="form-control"
-                          value={investmentDeclarations.section80C}
-                          onChange={(e) => setInvestmentDeclarations(prev => ({...prev, section80C: parseFloat(e.target.value)}))}
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label small">Section 80D</label>
-                        <input 
-                          type="number" 
-                          className="form-control"
-                          value={investmentDeclarations.section80D}
-                          onChange={(e) => setInvestmentDeclarations(prev => ({...prev, section80D: parseFloat(e.target.value)}))}
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label small">NPS (80CCD)</label>
-                        <input 
-                          type="number" 
-                          className="form-control"
-                          value={investmentDeclarations.npsContribution}
-                          onChange={(e) => setInvestmentDeclarations(prev => ({...prev, npsContribution: parseFloat(e.target.value)}))}
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label small">HRA Exemption</label>
-                        <input 
-                          type="number" 
-                          className="form-control"
-                          value={investmentDeclarations.hraExemption}
-                          onChange={(e) => setInvestmentDeclarations(prev => ({...prev, hraExemption: parseFloat(e.target.value)}))}
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label small">Home Loan Interest</label>
-                        <input 
-                          type="number" 
-                          className="form-control"
-                          value={investmentDeclarations.homeLoanInterest}
-                          onChange={(e) => setInvestmentDeclarations(prev => ({...prev, homeLoanInterest: parseFloat(e.target.value)}))}
-                        />
-                      </div>
-                      <div className="col-12 mt-3">
-                        <div className="d-flex justify-content-between align-items-center">
-                          <span className="fw-bold">Total Declared:</span>
-                          <span className="text-primary fw-bold">
-                            {formatCurrency(
-                              investmentDeclarations.section80C +
-                              investmentDeclarations.section80D +
-                              investmentDeclarations.npsContribution +
-                              investmentDeclarations.hraExemption +
-                              investmentDeclarations.homeLoanInterest
-                            )}
-                          </span>
-                        </div>
-                        <button className="btn btn-primary w-100 mt-2">
-                          Save Declaration
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        </div>
+      </div>
+      <div className="card-body p-0">
+        {/* Filters */}
+        <div className="p-4 border-bottom">
+          <div className="d-flex flex-wrap gap-3 align-items-center">
+            <div className="position-relative flex-fill" style={{ minWidth: '300px' }}>
+              <Icon icon="heroicons:magnifying-glass" className="position-absolute top-50 translate-middle-y text-muted ms-3" />
+              <input
+                type="text"
+                placeholder="Search declarations..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="form-control ps-5"
+              />
+            </div>
+            <div style={{ minWidth: '150px' }}>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="form-select"
+              >
+                <option value="All">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="submitted">Submitted</option>
+                <option value="draft">Draft</option>
+                <option value="verified">Verified</option>
+              </select>
             </div>
           </div>
         </div>
+
+        {/* Declarations Table */}
+        <div className="table-responsive">
+          <table className="table table-hover mb-0">
+            <thead className="bg-light">
+              <tr>
+                <th className="border-0 px-4 py-3 text-uppercase fw-bold text-dark">Employee</th>
+                <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">Financial Year</th>
+                <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">Status</th>
+                <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">Submitted Date</th>
+                <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">Verified</th>
+                <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedData.map((declaration) => (
+                <tr key={declaration.id} className="border-bottom">
+                  <td className="px-4 py-3">
+                    <div className="fw-medium text-dark">{declaration.employeeName}</div>
+                  </td>
+                  <td className="px-4 py-3">{declaration.financialYear}</td>
+                  <td className="px-4 py-3">{getStatusBadge(declaration.status)}</td>
+                  <td className="px-4 py-3">
+                    {declaration.submittedDate ? formatDate(declaration.submittedDate) : 'N/A'}
+                  </td>
+                  <td className="px-4 py-3">
+                    {declaration.verified ? (
+                      <span className="badge bg-success-subtle text-success">Yes</span>
+                    ) : (
+                      <span className="badge bg-warning-subtle text-warning">No</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => handleViewData(declaration, 'declaration')}
+                      className="btn btn-sm btn-outline-primary"
+                    >
+                      View Details
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {paginatedData.length === 0 && (
+          <div className="text-center py-5 text-muted">
+            <Icon icon="heroicons:clipboard-document-check" className="text-4xl mb-3" />
+            <h5>No declarations found</h5>
+            <p>No declarations match your search criteria.</p>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="px-4 py-3 border-top d-flex align-items-center justify-content-between">
+            <div className="small text-muted">
+              Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} declarations
+            </div>
+            <div className="d-flex gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="btn btn-sm btn-outline-secondary"
+              >
+                Previous
+              </button>
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`btn btn-sm ${
+                    currentPage === i + 1
+                      ? 'btn-primary'
+                      : 'btn-outline-secondary'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="btn btn-sm btn-outline-secondary"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 
   const renderReports = () => (
-    <div className="row g-4">
-      <div className="col-12">
-        <div className="card border shadow-none">
-          <div className="card-header bg-transparent border-0">
-            <div className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Compliance Reports & Reconciliation</h5>
-              <ButtonWithIcon 
-                icon="heroicons:document-arrow-down"
-                className="btn-primary"
-                onClick={handleExportReport}
-              >
-                Export Reports
-              </ButtonWithIcon>
-            </div>
+    <div className="card border shadow-none">
+      <div className="card-header bg-transparent border-0">
+        <div className="d-flex justify-content-between align-items-center">
+          <h5 className="mb-0">Compliance Reports</h5>
+          <div className="d-flex gap-2">
+            <ButtonWithIcon 
+              icon="heroicons:document-arrow-down"
+              className="btn-primary"
+              onClick={handleExportReport}
+            >
+              Export
+            </ButtonWithIcon>
+            <ButtonWithIcon 
+              icon="heroicons:arrow-path"
+              className="btn-outline-primary"
+              onClick={handleRefreshData}
+            >
+              Refresh
+            </ButtonWithIcon>
           </div>
-          <div className="card-body">
-            <div className="row g-4">
-              {/* Reports Summary */}
-              <div className="col-12">
-                <div className="card border">
-                  <div className="card-header">
-                    <h6 className="mb-0">Available Reports</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="table-responsive">
-                      <table className="table table-hover">
-                        <thead>
-                          <tr>
-                            <th>Report Name</th>
-                            <th>Period</th>
-                            <th>Type</th>
-                            <th>Status</th>
-                            <th>Generated Date</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {reconciliationReports.map(report => (
-                            <tr key={report.id}>
-                              <td className="fw-semibold">{report.reportName}</td>
-                              <td>{report.period}</td>
-                              <td>{getTypeBadge(report.type)}</td>
-                              <td>{getStatusBadge(report.status)}</td>
-                              <td>{report.generatedDate || 'N/A'}</td>
-                              <td>
-                                <div className="d-flex gap-2">
-                                  <button className="btn btn-sm btn-outline-primary">
-                                    View
-                                  </button>
-                                  {report.status === 'completed' && (
-                                    <button className="btn btn-sm btn-outline-success">
-                                      Download
-                                    </button>
-                                  )}
-                                  {report.status === 'pending' && (
-                                    <button className="btn btn-sm btn-outline-warning">
-                                      Generate
-                                    </button>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Report Generation */}
-              <div className="col-12">
-                <div className="card border">
-                  <div className="card-header">
-                    <h6 className="mb-0">Generate New Reports</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="row g-3">
-                      <div className="col-md-4">
-                        <div className="card border h-100">
-                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
-                            <div className="bg-primary-subtle text-primary p-3 rounded-circle mb-3">
-                              <Icon icon="heroicons:chart-bar" style={{ fontSize: '1.5rem' }} />
-                            </div>
-                            <h6 className="fw-bold mb-2">PF Reconciliation</h6>
-                            <p className="text-muted small mb-3">Employee vs Employer contribution</p>
-                            <ButtonWithIcon
-                              icon="heroicons:document-arrow-down"
-                              className="btn-outline-primary w-100"
-                            >
-                              Generate
-                            </ButtonWithIcon>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="card border h-100">
-                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
-                            <div className="bg-success-subtle text-success p-3 rounded-circle mb-3">
-                              <Icon icon="heroicons:chart-pie" style={{ fontSize: '1.5rem' }} />
-                            </div>
-                            <h6 className="fw-bold mb-2">TDS Reconciliation</h6>
-                            <p className="text-muted small mb-3">Quarterly TDS statement</p>
-                            <ButtonWithIcon
-                              icon="heroicons:document-arrow-down"
-                              className="btn-outline-success w-100"
-                            >
-                              Generate
-                            </ButtonWithIcon>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="card border h-100">
-                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
-                            <div className="bg-warning-subtle text-warning p-3 rounded-circle mb-3">
-                              <Icon icon="heroicons:chart-bar" style={{ fontSize: '1.5rem' }} />
-                            </div>
-                            <h6 className="fw-bold mb-2">Compliance Summary</h6>
-                            <p className="text-muted small mb-3">All statutory compliance</p>
-                            <ButtonWithIcon
-                              icon="heroicons:document-arrow-down"
-                              className="btn-outline-warning w-100"
-                            >
-                              Generate
-                            </ButtonWithIcon>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="card border h-100">
-                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
-                            <div className="bg-info-subtle text-info p-3 rounded-circle mb-3">
-                              <Icon icon="heroicons:document-text" style={{ fontSize: '1.5rem' }} />
-                            </div>
-                            <h6 className="fw-bold mb-2">Annual Return</h6>
-                            <p className="text-muted small mb-3">Year-end compliance report</p>
-                            <ButtonWithIcon
-                              icon="heroicons:document-arrow-down"
-                              className="btn-outline-info w-100"
-                            >
-                              Generate
-                            </ButtonWithIcon>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="card border h-100">
-                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
-                            <div className="bg-danger-subtle text-danger p-3 rounded-circle mb-3">
-                              <Icon icon="heroicons:document-chart-bar" style={{ fontSize: '1.5rem' }} />
-                            </div>
-                            <h6 className="fw-bold mb-2">Audit Report</h6>
-                            <p className="text-muted small mb-3">Statutory audit compliance</p>
-                            <ButtonWithIcon
-                              icon="heroicons:document-arrow-down"
-                              className="btn-outline-danger w-100"
-                            >
-                              Generate
-                            </ButtonWithIcon>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="card border h-100">
-                          <div className="card-body text-center d-flex flex-column align-items-center justify-content-center">
-                            <div className="bg-dark-subtle text-dark p-3 rounded-circle mb-3">
-                              <Icon icon="heroicons:calculator" style={{ fontSize: '1.5rem' }} />
-                            </div>
-                            <h6 className="fw-bold mb-2">Tax Projection</h6>
-                            <p className="text-muted small mb-3">Next FY tax liability</p>
-                            <ButtonWithIcon
-                              icon="heroicons:document-arrow-down"
-                              className="btn-outline-dark w-100"
-                            >
-                              Generate
-                            </ButtonWithIcon>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        </div>
+      </div>
+      <div className="card-body p-0">
+        {/* Filters */}
+        <div className="p-4 border-bottom">
+          <div className="d-flex flex-wrap gap-3 align-items-center">
+            <div className="position-relative flex-fill" style={{ minWidth: '300px' }}>
+              <Icon icon="heroicons:magnifying-glass" className="position-absolute top-50 translate-middle-y text-muted ms-3" />
+              <input
+                type="text"
+                placeholder="Search reports..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="form-control ps-5"
+              />
             </div>
           </div>
         </div>
+
+        {/* Reports Table */}
+        <div className="table-responsive">
+          <table className="table table-hover mb-0">
+            <thead className="bg-light">
+              <tr>
+                <th className="border-0 px-4 py-3 text-uppercase fw-bold text-dark">Report Name</th>
+                <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">Period</th>
+                <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">Type</th>
+                <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">Status</th>
+                <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">Generated Date</th>
+                <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedData.map((report) => (
+                <tr key={report.id} className="border-bottom">
+                  <td className="px-4 py-3">
+                    <div className="fw-medium text-dark">{report.reportName}</div>
+                  </td>
+                  <td className="px-4 py-3">{report.period}</td>
+                  <td className="px-4 py-3">{getTypeBadge(report.type)}</td>
+                  <td className="px-4 py-3">{getStatusBadge(report.status)}</td>
+                  <td className="px-4 py-3">
+                    {report.generatedDate ? formatDate(report.generatedDate) : 'N/A'}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="d-flex gap-2">
+                      <button
+                        onClick={() => handleViewData(report, 'report')}
+                        className="btn btn-sm btn-outline-primary"
+                      >
+                        View
+                      </button>
+                      {report.status === 'completed' && (
+                        <button 
+                          className="btn btn-sm btn-outline-success"
+                          onClick={() => {
+                            const content = `${report.reportName}\nPeriod: ${report.period}\nGenerated: ${new Date().toLocaleDateString()}`;
+                            downloadFile(content, report.reportName.replace(/\s+/g, '_'), 'PDF');
+                          }}
+                        >
+                          Download
+                        </button>
+                      )}
+                      {report.status === 'pending' && (
+                        <button 
+                          className="btn btn-sm btn-outline-warning"
+                          onClick={() => handleReconcileReport(report.id)}
+                        >
+                          Reconcile
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {paginatedData.length === 0 && (
+          <div className="text-center py-5 text-muted">
+            <Icon icon="heroicons:chart-bar" className="text-4xl mb-3" />
+            <h5>No reports found</h5>
+            <p>No reports match your search criteria.</p>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="px-4 py-3 border-top d-flex align-items-center justify-content-between">
+            <div className="small text-muted">
+              Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} reports
+            </div>
+            <div className="d-flex gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="btn btn-sm btn-outline-secondary"
+              >
+                Previous
+              </button>
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`btn btn-sm ${
+                    currentPage === i + 1
+                      ? 'btn-primary'
+                      : 'btn-outline-secondary'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="btn btn-sm btn-outline-secondary"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -3616,17 +2957,86 @@ const StatutoryCompliance = () => {
       case 'pf':
         return renderPF();
       case 'esi':
-        return renderESI();
+        return (
+          <div className="row g-4">
+            <div className="col-12">
+              <div className="card border shadow-none">
+                <div className="card-header bg-transparent border-0">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <h5 className="mb-0">Employee State Insurance (ESI) Configuration</h5>
+                    <ButtonWithIcon 
+                      icon="heroicons:document-plus"
+                      className="btn-primary"
+                      onClick={() => handleGenerateForm('ESI')}
+                    >
+                      Generate ESI Return
+                    </ButtonWithIcon>
+                  </div>
+                </div>
+                <div className="card-body">
+                  <div className="alert alert-info">
+                    <Icon icon="heroicons:information-circle" className="me-2" />
+                    ESI section - Use the Generate ESI Return button to create and download ESI forms
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
       case 'pt':
-        return renderPT();
+        return (
+          <div className="row g-4">
+            <div className="col-12">
+              <div className="card border shadow-none">
+                <div className="card-header bg-transparent border-0">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <h5 className="mb-0">Professional Tax (PT) Configuration</h5>
+                    <ButtonWithIcon 
+                      icon="heroicons:document-plus"
+                      className="btn-primary"
+                      onClick={() => handleGenerateForm('PT')}
+                    >
+                      Generate PT Return
+                    </ButtonWithIcon>
+                  </div>
+                </div>
+                <div className="card-body">
+                  <div className="alert alert-info">
+                    <Icon icon="heroicons:information-circle" className="me-2" />
+                    PT section - Use the Generate PT Return button to create and download PT forms
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
       case 'tds':
-        return renderTDS();
-      case 'lwf':
-        return renderLWF();
-      case 'gratuity':
-        return renderGratuity();
-      case 'bonus':
-        return renderBonus();
+        return (
+          <div className="row g-4">
+            <div className="col-12">
+              <div className="card border shadow-none">
+                <div className="card-header bg-transparent border-0">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <h5 className="mb-0">Tax Deducted at Source (TDS) Management</h5>
+                    <ButtonWithIcon 
+                      icon="heroicons:document-plus"
+                      className="btn-primary"
+                      onClick={() => handleGenerateForm('Form16')}
+                    >
+                      Generate Form 16
+                    </ButtonWithIcon>
+                  </div>
+                </div>
+                <div className="card-body">
+                  <div className="alert alert-info">
+                    <Icon icon="heroicons:information-circle" className="me-2" />
+                    TDS section - Use the Generate Form 16 button to create and download TDS forms
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
       case 'employees':
         return renderEmployees();
       case 'forms':
@@ -3742,6 +3152,11 @@ const StatutoryCompliance = () => {
           border-left-color: var(--bs-warning);
         }
         
+        .kpi-number {
+          font-size: 1.5rem;
+          font-weight: bold;
+        }
+        
         @media (max-width: 768px) {
           .card-header-actions {
             flex-direction: column;
@@ -3760,6 +3175,10 @@ const StatutoryCompliance = () => {
           
           .quick-link-card {
             margin-bottom: 1rem;
+          }
+          
+          .kpi-number {
+            font-size: 1.25rem;
           }
         }
       `}</style>
@@ -3795,10 +3214,10 @@ const StatutoryCompliance = () => {
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
                     <p className="text-muted small mb-1">Total PF Contribution</p>
-                    <h4 className="fw-bold text-primary mb-0">{formatCurrency(kpis.totalPFContribution)}</h4>
+                    <h4 className="kpi-number text-primary mb-0">{formatCurrency(kpis.totalPFContribution)}</h4>
                   </div>
                   <div className="bg-primary-subtle text-primary p-2 rounded">
-                    <Icon icon="heroicons:building-library" style={{ fontSize: '1.25rem' }} />
+                    <Icon icon="heroicons:building-library" style={{ fontSize: '1rem' }} />
                   </div>
                 </div>
               </div>
@@ -3810,10 +3229,10 @@ const StatutoryCompliance = () => {
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
                     <p className="text-muted small mb-1">Total ESI Contribution</p>
-                    <h4 className="fw-bold text-info mb-0">{formatCurrency(kpis.totalESIContribution)}</h4>
+                    <h4 className="kpi-number text-info mb-0">{formatCurrency(kpis.totalESIContribution)}</h4>
                   </div>
                   <div className="bg-info-subtle text-info p-2 rounded">
-                    <Icon icon="heroicons:heart" style={{ fontSize: '1.25rem' }} />
+                    <Icon icon="heroicons:heart" style={{ fontSize: '1rem' }} />
                   </div>
                 </div>
               </div>
@@ -3825,10 +3244,10 @@ const StatutoryCompliance = () => {
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
                     <p className="text-muted small mb-1">Total TDS Deduction</p>
-                    <h4 className="fw-bold text-success mb-0">{formatCurrency(kpis.totalTDSDeduction)}</h4>
+                    <h4 className="kpi-number text-success mb-0">{formatCurrency(kpis.totalTDSDeduction)}</h4>
                   </div>
                   <div className="bg-success-subtle text-success p-2 rounded">
-                    <Icon icon="heroicons:banknotes" style={{ fontSize: '1.25rem' }} />
+                    <Icon icon="heroicons:banknotes" style={{ fontSize: '1rem' }} />
                   </div>
                 </div>
               </div>
@@ -3840,10 +3259,10 @@ const StatutoryCompliance = () => {
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
                     <p className="text-muted small mb-1">Pending Declarations</p>
-                    <h4 className="fw-bold text-warning mb-0">{kpis.pendingDeclarations}</h4>
+                    <h4 className="kpi-number text-warning mb-0">{formatNumber(kpis.pendingDeclarations)}</h4>
                   </div>
                   <div className="bg-warning-subtle text-warning p-2 rounded">
-                    <Icon icon="heroicons:clock" style={{ fontSize: '1.25rem' }} />
+                    <Icon icon="heroicons:clock" style={{ fontSize: '1rem' }} />
                   </div>
                 </div>
               </div>
@@ -3854,10 +3273,64 @@ const StatutoryCompliance = () => {
         {/* Content Area */}
         {renderContent()}
 
-        {/* Quick Links Footer */}
-     
+        {/* View Data Modal - NEW */}
+        {showModal && viewModalData && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title d-flex align-items-center gap-2">
+                    <Icon icon="heroicons:eye" />
+                    {viewModalData.type === 'employee' ? 'Employee Details' : 
+                     viewModalData.type === 'pfStatement' ? 'PF Statement Details' :
+                     viewModalData.type === 'form' ? 'Form Details' :
+                     viewModalData.type === 'declaration' ? 'Declaration Details' :
+                     viewModalData.type === 'report' ? 'Report Details' :
+                     viewModalData.type === 'ecr' ? 'ECR Details' :
+                     viewModalData.type === 'vpf' ? 'VPF Details' : 'Details'}
+                  </h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => {
+                      setShowModal(false);
+                      setViewModalData(null);
+                    }}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  {renderViewModalContent()}
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setShowModal(false);
+                      setViewModalData(null);
+                    }}
+                  >
+                    Close
+                  </button>
+                  {viewModalData.type === 'form' && viewModalData.data.status === 'generated' && (
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => {
+                        handleDownloadForm(viewModalData.data.id);
+                        setShowModal(false);
+                        setViewModalData(null);
+                      }}
+                    >
+                      Download Form
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
-        {/* Modals remain the same */}
         {/* Generate Form Modal */}
         {showFormModal && selectedForm && (
           <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -3931,7 +3404,10 @@ const StatutoryCompliance = () => {
                       icon="heroicons:document-arrow-down"
                       className="btn-primary"
                       onClick={() => {
-                        alert(`Generating ${selectedForm} form... This may take a moment.`);
+                        const formatInput = document.querySelector('input[name="format"]:checked');
+                        const format = formatInput ? formatInput.value : 'PDF';
+                        
+                        generateAndDownloadForm(format);
                         setShowFormModal(false);
                         setSelectedForm(null);
                       }}
@@ -3939,122 +3415,6 @@ const StatutoryCompliance = () => {
                       Generate & Download
                     </ButtonWithIcon>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Details Modal */}
-        {showModal && selectedItem && (
-          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-lg">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title d-flex align-items-center gap-2">
-                    <Icon icon="heroicons:eye" />
-                    Details
-                  </h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={() => setShowModal(false)}
-                  ></button>
-                </div>
-                <div className="modal-body">
-                  {activeSection === 'employees' && (
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <label className="form-label small fw-semibold">Employee Name</label>
-                        <p className="form-control-plaintext fw-bold">{selectedItem.name}</p>
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label small fw-semibold">Employee ID</label>
-                        <p className="form-control-plaintext">{selectedItem.employeeId}</p>
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label small fw-semibold">Department</label>
-                        <p className="form-control-plaintext">{selectedItem.department}</p>
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label small fw-semibold">Date of Joining</label>
-                        <p className="form-control-plaintext">{selectedItem.doj}</p>
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label small fw-semibold">Basic Salary</label>
-                        <p className="form-control-plaintext fw-bold text-primary">{formatCurrency(selectedItem.basicSalary)}</p>
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label small fw-semibold">Gross Salary</label>
-                        <p className="form-control-plaintext">{formatCurrency(selectedItem.grossSalary)}</p>
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label small fw-semibold">PF Contribution</label>
-                        <p className="form-control-plaintext">{formatCurrency(selectedItem.pfContribution)}</p>
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label small fw-semibold">ESI Contribution</label>
-                        <p className="form-control-plaintext">{formatCurrency(selectedItem.esiContribution)}</p>
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label small fw-semibold">TDS Deduction</label>
-                        <p className="form-control-plaintext">{formatCurrency(selectedItem.tdsDeduction)}</p>
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label small fw-semibold">Professional Tax</label>
-                        <p className="form-control-plaintext">{formatCurrency(selectedItem.ptDeduction)}</p>
-                      </div>
-                      <div className="col-12">
-                        <label className="form-label small fw-semibold">PF UAN Number</label>
-                        <p className="form-control-plaintext">{selectedItem.pfUAN || 'N/A'}</p>
-                      </div>
-                      <div className="col-12">
-                        <label className="form-label small fw-semibold">ESI Number</label>
-                        <p className="form-control-plaintext">{selectedItem.esiNumber || 'N/A'}</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {activeSection === 'forms' && (
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <label className="form-label small fw-semibold">Form Name</label>
-                        <p className="form-control-plaintext fw-bold">{selectedItem.formName}</p>
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label small fw-semibold">Employee Name</label>
-                        <p className="form-control-plaintext">{selectedItem.employeeName}</p>
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label small fw-semibold">
-                          {selectedItem.financialYear ? 'Financial Year' : 'Period'}
-                        </label>
-                        <p className="form-control-plaintext">{selectedItem.financialYear || selectedItem.period}</p>
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label small fw-semibold">Status</label>
-                        <p className="form-control-plaintext">{getStatusBadge(selectedItem.status)}</p>
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label small fw-semibold">
-                          {selectedItem.generatedDate ? 'Generated Date' : 
-                           selectedItem.submittedDate ? 'Submitted Date' : 'Date'}
-                        </label>
-                        <p className="form-control-plaintext">
-                          {selectedItem.generatedDate || selectedItem.submittedDate || 'N/A'}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => setShowModal(false)}
-                  >
-                    Close
-                  </button>
                 </div>
               </div>
             </div>
@@ -4093,6 +3453,8 @@ const StatutoryCompliance = () => {
                           className="form-control"
                           placeholder="Enter 12-digit UAN"
                           maxLength="12"
+                          value={uanFormData.uanNumber}
+                          onChange={(e) => setUanFormData({...uanFormData, uanNumber: e.target.value})}
                         />
                       </div>
                       <div className="col-md-6">
@@ -4100,7 +3462,8 @@ const StatutoryCompliance = () => {
                         <input 
                           type="date" 
                           className="form-control"
-                          defaultValue={new Date().toISOString().split('T')[0]}
+                          value={uanFormData.activationDate}
+                          onChange={(e) => setUanFormData({...uanFormData, activationDate: e.target.value})}
                         />
                       </div>
                     </div>
@@ -4108,7 +3471,7 @@ const StatutoryCompliance = () => {
                 </div>
                 <div className="modal-footer">
                   <button type="button" className="btn btn-secondary" onClick={() => setShowUANModal(false)}>Cancel</button>
-                  <button type="button" className="btn btn-primary">Activate UAN</button>
+                  <button type="button" className="btn btn-primary" onClick={handleActivateUAN}>Activate UAN</button>
                 </div>
               </div>
             </div>
@@ -4116,38 +3479,85 @@ const StatutoryCompliance = () => {
         )}
 
         {/* ECR Generation Modal */}
-       {showECRModal && (
-  <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-    <div className="modal-dialog modal-lg">
-      <div className="modal-content">
-        <div className="modal-header">
-          <h5 className="modal-title">Generate ECR (Electronic Challan cum Return)</h5>
-          <button type="button" className="btn-close" onClick={() => setShowECRModal(false)}></button>
-        </div>
-        <div className="modal-body">
-          <div className="mb-3">
-            <label className="form-label">Select Month</label>
-            <select className="form-select">
-              <option>March 2024</option>
-              <option>February 2024</option>
-              <option>January 2024</option>
-            </select>
-          </div>
-          <div className="alert alert-info d-flex align-items-start">
-            <Icon icon="heroicons:information-circle" className="me-2 flex-shrink-0 mt-1" />
-            <div>
-              ECR will include all eligible employees with their wages, EPF, EPS, and EDLI contributions.
+        {showECRModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Generate ECR (Electronic Challan cum Return)</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowECRModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <label className="form-label">Select Month</label>
+                    <select 
+                      className="form-select"
+                      value={ecrFormData.month}
+                      onChange={(e) => setEcrFormData({...ecrFormData, month: e.target.value})}
+                    >
+                      <option value="">Select month...</option>
+                      <option value="March 2024">March 2024</option>
+                      <option value="February 2024">February 2024</option>
+                      <option value="January 2024">January 2024</option>
+                    </select>
+                  </div>
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label">Total Wages (₹)</label>
+                      <input 
+                        type="number" 
+                        className="form-control"
+                        value={ecrFormData.totalWages}
+                        onChange={(e) => setEcrFormData({...ecrFormData, totalWages: e.target.value})}
+                        placeholder="Total wages for the month"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">EPF Contribution (₹)</label>
+                      <input 
+                        type="number" 
+                        className="form-control"
+                        value={ecrFormData.epfContribution}
+                        onChange={(e) => setEcrFormData({...ecrFormData, epfContribution: e.target.value})}
+                        placeholder="EPF contribution amount"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">EPS Contribution (₹)</label>
+                      <input 
+                        type="number" 
+                        className="form-control"
+                        value={ecrFormData.epsContribution}
+                        onChange={(e) => setEcrFormData({...ecrFormData, epsContribution: e.target.value})}
+                        placeholder="EPS contribution amount"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">EDLI Contribution (₹)</label>
+                      <input 
+                        type="number" 
+                        className="form-control"
+                        value={ecrFormData.edliContribution}
+                        onChange={(e) => setEcrFormData({...ecrFormData, edliContribution: e.target.value})}
+                        placeholder="EDLI contribution amount"
+                      />
+                    </div>
+                  </div>
+                  <div className="alert alert-info d-flex align-items-start mt-3">
+                    <Icon icon="heroicons:information-circle" className="me-2 flex-shrink-0 mt-1" />
+                    <div>
+                      ECR will include all eligible employees with their wages, EPF, EPS, and EDLI contributions.
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowECRModal(false)}>Cancel</button>
+                  <button type="button" className="btn btn-primary" onClick={handleGenerateECR}>Generate ECR</button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="modal-footer">
-          <button type="button" className="btn btn-secondary" onClick={() => setShowECRModal(false)}>Cancel</button>
-          <button type="button" className="btn btn-primary">Generate ECR</button>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+        )}
 
         {/* Remittance Modal */}
         {showRemittanceModal && (
@@ -4164,25 +3574,68 @@ const StatutoryCompliance = () => {
                   <div className="row g-3">
                     <div className="col-md-6">
                       <label className="form-label">Month/Period</label>
-                      <input type="text" className="form-control" placeholder="March 2024" />
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        placeholder="March 2024" 
+                        value={remittanceFormData.month}
+                        onChange={(e) => setRemittanceFormData({...remittanceFormData, month: e.target.value})}
+                      />
                     </div>
                     <div className="col-md-6">
                       <label className="form-label">Challan Number</label>
-                      <input type="text" className="form-control" placeholder="Enter challan number" />
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        placeholder="Enter challan number" 
+                        value={remittanceFormData.challanNo}
+                        onChange={(e) => setRemittanceFormData({...remittanceFormData, challanNo: e.target.value})}
+                      />
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label">Total Contribution</label>
-                      <input type="number" className="form-control" placeholder="Enter amount" />
+                      <label className="form-label">Total Contribution (₹)</label>
+                      <input 
+                        type="number" 
+                        className="form-control" 
+                        placeholder="Enter amount" 
+                        value={remittanceFormData.totalContribution}
+                        onChange={(e) => setRemittanceFormData({...remittanceFormData, totalContribution: e.target.value})}
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Employee Contribution (₹)</label>
+                      <input 
+                        type="number" 
+                        className="form-control" 
+                        placeholder="Employee share" 
+                        value={remittanceFormData.employeeContribution}
+                        onChange={(e) => setRemittanceFormData({...remittanceFormData, employeeContribution: e.target.value})}
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Employer Contribution (₹)</label>
+                      <input 
+                        type="number" 
+                        className="form-control" 
+                        placeholder="Employer share" 
+                        value={remittanceFormData.employerContribution}
+                        onChange={(e) => setRemittanceFormData({...remittanceFormData, employerContribution: e.target.value})}
+                      />
                     </div>
                     <div className="col-md-6">
                       <label className="form-label">Remittance Date</label>
-                      <input type="date" className="form-control" />
+                      <input 
+                        type="date" 
+                        className="form-control" 
+                        value={remittanceFormData.remittanceDate}
+                        onChange={(e) => setRemittanceFormData({...remittanceFormData, remittanceDate: e.target.value})}
+                      />
                     </div>
                   </div>
                 </div>
                 <div className="modal-footer">
                   <button type="button" className="btn btn-secondary" onClick={() => setShowRemittanceModal(false)}>Cancel</button>
-                  <button type="button" className="btn btn-primary">Save Remittance</button>
+                  <button type="button" className="btn btn-primary" onClick={handleAddRemittance}>Save Remittance</button>
                 </div>
               </div>
             </div>
@@ -4204,28 +3657,49 @@ const StatutoryCompliance = () => {
                   <div className="row g-3">
                     <div className="col-md-6">
                       <label className="form-label">Period</label>
-                      <input type="text" className="form-control" placeholder="March 2024" />
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        placeholder="March 2024" 
+                        value={challanFormData.period}
+                        onChange={(e) => setChallanFormData({...challanFormData, period: e.target.value})}
+                      />
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label">Amount</label>
-                      <input type="number" className="form-control" placeholder="Enter amount" />
+                      <label className="form-label">Amount (₹)</label>
+                      <input 
+                        type="number" 
+                        className="form-control" 
+                        placeholder="Enter amount" 
+                        value={challanFormData.amount}
+                        onChange={(e) => setChallanFormData({...challanFormData, amount: e.target.value})}
+                      />
                     </div>
                     <div className="col-md-6">
                       <label className="form-label">Payment Date</label>
-                      <input type="date" className="form-control" />
+                      <input 
+                        type="date" 
+                        className="form-control" 
+                        value={challanFormData.paymentDate}
+                        onChange={(e) => setChallanFormData({...challanFormData, paymentDate: e.target.value})}
+                      />
                     </div>
                     <div className="col-md-6">
                       <label className="form-label">Format</label>
-                      <select className="form-select">
-                        <option>PDF</option>
-                        <option>Excel</option>
+                      <select 
+                        className="form-select"
+                        value={challanFormData.format}
+                        onChange={(e) => setChallanFormData({...challanFormData, format: e.target.value})}
+                      >
+                        <option value="PDF">PDF</option>
+                        <option value="Excel">Excel</option>
                       </select>
                     </div>
                   </div>
                 </div>
                 <div className="modal-footer">
                   <button type="button" className="btn btn-secondary" onClick={() => setShowChallanModal(false)}>Cancel</button>
-                  <button type="button" className="btn btn-primary">Generate Challan</button>
+                  <button type="button" className="btn btn-primary" onClick={handleGenerateChallan}>Generate Challan</button>
                 </div>
               </div>
             </div>
@@ -4265,7 +3739,24 @@ const StatutoryCompliance = () => {
                 </div>
                 <div className="modal-footer">
                   <button type="button" className="btn btn-secondary" onClick={() => setShowReconciliationModal(false)}>Cancel</button>
-                  <button type="button" className="btn btn-primary">Generate Report</button>
+                  <button type="button" className="btn btn-primary" onClick={() => {
+                    let content = `${remittanceType.toUpperCase()} Reconciliation Report\n`;
+                    content += `Period: March 2024\n`;
+                    content += `Generated: ${new Date().toLocaleDateString()}\n\n`;
+                    
+                    if (remittanceType === 'pf') {
+                      content += `Total PF Contribution: ${formatCurrency(kpis.totalPFContribution)}\n`;
+                      content += `Employee Share: ${formatCurrency(kpis.totalPFContribution * 0.5)}\n`;
+                      content += `Employer Share: ${formatCurrency(kpis.totalPFContribution * 0.5)}\n`;
+                    } else if (remittanceType === 'tds') {
+                      content += `Total TDS Deducted: ${formatCurrency(kpis.totalTDSDeduction)}\n`;
+                      content += `Total TDS Deposited: ${formatCurrency(kpis.totalTDSDeduction)}\n`;
+                      content += `Variance: ₹0\n`;
+                    }
+                    
+                    downloadFile(content, `${remittanceType.toUpperCase()}_Reconciliation_Report`, 'PDF');
+                    setShowReconciliationModal(false);
+                  }}>Generate Report</button>
                 </div>
               </div>
             </div>
@@ -4285,7 +3776,11 @@ const StatutoryCompliance = () => {
                   <div className="row g-3">
                     <div className="col-md-6">
                       <label className="form-label">Select Employee</label>
-                      <select className="form-select">
+                      <select 
+                        className="form-select"
+                        value={vpfFormData.employeeId}
+                        onChange={(e) => setVpfFormData({...vpfFormData, employeeId: e.target.value})}
+                      >
                         <option value="">Select employee...</option>
                         {employees.map(emp => (
                           <option key={emp.id} value={emp.id}>{emp.name} ({emp.employeeId})</option>
@@ -4301,11 +3796,19 @@ const StatutoryCompliance = () => {
                         min="0"
                         max="100"
                         step="0.01"
+                        value={vpfFormData.vpfRate}
+                        onChange={(e) => setVpfFormData({...vpfFormData, vpfRate: e.target.value})}
                       />
                     </div>
                     <div className="col-md-6">
                       <label className="form-label">Effective Month</label>
-                      <input type="text" className="form-control" placeholder="March 2024" />
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        placeholder="March 2024" 
+                        value={vpfFormData.month}
+                        onChange={(e) => setVpfFormData({...vpfFormData, month: e.target.value})}
+                      />
                     </div>
                     <div className="col-12">
                       <div className="alert alert-info">
@@ -4317,7 +3820,7 @@ const StatutoryCompliance = () => {
                 </div>
                 <div className="modal-footer">
                   <button type="button" className="btn btn-secondary" onClick={() => setShowVPFModal(false)}>Cancel</button>
-                  <button type="button" className="btn btn-primary">Add VPF</button>
+                  <button type="button" className="btn btn-primary" onClick={handleAddVPF}>Add VPF</button>
                 </div>
               </div>
             </div>

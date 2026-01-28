@@ -25,13 +25,27 @@ const BackgroundVerification = () => {
   const [newRequestEmployeeId, setNewRequestEmployeeId] = useState("");
   // Add these to your useState declarations
   const [uploadedDocuments, setUploadedDocuments] = useState([]);
-  const [emailUploadedDocuments, setEmailUploadedDocuments] = useState([]);
-  // Add this state variable
+  // Add these state variables with your other useState declarations
   const [emailUploads, setEmailUploads] = useState([]);
+  const [emailUploadedDocuments, setEmailUploadedDocuments] = useState([]);
 
+  // Add these near your other useState declarations
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // Add these state variables with your other useState declarations
+  const [editingEmployeeId, setEditingEmployeeId] = useState(null);
+  const [editEmployeeName, setEditEmployeeName] = useState("");
+  const [editEmployeePhone, setEditEmployeePhone] = useState("");
+  const [editEmployeeEmail, setEditEmployeeEmail] = useState("");
+  const [editEmployeeDepartment, setEditEmployeeDepartment] = useState("");
+  const [editEmployeeDesignation, setEditEmployeeDesignation] = useState("");
+  const [editEmployeeId, setEditEmployeeId] = useState("");
   const [emailSubject, setEmailSubject] = useState(
     "Background Verification - Document Request",
   );
+
   const [documentRequests, setDocumentRequests] = useState([]);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailStatus, setEmailStatus] = useState({ type: "", message: "" });
@@ -211,41 +225,75 @@ const BackgroundVerification = () => {
     }
   };
 
-  // Handle remove existing document from employee's request
+  // Add these functions
+  const handleEmailDocumentUpload = (e, documentId) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const documentName =
+      requiredDocuments.find((doc) => doc.id === documentId)?.name ||
+      "Document";
+
+    // Create a unique file URL
+    const fileUrl = URL.createObjectURL(file);
+
+    const newUpload = {
+      id: Date.now() + Math.random(),
+      documentId,
+      name: documentName,
+      file: file,
+      fileUrl: fileUrl,
+      uploadDate: new Date().toISOString(),
+      size: file.size,
+      type: file.type,
+    };
+
+    setEmailUploads((prev) => [...prev, newUpload]);
+    e.target.value = ""; // Reset file input
+  };
+
+  const handleRemoveEmailDocument = (documentId) => {
+    // Find the upload to remove and revoke URL
+    const uploadToRemove = emailUploads.find(
+      (upload) => upload.documentId === documentId,
+    );
+    if (uploadToRemove && uploadToRemove.fileUrl) {
+      URL.revokeObjectURL(uploadToRemove.fileUrl);
+    }
+
+    setEmailUploads((prev) =>
+      prev.filter((upload) => upload.documentId !== documentId),
+    );
+  };
+
   const handleRemoveExistingDocument = (documentId, employeeId) => {
-    if (
-      window.confirm(
-        "Are you sure you want to remove this document? This will delete it from the employee's record.",
-      )
-    ) {
-      // Find the employee's request
-      const updatedRequests = documentRequests.map((request) => {
-        if (request.employeeId === employeeId) {
-          const updatedDocuments = request.documents.map((doc) => {
+    if (window.confirm("Are you sure you want to remove this document?")) {
+      // Remove from document requests
+      const updatedRequests = documentRequests.map((req) => {
+        if (req.employeeId === employeeId) {
+          const updatedDocs = req.documents.map((doc) => {
             if (doc.id === documentId) {
-              // Remove file information but keep the document record
               return {
                 ...doc,
-                fileUrl: null,
-                fileName: null,
-                uploadedDate: null,
                 status: "Pending",
+                uploadedDate: null,
+                fileUrl: null,
               };
             }
             return doc;
           });
 
           return {
-            ...request,
-            documents: updatedDocuments,
+            ...req,
+            documents: updatedDocs,
           };
         }
-        return request;
+        return req;
       });
 
       saveDocumentRequests(updatedRequests);
 
-      // Update email status to show success
+      // Show success message
       setEmailStatus({
         type: "success",
         message: "Document removed successfully!",
@@ -253,72 +301,101 @@ const BackgroundVerification = () => {
     }
   };
 
-  // Handle remove new upload (from emailUploads)
-  const handleRemoveEmailDocument = (documentId) => {
-    setEmailUploads((prev) => {
-      const uploadToRemove = prev.find(
-        (upload) => upload.documentId === documentId,
-      );
-      if (uploadToRemove?.fileUrl) {
-        URL.revokeObjectURL(uploadToRemove.fileUrl);
-      }
-      return prev.filter((upload) => upload.documentId !== documentId);
-    });
-
-    // Update email status
-    setEmailStatus({
-      type: "info",
-      message: "Upload removed from queue.",
-    });
-  };
-
-  // Add view document handler
   const handleViewDocument = (document) => {
-    if (document?.fileUrl) {
+    if (document.fileUrl) {
       window.open(document.fileUrl, "_blank");
     }
   };
 
-  // Update the handleEmailDocumentUpload to handle updates
-  const handleEmailDocumentUpload = (event, documentId) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    // Simple validation
-    const allowedTypes = [
-      "application/pdf",
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ];
-    if (!allowedTypes.includes(file.type)) {
+  // Update the handleConfirmSendEmail function to include document uploads
+  const handleConfirmSendEmailWithUploads = async () => {
+    const selectedEmps = employees.filter((emp) =>
+      selectedEmployees.includes(emp.id),
+    );
+    if (selectedEmps.length === 0) {
       setEmailStatus({
         type: "error",
-        message: "Please upload PDF, JPG, PNG, or DOC files only",
+        message: "Please select at least one employee",
       });
       return;
     }
 
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
+    setSendingEmail(true);
+    setEmailStatus({ type: "info", message: "Sending emails..." });
+
+    const timestamp = new Date().toISOString();
+
+    try {
+      let emailResult;
+      // ... (rest of your email sending logic remains the same)
+
+      // After email is sent successfully, update document requests with uploaded files
+      if (emailResult && emailResult.success > 0 && emailUploads.length > 0) {
+        // For each selected employee, update their document requests with uploaded files
+        const updatedRequests = documentRequests.map((req) => {
+          if (selectedEmployees.includes(req.employeeId)) {
+            const updatedDocuments = req.documents.map((doc) => {
+              // Check if this document was uploaded
+              const uploadedDoc = emailUploads.find(
+                (up) => up.documentId === doc.id,
+              );
+              if (uploadedDoc) {
+                return {
+                  ...doc,
+                  status: "Completed",
+                  uploadedDate: timestamp,
+                  fileUrl: uploadedDoc.fileUrl,
+                  fileName: uploadedDoc.name,
+                  fileSize: uploadedDoc.size,
+                  fileType: uploadedDoc.type,
+                };
+              }
+              return doc;
+            });
+
+            return {
+              ...req,
+              documents: updatedDocuments,
+            };
+          }
+          return req;
+        });
+
+        saveDocumentRequests(updatedRequests);
+
+        // Update completion status for employees
+        const updatedEmployees = employees.map((emp) => {
+          if (selectedEmployees.includes(emp.id)) {
+            const empRequest = updatedRequests.find(
+              (req) => req.employeeId === emp.id,
+            );
+            if (empRequest) {
+              const completion = getCompletionPercentage(empRequest);
+              return {
+                ...emp,
+                status: completion === 100 ? "Completed" : "In Progress",
+              };
+            }
+          }
+          return emp;
+        });
+        setEmployees(updatedEmployees);
+      }
+
+      // ... (rest of your success/error handling)
+    } catch (error) {
+      console.error("Error sending email:", error);
       setEmailStatus({
         type: "error",
-        message: "File size should be less than 5MB",
+        message:
+          error.message ||
+          "Failed to send emails. Please try again or use a different method.",
       });
-      return;
+    } finally {
+      setSendingEmail(false);
     }
-
-    // For now, just show success message
-    setEmailStatus({
-      type: "success",
-      message: `${file.name} uploaded successfully for selected employee(s)`,
-    });
-
-    // Reset the file input
-    event.target.value = "";
   };
+
   // Filter employees
   const filteredEmployees = employees.filter((emp) => {
     const matchesSearch =
@@ -825,8 +902,256 @@ const BackgroundVerification = () => {
     return Math.round((completedDocs / totalDocs) * 100);
   };
 
+  // Handle Edit Employee
+  const handleEditEmployee = (employee) => {
+    setEditingEmployeeId(employee.id);
+    setEditEmployeeName(employee.name || "");
+    setEditEmployeePhone(employee.phone || "");
+    setEditEmployeeEmail(employee.email || "");
+    setEditEmployeeDepartment(employee.department || "");
+    setEditEmployeeDesignation(employee.designation || "");
+    setEditEmployeeId(employee.employeeId || "");
+  };
+
+  // Handle Save Employee Edit
+  const handleSaveEmployeeEdit = () => {
+    if (!editEmployeeName.trim() || !editEmployeeEmail.trim()) {
+      setEmailStatus({ type: "error", message: "Please enter name and email" });
+      return;
+    }
+
+    // Update employees list
+    const updatedEmployees = employees.map((emp) => {
+      if (emp.id === editingEmployeeId) {
+        return {
+          ...emp,
+          name: editEmployeeName,
+          phone: editEmployeePhone,
+          email: editEmployeeEmail,
+          department: editEmployeeDepartment,
+          designation: editEmployeeDesignation,
+          employeeId: editEmployeeId || emp.employeeId,
+        };
+      }
+      return emp;
+    });
+    setEmployees(updatedEmployees);
+
+    // Update document requests with new employee info
+    const updatedRequests = documentRequests.map((req) => {
+      if (req.employeeId === editingEmployeeId) {
+        return {
+          ...req,
+          employeeName: editEmployeeName,
+          email: editEmployeeEmail,
+        };
+      }
+      return req;
+    });
+    saveDocumentRequests(updatedRequests);
+
+    // Update localStorage
+    const savedProfiles = localStorage.getItem("employeeProfiles");
+    if (savedProfiles) {
+      const profiles = JSON.parse(savedProfiles);
+      const updatedProfiles = profiles.map((profile) => {
+        if (
+          profile.employeeId === editingEmployeeId ||
+          profile.id === editingEmployeeId
+        ) {
+          const nameParts = editEmployeeName.split(" ");
+          return {
+            ...profile,
+            firstName: nameParts[0] || editEmployeeName,
+            lastName: nameParts.slice(1).join(" ") || "",
+            officialEmail: editEmployeeEmail,
+            email: editEmployeeEmail,
+            phone: editEmployeePhone,
+            department: editEmployeeDepartment,
+            designation: editEmployeeDesignation,
+            employeeId: editEmployeeId || profile.employeeId,
+          };
+        }
+        return profile;
+      });
+      localStorage.setItem("employeeProfiles", JSON.stringify(updatedProfiles));
+    }
+
+    setEmailStatus({
+      type: "success",
+      message: "Employee details updated successfully!",
+    });
+
+    // Clear edit form
+    setTimeout(() => {
+      setEditingEmployeeId(null);
+    }, 1500);
+  };
+
+  // Updated send email function that includes employee edits
+  const handleConfirmSendEmailWithEdits = async () => {
+    const selectedEmps = employees.filter((emp) =>
+      selectedEmployees.includes(emp.id),
+    );
+    if (selectedEmps.length === 0) {
+      setEmailStatus({
+        type: "error",
+        message: "Please select at least one employee",
+      });
+      return;
+    }
+
+    // If we're editing an employee, save changes first
+    if (editingEmployeeId) {
+      handleSaveEmployeeEdit();
+    }
+
+    setSendingEmail(true);
+    setEmailStatus({ type: "info", message: "Sending emails..." });
+
+    const timestamp = new Date().toISOString();
+
+    try {
+      let emailResult;
+
+      // Rest of your existing email sending logic...
+      // ... (keep your existing email sending code here)
+
+      // Create/update document requests
+      const newRequests = selectedEmps.map((emp) => {
+        const existingRequest = documentRequests.find(
+          (req) => req.employeeId === emp.id,
+        );
+
+        if (existingRequest) {
+          // Update existing request
+          const updatedDocuments = existingRequest.documents.map((doc) => {
+            // Check if this document was uploaded in email uploads
+            const uploadedDoc = emailUploads.find(
+              (up) => up.documentId === doc.id,
+            );
+            if (uploadedDoc) {
+              return {
+                ...doc,
+                status: "Completed",
+                uploadedDate: timestamp,
+                fileUrl: uploadedDoc.fileUrl,
+                fileName: uploadedDoc.name,
+                fileSize: uploadedDoc.size,
+                fileType: uploadedDoc.type,
+              };
+            }
+            return doc;
+          });
+
+          return {
+            ...existingRequest,
+            employeeName: emp.name,
+            email: emp.email,
+            documents: updatedDocuments,
+            emailSent: true,
+            emailSentDate: timestamp,
+            emailMethod: emailMethod,
+            status: "Request Sent",
+          };
+        } else {
+          // Create new request
+          return {
+            id: Date.now() + Math.random(),
+            employeeId: emp.id,
+            employeeName: emp.name,
+            email: emp.email,
+            status: "Request Sent",
+            requestedDate: timestamp,
+            documents: requiredDocuments.map((doc) => ({
+              id: doc.id,
+              name: doc.name,
+              required: doc.required,
+              status: "Pending",
+              uploadedDate: null,
+              fileUrl: null,
+            })),
+            emailSent: true,
+            emailSentDate: timestamp,
+            emailMethod: emailMethod,
+            completedDate: null,
+          };
+        }
+      });
+
+      // Update or add requests
+      const updatedRequests = [...documentRequests];
+      newRequests.forEach((newReq) => {
+        const index = updatedRequests.findIndex(
+          (req) => req.employeeId === newReq.employeeId,
+        );
+        if (index >= 0) {
+          updatedRequests[index] = newReq;
+        } else {
+          updatedRequests.push(newReq);
+        }
+      });
+      saveDocumentRequests(updatedRequests);
+
+      // Update employee status
+      const updatedEmployees = employees.map((emp) => {
+        if (selectedEmployees.includes(emp.id)) {
+          return { ...emp, status: "In Progress" };
+        }
+        return emp;
+      });
+      setEmployees(updatedEmployees);
+
+      // Update localStorage
+      const savedProfiles = localStorage.getItem("employeeProfiles");
+      if (savedProfiles) {
+        const profiles = JSON.parse(savedProfiles);
+        const updatedProfiles = profiles.map((profile) => {
+          if (selectedEmployees.includes(profile.employeeId || profile.id)) {
+            return { ...profile, bgvStatus: "In Progress" };
+          }
+          return profile;
+        });
+        localStorage.setItem(
+          "employeeProfiles",
+          JSON.stringify(updatedProfiles),
+        );
+      }
+
+      setEmailStatus({
+        type: "success",
+        message: `Successfully sent ${selectedEmps.length} email(s)`,
+      });
+
+      setTimeout(() => {
+        setShowEmailModal(false);
+        setSelectedEmployees([]);
+        setEmailTemplate("");
+        setEmailStatus({ type: "", message: "" });
+        setCcEmails("");
+        setBccEmails("");
+        setEditingEmployeeId(null);
+        // Clear email uploads
+        emailUploads.forEach((doc) => {
+          if (doc.fileUrl) URL.revokeObjectURL(doc.fileUrl);
+        });
+        setEmailUploads([]);
+      }, 2000);
+    } catch (error) {
+      console.error("Error sending email:", error);
+      setEmailStatus({
+        type: "error",
+        message:
+          error.message ||
+          "Failed to send emails. Please try again or use a different method.",
+      });
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
   return (
-    <div className="container" style={{ maxWidth: "1400px" }}>
+    <div className="container">
       {/* Header */}
       <div className="mb-4">
         {/* Back Button */}
@@ -897,23 +1222,6 @@ const BackgroundVerification = () => {
                 Send Request ({selectedEmployees.length})
               </button>
             )}
-            <button
-              className="btn btn-secondary"
-              onClick={loadEmployees}
-              style={{
-                borderRadius: 8,
-                padding: "10px 20px",
-                fontWeight: 500,
-                fontSize: 14,
-                whiteSpace: "nowrap",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-              }}
-            >
-              <Icon icon="heroicons:arrow-path" style={{ fontSize: 18 }} />
-              Refresh
-            </button>
           </div>
         </div>
       </div>
@@ -947,6 +1255,8 @@ const BackgroundVerification = () => {
                     background: "#F9FAFB",
                     border: "1px solid #D1D5DB",
                     borderRight: "none",
+                    borderTopLeftRadius: "8px",
+                    borderBottomLeftRadius: "8px",
                   }}
                 >
                   <Icon
@@ -955,10 +1265,11 @@ const BackgroundVerification = () => {
                   />
                 </span>
                 <input
-                  type="text"
+                  type="search"
                   className="form-control"
                   style={{
-                    borderRadius: "0 8px 8px 0",
+                    borderTopRightRadius: "8px",
+                    borderBottomRightRadius: "8px",
                     border: "1px solid #D1D5DB",
                     borderLeft: "none",
                     padding: "10px 14px",
@@ -967,10 +1278,27 @@ const BackgroundVerification = () => {
                   }}
                   placeholder="Search by name, email, or employee ID..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    // Only update searchTerm, don't trigger email validation
+                    setSearchTerm(e.target.value);
+                  }}
+                  onKeyDown={(e) => {
+                    // Escape key clears search
+                    if (e.key === "Escape") {
+                      setSearchTerm("");
+                    }
+                  }}
+                  // Add these attributes to prevent any email-related behaviors
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck="false"
+                  // Ensure this doesn't conflict with email inputs
+                  name="employeeSearch"
+                  id="employeeSearchInput"
                 />
               </div>
             </div>
+
             <div className="col-md-4 col-lg-3">
               <label
                 style={{
@@ -1228,17 +1556,12 @@ const BackgroundVerification = () => {
                         <button
                           className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
                           onClick={() => {
-                            if (
-                              window.confirm(
-                                "Are you sure you want to delete this request?",
-                              )
-                            ) {
-                              const updatedRequests = documentRequests.filter(
-                                (req) => req.id !== request.id,
-                              );
-                              saveDocumentRequests(updatedRequests);
-                            }
+                            const updatedRequests = documentRequests.filter(
+                              (req) => req.id !== request.id,
+                            );
+                            saveDocumentRequests(updatedRequests);
                           }}
+                          title="Delete Request"
                         >
                           <Icon icon="heroicons:trash" className="fs-6" />
                         </button>
@@ -1581,42 +1904,8 @@ const BackgroundVerification = () => {
                                 className="btn btn-outline-danger btn-sm"
                                 title="Delete Request Permanently"
                                 onClick={() => {
-                                  if (
-                                    window.confirm(
-                                      `Delete document request for ${employee.name} permanently? This action cannot be undone.`,
-                                    )
-                                  ) {
-                                    /* 1️⃣ Remove document request completely */
-                                    const updatedRequests =
-                                      documentRequests.filter(
-                                        (req) => req.employeeId !== employee.id,
-                                      );
-                                    saveDocumentRequests(updatedRequests);
-
-                                    /* 2️⃣ Remove employee profile entry from localStorage */
-                                    const savedProfiles =
-                                      localStorage.getItem("employeeProfiles");
-                                    if (savedProfiles) {
-                                      const profiles =
-                                        JSON.parse(savedProfiles);
-                                      const updatedProfiles = profiles.filter(
-                                        (profile) =>
-                                          (profile.employeeId || profile.id) !==
-                                          employee.id,
-                                      );
-
-                                      localStorage.setItem(
-                                        "employeeProfiles",
-                                        JSON.stringify(updatedProfiles),
-                                      );
-                                    }
-
-                                    /* 3️⃣ (Optional) Remove employee from employees list */
-                                    const updatedEmployees = employees.filter(
-                                      (emp) => emp.id !== employee.id,
-                                    );
-                                    setEmployees(updatedEmployees);
-                                  }
+                                  setEmployeeToDelete(employee);
+                                  setShowDeleteModal(true);
                                 }}
                               >
                                 <Icon icon="heroicons:trash" />
@@ -1656,9 +1945,8 @@ const BackgroundVerification = () => {
           <div className="modal-dialog modal-dialog-centered modal-md">
             <div className="modal-content border-0 shadow-lg rounded-3">
               {/* Modal Header */}
-              <div className="modal-header bg-primary text-white rounded-top-3">
+              <div className="modal-header bg-info text-dark rounded-top-3">
                 <div className="d-flex align-items-center">
-                  <Icon icon="heroicons:document-text" className="me-2" />
                   <h5 className="modal-title mb-0 fw-semibold">
                     Document Request
                   </h5>
@@ -1865,7 +2153,7 @@ const BackgroundVerification = () => {
                 </button>
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="btn btn-primary btn-sm d-flex align-items-center px-3"
                   onClick={() => {
                     // Find the employee and send email
                     const employee = employees.find(
@@ -1910,10 +2198,9 @@ const BackgroundVerification = () => {
             <div className="modal-content border-0 shadow-lg rounded-3">
               {/* Header */}
               <div className="modal-header bg-primary text-white rounded-top-3 border-0 px-4 py-3">
-                <h5 className="modal-title d-flex align-items-center fw-semibold mb-0">
-                  <Icon icon="heroicons:envelope" className="me-2 fs-5" />
+                <h6 className="modal-title d-flex align-items-center fw-semibold mb-0">
                   Send Document Request Email
-                </h5>
+                </h6>
                 <button
                   type="button"
                   className="btn-close btn-close-white"
@@ -1942,15 +2229,14 @@ const BackgroundVerification = () => {
                   </div>
                 )}
 
-                {/* Recipients */}
+                {/* Recipients with Edit Option */}
                 <div className="mb-4">
                   <label className="form-label fw-semibold">To:</label>
                   <div className="p-3 bg-light rounded">
-                    <div className="d-flex flex-wrap gap-2">
+                    <div className="d-flex flex-wrap gap-2 mb-3">
                       {employees
                         .filter((emp) => selectedEmployees.includes(emp.id))
                         .map((emp) => {
-                          // Get existing request for this employee
                           const existingRequest = documentRequests.find(
                             (req) => req.employeeId === emp.id,
                           );
@@ -1982,13 +2268,179 @@ const BackgroundVerification = () => {
                                     icon="heroicons:document-text"
                                     className="me-1"
                                   />
-                                  Existing Request
+                                  Existing
                                 </small>
                               )}
+                              <button
+                                type="button"
+                                className="btn btn-link p-0 ms-2 text-white"
+                                onClick={() => handleEditEmployee(emp)}
+                                title="Edit Employee Details"
+                              >
+                                <Icon
+                                  icon="heroicons:pencil-square"
+                                  className="fs-6"
+                                />
+                              </button>
                             </span>
                           );
                         })}
                     </div>
+
+                    {/* Edit Employee Form (shown when editing) */}
+                    {editingEmployeeId && (
+                      <div className="border rounded p-3 bg-white mt-3">
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                          <h6 className="mb-0 fw-semibold">
+                            <Icon
+                              icon="heroicons:pencil-square"
+                              className="me-2"
+                            />
+                            Edit Employee Details
+                          </h6>
+                          <button
+                            type="button"
+                            className="btn-close"
+                            onClick={() => setEditingEmployeeId(null)}
+                          />
+                        </div>
+
+                        <div className="row g-3">
+                          {/* Name */}
+                          <div className="col-12 col-md-6">
+                            <label className="form-label fw-semibold">
+                              Name <span className="text-danger">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={editEmployeeName}
+                              onChange={(e) =>
+                                setEditEmployeeName(e.target.value)
+                              }
+                              placeholder="Enter employee name"
+                              disabled={sendingEmail}
+                            />
+                          </div>
+
+                          {/* Phone Number */}
+                          <div className="col-12 col-md-6">
+                            <label className="form-label fw-semibold">
+                              Phone Number
+                            </label>
+                            <input
+                              type="tel"
+                              className="form-control"
+                              value={editEmployeePhone}
+                              onChange={(e) =>
+                                setEditEmployeePhone(e.target.value)
+                              }
+                              placeholder="+91 98765 43210"
+                              disabled={sendingEmail}
+                            />
+                          </div>
+
+                          {/* Email */}
+                          <div className="col-12 col-md-6">
+                            <label className="form-label fw-semibold">
+                              Email ID <span className="text-danger">*</span>
+                            </label>
+                            <input
+                              type="email"
+                              className="form-control"
+                              value={editEmployeeEmail}
+                              onChange={(e) =>
+                                setEditEmployeeEmail(e.target.value)
+                              }
+                              placeholder="Enter email address"
+                              disabled={sendingEmail}
+                            />
+                          </div>
+
+                          {/* Department */}
+                          <div className="col-12 col-md-6">
+                            <label className="form-label fw-semibold">
+                              Department{" "}
+                            </label>
+                            <select
+                              className="form-select"
+                              value={editEmployeeDepartment}
+                              onChange={(e) =>
+                                setEditEmployeeDepartment(e.target.value)
+                              }
+                              disabled={sendingEmail}
+                            >
+                              <option value="">Select Department</option>
+                              <option value="Engineering">Engineering</option>
+                              <option value="Marketing">Marketing</option>
+                              <option value="Sales">Sales</option>
+                              <option value="HR">HR</option>
+                              <option value="Finance">Finance</option>
+                              <option value="Operations">Operations</option>
+                              <option value="External">External</option>
+                            </select>
+                          </div>
+
+                          {/* Designation */}
+                          <div className="col-12 col-md-6">
+                            <label className="form-label fw-semibold">
+                              Designation{" "}
+                            </label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={editEmployeeDesignation}
+                              onChange={(e) =>
+                                setEditEmployeeDesignation(e.target.value)
+                              }
+                              placeholder="e.g., Software Engineer, Marketing Executive"
+                              disabled={sendingEmail}
+                            />
+                          </div>
+
+                          {/* Employee ID */}
+                          <div className="col-12 col-md-6">
+                            <label className="form-label fw-semibold">
+                              Employee ID{" "}
+                            </label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={editEmployeeId}
+                              onChange={(e) =>
+                                setEditEmployeeId(e.target.value)
+                              }
+                              placeholder="EMP001, CAND001, etc."
+                              disabled={sendingEmail}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="d-flex justify-content-end gap-2 mt-3">
+                          <button
+                            type="button"
+                            className="btn btn-secondary"
+                            onClick={() => setEditingEmployeeId(null)}
+                            disabled={sendingEmail}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-primary d-flex align-items-center gap-2"
+                            onClick={handleSaveEmployeeEdit}
+                            disabled={
+                              sendingEmail ||
+                              !editEmployeeName.trim() ||
+                              !editEmployeeEmail.trim()
+                            }
+                          >
+                            <Icon icon="heroicons:check" />
+                            <span>Save Changes</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -2137,236 +2589,297 @@ const BackgroundVerification = () => {
                   />
                 </div>
 
-                {/* Document Upload Section */}
+                {/* Document Upload Section - Same as New Request Modal */}
                 <div className="mb-4">
                   <label className="form-label fw-semibold">
                     Upload Documents (Optional):
                   </label>
-                  <div className="alert alert-warning mb-3">
-                    <Icon
-                      icon="heroicons:information-circle"
-                      className="me-2"
-                    />
-                    <small>
-                      {selectedEmployees.length === 1
-                        ? "You can upload documents for this employee now."
-                        : "Document upload is only available for single employee selection."}
-                    </small>
-                  </div>
 
-                  {selectedEmployees.length === 1 ? (
-                    <div className="bg-light rounded p-3">
-                      <div className="table-responsive">
-                        <table className="table table-borderless table-sm mb-0">
-                          <thead>
-                            <tr>
-                              <th
-                                className="fw-semibold text-muted"
-                                style={{ width: "40%" }}
-                              >
-                                Document Name
-                              </th>
-                              <th
-                                className="fw-semibold text-muted"
-                                style={{ width: "20%" }}
-                              >
-                                Type
-                              </th>
-                              <th
-                                className="fw-semibold text-muted"
-                                style={{ width: "20%" }}
-                              >
-                                Status
-                              </th>
-                              <th
-                                className="fw-semibold text-muted"
-                                style={{ width: "20%" }}
-                              >
-                                Action
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {requiredDocuments.map((doc, index) => {
-                              // Check if this document is already uploaded for the selected employee
-                              const employeeId = selectedEmployees[0];
-                              const empRequest = documentRequests.find(
-                                (req) => req.employeeId === employeeId,
-                              );
-                              const existingDoc = empRequest?.documents?.find(
-                                (d) => d.id === doc.id,
-                              );
-                              const isUploaded = !!existingDoc?.fileUrl;
+                  <div className="bg-light rounded p-3">
+                    <div className="table-responsive">
+                      <table className="table table-borderless table-sm mb-0">
+                        <thead>
+                          <tr>
+                            <th
+                              className="fw-semibold text-muted"
+                              style={{ width: "40%" }}
+                            >
+                              Document Name
+                            </th>
+                            <th
+                              className="fw-semibold text-muted"
+                              style={{ width: "20%" }}
+                            >
+                              Type
+                            </th>
+                            <th
+                              className="fw-semibold text-muted"
+                              style={{ width: "20%" }}
+                            >
+                              Upload Status
+                            </th>
+                            <th
+                              className="fw-semibold text-muted"
+                              style={{ width: "20%" }}
+                            >
+                              Action
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {requiredDocuments.map((doc, index) => {
+                            // Check if this document is already uploaded
+                            const isUploaded = emailUploads.some(
+                              (ud) => ud.documentId === doc.id,
+                            );
+                            const uploadedDoc = emailUploads.find(
+                              (ud) => ud.documentId === doc.id,
+                            );
 
-                              // Check if this document is in emailUploads (new uploads during this session)
-                              const newUpload = emailUploads.find(
-                                (up) => up.documentId === doc.id,
-                              );
-
-                              return (
-                                <tr
-                                  key={doc.id}
-                                  className={
-                                    index % 2 === 0 ? "bg-white" : "bg-light"
-                                  }
-                                >
-                                  <td className="align-middle">
-                                    <div className="d-flex align-items-center">
-                                      <Icon
-                                        icon={
-                                          isUploaded || newUpload
-                                            ? "heroicons:document-check"
-                                            : "heroicons:document"
-                                        }
-                                        className={`me-2 ${isUploaded || newUpload ? "text-success" : "text-secondary"}`}
-                                      />
-                                      <div>
-                                        <div className="fw-medium">
-                                          {doc.name}
-                                        </div>
-                                        {(existingDoc?.uploadedDate ||
-                                          newUpload?.uploadDate) && (
-                                          <small className="text-muted">
-                                            {newUpload
-                                              ? `New upload: ${new Date(newUpload.uploadDate).toLocaleDateString()}`
-                                              : `Uploaded: ${new Date(existingDoc.uploadedDate).toLocaleDateString()}`}
-                                          </small>
-                                        )}
+                            return (
+                              <tr
+                                key={doc.id}
+                                className={
+                                  index % 2 === 0 ? "bg-white" : "bg-light"
+                                }
+                              >
+                                <td className="align-middle">
+                                  <div className="d-flex align-items-center">
+                                    <Icon
+                                      icon={
+                                        isUploaded
+                                          ? "heroicons:document-check"
+                                          : "heroicons:document"
+                                      }
+                                      className={`me-2 ${isUploaded ? "text-success" : "text-secondary"}`}
+                                    />
+                                    <div>
+                                      <div className="fw-medium">
+                                        {doc.name}
                                       </div>
+                                      {uploadedDoc && (
+                                        <small className="text-muted">
+                                          Uploaded:{" "}
+                                          {new Date(
+                                            uploadedDoc.uploadDate,
+                                          ).toLocaleDateString()}
+                                        </small>
+                                      )}
                                     </div>
-                                  </td>
-                                  <td className="align-middle">
-                                    <span
-                                      className={`badge bg-${doc.required ? "danger" : "secondary"}`}
-                                    >
-                                      {doc.required ? "Required" : "Optional"}
+                                  </div>
+                                </td>
+                                <td className="align-middle">
+                                  <span
+                                    className={`badge bg-${doc.required ? "danger" : "secondary"}`}
+                                  >
+                                    {doc.required ? "Required" : "Optional"}
+                                  </span>
+                                </td>
+                                <td className="align-middle">
+                                  {isUploaded ? (
+                                    <span className="badge bg-success">
+                                      Uploaded
                                     </span>
-                                  </td>
-                                  <td className="align-middle">
-                                    {isUploaded || newUpload ? (
-                                      <span className="badge bg-success">
-                                        <Icon
-                                          icon="heroicons:check"
-                                          className="me-1"
-                                        />
-                                        Uploaded
-                                      </span>
-                                    ) : existingDoc?.status === "Completed" ? (
-                                      <span className="badge bg-info">
-                                        <Icon
-                                          icon="heroicons:check-circle"
-                                          className="me-1"
-                                        />
-                                        Completed
-                                      </span>
-                                    ) : (
-                                      <span
-                                        className={`badge bg-${doc.required ? "warning" : "secondary"}`}
+                                  ) : (
+                                    <span
+                                      className={`badge bg-${doc.required ? "warning" : "secondary"}`}
+                                    >
+                                      {doc.required ? "Pending" : "Optional"}
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="align-middle">
+                                  {isUploaded ? (
+                                    <div className="d-flex gap-1">
+                                      <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-primary"
+                                        onClick={() =>
+                                          handleViewDocument(uploadedDoc)
+                                        }
+                                        title="View Document"
                                       >
                                         <Icon
-                                          icon="heroicons:clock"
-                                          className="me-1"
+                                          icon="heroicons:eye"
+                                          className="fs-6"
                                         />
-                                        {doc.required ? "Pending" : "Optional"}
-                                      </span>
-                                    )}
-                                  </td>
-                                  <td className="align-middle">
-                                    {isUploaded || newUpload ? (
-                                      <div className="d-flex gap-1">
-                                        {isUploaded ? (
-                                          // For existing documents, show view and update buttons
-                                          <>
-                                            <button
-                                              type="button"
-                                              className="btn btn-sm btn-outline-danger"
-                                              onClick={() =>
-                                                handleRemoveExistingDocument(
-                                                  doc.id,
-                                                  employeeId,
-                                                )
-                                              }
-                                              title="Remove Document"
-                                              disabled={sendingEmail}
-                                            >
-                                              <Icon
-                                                icon="heroicons:trash"
-                                                className="fs-6"
-                                              />
-                                            </button>
-                                          </>
-                                        ) : (
-                                          // For new uploads (emailUploads), show remove button only
-                                          <>
-                                            <button
-                                              type="button"
-                                              className="btn btn-sm btn-outline-danger"
-                                              onClick={() =>
-                                                handleRemoveEmailDocument(
-                                                  doc.id,
-                                                )
-                                              }
-                                              title="Remove New Upload"
-                                              disabled={sendingEmail}
-                                            >
-                                              <Icon
-                                                icon="heroicons:trash"
-                                                className="fs-6"
-                                              />
-                                            </button>
-                                          </>
-                                        )}
-                                      </div>
-                                    ) : (
-                                      // Upload button for documents not uploaded
-                                      <div>
-                                        <input
-                                          type="file"
-                                          id={`email-upload-${doc.id}`}
-                                          className="d-none"
-                                          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                                          onChange={(e) =>
-                                            handleEmailDocumentUpload(e, doc.id)
-                                          }
-                                          disabled={sendingEmail}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-danger"
+                                        onClick={() =>
+                                          handleRemoveEmailDocument(doc.id)
+                                        }
+                                        title="Remove Document"
+                                      >
+                                        <Icon
+                                          icon="heroicons:trash"
+                                          className="fs-6"
                                         />
-                                        <label
-                                          htmlFor={`email-upload-${doc.id}`}
-                                          className={`btn btn-sm w-100 ${doc.required ? "btn-outline-success" : "btn-outline-secondary"}`}
-                                          style={{
-                                            cursor: sendingEmail
-                                              ? "not-allowed"
-                                              : "pointer",
-                                          }}
-                                        >
-                                          <Icon
-                                            icon="heroicons:arrow-up-tray"
-                                            className="me-1"
-                                          />
-                                          Upload
-                                        </label>
-                                      </div>
-                                    )}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div>
+                                      <input
+                                        type="file"
+                                        id={`email-upload-${doc.id}`}
+                                        className="d-none"
+                                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                        onChange={(e) =>
+                                          handleEmailDocumentUpload(e, doc.id)
+                                        }
+                                        disabled={sendingEmail}
+                                      />
+                                      <label
+                                        htmlFor={`email-upload-${doc.id}`}
+                                        className={`btn btn-sm w-100 ${doc.required ? "btn-outline-success" : "btn-outline-secondary"}`}
+                                        style={{
+                                          cursor: "pointer",
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          gap: "4px",
+                                        }}
+                                      >
+                                        <Icon
+                                          icon="heroicons:arrow-up-tray"
+                                          style={{ fontSize: 18 }}
+                                        />
+                                        <span>Upload</span>
+                                      </label>
+                                    </div>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Upload Summary */}
+                    {emailUploads.length > 0 && (
+                      <div className="mt-3 pt-3 border-top">
+                        <div className="d-flex justify-content-between align-items-center">
+                          <div>
+                            <small className="text-muted">
+                              {emailUploads.length} of{" "}
+                              {requiredDocuments.length} documents uploaded
+                            </small>
+                            <div
+                              className="progress mt-1"
+                              style={{ height: "6px", width: "200px" }}
+                            >
+                              <div
+                                className="progress-bar bg-success"
+                                style={{
+                                  width: `${(emailUploads.length / requiredDocuments.length) * 100}%`,
+                                }}
+                              ></div>
+                            </div>
+
+                            {/* Required Documents Summary */}
+                            <div className="mt-2">
+                              <small className="text-muted d-block">
+                                Required:{" "}
+                                {
+                                  emailUploads.filter((ud) =>
+                                    requiredDocuments.find(
+                                      (rd) =>
+                                        rd.id === ud.documentId && rd.required,
+                                    ),
+                                  ).length
+                                }{" "}
+                                of{" "}
+                                {
+                                  requiredDocuments.filter((d) => d.required)
+                                    .length
+                                }
+                              </small>
+                              <div
+                                className="progress mt-1"
+                                style={{
+                                  height: "4px",
+                                  width: "200px",
+                                  backgroundColor: "#e9ecef",
+                                }}
+                              >
+                                <div
+                                  className="progress-bar bg-danger"
+                                  style={{
+                                    width: `${(emailUploads.filter((ud) => requiredDocuments.find((rd) => rd.id === ud.documentId && rd.required)).length / requiredDocuments.filter((d) => d.required).length) * 100}%`,
+                                  }}
+                                ></div>
+                              </div>
+                            </div>
+
+                            {/* Optional Documents Summary */}
+                            {requiredDocuments.filter((d) => !d.required)
+                              .length > 0 && (
+                              <div className="mt-2">
+                                <small className="text-muted d-block">
+                                  Optional:{" "}
+                                  {
+                                    emailUploads.filter((ud) =>
+                                      requiredDocuments.find(
+                                        (rd) =>
+                                          rd.id === ud.documentId &&
+                                          !rd.required,
+                                      ),
+                                    ).length
+                                  }{" "}
+                                  of{" "}
+                                  {
+                                    requiredDocuments.filter((d) => !d.required)
+                                      .length
+                                  }
+                                </small>
+                                <div
+                                  className="progress mt-1"
+                                  style={{
+                                    height: "4px",
+                                    width: "200px",
+                                    backgroundColor: "#e9ecef",
+                                  }}
+                                >
+                                  <div
+                                    className="progress-bar bg-secondary"
+                                    style={{
+                                      width: `${(emailUploads.filter((ud) => requiredDocuments.find((rd) => rd.id === ud.documentId && !rd.required)).length / requiredDocuments.filter((d) => !d.required).length) * 100}%`,
+                                    }}
+                                  ></div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => {
+                              if (
+                                window.confirm(
+                                  "Are you sure you want to clear all uploaded documents?",
+                                )
+                              ) {
+                                // Revoke object URLs to prevent memory leaks
+                                emailUploads.forEach((doc) => {
+                                  if (doc.fileUrl) {
+                                    URL.revokeObjectURL(doc.fileUrl);
+                                  }
+                                });
+                                setEmailUploads([]);
+                              }
+                            }}
+                            disabled={emailUploads.length === 0 || sendingEmail}
+                          >
+                            <Icon icon="heroicons:trash" className="me-1" />
+                            Clear All
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-3 bg-light rounded">
-                      <Icon
-                        icon="heroicons:user-group"
-                        className="text-muted mb-2"
-                        style={{ fontSize: "24px" }}
-                      />
-                      <p className="text-muted mb-0">
-                        Select a single employee to enable document upload
-                      </p>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
 
                 {/* Email Body */}
@@ -2396,10 +2909,10 @@ const BackgroundVerification = () => {
                     {selectedEmployees.length > 0 && (
                       <div className="mt-2">
                         <strong>
-                          Existing document status will be preserved.
+                          Employee details can be edited by clicking the edit
+                          icon next to their name.
                         </strong>{" "}
-                        Uploaded documents will be updated for selected
-                        employees.
+                        Changes will be saved to the employee record.
                       </div>
                     )}
                   </div>
@@ -2417,8 +2930,13 @@ const BackgroundVerification = () => {
                       setEmailStatus({ type: "", message: "" });
                       setCcEmails("");
                       setBccEmails("");
+                      // Clear edit state
+                      setEditingEmployeeId(null);
                       // Clear any temporary uploads
-                      setEmailUploadedDocuments([]);
+                      emailUploads.forEach((doc) => {
+                        if (doc.fileUrl) URL.revokeObjectURL(doc.fileUrl);
+                      });
+                      setEmailUploads([]);
                     }}
                     disabled={sendingEmail}
                   >
@@ -2427,7 +2945,7 @@ const BackgroundVerification = () => {
                   <button
                     type="button"
                     className="btn btn-primary order-1 order-md-2 flex-fill d-flex align-items-center justify-content-center"
-                    onClick={handleConfirmSendEmail}
+                    onClick={handleConfirmSendEmailWithEdits}
                     disabled={
                       sendingEmail ||
                       !emailTemplate.trim() ||
@@ -2486,7 +3004,6 @@ const BackgroundVerification = () => {
               {/* Header */}
               <div className="modal-header bg-success text-white rounded-top-3 border-0 px-4 py-3">
                 <h5 className="modal-title d-flex align-items-center fw-semibold mb-0">
-                  <Icon icon="heroicons:plus-circle" className="me-2 fs-5" />
                   New Document Request
                 </h5>
                 <button
@@ -2542,8 +3059,7 @@ const BackgroundVerification = () => {
                   {/* Phone Number */}
                   <div className="col-12 col-md-6">
                     <label className="form-label fw-semibold">
-                      Phone Number{" "}
-                      <span className="text-muted">(Optional)</span>
+                      Phone Number
                     </label>
                     <input
                       type="tel"
@@ -2553,9 +3069,6 @@ const BackgroundVerification = () => {
                       placeholder="+91 98765 43210"
                       disabled={sendingEmail}
                     />
-                    <small className="text-muted">
-                      Format: +91 98765 43210
-                    </small>
                   </div>
                 </div>
 
@@ -2578,9 +3091,7 @@ const BackgroundVerification = () => {
 
                   {/* Department/Designation */}
                   <div className="col-12 col-md-6">
-                    <label className="form-label fw-semibold">
-                      Department <span className="text-muted">(Optional)</span>
-                    </label>
+                    <label className="form-label fw-semibold">Department</label>
                     <select
                       className="form-select"
                       value={newRequestDepartment}
@@ -2604,7 +3115,7 @@ const BackgroundVerification = () => {
                   {/* Designation */}
                   <div className="col-12 col-md-6">
                     <label className="form-label fw-semibold">
-                      Designation <span className="text-muted">(Optional)</span>
+                      Designation
                     </label>
                     <input
                       type="text"
@@ -2619,7 +3130,7 @@ const BackgroundVerification = () => {
                   {/* Employee ID */}
                   <div className="col-12 col-md-6">
                     <label className="form-label fw-semibold">
-                      Employee ID <span className="text-muted">(Optional)</span>
+                      Employee ID
                     </label>
                     <input
                       type="text"
@@ -2720,7 +3231,7 @@ const BackgroundVerification = () => {
                       className="form-control"
                       value={ccEmails}
                       onChange={(e) => setCcEmails(e.target.value)}
-                      placeholder="email1@example.com, email2@example.com"
+                      placeholder="email1@example.com"
                       disabled={emailMethod === "mailto" || sendingEmail}
                     />
                     <small className="text-muted">
@@ -2736,7 +3247,7 @@ const BackgroundVerification = () => {
                       type="text"
                       className="form-control"
                       value={bccEmails}
-                      placeholder="email1@example.com, email2@example.com"
+                      placeholder="email1@example.com"
                       onChange={(e) => setBccEmails(e.target.value)}
                       disabled={emailMethod === "mailto" || sendingEmail}
                     />
@@ -2784,7 +3295,6 @@ const BackgroundVerification = () => {
                         </thead>
                         <tbody>
                           {requiredDocuments.map((doc, index) => {
-                            // Changed from filter to map for ALL documents
                             // Check if this document is already uploaded
                             const isUploaded = uploadedDocuments.some(
                               (ud) => ud.id === doc.id,
@@ -2835,20 +3345,12 @@ const BackgroundVerification = () => {
                                 <td className="align-middle">
                                   {isUploaded ? (
                                     <span className="badge bg-success">
-                                      <Icon
-                                        icon="heroicons:check"
-                                        className="me-1"
-                                      />
                                       Uploaded
                                     </span>
                                   ) : (
                                     <span
                                       className={`badge bg-${doc.required ? "warning" : "secondary"}`}
                                     >
-                                      <Icon
-                                        icon="heroicons:clock"
-                                        className="me-1"
-                                      />
                                       {doc.required ? "Pending" : "Optional"}
                                     </span>
                                   )}
@@ -2897,14 +3399,20 @@ const BackgroundVerification = () => {
                                       />
                                       <label
                                         htmlFor={`upload-${doc.id}`}
-                                        className={`btn btn-sm w-100 ${doc.required ? "btn-outline-success" : "btn-outline-secondary"}`}
-                                        style={{ cursor: "pointer" }}
+                                        className={`btn btn-sm w-100 ${doc.required ? "btn-outline-success" : "btn-outline-secondary"} d-flex flex-column align-items-center justify-content-center`}
+                                        style={{
+                                          cursor: "pointer",
+                                          height: "60px", // Optional: Adjust height for better appearance
+                                          padding: "6px",
+                                          gap: "4px", // Optional: Add spacing between icon and text
+                                        }}
                                       >
                                         <Icon
                                           icon="heroicons:arrow-up-tray"
-                                          className="me-1"
+                                          className="mb-1"
+                                          style={{ fontSize: "18px" }} // Optional: Adjust icon size
                                         />
-                                        Upload
+                                        <span>Upload</span>
                                       </label>
                                     </div>
                                   )}
@@ -3123,6 +3631,238 @@ const BackgroundVerification = () => {
                           : emailMethod === "clipboard"
                             ? "Copy to Clipboard"
                             : "Open Email Client"}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && employeeToDelete && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{
+            backgroundColor: "rgba(0,0,0,0.5)",
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 1060,
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !deleting) {
+              setShowDeleteModal(false);
+              setEmployeeToDelete(null);
+            }
+          }}
+        >
+          <div
+            className="modal-dialog modal-dialog-centered"
+            style={{ maxWidth: "450px" }}
+          >
+            <div className="modal-content border-0 shadow-lg rounded-3">
+              {/* Modal Header - Reduced height */}
+              <div
+                className="modal-header bg-danger text-white border-0 px-4 py-3"
+                style={{ borderRadius: "0.5rem 0.5rem 0 0" }}
+              >
+                <h5 className="modal-title d-flex align-items-center fw-semibold mb-0">
+                  <Icon
+                    icon="heroicons:exclamation-triangle"
+                    className="me-2"
+                  />
+                  Delete Request
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={() => {
+                    if (!deleting) {
+                      setShowDeleteModal(false);
+                      setEmployeeToDelete(null);
+                    }
+                  }}
+                  disabled={deleting}
+                  style={{
+                    padding: "0.5rem",
+                    margin: "-0.5rem -0.5rem -0.5rem auto",
+                  }}
+                />
+              </div>
+
+              {/* Modal Body - Compact layout */}
+              <div className="modal-body p-3">
+                <div className="text-center">
+                  {/* Compact warning icon */}
+                  <div className="mb-2">
+                    <div className="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 rounded-circle p-2">
+                      <Icon
+                        icon="heroicons:trash"
+                        className="text-danger"
+                        style={{ fontSize: "24px" }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Main message - more compact */}
+                  <h6 className="fw-semibold mb-2">Delete Permanently?</h6>
+                  <p className="text-muted mb-3" style={{ fontSize: "14px" }}>
+                    Delete document request for{" "}
+                    <strong>{employeeToDelete.name}</strong>?
+                  </p>
+
+                  {/* Compact warning alert */}
+                  <div
+                    className="alert alert-warning py-2 mb-3"
+                    style={{ fontSize: "13px" }}
+                  >
+                    <div className="d-flex align-items-start">
+                      <Icon
+                        icon="heroicons:exclamation-circle"
+                        className="me-2 mt-0"
+                        style={{ fontSize: "16px" }}
+                      />
+                      <div>
+                        <strong className="d-block mb-0">Warning:</strong>
+                        <small>This action cannot be undone.</small>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Compact employee details */}
+                  <div
+                    className="bg-light rounded p-2 mb-3"
+                    style={{ fontSize: "13px" }}
+                  >
+                    <div className="d-flex justify-content-between mb-1">
+                      <span className="text-muted">Employee:</span>
+                      <span
+                        className="fw-semibold text-truncate"
+                        style={{ maxWidth: "200px" }}
+                      >
+                        {employeeToDelete.name}
+                      </span>
+                    </div>
+                    <div className="d-flex justify-content-between mb-1">
+                      <span className="text-muted">Email:</span>
+                      <span
+                        className="fw-semibold text-truncate"
+                        style={{ maxWidth: "180px" }}
+                      >
+                        {employeeToDelete.email}
+                      </span>
+                    </div>
+                    <div className="d-flex justify-content-between">
+                      <span className="text-muted">Employee ID:</span>
+                      <span className="fw-semibold">
+                        {employeeToDelete.employeeId}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer - Compact */}
+              <div
+                className="modal-footer border-top-0 bg-light px-3 py-2"
+                style={{ borderRadius: "0 0 0.5rem 0.5rem" }}
+              >
+                <div className="d-flex w-100 gap-2">
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary btn-sm flex-fill"
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setEmployeeToDelete(null);
+                      setDeleting(false);
+                    }}
+                    disabled={deleting}
+                    style={{ padding: "0.375rem 0.75rem", fontSize: "14px" }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger btn-sm flex-fill d-flex align-items-center justify-content-center"
+                    onClick={async () => {
+                      setDeleting(true);
+
+                      try {
+                        /* 1️⃣ Remove document request completely */
+                        const updatedRequests = documentRequests.filter(
+                          (req) => req.employeeId !== employeeToDelete.id,
+                        );
+                        saveDocumentRequests(updatedRequests);
+
+                        /* 2️⃣ Remove employee profile entry from localStorage */
+                        const savedProfiles =
+                          localStorage.getItem("employeeProfiles");
+                        if (savedProfiles) {
+                          const profiles = JSON.parse(savedProfiles);
+                          const updatedProfiles = profiles.filter(
+                            (profile) =>
+                              (profile.employeeId || profile.id) !==
+                              employeeToDelete.id,
+                          );
+                          localStorage.setItem(
+                            "employeeProfiles",
+                            JSON.stringify(updatedProfiles),
+                          );
+                        }
+
+                        /* 3️⃣ Remove employee from employees list */
+                        const updatedEmployees = employees.filter(
+                          (emp) => emp.id !== employeeToDelete.id,
+                        );
+                        setEmployees(updatedEmployees);
+
+                        // Show success status
+                        setEmailStatus({
+                          type: "success",
+                          message: `Successfully deleted request for ${employeeToDelete.name}`,
+                        });
+
+                        // Close modal after delay
+                        setTimeout(() => {
+                          setShowDeleteModal(false);
+                          setEmployeeToDelete(null);
+                          setDeleting(false);
+
+                          // Clear success message after 3 seconds
+                          setTimeout(() => {
+                            setEmailStatus({ type: "", message: "" });
+                          }, 3000);
+                        }, 1000);
+                      } catch (error) {
+                        console.error("Error deleting request:", error);
+                        setEmailStatus({
+                          type: "error",
+                          message:
+                            "Failed to delete request. Please try again.",
+                        });
+                        setDeleting(false);
+                      }
+                    }}
+                    style={{ padding: "0.375rem 0.75rem", fontSize: "14px" }}
+                  >
+                    {deleting ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2"></span>
+                        <span>Deleting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Icon
+                          icon="heroicons:trash"
+                          className="me-1"
+                          style={{ fontSize: "16px" }}
+                        />
+                        <span>Delete</span>
                       </>
                     )}
                   </button>

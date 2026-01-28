@@ -7,6 +7,29 @@ import React, {
   createContext,
 } from "react";
 
+
+import * as XLSX from 'xlsx';
+
+const data = [
+  { Name: "Keerthi", Age: 25, City: "Hyderabad" },
+  { Name: "Ravi", Age: 28, City: "Bangalore" },
+  // your table or data here
+];
+const exportToExcel = () => {
+  const data = [
+    { Name: "Keerthi", Age: 25, City: "Hyderabad" },
+    { Name: "Ravi", Age: 28, City: "Bangalore" },
+    // Replace with your actual table data
+  ];
+
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+
+  XLSX.writeFile(workbook, "ExportData.xlsx");
+};
+
+
 // ==============================
 // CONTEXT FOR GLOBAL STATE
 // ==============================
@@ -595,11 +618,16 @@ const WHR = () => {
           <div className="col-12">
             <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 gap-sm-0 mb-3">
               {/* Title - Always on top */}
-              <div>
-                <h2 className="fw-bold h5 h4-sm h3-lg mb-0">
-                  Work Hour Rules & Policies
-                </h2>
-              </div>
+             <div className="d-flex align-items-center gap-2">
+  {/* Icon */}
+  <i className="bi bi-clock-history text-dark fs-5"></i>
+
+  {/* Heading */}
+  <h2 className="fw-bold h5 h4-sm h3-lg mb-0">
+    Work Hour Rules & Policies
+  </h2>
+</div>
+
 
               {/* Action Buttons - Responsive Layout */}
               <div className="d-flex flex-wrap align-items-center gap-2">
@@ -629,26 +657,29 @@ const WHR = () => {
                 </div>
 
                 {/* Medium+ screens: Full buttons */}
-                <div className="d-none d-sm-block btn-group me-2">
-                  <button
-                    className="btn btn-outline-secondary"
-                    onClick={() => setShowImportModal(true)}
-                  >
-                    <i className="bi bi-upload me-2"></i>Import
-                  </button>
-                  <button
-                    className="btn btn-outline-secondary"
-                    onClick={() => setShowExportModal(true)}
-                  >
-                    <i className="bi bi-download me-2"></i>Export
-                  </button>
-                  <button
-                    className="btn btn-outline-secondary"
-                    onClick={handleReset}
-                  >
-                    <i className="bi bi-arrow-clockwise me-2"></i>Reset
-                  </button>
-                </div>
+       <div className="d-none d-sm-block btn-group me-2">
+  <button
+    className="btn btn-primary"
+    onClick={() => setShowImportModal(true)}
+  >
+    <i className="bi bi-upload me-2"></i>Import
+  </button>
+  <button
+  className="btn btn-primary"
+  onClick={exportToExcel}
+>
+  <i className="bi bi-download me-2"></i>Export
+</button>
+
+  <button
+    className="btn btn-primary"
+    onClick={handleReset}
+  >
+    <i className="bi bi-arrow-clockwise me-2"></i>Reset
+  </button>
+</div>
+
+
 
                 {/* Save Button - Responsive text */}
                 <button
@@ -1146,40 +1177,41 @@ const AttendanceRules = () => {
                   </div>
 
                   {/* Desktop: Full buttons with group styling */}
-                  <div className="d-none d-sm-flex btn-group">
-                    <button
-                      className="btn btn-sm btn-light d-flex align-items-center"
-                      onClick={exportRules}
-                      title="Export Rules"
-                    >
-                      <i className="bi bi-download me-1 me-md-2"></i>
-                      <span className="d-none d-md-inline">Export</span>
-                    </button>
+            <div className="d-none d-sm-flex btn-group">
+  <button
+    className="btn btn-sm btn-primary d-flex align-items-center"
+    onClick={exportRules}
+    title="Export Rules"
+  >
+    <i className="bi bi-download me-1 me-md-2"></i>
+    <span className="d-none d-md-inline">Export</span>
+  </button>
 
-                    <label
-                      className="btn btn-sm btn-light d-flex align-items-center position-relative"
-                      title="Import Rules"
-                    >
-                      <i className="bi bi-upload me-1 me-md-2"></i>
-                      <span className="d-none d-md-inline">Import</span>
-                      <input
-                        type="file"
-                        accept=".json"
-                        onChange={importRules}
-                        className="position-absolute top-0 start-0 w-100 h-100 opacity-0"
-                        style={{ cursor: "pointer" }}
-                      />
-                    </label>
+  <label
+    className="btn btn-sm btn-primary d-flex align-items-center position-relative"
+    title="Import Rules"
+  >
+    <i className="bi bi-upload me-1 me-md-2"></i>
+    <span className="d-none d-md-inline">Import</span>
+    <input
+      type="file"
+      accept=".json"
+      onChange={importRules}
+      className="position-absolute top-0 start-0 w-100 h-100 opacity-0"
+      style={{ cursor: "pointer" }}
+    />
+  </label>
 
-                    <button
-                      className="btn btn-sm btn-light d-flex align-items-center"
-                      onClick={resetToDefaults}
-                      title="Reset to Defaults"
-                    >
-                      <i className="bi bi-arrow-clockwise me-1 me-md-2"></i>
-                      <span className="d-none d-md-inline">Reset</span>
-                    </button>
-                  </div>
+  <button
+    className="btn btn-sm btn-primary d-flex align-items-center"
+    onClick={resetToDefaults}
+    title="Reset to Defaults"
+  >
+    <i className="bi bi-arrow-clockwise me-1 me-md-2"></i>
+    <span className="d-none d-md-inline">Reset</span>
+  </button>
+</div>
+
                 </div>
               </div>
             </div>
@@ -1234,116 +1266,106 @@ const AttendanceRules = () => {
               </div>
 
               {/* Feature Statistics */}
-              <div className="row mb-4">
-                <div className="col-12">
-                  <div className="card border">
-                    <div className="card-body p-2 p-sm-3 p-md-4">
-                      <div className="row g-0 text-center">
-                        {[
-                          {
-                            title: "Active Rules",
-                            value: featureStats.activeRules,
-                            color: "success",
-                            icon: "bi-check-circle",
-                            subtitle: "Enabled configurations",
-                            shortTitle: "Active",
-                          },
-                          {
-                            title: "Grace Period",
-                            value: `${rules.lateArrival.gracePeriod} min`,
-                            color: "warning",
-                            icon: "bi-clock",
-                            subtitle: "Late arrival allowance",
-                            shortTitle: "Grace",
-                          },
-                          {
-                            title: "Min Hours",
-                            value: `${rules.minWorkHours}h`,
-                            color: "primary",
-                            icon: "bi-hourglass",
-                            subtitle: "Daily requirement",
-                            shortTitle: "Min Hours",
-                          },
-                          {
-                            title: "Short Leave",
-                            value: rules.shortLeave.categories.length,
-                            color: "info",
-                            icon: "bi-calendar-minus",
-                            subtitle: "Categories",
-                            shortTitle: "Leave",
-                          },
-                          {
-                            title: "Absence Alert",
-                            value: `${rules.continuousAbsence.threshold}d`,
-                            color: "danger",
-                            icon: "bi-exclamation-triangle",
-                            subtitle: "Days threshold",
-                            shortTitle: "Absence",
-                          },
-                          {
-                            title: "Weekend Rate",
-                            value: `${rules.weekendWorking.rate}x`,
-                            color: "dark",
-                            icon: "bi-calendar2-week",
-                            subtitle: "Compensation",
-                            shortTitle: "Weekend",
-                          },
-                        ].map((stat, index) => (
-                          <div
-                            key={index}
-                            className="col-6 col-md-4 col-lg-2 mb-2 mb-md-0"
-                          >
-                            <div
-                              className={`
+            <div className="row mb-4">
+  <div className="col-12">
+    <div className="card border">
+      <div className="card-body p-2 p-sm-3 p-md-4">
+        <div className="row g-0 text-center">
+          {[
+            {
+              title: "Active Rules",
+              value: featureStats.activeRules,
+              color: "success",
+              icon: "bi-check-circle",
+              subtitle: "Enabled configurations",
+              shortTitle: "Active",
+            },
+            {
+              title: "Grace Period",
+              value: `${rules.lateArrival.gracePeriod} min`,
+              color: "warning",
+              icon: "bi-clock",
+              subtitle: "Late arrival allowance",
+              shortTitle: "Grace",
+            },
+            {
+              title: "Min Hours",
+              value: `${rules.minWorkHours}h`,
+              color: "primary",
+              icon: "bi-hourglass",
+              subtitle: "Daily requirement",
+              shortTitle: "Min Hours",
+            },
+            {
+              title: "Short Leave",
+              value: rules.shortLeave.categories.length,
+              color: "info",
+              icon: "bi-calendar-minus",
+              subtitle: "Categories",
+              shortTitle: "Leave",
+            },
+            {
+              title: "Absence Alert",
+              value: `${rules.continuousAbsence.threshold}d`,
+              color: "danger",
+              icon: "bi-exclamation-triangle",
+              subtitle: "Days threshold",
+              shortTitle: "Absence",
+            },
+            {
+              title: "Weekend Rate",
+              value: `${rules.weekendWorking.rate}x`,
+              color: "dark",
+              icon: "bi-calendar2-week",
+              subtitle: "Compensation",
+              shortTitle: "Weekend",
+            },
+          ].map((stat, index) => (
+            <div
+              key={index}
+              className="col-6 col-md-4 col-lg-2 mb-2 mb-md-0"
+            >
+              <div
+                className={`
                   h-100 py-2 py-sm-3
                   ${index > 0 ? "border-start border-light" : ""}
                   ${index === 2 || index === 5 ? "border-md-none" : ""}
                 `}
-                              style={{
-                                borderColor: "rgba(0,0,0,0.1) !important",
-                              }}
-                            >
-                              {/* Title with responsive icon */}
-                              <div className="fw-semibold text-secondary small mb-1 mb-sm-2">
-                                <i
-                                  className={`bi ${stat.icon} d-none d-sm-inline me-1 me-sm-2`}
-                                ></i>
-                                <i
-                                  className={`bi ${stat.icon} d-sm-none me-1`}
-                                ></i>
-                                <span className="d-none d-sm-inline">
-                                  {stat.title}
-                                </span>
-                                <span className="d-sm-none">
-                                  {stat.shortTitle}
-                                </span>
-                              </div>
+                style={{ borderColor: "rgba(0,0,0,0.1)" }}
+              >
+                {/* Title with responsive icon */}
+                <div className="fw-semibold text-secondary small mb-1 mb-sm-2">
+                  <i
+                    className={`bi ${stat.icon} d-none d-sm-inline me-1 me-sm-2`}
+                  ></i>
+                  <i className={`bi ${stat.icon} d-sm-none me-1`}></i>
+                  <span className="d-none d-sm-inline">{stat.title}</span>
+                  <span className="d-sm-none">{stat.shortTitle}</span>
+                </div>
 
-                              {/* Value with responsive size */}
-                              <div
-                                className={`h4 h3-sm h2-lg mb-1 mb-sm-2 text-${stat.color} fw-bold`}
-                              >
-                                {stat.value}
-                              </div>
+                {/* Value with responsive size */}
+                <div
+                  className={`text-${stat.color} fw-bold`}
+                  style={{ fontSize: "clamp(1rem, 4vw, 1.75rem)" }}
+                >
+                  {stat.value}
+                </div>
 
-                              {/* Subtitle with responsive icon */}
-                              <div className="small text-muted mb-0">
-                                <i className="bi bi-info-circle d-none d-sm-inline me-1"></i>
-                                <span className="d-none d-sm-inline">
-                                  {stat.subtitle}
-                                </span>
-                                <span className="d-sm-none">
-                                  {stat.shortTitle}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                {/* Subtitle with responsive icon */}
+                <div className="small text-muted mb-0">
+                  <i className="bi bi-info-circle d-none d-sm-inline me-1"></i>
+                  <span className="d-none d-sm-inline">{stat.subtitle}</span>
+                  <span className="d-sm-none">{stat.shortTitle}</span>
                 </div>
               </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
               {/* Main Rules Container */}
               <div className="row g-4">
@@ -1482,64 +1504,61 @@ const AttendanceRules = () => {
                             deducted per minute late
                           </div>
                         </div>
+<div className="col-md-6">
+  <label className="form-label">
+    <i className="bi bi-calendar-month text-secondary me-1"></i>
+    Monthly Limit
+  </label>
 
-                        <div className="col-md-6">
-                          <label className="form-label">
-                            <i className="bi bi-calendar-month text-secondary me-1"></i>
-                            Monthly Limit
-                          </label>
-                          <div className="input-group">
-                            <input
-                              type="number"
-                              className="form-control"
-                              value={rules.lateArrival.monthlyLimit}
-                              onChange={(e) =>
-                                handleChange("lateArrival", {
-                                  monthlyLimit: parseInt(e.target.value),
-                                })
-                              }
-                              min="0"
-                              max="60"
-                              disabled={!rules.lateArrival.enabled}
-                            />
-                            <span className="input-group-text">
-                              <i className="bi bi-calendar"></i>
-                            </span>
-                          </div>
-                          <div className="form-text">
-                            <i className="bi bi-graph-up me-1"></i>Max late
-                            minutes allowed per month
-                          </div>
-                        </div>
+  <div className="input-group">
+    <input
+      type="month"   // 👈 calendar (month picker)
+      className="form-control"
+      value={rules.lateArrival.monthlyLimit}
+      onChange={(e) =>
+        handleChange("lateArrival", {
+          monthlyLimit: e.target.value,
+        })
+      }
+      disabled={!rules.lateArrival.enabled}
+    />
+    
+  </div>
 
-                        <div className="col-md-6">
-                          <label className="form-label">
-                            <i className="bi bi-calendar-x text-secondary me-1"></i>
-                            Max Instances/Month
-                          </label>
-                          <div className="input-group">
-                            <input
-                              type="number"
-                              className="form-control"
-                              value={rules.lateArrival.maxAllowed}
-                              onChange={(e) =>
-                                handleChange("lateArrival", {
-                                  maxAllowed: parseInt(e.target.value),
-                                })
-                              }
-                              min="0"
-                              max="31"
-                              disabled={!rules.lateArrival.enabled}
-                            />
-                            <span className="input-group-text">
-                              <i className="bi bi-calendar-check"></i>
-                            </span>
-                          </div>
-                          <div className="form-text">
-                            <i className="bi bi-123 me-1"></i>Maximum late
-                            instances allowed
-                          </div>
-                        </div>
+  <div className="form-text">
+    <i className="bi bi-graph-up me-1"></i>
+    Select month for late arrival limit
+  </div>
+</div>
+
+
+<div className="col-md-6">
+  <label className="form-label">
+    <i className="bi bi-calendar-x text-secondary me-1"></i>
+    Max Instances / Month
+  </label>
+
+  <div className="input-group">
+    <input
+      type="month"   // 👈 calendar (month + year)
+      className="form-control"
+      value={rules.lateArrival.maxAllowed}
+      onChange={(e) =>
+        handleChange("lateArrival", {
+          maxAllowed: e.target.value,
+        })
+      }
+      disabled={!rules.lateArrival.enabled}
+    />
+ 
+  </div>
+
+  <div className="form-text">
+    <i className="bi bi-info-circle me-1"></i>
+    Select month for max late instances
+  </div>
+</div>
+
 
                         <div className="col-md-6">
                           <label className="form-label">
@@ -1924,80 +1943,113 @@ const AttendanceRules = () => {
                                 </div>
                               </div>
 
-                              <div className="mt-4">
-                                <div className="form-check">
-                                  <input
-                                    className="form-check-input"
-                                    type="checkbox"
-                                    checked={
-                                      rules.halfDayCriteria.considerAsHalfDay
-                                    }
-                                    onChange={(e) =>
-                                      handleChange("halfDayCriteria", {
-                                        ...rules.halfDayCriteria,
-                                        considerAsHalfDay: e.target.checked,
-                                      })
-                                    }
-                                    id="considerHalfDay"
-                                  />
-                                  <label
-                                    className="form-check-label"
-                                    htmlFor="considerHalfDay"
-                                  >
-                                    <i className="bi bi-calendar-check me-1"></i>
-                                    Consider as Half-Day Leave
-                                  </label>
-                                </div>
+ <>
+  <style>
+    {`
+      .custom-check {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+        font-size: 15px;
+        margin-bottom: 10px;
+      }
 
-                                <div className="form-check mt-2">
-                                  <input
-                                    className="form-check-input"
-                                    type="checkbox"
-                                    checked={
-                                      rules.halfDayCriteria.markAsAbsentBelow
-                                    }
-                                    onChange={(e) =>
-                                      handleChange("halfDayCriteria", {
-                                        ...rules.halfDayCriteria,
-                                        markAsAbsentBelow: e.target.checked,
-                                      })
-                                    }
-                                    id="markAbsentBelow"
-                                  />
-                                  <label
-                                    className="form-check-label"
-                                    htmlFor="markAbsentBelow"
-                                  >
-                                    <i className="bi bi-calendar-x me-1"></i>
-                                    Mark as Absent below{" "}
-                                    {rules.halfDayCriteria.applyAfterHours ||
-                                      3}{" "}
-                                    hours
-                                  </label>
-                                </div>
+      .custom-check input {
+        display: none;
+      }
 
-                                <div className="form-check mt-2">
-                                  <input
-                                    className="form-check-input"
-                                    type="checkbox"
-                                    checked={rules.halfDayCriteria.autoDeduct}
-                                    onChange={(e) =>
-                                      handleChange("halfDayCriteria", {
-                                        ...rules.halfDayCriteria,
-                                        autoDeduct: e.target.checked,
-                                      })
-                                    }
-                                    id="halfDayAutoDeduct"
-                                  />
-                                  <label
-                                    className="form-check-label"
-                                    htmlFor="halfDayAutoDeduct"
-                                  >
-                                    <i className="bi bi-robot me-1"></i>
-                                    Auto-deduct from leaves
-                                  </label>
-                                </div>
-                              </div>
+      .check-box {
+        width: 18px;
+        height: 18px;
+        border: 2px solid #0d6efd;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;sss
+        justify-content: center;
+        margin-right: 8px;
+        background: #fff;
+        transition: all 0.2s ease;
+        position: relative;
+      }
+
+      .custom-check input:checked + .check-box {
+        background: #0d6efd;
+        border-color: #0d6efd;
+      }
+
+      .custom-check input:checked + .check-box::after {
+        content: "✔";
+        color: #f8f2f2;      
+        font-size: 13px;
+        font-weight: bold;
+        position: absolute;
+      }
+    `}
+  </style>
+
+  <div className="mt-4">
+    {/* Consider Half Day */}
+    <label className="custom-check">
+      <input
+        type="checkbox"
+        checked={rules.halfDayCriteria.considerAsHalfDay}
+        onChange={(e) =>
+          handleChange("halfDayCriteria", {
+            ...rules.halfDayCriteria,
+            considerAsHalfDay: e.target.checked,
+          })
+        }
+      />
+      <span className="check-box"></span>
+      <span>
+        <i className="bi bi-calendar-check me-1"></i>
+        Consider as Half-Day Leave
+      </span>
+    </label>
+
+    {/* Mark Absent */}
+    <label className="custom-check">
+      <input
+        type="checkbox"
+        checked={rules.halfDayCriteria.markAsAbsentBelow}
+        onChange={(e) =>
+          handleChange("halfDayCriteria", {
+            ...rules.halfDayCriteria,
+            markAsAbsentBelow: e.target.checked,
+          })
+        }
+      />
+      <span className="check-box"></span>
+      <span>
+        <i className="bi bi-calendar-x me-1"></i>
+        Mark as Absent below {rules.halfDayCriteria.applyAfterHours || 3} hours
+      </span>
+    </label>
+
+    {/* Auto Deduct */}
+    <label className="custom-check">
+      <input
+        type="checkbox"
+        checked={rules.halfDayCriteria.autoDeduct}
+        onChange={(e) =>
+          handleChange("halfDayCriteria", {
+            ...rules.halfDayCriteria,
+            autoDeduct: e.target.checked,
+          })
+        }
+      />
+      <span className="check-box"></span>
+      <span>
+        <i className="bi bi-robot me-1"></i>
+        Auto-deduct from leaves
+      </span>
+    </label>
+  </div>
+</>
+
+ 
+
                             </div>
                           </div>
                         </div>
@@ -2011,16 +2063,15 @@ const AttendanceRules = () => {
                   <div className="card border h-100">
                     <div className="card-header bg-light">
                       <div className="d-flex justify-content-between align-items-center">
-                        <div className="d-flex align-items-center">
-                          <i className="bi bi-clock text-info me-2"></i>
-                          <h6 className="mb-0">Short Leave Policies</h6>
-                        </div>
-                        <button
-                          className="btn btn-sm btn-outline-primary"
-                          onClick={addShortLeaveCategory}
-                        >
-                          <i className="bi bi-plus-circle me-1"></i> Add
-                        </button>
+                     <div className="d-flex align-items-center gap-1">
+  {/* Left side: icon + text */}
+  <i className="bi bi-clock text-info"></i>
+  <h6 className="text-nowrap mb-0">Short Leave Policies</h6>
+
+ 
+</div>
+
+
                       </div>
                     </div>
                     <div className="card-body">
@@ -3000,40 +3051,40 @@ const OvertimeManagement = () => {
                   </div>
 
                   {/* Medium+ screens: Full buttons with group */}
-                  <div className="d-none d-sm-flex btn-group me-2">
-                    <button
-                      className="btn btn-sm btn-light d-flex align-items-center"
-                      onClick={exportRules}
-                      title="Export Overtime Rules"
-                    >
-                      <i className="bi bi-download me-1 me-sm-2"></i>
-                      <span className="d-none d-sm-inline">Export</span>
-                    </button>
+                    <div className="d-none d-sm-flex btn-group">
+  <button
+    className="btn btn-sm btn-primary d-flex align-items-center"
+    onClick={exportRules}
+    title="Export Rules"
+  >
+    <i className="bi bi-download me-1 me-md-2"></i>
+    <span className="d-none d-md-inline">Export</span>
+  </button>
 
-                    <label
-                      className="btn btn-sm btn-light d-flex align-items-center position-relative"
-                      title="Import Overtime Rules"
-                    >
-                      <i className="bi bi-upload me-1 me-sm-2"></i>
-                      <span className="d-none d-sm-inline">Import</span>
-                      <input
-                        type="file"
-                        accept=".json"
-                        onChange={importRules}
-                        className="position-absolute top-0 start-0 w-100 h-100 opacity-0"
-                        style={{ cursor: "pointer" }}
-                      />
-                    </label>
+  <label
+    className="btn btn-sm btn-primary d-flex align-items-center position-relative"
+    title="Import Rules"
+  >
+    <i className="bi bi-upload me-1 me-md-2"></i>
+    <span className="d-none d-md-inline">Import</span>
+    <input
+      type="file"
+      accept=".json"
+      onChange={importRules}
+      className="position-absolute top-0 start-0 w-100 h-100 opacity-0"
+      style={{ cursor: "pointer" }}
+    />
+  </label>
 
-                    <button
-                      className="btn btn-sm btn-light d-flex align-items-center"
-                      onClick={resetToDefaults}
-                      title="Reset to Defaults"
-                    >
-                      <i className="bi bi-arrow-clockwise me-1 me-sm-2"></i>
-                      <span className="d-none d-sm-inline">Reset</span>
-                    </button>
-                  </div>
+  <button
+    className="btn btn-sm btn-primary d-flex align-items-center"
+    onClick={resetToDefaults}
+    title="Reset to Defaults"
+  >
+    <i className="bi bi-arrow-clockwise me-1 me-md-2"></i>
+    <span className="d-none d-md-inline">Reset</span>
+  </button>
+</div>
 
                   {/* Optional: Add a Save button like in your reference if needed */}
                   {/* <button className="btn btn-sm btn-primary">Save</button> */}
@@ -3056,7 +3107,7 @@ const OvertimeManagement = () => {
                       <div className="d-flex flex-column flex-md-row align-items-md-center">
                         <div className="mb-1 mb-md-0 me-md-3">
                           <h6 className="fw-semibold mb-0 d-inline me-2">
-                            <i className="bi bi-check-circle text-success me-1"></i>
+                          
                             Overtime Rules Auto-Saved to Local Storage
                           </h6>
                           <span className="badge bg-info d-none d-md-inline">
@@ -3173,11 +3224,12 @@ const OvertimeManagement = () => {
                               </div>
 
                               {/* Value with responsive size */}
-                              <div
-                                className={`h4 h3-sm h2-lg mb-1 mb-sm-2 text-${stat.color} fw-bold`}
-                              >
-                                {stat.value}
-                              </div>
+                             <div
+  className={`h6 h5-sm h4-lg mb-1 mb-sm-2 text-${stat.color} fw-semibold`}
+>
+  {stat.value}
+</div>
+
 
                               {/* Subtitle with responsive icon */}
                               <div className="small text-muted mb-0">
@@ -3477,52 +3529,88 @@ const OvertimeManagement = () => {
                         </div>
                       </div>
 
-                      <div className="row g-2 mb-3">
-                        <div className="col-6">
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              checked={rules.eligibility.excludeWeekends}
-                              onChange={(e) =>
-                                handleChange("eligibility", {
-                                  excludeWeekends: e.target.checked,
-                                })
-                              }
-                              id="excludeWeekends"
-                            />
-                            <label
-                              className="form-check-label"
-                              htmlFor="excludeWeekends"
-                            >
-                              <i className="bi bi-calendar-week me-1"></i>
-                              Exclude Weekends
-                            </label>
-                          </div>
-                        </div>
-                        <div className="col-6">
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              checked={rules.eligibility.includeWFH}
-                              onChange={(e) =>
-                                handleChange("eligibility", {
-                                  includeWFH: e.target.checked,
-                                })
-                              }
-                              id="includeWFH"
-                            />
-                            <label
-                              className="form-check-label"
-                              htmlFor="includeWFH"
-                            >
-                              <i className="bi bi-house me-1"></i>
-                              Include WFH
-                            </label>
-                          </div>
-                        </div>
-                      </div>
+                   <div className="row g-2 mb-3">
+
+  <style>
+    {`
+      /* Big blue checkbox with bold white tick for all checkboxes */
+      .form-check-input {
+        width: 1.6rem;
+        height: 1.6rem;
+        cursor: pointer;
+        position: relative;
+        appearance: none;
+        -webkit-appearance: none;
+        background-color: #fff;
+        border: 2px solid #0d6efd;
+        border-radius: 0.25rem;
+        transition: all 0.15s;
+      }
+
+      .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+      }
+
+      /* Bold white tick */
+      .form-check-input:checked::after {
+        content: "";
+        position: absolute;
+        left: 5px;
+        top: 3px;
+        width: 6px;
+        height: 10px;
+        border: solid white;
+        border-width: 0 3px 3px 0;
+        transform: rotate(45deg);
+      }
+
+      .form-check-label {
+        margin-left: 0.6rem;
+        cursor: pointer;
+        font-weight: 500;
+      }
+    `}
+  </style>
+
+  <div className="col-6">
+    <div className="form-check">
+      <input
+        className="form-check-input"
+        type="checkbox"
+        checked={rules.eligibility.excludeWeekends}
+        onChange={(e) =>
+          handleChange("eligibility", { excludeWeekends: e.target.checked })
+        }
+        id="excludeWeekends"
+      />
+      <label className="form-check-label" htmlFor="excludeWeekends">
+        <i className="bi bi-calendar-week me-1"></i>
+        Exclude Weekends
+      </label>
+    </div>
+  </div>
+
+  <div className="col-6">
+    <div className="form-check">
+      <input
+        className="form-check-input"
+        type="checkbox"
+        checked={rules.eligibility.includeWFH}
+        onChange={(e) =>
+          handleChange("eligibility", { includeWFH: e.target.checked })
+        }
+        id="includeWFH"
+      />
+      <label className="form-check-label" htmlFor="includeWFH">
+        <i className="bi bi-house me-1"></i>
+        Include WFH
+      </label>
+    </div>
+  </div>
+
+</div>
+
 
                       {/* Eligibility Summary */}
                       <div className="card bg-light border-0 mt-4">
@@ -4140,29 +4228,7 @@ const OvertimeManagement = () => {
                                 <i className="bi bi-trophy me-1"></i> CEO
                               </option>
                             </select>
-                            <button
-                              className="btn btn-outline-primary"
-                              type="button"
-                              onClick={() => {
-                                const selected =
-                                  rules.approvalWorkflow.selectedLevel;
-                                if (
-                                  selected &&
-                                  !rules.approvalWorkflow.levels.includes(
-                                    selected
-                                  )
-                                ) {
-                                  handleChange("approvalWorkflow", {
-                                    levels: [
-                                      ...rules.approvalWorkflow.levels,
-                                      selected,
-                                    ],
-                                  });
-                                }
-                              }}
-                            >
-                              <i className="bi bi-plus"></i> Add
-                            </button>
+                         
                           </div>
                           <div className="form-text">
                             <i className="bi bi-info-circle me-1"></i>
@@ -4922,26 +4988,7 @@ const OvertimeManagement = () => {
                                 Trend Analysis
                               </option>
                             </select>
-                            <button
-                              className="btn btn-outline-primary"
-                              type="button"
-                              onClick={() => {
-                                const selected = rules.reports.selectedType;
-                                if (
-                                  selected &&
-                                  !rules.reports.reportTypes.includes(selected)
-                                ) {
-                                  handleChange("reports", {
-                                    reportTypes: [
-                                      ...rules.reports.reportTypes,
-                                      selected,
-                                    ],
-                                  });
-                                }
-                              }}
-                            >
-                              <i className="bi bi-plus"></i> Add
-                            </button>
+                        s
                           </div>
                           <div className="form-text">
                             <i className="bi bi-info-circle me-1"></i>
@@ -6257,55 +6304,66 @@ const BreakManagement = () => {
                       </button>
                     </div>
 
-                    {/* Optional Save button for mobile (if needed) */}
-                    {/* <button className="btn btn-sm btn-primary ms-1">
-          <i className="bi bi-save"></i>
-        </button> */}
                   </div>
 
                   {/* Medium+ screens: Full buttons with group */}
-                  <div className="d-none d-sm-flex align-items-center">
-                    <div className="btn-group me-2">
-                      <button
-                        className="btn btn-sm btn-light d-flex align-items-center"
-                        onClick={exportRules}
-                        title="Export Break Rules"
-                      >
-                        <i className="bi bi-download me-1 me-sm-2"></i>
-                        <span className="d-none d-sm-inline">Export</span>
-                      </button>
+            <div className="d-none d-sm-flex btn-group">
 
-                      <label
-                        className="btn btn-sm btn-light d-flex align-items-center position-relative"
-                        title="Import Break Rules"
-                      >
-                        <i className="bi bi-upload me-1 me-sm-2"></i>
-                        <span className="d-none d-sm-inline">Import</span>
-                        <input
-                          type="file"
-                          accept=".json"
-                          onChange={importRules}
-                          className="position-absolute top-0 start-0 w-100 h-100 opacity-0"
-                          style={{ cursor: "pointer" }}
-                        />
-                      </label>
+  <style>
+    {`
+      .custom-btn {
+        background-color: #0d6efd;  /* base blue */
+        color: #fff;                 /* text color white */
+        border: none;
+        transition: background 0.2s;
+      }
 
-                      <button
-                        className="btn btn-sm btn-light d-flex align-items-center"
-                        onClick={resetToDefaults}
-                        title="Reset to Defaults"
-                      >
-                        <i className="bi bi-arrow-clockwise me-1 me-sm-2"></i>
-                        <span className="d-none d-sm-inline">Reset</span>
-                      </button>
-                    </div>
+      .custom-btn:hover {
+        background-color: #0b5ed7;  /* darker blue on hover */
+      }
 
-                    {/* Optional Save button for desktop (if needed) */}
-                    {/* <button className="btn btn-sm btn-primary">
-          <i className="bi bi-save me-1 me-sm-2"></i>
-          <span className="d-none d-sm-inline">Save</span>
-        </button> */}
-                  </div>
+      .custom-btn i {
+        font-size: 0.9rem;
+      }
+    `}
+  </style>
+
+  <button
+    className="btn btn-sm custom-btn d-flex align-items-center"
+    onClick={exportRules}
+    title="Export Rules"
+  >
+    <i className="bi bi-download me-1 me-md-2"></i>
+    <span className="d-none d-md-inline">Export</span>
+  </button>
+
+  <label
+    className="btn btn-sm custom-btn d-flex align-items-center position-relative"
+    title="Import Rules"
+  >
+    <i className="bi bi-upload me-1 me-md-2"></i>
+    <span className="d-none d-md-inline">Import</span>
+    <input
+      type="file"
+      accept=".json"
+      onChange={importRules}
+      className="position-absolute top-0 start-0 w-100 h-100 opacity-0"
+      style={{ cursor: "pointer" }}
+    />
+  </label>
+
+  <button
+    className="btn btn-sm custom-btn d-flex align-items-center"
+    onClick={resetToDefaults}
+    title="Reset to Defaults"
+  >
+    <i className="bi bi-arrow-clockwise me-1 me-md-2"></i>
+    <span className="d-none d-md-inline">Reset</span>
+  </button>
+
+</div>
+
+
                 </div>
               </div>
             </div>
@@ -6325,7 +6383,7 @@ const BreakManagement = () => {
                       <div className="d-flex flex-column flex-md-row align-items-md-center">
                         <div className="mb-1 mb-md-0 me-md-3">
                           <h6 className="fw-semibold mb-0 d-inline me-2">
-                            <i className="bi bi-check-circle text-success me-1"></i>
+                          
                             Break Rules Auto-Saved to Local Storage
                           </h6>
                           <span className="badge bg-info d-none d-md-inline">
@@ -6451,11 +6509,12 @@ const BreakManagement = () => {
                               </div>
 
                               {/* Value with responsive size */}
-                              <div
-                                className={`h4 h3-sm h2-lg mb-1 mb-sm-2 text-${stat.color} fw-bold`}
-                              >
-                                {stat.value}
-                              </div>
+                        <div
+  className={`h6 h5-sm h4-lg mb-1 mb-sm-2 text-${stat.color} fw-semibold`}
+>
+  {stat.value}
+</div>
+
 
                               {/* Subtitle with responsive icon */}
                               <div className="small text-muted mb-0">
@@ -6476,654 +6535,507 @@ const BreakManagement = () => {
                 </div>
               </div>
 
-              {/* Main Configuration Section */}
-              <div className="row g-4">
+        
+             
                 {/* Break Configuration */}
-                <div className="col-12">
-                  <div className="card border">
-                    <div className="card-header bg-light text-dark">
-                      <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 gap-sm-0">
-                        {/* Title with responsive icon sizing */}
-                        <div className="d-flex align-items-center">
-                          <i className="bi bi-cup-hot text-primary me-1 me-sm-2 fs-5 fs-sm-4"></i>
-                          <div>
-                            <h5 className="fw-semibold mb-0 h6 h5-sm h4-md">
-                              Break Configuration
-                            </h5>
-                          </div>
-                        </div>
+              <div className="row g-3">
+  {/* Break Configuration - Compact */}
+<div className="col-12">
+  <div className="card border">
+    <div className="card-header bg-light py-2">
+      <div className="d-flex justify-content-between align-items-center">
+        <div className="d-flex align-items-center">
+          <i className="bi bi-cup-hot text-primary me-2 fs-5"></i>
+          <h6 className="mb-0">Break Configuration</h6>
+        </div>
+        <div className="d-flex align-items-center gap-2">
+          <button className="btn btn-sm btn-primary" onClick={handleAddBreak}>
+            <i className="bi bi-plus me-1"></i>Add Break
+          </button>
+          <span className="badge bg-secondary">{rules.breaks.length} breaks</span>
+        </div>
+      </div>
+    </div>
 
-                        {/* Action Buttons */}
-                        <div className="d-flex align-items-center">
-                          {/* Small screen: Icon-only buttons */}
-                          <div className="d-flex d-sm-none align-items-center gap-1">
-                            <div className="btn-group">
-                              <button
-                                className="btn btn-sm btn-outline-primary"
-                                onClick={handleAddBreak}
-                                title="Add New Break"
-                              >
-                                <i className="bi bi-plus-circle"></i>
-                              </button>
-                              <button
-                                className="btn btn-sm btn-outline-secondary"
-                                onClick={() => {
-                                  const sortedBreaks = [...rules.breaks].sort(
-                                    (a, b) =>
-                                      a.windowStart.localeCompare(b.windowStart)
-                                  );
-                                  setRules((prev) => ({
-                                    ...prev,
-                                    breaks: sortedBreaks,
-                                  }));
-                                }}
-                                title="Sort by Time"
-                              >
-                                <i className="bi bi-sort-alpha-down"></i>
-                              </button>
-                            </div>
+    <div className="card-body p-3">
+      {rules.breaks.length > 0 ? (
+        <div className="row g-3">
+          {rules.breaks.map((breakItem) => (
+            <div className="col-md-6 col-lg-4" key={breakItem.id}>
+              <div className={`card h-100 ${breakItem.mandatory ? 'border-warning' : ''}`}>
+                <div className="card-body">
 
-                            {/* Optional: Break count badge for mobile */}
-                            <span className="badge bg-primary ms-1">
-                              {rules.breaks.length}
-                            </span>
-                          </div>
-
-                          {/* Medium+ screens: Full buttons with group */}
-                          <div className="d-none d-sm-flex align-items-center">
-                            <div className="btn-group me-2">
-                              <button
-                                className="btn btn-sm btn-outline-primary d-flex align-items-center"
-                                onClick={handleAddBreak}
-                                title="Add Break"
-                              >
-                                <i className="bi bi-plus-circle me-1 me-sm-2"></i>
-                                <span className="d-none d-sm-inline">
-                                  Add Break
-                                </span>
-                              </button>
-                              <button
-                                className="btn btn-sm btn-outline-secondary d-flex align-items-center"
-                                onClick={() => {
-                                  const sortedBreaks = [...rules.breaks].sort(
-                                    (a, b) =>
-                                      a.windowStart.localeCompare(b.windowStart)
-                                  );
-                                  setRules((prev) => ({
-                                    ...prev,
-                                    breaks: sortedBreaks,
-                                  }));
-                                }}
-                                title="Sort"
-                              >
-                                <i className="bi bi-sort-alpha-down me-1 me-sm-2"></i>
-                                <span className="d-none d-sm-inline">Sort</span>
-                              </button>
-                            </div>
-
-                            {/* Optional: Break count display for desktop */}
-                            <div className="d-none d-md-flex align-items-center">
-                              <div
-                                className="vr me-2"
-                                style={{ height: "20px" }}
-                              ></div>
-                              <div className="small text-muted">
-                                <span className="fw-bold text-primary">
-                                  {rules.breaks.length}
-                                </span>{" "}
-                                breaks
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                  {/* Header with Blue Box Tick */}
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <div className="d-flex align-items-center">
+                      {/* Blue box with tick */}
+                      <div
+                        className="d-flex align-items-center justify-content-center me-2 rounded"
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          cursor: 'pointer',
+                          backgroundColor: breakItem.confirmed ? '#0d6efd' : '#cce5ff', // solid blue if confirmed, light blue if not
+                          color: breakItem.confirmed ? '#fff' : '#0d6efd',
+                          transition: 'all 0.2s',
+                        }}
+                        onClick={() => handleBreakChange(breakItem.id, { confirmed: !breakItem.confirmed })}
+                      >
+                        {breakItem.confirmed ? (
+                          <i className="bi bi-check-lg" style={{ fontSize: '14px' }}></i>
+                        ) : (
+                          <i className="bi bi-circle" style={{ fontSize: '14px' }}></i>
+                        )}
                       </div>
+                      <h6 className="mb-0 text-truncate" style={{ maxWidth: '120px' }}>
+                        {breakItem.name}
+                      </h6>
                     </div>
-                    <div className="card-body">
-                      <div className="d-flex justify-content-center">
-                        <div
-                          className="row g-3"
-                          style={{ maxWidth: "1200px", width: "100%" }}
-                        >
-                          {rules.breaks.map((breakItem) => (
-                            <div
-                              className="col-md-6 col-lg-4 col-xl-3"
-                              key={breakItem.id}
-                            >
-                              <div
-                                className={`card border ${
-                                  breakItem.mandatory
-                                    ? "border-warning border-2"
-                                    : ""
-                                }`}
-                                style={{ height: "320px" }}
-                              >
-<div className="card-header py-4 bg-light">
-  <div className="d-flex justify-content-between align-items-center gap-0">
+                    <div className="d-flex gap-1">
+                      <button className="btn btn-sm btn-outline-primary" onClick={() => handleEditBreak(breakItem)}>
+                        <i className="bi bi-pencil"></i>
+                      </button>
+                      <button className="btn btn-sm btn-outline-danger" onClick={() => handleRemoveBreak(breakItem.id)}>
+                        <i className="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </div>
 
-    {/* LEFT: Checkbox + Star + Name */}
-    <div className="d-flex align-items-center gap-2 flex-grow-1">
+                  {/* Type & Duration */}
+                  <div className="d-flex justify-content-between mb-2">
+                    <span className={`badge ${breakItem.type === 'paid' ? 'bg-success' : breakItem.type === 'unpaid' ? 'bg-warning' : 'bg-info'}`}>
+                      {breakItem.type.charAt(0).toUpperCase() + breakItem.type.slice(1)}
+                    </span>
+                    <span className="text-muted">{breakItem.duration}m</span>
+                  </div>
 
-      {/* Checkbox + Star */}
-      <div className="form-check mb-0 d-flex align-items-center">
-        <input
-          className="form-check-input me-0 visually-hidden"
-          type="checkbox"
-          checked={breakItem.mandatory}
-          onChange={(e) =>
-            handleBreakChange(breakItem.id, { mandatory: e.target.checked })
-          }
-          id={`mandatory-${breakItem.id}`}
-          style={{ width: "1.1rem", height: "1.1rem", cursor: "pointer" }}
-        />
+                  {/* Time */}
+                  <div className="mb-2">
+                    <small className="text-muted">Time:</small>
+                    <div className="d-flex justify-content-between">
+                      <span>{breakItem.windowStart}</span>
+                      <span>to</span>
+                      <span>{breakItem.windowEnd}</span>
+                    </div>
+                  </div>
 
-        <label
-          htmlFor={`mandatory-${breakItem.id}`}
-          className="form-check-label d-flex align-items-center"
-          style={{ cursor: "pointer" }}
-        >
-          {breakItem.mandatory ? (
-            <i className="bi bi-star-fill text-warning fs-5"></i>
-          ) : (
-            <i className="bi bi-star fs-5"></i>
-          )}
-        </label>
-      </div>
+                  {/* Settings */}
+                  <div className="d-flex gap-3 mb-2">
+                    <div className="form-check form-switch">
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        checked={breakItem.autoDeduct}
+                        onChange={(e) => handleBreakChange(breakItem.id, { autoDeduct: e.target.checked })}
+                      />
+                      <label className="form-check-label small">Auto</label>
+                    </div>
+                    <div className="form-check form-switch">
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        checked={breakItem.punchRequired}
+                        onChange={(e) => handleBreakChange(breakItem.id, { punchRequired: e.target.checked })}
+                      />
+                      <label className="form-check-label small">Punch</label>
+                    </div>
+                  </div>
 
-      {/* Break Name */}
-      <div
-        className="fw-semibold text-truncate"
-        style={{
-          maxWidth: "150px",         // Increased width
-          fontSize: "1rem"
-        }}
-        title={breakItem.name}
-      >
-        {breakItem.name}
-      </div>
+                  {/* Additional Info */}
+                  <div className="small text-muted">
+                    <div className="d-flex justify-content-between">
+                      <span>Max Delay: {breakItem.maxDelay}m</span>
+                      <span>Min Gap: {breakItem.minGapAfter}m</span>
+                      <span>Grace: {breakItem.gracePeriod || 5}m</span>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-4">
+          <i className="bi bi-cup-hot fs-1 text-muted mb-2"></i>
+          <p className="text-muted">No breaks configured</p>
+          <button className="btn btn-primary" onClick={handleAddBreak}>
+            Add First Break
+          </button>
+        </div>
+      )}
     </div>
-
-    {/* RIGHT: Action Icons */}
-    <div className="d-flex align-items-center gap-2 flex-shrink-0">
-
-      <button
-        className="btn btn-outline-info border-0 p-0"
-        onClick={() => handleEditBreak(breakItem)}
-        title="Edit Break"
-      >
-        <i className="bi bi-pencil fs-6"></i>
-      </button>
-
-      <button
-        className="btn btn-outline-secondary border-0 p-0"
-        onClick={() => setViewingBreakId(breakItem.id)}
-        title="View Details"
-      >
-        <i className="bi bi-eye fs-6"></i>
-      </button>
-
-      <button
-        className="btn btn-outline-danger border-0 p-0"
-        onClick={() => handleRemoveBreak(breakItem.id)}
-        title="Delete Break"
-      >
-        <i className="bi bi-trash fs-6"></i>
-      </button>
-
-    </div>
-
   </div>
 </div>
 
 
 
-                                <div
-                                  className="card-body p-2"
-                                  style={{ overflow: "hidden" }}
-                                >
-                                  {/* Break Type and Duration */}
-                                  <div className="d-flex justify-content-between mb-2">
-                                    <span
-                                      className={`badge ${
-                                        breakItem.type === "paid"
-                                          ? "bg-success"
-                                          : breakItem.type === "unpaid"
-                                          ? "bg-warning"
-                                          : "bg-info"
-                                      }`}
-                                    >
-                                      <i
-                                        className={`bi ${
-                                          breakItem.type === "paid"
-                                            ? "bi-cash-coin"
-                                            : breakItem.type === "unpaid"
-                                            ? "bi-clock"
-                                            : "bi-arrows-angle-expand"
-                                        } me-1`}
-                                      ></i>
-                                      {breakItem.type.charAt(0).toUpperCase() +
-                                        breakItem.type.slice(1)}
-                                    </span>
-                                    <span className="badge bg-primary">
-                                      <i className="bi bi-clock-history me-1"></i>
-                                      {breakItem.duration}
-                                    </span>
-                                  </div>
 
-                                  {/* Time Window - Compact */}
-                                  <div className="mb-2">
-                                    <div className="small text-muted mb-1">
-                                      <i className="bi bi-clock me-1"></i> Time
-                                    </div>
-                                    <div className="d-flex justify-content-between align-items-center">
-                                      <span className="fw-bold small">
-                                        {breakItem.windowStart}
-                                      </span>
-                                      <i className="bi bi-arrow-right text-muted mx-1"></i>
-                                      <span className="fw-bold small">
-                                        {breakItem.windowEnd}
-                                      </span>
-                                    </div>
-                                  </div>
+  
+  {/* Settings Section */}
+  <div className="col-12">
+    <div className="card border">
+      <div className="card-header bg-light py-2">
+        <h6 className="mb-0">Break Settings</h6>
+      </div>
+   
+ 
+    <div className="card-body">
 
-                                  {/* Quick Configuration Toggles */}
-                                  <div className="row g-1 mb-2">
-                                    <div className="col-6">
-                                      <div className="form-check form-switch">
-                                        <input
-                                          className="form-check-input"
-                                          type="checkbox"
-                                          checked={breakItem.autoDeduct}
-                                          onChange={(e) =>
-                                            handleBreakChange(breakItem.id, {
-                                              autoDeduct: e.target.checked,
-                                            })
-                                          }
-                                          id={`autoDeduct-${breakItem.id}`}
-                                        />
-                                        <label
-                                          className="form-check-label small"
-                                          htmlFor={`autoDeduct-${breakItem.id}`}
-                                        >
-                                          <i className="bi bi-robot me-1"></i>
-                                          Auto
-                                        </label>
-                                      </div>
-                                    </div>
-                                    <div className="col-6">
-                                      <div className="form-check form-switch">
-                                        <input
-                                          className="form-check-input"
-                                          type="checkbox"
-                                          checked={breakItem.punchRequired}
-                                          onChange={(e) =>
-                                            handleBreakChange(breakItem.id, {
-                                              punchRequired: e.target.checked,
-                                            })
-                                          }
-                                          id={`punch-${breakItem.id}`}
-                                        />
-                                        <label
-                                          className="form-check-label small"
-                                          htmlFor={`punch-${breakItem.id}`}
-                                        >
-                                          <i className="bi bi-clipboard-check me-1"></i>
-                                          Punch
-                                        </label>
-                                      </div>
-                                    </div>
-                                  </div>
+      <style>
+        {`
+          /* Big blue checkbox with bold white tick */
+          .form-check-input {
+            width: 1.6rem;
+            height: 1.6rem;
+            cursor: pointer;
+            position: relative;
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: #fff;
+            border: 2px solid #0d6efd;
+            border-radius: 0.25rem;
+            transition: all 0.15s;
+          }
 
-                                  {/* Compact Stats */}
-                                  <div className="mt-2 pt-2 border-top">
-                                    <div className="row small text-muted text-center">
-                                      <div className="col-4">
-                                        <div className="d-flex flex-column align-items-center">
-                                          <i className="bi bi-clock-history mb-1"></i>
-                                          <div className="fw-bold">
-                                            {breakItem.maxDelay}m
-                                          </div>
-                                          <div
-                                            className="text-truncate"
-                                            style={{
-                                              fontSize: "0.65rem",
-                                              maxWidth: "100%",
-                                            }}
-                                          >
-                                            Delay
-                                          </div>
-                                        </div>
-                                      </div>
-                                      <div className="col-4">
-                                        <div className="d-flex flex-column align-items-center">
-                                          <i className="bi bi-hourglass mb-1"></i>
-                                          <div className="fw-bold">
-                                            {breakItem.minGapAfter}m
-                                          </div>
-                                          <div
-                                            className="text-truncate"
-                                            style={{
-                                              fontSize: "0.65rem",
-                                              maxWidth: "100%",
-                                            }}
-                                          >
-                                            Gap
-                                          </div>
-                                        </div>
-                                      </div>
-                                      <div className="col-4">
-                                        <div className="d-flex flex-column align-items-center">
-                                          <i className="bi bi-shield-check mb-1"></i>
-                                          <div className="fw-bold">
-                                            {breakItem.gracePeriod || 5}m
-                                          </div>
-                                          <div
-                                            className="text-truncate"
-                                            style={{
-                                              fontSize: "0.65rem",
-                                              maxWidth: "100%",
-                                            }}
-                                          >
-                                            Grace
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
+          .form-check-input:checked {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+          }
 
-                                  {/* Description Preview (Truncated) */}
-                                  {breakItem.description && (
-                                    <div className="mt-2">
-                                      <small
-                                        className="text-muted"
-                                        title={breakItem.description}
-                                      >
-                                        <i className="bi bi-info-circle me-1"></i>
-                                        {breakItem.description.length > 25
-                                          ? `${breakItem.description.substring(
-                                              0,
-                                              25
-                                            )}...`
-                                          : breakItem.description}
-                                      </small>
-                                    </div>
-                                  )}
-                                </div>
+          /* Big white tick */
+          .form-check-input:checked::after {
+            content: "";
+            position: absolute;
+            left: 5px;
+            top: 3px;
+            width: 6px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 3px 3px 0;
+            transform: rotate(45deg);
+          }
 
-                                {/* Card Footer - Compact */}
-                                <div className="card-footer bg-transparent border-top py-1">
-                                  <div className="d-flex justify-content-between align-items-center">
-                                    <small className="text-muted">
-                                      <i className="bi bi-calendar-event me-1"></i>
-                                      {breakItem.windowStart} -{" "}
-                                      {breakItem.windowEnd}
-                                    </small>
-                                    <button
-                                      className="btn btn-sm btn-outline-primary"
-                                      onClick={() => handleEditBreak(breakItem)}
-                                    >
-                                      <i className="bi bi-pencil-square"></i>
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
+          .form-check-label {
+            margin-left: 0.6rem;
+            cursor: pointer;
+            font-weight: 500;
+          }
+
+          .form-control {
+            margin-top: 0.25rem;
+          }
+
+          h6.border-bottom {
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+          }
+        `}
+      </style>
+
+      <div className="row">
+
+        {/* Enforcement */}
+        <div className="col-md-6">
+          <h6 className="border-bottom">Enforcement & Tracking</h6>
+
+          {[
+            { key: "trackBreakPunches", label: "Track Break Punches" },
+            { key: "breakReminders", label: "Break Reminders" },
+            { key: "enforceSequence", label: "Enforce Break Sequence" },
+            { key: "strictMode", label: "Strict Mode" },
+            { key: "deductFromWorkHours", label: "Deduct from Work Hours" },
+            { key: "allowMultipleBreaks", label: "Allow Multiple Breaks" },
+          ].map(({ key, label }) => (
+            <div className="form-check mb-3" key={key}>
+              <input
+                type="checkbox"
+                className="form-check-input"
+                checked={rules.enforcement[key]}
+                onChange={(e) => handleEnforcementChange({ [key]: e.target.checked })}
+              />
+              <label className="form-check-label">{label}</label>
+            </div>
+          ))}
+
+          <div className="mb-3">
+            <label className="form-label">Reminder Before (minutes)</label>
+            <input
+              type="number"
+              className="form-control"
+              value={rules.enforcement.reminderBefore}
+              onChange={(e) =>
+                handleEnforcementChange({ reminderBefore: parseInt(e.target.value) })
+              }
+              min="1"
+              max="60"
+              disabled={!rules.enforcement.breakReminders}
+            />
+          </div>
+        </div>
+
+        {/* Policies */}
+        <div className="col-md-6">
+          <h6 className="border-bottom">Auto-Deduction Policies</h6>
+
+          <div className="form-check mb-3">
+            <input
+              type="checkbox"
+              className="form-check-input"
+              checked={rules.policies.mealBreakRequired}
+              onChange={(e) =>
+                handlePoliciesChange({ mealBreakRequired: e.target.checked })
+              }
+            />
+            <label className="form-check-label">Meal Break Required</label>
+          </div>
+
+          {rules.policies.mealBreakRequired && (
+            <div className="mb-3">
+              <label className="form-label">Required After (hours)</label>
+              <input
+                type="number"
+                className="form-control"
+                value={rules.policies.mealBreakAfterHours}
+                onChange={(e) =>
+                  handlePoliciesChange({ mealBreakAfterHours: parseInt(e.target.value) })
+                }
+                min="1"
+                max="12"
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+ 
+  
+    </div>
+  </div>
+  
+  {/* Break Logs - Simplified */}
+  <div className="col-12">
+    <div className="card border">
+      <div className="card-header bg-light py-2">
+        <div className="d-flex justify-content-between align-items-center">
+          <h6 className="mb-0">Break Logs & Compliance</h6>
+          <span className="badge bg-success">{complianceData.completionRate}% compliance</span>
+        </div>
+      </div>
+      
+      <div className="card-body p-0">
+        {/* Stats Row */}
+        <div className="row g-2 p-3 border-bottom">
+          {[
+            { title: 'Total Logs', value: complianceData.totalLogs, color: 'primary' },
+            { title: 'Completed', value: complianceData.completedLogs, color: 'success' },
+            { title: 'Avg Duration', value: `${complianceData.averageDuration}m`, color: 'info' },
+            { title: 'Auto Breaks', value: complianceData.autoBreaks, color: 'secondary' },
+          ].map((stat, index) => (
+            <div className="col-6 col-md-3" key={index}>
+              <div className="text-center p-2 bg-light rounded">
+                <div className={`fw-bold text-${stat.color}`}>{stat.value}</div>
+                <div className="small text-muted">{stat.title}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* Table */}
+        <div className="table-responsive">
+          <table className="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Break</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Duration</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {breakLogs.length > 0 ? (
+                breakLogs.map((log) => {
+                  const breakItem = rules.breaks.find(b => b.id === log.breakId);
+                  return (
+                    <tr key={log.id}>
+                      <td>
+                        <div className="d-flex align-items-center">
+                          <div className="avatar-sm me-2">
+                            <div className="avatar-title bg-light rounded-circle text-primary">
+                              {log.employeeName.charAt(0)}
                             </div>
-                          ))}
+                          </div>
+                          <span>{log.employeeName}</span>
                         </div>
-                      </div>
+                      </td>
+                      <td>{breakItem?.name || 'Unknown'}</td>
+                      <td>
+                        {new Date(log.startTime).toLocaleTimeString([], { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })}
+                      </td>
+                      <td>
+                        {log.endTime ? (
+                          new Date(log.endTime).toLocaleTimeString([], { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })
+                        ) : (
+                          <span className="badge bg-secondary">Ongoing</span>
+                        )}
+                      </td>
+                      <td>{log.duration}m</td>
+                      <td>
+                        <span className={`badge ${
+                          log.status === 'completed' ? 'bg-success' :
+                          log.status === 'missed' ? 'bg-danger' :
+                          log.status === 'late' ? 'bg-warning' :
+                          'bg-secondary'
+                        }`}>
+                          {log.status}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan="6" className="text-center py-4">
+                    <i className="bi bi-clipboard-data fs-1 text-muted mb-2 d-block"></i>
+                    <p className="text-muted">No break logs available</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Footer Stats */}
+        {breakLogs.length > 0 && (
+          <div className="border-top p-3">
+            <div className="d-flex flex-wrap justify-content-center gap-4">
+              <div className="text-center">
+                <div className="small text-muted">Total Employees</div>
+                <div className="fw-bold text-primary">{complianceData.totalEmployees || 0}</div>
+              </div>
+              <div className="text-center">
+                <div className="small text-muted">Missed Breaks</div>
+                <div className="fw-bold text-danger">{complianceData.missedBreaks || 0}</div>
+              </div>
+              <div className="text-center">
+                <div className="small text-muted">Late Breaks</div>
+                <div className="fw-bold text-warning">{complianceData.lateBreaks || 0}</div>
+              </div>
+              <div className="text-center">
+                <div className="small text-muted">Avg Compliance</div>
+                <div className="fw-bold text-success">{complianceData.completionRate}%</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
 
-                      {rules.breaks.length === 0 && (
-                        <div className="text-center py-5">
-                          <i className="bi bi-cup-hot display-4 text-muted mb-3"></i>
-                          <h5 className="text-muted mb-2">
-                            No breaks configured
-                          </h5>
-                          <p className="text-muted mb-3">
-                            Add your first break to get started
-                          </p>
-                          <button
-                            className="btn btn-primary"
-                            onClick={handleAddBreak}
-                          >
-                            <i className="bi bi-plus-circle me-2"></i>
-                            Add First Break
-                          </button>
-                        </div>
-                      )}
+
+{/* View Break Details Modal - Simplified */}
+{viewingBreakId && (
+  <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+    <div className="modal-dialog modal-md">
+      <div className="modal-content">
+        <div className="modal-header bg-light py-2">
+          <h6 className="modal-title mb-0">Break Details</h6>
+          <button type="button" className="btn-close" onClick={() => setViewingBreakId(null)}></button>
+        </div>
+        <div className="modal-body p-3">
+          {(() => {
+            const breakItem = rules.breaks.find(b => b.id === viewingBreakId);
+            if (!breakItem) return null;
+            
+            return (
+              <div>
+                <div className="text-center mb-3">
+                  <h5>{breakItem.name}</h5>
+                  <span className={`badge ${breakItem.type === 'paid' ? 'bg-success' : breakItem.type === 'unpaid' ? 'bg-warning' : 'bg-info'}`}>
+                    {breakItem.type} • {breakItem.duration}m
+                  </span>
+                </div>
+                
+                <div className="row mb-3">
+                  <div className="col-6">
+                    <div className="card bg-light">
+                      <div className="card-body p-2 text-center">
+                        <div className="fw-bold">{breakItem.duration}m</div>
+                        <small className="text-muted">Duration</small>
+                      </div>
                     </div>
                   </div>
-
-                  {/* View Break Details Modal - Compact */}
-                  {viewingBreakId && (
-                    <div
-                      className="modal fade show"
-                      style={{
-                        display: "block",
-                        backgroundColor: "rgba(0,0,0,0.5)",
-                      }}
-                    >
-                      <div className="modal-dialog modal-md">
-                        <div className="modal-content">
-                          <div className="modal-header bg-light py-2">
-                            <h6 className="modal-title mb-0">
-                              <i className="bi bi-info-circle text-primary me-2"></i>
-                              Break Details
-                            </h6>
-                            <button
-                              type="button"
-                              className="btn-close"
-                              onClick={() => setViewingBreakId(null)}
-                            ></button>
-                          </div>
-                          <div className="modal-body p-3">
-                            {(() => {
-                              const breakItem = rules.breaks.find(
-                                (b) => b.id === viewingBreakId
-                              );
-                              return breakItem ? (
-                                <div>
-                                  <div className="text-center mb-3">
-                                    <div className="mb-2">
-                                      {breakItem.type === "paid" ? (
-                                        <i className="bi bi-cash-coin text-success fs-1"></i>
-                                      ) : breakItem.type === "unpaid" ? (
-                                        <i className="bi bi-clock text-warning fs-1"></i>
-                                      ) : (
-                                        <i className="bi bi-arrows-angle-expand text-info fs-1"></i>
-                                      )}
-                                    </div>
-                                    <h5 className="mb-1">{breakItem.name}</h5>
-                                    <span
-                                      className={`badge ${
-                                        breakItem.type === "paid"
-                                          ? "bg-success"
-                                          : breakItem.type === "unpaid"
-                                          ? "bg-warning"
-                                          : "bg-info"
-                                      }`}
-                                    >
-                                      {breakItem.type.charAt(0).toUpperCase() +
-                                        breakItem.type.slice(1)}{" "}
-                                      Break • {breakItem.duration}m
-                                    </span>
-                                  </div>
-
-                                  {breakItem.description && (
-                                    <div className="mb-3">
-                                      <div className="small text-muted mb-1">
-                                        <i className="bi bi-card-text me-1"></i>
-                                        Description
-                                      </div>
-                                      <p className="mb-0 small">
-                                        {breakItem.description}
-                                      </p>
-                                    </div>
-                                  )}
-
-                                  {/* Quick Info Grid */}
-                                  <div className="row mb-3">
-                                    <div className="col-6 mb-2">
-                                      <div className="card bg-light border-0">
-                                        <div className="card-body p-2 text-center">
-                                          <div className="text-primary">
-                                            <i className="bi bi-clock-history"></i>
-                                          </div>
-                                          <div className="fw-bold small">
-                                            {breakItem.duration}m
-                                          </div>
-                                          <small className="text-muted">
-                                            Duration
-                                          </small>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="col-6 mb-2">
-                                      <div className="card bg-light border-0">
-                                        <div className="card-body p-2 text-center">
-                                          <div className="text-primary">
-                                            <i className="bi bi-arrows-angle-expand"></i>
-                                          </div>
-                                          <div className="fw-bold small">
-                                            {breakItem.flexibleWindow}m
-                                          </div>
-                                          <small className="text-muted">
-                                            Flexible
-                                          </small>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {/* Time Window */}
-                                  <div className="mb-3">
-                                    <div className="small text-muted mb-2">
-                                      <i className="bi bi-clock me-1"></i>
-                                      Time Window
-                                    </div>
-                                    <div className="d-flex align-items-center justify-content-center bg-light py-2 rounded">
-                                      <div className="text-center px-3">
-                                        <div className="fw-bold">
-                                          {breakItem.windowStart}
-                                        </div>
-                                        <small className="text-muted">
-                                          Start
-                                        </small>
-                                      </div>
-                                      <i className="bi bi-arrow-right text-muted"></i>
-                                      <div className="text-center px-3">
-                                        <div className="fw-bold">
-                                          {breakItem.windowEnd}
-                                        </div>
-                                        <small className="text-muted">
-                                          End
-                                        </small>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {/* Configuration Summary */}
-                                  <div className="mb-3">
-                                    <div className="small text-muted mb-2">
-                                      <i className="bi bi-gear me-1"></i>
-                                      Configuration
-                                    </div>
-                                    <div className="row">
-                                      <div className="col-6 mb-1">
-                                        <div className="d-flex align-items-center">
-                                          <i
-                                            className={`bi ${
-                                              breakItem.autoDeduct
-                                                ? "bi-check-circle text-success"
-                                                : "bi-x-circle text-secondary"
-                                            } me-2`}
-                                          ></i>
-                                          <span className="small">
-                                            Auto-Deduct
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <div className="col-6 mb-1">
-                                        <div className="d-flex align-items-center">
-                                          <i
-                                            className={`bi ${
-                                              breakItem.punchRequired
-                                                ? "bi-check-circle text-success"
-                                                : "bi-x-circle text-secondary"
-                                            } me-2`}
-                                          ></i>
-                                          <span className="small">
-                                            Punch Required
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <div className="col-6 mb-1">
-                                        <div className="d-flex align-items-center">
-                                          <i
-                                            className={`bi ${
-                                              breakItem.mandatory
-                                                ? "bi-check-circle text-success"
-                                                : "bi-x-circle text-secondary"
-                                            } me-2`}
-                                          ></i>
-                                          <span className="small">
-                                            Mandatory
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <div className="col-6 mb-1">
-                                        <div className="d-flex align-items-center">
-                                          <i
-                                            className={`bi ${
-                                              breakItem.autoPunchOut
-                                                ? "bi-check-circle text-success"
-                                                : "bi-x-circle text-secondary"
-                                            } me-2`}
-                                          ></i>
-                                          <span className="small">
-                                            Auto Punch-Out
-                                          </span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              ) : null;
-                            })()}
-                          </div>
-                          <div className="modal-footer py-2">
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-secondary"
-                              onClick={() => setViewingBreakId(null)}
-                            >
-                              Close
-                            </button>
-                            {(() => {
-                              const breakItem = rules.breaks.find(
-                                (b) => b.id === viewingBreakId
-                              );
-                              return breakItem ? (
-                                <button
-                                  type="button"
-                                  className="btn btn-sm btn-primary"
-                                  onClick={() => {
-                                    setViewingBreakId(null);
-                                    setTimeout(
-                                      () => handleEditBreak(breakItem),
-                                      100
-                                    );
-                                  }}
-                                >
-                                  <i className="bi bi-pencil me-1"></i>
-                                  Edit
-                                </button>
-                              ) : null;
-                            })()}
-                          </div>
-                        </div>
+                  <div className="col-6">
+                    <div className="card bg-light">
+                      <div className="card-body p-2 text-center">
+                        <div className="fw-bold">{breakItem.flexibleWindow}m</div>
+                        <small className="text-muted">Flexible Window</small>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
+                
+                <div className="mb-3">
+                  <label className="form-label">Time Window</label>
+                  <div className="d-flex justify-content-between align-items-center bg-light p-2 rounded">
+                    <span className="fw-bold">{breakItem.windowStart}</span>
+                    <i className="bi bi-arrow-right"></i>
+                    <span className="fw-bold">{breakItem.windowEnd}</span>
+                  </div>
+                </div>
+                
+                <div className="mb-3">
+                  <label className="form-label">Settings</label>
+                  <div className="d-flex flex-wrap gap-3">
+                    <span className={`badge ${breakItem.autoDeduct ? 'bg-success' : 'bg-secondary'}`}>
+                      Auto-Deduct: {breakItem.autoDeduct ? 'Yes' : 'No'}
+                    </span>
+                    <span className={`badge ${breakItem.punchRequired ? 'bg-success' : 'bg-secondary'}`}>
+                      Punch Required: {breakItem.punchRequired ? 'Yes' : 'No'}
+                    </span>
+                    <span className={`badge ${breakItem.mandatory ? 'bg-warning' : 'bg-secondary'}`}>
+                      Mandatory: {breakItem.mandatory ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                </div>
+                
+                {breakItem.description && (
+                  <div className="mb-3">
+                    <label className="form-label">Description</label>
+                    <p className="mb-0">{breakItem.description}</p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </div>
+        <div className="modal-footer py-2">
+          <button type="button" className="btn btn-secondary" onClick={() => setViewingBreakId(null)}>
+            Close
+          </button>
+          <button type="button" className="btn btn-primary" onClick={() => {
+            const breakItem = rules.breaks.find(b => b.id === viewingBreakId);
+            if (breakItem) {
+              setViewingBreakId(null);
+              setTimeout(() => handleEditBreak(breakItem), 100);
+            }
+          }}>
+            Edit Break
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
                 {/* Break Enforcement & Tracking */}
                 <div className="col-lg-8">
@@ -7499,82 +7411,86 @@ const BreakManagement = () => {
                     {/* Card Body */}
                     <div className="card-body p-2 p-sm-3 p-md-4">
                       {/* Stats Cards - Responsive Grid */}
-                      <div className="row g-2 g-sm-3 g-md-4 mb-4">
-                        {[
-                          {
-                            title: "Total Logs",
-                            value: complianceData.totalLogs,
-                            color: "primary",
-                            subtitle: "This week",
-                            icon: "bi-journal-text",
-                            shortTitle: "Logs",
-                          },
-                          {
-                            title: "Completed",
-                            value: complianceData.completedLogs,
-                            color: "success",
-                            subtitle: "Break sessions",
-                            icon: "bi-check-circle",
-                            shortTitle: "Done",
-                          },
-                          {
-                            title: "Avg Duration",
-                            value: `${complianceData.averageDuration} min`,
-                            color: "info",
-                            subtitle: "Per break",
-                            icon: "bi-clock-history",
-                            shortTitle: "Avg Time",
-                          },
-                          {
-                            title: "Auto Breaks",
-                            value: complianceData.autoBreaks,
-                            color: "secondary",
-                            subtitle: "Automatically logged",
-                            icon: "bi-robot",
-                            shortTitle: "Auto",
-                          },
-                        ].map((stat, index) => (
-                          <div
-                            key={index}
-                            className="col-6 col-md-3 mb-2 mb-md-0"
-                          >
-                            <div className="card bg-light border-0 h-100">
-                              <div className="card-body text-center p-2 p-sm-3">
-                                {/* Mobile Layout - Horizontal */}
-                                <div className="d-flex d-md-none align-items-center justify-content-start">
-                                  <div className={`text-${stat.color} me-2`}>
-                                    <i className={`bi ${stat.icon} fs-5`}></i>
-                                  </div>
-                                  <div className="text-start flex-grow-1">
-                                    <div
-                                      className={`fw-bold text-${stat.color} fs-6`}
-                                    >
-                                      {stat.value}
-                                    </div>
-                                    <div className="small text-muted">
-                                      {stat.shortTitle}
-                                    </div>
-                                  </div>
-                                </div>
+                    <div className="row g-2 g-sm-3 g-md-4 mb-4">
+  {[
+    {
+      title: "Total Logs",
+      value: complianceData.totalLogs,
+      color: "primary",
+      subtitle: "This week",
+      icon: "bi-journal-text",
+      shortTitle: "Logs",
+    },
+    {
+      title: "Completed",
+      value: complianceData.completedLogs,
+      color: "success",
+      subtitle: "Break sessions",
+      icon: "bi-check-circle",
+      shortTitle: "Done",
+    },
+    {
+      title: "Avg Duration",
+      value: `${complianceData.averageDuration} min`,
+      color: "info",
+      subtitle: "Per break",
+      icon: "bi-clock-history",
+      shortTitle: "Avg Time",
+    },
+    {
+      title: "Auto Breaks",
+      value: complianceData.autoBreaks,
+      color: "secondary",
+      subtitle: "Automatically logged",
+      icon: "bi-robot",
+      shortTitle: "Auto",
+    },
+  ].map((stat, index) => (
+    <div
+      key={index}
+      className="col-6 col-md-3 mb-2 mb-md-0"
+    >
+      <div className="card bg-light border-0 h-100">
+        <div className="card-body text-center p-2 p-sm-3">
 
-                                {/* Desktop Layout - Vertical */}
-                                <div className="d-none d-md-block">
-                                  <div className="fw-bold text-secondary-light small mb-2">
-                                    <i className={`bi ${stat.icon} me-1`}></i>
-                                    {stat.title}
-                                  </div>
-                                  <div className={`h3 mb-1 text-${stat.color}`}>
-                                    {stat.value}
-                                  </div>
-                                  <div className="small text-muted">
-                                    {stat.subtitle}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+          {/* Mobile Layout - Horizontal */}
+          <div className="d-flex d-md-none align-items-center justify-content-start">
+            <div className={`text-${stat.color} me-2`}>
+              <i className={`bi ${stat.icon} fs-5`}></i>
+            </div>
+            <div className="text-start flex-grow-1">
+              <div className={`fw-bold text-${stat.color} fs-6`}>
+                {stat.value}
+              </div>
+              <div className="small text-muted">
+                {stat.shortTitle}
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Layout - Vertical */}
+          <div className="d-none d-md-block">
+            <div className="fw-bold text-secondary-light small mb-2">
+              <i className={`bi ${stat.icon} me-1`}></i>
+              {stat.title}
+            </div>
+
+            {/* ✅ Smaller middle number */}
+            <div className={`fs-5 fw-bold mb-1 text-${stat.color}`}>
+              {stat.value}
+            </div>
+
+            <div className="small text-muted">
+              {stat.subtitle}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
+
 
                       {/* Table Section */}
                       <div className="table-responsive">
@@ -8390,384 +8306,243 @@ const Settings = () => {
           System Settings & Storage Management
         </h5>
 
-        <div className="row g-4">
-          {/* General Settings */}
-          <div className="col-lg-6">
-            <div className="card border">
-              <div className="card-header bg-light">
-                <h6 className="mb-0">
-                  <i className="bi bi-gear text-primary me-2"></i>
-                  General Settings
-                </h6>
-              </div>
-              <div className="card-body">
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <label className="form-label">Currency</label>
-                    <select
-                      className="form-select"
-                      value={settings.currency}
-                      onChange={(e) =>
-                        handleSettingsChange({ currency: e.target.value })
-                      }
-                    >
-                      <option value="USD">US Dollar (USD)</option>
-                      <option value="EUR">Euro (EUR)</option>
-                      <option value="GBP">British Pound (GBP)</option>
-                      <option value="INR">Indian Rupee (INR)</option>
-                      <option value="JPY">Japanese Yen (JPY)</option>
-                    </select>
-                  </div>
+      <div className="row g-4">
 
-                  <div className="col-md-6">
-                    <label className="form-label">Time Format</label>
-                    <select
-                      className="form-select"
-                      value={settings.timeFormat}
-                      onChange={(e) =>
-                        handleSettingsChange({ timeFormat: e.target.value })
-                      }
-                    >
-                      <option value="24h">24-Hour Format</option>
-                      <option value="12h">12-Hour Format</option>
-                    </select>
-                  </div>
+  {/* ================= General Settings ================= */}
+  <div className="col-lg-6">
+    <div className="card h-100">
+      <div className="card-header bg-light">
+        <h6 className="mb-0 fw-semibold">
+          <i className="bi bi-gear text-primary me-2"></i>
+          General Settings
+        </h6>
+      </div>
 
-                  <div className="col-md-6">
-                    <label className="form-label">Current Date Display</label>
-                    <div className="card bg-light border-0">
-                      <div className="card-body text-center py-3">
-                        <h5 className="mb-2 text-primary">
-                          <i className="bi bi-calendar-date me-2"></i>
-                          Today's Date
-                        </h5>
-                        <div className="display- mb-3">
-                          {(() => {
-                            const now = new Date();
-                            const day = now
-                              .getDate()
-                              .toString()
-                              .padStart(2, "0");
-                            const month = (now.getMonth() + 1)
-                              .toString()
-                              .padStart(2, "0");
-                            const year = now.getFullYear();
-                            return `${day}/${month}/${year}`; // Fixed format
-                          })()}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="form-text mt-2">
-                      <i className="bi bi-calendar3 me-1"></i>
-                      System date display format
-                    </div>
-                  </div>
+      <div className="card-body">
+        <div className="row g-3">
 
-                  <div className="col-md-6">
-                    <label className="form-label">Week Start Day</label>
-                    <select
-                      className="form-select"
-                      value={settings.weekStart}
-                      onChange={(e) =>
-                        handleSettingsChange({ weekStart: e.target.value })
-                      }
-                    >
-                      <option value="Monday">Monday</option>
-                      <option value="Sunday">Sunday</option>
-                      <option value="Saturday">Saturday</option>
-                    </select>
-                  </div>
+          <div className="col-md-6">
+            <label className="form-label">Currency</label>
+            <select
+              className="form-select"
+              value={settings.currency}
+              onChange={(e) =>
+                handleSettingsChange({ currency: e.target.value })
+              }
+            >
+              <option>USD</option>
+              <option>EUR</option>
+              <option>GBP</option>
+              <option>INR</option>
+            </select>
+          </div>
 
-                  <div className="col-md-6">
-                    <label className="form-label">Fiscal Year Start</label>
-                    <select
-                      className="form-select"
-                      value={settings.fiscalYearStart}
-                      onChange={(e) =>
-                        handleSettingsChange({
-                          fiscalYearStart: e.target.value,
-                        })
-                      }
-                    >
-                      <option value="January">January</option>
-                      <option value="April">April</option>
-                      <option value="July">July</option>
-                      <option value="October">October</option>
-                    </select>
-                  </div>
+          <div className="col-md-6">
+            <label className="form-label">Time Format</label>
+            <select
+              className="form-select"
+              value={settings.timeFormat}
+              onChange={(e) =>
+                handleSettingsChange({ timeFormat: e.target.value })
+              }
+            >
+              <option value="24h">24 Hour</option>
+              <option value="12h">12 Hour</option>
+            </select>
+          </div>
+
+          {/* Date Card */}
+          <div className="col-md-6">
+            <label className="form-label">Current Date</label>
+            <div className="card bg-light border-0">
+              <div className="card-body text-center py-3">
+                <div className="small text-muted mb-1">Today</div>
+                <div className="fs-5 fw-bold text-primary">
+                  {new Date().toLocaleDateString("en-GB")}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Backup & Notifications */}
-          <div className="col-lg-6">
-            <div className="card border">
-              <div className="card-header bg-light">
-                <h6 className="mb-0">
-                  <i className="bi bi-bell text-warning me-2"></i>
-                  Backup & Notifications
-                </h6>
-              </div>
-              <div className="card-body">
-                <div className="mb-3">
-                  <label className="form-label">Backup Frequency</label>
-                  <select
-                    className="form-select"
-                    value={settings.backupFrequency}
-                    onChange={(e) =>
-                      handleSettingsChange({ backupFrequency: e.target.value })
-                    }
-                  >
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="never">Never</option>
-                  </select>
-                </div>
-
-                <div className="form-check mb-3">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={settings.autoSave}
-                    onChange={(e) =>
-                      handleSettingsChange({ autoSave: e.target.checked })
-                    }
-                  />
-                  <label className="form-check-label">Auto-Save Changes</label>
-                  <div className="form-text">
-                    Automatically save changes as you make them
-                  </div>
-                </div>
-
-                <div className="form-check mb-3">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={settings.notificationEmails}
-                    onChange={(e) =>
-                      handleSettingsChange({
-                        notificationEmails: e.target.checked,
-                      })
-                    }
-                  />
-                  <label className="form-check-label">
-                    Email Notifications
-                  </label>
-                  <div className="form-text">
-                    Receive email alerts for important changes
-                  </div>
-                </div>
-
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={settings.smsAlerts}
-                    onChange={(e) =>
-                      handleSettingsChange({ smsAlerts: e.target.checked })
-                    }
-                  />
-                  <label className="form-check-label">SMS Alerts</label>
-                  <div className="form-text">
-                    Receive SMS for critical alerts
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="col-md-6">
+            <label className="form-label">Week Start</label>
+            <select
+              className="form-select"
+              value={settings.weekStart}
+              onChange={(e) =>
+                handleSettingsChange({ weekStart: e.target.value })
+              }
+            >
+              <option>Monday</option>
+              <option>Sunday</option>
+            </select>
           </div>
 
-          {/* Storage Usage */}
-          <div className="col-12">
-            <div className="card border">
-              <div className="card-header bg-light">
-                <h6 className="mb-0">
-                  <i className="bi bi-hdd text-info me-2"></i>
-                  Storage Usage & Data Management
-                </h6>
-              </div>
-              <div className="card-body">
-                {/* Storage Overview */}
-                <div className="mb-4">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h6 className="mb-0">Local Storage Usage</h6>
-                    <div className="text-end">
-                      <div className="h4 mb-0">
-                        {storageInfo.totalSize.toFixed(2)} KB
-                      </div>
-                      <small className="text-muted">Total Storage Used</small>
-                    </div>
-                  </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-                  <div className="progress mb-3" style={{ height: "20px" }}>
-                    <div
-                      className="progress-bar bg-primary"
-                      style={{
-                        width: `${storageInfo.modules.attendanceRules.percentage}%`,
-                      }}
-                      title={`Attendance Rules: ${storageInfo.modules.attendanceRules.size.toFixed(
-                        2
-                      )} KB`}
-                    ></div>
-                    <div
-                      className="progress-bar bg-warning"
-                      style={{
-                        width: `${storageInfo.modules.overtimeRules.percentage}%`,
-                      }}
-                      title={`Overtime Management: ${storageInfo.modules.overtimeRules.size.toFixed(
-                        2
-                      )} KB`}
-                    ></div>
-                    <div
-                      className="progress-bar bg-success"
-                      style={{
-                        width: `${storageInfo.modules.breakRules.percentage}%`,
-                      }}
-                      title={`Break Management: ${storageInfo.modules.breakRules.size.toFixed(
-                        2
-                      )} KB`}
-                    ></div>
-                    <div
-                      className="progress-bar bg-info"
-                      style={{
-                        width: `${storageInfo.modules.settings.percentage}%`,
-                      }}
-                      title={`System Settings: ${storageInfo.modules.settings.size.toFixed(
-                        2
-                      )} KB`}
-                    ></div>
-                  </div>
+  {/* ================= Notifications ================= */}
+  <div className="col-lg-6">
+    <div className="card h-100">
+      <div className="card-header bg-light">
+        <h6 className="mb-0 fw-semibold">
+          <i className="bi bi-bell text-warning me-2"></i>
+          Backup & Notifications
+        </h6>
+      </div>
 
-                  <div className="row">
-                    {Object.entries(storageInfo.modules).map(
-                      ([key, module]) => (
-                        <div key={key} className="col-6 col-md-3 mb-3">
-                          <div className="d-flex align-items-center">
-                            <div
-                              className={`bg-${module.color} rounded-circle me-2`}
-                              style={{ width: "10px", height: "10px" }}
-                            ></div>
-                            <div>
-                              <div className="small">{module.name}</div>
-                              <div className="fw-bold">
-                                {module.size.toFixed(2)} KB
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </div>
+      <div className="card-body">
 
-                {/* System Information Cards */}
-                <div className="row mb-4">
-                  <div className="col-md-3 mb-3">
-                    <div className="card bg-light border-0 h-100">
-                      <div className="card-body text-center">
-                        <div className="mb-2">
-                          <i className="bi bi-database fs-4 text-primary"></i>
-                        </div>
-                        <h6 className="card-title">Total Data</h6>
-                        <p className="card-text h4">
-                          {storageInfo.totalSize.toFixed(2)} KB
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+        <label className="form-label">Backup Frequency</label>
+        <select
+          className="form-select mb-3"
+          value={settings.backupFrequency}
+          onChange={(e) =>
+            handleSettingsChange({ backupFrequency: e.target.value })
+          }
+        >
+          <option>Daily</option>
+          <option>Weekly</option>
+          <option>Monthly</option>
+        </select>
 
-                  <div className="col-md-3 mb-3">
-                    <div className="card bg-light border-0 h-100">
-                      <div className="card-body text-center">
-                        <div className="mb-2">
-                          <i className="bi bi-calendar-check fs-4 text-success"></i>
-                        </div>
-                        <h6 className="card-title">Last Backup</h6>
-                        <p className="card-text">{storageInfo.lastBackup}</p>
-                      </div>
-                    </div>
-                  </div>
+<>
+  <style>
+    {`
+      /* Remove default checkbox */
+      .custom-check {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        border: 1.5px solid #ccc;
+        border-radius: 3px;
+        background-color: #fff; /* unchecked white */
+        cursor: pointer;
+        position: relative;
+      }
 
-                  <div className="col-md-3 mb-3">
-                    <div className="card bg-light border-0 h-100">
-                      <div className="card-body text-center">
-                        <div className="mb-2">
-                          <i className="bi bi-tag fs-4 text-info"></i>
-                        </div>
-                        <h6 className="card-title">Rules Version</h6>
-                        <p className="card-text">{storageInfo.rulesVersion}</p>
-                      </div>
-                    </div>
-                  </div>
+      /* Checked state: FULL blue box */
+      .custom-check:checked {
+        background-color: #0d6efd; /* blue */
+        border-color: #0d6efd;
+      }
 
-                  <div className="col-md-3 mb-3">
-                    <div className="card bg-light border-0 h-100">
-                      <div className="card-body text-center">
-                        <div className="mb-2">
-                          <i className="bi bi-cpu fs-4 text-warning"></i>
-                        </div>
-                        <h6 className="card-title">Storage Quota</h6>
-                        <p className="card-text">
-                          <span className="h4">10 MB</span>
-                          <br />
-                          <small className="text-muted">Browser Limit</small>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+      /* White tick */
+      .custom-check:checked::after {
+        content: "✓";
+        position: absolute;
+        top: -1px;
+        left: 3px;
+        font-size: 13px;
+        color: #fff;
+        font-weight: bold;
+      }
 
-                {/* Action Buttons */}
-                <div className="d-flex flex-wrap gap-2">
-                  <button className="btn btn-primary" onClick={handleBackup}>
-                    <i className="bi bi-download me-2"></i>Backup All Data
-                  </button>
-                  <button
-                    className="btn btn-outline-success"
-                    onClick={handleCheckUpdates}
-                  >
-                    <i className="bi bi-arrow-repeat me-2"></i>Check for Updates
-                  </button>
-                  <button
-                    className="btn btn-outline-warning"
-                    onClick={() => {
-                      if (
-                        window.confirm("Clear cache for Attendance Rules only?")
-                      ) {
-                        localStorage.removeItem("attendanceRules");
-                        showNotification(
-                          "Attendance Rules cache cleared",
-                          "warning"
-                        );
-                        setTimeout(() => window.location.reload(), 1000);
-                      }
-                    }}
-                  >
-                    <i className="bi bi-trash me-2"></i>Clear Attendance Cache
-                  </button>
-                  <button
-                    className="btn btn-outline-danger"
-                    onClick={handleClearCache}
-                  >
-                    <i className="bi bi-trash me-2"></i>Clear All Cache
-                  </button>
-                </div>
+      /* Remove focus glow */
+      .custom-check:focus {
+        outline: none;
+        box-shadow: none;
+      }
+    `}
+  </style>
 
-                {/* Storage Tips */}
-                <div className="alert alert-light mt-4">
-                  <i className="bi bi-lightbulb text-warning me-2"></i>
-                  <small>
-                    <strong>Storage Tips:</strong> Regular backups help prevent
-                    data loss. Clear cache only when necessary as it will reset
-                    all rules to defaults. Browser local storage typically
-                    supports 5-10 MB per domain.
-                  </small>
-                </div>
-              </div>
-            </div>
+  {[
+    { label: "Auto Save", key: "autoSave" },
+    { label: "Email Alerts", key: "notificationEmails" },
+    { label: "SMS Alerts", key: "smsAlerts" },
+  ].map((item) => (
+    <div className="d-flex align-items-center mb-2" key={item.key}>
+      <input
+        type="checkbox"
+        id={item.key}
+        className="custom-check"
+        checked={!!settings[item.key]}
+        onChange={(e) =>
+          handleSettingsChange({ [item.key]: e.target.checked })
+        }
+      />
+      <label htmlFor={item.key} className="ms-2">
+        {item.label}
+      </label>
+    </div>
+  ))}
+</>
+
+      </div>
+    </div>
+  </div>
+
+  {/* ================= Storage ================= */}
+  <div className="col-12">
+    <div className="card">
+      <div className="card-header bg-light">
+        <h6 className="mb-0 fw-semibold">
+          <i className="bi bi-hdd text-info me-2"></i>
+          Storage Usage
+        </h6>
+      </div>
+
+      <div className="card-body">
+
+        {/* Top Summary */}
+        <div className="d-flex justify-content-between mb-3">
+          <div className="small text-muted">Total Used</div>
+          <div className="fw-bold fs-5">
+            {storageInfo.totalSize.toFixed(2)} KB
           </div>
         </div>
+
+        {/* Progress */}
+        <div className="progress mb-4" style={{ height: 10 }}>
+          {Object.values(storageInfo.modules).map((m, i) => (
+            <div
+              key={i}
+              className={`progress-bar bg-${m.color}`}
+              style={{ width: `${m.percentage}%` }}
+            />
+          ))}
+        </div>
+
+        {/* Module Cards */}
+        <div className="row g-3 mb-4">
+          {Object.entries(storageInfo.modules).map(([k, m]) => (
+            <div key={k} className="col-6 col-md-3">
+              <div className="card bg-light border-0 text-center">
+                <div className="card-body py-3">
+                  <div className="small text-muted">{m.name}</div>
+                  <div className="fw-bold fs-6">
+                    {m.size.toFixed(2)} KB
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Actions */}
+        <div className="d-flex flex-wrap gap-2">
+          <button className="btn btn-primary btn-sm" onClick={handleBackup}>
+            Backup
+          </button>
+          <button className="btn btn-outline-secondary btn-sm">
+            Check Updates
+          </button>
+          <button
+            className="btn btn-outline-danger btn-sm"
+            onClick={handleClearCache}
+          >
+            Clear Cache
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
       </div>
     </div>
   );

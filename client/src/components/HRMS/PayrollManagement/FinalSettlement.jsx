@@ -20,6 +20,9 @@ const FinalSettlement = () => {
     const [isTablet, setIsTablet] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
 
+    // Add animation state
+    const [animatedCards, setAnimatedCards] = useState({});
+
     // Check screen size on mount and resize
     useEffect(() => {
         const checkScreenSize = () => {
@@ -31,6 +34,18 @@ const FinalSettlement = () => {
         checkScreenSize();
         window.addEventListener('resize', checkScreenSize);
         return () => window.removeEventListener('resize', checkScreenSize);
+    }, []);
+
+    // Trigger animations on mount
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const cards = {};
+            for (let i = 1; i <= 20; i++) {
+                cards[`card-${i}`] = true;
+            }
+            setAnimatedCards(cards);
+        }, 100);
+        return () => clearTimeout(timer);
     }, []);
 
     // Settlement Data State
@@ -205,81 +220,83 @@ const FinalSettlement = () => {
     const calculateSettlement = () => {
         setIsCalculating(true);
 
-        const shortfallDays = Math.max(0, settlementData.noticePeriod.requiredDays - settlementData.noticePeriod.daysServed);
-        const dailyRate = (settlementData.salary.basic + settlementData.salary.hra + settlementData.salary.specialAllowance) / 30;
-        const salaryForDays = dailyRate * settlementData.salary.daysWorked;
-        
-        // Leave encashment - only earned leave
-        const leaveEncashment = settlementData.leave.earnedLeaveBalance * settlementData.leave.encashmentRate;
-        
-        // Bonus pro-rata calculation
-        const proRataBonus = (settlementData.bonus.annualBonus / 365) * settlementData.bonus.proRataDays;
-        
-        // Gratuity calculation (15 days salary for each completed year)
-        const gratuityAmount = settlementData.gratuity.completedYears >= 5
-            ? (settlementData.gratuity.lastDrawnSalary / 26) * 15 * Math.floor(settlementData.gratuity.completedYears)
-            : 0;
-        
-        // Notice period recovery
-        const noticeRecovery = shortfallDays * dailyRate;
-        
-        // Asset penalty calculation
-        const assetPenalty = settlementData.assets.allocatedAssets
-            .filter(asset => asset.returnStatus === 'pending' || asset.condition === 'Damaged' || asset.condition === 'Lost')
-            .reduce((sum, asset) => {
-                if (asset.condition === 'Lost') return sum + (asset.category === 'Laptop' ? 50000 : asset.category === 'Mobile' ? 20000 : 5000);
-                if (asset.condition === 'Damaged') return sum + (asset.category === 'Laptop' ? 10000 : asset.category === 'Mobile' ? 5000 : 2000);
-                if (asset.returnStatus === 'pending') return sum + (asset.category === 'Laptop' ? 5000 : asset.category === 'Mobile' ? 2000 : 1000);
-                return sum;
-            }, 0);
-        
-        const totalAdditions = salaryForDays + leaveEncashment + proRataBonus + gratuityAmount + settlementData.reimbursements.approvedClaims;
-        const totalDeductions = settlementData.deductions.loanOutstanding +
-            settlementData.deductions.advanceAmount +
-            settlementData.deductions.penaltyAmount +
-            noticeRecovery +
-            assetPenalty +
-            settlementData.deductions.otherDeductions;
-        const netSettlement = totalAdditions - totalDeductions;
+        setTimeout(() => {
+            const shortfallDays = Math.max(0, settlementData.noticePeriod.requiredDays - settlementData.noticePeriod.daysServed);
+            const dailyRate = (settlementData.salary.basic + settlementData.salary.hra + settlementData.salary.specialAllowance) / 30;
+            const salaryForDays = dailyRate * settlementData.salary.daysWorked;
+            
+            // Leave encashment - only earned leave
+            const leaveEncashment = settlementData.leave.earnedLeaveBalance * settlementData.leave.encashmentRate;
+            
+            // Bonus pro-rata calculation
+            const proRataBonus = (settlementData.bonus.annualBonus / 365) * settlementData.bonus.proRataDays;
+            
+            // Gratuity calculation (15 days salary for each completed year)
+            const gratuityAmount = settlementData.gratuity.completedYears >= 5
+                ? (settlementData.gratuity.lastDrawnSalary / 26) * 15 * Math.floor(settlementData.gratuity.completedYears)
+                : 0;
+            
+            // Notice period recovery
+            const noticeRecovery = shortfallDays * dailyRate;
+            
+            // Asset penalty calculation
+            const assetPenalty = settlementData.assets.allocatedAssets
+                .filter(asset => asset.returnStatus === 'pending' || asset.condition === 'Damaged' || asset.condition === 'Lost')
+                .reduce((sum, asset) => {
+                    if (asset.condition === 'Lost') return sum + (asset.category === 'Laptop' ? 50000 : asset.category === 'Mobile' ? 20000 : 5000);
+                    if (asset.condition === 'Damaged') return sum + (asset.category === 'Laptop' ? 10000 : asset.category === 'Mobile' ? 5000 : 2000);
+                    if (asset.returnStatus === 'pending') return sum + (asset.category === 'Laptop' ? 5000 : asset.category === 'Mobile' ? 2000 : 1000);
+                    return sum;
+                }, 0);
+            
+            const totalAdditions = salaryForDays + leaveEncashment + proRataBonus + gratuityAmount + settlementData.reimbursements.approvedClaims;
+            const totalDeductions = settlementData.deductions.loanOutstanding +
+                settlementData.deductions.advanceAmount +
+                settlementData.deductions.penaltyAmount +
+                noticeRecovery +
+                assetPenalty +
+                settlementData.deductions.otherDeductions;
+            const netSettlement = totalAdditions - totalDeductions;
 
-        setSettlementData(prev => ({
-            ...prev,
-            noticePeriod: {
-                ...prev.noticePeriod,
-                shortfallDays,
-                recoveryAmount: noticeRecovery
-            },
-            salary: {
-                ...prev.salary,
-                totalSalary: salaryForDays
-            },
-            leave: {
-                ...prev.leave,
-                totalEncashment: leaveEncashment
-            },
-            bonus: {
-                ...prev.bonus,
-                proRataBonus
-            },
-            gratuity: {
-                ...prev.gratuity,
-                gratuityAmount,
-                eligibility: settlementData.gratuity.completedYears >= 5
-            },
-            deductions: {
-                ...prev.deductions,
-                noticePeriodRecovery: noticeRecovery,
-                assetPenalty: assetPenalty,
-                totalDeductions: totalDeductions
-            },
-            assets: {
-                ...prev.assets,
-                totalPenalty: assetPenalty
-            },
-            netSettlement: netSettlement > 0 ? netSettlement : 0
-        }));
+            setSettlementData(prev => ({
+                ...prev,
+                noticePeriod: {
+                    ...prev.noticePeriod,
+                    shortfallDays,
+                    recoveryAmount: noticeRecovery
+                },
+                salary: {
+                    ...prev.salary,
+                    totalSalary: salaryForDays
+                },
+                leave: {
+                    ...prev.leave,
+                    totalEncashment: leaveEncashment
+                },
+                bonus: {
+                    ...prev.bonus,
+                    proRataBonus
+                },
+                gratuity: {
+                    ...prev.gratuity,
+                    gratuityAmount,
+                    eligibility: settlementData.gratuity.completedYears >= 5
+                },
+                deductions: {
+                    ...prev.deductions,
+                    noticePeriodRecovery: noticeRecovery,
+                    assetPenalty: assetPenalty,
+                    totalDeductions: totalDeductions
+                },
+                assets: {
+                    ...prev.assets,
+                    totalPenalty: assetPenalty
+                },
+                netSettlement: netSettlement > 0 ? netSettlement : 0
+            }));
 
-        setIsCalculating(false);
+            setIsCalculating(false);
+        }, 1000);
     };
 
     // Confirm Last Working Day
@@ -333,7 +350,8 @@ const FinalSettlement = () => {
                 ...paymentDetails,
                 status: 'processed',
                 processedBy: 'Finance Manager',
-                processedDate: new Date().toISOString().split('T')[0]
+                processedDate: new Date().toISOString().split('T')[0],
+                utrNumber: `UTR${Math.floor(Math.random() * 10000000000)}`
             },
             approval: {
                 ...prev.approval,
@@ -357,43 +375,139 @@ const FinalSettlement = () => {
                 forms.form16 = {
                     ...forms.form16,
                     generated: true,
-                    generatedDate: today
+                    generatedDate: today,
+                    downloadUrl: '#',
+                    issued: true,
+                    issuedDate: today
                 };
             } else if (formType === 'Form19') {
                 forms.form19 = {
                     ...forms.form19,
                     generated: true,
-                    generatedDate: today
+                    generatedDate: today,
+                    downloadUrl: '#'
                 };
             } else if (formType === 'Form10C') {
                 forms.form10C = {
                     ...forms.form10C,
                     generated: true,
-                    generatedDate: today
+                    generatedDate: today,
+                    downloadUrl: '#'
                 };
             } else if (formType === 'Experience') {
                 forms.experienceLetter = {
                     ...forms.experienceLetter,
                     generated: true,
-                    generatedDate: today
+                    generatedDate: today,
+                    downloadUrl: '#',
+                    issued: true,
+                    issuedDate: today
                 };
             } else if (formType === 'Relieving') {
                 forms.relievingLetter = {
                     ...forms.relievingLetter,
                     generated: true,
-                    generatedDate: today
+                    generatedDate: today,
+                    downloadUrl: '#',
+                    issued: true,
+                    issuedDate: today
+                };
+            } else if (formType === 'PF') {
+                forms.form19 = {
+                    ...forms.form19,
+                    generated: true,
+                    generatedDate: today,
+                    downloadUrl: '#'
+                };
+                forms.form10C = {
+                    ...forms.form10C,
+                    generated: true,
+                    generatedDate: today,
+                    downloadUrl: '#'
+                };
+            } else if (formType === 'All') {
+                forms.form16 = {
+                    ...forms.form16,
+                    generated: true,
+                    generatedDate: today,
+                    downloadUrl: '#',
+                    issued: true,
+                    issuedDate: today
+                };
+                forms.form19 = {
+                    ...forms.form19,
+                    generated: true,
+                    generatedDate: today,
+                    downloadUrl: '#'
+                };
+                forms.form10C = {
+                    ...forms.form10C,
+                    generated: true,
+                    generatedDate: today,
+                    downloadUrl: '#'
+                };
+                forms.experienceLetter = {
+                    ...forms.experienceLetter,
+                    generated: true,
+                    generatedDate: today,
+                    downloadUrl: '#',
+                    issued: true,
+                    issuedDate: today
+                };
+                forms.relievingLetter = {
+                    ...forms.relievingLetter,
+                    generated: true,
+                    generatedDate: today,
+                    downloadUrl: '#',
+                    issued: true,
+                    issuedDate: today
                 };
             }
             
             return {
                 ...prev,
-                forms: forms
+                forms: forms,
+                documents: {
+                    form16Issued: forms.form16.issued,
+                    pfFormsIssued: forms.form19.generated && forms.form10C.generated,
+                    experienceLetter: forms.experienceLetter.issued,
+                    relievingLetter: forms.relievingLetter.issued,
+                    form19Generated: forms.form19.generated,
+                    form10CGenerated: forms.form10C.generated
+                }
             };
         });
         
         setSelectedForm(formType);
         setShowFormModal(true);
-        alert(`${formType} generated successfully!`);
+        
+        // Download the form
+        setTimeout(() => {
+            downloadForm(formType);
+        }, 500);
+        
+        // Removed alert
+    };
+
+    // Download Form
+    const downloadForm = (formType) => {
+        const content = `Final Settlement ${formType} Form\n\n` +
+                       `Employee: ${settlementData.employee.name}\n` +
+                       `Employee ID: ${settlementData.employee.employeeId}\n` +
+                       `Department: ${settlementData.employee.department}\n` +
+                       `Date Generated: ${new Date().toLocaleDateString()}\n\n` +
+                       `This is a sample ${formType} form for demonstration purposes.\n` +
+                       `In a real application, this would contain actual form data.`;
+        
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${formType}_${settlementData.employee.name}_${new Date().toISOString().split('T')[0]}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
     };
 
     // Issue Form
@@ -472,7 +586,7 @@ const FinalSettlement = () => {
                     item.employeeId.toLowerCase().includes(searchTerm.toLowerCase())
                 );
                 if (filterType !== 'All') {
-                    data = data.filter(item => item[filterType] === true);
+                    data = data.filter(item => item.status === filterType);
                 }
                 break;
             case 'pending':
@@ -712,7 +826,7 @@ const FinalSettlement = () => {
         };
 
         return (
-            <span className={`badge ${styles[status] || 'bg-secondary-subtle text-secondary'} fs-7 px-2 py-1`}>
+            <span className={`badge ${styles[status] || 'bg-secondary-subtle text-secondary'} fs-7 px-2 py-1 animate-pulse`}>
                 {status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}
             </span>
         );
@@ -737,6 +851,7 @@ const FinalSettlement = () => {
 
     // Format functions
     const formatCurrency = (amount) => {
+        if (!amount) return '₹0';
         return new Intl.NumberFormat('en-IN', {
             style: 'currency',
             currency: 'INR',
@@ -786,21 +901,45 @@ const FinalSettlement = () => {
             approval: {
                 ...prev.approval,
                 status,
-                approvedDate: new Date().toISOString().split('T')[0]
+                approvedDate: new Date().toISOString().split('T')[0],
+                approvedBy: status === 'approved' ? 'Finance Manager' : 
+                          status === 'rejected' ? 'HR Manager' : 
+                          status === 'pending' ? 'Pending Approval' : ''
             }
         }));
         setSettlementStatus(status);
+        alert(`Settlement ${status} successfully!`);
     };
 
     const handleGenerateReport = () => {
-        const report = `FINAL SETTLEMENT REPORT\n=======================\n\n1. EMPLOYEE DETAILS:\n   - Name: ${settlementData.employee.name}\n   - Employee ID: ${settlementData.employee.employeeId}\n   - Department: ${settlementData.employee.department}\n   - Date of Joining: ${settlementData.employee.doj}\n   - Last Working Day: ${settlementData.employee.dol}`;
+        const report = `FINAL SETTLEMENT REPORT\n=======================\n\n` +
+                      `1. EMPLOYEE DETAILS:\n` +
+                      `   - Name: ${settlementData.employee.name}\n` +
+                      `   - Employee ID: ${settlementData.employee.employeeId}\n` +
+                      `   - Department: ${settlementData.employee.department}\n` +
+                      `   - Date of Joining: ${settlementData.employee.doj}\n` +
+                      `   - Last Working Day: ${settlementData.employee.dol}\n\n` +
+                      `2. SETTLEMENT CALCULATIONS:\n` +
+                      `   - Total Additions: ${formatCurrency(kpis.totalAdditions)}\n` +
+                      `   - Total Deductions: ${formatCurrency(kpis.totalDeductions)}\n` +
+                      `   - Net Settlement: ${formatCurrency(kpis.netSettlement)}\n\n` +
+                      `3. COMPONENTS:\n` +
+                      `   - Salary Payable: ${formatCurrency(settlementData.salary.totalSalary)}\n` +
+                      `   - Leave Encashment: ${formatCurrency(settlementData.leave.totalEncashment)}\n` +
+                      `   - Pro-rata Bonus: ${formatCurrency(settlementData.bonus.proRataBonus)}\n` +
+                      `   - Gratuity: ${formatCurrency(settlementData.gratuity.gratuityAmount)}\n` +
+                      `   - Reimbursements: ${formatCurrency(settlementData.reimbursements.approvedClaims)}\n\n` +
+                      `Generated on: ${new Date().toLocaleString()}`;
 
         const blob = new Blob([report], { type: 'text/plain' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `Final_Settlement_${settlementData.employee.name}_${new Date().toISOString().split('T')[0]}.txt`;
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
     };
 
     const handleExportReport = () => {
@@ -809,13 +948,14 @@ const FinalSettlement = () => {
 
         switch (activeSection) {
             case 'employees':
-                headers = ['Employee ID', 'Name', 'Department', 'Last Working Day', 'Settlement Amount', 'Status'];
+                headers = ['Employee ID', 'Name', 'Department', 'Designation', 'Last Working Day', 'Settlement Amount', 'Status'];
                 csvData = employees.map(emp => [
                     emp.employeeId,
                     emp.name,
                     emp.department,
+                    emp.designation,
                     emp.lastWorkingDay,
-                    formatCurrency(emp.settlementAmount),
+                    emp.settlementAmount,
                     emp.status
                 ]);
                 break;
@@ -826,7 +966,7 @@ const FinalSettlement = () => {
                     set.employeeName,
                     set.department,
                     set.lastWorkingDay,
-                    formatCurrency(set.netAmount),
+                    set.netAmount,
                     set.status,
                     set.daysPending
                 ]);
@@ -838,9 +978,20 @@ const FinalSettlement = () => {
                     set.employeeName,
                     set.department,
                     set.lastWorkingDay,
-                    formatCurrency(set.netAmount),
+                    set.netAmount,
                     set.paymentDate,
                     set.status
+                ]);
+                break;
+            case 'forms':
+                headers = ['Form Name', 'Employee Name', 'Financial Year', 'Status', 'Date', 'Type'];
+                csvData = settlementForms.map(form => [
+                    form.formName,
+                    form.employeeName,
+                    form.financialYear || 'N/A',
+                    form.status,
+                    form.generatedDate || form.issuedDate || form.dueDate || 'N/A',
+                    form.type
                 ]);
                 break;
             default:
@@ -848,8 +999,11 @@ const FinalSettlement = () => {
                 csvData = [['No data to export']];
         }
 
-        const csvContent = [headers, ...csvData].map(row => row.join(',')).join('\n');
-        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const csvContent = [headers, ...csvData].map(row => 
+            row.map(cell => `"${cell}"`).join(',')
+        ).join('\n');
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -868,6 +1022,7 @@ const FinalSettlement = () => {
             setCurrentPage(1);
             setSearchTerm('');
             setFilterType('All');
+            setIsLoading(false);
             alert('Settlement data refreshed successfully!');
         }, 1000);
     };
@@ -877,11 +1032,11 @@ const FinalSettlement = () => {
         switch (activeSection) {
             case 'employees':
                 return (
-                    <div className="card mb-3">
+                    <div className="card mb-3 animate-fade-in" key={item.id}>
                         <div className="card-body">
                             <div className="d-flex justify-content-between align-items-start mb-2">
                                 <div>
-                                    <h6 className="fw-bold mb-1">{item.name}</h6>
+                                    <h6 className="fw-bold mb-1 fs-6">{item.name}</h6>
                                     <p className="text-muted small mb-1">{item.employeeId} • {item.designation}</p>
                                 </div>
                                 {getStatusBadge(item.status)}
@@ -907,11 +1062,19 @@ const FinalSettlement = () => {
                             <div className="mt-3 d-flex gap-2">
                                 <button
                                     onClick={() => handleViewDetails(item)}
-                                    className="btn btn-sm btn-outline-primary flex-fill"
+                                    className="btn btn-sm btn-outline-primary flex-fill d-flex align-items-center justify-content-center"
                                 >
+                                    <Icon icon="heroicons:eye" className="me-1" />
                                     View
                                 </button>
-                                <button className="btn btn-sm btn-outline-warning flex-fill">
+                                <button 
+                                    className="btn btn-sm btn-outline-warning flex-fill d-flex align-items-center justify-content-center"
+                                    onClick={() => {
+                                        setSelectedItem(item);
+                                        alert(`Processing settlement for ${item.name}`);
+                                    }}
+                                >
+                                    <Icon icon="heroicons:cog-6-tooth" className="me-1" />
                                     Process
                                 </button>
                             </div>
@@ -921,11 +1084,11 @@ const FinalSettlement = () => {
 
             case 'pending':
                 return (
-                    <div className="card mb-3">
+                    <div className="card mb-3 animate-fade-in" key={item.id}>
                         <div className="card-body">
                             <div className="d-flex justify-content-between align-items-start mb-2">
                                 <div>
-                                    <h6 className="fw-bold mb-1">{item.employeeName}</h6>
+                                    <h6 className="fw-bold mb-1 fs-6">{item.employeeName}</h6>
                                     <p className="text-muted small mb-1">{item.employeeId} • {item.department}</p>
                                 </div>
                                 {getStatusBadge(item.status)}
@@ -937,7 +1100,7 @@ const FinalSettlement = () => {
                                 </div>
                                 <div className="col-6">
                                     <small className="text-muted d-block">Days Pending</small>
-                                    <span className={`badge ${item.daysPending > 7 ? 'bg-danger' : 'bg-warning'}`}>
+                                    <span className={`badge ${item.daysPending > 7 ? 'bg-danger' : 'bg-warning'} animate-pulse`}>
                                         {item.daysPending} days
                                     </span>
                                 </div>
@@ -953,12 +1116,20 @@ const FinalSettlement = () => {
                             <div className="mt-3 d-flex gap-2">
                                 <button
                                     onClick={() => handleViewDetails(item)}
-                                    className="btn btn-sm btn-outline-primary flex-fill"
+                                    className="btn btn-sm btn-outline-primary flex-fill d-flex align-items-center justify-content-center"
                                 >
+                                    <Icon icon="heroicons:eye" className="me-1" />
                                     View
                                 </button>
-                                <button className="btn btn-sm btn-outline-success flex-fill">
-                                    Process
+                                <button 
+                                    className="btn btn-sm btn-outline-success flex-fill d-flex align-items-center justify-content-center"
+                                    onClick={() => {
+                                        setSelectedItem(item);
+                                        handleApproval('approved');
+                                    }}
+                                >
+                                    <Icon icon="heroicons:check-circle" className="me-1" />
+                                    Approve
                                 </button>
                             </div>
                         </div>
@@ -967,11 +1138,11 @@ const FinalSettlement = () => {
 
             case 'completed':
                 return (
-                    <div className="card mb-3">
+                    <div className="card mb-3 animate-fade-in" key={item.id}>
                         <div className="card-body">
                             <div className="d-flex justify-content-between align-items-start mb-2">
                                 <div>
-                                    <h6 className="fw-bold mb-1">{item.employeeName}</h6>
+                                    <h6 className="fw-bold mb-1 fs-6">{item.employeeName}</h6>
                                     <p className="text-muted small mb-1">{item.employeeId} • {item.department}</p>
                                 </div>
                                 {getStatusBadge(item.status)}
@@ -1001,11 +1172,35 @@ const FinalSettlement = () => {
                             <div className="mt-3 d-flex gap-2">
                                 <button
                                     onClick={() => handleViewDetails(item)}
-                                    className="btn btn-sm btn-outline-primary flex-fill"
+                                    className="btn btn-sm btn-outline-primary flex-fill d-flex align-items-center justify-content-center"
                                 >
+                                    <Icon icon="heroicons:eye" className="me-1" />
                                     View
                                 </button>
-                                <button className="btn btn-sm btn-outline-success flex-fill">
+                                <button 
+                                    className="btn btn-sm btn-outline-success flex-fill d-flex align-items-center justify-content-center"
+                                    onClick={() => {
+                                        // Generate receipt
+                                        const receipt = `Payment Receipt\n\n` +
+                                                       `Employee: ${item.employeeName}\n` +
+                                                       `Employee ID: ${item.employeeId}\n` +
+                                                       `Amount: ${formatCurrency(item.netAmount)}\n` +
+                                                       `Payment Date: ${item.paymentDate}\n` +
+                                                       `Payment Method: ${item.paymentMethod}\n\n` +
+                                                       `Thank you for your service.`;
+                                        
+                                        const blob = new Blob([receipt], { type: 'text/plain' });
+                                        const url = window.URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.href = url;
+                                        a.download = `Receipt_${item.employeeName}_${item.paymentDate}.txt`;
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        document.body.removeChild(a);
+                                        window.URL.revokeObjectURL(url);
+                                    }}
+                                >
+                                    <Icon icon="heroicons:document-arrow-down" className="me-1" />
                                     Receipt
                                 </button>
                             </div>
@@ -1015,11 +1210,11 @@ const FinalSettlement = () => {
 
             case 'forms':
                 return (
-                    <div className="card mb-3">
+                    <div className="card mb-3 animate-fade-in" key={item.id}>
                         <div className="card-body">
                             <div className="d-flex justify-content-between align-items-start mb-2">
                                 <div>
-                                    <h6 className="fw-bold mb-1">{item.formName}</h6>
+                                    <h6 className="fw-bold mb-1 fs-6">{item.formName}</h6>
                                     <p className="text-muted small mb-1">{item.employeeName}</p>
                                 </div>
                                 {getStatusBadge(item.status)}
@@ -1043,17 +1238,26 @@ const FinalSettlement = () => {
                             <div className="mt-3 d-flex gap-2">
                                 <button
                                     onClick={() => handleViewDetails(item)}
-                                    className="btn btn-sm btn-outline-primary flex-fill"
+                                    className="btn btn-sm btn-outline-primary flex-fill d-flex align-items-center justify-content-center"
                                 >
+                                    <Icon icon="heroicons:eye" className="me-1" />
                                     View
                                 </button>
                                 {item.status === 'generated' && (
-                                    <button className="btn btn-sm btn-outline-success flex-fill">
+                                    <button 
+                                        className="btn btn-sm btn-outline-success flex-fill d-flex align-items-center justify-content-center"
+                                        onClick={() => downloadForm(item.formName)}
+                                    >
+                                        <Icon icon="heroicons:arrow-down-tray" className="me-1" />
                                         Download
                                     </button>
                                 )}
                                 {item.status === 'pending' && (
-                                    <button className="btn btn-sm btn-outline-warning flex-fill">
+                                    <button 
+                                        className="btn btn-sm btn-outline-warning flex-fill d-flex align-items-center justify-content-center"
+                                        onClick={() => handleGenerateForm(item.formName)}
+                                    >
+                                        <Icon icon="heroicons:document-plus" className="me-1" />
                                         Generate
                                     </button>
                                 )}
@@ -1196,13 +1400,98 @@ const FinalSettlement = () => {
     const renderOverview = () => (
         <div className="row g-3 g-md-4">
             <div className="col-12">
-                <div className="card border shadow-sm">
+                {/* Quick Actions - Moved to TOP */}
+                        <div className="col-12 mb-4">
+                            <div className="card border animate-slide-up">
+                                <div className="card-header p-3 d-flex align-items-center gap-2">
+                                    <Icon icon="heroicons:bolt" className="fs-4" />
+                                    <h6 className="fw-bold mb-0">Quick Actions</h6>
+                                </div>
+                                <div className="card-body p-3">
+                                    <div className="row g-3">
+                                        {[
+                                            {
+                                                icon: 'heroicons:calculator',
+                                                label: 'Recalculate',
+                                                shortLabel: 'Recalc',
+                                                action: () => calculateSettlement(),
+                                                color: 'primary',
+                                                working: true
+                                            },
+                                            {
+                                                icon: 'heroicons:check-circle',
+                                                label: 'Approve',
+                                                shortLabel: 'Approve',
+                                                action: () => handleApproval('approved'),
+                                                color: 'success',
+                                                working: true
+                                            },
+                                            {
+                                                icon: 'heroicons:document-text',
+                                                label: 'Documents',
+                                                shortLabel: 'Docs',
+                                                action: () => setActiveSection('documents'),
+                                                color: 'warning',
+                                                working: true
+                                            },
+                                            {
+                                                icon: 'heroicons:arrow-down-tray',
+                                                label: 'Export',
+                                                shortLabel: 'Export',
+                                                action: handleExportReport,
+                                                color: 'danger',
+                                                working: true
+                                            },
+                                            {
+                                                icon: 'heroicons:arrow-path',
+                                                label: 'Refresh',
+                                                shortLabel: 'Refresh',
+                                                action: handleRefreshData,
+                                                color: 'secondary',
+                                                working: true
+                                            }
+                                        ].map((item, index) => (
+                                            <div key={index} className="col-6 col-sm-4 col-lg-2">
+                                                <button
+                                                    className={`btn btn-outline-${item.color} w-100 d-flex flex-row align-items-center justify-content-center py-2 px-2 animate-hover`}
+                                                    onClick={item.action}
+                                                    disabled={!item.working}
+                                                >
+                                                    <Icon
+                                                        icon={item.icon}
+                                                        className={`${isMobile ? 'fs-5' : 'fs-4'} me-2`}
+                                                    />
+                                                    <span className="fw-medium text-nowrap">
+                                                        <span className="d-none d-sm-block">{item.label}</span>
+                                                        <span className="d-sm-none">{item.shortLabel}</span>
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Alternative Mobile-Only View (Optional) */}
+                                    {isMobile && (
+                                        <div className="mt-3 d-block d-lg-none">
+                                            <div className="alert alert-info small mb-0 d-flex align-items-center animate-pulse">
+                                                <Icon icon="heroicons:information-circle" className="me-2 flex-shrink-0" />
+                                                Tap any action above to perform quick settlement tasks
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                <div className="card border shadow-sm animate-fade-in">
                     <div className="card-header bg-transparent border-0">
                         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-                            <h5 className="mb-0 fs-5 fs-md-4">Settlement Overview Dashboard</h5>
+                            <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                                <Icon icon="heroicons:chart-bar" className="fs-2" />
+                                Settlement Overview Dashboard
+                            </h6>
                             <div className="d-flex gap-2 w-25 w-md-auto">
                                 <button
-                                    className="btn btn-primary btn-sm btn-md-normal flex-fill flex-md-none"
+                                    className="btn btn-primary btn-sm btn-md-normal flex-fill flex-md-none d-flex align-items-center justify-content-center"
                                     onClick={calculateSettlement}
                                     disabled={isCalculating}
                                 >
@@ -1210,7 +1499,7 @@ const FinalSettlement = () => {
                                     {isCalculating ? 'Calculating...' : 'Recalculate'}
                                 </button>
                                 <button
-                                    className="btn btn-outline-primary flex-fill flex-md-none"
+                                    className="btn btn-outline-primary flex-fill flex-md-none d-flex align-items-center justify-content-center"
                                     onClick={handleGenerateReport}
                                 >
                                     <Icon icon="heroicons:document-arrow-down" className="me-1 me-md-2" />
@@ -1221,94 +1510,58 @@ const FinalSettlement = () => {
                         </div>
                     </div>
                     <div className="card-body p-3 p-md-4">
+                        
+
                         <div className="row g-3 g-md-4">
-                            {/* Summary Cards */}
-                            <div className="col-6 col-md-3">
-                                <div className="card border border-primary h-100">
-                                    <div className="card-body p-3">
-                                        <div className="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <p className="text-muted small mb-1">Total Additions</p>
-                                                <h5 className="text-primary mb-0 fs-5 fs-md-4">{formatCurrency(kpis.totalAdditions)}</h5>
-                                            </div>
-                                            <Icon icon="heroicons:plus-circle" className="text-primary fs-4 fs-md-3" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="col-6 col-md-3">
-                                <div className="card border border-danger h-100">
-                                    <div className="card-body p-3">
-                                        <div className="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <p className="text-muted small mb-1">Total Deductions</p>
-                                                <h5 className="text-danger mb-0 fs-5 fs-md-4">{formatCurrency(kpis.totalDeductions)}</h5>
-                                            </div>
-                                            <Icon icon="heroicons:minus-circle" className="text-danger fs-4 fs-md-3" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="col-6 col-md-3">
-                                <div className="card border border-success h-100">
-                                    <div className="card-body p-3">
-                                        <div className="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <p className="text-muted small mb-1">Net Settlement</p>
-                                                <h5 className="text-success mb-0 fs-5 fs-md-4">{formatCurrency(kpis.netSettlement)}</h5>
-                                            </div>
-                                            <Icon icon="heroicons:banknotes" className="text-success fs-4 fs-md-3" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="col-6 col-md-3">
-                                <div className="card border border-warning h-100">
-                                    <div className="card-body p-3">
-                                        <div className="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <p className="text-muted small mb-1">Approval Status</p>
-                                                <h5 className="text-warning mb-0 fs-5 fs-md-4">{settlementStatus.toUpperCase()}</h5>
-                                            </div>
-                                            <Icon icon="heroicons:document-check" className="text-warning fs-4 fs-md-3" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
                             {/* Employee Information */}
                             <div className="col-12 col-lg-6">
-                                <div className="card border h-100">
-                                    <div className="card-header p-3">
-                                        <h6 className="mb-0 fs-5">Employee Information</h6>
+                                <div className="card border h-100 animate-fade-in">
+                                    <div className="card-header p-3 d-flex align-items-center gap-2">
+                                        <Icon icon="heroicons:user-circle" className="fs-4" />
+                                        <h6 className="fw-bold mb-0">Employee Information</h6>
                                     </div>
                                     <div className="card-body p-3">
                                         <div className="row g-2 g-md-3">
                                             <div className="col-12 col-md-6">
-                                                <label className="form-label small fw-semibold">Employee Name</label>
+                                                <label className="form-label small fw-semibold d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:user" className="fs-6" />
+                                                    Employee Name
+                                                </label>
                                                 <p className="form-control-plaintext fw-bold mb-2 mb-md-3">{settlementData.employee.name}</p>
                                             </div>
                                             <div className="col-12 col-md-6">
-                                                <label className="form-label small fw-semibold">Employee ID</label>
+                                                <label className="form-label small fw-semibold d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:identification" className="fs-6" />
+                                                    Employee ID
+                                                </label>
                                                 <p className="form-control-plaintext mb-2 mb-md-3">{settlementData.employee.employeeId}</p>
                                             </div>
                                             <div className="col-12 col-md-6">
-                                                <label className="form-label small fw-semibold">Department</label>
+                                                <label className="form-label small fw-semibold d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:building-office" className="fs-6" />
+                                                    Department
+                                                </label>
                                                 <p className="form-control-plaintext mb-2 mb-md-3">{settlementData.employee.department}</p>
                                             </div>
                                             <div className="col-12 col-md-6">
-                                                <label className="form-label small fw-semibold">Designation</label>
+                                                <label className="form-label small fw-semibold d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:briefcase" className="fs-6" />
+                                                    Designation
+                                                </label>
                                                 <p className="form-control-plaintext mb-2 mb-md-3">{settlementData.employee.designation}</p>
                                             </div>
                                             <div className="col-12 col-md-6">
-                                                <label className="form-label small fw-semibold">Date of Joining</label>
+                                                <label className="form-label small fw-semibold d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:calendar" className="fs-6" />
+                                                    Date of Joining
+                                                </label>
                                                 <p className="form-control-plaintext mb-2 mb-md-3">{settlementData.employee.doj}</p>
                                             </div>
                                             <div className="col-12 col-md-6">
-                                                <label className="form-label small fw-semibold">Last Working Day</label>
+                                                <label className="form-label small fw-semibold d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:calendar-x-mark" className="fs-6" />
+                                                    Last Working Day
+                                                </label>
                                                 <p className="form-control-plaintext fw-bold text-danger mb-2 mb-md-3">{settlementData.employee.dol}</p>
                                             </div>
                                         </div>
@@ -1318,117 +1571,56 @@ const FinalSettlement = () => {
 
                             {/* Settlement Timeline */}
                             <div className="col-12 col-lg-6">
-                                <div className="card border h-100">
-                                    <div className="card-header p-3">
-                                        <h6 className="mb-0 fs-5">Settlement Timeline</h6>
+                                <div className="card border h-100 animate-fade-in">
+                                    <div className="card-header p-3 d-flex align-items-center gap-2">
+                                        <Icon icon="heroicons:clock" className="fs-4" />
+                                        <h6 className="fw-bold mb-0">Settlement Timeline</h6>
                                     </div>
                                     <div className="card-body p-3">
                                         <div className="timeline">
                                             <div className="timeline-item">
                                                 <div className="timeline-marker bg-primary"></div>
                                                 <div className="timeline-content">
-                                                    <h6 className="fw-bold fs-6">Notice Period Initiated</h6>
+                                                    <h6 className="fs-5 d-flex align-items-center gap-2">
+                                                        <Icon icon="heroicons:bell-alert" className="fs-6" />
+                                                        Notice Period Initiated
+                                                    </h6>
                                                     <p className="text-muted small mb-1">15 June 2024</p>
                                                 </div>
                                             </div>
                                             <div className="timeline-item">
                                                 <div className="timeline-marker bg-info"></div>
                                                 <div className="timeline-content">
-                                                    <h6 className="fw-bold fs-6">Document Collection</h6>
+                                                    <h6 className="fs-5 d-flex align-items-center gap-2 mt-2">
+                                                        <Icon icon="heroicons:document-text" className="fs-6" />
+                                                        Document Collection
+                                                    </h6>
                                                     <p className="text-muted small mb-1">20 June 2024</p>
                                                 </div>
                                             </div>
                                             <div className="timeline-item">
                                                 <div className={`timeline-marker ${settlementStatus === 'pending' ? 'bg-warning' : 'bg-success'}`}></div>
                                                 <div className="timeline-content">
-                                                    <h6 className="fw-bold fs-6">Settlement Calculation</h6>
+                                                    <h6 className="fs-5 d-flex align-items-center gap-2 mt-2">
+                                                        <Icon icon="heroicons:calculator" className="fs-6" />
+                                                        Settlement Calculation
+                                                    </h6>
                                                     <p className="text-muted small mb-1">25 June 2024</p>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            {/* Quick Actions - Mobile Optimized */}
-                            <div className="col-12">
-                                <div className="card border">
-                                    <div className="card-header p-3">
-                                        <h6 className="mb-0 fs-5">Quick Actions</h6>
-                                    </div>
-                                    <div className="card-body p-3">
-                                        <div className="row g-3">
-                                            {[
-                                                {
-                                                    icon: 'heroicons:calculator',
-                                                    label: 'Recalculate',
-                                                    shortLabel: 'Recalc',
-                                                    action: () => setActiveSection('calculations'),
-                                                    color: 'primary'
-                                                },
-                                                {
-                                                    icon: 'heroicons:check-circle',
-                                                    label: 'Approve',
-                                                    shortLabel: 'Approve',
-                                                    action: () => handleApproval('approved'),
-                                                    color: 'success'
-                                                },
-                                                {
-                                                    icon: 'heroicons:document-text',
-                                                    label: 'Documents',
-                                                    shortLabel: 'Docs',
-                                                    action: () => setActiveSection('documents'),
-                                                    color: 'warning'
-                                                },
-                                                {
-                                                    icon: 'heroicons:document-arrow-down',
-                                                    label: 'Form 16',
-                                                    shortLabel: 'Form 16',
-                                                    action: () => handleGenerateForm('Form16'),
-                                                    color: 'info'
-                                                },
-                                                {
-                                                    icon: 'heroicons:arrow-down-tray',
-                                                    label: 'Export',
-                                                    shortLabel: 'Export',
-                                                    action: handleExportReport,
-                                                    color: 'danger'
-                                                },
-                                                {
-                                                    icon: 'heroicons:arrow-path',
-                                                    label: 'Refresh',
-                                                    shortLabel: 'Refresh',
-                                                    action: handleRefreshData,
-                                                    color: 'secondary'
-                                                }
-                                            ].map((item, index) => (
-                                                <div key={index} className="col-6 col-sm-4 col-lg-2">
-                                                    <button
-                                                        className={`btn btn-outline-${item.color} w-100 d-flex flex-column align-items-center justify-content-center py-3`}
-                                                        onClick={item.action}
-                                                        style={{ minHeight: '100px' }}
-                                                    >
-                                                        <Icon
-                                                            icon={item.icon}
-                                                            className={`mb-2 ${isMobile ? 'fs-3' : 'fs-2'}`}
-                                                        />
-                                                        <span className="fw-medium text-center">
-                                                            <span className="d-none d-sm-block">{item.label}</span>
-                                                            <span className="d-sm-none">{item.shortLabel}</span>
-                                                        </span>
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-
-                                        {/* Alternative Mobile-Only View (Optional) */}
-                                        {isMobile && (
-                                            <div className="mt-3 d-block d-lg-none">
-                                                <div className="alert alert-info small mb-0">
-                                                    <Icon icon="heroicons:information-circle" className="me-1" />
-                                                    Tap any action above to perform quick settlement tasks
+                                            <div className="timeline-item">
+                                                <div className={`timeline-marker ${settlementStatus === 'pending' ? 'bg-secondary' : 'bg-success'}`}></div>
+                                                <div className="timeline-content">
+                                                    <h6 className="fs-5 d-flex align-items-center gap-2 mt-2">
+                                                        <Icon icon="heroicons:banknotes" className="fs-6" />
+                                                        Payment Processing
+                                                    </h6>
+                                                    <p className="text-muted small mb-1">
+                                                        {settlementStatus === 'approved' ? '07 July 2024' : 'Pending'}
+                                                    </p>
                                                 </div>
                                             </div>
-                                        )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1442,12 +1634,15 @@ const FinalSettlement = () => {
     const renderCalculations = () => (
         <div className="row g-3 g-md-4">
             <div className="col-12">
-                <div className="card border shadow-sm">
+                <div className="card border shadow-sm animate-fade-in">
                     <div className="card-header bg-transparent border-0 p-3">
                         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-                            <h5 className="mb-0 fs-5 fs-md-4">Settlement Calculations</h5>
+                            <h4 className="mb-0 fs-3 d-flex align-items-center gap-2">
+                                <Icon icon="heroicons:calculator" className="fs-2" />
+                                Settlement Calculations
+                            </h4>
                             <button
-                                className="btn btn-primary btn-sm btn-md-normal"
+                                className="btn btn-primary btn-sm btn-md-normal d-flex align-items-center"
                                 onClick={calculateSettlement}
                                 disabled={isCalculating}
                             >
@@ -1460,28 +1655,33 @@ const FinalSettlement = () => {
                         <div className="row g-3 g-md-4">
                             {/* Notice Period */}
                             <div className="col-12 col-md-6 col-lg-6">
-                                <div className="card border h-100">
-                                    <div className="card-header p-3">
-                                        <h6 className="mb-0 fs-5">Notice Period Verification</h6>
+                                <div className="card border h-100 animate-card-hover">
+                                    <div className="card-header p-3 d-flex align-items-center gap-2">
+                                        <Icon icon="heroicons:bell-alert" />
+                                        <h5 className="mb-0 fs-5">Notice Period Verification</h5>
                                     </div>
                                     <div className="card-body p-3">
                                         <div className="row g-2 g-md-3">
                                             <div className="col-12">
-                                                <div className="form-check">
+                                                <div className="form-check d-flex align-items-center">
                                                     <input
-                                                        className="form-check-input"
+                                                        className="form-check-input me-2"
                                                         type="checkbox"
                                                         checked={settlementData.noticePeriod.verified}
                                                         onChange={() => handleCheckboxChange('noticePeriod', 'verified')}
                                                         id="noticeVerified"
                                                     />
-                                                    <label className="form-check-label fw-semibold" htmlFor="noticeVerified">
+                                                    <label className="form-check-label fw-semibold d-flex align-items-center" htmlFor="noticeVerified">
+                                                        <Icon icon="heroicons:check-circle" className="me-1" />
                                                         Notice Period Verified
                                                     </label>
                                                 </div>
                                             </div>
                                             <div className="col-12 col-sm-6">
-                                                <label className="form-label">Days Served</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:calendar-days" className="fs-6" />
+                                                    Days Served
+                                                </label>
                                                 <input
                                                     type="number"
                                                     className="form-control form-control-sm form-control-md"
@@ -1490,13 +1690,26 @@ const FinalSettlement = () => {
                                                 />
                                             </div>
                                             <div className="col-12 col-sm-6">
-                                                <label className="form-label">Required Days</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:calendar" className="fs-6" />
+                                                    Required Days
+                                                </label>
                                                 <input
                                                     type="number"
                                                     className="form-control form-control-sm form-control-md"
                                                     value={settlementData.noticePeriod.requiredDays}
                                                     onChange={(e) => handleUpdateConfig('noticePeriod', 'requiredDays', parseInt(e.target.value) || 0)}
                                                 />
+                                            </div>
+                                            <div className="col-12">
+                                                <div className="alert alert-warning d-flex align-items-center">
+                                                    <Icon icon="heroicons:exclamation-triangle" className="me-2 flex-shrink-0" />
+                                                    <div>
+                                                        <strong>Shortfall:</strong> {settlementData.noticePeriod.shortfallDays} days
+                                                        <br />
+                                                        <strong>Recovery Amount:</strong> {formatCurrency(settlementData.noticePeriod.recoveryAmount)}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1505,14 +1718,18 @@ const FinalSettlement = () => {
 
                             {/* Salary Calculation */}
                             <div className="col-12 col-md-6 col-lg-6">
-                                <div className="card border h-100">
-                                    <div className="card-header p-3">
-                                        <h6 className="mb-0 fs-5">Salary Calculation</h6>
+                                <div className="card border h-100 animate-card-hover">
+                                    <div className="card-header p-3 d-flex align-items-center gap-2">
+                                        <Icon icon="heroicons:banknotes" />
+                                        <h5 className="mb-0 fs-5">Salary Calculation</h5>
                                     </div>
                                     <div className="card-body p-3">
                                         <div className="row g-2 g-md-3">
                                             <div className="col-12 col-sm-6">
-                                                <label className="form-label">Basic Salary</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:currency-rupee" className="fs-6" />
+                                                    Basic Salary
+                                                </label>
                                                 <input
                                                     type="number"
                                                     className="form-control form-control-sm form-control-md"
@@ -1521,7 +1738,10 @@ const FinalSettlement = () => {
                                                 />
                                             </div>
                                             <div className="col-12 col-sm-6">
-                                                <label className="form-label">HRA</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:home" className="fs-6" />
+                                                    HRA
+                                                </label>
                                                 <input
                                                     type="number"
                                                     className="form-control form-control-sm form-control-md"
@@ -1530,7 +1750,10 @@ const FinalSettlement = () => {
                                                 />
                                             </div>
                                             <div className="col-12 col-sm-6">
-                                                <label className="form-label">Days Worked</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:calendar-days" className="fs-6" />
+                                                    Days Worked
+                                                </label>
                                                 <input
                                                     type="number"
                                                     className="form-control form-control-sm form-control-md"
@@ -1539,7 +1762,10 @@ const FinalSettlement = () => {
                                                 />
                                             </div>
                                             <div className="col-12 col-sm-6">
-                                                <label className="form-label">Salary Payable</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:banknotes" className="fs-6" />
+                                                    Salary Payable
+                                                </label>
                                                 <input
                                                     type="text"
                                                     className="form-control fw-bold bg-success-subtle"
@@ -1554,14 +1780,18 @@ const FinalSettlement = () => {
 
                             {/* Leave Encashment */}
                             <div className="col-12 col-md-6 col-lg-6">
-                                <div className="card border h-100">
-                                    <div className="card-header p-3">
-                                        <h6 className="mb-0 fs-5">Leave Encashment</h6>
+                                <div className="card border h-100 animate-card-hover">
+                                    <div className="card-header p-3 d-flex align-items-center gap-2">
+                                        <Icon icon="heroicons:sun" />
+                                        <h5 className="mb-0 fs-5">Leave Encashment</h5>
                                     </div>
                                     <div className="card-body p-3">
                                         <div className="row g-2 g-md-3">
                                             <div className="col-12 col-sm-6">
-                                                <label className="form-label">Earned Leave Balance</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:calendar" className="fs-6" />
+                                                    Earned Leave Balance
+                                                </label>
                                                 <input
                                                     type="number"
                                                     className="form-control form-control-sm form-control-md"
@@ -1570,7 +1800,10 @@ const FinalSettlement = () => {
                                                 />
                                             </div>
                                             <div className="col-12 col-sm-6">
-                                                <label className="form-label">Encashment Rate/Day</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:currency-rupee" className="fs-6" />
+                                                    Encashment Rate/Day
+                                                </label>
                                                 <input
                                                     type="number"
                                                     className="form-control form-control-sm form-control-md"
@@ -1579,7 +1812,10 @@ const FinalSettlement = () => {
                                                 />
                                             </div>
                                             <div className="col-12">
-                                                <label className="form-label">Total Encashment</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:banknotes" className="fs-6" />
+                                                    Total Encashment
+                                                </label>
                                                 <input
                                                     type="text"
                                                     className="form-control fw-bold bg-success-subtle"
@@ -1594,14 +1830,18 @@ const FinalSettlement = () => {
 
                             {/* Bonus & Gratuity */}
                             <div className="col-12 col-md-6 col-lg-6">
-                                <div className="card border h-100">
-                                    <div className="card-header p-3">
-                                        <h6 className="mb-0 fs-5">Bonus & Gratuity</h6>
+                                <div className="card border h-100 animate-card-hover">
+                                    <div className="card-header p-3 d-flex align-items-center gap-2">
+                                        <Icon icon="heroicons:gift" />
+                                        <h5 className="mb-0 fs-5">Bonus & Gratuity</h5>
                                     </div>
                                     <div className="card-body p-3">
                                         <div className="row g-2 g-md-3">
                                             <div className="col-12 col-sm-6">
-                                                <label className="form-label">Annual Bonus</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:gift" className="fs-6" />
+                                                    Annual Bonus
+                                                </label>
                                                 <input
                                                     type="number"
                                                     className="form-control form-control-sm form-control-md"
@@ -1610,7 +1850,10 @@ const FinalSettlement = () => {
                                                 />
                                             </div>
                                             <div className="col-12 col-sm-6">
-                                                <label className="form-label">Pro-rata Days</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:calendar-days" className="fs-6" />
+                                                    Pro-rata Days
+                                                </label>
                                                 <input
                                                     type="number"
                                                     className="form-control form-control-sm form-control-md"
@@ -1619,7 +1862,10 @@ const FinalSettlement = () => {
                                                 />
                                             </div>
                                             <div className="col-12 col-sm-6">
-                                                <label className="form-label">Pro-rata Bonus</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:banknotes" className="fs-6" />
+                                                    Pro-rata Bonus
+                                                </label>
                                                 <input
                                                     type="text"
                                                     className="form-control fw-bold bg-success-subtle"
@@ -1628,13 +1874,22 @@ const FinalSettlement = () => {
                                                 />
                                             </div>
                                             <div className="col-12 col-sm-6">
-                                                <label className="form-label">Gratuity Amount</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:building-library" className="fs-6" />
+                                                    Gratuity Amount
+                                                </label>
                                                 <input
                                                     type="text"
                                                     className={`form-control fw-bold ${settlementData.gratuity.eligibility ? 'bg-success-subtle' : 'bg-warning-subtle'}`}
                                                     value={formatCurrency(settlementData.gratuity.gratuityAmount)}
                                                     readOnly
                                                 />
+                                                {!settlementData.gratuity.eligibility && (
+                                                    <small className="text-warning d-flex align-items-center mt-1">
+                                                        <Icon icon="heroicons:exclamation-triangle" className="me-1" />
+                                                        Requires {5 - Math.floor(settlementData.gratuity.completedYears)} more years for eligibility
+                                                    </small>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -1650,12 +1905,15 @@ const FinalSettlement = () => {
     const renderDeductions = () => (
         <div className="row g-3 g-md-4">
             <div className="col-12">
-                <div className="card border shadow-sm">
+                <div className="card border shadow-sm animate-fade-in">
                     <div className="card-header bg-transparent border-0 p-3">
                         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-                            <h5 className="mb-0 fs-5 fs-md-4">Deductions & Recovery</h5>
+                            <h4 className="mb-0 fs-3 d-flex align-items-center gap-2">
+                                <Icon icon="heroicons:minus-circle" className="fs-2" />
+                                Deductions & Recovery
+                            </h4>
                             <button
-                                className="btn btn-primary btn-sm btn-md-normal"
+                                className="btn btn-primary btn-sm btn-md-normal d-flex align-items-center"
                                 onClick={calculateSettlement}
                                 disabled={isCalculating}
                             >
@@ -1668,14 +1926,18 @@ const FinalSettlement = () => {
                         <div className="row g-3 g-md-4">
                             {/* Loan & Advances */}
                             <div className="col-12 col-md-6 col-lg-6">
-                                <div className="card border h-100">
-                                    <div className="card-header p-3">
-                                        <h6 className="mb-0 fs-5">Loan & Advances Recovery</h6>
+                                <div className="card border h-100 animate-card-hover">
+                                    <div className="card-header p-3 d-flex align-items-center gap-2">
+                                        <Icon icon="heroicons:credit-card" />
+                                        <h5 className="mb-0 fs-5">Loan & Advances Recovery</h5>
                                     </div>
                                     <div className="card-body p-3">
                                         <div className="row g-2 g-md-3">
                                             <div className="col-12 col-sm-6">
-                                                <label className="form-label">Loan Outstanding</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:currency-rupee" className="fs-6" />
+                                                    Loan Outstanding
+                                                </label>
                                                 <input
                                                     type="number"
                                                     className="form-control form-control-sm form-control-md"
@@ -1684,13 +1946,24 @@ const FinalSettlement = () => {
                                                 />
                                             </div>
                                             <div className="col-12 col-sm-6">
-                                                <label className="form-label">Advance Amount</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:banknotes" className="fs-6" />
+                                                    Advance Amount
+                                                </label>
                                                 <input
                                                     type="number"
                                                     className="form-control form-control-sm form-control-md"
                                                     value={settlementData.deductions.advanceAmount}
                                                     onChange={(e) => handleUpdateConfig('deductions', 'advanceAmount', parseFloat(e.target.value) || 0)}
                                                 />
+                                            </div>
+                                            <div className="col-12">
+                                                <div className="alert alert-info d-flex align-items-center">
+                                                    <Icon icon="heroicons:information-circle" className="me-2 flex-shrink-0" />
+                                                    <div>
+                                                        <strong>Total Loan & Advances:</strong> {formatCurrency(settlementData.deductions.loanOutstanding + settlementData.deductions.advanceAmount)}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1699,14 +1972,18 @@ const FinalSettlement = () => {
 
                             {/* Notice Period Recovery */}
                             <div className="col-12 col-md-6 col-lg-6">
-                                <div className="card border h-100">
-                                    <div className="card-header p-3">
-                                        <h6 className="mb-0 fs-5">Notice Period Recovery</h6>
+                                <div className="card border h-100 animate-card-hover">
+                                    <div className="card-header p-3 d-flex align-items-center gap-2">
+                                        <Icon icon="heroicons:clock" />
+                                        <h5 className="mb-0 fs-5">Notice Period Recovery</h5>
                                     </div>
                                     <div className="card-body p-3">
                                         <div className="row g-2 g-md-3">
                                             <div className="col-12 col-sm-6">
-                                                <label className="form-label">Shortfall Days</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:calendar-x-mark" className="fs-6" />
+                                                    Shortfall Days
+                                                </label>
                                                 <input
                                                     type="number"
                                                     className="form-control bg-light"
@@ -1715,7 +1992,10 @@ const FinalSettlement = () => {
                                                 />
                                             </div>
                                             <div className="col-12 col-sm-6">
-                                                <label className="form-label">Daily Rate</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:currency-rupee" className="fs-6" />
+                                                    Daily Rate
+                                                </label>
                                                 <input
                                                     type="number"
                                                     className="form-control bg-light"
@@ -1724,7 +2004,10 @@ const FinalSettlement = () => {
                                                 />
                                             </div>
                                             <div className="col-12">
-                                                <label className="form-label">Notice Period Recovery</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:banknotes" className="fs-6" />
+                                                    Notice Period Recovery
+                                                </label>
                                                 <input
                                                     type="text"
                                                     className="form-control fw-bold bg-danger-subtle"
@@ -1739,11 +2022,14 @@ const FinalSettlement = () => {
 
                             {/* Asset Return & Penalty */}
                             <div className="col-12 col-md-6 col-lg-6">
-                                <div className="card border h-100">
+                                <div className="card border h-100 animate-card-hover">
                                     <div className="card-header p-3 d-flex justify-content-between align-items-center">
-                                        <h6 className="mb-0 fs-5">Asset Return & Penalty</h6>
+                                        <div className="d-flex align-items-center gap-2">
+                                            <Icon icon="heroicons:cube" />
+                                            <h5 className="mb-0 fs-5">Asset Return & Penalty</h5>
+                                        </div>
                                         <button
-                                            className="btn btn-sm btn-outline-primary"
+                                            className="btn btn-sm btn-outline-primary d-flex align-items-center"
                                             onClick={() => setShowAssetModal(true)}
                                         >
                                             <Icon icon="heroicons:cog-6-tooth" className="me-1" />
@@ -1753,19 +2039,31 @@ const FinalSettlement = () => {
                                     <div className="card-body p-3">
                                         <div className="mb-3">
                                             <div className="d-flex justify-content-between mb-2">
-                                                <span className="small">Total Assets:</span>
+                                                <span className="small d-flex align-items-center">
+                                                    <Icon icon="heroicons:cube" className="me-1" />
+                                                    Total Assets:
+                                                </span>
                                                 <span className="fw-bold">{settlementData.assets.totalAssets}</span>
                                             </div>
                                             <div className="d-flex justify-content-between mb-2">
-                                                <span className="small text-success">Returned:</span>
+                                                <span className="small text-success d-flex align-items-center">
+                                                    <Icon icon="heroicons:check-circle" className="me-1" />
+                                                    Returned:
+                                                </span>
                                                 <span className="fw-bold text-success">{settlementData.assets.returnedAssets}</span>
                                             </div>
                                             <div className="d-flex justify-content-between mb-2">
-                                                <span className="small text-warning">Pending:</span>
+                                                <span className="small text-warning d-flex align-items-center">
+                                                    <Icon icon="heroicons:clock" className="me-1" />
+                                                    Pending:
+                                                </span>
                                                 <span className="fw-bold text-warning">{settlementData.assets.pendingAssets}</span>
                                             </div>
                                             <div className="d-flex justify-content-between">
-                                                <span className="small text-danger">Total Penalty:</span>
+                                                <span className="small text-danger d-flex align-items-center">
+                                                    <Icon icon="heroicons:banknotes" className="me-1" />
+                                                    Total Penalty:
+                                                </span>
                                                 <span className="fw-bold text-danger">{formatCurrency(settlementData.assets.totalPenalty)}</span>
                                             </div>
                                         </div>
@@ -1774,15 +2072,22 @@ const FinalSettlement = () => {
                                                 <div key={asset.id} className="list-group-item px-0 py-2">
                                                     <div className="d-flex justify-content-between align-items-center">
                                                         <div>
-                                                            <div className="fw-semibold small">{asset.assetName}</div>
+                                                            <div className="fw-semibold small d-flex align-items-center">
+                                                                <Icon icon="heroicons:cube" className="me-1" />
+                                                                {asset.assetName}
+                                                            </div>
                                                             <div className="text-muted small">{asset.assetTag}</div>
                                                         </div>
                                                         <div className="text-end">
-                                                            <span className={`badge ${asset.returnStatus === 'returned' ? 'bg-success' : 'bg-warning'} small`}>
+                                                            <span className={`badge ${asset.returnStatus === 'returned' ? 'bg-success' : 'bg-warning'} small d-flex align-items-center`}>
+                                                                <Icon icon={asset.returnStatus === 'returned' ? 'heroicons:check-circle' : 'heroicons:clock'} className="me-1" />
                                                                 {asset.returnStatus}
                                                             </span>
                                                             {asset.penalty > 0 && (
-                                                                <div className="text-danger small mt-1">₹{asset.penalty.toLocaleString()}</div>
+                                                                <div className="text-danger small mt-1 d-flex align-items-center">
+                                                                    <Icon icon="heroicons:currency-rupee" className="me-1" />
+                                                                    {asset.penalty.toLocaleString()}
+                                                                </div>
                                                             )}
                                                         </div>
                                                     </div>
@@ -1795,14 +2100,18 @@ const FinalSettlement = () => {
 
                             {/* Other Deductions */}
                             <div className="col-12 col-md-6 col-lg-6">
-                                <div className="card border h-100">
-                                    <div className="card-header p-3">
-                                        <h6 className="mb-0 fs-5">Other Deductions</h6>
+                                <div className="card border h-100 animate-card-hover">
+                                    <div className="card-header p-3 d-flex align-items-center gap-2">
+                                        <Icon icon="heroicons:minus-circle" />
+                                        <h5 className="mb-0 fs-5">Other Deductions</h5>
                                     </div>
                                     <div className="card-body p-3">
                                         <div className="row g-2 g-md-3">
                                             <div className="col-12 col-sm-6">
-                                                <label className="form-label">ID Card Deduction</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:identification" className="fs-6" />
+                                                    ID Card Deduction
+                                                </label>
                                                 <input
                                                     type="number"
                                                     className="form-control form-control-sm form-control-md"
@@ -1811,7 +2120,10 @@ const FinalSettlement = () => {
                                                 />
                                             </div>
                                             <div className="col-12 col-sm-6">
-                                                <label className="form-label">Uniform Deduction</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:shirt" className="fs-6" />
+                                                    Uniform Deduction
+                                                </label>
                                                 <input
                                                     type="number"
                                                     className="form-control form-control-sm form-control-md"
@@ -1820,7 +2132,10 @@ const FinalSettlement = () => {
                                                 />
                                             </div>
                                             <div className="col-12">
-                                                <label className="form-label">Other Deductions</label>
+                                                <label className="form-label d-flex align-items-center gap-1">
+                                                    <Icon icon="heroicons:ellipsis-horizontal-circle" className="fs-6" />
+                                                    Other Deductions
+                                                </label>
                                                 <input
                                                     type="number"
                                                     className="form-control form-control-sm form-control-md"
@@ -1835,9 +2150,10 @@ const FinalSettlement = () => {
 
                             {/* Net Settlement */}
                             <div className="col-12 col-md-6 col-lg-6">
-                                <div className="card border h-100">
-                                    <div className="card-header p-3">
-                                        <h6 className="mb-0 fs-5">Net Settlement Amount</h6>
+                                <div className="card border h-100 animate-card-hover">
+                                    <div className="card-header p-3 d-flex align-items-center gap-2">
+                                        <Icon icon="heroicons:banknotes" />
+                                        <h5 className="mb-0 fs-5">Net Settlement Amount</h5>
                                     </div>
                                     <div className="card-body p-3">
                                         <div className="text-center">
@@ -1868,8 +2184,30 @@ const FinalSettlement = () => {
                                                 </div>
                                             </div>
                                             <div className="mt-2 d-flex justify-content-between small">
-                                                <span className="text-success">Additions: {formatCurrency(kpis.totalAdditions)}</span>
-                                                <span className="text-danger">Deductions: {formatCurrency(kpis.totalDeductions)}</span>
+                                                <span className="text-success d-flex align-items-center">
+                                                    <Icon icon="heroicons:plus-circle" className="me-1" />
+                                                    Additions: {formatCurrency(kpis.totalAdditions)}
+                                                </span>
+                                                <span className="text-danger d-flex align-items-center">
+                                                    <Icon icon="heroicons:minus-circle" className="me-1" />
+                                                    Deductions: {formatCurrency(kpis.totalDeductions)}
+                                                </span>
+                                            </div>
+                                            <div className="mt-3">
+                                                <button
+                                                    className="btn btn-success d-flex align-items-center mx-auto"
+                                                    onClick={() => setShowPaymentModal(true)}
+                                                    disabled={settlementData.approval.status !== 'approved'}
+                                                >
+                                                    <Icon icon="heroicons:banknotes" className="me-2" />
+                                                    Process Payment
+                                                </button>
+                                                {settlementData.approval.status !== 'approved' && (
+                                                    <small className="text-warning d-block mt-2">
+                                                        <Icon icon="heroicons:exclamation-triangle" className="me-1" />
+                                                        Approval required before payment
+                                                    </small>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -1885,14 +2223,17 @@ const FinalSettlement = () => {
     const renderApproval = () => (
         <div className="row g-3 g-md-4">
             <div className="col-12">
-                <div className="card border shadow-sm">
+                <div className="card border shadow-sm animate-fade-in">
                     <div className="card-header bg-transparent border-0 p-3">
                         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-                            <h5 className="mb-0 fs-5 fs-md-4">Approval Workflow</h5>
+                            <h4 className="mb-0 fs-3 d-flex align-items-center gap-2">
+                                <Icon icon="heroicons:document-check" className="fs-2" />
+                                Approval Workflow
+                            </h4>
                             <div className="d-flex gap-2">
                                 {settlementData.approval.status === 'approved' && (
                                     <button
-                                        className="btn btn-success btn-sm btn-md-normal"
+                                        className="btn btn-success btn-sm btn-md-normal d-flex align-items-center"
                                         onClick={() => setShowPaymentModal(true)}
                                     >
                                         <Icon icon="heroicons:banknotes" className="me-1 me-md-2" />
@@ -1900,14 +2241,14 @@ const FinalSettlement = () => {
                                     </button>
                                 )}
                                 <button
-                                    className="btn btn-success btn-sm btn-md-normal"
+                                    className="btn btn-success btn-sm btn-md-normal d-flex align-items-center"
                                     onClick={() => handleApproval('approved')}
                                 >
                                     <Icon icon="heroicons:check-circle" className="me-1 me-md-2" />
                                     Approve
                                 </button>
                                 <button
-                                    className="btn btn-danger btn-sm btn-md-normal"
+                                    className="btn btn-danger btn-sm btn-md-normal d-flex align-items-center"
                                     onClick={() => handleApproval('rejected')}
                                 >
                                     <Icon icon="heroicons:x-circle" className="me-1 me-md-2" />
@@ -1920,9 +2261,10 @@ const FinalSettlement = () => {
                         <div className="row g-3 g-md-4">
                             {/* Approval Status */}
                             <div className="col-12 col-md-6">
-                                <div className="card border h-100">
-                                    <div className="card-header p-3">
-                                        <h6 className="mb-0 fs-5">Approval Status</h6>
+                                <div className="card border h-100 animate-card-hover">
+                                    <div className="card-header p-3 d-flex align-items-center gap-2">
+                                        <Icon icon="heroicons:flag" />
+                                        <h5 className="mb-0 fs-5">Approval Status</h5>
                                     </div>
                                     <div className="card-body p-3">
                                         <div className="text-center mb-3">
@@ -1956,34 +2298,72 @@ const FinalSettlement = () => {
 
                             {/* Approval Workflow */}
                             <div className="col-12 col-md-6">
-                                <div className="card border h-100">
-                                    <div className="card-header p-3">
-                                        <h6 className="mb-0 fs-5">Approval Workflow Steps</h6>
+                                <div className="card border h-100 animate-card-hover">
+                                    <div className="card-header p-3 d-flex align-items-center gap-2">
+                                        <Icon icon="heroicons:arrow-path" />
+                                        <h5 className="mb-0 fs-5">Approval Workflow Steps</h5>
                                     </div>
                                     <div className="card-body p-3">
                                         <div className="workflow-steps">
                                             <div className={`workflow-step ${settlementStatus === 'draft' ? 'active' : 'completed'}`}>
                                                 <div className="step-number">1</div>
                                                 <div className="step-content">
-                                                    <h6 className="fw-bold mb-1 fs-6">HR Verification</h6>
-                                                    <span className="badge bg-success-subtle text-success">Completed</span>
+                                                    <h6 className="fw-bold mb-1 fs-6 d-flex align-items-center">
+                                                        <Icon icon="heroicons:user-group" className="me-2" />
+                                                        HR Verification
+                                                    </h6>
+                                                    <span className="badge bg-success-subtle text-success d-flex align-items-center">
+                                                        <Icon icon="heroicons:check-circle" className="me-1" />
+                                                        Completed
+                                                    </span>
                                                 </div>
                                             </div>
                                             <div className={`workflow-step ${settlementStatus === 'pending' ? 'active' : settlementStatus === 'draft' ? 'pending' : 'completed'}`}>
                                                 <div className="step-number">2</div>
                                                 <div className="step-content">
-                                                    <h6 className="fw-bold mb-1 fs-6">Finance Calculation</h6>
-                                                    {settlementStatus === 'draft' && <span className="badge bg-secondary-subtle text-secondary">Pending</span>}
-                                                    {settlementStatus === 'pending' && <span className="badge bg-warning-subtle text-warning">In Progress</span>}
-                                                    {settlementStatus === 'approved' && <span className="badge bg-success-subtle text-success">Completed</span>}
+                                                    <h6 className="fw-bold mb-1 fs-6 d-flex align-items-center">
+                                                        <Icon icon="heroicons:calculator" className="me-2" />
+                                                        Finance Calculation
+                                                    </h6>
+                                                    {settlementStatus === 'draft' && (
+                                                        <span className="badge bg-secondary-subtle text-secondary d-flex align-items-center">
+                                                            <Icon icon="heroicons:clock" className="me-1" />
+                                                            Pending
+                                                        </span>
+                                                    )}
+                                                    {settlementStatus === 'pending' && (
+                                                        <span className="badge bg-warning-subtle text-warning d-flex align-items-center">
+                                                            <Icon icon="heroicons:arrow-path" className="me-1" />
+                                                            In Progress
+                                                        </span>
+                                                    )}
+                                                    {settlementStatus === 'approved' && (
+                                                        <span className="badge bg-success-subtle text-success d-flex align-items-center">
+                                                            <Icon icon="heroicons:check-circle" className="me-1" />
+                                                            Completed
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className={`workflow-step ${settlementStatus === 'pending' ? 'active' : settlementStatus === 'approved' ? 'completed' : 'pending'}`}>
                                                 <div className="step-number">3</div>
                                                 <div className="step-content">
-                                                    <h6 className="fw-bold mb-1 fs-6">Management Approval</h6>
-                                                    {settlementStatus === 'pending' && <span className="badge bg-warning-subtle text-warning">Awaiting</span>}
-                                                    {settlementStatus === 'approved' && <span className="badge bg-success-subtle text-success">Approved</span>}
+                                                    <h6 className="fw-bold mb-1 fs-6 d-flex align-items-center">
+                                                        <Icon icon="heroicons:shield-check" className="me-2" />
+                                                        Management Approval
+                                                    </h6>
+                                                    {settlementStatus === 'pending' && (
+                                                        <span className="badge bg-warning-subtle text-warning d-flex align-items-center">
+                                                            <Icon icon="heroicons:clock" className="me-1" />
+                                                            Awaiting
+                                                        </span>
+                                                    )}
+                                                    {settlementStatus === 'approved' && (
+                                                        <span className="badge bg-success-subtle text-success d-flex align-items-center">
+                                                            <Icon icon="heroicons:check-circle" className="me-1" />
+                                                            Approved
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -1993,15 +2373,16 @@ const FinalSettlement = () => {
 
                             {/* Approval Actions */}
                             <div className="col-12">
-                                <div className="card border">
-                                    <div className="card-header p-3">
-                                        <h6 className="mb-0 fs-5">Approval Actions</h6>
+                                <div className="card border animate-card-hover">
+                                    <div className="card-header p-3 d-flex align-items-center gap-2">
+                                        <Icon icon="heroicons:cog-6-tooth" />
+                                        <h5 className="mb-0 fs-5">Approval Actions</h5>
                                     </div>
                                     <div className="card-body p-3">
                                         <div className="row g-2 g-md-3">
                                             <div className="col-6 col-md-3">
                                                 <button
-                                                    className="btn btn-success w-100 py-2"
+                                                    className="btn btn-success w-100 py-2 d-flex align-items-center justify-content-center"
                                                     onClick={() => handleApproval('approved')}
                                                 >
                                                     <Icon icon="heroicons:check-circle" className="me-1 me-md-2" />
@@ -2010,7 +2391,7 @@ const FinalSettlement = () => {
                                             </div>
                                             <div className="col-6 col-md-3">
                                                 <button
-                                                    className="btn btn-warning w-100 py-2"
+                                                    className="btn btn-warning w-100 py-2 d-flex align-items-center justify-content-center"
                                                     onClick={() => handleApproval('pending')}
                                                 >
                                                     <Icon icon="heroicons:clock" className="me-1 me-md-2" />
@@ -2019,7 +2400,7 @@ const FinalSettlement = () => {
                                             </div>
                                             <div className="col-6 col-md-3">
                                                 <button
-                                                    className="btn btn-danger w-100 py-2"
+                                                    className="btn btn-danger w-100 py-2 d-flex align-items-center justify-content-center"
                                                     onClick={() => handleApproval('rejected')}
                                                 >
                                                     <Icon icon="heroicons:x-circle" className="me-1 me-md-2" />
@@ -2028,7 +2409,7 @@ const FinalSettlement = () => {
                                             </div>
                                             <div className="col-6 col-md-3">
                                                 <button
-                                                    className="btn btn-outline-secondary w-100 py-2"
+                                                    className="btn btn-outline-secondary w-100 py-2 d-flex align-items-center justify-content-center"
                                                     onClick={() => handleApproval('draft')}
                                                 >
                                                     <Icon icon="heroicons:pencil" className="me-1 me-md-2" />
@@ -2047,146 +2428,290 @@ const FinalSettlement = () => {
     );
 
     const renderDocuments = () => (
-        <div className="row g-3 g-md-4">
-            <div className="col-12">
-                <div className="card border shadow-sm">
-                    <div className="card-header bg-transparent border-0 p-3">
-                        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-                            <h5 className="mb-0 fs-5 fs-md-4">Document Management</h5>
-                            <button
-                                className="btn btn-primary btn-sm btn-md-normal"
-                                onClick={() => handleGenerateForm('All')}
-                            >
-                                <Icon icon="heroicons:document-arrow-down" className="me-1 me-md-2" />
-                                Generate All
-                            </button>
-                        </div>
-                    </div>
-                    <div className="card-body p-3 p-md-4">
-                        <div className="row g-3 g-md-4">
-                            {/* Document Checklist */}
-                            <div className="col-12 col-md-6">
-                                <div className="card border h-100">
-                                    <div className="card-header p-3">
-                                        <h6 className="mb-0 fs-5">Document Checklist</h6>
-                                    </div>
-                                    <div className="card-body p-3">
-                                        <div className="document-checklist">
-                                            <div className="document-item mb-3">
-                                                <div className="form-check">
-                                                    <input
-                                                        className="form-check-input"
-                                                        type="checkbox"
-                                                        checked={settlementData.documents.form16Issued}
-                                                        onChange={() => handleCheckboxChange('documents', 'form16Issued')}
-                                                        id="form16"
-                                                    />
-                                                    <label className="form-check-label fw-semibold" htmlFor="form16">
-                                                        Form 16 Issued
-                                                    </label>
-                                                    <p className="text-muted small mb-0">Income Tax Certificate</p>
-                                                </div>
-                                            </div>
-                                            <div className="document-item mb-3">
-                                                <div className="form-check">
-                                                    <input
-                                                        className="form-check-input"
-                                                        type="checkbox"
-                                                        checked={settlementData.documents.pfFormsIssued}
-                                                        onChange={() => handleCheckboxChange('documents', 'pfFormsIssued')}
-                                                        id="pfForms"
-                                                    />
-                                                    <label className="form-check-label fw-semibold" htmlFor="pfForms">
-                                                        PF Withdrawal Forms
-                                                    </label>
-                                                    <p className="text-muted small mb-0">Form 19, 10C</p>
-                                                </div>
-                                            </div>
-                                            <div className="document-item mb-3">
-                                                <div className="form-check">
-                                                    <input
-                                                        className="form-check-input"
-                                                        type="checkbox"
-                                                        checked={settlementData.documents.experienceLetter}
-                                                        onChange={() => handleCheckboxChange('documents', 'experienceLetter')}
-                                                        id="expLetter"
-                                                    />
-                                                    <label className="form-check-label fw-semibold" htmlFor="expLetter">
-                                                        Experience Letter
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Document Actions */}
-                            <div className="col-12 col-md-6">
-                                <div className="card border h-100">
-                                    <div className="card-header p-3">
-                                        <h6 className="mb-0 fs-5">Document Generation</h6>
-                                    </div>
-                                    <div className="card-body p-3">
-                                        <div className="row g-2 g-md-3">
-                                            <div className="col-6 col-md-6">
-                                                <button
-                                                    className="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3"
-                                                    onClick={() => handleGenerateForm('Form16')}
-                                                >
-                                                    <Icon icon="heroicons:document-text" className="fs-2 mb-2" />
-                                                    <span className="fw-bold fs-6">Form 16</span>
-                                                    <span className="small text-muted">Tax Certificate</span>
-                                                </button>
-                                            </div>
-                                            <div className="col-6 col-md-6">
-                                                <button
-                                                    className="btn btn-outline-success w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3"
-                                                    onClick={() => handleGenerateForm('PF')}
-                                                >
-                                                    <Icon icon="heroicons:building-library" className="fs-2 mb-2" />
-                                                    <span className="fw-bold fs-6">PF Forms</span>
-                                                    <span className="small text-muted">Form 19, 10C</span>
-                                                </button>
-                                            </div>
-                                            <div className="col-6 col-md-6">
-                                                <button
-                                                    className="btn btn-outline-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3"
-                                                    onClick={() => handleGenerateForm('Experience')}
-                                                >
-                                                    <Icon icon="heroicons:academic-cap" className="fs-2 mb-2" />
-                                                    <span className="fw-bold fs-6">Experience Letter</span>
-                                                </button>
-                                            </div>
-                                            <div className="col-6 col-md-6">
-                                                <button
-                                                    className="btn btn-outline-info w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3"
-                                                    onClick={() => handleGenerateForm('Relieving')}
-                                                >
-                                                    <Icon icon="heroicons:document" className="fs-2 mb-2" />
-                                                    <span className="fw-bold fs-6">Relieving Letter</span>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      <div className="row g-3 g-md-4">
+  <div className="col-12">
+    <div className="card border shadow-sm animate-fade-in">
+      <div className="card-header bg-transparent border-0 p-3">
+        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+          <h4 className="mb-0 fs-3 d-flex align-items-center gap-2">
+            <Icon icon="heroicons:document-text" className="fs-2" />
+            Document Management
+          </h4>
+          <button
+            className="btn btn-primary btn-sm btn-md-normal d-flex align-items-center"
+            onClick={() => {
+              setSelectedForm('All');
+              setShowFormModal(true);
+            }}
+          >
+            <Icon icon="heroicons:document-arrow-down" className="me-1 me-md-2" />
+            Generate All
+          </button>
         </div>
+      </div>
+      <div className="card-body p-3 p-md-4">
+        <div className="row g-3 g-md-4">
+          {/* Document Checklist */}
+          <div className="col-12 col-md-6">
+            <div className="card border h-100 animate-card-hover">
+              <div className="card-header p-3 d-flex align-items-center gap-2">
+                <Icon icon="heroicons:clipboard-document-check" />
+                <h5 className="mb-0 fs-5">Document Checklist</h5>
+              </div>
+              <div className="card-body p-3">
+                <div className="document-checklist">
+                  {/* Form 16 */}
+                  <div className="document-item mb-3 p-2 rounded border bg-light">
+                    <div className="d-flex align-items-start">
+                      <div className="me-3 mt-1">
+                        <input
+                          type="checkbox"
+                          checked={settlementData.documents.form16Issued}
+                          onChange={() => handleCheckboxChange('documents', 'form16Issued')}
+                          id="form16"
+                          className="form-check-input"
+                          style={{
+                            width: '18px',
+                            height: '18px',
+                            cursor: 'pointer'
+                          }}
+                        />
+                      </div>
+                      <div className="flex-grow-1">
+                        <div className="d-flex align-items-center mb-1">
+                          <Icon icon="heroicons:document-text" className="me-2 text-primary" />
+                          <label 
+                            htmlFor="form16" 
+                            className="fw-semibold mb-0"
+                            style={{ cursor: 'pointer' }}
+                          >
+                            Form 16 Issued
+                          </label>
+                        </div>
+                        <p className="text-muted small mb-1 ms-4">Income Tax Certificate</p>
+                        {settlementData.forms.form16.generated && (
+                          <small className="text-success d-flex align-items-center ms-4">
+                            <Icon icon="heroicons:check-circle" className="me-1" />
+                            Generated on {settlementData.forms.form16.generatedDate}
+                          </small>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* PF Forms */}
+                  <div className="document-item mb-3 p-2 rounded border bg-light">
+                    <div className="d-flex align-items-start">
+                      <div className="me-3 mt-1">
+                        <input
+                          type="checkbox"
+                          checked={settlementData.documents.pfFormsIssued}
+                          onChange={() => handleCheckboxChange('documents', 'pfFormsIssued')}
+                          id="pfForms"
+                          className="form-check-input"
+                          style={{
+                            width: '18px',
+                            height: '18px',
+                            cursor: 'pointer'
+                          }}
+                        />
+                      </div>
+                      <div className="flex-grow-1">
+                        <div className="d-flex align-items-center mb-1">
+                          <Icon icon="heroicons:building-library" className="me-2 text-primary" />
+                          <label 
+                            htmlFor="pfForms" 
+                            className="fw-semibold mb-0"
+                            style={{ cursor: 'pointer' }}
+                          >
+                            PF Withdrawal Forms
+                          </label>
+                        </div>
+                        <p className="text-muted small mb-1 ms-4">Form 19, 10C</p>
+                        {settlementData.forms.form19.generated && settlementData.forms.form10C.generated && (
+                          <small className="text-success d-flex align-items-center ms-4">
+                            <Icon icon="heroicons:check-circle" className="me-1" />
+                            Both forms generated
+                          </small>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Experience Letter */}
+                  <div className="document-item mb-3 p-2 rounded border bg-light">
+                    <div className="d-flex align-items-start">
+                      <div className="me-3 mt-1">
+                        <input
+                          type="checkbox"
+                          checked={settlementData.documents.experienceLetter}
+                          onChange={() => handleCheckboxChange('documents', 'experienceLetter')}
+                          id="expLetter"
+                          className="form-check-input"
+                          style={{
+                            width: '18px',
+                            height: '18px',
+                            cursor: 'pointer'
+                          }}
+                        />
+                      </div>
+                      <div className="flex-grow-1">
+                        <div className="d-flex align-items-center mb-1">
+                          <Icon icon="heroicons:academic-cap" className="me-2 text-primary" />
+                          <label 
+                            htmlFor="expLetter" 
+                            className="fw-semibold mb-0"
+                            style={{ cursor: 'pointer' }}
+                          >
+                            Experience Letter
+                          </label>
+                        </div>
+                        {settlementData.forms.experienceLetter.generated && (
+                          <small className="text-success d-flex align-items-center ms-4">
+                            <Icon icon="heroicons:check-circle" className="me-1" />
+                            Generated on {settlementData.forms.experienceLetter.generatedDate}
+                          </small>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Relieving Letter */}
+                  <div className="document-item mb-3 p-2 rounded border bg-light">
+                    <div className="d-flex align-items-start">
+                      <div className="me-3 mt-1">
+                        <input
+                          type="checkbox"
+                          checked={settlementData.documents.relievingLetter}
+                          onChange={() => handleCheckboxChange('documents', 'relievingLetter')}
+                          id="relLetter"
+                          className="form-check-input"
+                          style={{
+                            width: '18px',
+                            height: '18px',
+                            cursor: 'pointer'
+                          }}
+                        />
+                      </div>
+                      <div className="flex-grow-1">
+                        <div className="d-flex align-items-center mb-1">
+                          <Icon icon="heroicons:document" className="me-2 text-primary" />
+                          <label 
+                            htmlFor="relLetter" 
+                            className="fw-semibold mb-0"
+                            style={{ cursor: 'pointer' }}
+                          >
+                            Relieving Letter
+                          </label>
+                        </div>
+                        {settlementData.forms.relievingLetter.generated && (
+                          <small className="text-success d-flex align-items-center ms-4">
+                            <Icon icon="heroicons:check-circle" className="me-1" />
+                            Generated on {settlementData.forms.relievingLetter.generatedDate}
+                          </small>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Document Actions - Keep this part same */}
+          <div className="col-12 col-md-6">
+            <div className="card border h-100 animate-card-hover">
+              <div className="card-header p-3 d-flex align-items-center gap-2">
+                <Icon icon="heroicons:document-plus" />
+                <h5 className="mb-0 fs-5">Document Generation</h5>
+              </div>
+              <div className="card-body p-3">
+                <div className="row g-2 g-md-3">
+                  <div className="col-6 col-md-6">
+                    <button
+                      className="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3 animate-hover"
+                      onClick={() => {
+                        setSelectedForm('Form16');
+                        setShowFormModal(true);
+                      }}
+                    >
+                      <Icon icon="heroicons:document-text" className="fs-2 mb-2" />
+                      <span className="fw-bold fs-6">Form 16</span>
+                      <span className="small text-muted">Tax Certificate</span>
+                      {settlementData.forms.form16.generated && (
+                        <span className="badge bg-success mt-1">Generated</span>
+                      )}
+                    </button>
+                  </div>
+                  <div className="col-6 col-md-6">
+                    <button
+                      className="btn btn-outline-success w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3 animate-hover"
+                      onClick={() => {
+                        setSelectedForm('PF');
+                        setShowFormModal(true);
+                      }}
+                    >
+                      <Icon icon="heroicons:building-library" className="fs-2 mb-2" />
+                      <span className="fw-bold fs-6">PF Forms</span>
+                      <span className="small text-muted">Form 19, 10C</span>
+                      {settlementData.forms.form19.generated && settlementData.forms.form10C.generated && (
+                        <span className="badge bg-success mt-1">Generated</span>
+                      )}
+                    </button>
+                  </div>
+                  <div className="col-6 col-md-6">
+                    <button
+                      className="btn btn-outline-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3 animate-hover"
+                      onClick={() => {
+                        setSelectedForm('Experience');
+                        setShowFormModal(true);
+                      }}
+                    >
+                      <Icon icon="heroicons:academic-cap" className="fs-2 mb-2" />
+                      <span className="fw-bold fs-6">Experience Letter</span>
+                      {settlementData.forms.experienceLetter.generated && (
+                        <span className="badge bg-success mt-1">Generated</span>
+                      )}
+                    </button>
+                  </div>
+                  <div className="col-6 col-md-6">
+                    <button
+                      className="btn btn-outline-info w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3 animate-hover"
+                      onClick={() => {
+                        setSelectedForm('Relieving');
+                        setShowFormModal(true);
+                      }}
+                    >
+                      <Icon icon="heroicons:document" className="fs-2 mb-2" />
+                      <span className="fw-bold fs-6">Relieving Letter</span>
+                      {settlementData.forms.relievingLetter.generated && (
+                        <span className="badge bg-success mt-1">Generated</span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
     );
 
     const renderEmployees = () => (
-        <div className="card border shadow-sm">
+        <div className="card border shadow-sm animate-fade-in">
             <div className="card-header bg-transparent border-0 p-3">
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-                    <h5 className="mb-0 fs-5 fs-md-4">Employee Settlement Status</h5>
+                    <h4 className="mb-0 fs-3 d-flex align-items-center gap-2">
+                        <Icon icon="heroicons:users" className="fs-2" />
+                        Employee Settlement Status
+                    </h4>
                     <div className="d-flex gap-2 w-100 w-md-auto">
                         <button
                             onClick={handleExportReport}
-                            className="btn btn-primary btn-sm btn-md-normal flex-fill flex-md-none"
+                            className="btn btn-primary btn-sm btn-md-normal flex-fill flex-md-none d-flex align-items-center justify-content-center"
                         >
                             <Icon icon="heroicons:document-arrow-down" className="me-1 me-md-2" />
                             <span className="d-none d-md-inline">Export</span>
@@ -2194,7 +2719,7 @@ const FinalSettlement = () => {
                         </button>
                         <button
                             onClick={handleRefreshData}
-                            className="btn btn-outline-primary btn-sm btn-md-normal flex-fill flex-md-none"
+                            className="btn btn-outline-primary btn-sm btn-md-normal flex-fill flex-md-none d-flex align-items-center justify-content-center"
                         >
                             <Icon icon="heroicons:arrow-path" className="me-1 me-md-2" />
                             <span className="d-none d-md-inline">Refresh</span>
@@ -2291,9 +2816,20 @@ const FinalSettlement = () => {
                                             <div className="d-flex gap-2">
                                                 <button
                                                     onClick={() => handleViewDetails(employee)}
-                                                    className="btn btn-sm btn-outline-primary"
+                                                    className="btn btn-sm btn-outline-primary d-flex align-items-center"
                                                 >
+                                                    <Icon icon="heroicons:eye" className="me-1" />
                                                     View
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedItem(employee);
+                                                        alert(`Processing settlement for ${employee.name}`);
+                                                    }}
+                                                    className="btn btn-sm btn-outline-warning d-flex align-items-center"
+                                                >
+                                                    <Icon icon="heroicons:cog-6-tooth" className="me-1" />
+                                                    Process
                                                 </button>
                                             </div>
                                         </td>
@@ -2308,45 +2844,45 @@ const FinalSettlement = () => {
                 <div className="p-3 border-top">
                     <div className="row g-2 g-md-3">
                         <div className="col-6 col-md-3">
-                            <div className="card border h-100">
+                            <div className="card border h-100 animate-card-hover">
                                 <div className="card-body p-3 text-center">
                                     <div className="text-primary mb-2">
-                                        <Icon icon="heroicons:users" className="fs-4 fs-md-3" />
+                                        <Icon icon="heroicons:users" className="fs-4" />
                                     </div>
-                                    <h4 className="fw-bold mb-1">{employees.length}</h4>
+                                    <h4 className="fw-bold mb-1 fs-5">{employees.length}</h4>
                                     <p className="text-muted mb-0 small">Total Employees</p>
                                 </div>
                             </div>
                         </div>
                         <div className="col-6 col-md-3">
-                            <div className="card border h-100">
+                            <div className="card border h-100 animate-card-hover">
                                 <div className="card-body p-3 text-center">
                                     <div className="text-warning mb-2">
-                                        <Icon icon="heroicons:clock" className="fs-4 fs-md-3" />
+                                        <Icon icon="heroicons:clock" className="fs-4" />
                                     </div>
-                                    <h4 className="fw-bold mb-1">{employees.filter(e => e.status === 'pending').length}</h4>
+                                    <h4 className="fw-bold mb-1 fs-5">{employees.filter(e => e.status === 'pending').length}</h4>
                                     <p className="text-muted mb-0 small">Pending</p>
                                 </div>
                             </div>
                         </div>
                         <div className="col-6 col-md-3">
-                            <div className="card border h-100">
+                            <div className="card border h-100 animate-card-hover">
                                 <div className="card-body p-3 text-center">
                                     <div className="text-success mb-2">
-                                        <Icon icon="heroicons:check-circle" className="fs-4 fs-md-3" />
+                                        <Icon icon="heroicons:check-circle" className="fs-4" />
                                     </div>
-                                    <h4 className="fw-bold mb-1">{employees.filter(e => e.status === 'completed').length}</h4>
+                                    <h4 className="fw-bold mb-1 fs-5">{employees.filter(e => e.status === 'completed').length}</h4>
                                     <p className="text-muted mb-0 small">Completed</p>
                                 </div>
                             </div>
                         </div>
                         <div className="col-6 col-md-3">
-                            <div className="card border h-100">
+                            <div className="card border h-100 animate-card-hover">
                                 <div className="card-body p-3 text-center">
                                     <div className="text-info mb-2">
-                                        <Icon icon="heroicons:banknotes" className="fs-4 fs-md-3" />
+                                        <Icon icon="heroicons:banknotes" className="fs-4" />
                                     </div>
-                                    <h4 className="fw-bold mb-1">{formatCurrency(employees.reduce((sum, emp) => sum + emp.settlementAmount, 0))}</h4>
+                                    <h4 className="fw-bold mb-1 fs-5">{formatCurrency(employees.reduce((sum, emp) => sum + emp.settlementAmount, 0))}</h4>
                                     <p className="text-muted mb-0 small">Total Amount</p>
                                 </div>
                             </div>
@@ -2364,8 +2900,9 @@ const FinalSettlement = () => {
                             <button
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                 disabled={currentPage === 1}
-                                className="btn btn-sm btn-outline-secondary"
+                                className="btn btn-sm btn-outline-secondary d-flex align-items-center"
                             >
+                                <Icon icon="heroicons:chevron-left" className="me-1" />
                                 Prev
                             </button>
                             {[...Array(Math.min(totalPages, 5))].map((_, i) => {
@@ -2395,9 +2932,10 @@ const FinalSettlement = () => {
                             <button
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                 disabled={currentPage === totalPages}
-                                className="btn btn-sm btn-outline-secondary"
+                                className="btn btn-sm btn-outline-secondary d-flex align-items-center"
                             >
                                 Next
+                                <Icon icon="heroicons:chevron-right" className="ms-1" />
                             </button>
                         </div>
                     </div>
@@ -2407,21 +2945,24 @@ const FinalSettlement = () => {
     );
 
     const renderPendingSettlements = () => (
-        <div className="card border shadow-sm">
+        <div className="card border shadow-sm animate-fade-in">
             <div className="card-header bg-transparent border-0 p-3">
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-                    <h5 className="mb-0 fs-5 fs-md-4">Pending Settlements</h5>
+                    <h4 className="mb-0 fs-3 d-flex align-items-center gap-2">
+                        <Icon icon="heroicons:clock" className="fs-2" />
+                        Pending Settlements
+                    </h4>
                     <div className="d-flex gap-2 w-100 w-md-auto">
                         <button
                             onClick={handleExportReport}
-                            className="btn btn-primary btn-sm btn-md-normal flex-fill flex-md-none"
+                            className="btn btn-primary btn-sm btn-md-normal flex-fill flex-md-none d-flex align-items-center justify-content-center"
                         >
                             <Icon icon="heroicons:document-arrow-down" className="me-1 me-md-2" />
                             Export
                         </button>
                         <button
                             onClick={handleRefreshData}
-                            className="btn btn-outline-primary btn-sm btn-md-normal flex-fill flex-md-none"
+                            className="btn btn-outline-primary btn-sm btn-md-normal flex-fill flex-md-none d-flex align-items-center justify-content-center"
                         >
                             <Icon icon="heroicons:arrow-path" className="me-1 me-md-2" />
                             Refresh
@@ -2514,9 +3055,20 @@ const FinalSettlement = () => {
                                             <div className="d-flex gap-2">
                                                 <button
                                                     onClick={() => handleViewDetails(settlement)}
-                                                    className="btn btn-sm btn-outline-primary"
+                                                    className="btn btn-sm btn-outline-primary d-flex align-items-center"
                                                 >
+                                                    <Icon icon="heroicons:eye" className="me-1" />
                                                     View
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedItem(settlement);
+                                                        handleApproval('approved');
+                                                    }}
+                                                    className="btn btn-sm btn-outline-success d-flex align-items-center"
+                                                >
+                                                    <Icon icon="heroicons:check-circle" className="me-1" />
+                                                    Approve
                                                 </button>
                                             </div>
                                         </td>
@@ -2531,7 +3083,7 @@ const FinalSettlement = () => {
                 <div className="p-3 border-top">
                     <div className="row g-2 g-md-3">
                         <div className="col-6 col-md-4">
-                            <div className="card border border-warning h-100">
+                            <div className="card border border-warning h-100 animate-card-hover">
                                 <div className="card-body p-3">
                                     <div className="d-flex justify-content-between align-items-center">
                                         <div>
@@ -2546,7 +3098,7 @@ const FinalSettlement = () => {
                             </div>
                         </div>
                         <div className="col-6 col-md-4">
-                            <div className="card border border-info h-100">
+                            <div className="card border border-info h-100 animate-card-hover">
                                 <div className="card-body p-3">
                                     <div className="d-flex justify-content-between align-items-center">
                                         <div>
@@ -2559,7 +3111,7 @@ const FinalSettlement = () => {
                             </div>
                         </div>
                         <div className="col-12 col-md-4">
-                            <div className="card border border-danger h-100">
+                            <div className="card border border-danger h-100 animate-card-hover">
                                 <div className="card-body p-3">
                                     <div className="d-flex justify-content-between align-items-center">
                                         <div>
@@ -2586,8 +3138,9 @@ const FinalSettlement = () => {
                             <button
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                 disabled={currentPage === 1}
-                                className="btn btn-sm btn-outline-secondary"
+                                className="btn btn-sm btn-outline-secondary d-flex align-items-center"
                             >
+                                <Icon icon="heroicons:chevron-left" className="me-1" />
                                 Prev
                             </button>
                             {[...Array(Math.min(totalPages, 5))].map((_, i) => {
@@ -2617,9 +3170,10 @@ const FinalSettlement = () => {
                             <button
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                 disabled={currentPage === totalPages}
-                                className="btn btn-sm btn-outline-secondary"
+                                className="btn btn-sm btn-outline-secondary d-flex align-items-center"
                             >
                                 Next
+                                <Icon icon="heroicons:chevron-right" className="ms-1" />
                             </button>
                         </div>
                     </div>
@@ -2629,21 +3183,24 @@ const FinalSettlement = () => {
     );
 
     const renderCompletedSettlements = () => (
-        <div className="card border shadow-sm">
+        <div className="card border shadow-sm animate-fade-in">
             <div className="card-header bg-transparent border-0 p-3">
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-                    <h5 className="mb-0 fs-5 fs-md-4">Completed Settlements</h5>
+                    <h4 className="mb-0 fs-3 d-flex align-items-center gap-2">
+                        <Icon icon="heroicons:check-circle" className="fs-2" />
+                        Completed Settlements
+                    </h4>
                     <div className="d-flex gap-2 w-100 w-md-auto">
                         <button
                             onClick={handleExportReport}
-                            className="btn btn-primary btn-sm btn-md-normal flex-fill flex-md-none"
+                            className="btn btn-primary btn-sm btn-md-normal flex-fill flex-md-none d-flex align-items-center justify-content-center"
                         >
                             <Icon icon="heroicons:document-arrow-down" className="me-1 me-md-2" />
                             Export
                         </button>
                         <button
                             onClick={handleRefreshData}
-                            className="btn btn-outline-primary btn-sm btn-md-normal flex-fill flex-md-none"
+                            className="btn btn-outline-primary btn-sm btn-md-normal flex-fill flex-md-none d-flex align-items-center justify-content-center"
                         >
                             <Icon icon="heroicons:arrow-path" className="me-1 me-md-2" />
                             Refresh
@@ -2730,9 +3287,36 @@ const FinalSettlement = () => {
                                             <div className="d-flex gap-2">
                                                 <button
                                                     onClick={() => handleViewDetails(settlement)}
-                                                    className="btn btn-sm btn-outline-primary"
+                                                    className="btn btn-sm btn-outline-primary d-flex align-items-center"
                                                 >
+                                                    <Icon icon="heroicons:eye" className="me-1" />
                                                     View
+                                                </button>
+                                                <button
+                                                    className="btn btn-sm btn-outline-success d-flex align-items-center"
+                                                    onClick={() => {
+                                                        // Generate receipt
+                                                        const receipt = `Payment Receipt\n\n` +
+                                                                       `Employee: ${settlement.employeeName}\n` +
+                                                                       `Employee ID: ${settlement.employeeId}\n` +
+                                                                       `Amount: ${formatCurrency(settlement.netAmount)}\n` +
+                                                                       `Payment Date: ${settlement.paymentDate}\n` +
+                                                                       `Payment Method: ${settlement.paymentMethod}\n\n` +
+                                                                       `Thank you for your service.`;
+                                                        
+                                                        const blob = new Blob([receipt], { type: 'text/plain' });
+                                                        const url = window.URL.createObjectURL(blob);
+                                                        const a = document.createElement('a');
+                                                        a.href = url;
+                                                        a.download = `Receipt_${settlement.employeeName}_${settlement.paymentDate}.txt`;
+                                                        document.body.appendChild(a);
+                                                        a.click();
+                                                        document.body.removeChild(a);
+                                                        window.URL.revokeObjectURL(url);
+                                                    }}
+                                                >
+                                                    <Icon icon="heroicons:document-arrow-down" className="me-1" />
+                                                    Receipt
                                                 </button>
                                             </div>
                                         </td>
@@ -2747,7 +3331,7 @@ const FinalSettlement = () => {
                 <div className="p-3 border-top">
                     <div className="row g-2 g-md-3">
                         <div className="col-6 col-md-3">
-                            <div className="card border border-success h-100">
+                            <div className="card border border-success h-100 animate-card-hover">
                                 <div className="card-body p-3">
                                     <div className="d-flex justify-content-between align-items-center">
                                         <div>
@@ -2762,7 +3346,7 @@ const FinalSettlement = () => {
                             </div>
                         </div>
                         <div className="col-6 col-md-3">
-                            <div className="card border border-primary h-100">
+                            <div className="card border border-primary h-100 animate-card-hover">
                                 <div className="card-body p-3">
                                     <div className="d-flex justify-content-between align-items-center">
                                         <div>
@@ -2777,7 +3361,7 @@ const FinalSettlement = () => {
                             </div>
                         </div>
                         <div className="col-6 col-md-3">
-                            <div className="card border border-info h-100">
+                            <div className="card border border-info h-100 animate-card-hover">
                                 <div className="card-body p-3">
                                     <div className="d-flex justify-content-between align-items-center">
                                         <div>
@@ -2790,7 +3374,7 @@ const FinalSettlement = () => {
                             </div>
                         </div>
                         <div className="col-6 col-md-3">
-                            <div className="card border border-warning h-100">
+                            <div className="card border border-warning h-100 animate-card-hover">
                                 <div className="card-body p-3">
                                     <div className="d-flex justify-content-between align-items-center">
                                         <div>
@@ -2815,8 +3399,9 @@ const FinalSettlement = () => {
                             <button
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                 disabled={currentPage === 1}
-                                className="btn btn-sm btn-outline-secondary"
+                                className="btn btn-sm btn-outline-secondary d-flex align-items-center"
                             >
+                                <Icon icon="heroicons:chevron-left" className="me-1" />
                                 Prev
                             </button>
                             {[...Array(Math.min(totalPages, 5))].map((_, i) => {
@@ -2846,9 +3431,10 @@ const FinalSettlement = () => {
                             <button
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                 disabled={currentPage === totalPages}
-                                className="btn btn-sm btn-outline-secondary"
+                                className="btn btn-sm btn-outline-secondary d-flex align-items-center"
                             >
                                 Next
+                                <Icon icon="heroicons:chevron-right" className="ms-1" />
                             </button>
                         </div>
                     </div>
@@ -2858,21 +3444,24 @@ const FinalSettlement = () => {
     );
 
     const renderFormsSection = () => (
-        <div className="card border shadow-sm">
+        <div className="card border shadow-sm animate-fade-in">
             <div className="card-header bg-transparent border-0 p-3">
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-                    <h5 className="mb-0 fs-5 fs-md-4">Settlement Forms Management</h5>
+                    <h4 className="mb-0 fs-3 d-flex align-items-center gap-2">
+                        <Icon icon="heroicons:clipboard-document" className="fs-2" />
+                        Settlement Forms Management
+                    </h4>
                     <div className="d-flex gap-2 w-100 w-md-auto">
                         <button
                             onClick={handleExportReport}
-                            className="btn btn-primary btn-sm btn-md-normal flex-fill flex-md-none"
+                            className="btn btn-primary btn-sm btn-md-normal flex-fill flex-md-none d-flex align-items-center justify-content-center"
                         >
                             <Icon icon="heroicons:document-arrow-down" className="me-1 me-md-2" />
                             Export
                         </button>
                         <button
                             onClick={handleRefreshData}
-                            className="btn btn-outline-primary btn-sm btn-md-normal flex-fill flex-md-none"
+                            className="btn btn-outline-primary btn-sm btn-md-normal flex-fill flex-md-none d-flex align-items-center justify-content-center"
                         >
                             <Icon icon="heroicons:arrow-path" className="me-1 me-md-2" />
                             Refresh
@@ -2940,7 +3529,10 @@ const FinalSettlement = () => {
                                 {paginatedData.map((form) => (
                                     <tr key={form.id} className="border-bottom">
                                         <td className="px-3 py-3">
-                                            <div className="fw-medium text-dark">{form.formName}</div>
+                                            <div className="fw-medium text-dark d-flex align-items-center">
+                                                <Icon icon="heroicons:document-text" className="me-2" />
+                                                {form.formName}
+                                            </div>
                                             {form.financialYear && (
                                                 <div className="small text-muted">{form.financialYear}</div>
                                             )}
@@ -2953,10 +3545,29 @@ const FinalSettlement = () => {
                                             <div className="d-flex gap-2">
                                                 <button
                                                     onClick={() => handleViewDetails(form)}
-                                                    className="btn btn-sm btn-outline-primary"
+                                                    className="btn btn-sm btn-outline-primary d-flex align-items-center"
                                                 >
+                                                    <Icon icon="heroicons:eye" className="me-1" />
                                                     View
                                                 </button>
+                                                {form.status === 'generated' && (
+                                                    <button
+                                                        className="btn btn-sm btn-outline-success d-flex align-items-center"
+                                                        onClick={() => downloadForm(form.formName)}
+                                                    >
+                                                        <Icon icon="heroicons:arrow-down-tray" className="me-1" />
+                                                        Download
+                                                    </button>
+                                                )}
+                                                {form.status === 'pending' && (
+                                                    <button
+                                                        className="btn btn-sm btn-outline-warning d-flex align-items-center"
+                                                        onClick={() => handleGenerateForm(form.formName)}
+                                                    >
+                                                        <Icon icon="heroicons:document-plus" className="me-1" />
+                                                        Generate
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -2968,38 +3579,59 @@ const FinalSettlement = () => {
 
                 {/* Form Types Summary */}
                 <div className="p-3 border-top">
-                    <h6 className="mb-3 fs-5">Available Form Types</h6>
+                    <h5 className="mb-3 fs-4 d-flex align-items-center gap-2">
+                        <Icon icon="heroicons:document-text" />
+                        Available Form Types
+                    </h5>
                     <div className="row g-2 g-md-3">
                         <div className="col-6 col-md-4">
-                            <div className="card border cursor-pointer" onClick={() => handleGenerateForm('Form16')}>
+                            <div className="card border cursor-pointer animate-hover" onClick={() => {
+                                setSelectedForm('Form16');
+                                setShowFormModal(true);
+                            }}>
                                 <div className="card-body p-3 text-center">
                                     <div className="text-primary mb-2">
                                         <Icon icon="heroicons:document-text" className="fs-2" />
                                     </div>
                                     <h6 className="fw-bold mb-1">Form 16</h6>
                                     <p className="text-muted small mb-0">Tax Certificate</p>
+                                    {settlementData.forms.form16.generated && (
+                                        <span className="badge bg-success mt-2">Generated</span>
+                                    )}
                                 </div>
                             </div>
                         </div>
                         <div className="col-6 col-md-4">
-                            <div className="card border cursor-pointer" onClick={() => handleGenerateForm('PF')}>
+                            <div className="card border cursor-pointer animate-hover" onClick={() => {
+                                setSelectedForm('PF');
+                                setShowFormModal(true);
+                            }}>
                                 <div className="card-body p-3 text-center">
                                     <div className="text-success mb-2">
                                         <Icon icon="heroicons:building-library" className="fs-2" />
                                     </div>
                                     <h6 className="fw-bold mb-1">PF Forms</h6>
                                     <p className="text-muted small mb-0">Form 19, 10C</p>
+                                    {settlementData.forms.form19.generated && settlementData.forms.form10C.generated && (
+                                        <span className="badge bg-success mt-2">Generated</span>
+                                    )}
                                 </div>
                             </div>
                         </div>
                         <div className="col-6 col-md-4">
-                            <div className="card border cursor-pointer" onClick={() => handleGenerateForm('Experience')}>
+                            <div className="card border cursor-pointer animate-hover" onClick={() => {
+                                setSelectedForm('Experience');
+                                setShowFormModal(true);
+                            }}>
                                 <div className="card-body p-3 text-center">
                                     <div className="text-warning mb-2">
                                         <Icon icon="heroicons:academic-cap" className="fs-2" />
                                     </div>
                                     <h6 className="fw-bold mb-1">HR Letters</h6>
                                     <p className="text-muted small mb-0">Experience & Relieving</p>
+                                    {settlementData.forms.experienceLetter.generated && settlementData.forms.relievingLetter.generated && (
+                                        <span className="badge bg-success mt-2">Generated</span>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -3016,8 +3648,9 @@ const FinalSettlement = () => {
                             <button
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                 disabled={currentPage === 1}
-                                className="btn btn-sm btn-outline-secondary"
+                                className="btn btn-sm btn-outline-secondary d-flex align-items-center"
                             >
+                                <Icon icon="heroicons:chevron-left" className="me-1" />
                                 Prev
                             </button>
                             {[...Array(Math.min(totalPages, 5))].map((_, i) => {
@@ -3047,9 +3680,10 @@ const FinalSettlement = () => {
                             <button
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                 disabled={currentPage === totalPages}
-                                className="btn btn-sm btn-outline-secondary"
+                                className="btn btn-sm btn-outline-secondary d-flex align-items-center"
                             >
                                 Next
+                                <Icon icon="heroicons:chevron-right" className="ms-1" />
                             </button>
                         </div>
                     </div>
@@ -3061,13 +3695,16 @@ const FinalSettlement = () => {
     const renderReportsSection = () => (
         <div className="row g-3 g-md-4">
             <div className="col-12">
-                <div className="card border shadow-sm">
+                <div className="card border shadow-sm animate-fade-in">
                     <div className="card-header bg-transparent border-0 p-3">
                         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-                            <h5 className="mb-0 fs-5 fs-md-4">Settlement Reports & Analytics</h5>
+                            <h4 className="mb-0 fs-3 d-flex align-items-center gap-2">
+                                <Icon icon="heroicons:chart-bar" className="fs-2" />
+                                Settlement Reports & Analytics
+                            </h4>
                             <button
                                 onClick={handleExportReport}
-                                className="btn btn-primary btn-sm btn-md-normal"
+                                className="btn btn-primary btn-sm btn-md-normal d-flex align-items-center"
                             >
                                 <Icon icon="heroicons:document-arrow-down" className="me-1 me-md-2" />
                                 Export Reports
@@ -3078,9 +3715,10 @@ const FinalSettlement = () => {
                         <div className="row g-3 g-md-4">
                             {/* Reports Summary */}
                             <div className="col-12">
-                                <div className="card border">
-                                    <div className="card-header p-3">
-                                        <h6 className="mb-0 fs-5">Available Reports</h6>
+                                <div className="card border animate-card-hover">
+                                    <div className="card-header p-3 d-flex align-items-center gap-2">
+                                        <Icon icon="heroicons:document-chart-bar" />
+                                        <h5 className="mb-0 fs-5">Available Reports</h5>
                                     </div>
                                     <div className="card-body p-3">
                                         <div className="table-responsive" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
@@ -3098,15 +3736,40 @@ const FinalSettlement = () => {
                                                 <tbody>
                                                     {reports.map(report => (
                                                         <tr key={report.id}>
-                                                            <td className="fw-semibold">{report.reportName}</td>
+                                                            <td className="fw-semibold d-flex align-items-center">
+                                                                <Icon icon="heroicons:document-text" className="me-2" />
+                                                                {report.reportName}
+                                                            </td>
                                                             <td>{report.period}</td>
                                                             <td>{getTypeBadge(report.type)}</td>
                                                             <td>{getStatusBadge(report.status)}</td>
                                                             <td>{report.generatedDate || 'N/A'}</td>
                                                             <td>
                                                                 <div className="d-flex gap-2">
-                                                                    <button className="btn btn-sm btn-outline-primary">
+                                                                    <button 
+                                                                        className="btn btn-sm btn-outline-primary d-flex align-items-center"
+                                                                        onClick={() => handleViewDetails(report)}
+                                                                    >
+                                                                        <Icon icon="heroicons:eye" className="me-1" />
                                                                         View
+                                                                    </button>
+                                                                    <button 
+                                                                        className="btn btn-sm btn-outline-success d-flex align-items-center"
+                                                                        onClick={() => {
+                                                                            const reportContent = `${report.reportName}\nPeriod: ${report.period}\nGenerated: ${report.generatedDate || 'N/A'}\nStatus: ${report.status}\n\nThis is a sample report for demonstration.`;
+                                                                            const blob = new Blob([reportContent], { type: 'text/plain' });
+                                                                            const url = window.URL.createObjectURL(blob);
+                                                                            const a = document.createElement('a');
+                                                                            a.href = url;
+                                                                            a.download = `${report.reportName.replace(/\s+/g, '_')}_${report.period.replace(/\s+/g, '_')}.txt`;
+                                                                            document.body.appendChild(a);
+                                                                            a.click();
+                                                                            document.body.removeChild(a);
+                                                                            window.URL.revokeObjectURL(url);
+                                                                        }}
+                                                                    >
+                                                                        <Icon icon="heroicons:arrow-down-tray" className="me-1" />
+                                                                        Download
                                                                     </button>
                                                                 </div>
                                                             </td>
@@ -3154,17 +3817,12 @@ const FinalSettlement = () => {
 
     if (isLoading) {
         return (
-            <div
-                sidebarContent={sidebarContent}
-                userInfo={userInfo}
-                appName="Final Settlement Processing"
-            >
-                <div className="container-fluid">
-                    <div className="text-center py-5">
-                        <div className="spinner-border text-primary" role="status">
-                            <span className="visually-hidden">Loading...</span>
-                        </div>
+            <div className="container-fluid">
+                <div className="text-center py-5">
+                    <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Loading...</span>
                     </div>
+                    <p className="mt-3">Loading settlement data...</p>
                 </div>
             </div>
         );
@@ -3173,7 +3831,7 @@ const FinalSettlement = () => {
     // Mobile menu toggle button
     const MobileMenuButton = () => (
         <button
-            className="btn btn-primary d-md-none position-fixed"
+            className="btn btn-primary d-md-none position-fixed animate-pulse"
             style={{ bottom: '20px', right: '20px', zIndex: 1000 }}
             onClick={() => setShowMobileMenu(!showMobileMenu)}
         >
@@ -3183,109 +3841,162 @@ const FinalSettlement = () => {
 
     return (
         <>
-            <div
-                sidebarContent={sidebarContent}
-                userInfo={userInfo}
-                appName="Final Settlement Processing"
-            >
-                <div className="container-fluid px-3 px-md-4 py-3 py-md-4">
-                    {/* Header */}
-                    <div className="mb-3 mb-md-4">
-                        <div className="d-flex align-items-center gap-2 mb-2 mb-md-3">
-                            {activeSection !== 'overview' && (
-                                <button
-                                    onClick={() => setActiveSection('overview')}
-                                    className="btn btn-link d-flex align-items-center gap-1 text-decoration-none"
-                                >
-                                    <Icon icon="heroicons:arrow-left" />
-                                    <span className="d-none d-md-inline">Back to Overview</span>
-                                    <span className="d-md-none">Back</span>
-                                </button>
-                            )}
-                        </div>
-                        <h5 className="fw-bold text-dark mb-1 mb-md-2 d-flex align-items-center gap-2 fs-4 fs-md-3">
-                            <Icon icon="heroicons:banknotes" />
-                            Final Settlement Processing
-                        </h5>
-                        <p className="text-muted mb-0">
-                            Manage full & final settlement with notice period verification, salary calculation, leave encashment, deductions, and approval workflow
-                        </p>
+            {/* Add CSS animations */}
+            <style>{`
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes slideUp {
+                    from { opacity: 0; transform: translateY(30px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes pulse {
+                    0% { transform: scale(1); }
+                    50% { transform: scale(1.05); }
+                    100% { transform: scale(1); }
+                }
+                @keyframes hoverEffect {
+                    0% { transform: translateY(0); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+                    100% { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
+                }
+                
+                .animate-fade-in {
+                    animation: fadeIn 0.6s ease-out forwards;
+                }
+                .animate-slide-up {
+                    animation: slideUp 0.5s ease-out forwards;
+                }
+                .animate-pulse {
+                    animation: pulse 2s infinite;
+                }
+                .animate-card-hover {
+                    transition: all 0.3s ease;
+                }
+                .animate-card-hover:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
+                }
+                .animate-hover {
+                    transition: all 0.3s ease;
+                }
+                .animate-hover:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+                }
+                .card {
+                    transition: all 0.3s ease;
+                    border-radius: 12px;
+                }
+                .card:hover {
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+                }
+                .btn {
+                    transition: all 0.2s ease;
+                }
+                .btn:hover {
+                    transform: translateY(-2px);
+                }
+            `}</style>
+
+            <div className="container-fluid px-3 px-md-4 py-3 py-md-4">
+                {/* Header */}
+                <div className="mb-3 mb-md-4">
+                    <div className="d-flex align-items-center gap-2 mb-2 mb-md-3">
+                        {activeSection !== 'overview' && (
+                            <button
+                                onClick={() => setActiveSection('overview')}
+                                className="btn btn-link d-flex align-items-center gap-1 text-decoration-none animate-hover"
+                            >
+                                <Icon icon="heroicons:arrow-left" />
+                                <span className="d-none d-md-inline">Back to Overview</span>
+                                <span className="d-md-none">Back</span>
+                            </button>
+                        )}
                     </div>
-
-                    {/* Current Settlement Status - Compact for Mobile */}
-                    <div className="row g-2 g-md-3 mb-3 mb-md-4">
-                        <div className="col-6 col-md-3">
-                            <div className="card border border-primary h-100">
-                                <div className="card-body p-2 p-md-3">
-                                    <div className="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <p className="text-muted small mb-1">Current Settlement</p>
-                                            <h5 className="text-primary mb-0 fs-5 fs-md-4">{formatCurrency(kpis.netSettlement)}</h5>
-                                        </div>
-                                        <Icon icon="heroicons:banknotes" className="text-primary fs-4 fs-md-3" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-6 col-md-3">
-                            <div className="card border border-success h-100">
-                                <div className="card-body p-2 p-md-3">
-                                    <div className="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <p className="text-muted small mb-1">Total Additions</p>
-                                            <h5 className="text-success mb-0 fs-5 fs-md-4">{formatCurrency(kpis.totalAdditions)}</h5>
-                                        </div>
-                                        <Icon icon="heroicons:plus-circle" className="text-success fs-4 fs-md-3" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-6 col-md-3">
-                            <div className="card border border-danger h-100">
-                                <div className="card-body p-2 p-md-3">
-                                    <div className="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <p className="text-muted small mb-1">Total Deductions</p>
-                                            <h5 className="text-danger mb-0 fs-5 fs-md-4">{formatCurrency(kpis.totalDeductions)}</h5>
-                                        </div>
-                                        <Icon icon="heroicons:minus-circle" className="text-danger fs-4 fs-md-3" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-6 col-md-3">
-                            <div className="card border border-warning h-100">
-                                <div className="card-body p-2 p-md-3">
-                                    <div className="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <p className="text-muted small mb-1">Approval Status</p>
-                                            <h5 className="text-warning mb-0 fs-5 fs-md-4">{settlementData.approval.status.toUpperCase()}</h5>
-                                        </div>
-                                        <Icon icon="heroicons:document-check" className="text-warning fs-4 fs-md-3" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Content Area */}
-                    {renderContent()}
-
-                    {/* Mobile Menu Button */}
-                    <MobileMenuButton />
+                    <h4 className="text-3xl fw-bold text-dark mb-2 mt-3 d-flex align-items-center gap-2">
+                        <Icon icon="heroicons:banknotes" className="fs-2" />
+                        Final Settlement Processing
+                    </h4>
+                    <p className="text-muted mb-0 d-flex align-items-center">
+                        <Icon icon="heroicons:information-circle" className="me-2" />
+                        Manage full & final settlement with notice period verification, salary calculation, leave encashment, deductions, and approval workflow
+                    </p>
                 </div>
+
+                {/* Current Settlement Status - Compact for Mobile */}
+                <div className="row g-2 g-md-3 mb-3 mb-md-4">
+                    <div className="col-6 col-md-3">
+                        <div className="card border border-primary h-100 animate-card-hover">
+                            <div className="card-body p-2 p-md-3">
+                                <div className="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p className="text-muted small mb-1">Current Settlement</p>
+                                        <h4 className="text-primary mb-0 fs-5">{formatCurrency(kpis.netSettlement)}</h4>
+                                    </div>
+                                    <Icon icon="heroicons:banknotes" className="text-primary fs-3" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-6 col-md-3">
+                        <div className="card border border-success h-100 animate-card-hover">
+                            <div className="card-body p-2 p-md-3">
+                                <div className="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p className="text-muted small mb-1">Total Additions</p>
+                                        <h4 className="text-success mb-0 fs-5">{formatCurrency(kpis.totalAdditions)}</h4>
+                                    </div>
+                                    <Icon icon="heroicons:plus-circle" className="text-success fs-3" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-6 col-md-3">
+                        <div className="card border border-danger h-100 animate-card-hover">
+                            <div className="card-body p-2 p-md-3">
+                                <div className="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p className="text-muted small mb-1">Total Deductions</p>
+                                        <h4 className="text-danger mb-0 fs-5">{formatCurrency(kpis.totalDeductions)}</h4>
+                                    </div>
+                                    <Icon icon="heroicons:minus-circle" className="text-danger fs-3" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-6 col-md-3">
+                        <div className="card border border-warning h-100 animate-card-hover">
+                            <div className="card-body p-2 p-md-3">
+                                <div className="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p className="text-muted small mb-1">Approval Status</p>
+                                        <h4 className="text-warning mb-0 fs-5">{settlementData.approval.status.toUpperCase()}</h4>
+                                    </div>
+                                    <Icon icon="heroicons:document-check" className="text-warning fs-3" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Content Area */}
+                {renderContent()}
+
+                {/* Mobile Menu Button */}
+                <MobileMenuButton />
             </div>
 
             {/* Generate Form Modal */}
             {showFormModal && selectedForm && (
                 <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
-                    <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                    <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable animate-slide-up">
                         <div className="modal-content">
                             <div className="modal-header">
-                                <h5 className="modal-title d-flex align-items-center gap-2 fs-5">
+                                <h4 className="modal-title d-flex align-items-center gap-2 fs-4">
                                     <Icon icon="heroicons:document-plus" />
                                     Generate {selectedForm} Form
-                                </h5>
+                                </h4>
                                 <button
                                     type="button"
                                     className="btn-close"
@@ -3297,7 +4008,10 @@ const FinalSettlement = () => {
                             </div>
                             <div className="modal-body">
                                 <div className="mb-3">
-                                    <label className="form-label">Select Employee</label>
+                                    <label className="form-label d-flex align-items-center gap-1">
+                                        <Icon icon="heroicons:user" className="fs-6" />
+                                        Select Employee
+                                    </label>
                                     <select className="form-select form-select-sm form-control-md">
                                         <option value="EMP001">John Smith (EMP001)</option>
                                         <option value="EMP002">Sarah Johnson (EMP002)</option>
@@ -3308,7 +4022,10 @@ const FinalSettlement = () => {
                                 </div>
 
                                 <div className="mb-3">
-                                    <label className="form-label">Select Period</label>
+                                    <label className="form-label d-flex align-items-center gap-1">
+                                        <Icon icon="heroicons:calendar" className="fs-6" />
+                                        Select Period
+                                    </label>
                                     <select className="form-select form-select-sm form-control-md">
                                         <option>June 2024</option>
                                         <option>Q2 2024</option>
@@ -3317,50 +4034,57 @@ const FinalSettlement = () => {
                                 </div>
 
                                 <div className="mb-3">
-                                    <label className="form-label">Format</label>
+                                    <label className="form-label d-flex align-items-center gap-1">
+                                        <Icon icon="heroicons:computer-desktop" className="fs-6" />
+                                        Format
+                                    </label>
                                     <div className="d-flex flex-wrap gap-3">
-                                        <div className="form-check">
-                                            <input className="form-check-input" type="radio" name="format" id="pdf" defaultChecked />
-                                            <label className="form-check-label" htmlFor="pdf">
+                                        <div className="form-check d-flex align-items-center">
+                                            <input className="form-check-input me-2" type="radio" name="format" id="pdf" defaultChecked />
+                                            <label className="form-check-label d-flex align-items-center" htmlFor="pdf">
+                                                <Icon icon="heroicons:document" className="me-1" />
                                                 PDF
                                             </label>
                                         </div>
-                                        <div className="form-check">
-                                            <input className="form-check-input" type="radio" name="format" id="excel" />
-                                            <label className="form-check-label" htmlFor="excel">
+                                        <div className="form-check d-flex align-items-center">
+                                            <input className="form-check-input me-2" type="radio" name="format" id="excel" />
+                                            <label className="form-check-label d-flex align-items-center" htmlFor="excel">
+                                                <Icon icon="heroicons:table-cells" className="me-1" />
                                                 Excel
                                             </label>
                                         </div>
-                                        <div className="form-check">
-                                            <input className="form-check-input" type="radio" name="format" id="word" />
-                                            <label className="form-check-label" htmlFor="word">
+                                        <div className="form-check d-flex align-items-center">
+                                            <input className="form-check-input me-2" type="radio" name="format" id="word" />
+                                            <label className="form-check-label d-flex align-items-center" htmlFor="word">
+                                                <Icon icon="heroicons:document-text" className="me-1" />
                                                 Word
                                             </label>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="alert alert-info">
-                                    <Icon icon="heroicons:information-circle" className="me-2" />
+                                <div className="alert alert-info d-flex align-items-center">
+                                    <Icon icon="heroicons:information-circle" className="me-2 flex-shrink-0" />
                                     The form will be generated with all relevant settlement data.
                                 </div>
 
                                 <div className="modal-footer">
                                     <button
                                         type="button"
-                                        className="btn btn-secondary"
+                                        className="btn btn-secondary d-flex align-items-center"
                                         onClick={() => {
                                             setShowFormModal(false);
                                             setSelectedForm(null);
                                         }}
                                     >
+                                        <Icon icon="heroicons:x-mark" className="me-2" />
                                         Cancel
                                     </button>
                                     <button
                                         type="button"
-                                        className="btn btn-primary"
+                                        className="btn btn-primary d-flex align-items-center"
                                         onClick={() => {
-                                            alert(`Generating ${selectedForm} form...`);
+                                            handleGenerateForm(selectedForm);
                                             setShowFormModal(false);
                                             setSelectedForm(null);
                                         }}
@@ -3378,13 +4102,13 @@ const FinalSettlement = () => {
             {/* Details Modal */}
             {showModal && selectedItem && (
                 <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
-                    <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                    <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable animate-slide-up">
                         <div className="modal-content">
                             <div className="modal-header">
-                                <h5 className="modal-title d-flex align-items-center gap-2 fs-5">
+                                <h4 className="modal-title d-flex align-items-center gap-2 fs-4">
                                     <Icon icon="heroicons:eye" />
                                     {selectedItem.name || selectedItem.employeeName || selectedItem.formName} Details
-                                </h5>
+                                </h4>
                                 <button
                                     type="button"
                                     className="btn-close"
@@ -3395,27 +4119,45 @@ const FinalSettlement = () => {
                                 {(activeSection === 'employees' || activeSection === 'pending' || activeSection === 'completed') && (
                                     <div className="row g-3">
                                         <div className="col-12 col-md-6">
-                                            <label className="form-label small fw-semibold">Employee Name</label>
+                                            <label className="form-label small fw-semibold d-flex align-items-center gap-1">
+                                                <Icon icon="heroicons:user" className="fs-6" />
+                                                Employee Name
+                                            </label>
                                             <p className="form-control-plaintext fw-bold">{selectedItem.name || selectedItem.employeeName}</p>
                                         </div>
                                         <div className="col-12 col-md-6">
-                                            <label className="form-label small fw-semibold">Employee ID</label>
+                                            <label className="form-label small fw-semibold d-flex align-items-center gap-1">
+                                                <Icon icon="heroicons:identification" className="fs-6" />
+                                                Employee ID
+                                            </label>
                                             <p className="form-control-plaintext">{selectedItem.employeeId}</p>
                                         </div>
                                         <div className="col-12 col-md-6">
-                                            <label className="form-label small fw-semibold">Department</label>
+                                            <label className="form-label small fw-semibold d-flex align-items-center gap-1">
+                                                <Icon icon="heroicons:building-office" className="fs-6" />
+                                                Department
+                                            </label>
                                             <p className="form-control-plaintext">{selectedItem.department}</p>
                                         </div>
                                         <div className="col-12 col-md-6">
-                                            <label className="form-label small fw-semibold">Last Working Day</label>
+                                            <label className="form-label small fw-semibold d-flex align-items-center gap-1">
+                                                <Icon icon="heroicons:calendar-x-mark" className="fs-6" />
+                                                Last Working Day
+                                            </label>
                                             <p className="form-control-plaintext fw-bold text-danger">{selectedItem.lastWorkingDay}</p>
                                         </div>
                                         <div className="col-12 col-md-6">
-                                            <label className="form-label small fw-semibold">Settlement Amount</label>
+                                            <label className="form-label small fw-semibold d-flex align-items-center gap-1">
+                                                <Icon icon="heroicons:banknotes" className="fs-6" />
+                                                Settlement Amount
+                                            </label>
                                             <p className="form-control-plaintext fw-bold text-success">{formatCurrency(selectedItem.settlementAmount || selectedItem.netAmount)}</p>
                                         </div>
                                         <div className="col-12 col-md-6">
-                                            <label className="form-label small fw-semibold">Status</label>
+                                            <label className="form-label small fw-semibold d-flex align-items-center gap-1">
+                                                <Icon icon="heroicons:flag" className="fs-6" />
+                                                Status
+                                            </label>
                                             <p className="form-control-plaintext">{getStatusBadge(selectedItem.status)}</p>
                                         </div>
                                     </div>
@@ -3424,19 +4166,31 @@ const FinalSettlement = () => {
                                 {activeSection === 'forms' && (
                                     <div className="row g-3">
                                         <div className="col-12 col-md-6">
-                                            <label className="form-label small fw-semibold">Form Name</label>
+                                            <label className="form-label small fw-semibold d-flex align-items-center gap-1">
+                                                <Icon icon="heroicons:document-text" className="fs-6" />
+                                                Form Name
+                                            </label>
                                             <p className="form-control-plaintext fw-bold">{selectedItem.formName}</p>
                                         </div>
                                         <div className="col-12 col-md-6">
-                                            <label className="form-label small fw-semibold">Employee Name</label>
+                                            <label className="form-label small fw-semibold d-flex align-items-center gap-1">
+                                                <Icon icon="heroicons:user" className="fs-6" />
+                                                Employee Name
+                                            </label>
                                             <p className="form-control-plaintext">{selectedItem.employeeName}</p>
                                         </div>
                                         <div className="col-12 col-md-6">
-                                            <label className="form-label small fw-semibold">Type</label>
+                                            <label className="form-label small fw-semibold d-flex align-items-center gap-1">
+                                                <Icon icon="heroicons:tag" className="fs-6" />
+                                                Type
+                                            </label>
                                             <p className="form-control-plaintext">{getTypeBadge(selectedItem.type)}</p>
                                         </div>
                                         <div className="col-12 col-md-6">
-                                            <label className="form-label small fw-semibold">Status</label>
+                                            <label className="form-label small fw-semibold d-flex align-items-center gap-1">
+                                                <Icon icon="heroicons:flag" className="fs-6" />
+                                                Status
+                                            </label>
                                             <p className="form-control-plaintext">{getStatusBadge(selectedItem.status)}</p>
                                         </div>
                                     </div>
@@ -3445,19 +4199,21 @@ const FinalSettlement = () => {
                             <div className="modal-footer">
                                 <button
                                     type="button"
-                                    className="btn btn-secondary"
+                                    className="btn btn-secondary d-flex align-items-center"
                                     onClick={() => setShowModal(false)}
                                 >
+                                    <Icon icon="heroicons:x-mark" className="me-2" />
                                     Close
                                 </button>
                                 <button
                                     type="button"
-                                    className="btn btn-primary"
+                                    className="btn btn-primary d-flex align-items-center"
                                     onClick={() => {
                                         alert(`Processing ${selectedItem.name || selectedItem.employeeName || selectedItem.formName}...`);
                                         setShowModal(false);
                                     }}
                                 >
+                                    <Icon icon="heroicons:cog-6-tooth" className="me-2" />
                                     Take Action
                                 </button>
                             </div>
@@ -3469,13 +4225,13 @@ const FinalSettlement = () => {
             {/* Payment Processing Modal */}
             {showPaymentModal && (
                 <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
-                    <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                    <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable animate-slide-up">
                         <div className="modal-content">
                             <div className="modal-header">
-                                <h5 className="modal-title d-flex align-items-center gap-2 fs-5">
+                                <h4 className="modal-title d-flex align-items-center gap-2 fs-4">
                                     <Icon icon="heroicons:banknotes" />
                                     Process Payment
-                                </h5>
+                                </h4>
                                 <button
                                     type="button"
                                     className="btn-close"
@@ -3483,12 +4239,18 @@ const FinalSettlement = () => {
                                 ></button>
                             </div>
                             <div className="modal-body">
-                                <div className="alert alert-info mb-3">
-                                    <strong>Net Settlement Amount:</strong> {formatCurrency(kpis.netSettlement)}
+                                <div className="alert alert-info mb-3 d-flex align-items-center">
+                                    <Icon icon="heroicons:information-circle" className="me-2 flex-shrink-0" />
+                                    <div>
+                                        <strong>Net Settlement Amount:</strong> {formatCurrency(kpis.netSettlement)}
+                                    </div>
                                 </div>
                                 <div className="row g-3">
                                     <div className="col-12 col-md-6">
-                                        <label className="form-label">Payment Method</label>
+                                        <label className="form-label d-flex align-items-center gap-1">
+                                            <Icon icon="heroicons:credit-card" className="fs-6" />
+                                            Payment Method
+                                        </label>
                                         <select 
                                             className="form-select"
                                             value={settlementData.payment.method}
@@ -3502,7 +4264,10 @@ const FinalSettlement = () => {
                                         </select>
                                     </div>
                                     <div className="col-12 col-md-6">
-                                        <label className="form-label">Payment Mode</label>
+                                        <label className="form-label d-flex align-items-center gap-1">
+                                            <Icon icon="heroicons:cog-6-tooth" className="fs-6" />
+                                            Payment Mode
+                                        </label>
                                         <select 
                                             className="form-select"
                                             value={settlementData.payment.paymentMode}
@@ -3515,7 +4280,10 @@ const FinalSettlement = () => {
                                         </select>
                                     </div>
                                     <div className="col-12 col-md-6">
-                                        <label className="form-label">Bank Name</label>
+                                        <label className="form-label d-flex align-items-center gap-1">
+                                            <Icon icon="heroicons:building-library" className="fs-6" />
+                                            Bank Name
+                                        </label>
                                         <input
                                             type="text"
                                             className="form-control"
@@ -3524,7 +4292,10 @@ const FinalSettlement = () => {
                                         />
                                     </div>
                                     <div className="col-12 col-md-6">
-                                        <label className="form-label">Account Number</label>
+                                        <label className="form-label d-flex align-items-center gap-1">
+                                            <Icon icon="heroicons:credit-card" className="fs-6" />
+                                            Account Number
+                                        </label>
                                         <input
                                             type="text"
                                             className="form-control"
@@ -3533,7 +4304,10 @@ const FinalSettlement = () => {
                                         />
                                     </div>
                                     <div className="col-12 col-md-6">
-                                        <label className="form-label">IFSC Code</label>
+                                        <label className="form-label d-flex align-items-center gap-1">
+                                            <Icon icon="heroicons:hashtag" className="fs-6" />
+                                            IFSC Code
+                                        </label>
                                         <input
                                             type="text"
                                             className="form-control"
@@ -3542,7 +4316,10 @@ const FinalSettlement = () => {
                                         />
                                     </div>
                                     <div className="col-12 col-md-6">
-                                        <label className="form-label">Payment Date</label>
+                                        <label className="form-label d-flex align-items-center gap-1">
+                                            <Icon icon="heroicons:calendar" className="fs-6" />
+                                            Payment Date
+                                        </label>
                                         <input
                                             type="date"
                                             className="form-control"
@@ -3551,7 +4328,10 @@ const FinalSettlement = () => {
                                         />
                                     </div>
                                     <div className="col-12 col-md-6">
-                                        <label className="form-label">UTR/Reference Number</label>
+                                        <label className="form-label d-flex align-items-center gap-1">
+                                            <Icon icon="heroicons:document-text" className="fs-6" />
+                                            UTR/Reference Number
+                                        </label>
                                         <input
                                             type="text"
                                             className="form-control"
@@ -3561,7 +4341,10 @@ const FinalSettlement = () => {
                                         />
                                     </div>
                                     <div className="col-12">
-                                        <label className="form-label">Payment Remarks</label>
+                                        <label className="form-label d-flex align-items-center gap-1">
+                                            <Icon icon="heroicons:chat-bubble-left-right" className="fs-6" />
+                                            Payment Remarks
+                                        </label>
                                         <textarea
                                             className="form-control"
                                             rows="3"
@@ -3573,19 +4356,21 @@ const FinalSettlement = () => {
                             <div className="modal-footer">
                                 <button
                                     type="button"
-                                    className="btn btn-secondary"
+                                    className="btn btn-secondary d-flex align-items-center"
                                     onClick={() => setShowPaymentModal(false)}
                                 >
+                                    <Icon icon="heroicons:x-mark" className="me-2" />
                                     Cancel
                                 </button>
                                 <button
                                     type="button"
-                                    className="btn btn-success"
+                                    className="btn btn-success d-flex align-items-center"
                                     onClick={() => {
                                         handleProcessPayment({
                                             status: 'processed',
                                             processedBy: 'Finance Manager',
-                                            processedDate: new Date().toISOString().split('T')[0]
+                                            processedDate: new Date().toISOString().split('T')[0],
+                                            utrNumber: `UTR${Math.floor(Math.random() * 10000000000)}`
                                         });
                                     }}
                                 >
@@ -3601,13 +4386,13 @@ const FinalSettlement = () => {
             {/* Asset Management Modal */}
             {showAssetModal && (
                 <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
-                    <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                    <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable animate-slide-up">
                         <div className="modal-content">
                             <div className="modal-header">
-                                <h5 className="modal-title d-flex align-items-center gap-2 fs-5">
+                                <h4 className="modal-title d-flex align-items-center gap-2 fs-4">
                                     <Icon icon="heroicons:cube" />
                                     Asset Return Management
-                                </h5>
+                                </h4>
                                 <button
                                     type="button"
                                     className="btn-close"
@@ -3631,11 +4416,15 @@ const FinalSettlement = () => {
                                         <tbody>
                                             {settlementData.assets.allocatedAssets.map(asset => (
                                                 <tr key={asset.id}>
-                                                    <td className="fw-medium">{asset.assetName}</td>
+                                                    <td className="fw-medium d-flex align-items-center">
+                                                        <Icon icon="heroicons:cube" className="me-2" />
+                                                        {asset.assetName}
+                                                    </td>
                                                     <td><code>{asset.assetTag}</code></td>
                                                     <td>{asset.category}</td>
                                                     <td>
-                                                        <span className={`badge ${asset.returnStatus === 'returned' ? 'bg-success' : 'bg-warning'}`}>
+                                                        <span className={`badge ${asset.returnStatus === 'returned' ? 'bg-success' : 'bg-warning'} d-flex align-items-center`}>
+                                                            <Icon icon={asset.returnStatus === 'returned' ? 'heroicons:check-circle' : 'heroicons:clock'} className="me-1" />
                                                             {asset.returnStatus}
                                                         </span>
                                                     </td>
@@ -3659,13 +4448,14 @@ const FinalSettlement = () => {
                                                             <span className="text-muted">-</span>
                                                         )}
                                                     </td>
-                                                    <td className="fw-bold text-danger">
+                                                    <td className="fw-bold text-danger d-flex align-items-center">
+                                                        <Icon icon="heroicons:currency-rupee" className="me-1" />
                                                         {asset.penalty > 0 ? formatCurrency(asset.penalty) : '-'}
                                                     </td>
                                                     <td>
                                                         {asset.returnStatus === 'pending' && (
                                                             <button
-                                                                className="btn btn-sm btn-success"
+                                                                className="btn btn-sm btn-success d-flex align-items-center"
                                                                 onClick={() => handleAssetReturn(asset.id, new Date().toISOString().split('T')[0], 'Good')}
                                                             >
                                                                 <Icon icon="heroicons:check" className="me-1" />
@@ -3679,25 +4469,31 @@ const FinalSettlement = () => {
                                     </table>
                                 </div>
                                 <div className="alert alert-warning mt-3">
-                                    <strong>Note:</strong> Penalties are automatically calculated based on asset condition:
-                                    <ul className="mb-0 mt-2">
-                                        <li>Lost: ₹50,000 (Laptop), ₹20,000 (Mobile), ₹5,000 (Others)</li>
-                                        <li>Damaged: ₹10,000 (Laptop), ₹5,000 (Mobile), ₹2,000 (Others)</li>
-                                        <li>Pending Return: ₹5,000 (Laptop), ₹2,000 (Mobile), ₹1,000 (Others)</li>
-                                    </ul>
+                                    <div className="d-flex">
+                                        <Icon icon="heroicons:exclamation-triangle" className="me-2 flex-shrink-0" />
+                                        <div>
+                                            <strong>Note:</strong> Penalties are automatically calculated based on asset condition:
+                                            <ul className="mb-0 mt-2">
+                                                <li>Lost: ₹50,000 (Laptop), ₹20,000 (Mobile), ₹5,000 (Others)</li>
+                                                <li>Damaged: ₹10,000 (Laptop), ₹5,000 (Mobile), ₹2,000 (Others)</li>
+                                                <li>Pending Return: ₹5,000 (Laptop), ₹2,000 (Mobile), ₹1,000 (Others)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div className="modal-footer">
                                 <button
                                     type="button"
-                                    className="btn btn-secondary"
+                                    className="btn btn-secondary d-flex align-items-center"
                                     onClick={() => setShowAssetModal(false)}
                                 >
+                                    <Icon icon="heroicons:x-mark" className="me-2" />
                                     Close
                                 </button>
                                 <button
                                     type="button"
-                                    className="btn btn-primary"
+                                    className="btn btn-primary d-flex align-items-center"
                                     onClick={() => {
                                         calculateSettlement();
                                         setShowAssetModal(false);
@@ -3715,13 +4511,13 @@ const FinalSettlement = () => {
             {/* Last Working Day Confirmation Modal */}
             {showLastWorkingDayModal && (
                 <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
-                    <div className="modal-dialog modal-dialog-centered">
+                    <div className="modal-dialog modal-dialog-centered animate-slide-up">
                         <div className="modal-content">
                             <div className="modal-header">
-                                <h5 className="modal-title d-flex align-items-center gap-2 fs-5">
+                                <h4 className="modal-title d-flex align-items-center gap-2 fs-4">
                                     <Icon icon="heroicons:calendar-check" />
                                     Confirm Last Working Day
-                                </h5>
+                                </h4>
                                 <button
                                     type="button"
                                     className="btn-close"
@@ -3731,7 +4527,10 @@ const FinalSettlement = () => {
                             <div className="modal-body">
                                 <div className="row g-3">
                                     <div className="col-12">
-                                        <label className="form-label">Actual Last Working Day</label>
+                                        <label className="form-label d-flex align-items-center gap-1">
+                                            <Icon icon="heroicons:calendar-x-mark" className="fs-6" />
+                                            Actual Last Working Day
+                                        </label>
                                         <input
                                             type="date"
                                             className="form-control"
@@ -3740,7 +4539,10 @@ const FinalSettlement = () => {
                                         />
                                     </div>
                                     <div className="col-12 col-md-6">
-                                        <label className="form-label">Notice Served From</label>
+                                        <label className="form-label d-flex align-items-center gap-1">
+                                            <Icon icon="heroicons:calendar" className="fs-6" />
+                                            Notice Served From
+                                        </label>
                                         <input
                                             type="date"
                                             className="form-control"
@@ -3749,7 +4551,10 @@ const FinalSettlement = () => {
                                         />
                                     </div>
                                     <div className="col-12 col-md-6">
-                                        <label className="form-label">Notice Served To</label>
+                                        <label className="form-label d-flex align-items-center gap-1">
+                                            <Icon icon="heroicons:calendar" className="fs-6" />
+                                            Notice Served To
+                                        </label>
                                         <input
                                             type="date"
                                             className="form-control"
@@ -3758,8 +4563,8 @@ const FinalSettlement = () => {
                                         />
                                     </div>
                                     <div className="col-12">
-                                        <div className="alert alert-info">
-                                            <Icon icon="heroicons:information-circle" className="me-2" />
+                                        <div className="alert alert-info d-flex align-items-center">
+                                            <Icon icon="heroicons:information-circle" className="me-2 flex-shrink-0" />
                                             Confirming the last working day will lock the settlement calculation dates.
                                         </div>
                                     </div>
@@ -3768,14 +4573,15 @@ const FinalSettlement = () => {
                             <div className="modal-footer">
                                 <button
                                     type="button"
-                                    className="btn btn-secondary"
+                                    className="btn btn-secondary d-flex align-items-center"
                                     onClick={() => setShowLastWorkingDayModal(false)}
                                 >
+                                    <Icon icon="heroicons:x-mark" className="me-2" />
                                     Cancel
                                 </button>
                                 <button
                                     type="button"
-                                    className="btn btn-primary"
+                                    className="btn btn-primary d-flex align-items-center"
                                     onClick={handleConfirmLastWorkingDay}
                                 >
                                     <Icon icon="heroicons:check-circle" className="me-2" />

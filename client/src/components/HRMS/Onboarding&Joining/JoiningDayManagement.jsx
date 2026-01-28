@@ -1,29 +1,14 @@
+// src/components/HRMS/Onboarding&Joining/JoiningDayManagement.jsx
 import React, { useState } from 'react';
 import {
-  Grid,
-  Paper,
-  Typography,
-  Button,
-  Box,
-  Card,
-  CardContent,
-  IconButton,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Checkbox,
-  FormControlLabel,
-  Snackbar,
-  RadioGroup,
-  Radio,
-  Alert
+  Grid, Paper, Typography, Button, Box, Card, CardContent,
+  IconButton, TextField, FormControl, InputLabel, Select,
+  MenuItem, Checkbox, FormControlLabel, Snackbar, RadioGroup,
+  Radio, Alert
 } from '@mui/material';
 import {
-  Close as CloseIcon,
-  Save as SaveIcon,
-  Info as InfoIcon
+  Close as CloseIcon, Save as SaveIcon, Info as InfoIcon,
+  PersonAdd as PersonAddIcon
 } from '@mui/icons-material';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -94,8 +79,8 @@ const JoiningDayManagement = () => {
 
   // Generate Employee ID
   const generateEmployeeId = (department, firstName, lastName) => {
-    const deptCode = department.substring(0, 3).toUpperCase();
-    const initials = `${firstName[0]}${lastName[0]}`.toUpperCase();
+    const deptCode = department ? department.substring(0, 3).toUpperCase() : 'EMP';
+    const initials = `${firstName ? firstName[0] : 'F'}${lastName ? lastName[0] : 'L'}`.toUpperCase();
     const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     return `EMP${deptCode}${initials}${randomNum}`;
   };
@@ -160,15 +145,15 @@ const JoiningDayManagement = () => {
       status: 'pending_review',
       createdAt: new Date().toISOString()
     };
-    
+
     // Load existing profiles from localStorage
     const savedProfiles = localStorage.getItem('employeeProfiles');
     const existingProfiles = savedProfiles ? JSON.parse(savedProfiles) : [];
     const updatedProfiles = [...existingProfiles, newProfile];
-    
+
     // Save to localStorage
     localStorage.setItem('employeeProfiles', JSON.stringify(updatedProfiles));
-    
+
     // Create checklist for new employee
     const savedChecklists = localStorage.getItem('employeeChecklists');
     const existingChecklists = savedChecklists ? JSON.parse(savedChecklists) : {};
@@ -203,7 +188,7 @@ const JoiningDayManagement = () => {
       }))
     };
     localStorage.setItem('employeeChecklists', JSON.stringify(existingChecklists));
-    
+
     // Add to employees list
     const savedEmployees = localStorage.getItem('employeeList');
     const existingEmployees = savedEmployees ? JSON.parse(savedEmployees) : [];
@@ -218,7 +203,7 @@ const JoiningDayManagement = () => {
     };
     const updatedEmployees = [...existingEmployees, newEmployee];
     localStorage.setItem('employeeList', JSON.stringify(updatedEmployees));
-    
+
     // Also create a form entry for PreJoiningEngagement
     const savedForms = localStorage.getItem('onboardingForms');
     const existingForms = savedForms ? JSON.parse(savedForms) : [];
@@ -234,7 +219,7 @@ const JoiningDayManagement = () => {
     };
     existingForms.unshift(newForm);
     localStorage.setItem('onboardingForms', JSON.stringify(existingForms));
-    
+
     // Reset form
     resetForm();
     showSnackbar('Profile created successfully', 'success');
@@ -252,10 +237,15 @@ const JoiningDayManagement = () => {
 
   return (
     <>
-      <Box sx={{ p: { xs: 2, md: 3 } }}>
-        <Typography variant="h4" fontWeight="bold" gutterBottom>
-          ADD EMPLOYEE
-        </Typography>
+      <Box>
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h5 className="text-3xl fw-bold text-dark mb-2 mt-3 d-flex align-items-center gap-2">
+              <PersonAddIcon className="me-2" />
+              ADD EMPLOYEE
+            </h5>
+          </div>
+        </div>
 
         <Paper sx={{ mt: 2, p: 3 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -265,10 +255,10 @@ const JoiningDayManagement = () => {
             </IconButton>
           </Box>
           
-          <Grid container spacing={3}>
+          <Grid container spacing={3} sx={{ flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
             {/* Left Column - Employee Personal and Contact Information */}
-            <Grid item xs={12} md={4}>
-              <Card variant="outlined">
+            <Grid item xs={12} md={8} sx={{ minWidth: { md: 0 } }}>
+              <Card variant="outlined" sx={{ height: '100%' }}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
                     Employee Personal and Contact Information
@@ -336,8 +326,8 @@ const JoiningDayManagement = () => {
                         value={profileForm.joiningDate}
                         onChange={(e) => {
                           const joiningDate = e.target.value;
-                          setProfileForm({ 
-                            ...profileForm, 
+                          setProfileForm({
+                            ...profileForm,
                             joiningDate,
                             confirmationDate: joiningDate ? '' : profileForm.confirmationDate
                           });
@@ -396,16 +386,28 @@ const JoiningDayManagement = () => {
                   </Typography>
                   <Grid container spacing={2} sx={{ mb: 3 }}>
                     <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Employee Code *"
-                        value={profileForm.employeeId}
-                        onChange={(e) => setProfileForm({ ...profileForm, employeeId: e.target.value })}
-                        required
-                        size="small"
-                        helperText="Will be auto-generated"
-                        disabled={profileForm.generateIdAuto}
-                      />
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <TextField
+                          fullWidth
+                          label="Employee Code *"
+                          value={profileForm.employeeId}
+                          onChange={(e) => setProfileForm({ ...profileForm, employeeId: e.target.value })}
+                          required
+                          size="small"
+                          helperText="Will be auto-generated"
+                          disabled={profileForm.generateIdAuto}
+                        />
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={profileForm.generateIdAuto}
+                              onChange={(e) => setProfileForm({ ...profileForm, generateIdAuto: e.target.checked })}
+                              sx={{ ml: 1 }}
+                            />
+                          }
+                          label="Auto"
+                        />
+                      </Box>
                     </Grid>
                     <Grid item xs={12}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -434,16 +436,29 @@ const JoiningDayManagement = () => {
                         onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
                         size="small"
                         helperText="Enter 10-digits only"
+                        inputProps={{ maxLength: 10 }}
                       />
                     </Grid>
                     <Grid item xs={12}>
                       <TextField
                         fullWidth
-                        label="Official E-Mail"
+                        label="Personal Email"
+                        type="email"
+                        value={profileForm.email}
+                        onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                        size="small"
+                        helperText="Optional"
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Official Email"
                         type="email"
                         value={profileForm.officialEmail}
                         onChange={(e) => setProfileForm({ ...profileForm, officialEmail: e.target.value })}
                         size="small"
+                        helperText="Company email address"
                       />
                     </Grid>
                   </Grid>
@@ -488,8 +503,8 @@ const JoiningDayManagement = () => {
             </Grid>
 
             {/* Right Column - Work Profile and Policies */}
-            <Grid item xs={12} md={8}>
-              <Card variant="outlined">
+            <Grid item xs={12} md={4} sx={{ minWidth: { md: 360 } }}>
+              <Card variant="outlined" sx={{ height: '100%' }}>
                 <CardContent>
                   {/* Work Profile */}
                   <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
@@ -498,58 +513,14 @@ const JoiningDayManagement = () => {
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                     Select work profile for this employee. If you do not select these values now, system will assign default values, which you can edit later.
                   </Typography>
+                  
                   <Grid container spacing={2} sx={{ mb: 4 }}>
-                    <Grid item xs={6} sm={4} md="auto" sx={{ minWidth: { md: '180px' }, flex: { md: '1 1 0%' } }}>
+                    {/* Department */}
+                    <Grid item xs={12}>
                       <FormControl fullWidth size="small">
-                        <InputLabel>Business Unit</InputLabel>
+                        <InputLabel id="department-label">Department</InputLabel>
                         <Select
-                          value={profileForm.businessUnit}
-                          onChange={(e) => setProfileForm({ ...profileForm, businessUnit: e.target.value })}
-                          label="Business Unit"
-                        >
-                          <MenuItem value="">- Select -</MenuItem>
-                          <MenuItem value="IT">IT</MenuItem>
-                          <MenuItem value="HR">HR</MenuItem>
-                          <MenuItem value="Finance">Finance</MenuItem>
-                          <MenuItem value="Operations">Operations</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={6} sm={4} md="auto" sx={{ minWidth: { md: '180px' }, flex: { md: '1 1 0%' } }}>
-                      <FormControl fullWidth size="small">
-                        <InputLabel>Location</InputLabel>
-                        <Select
-                          value={profileForm.location}
-                          onChange={(e) => setProfileForm({ ...profileForm, location: e.target.value })}
-                          label="Location"
-                        >
-                          <MenuItem value="">- Select -</MenuItem>
-                          <MenuItem value="Mumbai">Mumbai</MenuItem>
-                          <MenuItem value="Delhi">Delhi</MenuItem>
-                          <MenuItem value="Bangalore">Bangalore</MenuItem>
-                          <MenuItem value="Hyderabad">Hyderabad</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={6} sm={4} md="auto" sx={{ minWidth: { md: '180px' }, flex: { md: '1 1 0%' } }}>
-                      <FormControl fullWidth size="small">
-                        <InputLabel>Cost Center</InputLabel>
-                        <Select
-                          value={profileForm.costCenter}
-                          onChange={(e) => setProfileForm({ ...profileForm, costCenter: e.target.value })}
-                          label="Cost Center"
-                        >
-                          <MenuItem value="">- Select -</MenuItem>
-                          <MenuItem value="CC001">CC001</MenuItem>
-                          <MenuItem value="CC002">CC002</MenuItem>
-                          <MenuItem value="CC003">CC003</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={6} sm={4} md="auto" sx={{ minWidth: { md: '180px' }, flex: { md: '1 1 0%' } }}>
-                      <FormControl fullWidth size="small">
-                        <InputLabel>Department</InputLabel>
-                        <Select
+                          labelId="department-label"
                           value={profileForm.department}
                           onChange={(e) => {
                             const dept = e.target.value;
@@ -565,34 +536,117 @@ const JoiningDayManagement = () => {
                           <MenuItem value="Engineering">Engineering</MenuItem>
                           <MenuItem value="Marketing">Marketing</MenuItem>
                           <MenuItem value="Sales">Sales</MenuItem>
-                          <MenuItem value="HR">HR</MenuItem>
+                          <MenuItem value="HR">Human Resources</MenuItem>
                           <MenuItem value="Finance">Finance</MenuItem>
+                          <MenuItem value="Operations">Operations</MenuItem>
+                          <MenuItem value="IT">Information Technology</MenuItem>
+                          <MenuItem value="Admin">Administration</MenuItem>
                         </Select>
                       </FormControl>
                     </Grid>
-                    <Grid item xs={6} sm={4} md="auto" sx={{ minWidth: { md: '180px' }, flex: { md: '1 1 0%' } }}>
-                      <FormControl fullWidth size="small">
-                        <InputLabel>Grade</InputLabel>
-                        <Select
-                          value={profileForm.grade}
-                          onChange={(e) => setProfileForm({ ...profileForm, grade: e.target.value })}
-                          label="Grade"
-                        >
-                          <MenuItem value="">- Select -</MenuItem>
-                          <MenuItem value="A">A</MenuItem>
-                          <MenuItem value="B">B</MenuItem>
-                          <MenuItem value="C">C</MenuItem>
-                          <MenuItem value="D">D</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
+                    
+                    {/* Designation */}
+                    <Grid item xs={12}>
                       <TextField
                         fullWidth
                         label="Designation"
                         value={profileForm.designation}
                         onChange={(e) => setProfileForm({ ...profileForm, designation: e.target.value })}
                         size="small"
+                        placeholder="e.g., Software Engineer"
+                      />
+                    </Grid>
+                    
+                    {/* Business Unit */}
+                    <Grid item xs={12}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel id="business-unit-label">Business Unit</InputLabel>
+                        <Select
+                          labelId="business-unit-label"
+                          value={profileForm.businessUnit}
+                          onChange={(e) => setProfileForm({ ...profileForm, businessUnit: e.target.value })}
+                          label="Business Unit"
+                        >
+                          <MenuItem value="">- Select -</MenuItem>
+                          <MenuItem value="IT">Technology</MenuItem>
+                          <MenuItem value="HR">Human Resources</MenuItem>
+                          <MenuItem value="Finance">Finance</MenuItem>
+                          <MenuItem value="Operations">Operations</MenuItem>
+                          <MenuItem value="Sales">Sales & Marketing</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    
+                    {/* Location */}
+                    <Grid item xs={12}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel id="location-label">Location</InputLabel>
+                        <Select
+                          labelId="location-label"
+                          value={profileForm.location}
+                          onChange={(e) => setProfileForm({ ...profileForm, location: e.target.value })}
+                          label="Location"
+                        >
+                          <MenuItem value="">- Select -</MenuItem>
+                          <MenuItem value="Mumbai">Mumbai</MenuItem>
+                          <MenuItem value="Delhi">Delhi</MenuItem>
+                          <MenuItem value="Bangalore">Bangalore</MenuItem>
+                          <MenuItem value="Hyderabad">Hyderabad</MenuItem>
+                          <MenuItem value="Chennai">Chennai</MenuItem>
+                          <MenuItem value="Pune">Pune</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    
+                    {/* Cost Center */}
+                    <Grid item xs={12}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel id="cost-center-label">Cost Center</InputLabel>
+                        <Select
+                          labelId="cost-center-label"
+                          value={profileForm.costCenter}
+                          onChange={(e) => setProfileForm({ ...profileForm, costCenter: e.target.value })}
+                          label="Cost Center"
+                        >
+                          <MenuItem value="">- Select -</MenuItem>
+                          <MenuItem value="CC001">CC001 - Corporate</MenuItem>
+                          <MenuItem value="CC002">CC002 - Operations</MenuItem>
+                          <MenuItem value="CC003">CC003 - Sales & Marketing</MenuItem>
+                          <MenuItem value="CC004">CC004 - R&D</MenuItem>
+                          <MenuItem value="CC005">CC005 - Support</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    
+                    {/* Grade */}
+                    <Grid item xs={12}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel id="grade-label">Grade</InputLabel>
+                        <Select
+                          labelId="grade-label"
+                          value={profileForm.grade}
+                          onChange={(e) => setProfileForm({ ...profileForm, grade: e.target.value })}
+                          label="Grade"
+                        >
+                          <MenuItem value="">- Select -</MenuItem>
+                          <MenuItem value="A">Grade A (Executive)</MenuItem>
+                          <MenuItem value="B">Grade B (Manager)</MenuItem>
+                          <MenuItem value="C">Grade C (Senior Manager)</MenuItem>
+                          <MenuItem value="D">Grade D (Director)</MenuItem>
+                          <MenuItem value="E">Grade E (VP & Above)</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    
+                    {/* Reporting Manager */}
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Reporting Manager"
+                        value={profileForm.reportingManager}
+                        onChange={(e) => setProfileForm({ ...profileForm, reportingManager: e.target.value })}
+                        size="small"
+                        placeholder="Enter manager's name or employee ID"
                       />
                     </Grid>
                   </Grid>
@@ -604,34 +658,42 @@ const JoiningDayManagement = () => {
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                     Select policies applicable to this employee. If you do not select these values now, system will assign default values, which you can edit later.
                   </Typography>
+                  
                   <Grid container spacing={2}>
-                    <Grid item xs={6} sm={4} md="auto" sx={{ minWidth: { md: '180px' }, flex: { md: '1 1 0%' } }}>
+                    {/* Shift Policy */}
+                    <Grid item xs={12}>
                       <FormControl fullWidth size="small">
-                        <InputLabel>Shift Policy</InputLabel>
+                        <InputLabel id="shift-policy-label">Shift Policy</InputLabel>
                         <Select
+                          labelId="shift-policy-label"
                           value={profileForm.shiftPolicy}
                           onChange={(e) => setProfileForm({ ...profileForm, shiftPolicy: e.target.value })}
                           label="Shift Policy"
                         >
                           <MenuItem value="">- Select -</MenuItem>
-                          <MenuItem value="General">General</MenuItem>
-                          <MenuItem value="Night">Night</MenuItem>
-                          <MenuItem value="Flexible">Flexible</MenuItem>
+                          <MenuItem value="General">General (9 AM - 6 PM)</MenuItem>
+                          <MenuItem value="Night">Night Shift</MenuItem>
+                          <MenuItem value="Flexible">Flexible Hours</MenuItem>
+                          <MenuItem value="Rotational">Rotational Shifts</MenuItem>
                         </Select>
                       </FormControl>
                     </Grid>
-                    <Grid item xs={6} sm={4} md="auto" sx={{ minWidth: { md: '180px' }, flex: { md: '1 1 0%' } }}>
+                    
+                    {/* Week Off Policy - FIXED */}
+                    <Grid item xs={12}>
                       <FormControl fullWidth size="small">
-                        <InputLabel>Week Off Policy</InputLabel>
+                        <InputLabel id="week-off-policy-label">Week Off Policy</InputLabel>
                         <Select
+                          labelId="week-off-policy-label"
                           value={profileForm.weekOffPolicy}
                           onChange={(e) => setProfileForm({ ...profileForm, weekOffPolicy: e.target.value })}
                           label="Week Off Policy"
                         >
                           <MenuItem value="">- Select -</MenuItem>
-                          <MenuItem value="Sunday">Sunday</MenuItem>
-                          <MenuItem value="Saturday-Sunday">Saturday-Sunday</MenuItem>
-                          <MenuItem value="Flexible">Flexible</MenuItem>
+                          <MenuItem value="Sunday">Sunday Fixed</MenuItem>
+                          <MenuItem value="Saturday-Sunday">Saturday & Sunday</MenuItem>
+                          <MenuItem value="Flexible">Flexible Week Off</MenuItem>
+                          <MenuItem value="Rotational">Rotational Week Off</MenuItem>
                         </Select>
                       </FormControl>
                     </Grid>

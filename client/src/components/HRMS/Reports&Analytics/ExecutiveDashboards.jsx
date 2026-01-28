@@ -229,10 +229,16 @@ const DashboardPage = () => {
 
         {/******** HEADER *********/}
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <div>
-            <h4 className="mb-1">{dashboardType} Dashboard</h4>
-            <p className="text-muted small mb-0">Real-time HR metrics and analytics</p>
-          </div>
+
+           <div className="mb-4">
+                    <h5 className="text-3xl fw-bold text-dark mb-2 mt-3 d-flex align-items-center gap-2">
+                      {/* <Icon icon="heroicons: Pencil-Edit" /> */}
+                    {dashboardType} Dashboard
+                    </h5>
+                    <p className="text-muted"> Real-time HR metrics and analytics</p>
+                  </div>
+          
+         
 
           <div className="d-flex gap-2">
             <select
@@ -249,9 +255,14 @@ const DashboardPage = () => {
               <option value="Employee">Employee View</option>
             </select>
 
-            <button className="btn btn-dark btn-sm" onClick={exportDashboardData}>
-              <Download size={14} className="me-1" /> Export
-            </button>
+           <button
+  className="btn btn-info btn-sm d-flex align-items-center justify-content-center gap-1"
+  onClick={exportDashboardData}
+>
+  <Download size={14} />
+  <span>Export</span>
+</button>
+
           </div>
         </div>
 

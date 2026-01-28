@@ -977,6 +977,8 @@ const LoansAdvances = () => {
   const [showCertificateModal, setShowCertificateModal] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [notification, setNotification] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [loanToDelete, setLoanToDelete] = useState(null);
 
   // Add these to your existing state declarations
   const [showPrepaymentModal, setShowPrepaymentModal] = useState(false);
@@ -995,6 +997,7 @@ const LoansAdvances = () => {
   });
   const itemsPerPage = 6;
 
+  const [foreclosureConfirmed, setForeclosureConfirmed] = useState(false);
   // New loan application state
   const [newLoanApplication, setNewLoanApplication] = useState({
     employeeName: "",
@@ -1044,6 +1047,23 @@ const LoansAdvances = () => {
     disbursementDate: new Date().toISOString().split("T")[0],
     transactionId: "",
   });
+  const [showDocModal, setShowDocModal] = useState(false);
+  const [activeDoc, setActiveDoc] = useState(null);
+
+  const handleViewDocument = (docKey) => {
+    setActiveDoc(docKey);
+    setShowDocModal(true);
+  };
+  const documentLabels = {
+    applicationForm: "Application Form",
+    identityProof: "Identity Proof",
+    salarySlips: "Salary Slips",
+    agreement: "Agreement",
+    certificate: "Certificate",
+  };
+  const getDocumentLabel = (docKey) => {
+    return documentLabels[docKey] || docKey;
+  };
 
   // Loan types
   const loanTypes = [
@@ -1195,7 +1215,7 @@ const LoansAdvances = () => {
     }));
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status, showIcon = true) => {
     const styles = {
       Active: "bg-success-subtle text-success",
       Completed: "bg-info-subtle text-info",
@@ -1218,11 +1238,16 @@ const LoansAdvances = () => {
 
     return (
       <span
-        className={`badge d-flex align-items-center ${
-          styles[status] || styles["Active"]
-        }`}
+        className={`badge d-flex align-items-center justify-content-center ${styles[status] || styles["Active"]
+          }`}
+        style={{ minWidth: "80px" }}
       >
-        <Icon icon={icons[status] || icons["Active"]} className="me-1" />
+        {showIcon && activeTab !== "pending" && (
+          <Icon icon={icons[status] || icons["Active"]} className="me-1" />
+        )}
+        {!showIcon && activeTab === "pending" && (
+          <Icon icon={icons[status] || icons["Active"]} className="me-1" />
+        )}
         {status}
       </span>
     );
@@ -1312,11 +1337,11 @@ const LoansAdvances = () => {
 
     const requiredTenure =
       eligibilityCriteria.serviceTenure[
-        loanType.toLowerCase().replace(" ", "")
+      loanType.toLowerCase().replace(" ", "")
       ];
     const salaryMultiplier =
       eligibilityCriteria.salaryMultiplier[
-        loanType.toLowerCase().replace(" ", "")
+      loanType.toLowerCase().replace(" ", "")
       ];
 
     const newId = loans.length + 1;
@@ -1466,19 +1491,19 @@ const LoansAdvances = () => {
       loans.map((loan) =>
         loan.id === editLoan.id
           ? {
-              ...loan,
-              ...editLoan,
-              amount: parseFloat(editLoan.amount),
-              interestRate: parseFloat(editLoan.interestRate),
-              tenureMonths: parseInt(editLoan.tenureMonths),
-              monthlyEMI: calculateEMI(
-                parseFloat(editLoan.amount),
-                parseFloat(editLoan.interestRate),
-                parseInt(editLoan.tenureMonths)
-              ),
-              amountPending:
-                parseFloat(editLoan.amount) - parseFloat(editLoan.amountPaid),
-            }
+            ...loan,
+            ...editLoan,
+            amount: parseFloat(editLoan.amount),
+            interestRate: parseFloat(editLoan.interestRate),
+            tenureMonths: parseInt(editLoan.tenureMonths),
+            monthlyEMI: calculateEMI(
+              parseFloat(editLoan.amount),
+              parseFloat(editLoan.interestRate),
+              parseInt(editLoan.tenureMonths)
+            ),
+            amountPending:
+              parseFloat(editLoan.amount) - parseFloat(editLoan.amountPaid),
+          }
           : loan
       )
     );
@@ -1616,13 +1641,24 @@ const LoansAdvances = () => {
     setShowForeclosureModal(false);
     showNotification("Loan foreclosed successfully!", "success");
   };
+
+  // Delete Loan Confirmation
+  const handleDeleteConfirmation = (loan) => {
+    setLoanToDelete(loan);
+    setShowDeleteModal(true);
+  };
+
   // Delete Loan
-  const handleDeleteLoan = (id) => {
-    setLoans(loans.filter((loan) => loan.id !== id));
-    if (selectedLoan?.id === id) {
-      setShowModal(false);
+  const handleDeleteLoan = () => {
+    if (loanToDelete) {
+      setLoans(loans.filter((loan) => loan.id !== loanToDelete.id));
+      if (selectedLoan?.id === loanToDelete.id) {
+        setShowModal(false);
+      }
+      setShowDeleteModal(false);
+      setLoanToDelete(null);
+      showNotification("Loan deleted successfully!", "success");
     }
-    showNotification("Loan deleted successfully!", "success");
   };
 
   // Make Payment
@@ -1914,9 +1950,8 @@ const LoansAdvances = () => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `loan_management_export_${
-      new Date().toISOString().split("T")[0]
-    }.csv`;
+    a.download = `loan_management_export_${new Date().toISOString().split("T")[0]
+      }.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -1973,78 +2008,71 @@ const LoansAdvances = () => {
         </div>
 
         {/* Tabs */}
-<div className="col-12 mb-4">
-  <div className="d-flex overflow-auto">
-    <div className="d-flex flex-nowrap gap-2 w-100">
+        <div className="col-12 mb-4">
+          <div className="d-flex overflow-auto">
+            <div className="d-flex flex-nowrap gap-2 w-100">
+              {/* All Loans */}
+              <button
+                type="button"
+                onClick={() => setActiveTab("all")}
+                className={`btn d-flex align-items-center gap-2 px-4 py-2.5 rounded flex-shrink-0 ${activeTab === "all"
+                  ? "btn-primary text-white"
+                  : "btn-outline-primary"
+                  }`}
+              >
+                <span>All Loans</span>
+                <span className="badge bg-light text-dark ms-2">
+                  {loans.length}
+                </span>
+              </button>
 
-      {/* All Loans */}
-      <button
-        type="button"
-        onClick={() => setActiveTab("all")}
-        className={`btn d-flex align-items-center gap-2 px-4 py-2.5 rounded flex-shrink-0 ${
-          activeTab === "all"
-            ? "btn-primary text-white"
-            : "btn-outline-primary"
-        }`}
-      >
-        <span>All Loans</span>
-        <span className="badge bg-light text-dark ms-2">
-          {loans.length}
-        </span>
-      </button>
+              {/* Pending Applications */}
+              <button
+                type="button"
+                onClick={() => setActiveTab("pending")}
+                className={`btn d-flex align-items-center gap-2 px-4 py-2.5 rounded flex-shrink-0 ${activeTab === "pending"
+                  ? "btn-primary text-white"
+                  : "btn-outline-primary"
+                  }`}
+              >
+                <span>Pending</span>
+                <span className="badge bg-light text-dark ms-2">
+                  {kpis.pendingApplications}
+                </span>
+              </button>
 
-      {/* Pending Applications */}
-      <button
-        type="button"
-        onClick={() => setActiveTab("pending")}
-        className={`btn d-flex align-items-center gap-2 px-4 py-2.5 rounded flex-shrink-0 ${
-          activeTab === "pending"
-            ? "btn-primary text-white"
-            : "btn-outline-primary"
-        }`}
-      >
-        <span>Pending</span>
-        <span className="badge bg-light text-dark ms-2">
-          {kpis.pendingApplications}
-        </span>
-      </button>
+              {/* Active Loans */}
+              <button
+                type="button"
+                onClick={() => setActiveTab("active")}
+                className={`btn d-flex align-items-center gap-2 px-4 py-2.5 rounded flex-shrink-0 ${activeTab === "active"
+                  ? "btn-primary text-white"
+                  : "btn-outline-primary"
+                  }`}
+              >
+                <span>Active</span>
+                <span className="badge bg-light text-dark ms-2">
+                  {kpis.activeLoans}
+                </span>
+              </button>
 
-      {/* Active Loans */}
-      <button
-        type="button"
-        onClick={() => setActiveTab("active")}
-        className={`btn d-flex align-items-center gap-2 px-4 py-2.5 rounded flex-shrink-0 ${
-          activeTab === "active"
-            ? "btn-primary text-white"
-            : "btn-outline-primary"
-        }`}
-      >
-        <span>Active</span>
-        <span className="badge bg-light text-dark ms-2">
-          {kpis.activeLoans}
-        </span>
-      </button>
-
-      {/* Completed Loans */}
-      <button
-        type="button"
-        onClick={() => setActiveTab("completed")}
-        className={`btn d-flex align-items-center gap-2 px-4 py-2.5 rounded flex-shrink-0 ${
-          activeTab === "completed"
-            ? "btn-primary text-white"
-            : "btn-outline-primary"
-        }`}
-      >
-        <span>Completed</span>
-        <span className="badge bg-light text-dark ms-2">
-          {kpis.completedLoans}
-        </span>
-      </button>
-
-    </div>
-  </div>
-</div>
-
+              {/* Completed Loans */}
+              <button
+                type="button"
+                onClick={() => setActiveTab("completed")}
+                className={`btn d-flex align-items-center gap-2 px-4 py-2.5 rounded flex-shrink-0 ${activeTab === "completed"
+                  ? "btn-primary text-white"
+                  : "btn-outline-primary"
+                  }`}
+              >
+                <span>Completed</span>
+                <span className="badge bg-light text-dark ms-2">
+                  {kpis.completedLoans}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
 
         {/* KPI Cards */}
         <div className="row g-4 mb-4">
@@ -2131,39 +2159,39 @@ const LoansAdvances = () => {
           <div className="card-body">
             <div className="d-flex flex-wrap gap-3 align-items-center">
               {/* Search */}
-<div className="position-relative col-12 col-sm-8 col-md-6 col-lg-5 col-xl-4">
-  <Icon
-    icon="heroicons:magnifying-glass"
-    className="position-absolute top-50 translate-middle-y text-muted ms-3"
-  />
-  <input
-    type="text"
-    placeholder="Search by employee name, ID, or loan ID..."
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-    className="form-control ps-5"
-  />
-</div>
+              <div className="position-relative col-12 col-sm-8 col-md-6 col-lg-5 col-xl-4">
+                <Icon
+                  icon="heroicons:magnifying-glass"
+                  className="position-absolute top-50 translate-middle-y text-muted ms-3"
+                />
+                <input
+                  type="text"
+                  placeholder="Search by employee name, ID, or loan ID..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="form-control ps-5"
+                />
+              </div>
 
               {/* Loan Type Filter */}
-<div className="col-6 col-sm-3 col-md-2 col-lg-2">
-  <select
-    value={loanTypeFilter}
-    onChange={(e) => setLoanTypeFilter(e.target.value)}
-    className="form-select"
-  >
-    <option value="All">All Loan Types</option>
-    {loanTypes.map((type) => (
-      <option key={type} value={type}>
-        {type}
-      </option>
-    ))}
-  </select>
-</div>
+              <div className="col-6 col-sm-3 col-md-2 col-lg-2">
+                <select
+                  value={loanTypeFilter}
+                  onChange={(e) => setLoanTypeFilter(e.target.value)}
+                  className="form-select"
+                >
+                  <option value="All">All Loan Types</option>
+                  {loanTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               {/* Status Filter */}
-<div className="col-4 col-sm-2 col-md-2 col-lg-1">
-                  <select
+              <div className="col-4 col-sm-2 col-md-2 col-lg-1">
+                <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="form-select"
@@ -2177,32 +2205,31 @@ const LoansAdvances = () => {
               </div>
 
               {/* Action Buttons */}
-<div className="d-flex flex-column flex-md-row flex-wrap gap-2">
-  <button
-    onClick={() => setShowApplicationModal(true)}
-    className="btn btn-success d-flex align-items-center justify-content-center flex-fill flex-md-grow-0"
-  >
-    <Icon icon="heroicons:document-plus" className="me-2" />
-    <span>Apply for Loan</span>
-  </button>
-  
-  <button
-    onClick={exportToCSV}
-    className="btn btn-primary d-flex align-items-center justify-content-center flex-fill flex-md-grow-0"
-  >
-    <Icon icon="heroicons:document-arrow-down" className="me-2" />
-    <span>Export</span>
-  </button>
-  
-  <button
-    onClick={refreshData}
-    className="btn btn-outline-primary d-flex align-items-center justify-content-center flex-fill flex-md-grow-0"
-  >
-    <Icon icon="heroicons:arrow-path" className="me-2" />
-    <span>Refresh</span>
-  </button>
-</div>
+              <div className="d-flex flex-column flex-md-row flex-wrap gap-2">
+                <button
+                  onClick={() => setShowApplicationModal(true)}
+                  className="btn btn-success d-flex align-items-center justify-content-center flex-fill flex-md-grow-0"
+                >
+                  <Icon icon="heroicons:document-plus" className="me-2" />
+                  <span>Apply for Loan</span>
+                </button>
 
+                <button
+                  onClick={exportToCSV}
+                  className="btn btn-primary d-flex align-items-center justify-content-center flex-fill flex-md-grow-0"
+                >
+                  <Icon icon="heroicons:document-arrow-down" className="me-2" />
+                  <span>Export</span>
+                </button>
+
+                <button
+                  onClick={refreshData}
+                  className="btn btn-outline-primary d-flex align-items-center justify-content-center flex-fill flex-md-grow-0"
+                >
+                  <Icon icon="heroicons:arrow-path" className="me-2" />
+                  <span>Refresh</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -2211,12 +2238,12 @@ const LoansAdvances = () => {
         <div className="card border shadow-none">
           <div className="card-header bg-transparent border-0">
             <div className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">
+              <h6 className="fw-bold mb-0">
                 {activeTab === "all" && "All Loan Records"}
                 {activeTab === "pending" && "Pending Applications"}
                 {activeTab === "active" && "Active Loans"}
                 {activeTab === "completed" && "Completed Loans"}
-              </h5>
+              </h6>
               <div className="text-muted">
                 Showing {paginatedData.length} of {sortedData.length} records
               </div>
@@ -2228,93 +2255,89 @@ const LoansAdvances = () => {
                 <thead className="bg-light">
                   <tr>
                     <th
-                      className="border-0 px-4 py-3 text-uppercase fw-bold text-dark cursor-pointer"
+                      className="border-0 px-4 py-3 text-uppercase fw-bold text-dark text-start"
                       onClick={() => handleSort("employeeName")}
-                      style={{ cursor: "pointer" }}
+                      style={{ cursor: "pointer", width: "15%" }}
                     >
                       <div className="d-flex align-items-center gap-2">
                         Employee Details
                         <Icon
-                          icon={`heroicons:chevron-${
-                            sortConfig.key === "employeeName" &&
+                          icon={`heroicons:chevron-${sortConfig.key === "employeeName" &&
                             sortConfig.direction === "asc"
-                              ? "up"
-                              : "down"
-                          }`}
+                            ? "up"
+                            : "down"
+                            }`}
                           className="small"
                         />
                       </div>
                     </th>
-                    <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">
+                    <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark text-start" style={{ width: "10%" }}>
                       DESIGNATION
                     </th>
-                    <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">
+                    <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark text-start" style={{ width: "10%" }}>
                       DEPARTMENT
                     </th>
                     <th
-                      className="border-0 px-3 py-3 text-uppercase fw-bold text-dark cursor-pointer"
+                      className="border-0 px-3 py-3 text-uppercase fw-bold text-dark text-start"
                       onClick={() => handleSort("loanType")}
-                      style={{ cursor: "pointer" }}
+                      style={{ cursor: "pointer", width: "12%" }}
                     >
                       <div className="d-flex align-items-center gap-2">
                         LOAN TYPE
                         <Icon
-                          icon={`heroicons:chevron-${
-                            sortConfig.key === "loanType" &&
+                          icon={`heroicons:chevron-${sortConfig.key === "loanType" &&
                             sortConfig.direction === "asc"
-                              ? "up"
-                              : "down"
-                          }`}
+                            ? "up"
+                            : "down"
+                            }`}
                           className="small"
                         />
                       </div>
                     </th>
-                    <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">
+                    <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark text-center" style={{ width: "10%" }}>
                       STATUS
                     </th>
                     <th
-                      className="border-0 px-3 py-3 text-uppercase fw-bold text-dark cursor-pointer"
+                      className="border-0 px-3 py-3 text-uppercase fw-bold text-dark text-center"
                       onClick={() => handleSort("startDate")}
-                      style={{ cursor: "pointer" }}
+                      style={{ cursor: "pointer", width: "10%" }}
                     >
-                      <div className="d-flex align-items-center gap-2">
+                      <div className="d-flex align-items-center justify-content-center gap-2">
                         ISSUE DATE
                         <Icon
-                          icon={`heroicons:chevron-${
-                            sortConfig.key === "startDate" &&
+                          icon={`heroicons:chevron-${sortConfig.key === "startDate" &&
                             sortConfig.direction === "asc"
-                              ? "up"
-                              : "down"
-                          }`}
+                            ? "up"
+                            : "down"
+                            }`}
                           className="small"
                         />
                       </div>
                     </th>
-                    <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">
+                    <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark text-center" style={{ width: "10%" }}>
                       INTEREST METHOD
                     </th>
                     <th
-                      className="border-0 px-3 py-3 text-uppercase fw-bold text-dark cursor-pointer"
+                      className="border-0 px-3 py-3 text-uppercase fw-bold text-dark text-end"
                       onClick={() => handleSort("amount")}
-                      style={{ cursor: "pointer" }}
+                      style={{ cursor: "pointer", width: "12%" }}
                     >
-                      <div className="d-flex align-items-center gap-2">
+                      <div className="d-flex align-items-center justify-content-end gap-2">
                         AMOUNT DETAILS
                         <Icon
-                          icon={`heroicons:chevron-${
-                            sortConfig.key === "amount" &&
+                          icon={`heroicons:chevron-${sortConfig.key === "amount" &&
                             sortConfig.direction === "asc"
-                              ? "up"
-                              : "down"
-                          }`}
+                            ? "up"
+                            : "down"
+                            }`}
                           className="small"
                         />
                       </div>
                     </th>
-                    <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">
+                    <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark text-end" style={{ width: "11%" }}>
                       EMI & TENURE
                     </th>
-                    <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark">
+                    <th className="border-0 px-3 py-3 text-uppercase fw-bold text-dark text-center" style={{ width: "10%" }}>
                       ACTIONS
                     </th>
                   </tr>
@@ -2322,45 +2345,39 @@ const LoansAdvances = () => {
                 <tbody>
                   {paginatedData.map((loan) => (
                     <tr key={loan.id} className="border-bottom">
+
                       {/* Employee Details Column */}
-                      <td className="px-4 py-3">
-                        <div className="d-flex align-items-center">
-                          <div className="w-40-px h-40-px bg-light rounded-circle d-flex align-items-center justify-content-center me-3">
-                            <Icon
-                              icon="heroicons:user"
-                              className="text-muted"
-                            />
+                      <td className="px-4 py-3 text-start">
+                        <div>
+                          <div className="fw-medium text-dark">
+                            {loan.employeeName}
                           </div>
-                          <div>
-                            <div className="fw-medium text-dark">
-                              {loan.employeeName}
-                            </div>
-                            <div className="small text-muted">
-                              ID: {loan.employeeId}
-                            </div>
-                            <div className="small text-muted">
-                              Loan ID: {loan.loanId}
-                            </div>
+                          <div className="small text-muted">
+                            ID: {loan.employeeId}
+                          </div>
+                          <div className="small text-muted">
+                            Loan ID: {loan.loanId}
                           </div>
                         </div>
                       </td>
 
+
                       {/* Designation Column */}
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-start">
                         <div className="fw-medium text-dark">
                           {loan.designation || "N/A"}
                         </div>
                       </td>
 
                       {/* Department Column */}
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-start">
                         <div className="fw-medium text-dark">
                           {loan.department || "N/A"}
                         </div>
                       </td>
 
                       {/* Loan Type Column (Separated) */}
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-start">
                         <div className="mb-2">
                           {getLoanTypeBadge(loan.loanType)}
                         </div>
@@ -2372,20 +2389,29 @@ const LoansAdvances = () => {
                             {loan.paymentMethod === "payroll_deduction"
                               ? "Payroll Deduction"
                               : loan.paymentMethod === "bank_transfer"
-                              ? "Bank Transfer"
-                              : loan.paymentMethod.charAt(0).toUpperCase() +
+                                ? "Bank Transfer"
+                                : loan.paymentMethod.charAt(0).toUpperCase() +
                                 loan.paymentMethod.slice(1)}
                           </div>
                         )}
                       </td>
 
-                      {/* Status Column (Separated) */}
-                      <td className="px-4 py-3">
-                        <div className="mb-2">
-                          {getStatusBadge(loan.status)}
+                      {/* Status Column (Separated) - Updated to remove icons for pending tab */}
+                      <td className="px-4 py-3 text-center">
+                        <div className="mb-2 d-flex justify-content-center">
+                          {activeTab === "pending" ? (
+                            <span
+                              className={`badge d-flex align-items-center justify-content-center bg-warning-subtle text-warning`}
+                              style={{ minWidth: "80px" }}
+                            >
+                              {loan.status}
+                            </span>
+                          ) : (
+                            getStatusBadge(loan.status)
+                          )}
                         </div>
                         {loan.applicationStatus && (
-                          <div className="mb-1">
+                          <div className="mb-1 d-flex justify-content-center">
                             {getApplicationStatusBadge(loan.applicationStatus)}
                           </div>
                         )}
@@ -2395,7 +2421,7 @@ const LoansAdvances = () => {
                       </td>
 
                       {/* Issue Date Column */}
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-center">
                         <div className="fw-medium text-dark">
                           {formatDate(loan.startDate)}
                         </div>
@@ -2405,7 +2431,7 @@ const LoansAdvances = () => {
                       </td>
 
                       {/* Interest Method Column */}
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-center">
                         <div className="fw-medium text-dark">
                           {loan.interestRate > 0
                             ? "Reducing Balance"
@@ -2419,7 +2445,7 @@ const LoansAdvances = () => {
                       </td>
 
                       {/* Amount Details Column */}
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-end">
                         <div className="fw-semibold text-dark">
                           {formatCurrency(loan.amount)}
                         </div>
@@ -2437,7 +2463,7 @@ const LoansAdvances = () => {
                       </td>
 
                       {/* EMI & Tenure Column */}
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-end">
                         <div className="fw-semibold text-dark">
                           {formatCurrency(loan.monthlyEMI)}/month
                         </div>
@@ -2450,9 +2476,8 @@ const LoansAdvances = () => {
                       </td>
 
                       {/* Actions Column */}
-                      <td>
-                        {/* <div className="d-flex gap-1"> */}
-                        <div className="d-flex gap-1">
+                      <td className="px-4 py-3 text-center">
+                        <div className="d-flex flex-wrap gap-1 justify-content-center">
                           <button
                             onClick={() => handleViewDetails(loan)}
                             className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
@@ -2472,7 +2497,7 @@ const LoansAdvances = () => {
                           {/* Single approval/reject buttons that change dynamically */}
 
                           {loan.applicationStatus === "submitted" ||
-                          loan.applicationStatus === "under_review" ? (
+                            loan.applicationStatus === "under_review" ? (
                             <>
                               {/* Show approve button for the next pending level */}
                               {(loan.approvalWorkflow?.find(
@@ -2482,16 +2507,16 @@ const LoansAdvances = () => {
                                   (w) => w.level === "supervisor"
                                 )?.status === "pending" &&
                                   loan.applicationStatus === "submitted")) && (
-                                <button
-                                  onClick={() =>
-                                    handleApproveLoan(loan, "supervisor")
-                                  }
-                                  className="btn btn-sm btn-outline-success d-flex align-items-center gap-1"
-                                  title="Supervisor Approve"
-                                >
-                                  <Icon icon="heroicons:check" />
-                                </button>
-                              )}
+                                  <button
+                                    onClick={() =>
+                                      handleApproveLoan(loan, "supervisor")
+                                    }
+                                    className="btn btn-sm btn-outline-success d-flex align-items-center gap-1"
+                                    title="Supervisor Approve"
+                                  >
+                                    <Icon icon="heroicons:check" />
+                                  </button>
+                                )}
 
                               {(loan.approvalWorkflow?.find(
                                 (w) => w.status === "pending"
@@ -2502,14 +2527,14 @@ const LoansAdvances = () => {
                                   loan.approvalWorkflow?.find(
                                     (w) => w.level === "hr"
                                   )?.status === "pending")) && (
-                                <button
-                                  onClick={() => handleApproveLoan(loan, "hr")}
-                                  className="btn btn-sm btn-outline-success d-flex align-items-center gap-1"
-                                  title="HR Approve"
-                                >
-                                  <Icon icon="heroicons:check" />
-                                </button>
-                              )}
+                                  <button
+                                    onClick={() => handleApproveLoan(loan, "hr")}
+                                    className="btn btn-sm btn-outline-success d-flex align-items-center gap-1"
+                                    title="HR Approve"
+                                  >
+                                    <Icon icon="heroicons:check" />
+                                  </button>
+                                )}
 
                               {(loan.approvalWorkflow?.find(
                                 (w) => w.status === "pending"
@@ -2520,16 +2545,16 @@ const LoansAdvances = () => {
                                   loan.approvalWorkflow?.find(
                                     (w) => w.level === "finance"
                                   )?.status === "pending")) && (
-                                <button
-                                  onClick={() =>
-                                    handleApproveLoan(loan, "finance")
-                                  }
-                                  className="btn btn-sm btn-outline-success d-flex align-items-center gap-1"
-                                  title="Finance Approve"
-                                >
-                                  <Icon icon="heroicons:check" />
-                                </button>
-                              )}
+                                  <button
+                                    onClick={() =>
+                                      handleApproveLoan(loan, "finance")
+                                    }
+                                    className="btn btn-sm btn-outline-success d-flex align-items-center gap-1"
+                                    title="Finance Approve"
+                                  >
+                                    <Icon icon="heroicons:check" />
+                                  </button>
+                                )}
 
                               {/* Single reject button that rejects at current pending level */}
                               <button
@@ -2596,7 +2621,7 @@ const LoansAdvances = () => {
                             <Icon icon="heroicons:pencil-square" />
                           </button>
                           <button
-                            onClick={() => handleDeleteLoan(loan.id)}
+                            onClick={() => handleDeleteConfirmation(loan)}
                             className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1"
                             title="Delete"
                           >
@@ -2609,14 +2634,13 @@ const LoansAdvances = () => {
                 </tbody>
               </table>
             </div>
-
             {paginatedData.length === 0 && (
               <div className="text-center py-5 text-muted">
-                <Icon icon="heroicons:banknotes" className="text-4xl mb-3" />
                 <h5>No loan records found</h5>
                 <p>No records found matching your search criteria.</p>
               </div>
             )}
+
 
             {/* Pagination */}
             {totalPages > 1 && (
@@ -2638,11 +2662,10 @@ const LoansAdvances = () => {
                     <button
                       key={i}
                       onClick={() => setCurrentPage(i + 1)}
-                      className={`btn btn-sm ${
-                        currentPage === i + 1
-                          ? "btn-primary"
-                          : "btn-outline-secondary"
-                      }`}
+                      className={`btn btn-sm ${currentPage === i + 1
+                        ? "btn-primary"
+                        : "btn-outline-secondary"
+                        }`}
                     >
                       {i + 1}
                     </button>
@@ -2663,6 +2686,106 @@ const LoansAdvances = () => {
         </div>
 
         {/* Modals */}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && loanToDelete && (
+          <div
+            className="modal show d-block"
+            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          >
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header border-0">
+                  <h5 className="modal-title d-flex align-items-center gap-2 text-danger">
+                    <Icon icon="heroicons:exclamation-triangle" />
+                    Confirm Delete
+                  </h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setShowDeleteModal(false)}
+                  ></button>
+                </div>
+                <div className="modal-body text-center">
+                  <div className="mb-4">
+                    <div className="w-80-px h-80-px bg-danger-subtle rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3">
+                      <Icon
+                        icon="heroicons:exclamation-triangle"
+                        className="text-danger text-3xl"
+                      />
+                    </div>
+                    <h5 className="fw-bold">Delete Loan Record</h5>
+                    <p className="text-muted">
+                      Are you sure you want to delete the loan record for{" "}
+                      <strong>{loanToDelete.employeeName}</strong>?
+                    </p>
+                    <div className="alert alert-warning mt-3">
+                      <div className="d-flex align-items-start">
+                        <Icon
+                          icon="heroicons:information-circle"
+                          className="text-warning me-2 mt-1"
+                        />
+                        <div className="small">
+                          <strong>Warning:</strong> This action cannot be undone.
+                          All loan data including payment history will be
+                          permanently deleted.
+                        </div>
+                      </div>
+                    </div>
+                    <div className="card bg-light mt-3">
+                      <div className="card-body p-3">
+                        <div className="row">
+                          <div className="col-6">
+                            <div className="small text-muted">Loan ID</div>
+                            <div className="fw-semibold">
+                              {loanToDelete.loanId}
+                            </div>
+                          </div>
+                          <div className="col-6">
+                            <div className="small text-muted">Loan Type</div>
+                            <div className="fw-semibold">
+                              {loanToDelete.loanType}
+                            </div>
+                          </div>
+                          <div className="col-6 mt-2">
+                            <div className="small text-muted">Amount</div>
+                            <div className="fw-semibold">
+                              {formatCurrency(loanToDelete.amount)}
+                            </div>
+                          </div>
+                          <div className="col-6 mt-2">
+                            <div className="small text-muted">Status</div>
+                            <div>
+                              {getStatusBadge(loanToDelete.status)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer border-0">
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => setShowDeleteModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger d-flex align-items-center gap-2"
+                    onClick={handleDeleteLoan}
+                  >
+                    <Icon icon="heroicons:trash" />
+                    Delete Loan
+                  </button>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Loan Application Modal */}
         {showApplicationModal && (
@@ -2896,9 +3019,9 @@ const LoansAdvances = () => {
                                 <div className="fw-semibold">
                                   {
                                     eligibilityCriteria.serviceTenure[
-                                      newLoanApplication.loanType
-                                        .toLowerCase()
-                                        .replace(" ", "")
+                                    newLoanApplication.loanType
+                                      .toLowerCase()
+                                      .replace(" ", "")
                                     ]
                                   }
                                 </div>
@@ -2912,9 +3035,9 @@ const LoansAdvances = () => {
                                 <div className="fw-semibold">
                                   {
                                     eligibilityCriteria.salaryMultiplier[
-                                      newLoanApplication.loanType
-                                        .toLowerCase()
-                                        .replace(" ", "")
+                                    newLoanApplication.loanType
+                                      .toLowerCase()
+                                      .replace(" ", "")
                                     ]
                                   }
                                 </div>
@@ -2930,15 +3053,15 @@ const LoansAdvances = () => {
                       </label>
                       <div className="form-control bg-light fw-bold">
                         {newLoanApplication.amount &&
-                        newLoanApplication.interestRate &&
-                        newLoanApplication.tenureMonths
+                          newLoanApplication.interestRate &&
+                          newLoanApplication.tenureMonths
                           ? formatCurrency(
-                              calculateEMI(
-                                parseFloat(newLoanApplication.amount),
-                                parseFloat(newLoanApplication.interestRate),
-                                parseInt(newLoanApplication.tenureMonths)
-                              )
+                            calculateEMI(
+                              parseFloat(newLoanApplication.amount),
+                              parseFloat(newLoanApplication.interestRate),
+                              parseInt(newLoanApplication.tenureMonths)
                             )
+                          )
                           : "--"}
                       </div>
                     </div>
@@ -2954,7 +3077,7 @@ const LoansAdvances = () => {
                   </button>
                   <button
                     type="button"
-                    className="btn btn-success"
+                    className="btn btn-success d-flex align-items-center gap-2"
                     onClick={handleApplyForLoan}
                     disabled={
                       !newLoanApplication.employeeName ||
@@ -2963,9 +3086,10 @@ const LoansAdvances = () => {
                       !newLoanApplication.tenureMonths
                     }
                   >
-                    <Icon icon="heroicons:paper-airplane" className="me-2" />
+                    <Icon icon="heroicons:paper-airplane" />
                     Submit Application
                   </button>
+
                 </div>
               </div>
             </div>
@@ -3132,18 +3256,18 @@ const LoansAdvances = () => {
                   </button>
                   <button
                     type="button"
-                    className="btn btn-primary"
+                    className="btn btn-primary d-flex align-items-center gap-2"
                     onClick={handleUpdateLoan}
                   >
-                    <Icon icon="heroicons:check-circle" className="me-2" />
+                    <Icon icon="heroicons:check-circle" />
                     Update Loan
                   </button>
+
                 </div>
               </div>
             </div>
           </div>
         )}
-
         {/* Prepayment Modal */}
         {showPrepaymentModal && selectedLoan && (
           <div
@@ -3165,61 +3289,67 @@ const LoansAdvances = () => {
                 </div>
                 <div className="modal-body">
                   <div className="row g-3">
-                    <div className="col-md-6">
-                      <div className="card border shadow-none h-100">
+                    {/* First Card - Loan Details */}
+                    <div className="col-12">
+                      <div className="card border shadow-none">
                         <div className="card-body">
                           <h6 className="fw-semibold mb-3">Loan Details</h6>
-                          <div className="mb-2">
-                            <label className="form-label small">
-                              Loan Amount
-                            </label>
-                            <div className="fw-bold text-primary">
-                              {formatCurrency(selectedLoan.amount)}
+                          <div className="row">
+                            <div className="col-md-4 mb-3">
+                              <label className="form-label small">Loan Amount</label>
+                              <div className="fw-bold text-primary fs-5">
+                                {formatCurrency(selectedLoan.amount)}
+                              </div>
+                            </div>
+                            <div className="col-md-4 mb-3">
+                              <label className="form-label small">Amount Paid</label>
+                              <div className="fw-bold text-success fs-5">
+                                {formatCurrency(selectedLoan.amountPaid)}
+                              </div>
+                            </div>
+                            <div className="col-md-4 mb-3">
+                              <label className="form-label small">Outstanding</label>
+                              <div className="fw-bold text-warning fs-5">
+                                {formatCurrency(selectedLoan.amountPending)}
+                              </div>
                             </div>
                           </div>
-                          <div className="mb-2">
-                            <label className="form-label small">
-                              Amount Paid
-                            </label>
-                            <div className="fw-bold text-success">
-                              {formatCurrency(selectedLoan.amountPaid)}
-                            </div>
-                          </div>
-                          <div className="mb-2">
-                            <label className="form-label small">
-                              Outstanding
-                            </label>
-                            <div className="fw-bold text-warning">
-                              {formatCurrency(selectedLoan.amountPending)}
-                            </div>
-                          </div>
-                          <div className="mb-2">
-                            <label className="form-label small">
-                              Prepayment Rules
-                            </label>
-                            <div className="small text-muted">
-                              Min Amount:{" "}
-                              {formatCurrency(
-                                selectedLoan.prepaymentRules.minimumAmount
-                              )}
-                              <br />
-                              Charges: {selectedLoan.prepaymentRules.charges}
+                          <div className="mt-3">
+                            <label className="form-label small fw-semibold">Prepayment Rules</label>
+                            <div className="card bg-light">
+                              <div className="card-body p-3">
+                                <div className="row">
+                                  <div className="col-md-6">
+                                    <div className="mb-2">
+                                      <span className="text-muted">Minimum Amount:</span>
+                                      <div className="fw-bold">
+                                        {formatCurrency(selectedLoan.prepaymentRules.minimumAmount)}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="col-md-6">
+                                    <div className="mb-2">
+                                      <span className="text-muted">Charges:</span>
+                                      <div className="fw-bold">
+                                        {selectedLoan.prepaymentRules.charges}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="col-md-6">
-                      <div className="card border shadow-none h-100">
+                    {/* Second Card - Prepayment Calculation */}
+                    <div className="col-12">
+                      <div className="card border shadow-none">
                         <div className="card-body">
-                          <h6 className="fw-semibold mb-3">
-                            Prepayment Calculation
-                          </h6>
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Prepayment Amount (₹)
-                            </label>
+                          <h6 className="fw-semibold mb-3">Prepayment Calculation</h6>
+                          <div className="mb-4">
+                            <label className="form-label">Prepayment Amount (₹)</label>
                             <div className="input-group">
                               <span className="input-group-text">₹</span>
                               <input
@@ -3237,25 +3367,21 @@ const LoansAdvances = () => {
                                 placeholder="Enter prepayment amount"
                               />
                             </div>
-                            <div className="small text-muted mt-1">
+                            <div className="small text-muted mt-2">
                               Minimum:{" "}
-                              {formatCurrency(
-                                selectedLoan.prepaymentRules.minimumAmount
-                              )}
+                              {formatCurrency(selectedLoan.prepaymentRules.minimumAmount)}
                             </div>
                           </div>
 
                           {prepaymentData.totalAmount > 0 && (
                             <div className="alert alert-info">
-                              <div className="d-flex justify-content-between">
+                              <div className="d-flex justify-content-between mb-2">
                                 <span>Prepayment Amount:</span>
                                 <span className="fw-bold">
-                                  {formatCurrency(
-                                    parseFloat(prepaymentData.amount)
-                                  )}
+                                  {formatCurrency(parseFloat(prepaymentData.amount))}
                                 </span>
                               </div>
-                              <div className="d-flex justify-content-between">
+                              <div className="d-flex justify-content-between mb-2">
                                 <span>Charges (2%):</span>
                                 <span className="fw-bold text-danger">
                                   {formatCurrency(prepaymentData.charges)}
@@ -3264,7 +3390,7 @@ const LoansAdvances = () => {
                               <hr className="my-2" />
                               <div className="d-flex justify-content-between">
                                 <span className="fw-bold">Total Payable:</span>
-                                <span className="fw-bold text-primary">
+                                <span className="fw-bold text-primary fs-5">
                                   {formatCurrency(prepaymentData.totalAmount)}
                                 </span>
                               </div>
@@ -3278,31 +3404,33 @@ const LoansAdvances = () => {
                 <div className="modal-footer">
                   <button
                     type="button"
-                    className="btn btn-secondary"
+                    className="btn btn-secondary d-flex align-items-center gap-2"
                     onClick={() => setShowPrepaymentModal(false)}
                   >
+                    <Icon icon="heroicons:x-mark" />
                     Cancel
                   </button>
                   <button
                     type="button"
-                    className="btn btn-warning"
+                    className="btn btn-warning d-flex align-items-center gap-2"
                     onClick={handlePrepaymentCalculate}
                     disabled={
                       !prepaymentData.amount ||
                       parseFloat(prepaymentData.amount) <= 0
                     }
                   >
+                    <Icon icon="heroicons:calculator" />
                     Calculate Charges
                   </button>
                   <button
                     type="button"
-                    className="btn btn-success"
+                    className="btn btn-success d-flex align-items-center gap-2"
                     onClick={handleProcessPrepayment}
                     disabled={
                       !prepaymentData.amount || prepaymentData.totalAmount === 0
                     }
                   >
-                    <Icon icon="heroicons:check-circle" className="me-2" />
+                    <Icon icon="heroicons:check-circle" />
                     Confirm Prepayment
                   </button>
                 </div>
@@ -3310,7 +3438,6 @@ const LoansAdvances = () => {
             </div>
           </div>
         )}
-
         {/* Foreclosure Modal */}
         {showForeclosureModal && selectedLoan && (
           <div
@@ -3320,75 +3447,87 @@ const LoansAdvances = () => {
             <div className="modal-dialog modal-lg">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title d-flex align-items-center gap-2">
+                  <h6 className="modal-title d-flex align-items-center gap-2">
                     <Icon icon="heroicons:lock-closed" />
                     Loan Foreclosure - {selectedLoan.loanId}
-                  </h5>
+                  </h6>
                   <button
                     type="button"
                     className="btn-close"
-                    onClick={() => setShowForeclosureModal(false)}
+                    onClick={() => {
+                      setShowForeclosureModal(false);
+                      setForeclosureConfirmed(false); // Reset checkbox when modal closes
+                    }}
                   ></button>
                 </div>
                 <div className="modal-body">
                   <div className="row g-3">
-                    <div className="col-md-6">
-                      <div className="card border shadow-none h-100">
+                    {/* First Card - Current Loan Status */}
+                    <div className="col-12">
+                      <div className="card border shadow-none">
                         <div className="card-body">
-                          <h6 className="fw-semibold mb-3">
-                            Current Loan Status
-                          </h6>
-                          <div className="mb-3">
-                            <label className="form-label small">
-                              Outstanding Amount
-                            </label>
-                            <div className="fw-bold text-warning fs-4">
-                              {formatCurrency(selectedLoan.amountPending)}
+                          <h6 className="fw-semibold mb-3">Current Loan Status</h6>
+                          <div className="row">
+                            <div className="col-md-6 mb-3">
+                              <label className="form-label small">Outstanding Amount</label>
+                              <div className="fw-bold text-warning fs-4">
+                                {formatCurrency(selectedLoan.amountPending)}
+                              </div>
+                            </div>
+                            <div className="col-md-6 mb-3">
+                              <label className="form-label small">Paid Months</label>
+                              <div className="fw-bold fs-4">
+                                {
+                                  selectedLoan.emiSchedule.filter(
+                                    (emi) => emi.status === "paid"
+                                  ).length
+                                }{" "}
+                                of {selectedLoan.tenureMonths}
+                              </div>
                             </div>
                           </div>
-                          <div className="mb-3">
-                            <label className="form-label small">
-                              Paid Months
-                            </label>
-                            <div className="fw-bold">
-                              {
-                                selectedLoan.emiSchedule.filter(
-                                  (emi) => emi.status === "paid"
-                                ).length
-                              }{" "}
-                              of {selectedLoan.tenureMonths}
-                            </div>
-                          </div>
-                          <div className="mb-3">
-                            <label className="form-label small">
-                              Foreclosure Rules
-                            </label>
-                            <div className="small text-muted">
-                              Allowed After:{" "}
-                              {selectedLoan.foreclosureOptions.allowedAfter}{" "}
-                              months
-                              <br />
-                              Charges: {selectedLoan.foreclosureOptions.charges}
+                          <div className="mt-3">
+                            <label className="form-label small fw-semibold">Foreclosure Rules</label>
+                            <div className="card bg-light">
+                              <div className="card-body p-3">
+                                <div className="row">
+                                  <div className="col-md-6">
+                                    <div className="mb-2">
+                                      <span className="text-muted">Allowed After:</span>
+                                      <div className="fw-bold">
+                                        {selectedLoan.foreclosureOptions.allowedAfter} months
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="col-md-6">
+                                    <div className="mb-2">
+                                      <span className="text-muted">Charges:</span>
+                                      <div className="fw-bold">
+                                        {selectedLoan.foreclosureOptions.charges}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="col-md-6">
-                      <div className="card border shadow-none h-100">
+                    {/* Second Card - Foreclosure Calculation */}
+                    <div className="col-12">
+                      <div className="card border shadow-none">
                         <div className="card-body">
-                          <h6 className="fw-semibold mb-3">
-                            Foreclosure Calculation
-                          </h6>
-                          <div className="alert alert-warning">
+                          <h6 className="fw-semibold mb-3">Foreclosure Calculation</h6>
+
+                          <div className="alert alert-warning mb-4">
                             <div className="d-flex align-items-center gap-2 mb-2">
                               <Icon icon="heroicons:exclamation-triangle" />
                               <h6 className="mb-0">Foreclosure Warning</h6>
                             </div>
                             <p className="small mb-0">
-                              This action will close your loan account
-                              permanently. All outstanding dues must be cleared.
+                              This action will close your loan account permanently. All outstanding dues must be cleared.
                             </p>
                           </div>
 
@@ -3398,9 +3537,7 @@ const LoansAdvances = () => {
                                 <tr>
                                   <td>Outstanding Principal</td>
                                   <td className="text-end fw-bold">
-                                    {formatCurrency(
-                                      foreclosureData.outstandingAmount
-                                    )}
+                                    {formatCurrency(foreclosureData.outstandingAmount)}
                                   </td>
                                 </tr>
                                 <tr>
@@ -3412,29 +3549,51 @@ const LoansAdvances = () => {
                                 <tr className="table-active">
                                   <td className="fw-bold">Total Payable</td>
                                   <td className="text-end fw-bold text-primary fs-5">
-                                    {formatCurrency(
-                                      foreclosureData.totalAmount
-                                    )}
+                                    {formatCurrency(foreclosureData.totalAmount)}
                                   </td>
                                 </tr>
                               </tbody>
                             </table>
                           </div>
 
-                          <div className="form-check mt-3">
+                          {/* Checkbox with tick mark */}
+                          <div className="form-check mt-4">
                             <input
                               type="checkbox"
                               className="form-check-input"
                               id="confirmForeclosure"
+                              checked={foreclosureConfirmed}
+                              onChange={(e) => setForeclosureConfirmed(e.target.checked)}
+                              style={{
+                                width: "20px",
+                                height: "20px",
+                                cursor: "pointer",
+                                position: "relative"
+                              }}
                             />
                             <label
-                              className="form-check-label small"
+                              className="form-check-label small d-flex align-items-center gap-2"
                               htmlFor="confirmForeclosure"
+                              style={{ cursor: "pointer" }}
                             >
-                              I understand that foreclosure charges are
-                              applicable and this action cannot be undone.
+                              <span>
+                                I understand that foreclosure charges are applicable and this action cannot be undone.
+                              </span>
+                              {foreclosureConfirmed && (
+                                <span className="text-success d-flex align-items-center">
+                                  <Icon icon="heroicons:check-circle" style={{ width: "18px", height: "18px" }} />
+                                </span>
+                              )}
                             </label>
                           </div>
+
+                          {/* Additional visual feedback when checked */}
+                          {foreclosureConfirmed && (
+                            <div className="alert alert-success mt-3 mb-0 p-2 d-flex align-items-center gap-2">
+                              <Icon icon="heroicons:check-circle" className="text-success" />
+                              <small className="mb-0">You have acknowledged the foreclosure terms.</small>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -3443,17 +3602,26 @@ const LoansAdvances = () => {
                 <div className="modal-footer">
                   <button
                     type="button"
-                    className="btn btn-secondary"
-                    onClick={() => setShowForeclosureModal(false)}
+                    className="btn btn-secondary d-flex align-items-center gap-2"
+                    onClick={() => {
+                      setShowForeclosureModal(false);
+                      setForeclosureConfirmed(false); // Reset checkbox when modal closes
+                    }}
                   >
+                    <Icon icon="heroicons:x-mark" />
                     Cancel
                   </button>
                   <button
                     type="button"
-                    className="btn btn-danger"
+                    className="btn btn-danger d-flex align-items-center gap-2"
                     onClick={handleProcessForeclosure}
+                    disabled={!foreclosureConfirmed}
+                    style={{
+                      opacity: foreclosureConfirmed ? 1 : 0.6,
+                      cursor: foreclosureConfirmed ? "pointer" : "not-allowed"
+                    }}
                   >
-                    <Icon icon="heroicons:check-circle" className="me-2" />
+                    <Icon icon="heroicons:check-circle" />
                     Confirm Foreclosure
                   </button>
                 </div>
@@ -3615,7 +3783,7 @@ const LoansAdvances = () => {
                       </thead>
                       <tbody>
                         {selectedLoan.emiSchedule &&
-                        selectedLoan.emiSchedule.length > 0 ? (
+                          selectedLoan.emiSchedule.length > 0 ? (
                           selectedLoan.emiSchedule.map((emi, index) => (
                             <tr key={index}>
                               <td>{emi.month}</td>
@@ -3623,13 +3791,12 @@ const LoansAdvances = () => {
                               <td>{formatCurrency(emi.amount)}</td>
                               <td>
                                 <span
-                                  className={`badge ${
-                                    emi.status === "paid"
-                                      ? "bg-success"
-                                      : emi.status === "due"
+                                  className={`badge ${emi.status === "paid"
+                                    ? "bg-success"
+                                    : emi.status === "due"
                                       ? "bg-warning"
                                       : "bg-secondary"
-                                  }`}
+                                    }`}
                                 >
                                   {emi.status}
                                 </span>
@@ -3791,7 +3958,7 @@ const LoansAdvances = () => {
           </div>
         )}
 
-        {/* Certificate Modal */}
+        {/* Certificate Modal - Updated heading size */}
         {showCertificateModal && selectedLoan && (
           <div
             className="modal show d-block"
@@ -3800,10 +3967,10 @@ const LoansAdvances = () => {
             <div className="modal-dialog modal-lg">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title d-flex align-items-center gap-2">
+                  <h6 className="modal-title d-flex align-items-center gap-2">
                     <Icon icon="heroicons:document-text" />
                     Loan Repayment Completion Certificate
-                  </h5>
+                  </h6>
                   <button
                     type="button"
                     className="btn-close"
@@ -3813,9 +3980,10 @@ const LoansAdvances = () => {
                 <div className="modal-body">
                   <div className="certificate border p-5">
                     <div className="text-center mb-4">
-                      <h3 className="fw-bold text-primary">
+                      {/* Changed from h3 to h4 and reduced font size */}
+                      <h6 className="fw-bold text-primary">
                         LOAN REPAYMENT COMPLETION CERTIFICATE
-                      </h3>
+                      </h6>
                       <p className="text-muted">
                         Certificate No:{" "}
                         {selectedLoan.documents.certificate.certificateNumber ||
@@ -3927,15 +4095,15 @@ const LoansAdvances = () => {
         {showModal && selectedLoan && (
           <div
             className="modal show d-block"
-            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+            style={{ backgroundColor: "rgba(0,0,0,0.5)", paddingLeft: "400px" }}
           >
             <div className="modal-dialog modal-xl">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title d-flex align-items-center gap-2">
+                  <h6 className="modal-title d-flex align-items-center gap-2">
                     <Icon icon="heroicons:document-text" />
                     Loan Details - {selectedLoan.loanId}
-                  </h5>
+                  </h6>
                   <button
                     type="button"
                     className="btn-close"
@@ -4166,16 +4334,15 @@ const LoansAdvances = () => {
                                         approval.status === "approved"
                                           ? "heroicons:check-circle"
                                           : approval.status === "rejected"
-                                          ? "heroicons:x-circle"
-                                          : "heroicons:clock"
+                                            ? "heroicons:x-circle"
+                                            : "heroicons:clock"
                                       }
-                                      className={`text-${
-                                        approval.status === "approved"
-                                          ? "success"
-                                          : approval.status === "rejected"
+                                      className={`text-${approval.status === "approved"
+                                        ? "success"
+                                        : approval.status === "rejected"
                                           ? "danger"
                                           : "warning"
-                                      }`}
+                                        }`}
                                     />
                                   </div>
                                   <div className="timeline-content ms-3">
@@ -4184,13 +4351,12 @@ const LoansAdvances = () => {
                                     </h6>
                                     <p className="mb-1">
                                       <span
-                                        className={`badge bg-${
-                                          approval.status === "approved"
-                                            ? "success"
-                                            : approval.status === "rejected"
+                                        className={`badge bg-${approval.status === "approved"
+                                          ? "success"
+                                          : approval.status === "rejected"
                                             ? "danger"
                                             : "secondary"
-                                        }`}
+                                          }`}
                                       >
                                         {approval.status}
                                       </span>
@@ -4212,7 +4378,6 @@ const LoansAdvances = () => {
                           )}
                       </div>
                     </div>
-
                     {/* Documents Tab */}
                     <div
                       className="tab-pane fade"
@@ -4220,49 +4385,53 @@ const LoansAdvances = () => {
                       role="tabpanel"
                     >
                       <h6 className="fw-semibold mb-3">Documents Status</h6>
-                      <div className="row">
+
+                      <div className="d-flex flex-column gap-3">
                         {selectedLoan.documents &&
-                          Object.entries(selectedLoan.documents).map(
-                            ([doc, status]) => (
-                              <div key={doc} className="col-md-6 mb-3">
-                                <div className="card">
-                                  <div className="card-body">
-                                    <div className="d-flex justify-content-between align-items-center">
-                                      <div>
-                                        <h6 className="mb-1 text-capitalize">
-                                          {doc
-                                            .replace(/([A-Z])/g, " $1")
-                                            .trim()}
-                                        </h6>
-                                        <span
-                                          className={`badge ${
-                                            status.verified ||
-                                            status.generated ||
-                                            status.signed
-                                              ? "bg-success"
-                                              : "bg-warning"
-                                          }`}
-                                        >
-                                          {status.verified
-                                            ? "Verified"
-                                            : status.generated
-                                            ? "Generated"
-                                            : status.signed
+                          Object.entries(selectedLoan.documents).map(([doc, status]) => {
+                            const isCompleted =
+                              status.verified || status.generated || status.signed;
+
+                            return (
+                              <div key={doc} className="card shadow-sm">
+                                <div className="card-body d-flex justify-content-between align-items-center">
+
+                                  {/* Left content */}
+                                  <div>
+                                    <h6 className="mb-1">
+                                      {getDocumentLabel(doc)}
+                                    </h6>
+
+                                    <span
+                                      className={`badge ${isCompleted ? "bg-success" : "bg-warning"
+                                        }`}
+                                    >
+                                      {status.verified
+                                        ? "Verified"
+                                        : status.generated
+                                          ? "Generated"
+                                          : status.signed
                                             ? "Signed"
                                             : "Pending"}
-                                        </span>
-                                      </div>
-                                      <button className="btn btn-sm btn-outline-primary">
-                                        <Icon icon="heroicons:eye" />
-                                      </button>
-                                    </div>
+                                    </span>
                                   </div>
+
+                                  {/* View Button */}
+                                  <button
+                                    className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+                                    onClick={() => handleViewDocument(doc)}
+                                  >
+                                    <Icon icon="heroicons:eye" />
+                                    View
+                                  </button>
                                 </div>
                               </div>
-                            )
-                          )}
+                            );
+                          })}
                       </div>
                     </div>
+
+
 
                     {/* Disbursement Tab */}
                     <div
@@ -4272,7 +4441,7 @@ const LoansAdvances = () => {
                     >
                       <h6 className="fw-semibold mb-3">Disbursement Details</h6>
                       {selectedLoan.disbursement &&
-                      selectedLoan.disbursement.status === "completed" ? (
+                        selectedLoan.disbursement.status === "completed" ? (
                         <div className="row g-3">
                           <div className="col-md-6">
                             <label className="form-label fw-semibold">
@@ -4361,6 +4530,55 @@ const LoansAdvances = () => {
             </div>
           </div>
         )}
+        {/* Document Preview Modal */}
+        {showDocModal && (
+          <>
+            <div className="modal-backdrop fade show" />
+
+            <div
+              className="modal fade show d-block"
+              style={{ zIndex: 1200 }}
+            >
+              <div className="modal-dialog modal-sm modal-dialog-centered">
+                <div className="modal-content rounded-3">
+
+                  <div className="modal-header">
+                    <h6 className="modal-title">
+                      {getDocumentLabel(activeDoc)}
+                    </h6>
+
+                    <button
+                      className="btn-close"
+                      onClick={() => setShowDocModal(false)}
+                    />
+                  </div>
+
+                  <div className="modal-body text-center">
+                    <Icon
+                      icon="heroicons:document-text"
+                      width="40"
+                      className="text-primary mb-2"
+                    />
+                    <p className="mb-0 small text-muted">
+                      Document preview will appear here.
+                    </p>
+                  </div>
+
+                  <div className="modal-footer justify-content-center">
+                    <button
+                      className="btn btn-sm btn-secondary"
+                      onClick={() => setShowDocModal(false)}
+                    >
+                      Close
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
       </div>
     </>
   );

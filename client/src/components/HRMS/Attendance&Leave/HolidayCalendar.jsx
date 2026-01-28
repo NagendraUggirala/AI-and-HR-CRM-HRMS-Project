@@ -1039,16 +1039,44 @@ const HolidayCalendar = () => {
         </div>
       )}
 
-      {/* PAGE HEADER */}
-      <div className="mb-3 mb-md-4">
-        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-2">
-          <div className="d-flex align-items-center mb-2 mb-md-0">
-            <h6 className="fw-bold h4 h2-md">Holiday Calendar</h6>
+      {/* PAGE HEADER - WITH LARGE ICON AND TITLE */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            {/* Calendar Icon Container */}
+            <div
+              style={{
+                width: "44px",
+                height: "44px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Calendar size={28} style={{ color: "#1e293b" }} />
+            </div>
+
+            {/* Title and Description */}
+            <div>
+              <h7
+                style={{
+                  fontSize: "24px",
+                  fontWeight: "bold",
+                  color: "#1e293b",
+                  marginBottom: "4px",
+                }}
+              >
+                Holiday Calendar
+              </h7>
+              <div style={{ fontSize: "14px", color: "#64748b" }}>
+                Manage holidays, applications, swap requests and calendars
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* VIEW TOGGLE & SEARCH BAR */}
+      {/* VIEW TOGGLE & SEARCH BAR - FIXED SECTION */}
       <div className="card border shadow-none mb-3 mb-md-4">
         <div className="card-body p-2 p-md-3">
           <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 gap-sm-3">
@@ -1094,8 +1122,8 @@ const HolidayCalendar = () => {
                 </div>
               </div>
 
-              {/* Filters Dropdowns */}
-              <div className="d-flex flex-wrap gap-2">
+              {/* Filters and Actions - Now properly aligned */}
+              <div className="d-flex flex-wrap gap-2 align-items-center">
                 {activeTab === "holidayMaster" ? (
                   <>
                     {/* Mobile: Stacked, Desktop: Inline */}
@@ -1141,7 +1169,7 @@ const HolidayCalendar = () => {
                       </select>
                     </div>
                   </>
-                ) : (
+                ) : activeTab === "optionalApplications" && (
                   <select
                     className="form-select form-select-sm"
                     value={statusFilter}
@@ -1158,10 +1186,10 @@ const HolidayCalendar = () => {
                   </select>
                 )}
 
-                {/* Action Buttons */}
-                <div className="d-flex gap-4">
+                {/* Export & Print Buttons - Always in same line */}
+                <div className="d-flex gap-2">
                   {/* Mobile: Icon-only */}
-                  <div className="btn-group d-sm-none">
+                  <div className="d-sm-none d-flex gap-1">
                     <button
                       className="btn btn-success btn-sm"
                       onClick={exportToCSV}
@@ -1179,11 +1207,12 @@ const HolidayCalendar = () => {
                   </div>
 
                   {/* Desktop: Full buttons */}
-                  <div className="d-none d-sm-flex btn-group">
+                  <div className="d-none d-sm-flex gap-2">
                     <button
                       className="btn btn-success btn-sm d-flex align-items-center"
                       onClick={exportToCSV}
                       title="Export to CSV"
+                      style={{ minWidth: "80px" }}
                     >
                       <Download size={14} className="me-1 me-md-2" />
                       <span className="d-none d-md-inline">Export</span>
@@ -1192,6 +1221,7 @@ const HolidayCalendar = () => {
                       className="btn btn-dark btn-sm d-flex align-items-center"
                       onClick={printData}
                       title="Print"
+                      style={{ minWidth: "80px" }}
                     >
                       <Printer size={14} className="me-1 me-md-2" />
                       <span className="d-none d-md-inline">Print</span>

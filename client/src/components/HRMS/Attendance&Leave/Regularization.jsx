@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useReducer } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import {
   Clock,
   Calendar,
@@ -61,6 +62,8 @@ const regularizationReducer = (state, action) => {
       };
     case "SET_BULK_PROCESSING":
       return { ...state, bulkProcessing: action.payload };
+    case "ADD_REPORT":
+      return { ...state, reports: [...state.reports, action.payload] };
     default:
       return state;
   }
@@ -120,6 +123,14 @@ const Regularization = () => {
     file: null,
   });
 
+  // Report form state
+  const [reportForm, setReportForm] = useState({
+    fromDate: "",
+    toDate: "",
+    requestType: "",
+    format: "pdf",
+  });
+
   // Load from localStorage
   const loadFromStorage = (key, defaultValue) => {
     const stored = localStorage.getItem(key);
@@ -133,16 +144,18 @@ const Regularization = () => {
       { id: 2, requestType: "forgot", days: 5, enabled: true },
     ]),
     bulkProcessing: loadFromStorage("bulkProcessing", []),
+    reports: loadFromStorage("regularizationReports", []),
   };
 
   const [state, dispatch] = useReducer(regularizationReducer, initialState);
-  const { requests, autoRejectRules, bulkProcessing } = state;
+  const { requests, autoRejectRules, bulkProcessing, reports } = state;
 
   // Save to localStorage
   useEffect(() => {
     localStorage.setItem("regularizationRequests", JSON.stringify(requests));
     localStorage.setItem("autoRejectRules", JSON.stringify(autoRejectRules));
     localStorage.setItem("bulkProcessing", JSON.stringify(bulkProcessing));
+    localStorage.setItem("regularizationReports", JSON.stringify(reports));
   }, [state]);
 
   // Auto-reject processing
@@ -287,6 +300,86 @@ const Regularization = () => {
     alert(`Bulk regularization processed for ${processedCount} employees`);
   };
 
+  // ==================== REPORT FUNCTIONS ====================
+  const handleGenerateReport = () => {
+    if (!reportForm.fromDate || !reportForm.toDate) {
+      alert("Please select both From Date and To Date");
+      return;
+    }
+
+    // Filter requests based on report criteria
+    let filteredReportData = requests.filter((req) => {
+      const requestDate = new Date(req.submittedAt);
+      const fromDate = new Date(reportForm.fromDate);
+      const toDate = new Date(reportForm.toDate);
+      toDate.setHours(23, 59, 59, 999); // Include entire end day
+
+      // Date range filter
+      if (requestDate < fromDate || requestDate > toDate) {
+        return false;
+      }
+
+      // Request type filter
+      if (reportForm.requestType && reportForm.requestType !== "" && req.requestType !== reportForm.requestType) {
+        return false;
+      }
+
+      return true;
+    });
+
+    // Generate report summary
+    const reportSummary = {
+      totalRequests: filteredReportData.length,
+      pending: filteredReportData.filter(r => r.status === "pending").length,
+      approved: filteredReportData.filter(r => r.status === "approved").length,
+      rejected: filteredReportData.filter(r => r.status === "rejected" || r.status === "auto-rejected").length,
+      byType: filteredReportData.reduce((acc, req) => {
+        acc[req.requestType] = (acc[req.requestType] || 0) + 1;
+        return acc;
+      }, {}),
+      byDepartment: filteredReportData.reduce((acc, req) => {
+        acc[req.department] = (acc[req.department] || 0) + 1;
+        return acc;
+      }, {})
+    };
+
+    // Create report object
+    const report = {
+      id: Date.now(),
+      ...reportForm,
+      generatedAt: new Date().toISOString(),
+      generatedBy: "HR Admin",
+      data: filteredReportData,
+      summary: reportSummary,
+      fileName: `regularization-report-${Date.now()}.${reportForm.format}`
+    };
+
+    // Save report
+    dispatch({ type: "ADD_REPORT", payload: report });
+
+    // Simulate file download
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = report.fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+
+    // Show success message
+    alert(`Report generated successfully!\n\nDownloaded: ${report.fileName}\n\nStatistics:\n• Total Requests: ${reportSummary.totalRequests}\n• Pending: ${reportSummary.pending}\n• Approved: ${reportSummary.approved}\n• Rejected: ${reportSummary.rejected}`);
+
+    // Reset form
+    setReportForm({
+      fromDate: "",
+      toDate: "",
+      requestType: "",
+      format: "pdf",
+    });
+  };
+
   // ==================== FILTERED DATA ====================
   const filteredRequests = requests.filter((req) => {
     const matchesSearch =
@@ -306,20 +399,26 @@ const Regularization = () => {
         <div className="card border-0 shadow-sm">
           <div className="card-header bg-white py-3">
             <div className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0 d-flex align-items-center">
+              <h7 className="mb-0 d-flex align-items-center fw-bold">
                 <FileText size={20} className="me-2 text-primary" />
                 Regularization Requests
-              </h5>
+              </h7>
               <button
-                className="btn btn-primary btn-sm"
+                className="btn btn-primary"
                 onClick={() => {
                   setRequestType("missing");
                   setRequestForm({ ...requestForm, requestType: "missing" });
                   setShowRequestModal(true);
                 }}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 20px'
+                }}
               >
-                <Plus size={16} className="me-2" />
-                New Request
+                <Plus size={18} />
+                <span>New Request</span>
               </button>
             </div>
           </div>
@@ -380,7 +479,34 @@ const Regularization = () => {
                   {filteredRequests.length === 0 ? (
                     <tr>
                       <td colSpan="7" className="text-center py-4">
-                        <p className="text-muted mb-0">No regularization requests</p>
+                        <div style={{ 
+                          textAlign: 'center', 
+                          padding: '60px 0',
+                          minHeight: '300px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <div style={{ 
+                            width: '80px',
+                            height: '80px',
+                            backgroundColor: '#f1f5f9',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginBottom: '20px'
+                          }}>
+                            <FileText size={40} color="#64748b" />
+                          </div>
+                          <h5 style={{ color: '#475569', marginBottom: '8px', fontWeight: '600' }}>
+                            No Regularization Requests Found
+                          </h5>
+                          <p style={{ color: '#94a3b8', marginBottom: '24px', maxWidth: '400px' }}>
+                            When you submit regularization requests, they will appear here for review and approval.
+                          </p>
+                        </div>
                       </td>
                     </tr>
                   ) : (
@@ -487,14 +613,14 @@ const Regularization = () => {
   );
 
   const renderSettings = () => (
-    <div className="row g-4">
-      <div className="col-12 col-md-6">
-        <div className="card border-0 shadow-sm">
+    <div className="row g-3">
+      <div className="col-12 col-md-8">
+        <div className="card border-0 shadow-sm h-100">
           <div className="card-header bg-white py-3">
-            <h5 className="mb-0 d-flex align-items-center">
-              <Settings size={20} className="me-2 text-primary" />
+            <h7 className="mb-0 d-flex align-items-center fw-bold">
+              <Settings size={18} className="me-2 text-primary" />
               Auto-Reject Rules
-            </h5>
+            </h7>
           </div>
           <div className="card-body">
             <div className="table-responsive">
@@ -551,41 +677,41 @@ const Regularization = () => {
         </div>
       </div>
 
-      <div className="col-12 col-md-6">
-        <div className="card border-0 shadow-sm">
+      <div className="col-12 col-md-4">
+        <div className="card border-0 shadow-sm h-100">
           <div className="card-header bg-white py-3">
-            <h5 className="mb-0 d-flex align-items-center">
-              <BarChart3 size={20} className="me-2 text-primary" />
+            <h7 className="mb-0 d-flex align-items-center fw-bold">
+              <BarChart3 size={18} className="me-2 text-primary" />
               Request Statistics
-            </h5>
+            </h7>
           </div>
           <div className="card-body">
             <div className="row g-3">
-              <div className="col-6">
-                <div className="text-center p-3 border rounded">
-                  <div className="h4 mb-0 text-primary">{requests.length}</div>
+              <div className="col-12">
+                <div className="text-center p-3 border rounded bg-light">
+                  <div className="h4 mb-0 text-primary fw-bold">{requests.length}</div>
                   <small className="text-muted">Total Requests</small>
                 </div>
               </div>
-              <div className="col-6">
-                <div className="text-center p-3 border rounded">
-                  <div className="h4 mb-0 text-warning">
+              <div className="col-12">
+                <div className="text-center p-3 border rounded bg-light">
+                  <div className="h4 mb-0 text-warning fw-bold">
                     {requests.filter((r) => r.status === "pending").length}
                   </div>
                   <small className="text-muted">Pending</small>
                 </div>
               </div>
-              <div className="col-6">
-                <div className="text-center p-3 border rounded">
-                  <div className="h4 mb-0 text-success">
+              <div className="col-12">
+                <div className="text-center p-3 border rounded bg-light">
+                  <div className="h4 mb-0 text-success fw-bold">
                     {requests.filter((r) => r.status === "approved").length}
                   </div>
                   <small className="text-muted">Approved</small>
                 </div>
               </div>
-              <div className="col-6">
-                <div className="text-center p-3 border rounded">
-                  <div className="h4 mb-0 text-danger">
+              <div className="col-12">
+                <div className="text-center p-3 border rounded bg-light">
+                  <div className="h4 mb-0 text-danger fw-bold">
                     {requests.filter((r) => r.status === "rejected" || r.status === "auto-rejected").length}
                   </div>
                   <small className="text-muted">Rejected</small>
@@ -598,14 +724,205 @@ const Regularization = () => {
     </div>
   );
 
+  const renderBulkProcessing = () => (
+    <div className="row g-4">
+      <div className="col-12">
+        <div className="card border-0 shadow-sm">
+          <div className="card-header bg-white py-3">
+            <div className="d-flex justify-content-between align-items-center">
+              <h8 className="mb-0 d-flex align-items-center fw-bold">
+                <Upload size={20} className="me-2 text-primary" />
+                Bulk Regularization Processing
+              </h8>
+              <button
+                className="btn btn-primary"
+                onClick={() => setShowBulkModal(true)}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 20px'
+                }}
+              >
+                <Plus size={18} />
+                <span>Process Bulk</span>
+              </button>
+            </div>
+          </div>
+          <div className="card-body">
+            <p className="text-muted">
+              Use bulk processing for system-wide issues like device malfunctions,
+              sync errors, or network failures affecting multiple employees.
+            </p>
+            {bulkProcessing.length > 0 && (
+              <div className="table-responsive mt-3">
+                <table className="table table-hover">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Date Range</th>
+                      <th>Issue Type</th>
+                      <th>Processed</th>
+                      <th>Status</th>
+                      <th>Processed By</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bulkProcessing.map((process) => (
+                      <tr key={process.id}>
+                        <td>
+                          {process.fromDate} to {process.toDate}
+                        </td>
+                        <td>{process.issueType}</td>
+                        <td>{process.processedCount} employees</td>
+                        <td>
+                          <span className="badge bg-success">{process.status}</span>
+                        </td>
+                        <td>{process.processedBy}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderReports = () => (
+    <div className="row g-4">
+      <div className="col-12">
+        <div className="card border-0 shadow-sm">
+          <div className="card-header bg-white py-3">
+            <h7 className="mb-0 d-flex align-items-center fw-bold">
+              <BarChart3 size={20} className="me-2 text-primary" />
+              Regularization Reports
+            </h7>
+          </div>
+          <div className="card-body">
+            <div className="row g-3 mb-3">
+              <div className="col-md-3">
+                <label className="form-label">From Date</label>
+                <input 
+                  type="date" 
+                  className="form-control" 
+                  value={reportForm.fromDate}
+                  onChange={(e) => setReportForm({...reportForm, fromDate: e.target.value})}
+                />
+              </div>
+              <div className="col-md-3">
+                <label className="form-label">To Date</label>
+                <input 
+                  type="date" 
+                  className="form-control" 
+                  value={reportForm.toDate}
+                  onChange={(e) => setReportForm({...reportForm, toDate: e.target.value})}
+                />
+              </div>
+              <div className="col-md-3">
+                <label className="form-label">Request Type</label>
+                <select 
+                  className="form-select"
+                  value={reportForm.requestType}
+                  onChange={(e) => setReportForm({...reportForm, requestType: e.target.value})}
+                >
+                  <option value="">All Types</option>
+                  <option value="missing">Missing Punch</option>
+                  <option value="incorrect">Incorrect Time</option>
+                  <option value="forgot">Forgot Punch</option>
+                  <option value="wfh">WFH</option>
+                  <option value="on_duty">On-Duty</option>
+                </select>
+              </div>
+              <div className="col-md-3">
+                <label className="form-label">Format</label>
+                <select 
+                  className="form-select"
+                  value={reportForm.format}
+                  onChange={(e) => setReportForm({...reportForm, format: e.target.value})}
+                >
+                  <option value="pdf">PDF</option>
+                  <option value="excel">Excel</option>
+                  <option value="csv">CSV</option>
+                </select>
+              </div>
+            </div>
+            <button 
+              className="btn btn-primary"
+              onClick={handleGenerateReport}
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 20px'
+              }}
+            >
+              <Download size={18} />
+              <span>Generate Report</span>
+            </button>
+            
+            {reports.length > 0 && (
+              <div className="mt-4">
+                <h6 className="mb-3 fw-bold">Generated Reports</h6>
+                <div className="table-responsive">
+                  <table className="table table-hover">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Date Range</th>
+                        <th>Type</th>
+                        <th>Format</th>
+                        <th>Generated At</th>
+                        <th>File Name</th>
+                        <th>Total Records</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reports.slice().reverse().map((report) => (
+                        <tr key={report.id}>
+                          <td>{report.fromDate} to {report.toDate}</td>
+                          <td>{report.requestType || "All Types"}</td>
+                          <td><span className="badge bg-info">{report.format.toUpperCase()}</span></td>
+                          <td>{new Date(report.generatedAt).toLocaleString()}</td>
+                          <td>{report.fileName}</td>
+                          <td>{report.summary.totalRecords || report.data?.length || 0}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="container-fluid py-4">
+      {/* HEADER - ONLY "Regularization Workflow" IN BOLD */}
       <div className="row mb-4">
         <div className="col-12">
-          <h4 className="mb-2">Regularization Workflow</h4>
-          <p className="text-muted">
-            Manage attendance regularization requests, approvals, and settings
-          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{
+              width: '44px',
+              height: '44px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <i className="bi bi-clock-history" style={{ fontSize: '24px', color: '#1e293b' }}></i>
+            </div>
+            <div>
+              <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1e293b' }}>
+                Regularization Workflow
+              </div>
+              <div style={{ fontSize: '14px', color: '#64748b' }}>
+                Manage attendance regularization requests, approvals, and settings
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -617,7 +934,7 @@ const Regularization = () => {
             onClick={() => setActiveTab("requests")}
           >
             <FileText size={16} className="me-2" />
-            Requests
+            <span className="fw-medium">Requests</span>
           </button>
         </li>
         <li className="nav-item">
@@ -626,7 +943,7 @@ const Regularization = () => {
             onClick={() => setActiveTab("settings")}
           >
             <Settings size={16} className="me-2" />
-            Settings
+            <span className="fw-medium">Settings</span>
           </button>
         </li>
         <li className="nav-item">
@@ -635,7 +952,7 @@ const Regularization = () => {
             onClick={() => setActiveTab("bulk")}
           >
             <Upload size={16} className="me-2" />
-            Bulk Processing
+            <span className="fw-medium">Bulk Processing</span>
           </button>
         </li>
         <li className="nav-item">
@@ -644,7 +961,7 @@ const Regularization = () => {
             onClick={() => setActiveTab("reports")}
           >
             <BarChart3 size={16} className="me-2" />
-            Reports
+            <span className="fw-medium">Reports</span>
           </button>
         </li>
       </ul>
@@ -653,126 +970,29 @@ const Regularization = () => {
       <div className="tab-content">
         {activeTab === "requests" && renderRequests()}
         {activeTab === "settings" && renderSettings()}
-        {activeTab === "bulk" && (
-          <div className="row g-4">
-            <div className="col-12">
-              <div className="card border-0 shadow-sm">
-                <div className="card-header bg-white py-3">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <h5 className="mb-0 d-flex align-items-center">
-                      <Upload size={20} className="me-2 text-primary" />
-                      Bulk Regularization Processing
-                    </h5>
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => setShowBulkModal(true)}
-                    >
-                      <Plus size={16} className="me-2" />
-                      Process Bulk
-                    </button>
-                  </div>
-                </div>
-                <div className="card-body">
-                  <p className="text-muted">
-                    Use bulk processing for system-wide issues like device malfunctions,
-                    sync errors, or network failures affecting multiple employees.
-                  </p>
-                  {bulkProcessing.length > 0 && (
-                    <div className="table-responsive mt-3">
-                      <table className="table table-hover">
-                        <thead className="table-light">
-                          <tr>
-                            <th>Date Range</th>
-                            <th>Issue Type</th>
-                            <th>Processed</th>
-                            <th>Status</th>
-                            <th>Processed By</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {bulkProcessing.map((process) => (
-                            <tr key={process.id}>
-                              <td>
-                                {process.fromDate} to {process.toDate}
-                              </td>
-                              <td>{process.issueType}</td>
-                              <td>{process.processedCount} employees</td>
-                              <td>
-                                <span className="badge bg-success">{process.status}</span>
-                              </td>
-                              <td>{process.processedBy}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        {activeTab === "reports" && (
-          <div className="row g-4">
-            <div className="col-12">
-              <div className="card border-0 shadow-sm">
-                <div className="card-header bg-white py-3">
-                  <h5 className="mb-0 d-flex align-items-center">
-                    <BarChart3 size={20} className="me-2 text-primary" />
-                    Regularization Reports
-                  </h5>
-                </div>
-                <div className="card-body">
-                  <div className="row g-3 mb-3">
-                    <div className="col-md-3">
-                      <label className="form-label">From Date</label>
-                      <input type="date" className="form-control" />
-                    </div>
-                    <div className="col-md-3">
-                      <label className="form-label">To Date</label>
-                      <input type="date" className="form-control" />
-                    </div>
-                    <div className="col-md-3">
-                      <label className="form-label">Request Type</label>
-                      <select className="form-select">
-                        <option value="">All Types</option>
-                        <option value="missing">Missing Punch</option>
-                        <option value="incorrect">Incorrect Time</option>
-                        <option value="forgot">Forgot Punch</option>
-                        <option value="wfh">WFH</option>
-                        <option value="on_duty">On-Duty</option>
-                      </select>
-                    </div>
-                    <div className="col-md-3">
-                      <label className="form-label">Format</label>
-                      <select className="form-select">
-                        <option value="pdf">PDF</option>
-                        <option value="excel">Excel</option>
-                        <option value="csv">CSV</option>
-                      </select>
-                    </div>
-                  </div>
-                  <button className="btn btn-primary">
-                    <Download size={16} className="me-2" />
-                    Generate Report
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {activeTab === "bulk" && renderBulkProcessing()}
+        {activeTab === "reports" && renderReports()}
       </div>
 
-      {/* Request Modal */}
+      {/* Request Modal - FORM PAGE CENTERED FOR DESKTOP */}
       {showRequestModal && (
         <div
           className="modal show d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          style={{ 
+            backgroundColor: "rgba(0,0,0,0.5)",
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '100vh'
+          }}
         >
-          <div className="modal-dialog modal-lg modal-dialog-scrollable">
+          <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">New Regularization Request</h5>
+                <h6 className="modal-title d-flex align-items-center fw-bold">
+                  <Plus size={20} className="me-2" />
+                  New Regularization Request
+                </h6>
                 <button
                   type="button"
                   className="btn-close"
@@ -1057,11 +1277,11 @@ const Regularization = () => {
                 </button>
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="btn btn-primary d-inline-flex align-items-center"
                   onClick={handleSubmitRequest}
                 >
-                  <Send size={16} className="me-2" />
-                  Submit Request
+                  <Send size={16} />
+                  <span className="ms-2">Submit Request</span>
                 </button>
               </div>
             </div>
@@ -1073,12 +1293,21 @@ const Regularization = () => {
       {showApprovalModal && selectedRequest && (
         <div
           className="modal show d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          style={{ 
+            backgroundColor: "rgba(0,0,0,0.5)",
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '100vh'
+          }}
         >
-          <div className="modal-dialog">
+          <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Request Details & Approval</h5>
+                <h6 className="modal-title d-flex align-items-center fw-bold">
+                  <Eye size={20} className="me-2" />
+                  Request Details & Approval
+                </h6>
                 <button
                   type="button"
                   className="btn-close"
@@ -1148,7 +1377,7 @@ const Regularization = () => {
                   <>
                     <button
                       type="button"
-                      className="btn btn-success"
+                      className="btn btn-success d-inline-flex align-items-center"
                       onClick={() => handleApproveRequest(selectedRequest.id, true)}
                     >
                       <Check size={16} className="me-2" />
@@ -1156,7 +1385,7 @@ const Regularization = () => {
                     </button>
                     <button
                       type="button"
-                      className="btn btn-danger"
+                      className="btn btn-danger d-inline-flex align-items-center"
                       onClick={() => handleApproveRequest(selectedRequest.id, false)}
                     >
                       <X size={16} className="me-2" />
@@ -1174,12 +1403,21 @@ const Regularization = () => {
       {showBulkModal && (
         <div
           className="modal show d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          style={{ 
+            backgroundColor: "rgba(0,0,0,0.5)",
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '100vh'
+          }}
         >
-          <div className="modal-dialog modal-lg">
+          <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Bulk Regularization Processing</h5>
+                <h6 className="modal-title d-flex align-items-center fw-bold">
+                  <Upload size={20} className="me-2" />
+                  Bulk Regularization Processing
+                </h6>
                 <button
                   type="button"
                   className="btn-close"
@@ -1253,7 +1491,7 @@ const Regularization = () => {
                 </button>
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="btn btn-primary d-inline-flex align-items-center"
                   onClick={handleBulkProcess}
                 >
                   <Upload size={16} className="me-2" />

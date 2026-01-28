@@ -1042,13 +1042,13 @@ const OfferManagement = () => {
                 <p className="mt-2">Loading offers...</p>
               </div>
             ) : getOffersByStatus(activeTab).length === 0 ? (
-              <div className="text-center py-4 justify-items-center" >
+              <div className="text-center py-4">
                 <Icon icon="heroicons:document-magnifying-glass" className="text-muted fs-1 mb-3" />
                 <p className="text-muted">No offers found</p>
               </div>
             ) : (
               <div className="table-responsive">
-                <table className="table table-hover">AZAZ
+                <table className="table table-hover">
                   <thead>
                     <tr>
                       <th>Candidate</th>
@@ -1350,7 +1350,6 @@ const OfferManagement = () => {
           >
             <div 
               className="modal-dialog modal-dialog-centered"
-              
             >
               <div className="modal-content" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
                 <div className="modal-header bg-light">
@@ -1839,7 +1838,7 @@ const OfferManagement = () => {
                         </div>
                       </div>
 
-                      {/* Step 4: Background Verification & References 
+                      {/* Step 4: Background Verification & References */}
                       <div className="mb-4">
                         <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center">
                           <span className="badge bg-primary me-2">4</span>
@@ -1868,7 +1867,7 @@ const OfferManagement = () => {
                           </div>
                         </div>
                       </div>
-                      */}
+                      
                       <div className="mb-4">
                         <label className="form-label">Notes</label>
                         <textarea
@@ -1980,19 +1979,11 @@ const OfferManagement = () => {
                 e.stopPropagation();
               }
             }}          >
-            <div 
-              className="modal-dialog modal-dialog-centered modal-dialog-scrollable"
-              style={{
-                maxWidth: '1200px',
-                width: '95%',
-                margin: '0 auto',
-                maxHeight: '90vh',
-                position: 'relative'
-              }}            >
+            <div className="modal-dialog modal-dialog-centered"  >
               <div className="modal-content" style={{ maxHeight: '90vh',  display: 'flex', flexDirection: 'column' }}>
                 <div className="modal-header bg-light">
                   <h5 className="modal-title d-flex align-items-center">
-                    {/* <Icon icon="heroicons:eye" className="me-2" /> */}
+                    <Icon icon="heroicons:eye" className="me-2" />
                     Offer Letter Preview
                   </h5>
                   <button 
@@ -2177,90 +2168,88 @@ const OfferManagement = () => {
           );
         })()}
 
-        {/* Send Offer Modal */}
-        {showSendModal && selectedOffer && (
-          <div 
-            className="modal fade show d-block" 
-            style={{ 
-              backgroundColor: 'rgba(0,0,0,0.5)',
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 1055,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-            onClick={(e) => {
-              if (e.target === e.currentTarget) {
-                setShowSendModal(false);
-              }
-            }}
-            onMouseDown={(e) => {
-              if (e.target === e.currentTarget) {
-                e.stopPropagation();
-              }
-            }}
-          >
-            <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content">
-                <div className="modal-header bg-primary text-white">
-                  <h5 className="modal-title d-flex align-items-center">
-                    <Icon icon="heroicons:paper-airplane" className="me-2" />
-                    Send Offer
-                  </h5>
-                  <button 
-                    type="button" 
-                    className="btn-close btn-close-white" 
-                    onClick={() => setShowSendModal(false)}
-                  ></button>
-                </div>
-                <div className="modal-body">
-                  <p>Send offer to <strong>{selectedOffer.candidateName}</strong>?</p>
-                  <div className="mb-3">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        checked={emailSettings.sendEmail}
-                        onChange={(e) => setEmailSettings({...emailSettings, sendEmail: e.target.checked})}
-                      />
-                      <label className="form-check-label">Send via Email</label>
-                    </div>
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        checked={emailSettings.sendSMS}
-                        onChange={(e) => setEmailSettings({...emailSettings, sendSMS: e.target.checked})}
-                      />
-                      <label className="form-check-label">Send via SMS</label>
-                    </div>
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => setShowSendModal(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={handleConfirmSendOffer}
-                  >
-                    <Icon icon="heroicons:paper-airplane" className="me-2" />
-                    Send Offer
-                  </button>
-                </div>
-              </div>
+{/* Send Offer Modal */}
+{showSendModal && selectedOffer && (
+  <div 
+    className="modal fade show d-block" 
+    style={{ 
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1055,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}
+    onClick={(e) => {
+      if (e.target === e.currentTarget) {
+        setShowSendModal(false);
+      }
+    }}
+    onMouseDown={(e) => {
+      if (e.target === e.currentTarget) {
+        e.stopPropagation();
+      }
+    }}
+  >
+    <div className="modal-dialog modal-dialog-centered">
+      <div className="modal-content">
+        <div className="modal-header bg-primary text-white">
+          <h5 className="modal-title d-flex align-items-center">
+            <Icon icon="heroicons:paper-airplane" className="me-2" />
+            Send Offer
+          </h5>
+          <button 
+            type="button" 
+            className="btn-close btn-close-white" 
+            onClick={() => setShowSendModal(false)}
+          ></button>
+        </div>
+        <div className="modal-body">
+          <p>Send offer to <strong>{selectedOffer.candidateName}</strong>?</p>
+          <div className="mb-3">
+            <div className="form-check">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                checked={emailSettings.sendEmail}
+                onChange={(e) => setEmailSettings({...emailSettings, sendEmail: e.target.checked})}
+              />
+              <label className="form-check-label">Send via Email</label>
+            </div>
+            <div className="form-check">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                checked={emailSettings.sendSMS}
+                onChange={(e) => setEmailSettings({...emailSettings, sendSMS: e.target.checked})}
+              />
+              <label className="form-check-label">Send via SMS</label>
             </div>
           </div>
-        )}
+        </div>
+        <div className="modal-footer">
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setShowSendModal(false)}          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={handleConfirmSendOffer}          >
+            <Icon icon="heroicons:paper-airplane" className="me-2" />
+            Send Offer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
         {/* Decline Offer Modal */}
         {showDeclineModal && selectedOffer && (
@@ -2437,7 +2426,7 @@ const OfferManagement = () => {
         {/* Background Verification Modal */}
         {showBGVModal && selectedOffer && (
           <div 
-            className="modal fade show d-block" 
+            className="modal-dialog modal-dialog-centered" 
             style={{ 
               backgroundColor: 'rgba(0,0,0,0.5)',
               position: 'fixed',
@@ -2507,7 +2496,7 @@ const OfferManagement = () => {
         {/* Reference Check Modal */}
         {showReferenceCheckModal && selectedOffer && (
           <div 
-            className="modal fade show d-block" 
+            className="modal-dialog modal-dialog-centered" 
             style={{ 
               backgroundColor: 'rgba(0,0,0,0.5)',
               position: 'fixed',

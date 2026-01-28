@@ -53,6 +53,8 @@ import {
   ChevronLeft,
 } from "lucide-react";
 
+
+
 // ==================== REDUCER FOR STATE MANAGEMENT ====================
 const leaveReducer = (state, action) => {
   switch (action.type) {
@@ -765,32 +767,46 @@ const LeaveManagement = () => {
     alert(`Comp-off added successfully (Policy: ${compOffForm.policyType})`);
   };
 
-  const handleApplyCompOff = (compOffId) => {
-    const compOff = compOffs.find((co) => co.id === compOffId);
-    if (!compOff) return;
+ const handleApplyCompOff = (compOffId) => {
+  const compOff = compOffs.find((co) => co.id === compOffId);
+  if (!compOff) return;
 
-    const application = {
-      id: Date.now(),
-      employeeId: compOff.employeeId,
-      leaveTypeId: null,
-      leaveTypeName: "Comp-Off",
-      startDate: new Date().toISOString().split("T")[0],
-      endDate: new Date().toISOString().split("T")[0],
-      days: compOff.hours / 8,
-      status: "pending",
-      appliedAt: new Date().toISOString(),
-      reason: `Comp-off application for ${compOff.hours} hours`,
-      isCompOff: true,
-      compOffId: compOffId,
-    };
+  const today = new Date().toISOString().split("T")[0];
 
-    dispatch({ type: "ADD_LEAVE_APPLICATION", payload: application });
-    dispatch({
-      type: "UPDATE_COMP_OFF",
-      payload: { ...compOff, applied: true, status: "applied" },
-    });
-    alert("Comp-off application submitted");
+  const application = {
+    id: Date.now(),
+    employeeId: compOff.employeeId,
+    leaveTypeId: "COMP_OFF",        // 🔴 important (not null)
+    leaveTypeName: "Comp-Off",
+    startDate: today,
+    endDate: today,
+    days: Number((compOff.hours / 8).toFixed(2)),
+    status: "pending",              // 🔴 always string
+    appliedAt: new Date().toISOString(),
+    reason: `Comp-off application for ${compOff.hours} hours`,
+    isCompOff: true,
+    compOffId: compOffId,
   };
+
+  // Add leave application
+  dispatch({
+    type: "ADD_LEAVE_APPLICATION",
+    payload: application,
+  });
+
+  // Update comp-off safely
+  dispatch({
+    type: "UPDATE_COMP_OFF",
+    payload: {
+      ...compOff,
+      applied: true,
+      status: "applied",             // 🔴 always exists
+    },
+  });
+
+  alert("Comp-off application submitted");
+};
+
 
   // ==================== UTILITY FUNCTIONS ====================
   const calculateProjectedBalance = (employeeId, leaveTypeId) => {
@@ -1120,14 +1136,22 @@ const LeaveManagement = () => {
   };
 
   // ==================== FILTERED DATA ====================
-  const filteredApplications = leaveApplications.filter((app) => {
-    const matchesSearch =
-      app.appliedBy.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.leaveTypeName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      filterStatus === "All" || app.status === filterStatus.toLowerCase();
-    return matchesSearch && matchesStatus;
-  });
+ const safeLower = (v) => (v || "").toLowerCase();
+
+const filteredApplications = leaveApplications.filter((app) => {
+  const search = safeLower(searchTerm);
+
+  const matchesSearch =
+    safeLower(app.appliedBy).includes(search) ||
+    safeLower(app.leaveTypeName).includes(search);
+
+  const matchesStatus =
+    filterStatus === "All" ||
+    safeLower(app.status) === safeLower(filterStatus);
+
+  return matchesSearch && matchesStatus;
+});
+
 
   // ==================== RENDER FUNCTIONS ====================
   const renderLeaveTypes = () => (
@@ -1140,35 +1164,36 @@ const LeaveManagement = () => {
                 <Settings size={20} className="me-2 text-primary" />
                 Leave Type Configuration
               </h5>
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={() => {
-                  setEditingLeaveType(null);
-                  setLeaveTypeForm({
-                    name: "",
-                    code: "",
-                    isPaid: true,
-                    accrualType: "monthly",
-                    accrualAmount: 1,
-                    maxAccrual: 12,
-                    carryForward: { enabled: true, maxDays: 3, expiryMonths: 3 },
-                    encashment: { enabled: false, maxDays: 0, rate: 0 },
-                    allowNegative: false,
-                    probationApplicable: false,
-                    sandwichLeave: true,
-                    allowBackdated: false,
-                    allowHalfDay: true,
-                    allowShortLeave: false,
-                    isOptional: false,
-                    usageLimit: null,
-                    description: "",
-                  });
-                  setShowLeaveTypeModal(true);
-                }}
-              >
-                <Plus size={16} className="me-2" />
-                Add Leave Type
-              </button>
+           <button
+  className="btn btn-primary btn-sm d-flex align-items-center"
+  onClick={() => {
+    setEditingLeaveType(null);
+    setLeaveTypeForm({
+      name: "",
+      code: "",
+      isPaid: true,
+      accrualType: "monthly",
+      accrualAmount: 1,
+      maxAccrual: 12,
+      carryForward: { enabled: true, maxDays: 3, expiryMonths: 3 },
+      encashment: { enabled: false, maxDays: 0, rate: 0 },
+      allowNegative: false,
+      probationApplicable: false,
+      sandwichLeave: true,
+      allowBackdated: false,
+      allowHalfDay: true,
+      allowShortLeave: false,
+      isOptional: false,
+      usageLimit: null,
+      description: "",
+    });
+    setShowLeaveTypeModal(true);
+  }}
+>
+  <Plus size={16} className="me-2" />
+  <span>Add Leave Type</span>
+</button>
+
             </div>
           </div>
           <div className="card-body">
@@ -1280,39 +1305,43 @@ const LeaveManagement = () => {
                 <BarChart3 size={20} className="me-2 text-primary" />
                 Leave Balance Management
               </h5>
-              <div className="d-flex gap-2">
-                <button
-                  className="btn btn-success btn-sm"
-                  onClick={processAutoAccrual}
-                  title="Process monthly accrual"
-                >
-                  <RefreshCw size={16} className="me-2" />
-                  Auto Accrual
-                </button>
-                <button
-                  className="btn btn-warning btn-sm"
-                  onClick={processLeaveLapse}
-                  title="Process expired carry-forward leaves"
-                >
-                  <AlertTriangle size={16} className="me-2" />
-                  Process Lapse
-                </button>
-                <button
-                  className="btn btn-info btn-sm"
-                  onClick={() => exportLeaveBalanceStatement(null, 'csv')}
-                  title="Export leave balance statement"
-                >
-                  <Download size={16} className="me-2" />
-                  Export Statement
-                </button>
-                <button
-                  className="btn btn-primary btn-sm"
-                  onClick={() => setShowBalanceModal(true)}
-                >
-                  <Plus size={16} className="me-2" />
-                  Add/Adjust Balance
-                </button>
-              </div>
+             <div className="d-flex gap-2">
+  <button
+    className="btn btn-success btn-sm d-flex align-items-center"
+    onClick={processAutoAccrual}
+    title="Process monthly accrual"
+  >
+    <RefreshCw size={16} className="me-2" />
+    <span>Auto Accrual</span>
+  </button>
+
+  <button
+    className="btn btn-warning btn-sm d-flex align-items-center"
+    onClick={processLeaveLapse}
+    title="Process expired carry-forward leaves"
+  >
+    <AlertTriangle size={16} className="me-2" />
+    <span>Process Lapse</span>
+  </button>
+
+  <button
+    className="btn btn-info btn-sm d-flex align-items-center"
+    onClick={() => exportLeaveBalanceStatement(null, "csv")}
+    title="Export leave balance statement"
+  >
+    <Download size={16} className="me-2" />
+    <span>Export Statement</span>
+  </button>
+
+  <button
+    className="btn btn-primary btn-sm d-flex align-items-center"
+    onClick={() => setShowBalanceModal(true)}
+  >
+    <Plus size={16} className="me-2" />
+    <span>Add / Adjust Balance</span>
+  </button>
+</div>
+
             </div>
           </div>
           <div className="card-body">
@@ -1455,164 +1484,175 @@ const LeaveManagement = () => {
     </div>
   );
 
-  const renderLeaveApplications = () => (
-    <div className="row g-4">
-      <div className="col-12">
-        <div className="card border-0 shadow-sm">
-          <div className="card-header bg-white py-3">
-            <div className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0 d-flex align-items-center">
-                <FileText size={20} className="me-2 text-primary" />
-                Leave Applications & Approval
-              </h5>
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={() => setShowApplicationModal(true)}
+ const renderLeaveApplications = () => (
+  <div className="row g-4">
+    <div className="col-12">
+      <div className="card border-0 shadow-sm">
+        <div className="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+          <h5 className="mb-0 d-flex align-items-center">
+            <FileText size={20} className="me-2 text-primary" />
+            Leave Applications & Approval
+          </h5>
+          <button
+            className="btn btn-primary btn-sm d-flex align-items-center"
+            onClick={() => setShowApplicationModal(true)}
+          >
+            <Plus size={16} className="me-2" />
+            <span>New Application</span>
+          </button>
+        </div>
+
+        <div className="card-body">
+          {/* Search & Filter - using the main component's state */}
+          <div className="row g-3 mb-3">
+            <div className="col-md-6">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Search applications..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="col-md-6">
+              <select
+                className="form-select"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
               >
-                <Plus size={16} className="me-2" />
-                New Application
-              </button>
+                <option value="All">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
             </div>
           </div>
-          <div className="card-body">
-            <div className="row g-3 mb-3">
-              <div className="col-md-6">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Search applications..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <div className="col-md-6">
-                <select
-                  className="form-select"
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                >
-                  <option value="All">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-              </div>
-            </div>
 
-            <div className="table-responsive">
-              <table className="table table-hover">
-                <thead className="table-light">
+          {/* Applications Table */}
+          <div className="table-responsive">
+            <table className="table table-hover">
+              <thead className="table-light">
+                <tr>
+                  <th>Employee</th>
+                  <th>Leave Type</th>
+                  <th>Dates</th>
+                  <th>Days</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredApplications.length === 0 ? (
                   <tr>
-                    <th>Employee</th>
-                    <th>Leave Type</th>
-                    <th>Dates</th>
-                    <th>Days</th>
-                    <th>Reason</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <td colSpan="7" className="text-center py-4">
+                      <p className="text-muted mb-0">No leave applications</p>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {filteredApplications.length === 0 ? (
-                    <tr>
-                      <td colSpan="7" className="text-center py-4">
-                        <p className="text-muted mb-0">No leave applications</p>
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredApplications.map((app) => {
-                      const employee = initialEmployees.find(
-                        (e) => e.id === app.employeeId
-                      );
-                      return (
-                        <tr key={app.id}>
-                          <td>{employee?.name || app.employeeId}</td>
-                          <td>
-                            <span className="badge bg-info">{app.leaveTypeName}</span>
-                          </td>
-                          <td>
-                            <small>
-                              {app.startDate}
-                              {app.endDate && app.endDate !== app.startDate
-                                ? ` - ${app.endDate}`
-                                : ""}
-                              {app.halfDay && ` (${app.halfDayType} half)`}
-                            </small>
-                          </td>
-                          <td>{app.days}</td>
-                          <td>
-                            <small>{app.reason || "N/A"}</small>
-                          </td>
-                          <td>
-                            <span
-                              className={`badge bg-${
-                                app.status === "approved"
-                                  ? "success"
-                                  : app.status === "rejected"
-                                  ? "danger"
-                                  : "warning"
-                              }`}
+                ) : (
+                  filteredApplications.map((app) => {
+                    const employee = initialEmployees.find(
+                      (e) => e.id === app.employeeId
+                    );
+                    return (
+                      <tr key={app.id}>
+                        <td>{employee?.name || app.employeeId}</td>
+                        <td>
+                          <span className="badge bg-info">
+                            {app.leaveTypeName}
+                          </span>
+                        </td>
+                        <td>
+                          <small>
+                            {app.startDate}
+                            {app.endDate && app.endDate !== app.startDate
+                              ? ` - ${app.endDate}`
+                              : ""}
+                            {app.halfDay && ` (${app.halfDayType} half)`}
+                          </small>
+                        </td>
+                        <td>{app.days}</td>
+                        <td>
+                          <small>{app.reason || "N/A"}</small>
+                        </td>
+                        <td>
+                          <span
+                            className={`badge bg-${
+                              app.status === "approved"
+                                ? "success"
+                                : app.status === "rejected"
+                                ? "danger"
+                                : "warning"
+                            }`}
+                          >
+                            {app.status}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="d-flex gap-2 align-items-center">
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-success"
+                              onClick={() =>
+                                handleApproveApplication(app.id, true)
+                              }
+                              disabled={app.status === "approved"}
+                              data-bs-toggle="tooltip"
+                              title="Approve"
                             >
-                              {app.status}
-                            </span>
-                          </td>
-                          <td>
-                            <div className="d-flex gap-2">
-                              {app.status === "pending" && (
-                                <>
-                                  <button
-                                    className="btn btn-sm btn-outline-success"
-                                    onClick={() => handleApproveApplication(app.id, true)}
-                                    title="Approve"
-                                  >
-                                    <Check size={14} />
-                                  </button>
-                                  <button
-                                    className="btn btn-sm btn-outline-danger"
-                                    onClick={() => handleApproveApplication(app.id, false)}
-                                    title="Reject"
-                                  >
-                                    <X size={14} />
-                                  </button>
-                                </>
-                              )}
-                              {app.status === "pending" && (
-                                <button
-                                  className="btn btn-sm btn-outline-warning"
-                                  onClick={() => handleWithdrawApplication(app.id)}
-                                  title="Withdraw"
-                                >
-                                  <XCircle size={14} />
-                                </button>
-                              )}
-                              {app.attachment && (
-                                <button
-                                  className="btn btn-sm btn-outline-primary"
-                                  title="View Attachment"
-                                >
-                                  <Eye size={14} />
-                                </button>
-                              )}
-                              {app.isAutoApproved && (
-                                <span className="badge bg-info" title="Auto-approved">
-                                  Auto
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
+                              <Check size={14} />
+                            </button>
+
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() =>
+                                handleApproveApplication(app.id, false)
+                              }
+                              disabled={app.status === "rejected"}
+                              data-bs-toggle="tooltip"
+                              title="Reject"
+                            >
+                              <X size={14} />
+                            </button>
+
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-warning"
+                              onClick={() => handleWithdrawApplication(app.id)}
+                              data-bs-toggle="tooltip"
+                              title="Withdraw"
+                            >
+                              <XCircle size={14} />
+                            </button>
+
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-primary"
+                              disabled={!app.attachment}
+                              data-bs-toggle="tooltip"
+                              title="View Attachment"
+                              onClick={() =>
+                                app.attachment &&
+                                window.open(app.attachment, "_blank")
+                              }
+                            >
+                              <Eye size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     </div>
-  );
-
+  </div>
+);
   const renderLeaveCalendar = () => {
     const currentMonth = selectedDate.getMonth();
     const currentYear = selectedDate.getFullYear();
@@ -1699,85 +1739,186 @@ const LeaveManagement = () => {
                 </div>
               </div>
             </div>
-            <div className="card-body">
-              {/* Department-wise Statistics */}
-              <div className="row g-3 mb-4">
-                <div className="col-12">
-                  <h6 className="mb-3">Department-wise Leave Summary</h6>
-                  <div className="row g-2">
-                    {Object.entries(departmentStats).map(([dept, stats]) => (
-                      <div key={dept} className="col-md-3">
-                        <div className="card border">
-                          <div className="card-body p-3">
-                            <div className="fw-bold text-primary">{dept}</div>
-                            <div className="small text-muted">
-                              {stats.employees.size} employees, {stats.count.toFixed(1)} days
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+             <div className="card-body">
+      {/* Department-wise Statistics */}
+      <div className="mb-4">
+   <h6 className="mb-3 text-dark fw-semibold">
+  Department-wise Leave Summary
+</h6>
 
-              {/* Calendar View */}
-              <div className="calendar-container">
-                <div className="row g-2 mb-2">
-                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                    <div key={day} className="col text-center fw-bold text-muted">
-                      {day}
-                    </div>
-                  ))}
-                </div>
-                <div className="row g-2">
-                  {calendarDays.map((day, index) => {
-                    const leaves = getLeavesForDate(day);
-                    const hasOverlap = leaves.length > 3;
-                    return (
-                      <div
-                        key={index}
-                        className={`col border rounded p-2 ${hasOverlap ? "bg-warning bg-opacity-10" : ""}`}
-                        style={{ minHeight: "100px" }}
-                      >
-                        {day && (
-                          <>
-                            <div className="fw-bold mb-1 d-flex justify-content-between align-items-center">
-                              <span>{day}</span>
-                              {hasOverlap && (
-                                <AlertTriangle size={12} className="text-warning" title="High leave overlap" />
-                              )}
-                            </div>
-                            <div className="d-flex flex-column gap-1">
-                              {leaves.slice(0, 3).map((leave) => {
-                                const employee = initialEmployees.find(
-                                  (e) => e.id === leave.employeeId
-                                );
-                                return (
-                                  <div
-                                    key={leave.id}
-                                    className="badge bg-info text-white text-truncate"
-                                    style={{ fontSize: "10px" }}
-                                    title={`${employee?.name || leave.employeeId} - ${leave.leaveTypeName}`}
-                                  >
-                                    {employee?.name?.split(" ")[0] || leave.employeeId} - {leave.leaveTypeName}
-                                  </div>
-                                );
-                              })}
-                              {leaves.length > 3 && (
-                                <small className="text-warning fw-bold">
-                                  +{leaves.length - 3} more
-                                </small>
-                              )}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+
+        <div className="dept-grid">
+          {Object.entries(departmentStats).map(([dept, stats]) => (
+            <div key={dept} className="dept-card">
+              <div className="fw-bold text-primary">{dept}</div>
+              <div className="small text-muted">
+                {stats.employees.size} employees,{" "}
+                {stats.count.toFixed(1)} days
               </div>
             </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Calendar */}
+      <div className="calendar-wrapper">
+        {/* Week Header */}
+        <div className="calendar-header">
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+            <div key={day} className="calendar-day-name">
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar Body */}
+        <div className="calendar-grid">
+          {calendarDays.map((day, index) => {
+            const leaves = getLeavesForDate(day);
+            const hasOverlap = leaves.length > 3;
+
+            return (
+              <div
+                key={index}
+                className={`calendar-cell ${
+                  hasOverlap ? "overlap" : ""
+                }`}
+              >
+                {day && (
+                  <>
+                    <div className="calendar-date">
+                      <span>{day}</span>
+                      {hasOverlap && (
+                        <AlertTriangle
+                          size={12}
+                          className="warning-icon"
+                          title="High leave overlap"
+                        />
+                      )}
+                    </div>
+
+                    <div className="leave-list">
+                      {leaves.slice(0, 3).map((leave) => {
+                        const emp = initialEmployees.find(
+                          (e) => e.id === leave.employeeId
+                        );
+
+                        return (
+                          <div
+                            key={leave.id}
+                            className="leave-badge"
+                            title={`${emp?.name || leave.employeeId} - ${leave.leaveTypeName}`}
+                          >
+                            {(emp?.name?.split(" ")[0] ||
+                              leave.employeeId)}{" "}
+                            - {leave.leaveTypeName}
+                          </div>
+                        );
+                      })}
+
+                      {leaves.length > 3 && (
+                        <div className="more-text">
+                          +{leaves.length - 3} more
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* CSS */}
+      <style>{`
+        /* Department cards */
+        .dept-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: 12px;
+        }
+
+        .dept-card {
+          border: 1px solid #dee2e6;
+          border-radius: 8px;
+          padding: 12px;
+          background: #fff;
+        }
+
+        /* Calendar */
+        .calendar-wrapper {
+          margin-top: 16px;
+        }
+
+        .calendar-header {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          margin-bottom: 8px;
+        }
+
+        .calendar-day-name {
+          text-align: center;
+          font-weight: 600;
+          font-size: 13px;
+          color: #6c757d;
+        }
+
+        .calendar-grid {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          gap: 8px;
+        }
+
+        .calendar-cell {
+          min-height: 110px;
+          border: 1px solid #dee2e6;
+          border-radius: 8px;
+          padding: 6px;
+          background: #fff;
+        }
+
+        .calendar-cell.overlap {
+          background: rgba(255, 193, 7, 0.1);
+        }
+
+        .calendar-date {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-weight: 600;
+          font-size: 12px;
+          margin-bottom: 4px;
+        }
+
+        .warning-icon {
+          color: #ffc107;
+        }
+
+        .leave-list {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .leave-badge {
+          background: #0dcaf0;
+          color: #fff;
+          font-size: 10px;
+          padding: 2px 6px;
+          border-radius: 6px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .more-text {
+          font-size: 10px;
+          font-weight: 600;
+          color: #ffc107;
+        }
+      `}</style>
+    </div>
           </div>
         </div>
       </div>
@@ -1826,20 +1967,28 @@ const LeaveManagement = () => {
                   Leave Planning & Coverage
                 </h5>
                 <div className="d-flex gap-2">
-                  <button
-                    className="btn btn-primary btn-sm"
-                    onClick={() => setShowCampaignModal(true)}
-                  >
-                    <Plus size={16} className="me-2" />
-                    Create Campaign
-                  </button>
+                 <button
+  className="btn btn-primary btn-sm d-inline-flex align-items-center gap-2"
+  onClick={() => setShowCampaignModal(true)}
+>
+  <Plus size={16} />
+  <span>Create Campaign</span>
+</button>
+
                 </div>
               </div>
             </div>
             <div className="card-body">
               <div className="row g-3 mb-4">
                 <div className="col-md-4">
-                  <label className="form-label">Department</label>
+               <label 
+  className="form-label mb-3 fw-semibold" 
+  style={{ color: "#000000" }}
+>
+  Department
+</label>
+
+
                   <select
                     className="form-select"
                     value={selectedDept}
@@ -1852,7 +2001,8 @@ const LeaveManagement = () => {
                   </select>
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label">Start Date</label>
+                  <label  className="form-label mb-3 fw-semibold" 
+  style={{ color: "#000000" }} >Start Date</label>
                   <input
                     type="date"
                     className="form-control"
@@ -1861,7 +2011,8 @@ const LeaveManagement = () => {
                   />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label">End Date</label>
+                  <label  className="form-label mb-3 fw-semibold" 
+  style={{ color: "#000000" }}>End Date</label>
                   <input
                     type="date"
                     className="form-control"
@@ -1871,31 +2022,36 @@ const LeaveManagement = () => {
                 </div>
               </div>
 
-              <h6 className="mb-3">Coverage Analysis</h6>
-              <div className="row g-3 mb-4">
-                {coverage.map((cov, idx) => (
-                  <div key={idx} className="col-md-4">
-                    <div className="card border">
-                      <div className="card-body">
-                        <div className="fw-bold text-primary">
-                          {selectedDept === "All" ? departments[idx] : selectedDept}
-                        </div>
-                        <div className="mt-2">
-                          <small className="text-muted">Total Employees: {cov.totalEmployees}</small>
-                          <br />
-                          <small className="text-muted">On Leave: {cov.employeesOnLeave}</small>
-                          <br />
-                          <div className={`mt-2 badge bg-${parseFloat(cov.coverage) >= 80 ? 'success' : parseFloat(cov.coverage) >= 60 ? 'warning' : 'danger'}`}>
-                            Coverage: {cov.coverage}%
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+ <h6 className="mb-0 d-flex align-items-center">
+                 Coverage Analysis
+                </h6><br></br>
+             
+           <div className="row g-3 mb-4">
+  {coverage.map((cov, idx) => (
+    <div key={idx} className="col-md-3">
+      <div className="card border">
+        <div className="card-body">
+          <div className="fw-bold text-primary">
+            {selectedDept === "All" ? departments[idx] : selectedDept}
+          </div>
+          <div className="mt-2">
+            <small className="text-muted">Total Employees: {cov.totalEmployees}</small>
+            <br />
+            <small className="text-muted">On Leave: {cov.employeesOnLeave}</small>
+            <br />
+            <div className={`mt-2 badge bg-${parseFloat(cov.coverage) >= 80 ? 'success' : parseFloat(cov.coverage) >= 60 ? 'warning' : 'danger'}`}>
+              Coverage: {cov.coverage}%
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
 
-              <h6 className="mb-3">Active Planning Campaigns</h6>
+                <h6 className="mb-0 d-flex align-items-center">
+                Active Planning Campaigns
+                </h6><br></br>
               <div className="table-responsive">
                 <table className="table table-hover">
                   <thead className="table-light">
@@ -2051,13 +2207,14 @@ const LeaveManagement = () => {
                   <Users size={20} className="me-2 text-primary" />
                   Approval Delegation Management
                 </h5>
-                <button
-                  className="btn btn-primary btn-sm"
-                  onClick={() => setShowDelegationModal(true)}
-                >
-                  <Plus size={16} className="me-2" />
-                  Setup Delegation
-                </button>
+              <button
+  className="btn btn-primary btn-sm d-inline-flex align-items-center gap-2"
+  onClick={() => setShowDelegationModal(true)}
+>
+  <Plus size={16} />
+  <span>Setup Delegation</span>
+</button>
+
               </div>
             </div>
             <div className="card-body">
@@ -2223,13 +2380,14 @@ const LeaveManagement = () => {
                 <Gift size={20} className="me-2 text-primary" />
                 Compensatory Off Management
               </h5>
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={() => setShowCompOffModal(true)}
-              >
-                <Plus size={16} className="me-2" />
-                Add Comp-Off
-              </button>
+            <button
+  className="btn btn-primary btn-sm d-flex align-items-center gap-2"
+  onClick={() => setShowCompOffModal(true)}
+>
+  <Plus size={16} />
+  <span>Add Comp-Off</span>
+</button>
+
             </div>
           </div>
           <div className="card-body">
@@ -2302,16 +2460,19 @@ const LeaveManagement = () => {
                                 : "Available"}
                             </span>
                           </td>
-                          <td>
-                            {co.status === "available" && !isExpired && (
-                              <button
-                                className="btn btn-sm btn-outline-primary"
-                                onClick={() => handleApplyCompOff(co.id)}
-                              >
-                                Apply
-                              </button>
-                            )}
-                          </td>
+                      <td>
+  {co.status === "available" && !co.applied && !isExpired ? (
+    <button
+      className="btn btn-sm btn-outline-primary"
+      onClick={() => handleApplyCompOff(co.id)}
+    >
+      Apply
+    </button>
+  ) : (
+    <span className="badge bg-secondary">Applied</span>
+  )}
+</td>
+
                         </tr>
                       );
                     })
@@ -2337,71 +2498,92 @@ const LeaveManagement = () => {
       </div>
 
       {/* Tabs */}
-      <ul className="nav nav-tabs mb-4">
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === "leaveTypes" ? "active" : ""}`}
-            onClick={() => setActiveTab("leaveTypes")}
-          >
-            <Settings size={16} className="me-2" />
-            Leave Types
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === "balance" ? "active" : ""}`}
-            onClick={() => setActiveTab("balance")}
-          >
-            <BarChart3 size={16} className="me-2" />
-            Leave Balance
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === "applications" ? "active" : ""}`}
-            onClick={() => setActiveTab("applications")}
-          >
-            <FileText size={16} className="me-2" />
-            Applications
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === "calendar" ? "active" : ""}`}
-            onClick={() => setActiveTab("calendar")}
-          >
-            <Calendar size={16} className="me-2" />
-            Calendar
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === "compOff" ? "active" : ""}`}
-            onClick={() => setActiveTab("compOff")}
-          >
-            <Gift size={16} className="me-2" />
-            Comp-Off
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === "planning" ? "active" : ""}`}
-            onClick={() => setActiveTab("planning")}
-          >
-            <CalendarDays size={16} className="me-2" />
-            Planning
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === "delegation" ? "active" : ""}`}
-            onClick={() => setActiveTab("delegation")}
-          >
-            <Users size={16} className="me-2" />
-            Delegation
-          </button>
-        </li>
-      </ul>
+ <ul className="nav nav-tabs mb-4">
+  <li className="nav-item">
+    <button
+      className={`nav-link d-flex align-items-center ${
+        activeTab === "leaveTypes" ? "active" : ""
+      }`}
+      onClick={() => setActiveTab("leaveTypes")}
+    >
+      <Settings size={16} className="me-2" />
+      <span>Leave Types</span>
+    </button>
+  </li>
+
+  <li className="nav-item">
+    <button
+      className={`nav-link d-flex align-items-center ${
+        activeTab === "balance" ? "active" : ""
+      }`}
+      onClick={() => setActiveTab("balance")}
+    >
+      <BarChart3 size={16} className="me-2" />
+      <span>Leave Balance</span>
+    </button>
+  </li>
+
+  <li className="nav-item">
+    <button
+      className={`nav-link d-flex align-items-center ${
+        activeTab === "applications" ? "active" : ""
+      }`}
+      onClick={() => setActiveTab("applications")}
+    >
+      <FileText size={16} className="me-2" />
+      <span>Applications</span>
+    </button>
+  </li>
+
+  <li className="nav-item">
+    <button
+      className={`nav-link d-flex align-items-center ${
+        activeTab === "calendar" ? "active" : ""
+      }`}
+      onClick={() => setActiveTab("calendar")}
+    >
+      <Calendar size={16} className="me-2" />
+      <span>Calendar</span>
+    </button>
+  </li>
+
+  <li className="nav-item">
+    <button
+      className={`nav-link d-flex align-items-center ${
+        activeTab === "compOff" ? "active" : ""
+      }`}
+      onClick={() => setActiveTab("compOff")}
+    >
+      <Gift size={16} className="me-2" />
+      <span>Comp-Off</span>
+    </button>
+  </li>
+
+  <li className="nav-item">
+    <button
+      className={`nav-link d-flex align-items-center ${
+        activeTab === "planning" ? "active" : ""
+      }`}
+      onClick={() => setActiveTab("planning")}
+    >
+      <CalendarDays size={16} className="me-2" />
+      <span>Planning</span>
+    </button>
+  </li>
+
+  <li className="nav-item">
+    <button
+      className={`nav-link d-flex align-items-center ${
+        activeTab === "delegation" ? "active" : ""
+      }`}
+      onClick={() => setActiveTab("delegation")}
+    >
+      <Users size={16} className="me-2" />
+      <span>Delegation</span>
+    </button>
+  </li>
+</ul>
+
 
       {/* Tab Content */}
       <div className="tab-content">
@@ -2902,14 +3084,17 @@ const LeaveManagement = () => {
                 >
                   Cancel
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={handleAddLeaveType}
-                >
-                  <Save size={16} className="me-2" />
-                  {editingLeaveType ? "Update" : "Save"} Leave Type
-                </button>
+               <button
+  type="button"
+  className="btn btn-primary d-flex align-items-center"
+  onClick={handleAddLeaveType}
+>
+  <Save size={16} className="me-2" />
+  <span>
+    {editingLeaveType ? "Update" : "Save"} Leave Type
+  </span>
+</button>
+
               </div>
             </div>
           </div>
@@ -3130,14 +3315,15 @@ const LeaveManagement = () => {
                 >
                   Cancel
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={handleSubmitApplication}
-                >
-                  <Send size={16} className="me-2" />
-                  Submit Application
-                </button>
+              <button
+  type="button"
+  className="btn btn-primary d-inline-flex align-items-center gap-2"
+  onClick={handleSubmitApplication}
+>
+  <Send size={16} />
+  <span>Submit Application</span>
+</button>
+
               </div>
             </div>
           </div>
@@ -3287,14 +3473,15 @@ const LeaveManagement = () => {
                 >
                   Cancel
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={handleAddBalance}
-                >
-                  <Save size={16} className="me-2" />
-                  Save Balance
-                </button>
+               <button
+  type="button"
+  className="btn btn-primary d-inline-flex align-items-center gap-2"
+  onClick={handleAddBalance}
+>
+  <Save size={16} />
+  <span>Save Balance</span>
+</button>
+
               </div>
             </div>
           </div>
@@ -3445,14 +3632,15 @@ const LeaveManagement = () => {
                 >
                   Cancel
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={handleAddCompOff}
-                >
-                  <Save size={16} className="me-2" />
-                  Add Comp-Off
-                </button>
+              <button
+  type="button"
+  className="btn btn-primary d-inline-flex align-items-center gap-2"
+  onClick={handleAddCompOff}
+>
+  <Save size={16} />
+  <span>Add Comp-Off</span>
+</button>
+
               </div>
             </div>
           </div>

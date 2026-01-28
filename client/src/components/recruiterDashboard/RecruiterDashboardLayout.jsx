@@ -532,10 +532,54 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
 
               <li className='sidebar-menu-group-title'>HR Management</li>
 
-              {/* All Employees - Quick Access */}
-              <li>
-                <LinkItem to='/hrms/all-employees' tabKey='all-employees' icon='heroicons:user-group' label='All Employees' />
-              </li>
+<li>
+  <NavLink
+    to="/hrms/all-employees"
+    className={({ isActive }) => (isActive ? "active-link" : "")}
+    style={{
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      padding: "8px 12px",
+      textDecoration: "none",
+      borderRadius: "6px",
+      fontWeight: 600,
+      color: "#000",
+      transition: "all 0.2s ease",
+    }}
+  >
+    <Icon
+      icon="heroicons:user-group"
+      className="menu-icon"
+      style={{ fontSize: "18px" }}
+    />
+    <span>All Employees</span>
+  </NavLink>
+
+  <style>
+    {`
+      /* Hover ONLY when not active */
+      a:not(.active-link):hover {
+        color: #0d6efd !important;
+      }
+
+      a:not(.active-link):hover svg {
+        color: #0d6efd !important;
+      }
+
+      /* Active state */
+      .active-link {
+        background-color: #0d6efd;
+        color: #fff !important;
+      }
+
+      .active-link svg {
+        color: #fff !important;
+      }
+    `}
+  </style>
+</li>
+
 
               {/* Onboarding & Pre-Joining */}
               <li className='dropdown'>
@@ -944,12 +988,55 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
                 </ul>
               </li>
 
-              <li>
-                <NavLink to='/Tenant/Company' className={(navData) => navData.isActive ? "active-page" : ""}>
-                  <Icon icon='heroicons:cog-6-tooth' className='icon menu-icon text-sm me-2 fs-5' />
-                  Company Settings
-                </NavLink>
-              </li>
+       
+
+<li>
+  <NavLink
+    to="/Tenant/Company"
+    className={({ isActive }) => (isActive ? "active-link" : "")}
+    style={{
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      padding: "8px 12px",
+      textDecoration: "none",
+      borderRadius: "6px",
+      fontWeight: 600,
+      color: "#000",
+      transition: "all 0.2s ease",
+    }}
+  >
+    <Icon
+      icon="heroicons:cog-6-tooth"
+      style={{ fontSize: "18px" }}
+    />
+    <span>Company Settings</span>
+
+    <style>
+      {`
+        /* Hover ONLY when not active */
+        a:not(.active-link):hover {
+          color: #0d6efd !important;
+        }
+
+        a:not(.active-link):hover svg {
+          color: #0d6efd !important;
+        }
+
+        /* Active state */
+        .active-link {
+          background-color: #0d6efd;
+          color: #fff !important;
+        }
+
+        .active-link svg {
+          color: #fff !important;
+        }
+      `}
+    </style>
+  </NavLink>
+</li>
+
 
 
 

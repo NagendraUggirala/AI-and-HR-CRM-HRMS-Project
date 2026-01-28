@@ -6,11 +6,11 @@ import { BASE_URL, API_ENDPOINTS } from '../config/api.config';
 const CreateJob = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Check if we're in edit mode
   const isEditMode = location.state?.editMode || false;
   const existingJobData = location.state?.jobData || null;
-  
+
   const [formData, setFormData] = useState({
     title: '',
     department: '',
@@ -30,11 +30,13 @@ const CreateJob = () => {
     jdFile: null
   });
 
+  
+
   // Pre-fill form if in edit mode
   useEffect(() => {
     if (isEditMode && existingJobData) {
       console.log('📝 Edit mode - Pre-filling form with:', existingJobData);
-      
+
       setFormData({
         title: existingJobData.title || '',
         department: existingJobData.department || '',
@@ -46,7 +48,7 @@ const CreateJob = () => {
         requirements: existingJobData.requirements || '',
         salaryMin: existingJobData.salary_min || '',
         salaryMax: existingJobData.salary_max || '',
-        currency: existingJobData.currency || 'USD',
+        currency: existingJobData.currency || 'Rupees',
         benefits: existingJobData.benefits || [],
         skills: existingJobData.skills || [],
         expiryDate: existingJobData.expiry_date || '',
@@ -63,16 +65,18 @@ const CreateJob = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState(null);
 
-  const departments = ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'Customer Success', 'Design', 'Product'];
+  const departments = ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'Customer Success', 'Design', 'Product', "Other"];
   const employmentTypes = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship'];
   const currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD'];
   const benefitOptions = ['Health Insurance', 'Dental Insurance', 'Vision Insurance', '401k Match', 'Remote Work', 'Flexible Hours', 'PTO', 'Stock Options', 'Gym Membership', 'Learning Budget'];
-  const skillSuggestions = ['JavaScript', 'React', 'Node.js', 'Python', 'AWS', 'Docker', 'Project Management', 'Leadership', 'Communication', 'Analytics'];
+  const skillSuggestions = ['JavaScript', 'React', 'Node.js', 'Python', 'AWS', 'Docker', 'Project Management', 'Leadership', 'Communication', 'Analytics', 'Other'];
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: null }));
   };
+
+  
 
   const handleSkillAdd = (skill) => {
     if (!formData.skills.includes(skill)) {
@@ -127,7 +131,7 @@ const CreateJob = () => {
       if (isEditMode && existingJobData) {
         // UPDATE MODE - Build query parameters
         const params = new URLSearchParams();
-        
+
         // Add all fields as query parameters
         params.append('title', formData.title);
         params.append('department', formData.department);
@@ -136,7 +140,7 @@ const CreateJob = () => {
         params.append('is_remote', String(formData.isRemote));
         params.append('currency', formData.currency);
         params.append('status', asDraft ? 'Draft' : 'Active');
-        
+
         // Optional fields - only add if not empty
         if (formData.location && formData.location.trim()) {
           params.append('location', formData.location);
@@ -159,7 +163,7 @@ const CreateJob = () => {
         if (formData.referenceId && formData.referenceId.trim()) {
           params.append('reference_id', formData.referenceId);
         }
-        
+
         // Arrays - FastAPI accepts JSON arrays as query params
         if (formData.benefits && formData.benefits.length > 0) {
           formData.benefits.forEach(benefit => {
@@ -174,7 +178,7 @@ const CreateJob = () => {
 
         const baseUrl = `${BASE_URL}${API_ENDPOINTS.JOBS.UPDATE(existingJobData.id)}`;
         const url = `${baseUrl}?${params.toString()}`;
-        
+
         console.log('📤 Updating job at:', url);
         console.log('📤 Query params:', params.toString());
 
@@ -187,21 +191,21 @@ const CreateJob = () => {
 
         const resText = await res.text();
         let resJson = null;
-        try { 
-          resJson = JSON.parse(resText); 
-        } catch (e) { 
+        try {
+          resJson = JSON.parse(resText);
+        } catch (e) {
           console.log('Response is not JSON:', resText);
         }
 
         if (!res.ok) {
           console.error('❌ Server error response:', res.status, resJson || resText);
-          
+
           if (res.status === 401) {
             setServerError('Session expired. Please login again.');
             setTimeout(() => navigate('/login'), 2000);
             return;
           }
-          
+
           if (res.status === 403) {
             setServerError('You do not have permission to update this job.');
             return;
@@ -219,7 +223,7 @@ const CreateJob = () => {
         console.log('✅ Job updated successfully:', resJson || resText);
         setIsDraft(asDraft);
         setShowSuccessModal(true);
-        
+
         // Redirect to jobs list after 2 seconds
         setTimeout(() => {
           navigate('/jobslist');
@@ -228,13 +232,13 @@ const CreateJob = () => {
       } else {
         // CREATE MODE - Use FormData
         const payload = new FormData();
-        
+
         // Required fields
         payload.append('title', formData.title);
         payload.append('department', formData.department);
         payload.append('employmentType', formData.employmentType);
         payload.append('description', formData.description);
-        
+
         // Optional string fields (only add if not empty)
         if (formData.location && formData.location.trim()) {
           payload.append('location', formData.location);
@@ -251,10 +255,10 @@ const CreateJob = () => {
         if (formData.expiryDate) {
           payload.append('expiryDate', formData.expiryDate);
         }
-        
+
         // Boolean field - send as string 'true' or 'false'
         payload.append('isRemote', String(formData.isRemote));
-        
+
         // Number fields (only add if not empty)
         if (formData.salaryMin && formData.salaryMin !== '') {
           payload.append('salaryMin', formData.salaryMin);
@@ -262,10 +266,10 @@ const CreateJob = () => {
         if (formData.salaryMax && formData.salaryMax !== '') {
           payload.append('salaryMax', formData.salaryMax);
         }
-        
+
         // Currency (always send, has default)
         payload.append('currency', formData.currency);
-        
+
         // Status
         payload.append('status', asDraft ? 'Draft' : 'Active');
 
@@ -299,22 +303,22 @@ const CreateJob = () => {
 
         const resText = await res.text();
         let resJson = null;
-        try { 
-          resJson = JSON.parse(resText); 
-        } catch (e) { 
+        try {
+          resJson = JSON.parse(resText);
+        } catch (e) {
           console.log('Response is not JSON:', resText);
         }
 
         if (!res.ok) {
           console.error('❌ Server error response:', res.status, resJson || resText);
-          
+
           // Handle different error cases
           if (res.status === 401) {
             setServerError('Session expired. Please login again.');
             setTimeout(() => navigate('/login'), 2000);
             return;
           }
-          
+
           if (res.status === 403) {
             setServerError('You do not have permission to create jobs. Only recruiters can create jobs.');
             return;
@@ -343,7 +347,7 @@ const CreateJob = () => {
         console.log('✅ Job created successfully:', resJson || resText);
         setIsDraft(asDraft);
         setShowSuccessModal(true);
-        
+
         // Redirect to jobs list after 2 seconds
         setTimeout(() => {
           navigate('/jobslist');
@@ -432,10 +436,10 @@ const CreateJob = () => {
   return (
     <div className='container-fluid py-4'>
       <div className='mb-12'>
-        <h4 className='mb-2'>{isEditMode ? 'Edit Job' : 'Post a New Job'}</h4>
+        <h4 className="fw-bold mb-1 d-flex align-items-center">{isEditMode ? 'Edit Job' : 'Post a New Job'}</h4>
         <p className='text-secondary-light mb-0'>
-          {isEditMode 
-            ? 'Update the job details below and save your changes.' 
+          {isEditMode
+            ? 'Update the job details below and save your changes.'
             : 'Fill in the details below to publish your job listing.'}
         </p>
       </div>
@@ -445,7 +449,7 @@ const CreateJob = () => {
           <form className='d-grid gap-3'>
             <div className='card border shadow-none'>
               <div className='card-body p-24'>
-                <h6 className='mb-16'>Basic Information</h6>
+                <h4 className="fw-semibold fs-3 mb-0 text-dark">Basic Information</h4>
                 <div className='row g-3'>
                   <div className='col-12'>
                     <label className='form-label'>Job Title *</label>
@@ -461,22 +465,46 @@ const CreateJob = () => {
                     )}
                   </div>
 
-                  <div className='col-12 col-md-6'>
-                    <label className='form-label'>Department *</label>
-                    <select
-                      value={formData.department}
-                      onChange={(e) => handleInputChange('department', e.target.value)}
-                      className={`form-select ${errors.department ? 'is-invalid' : ''}`}
-                    >
-                      <option value=''>Select Department</option>
-                      {departments.map((dept) => (
-                        <option key={dept} value={dept}>{dept}</option>
-                      ))}
-                    </select>
+                  <div className="col-12 col-md-6">
+                    <label className="form-label">Department *</label>
+
+                    {formData.department === 'Other' ? (
+                      // 👉 Input field when "Other" is selected
+                      <input
+                        type="text"
+                        className={`form-control ${errors.department ? 'is-invalid' : ''}`}
+                        placeholder="Enter Department"
+                        value={formData.customDepartment || ''}
+                        onChange={(e) =>
+                          handleInputChange('customDepartment', e.target.value)
+                        }
+                        onBlur={() =>
+                          handleInputChange('department', formData.customDepartment)
+                        }
+                      />
+                    ) : (
+                      // 👉 Normal select dropdown
+                      <select
+                        value={formData.department}
+                        onChange={(e) => handleInputChange('department', e.target.value)}
+                        className={`form-select ${errors.department ? 'is-invalid' : ''}`}
+                      >
+                        <option value="">Select Department</option>
+                        {departments.map((dept) => (
+                          <option key={dept} value={dept}>
+                            {dept}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+
                     {errors.department && (
-                      <div className='invalid-feedback d-inline-flex align-items-center'><AlertCircle size={14} className='me-1' /> {errors.department}</div>
+                      <div className="invalid-feedback d-inline-flex align-items-center">
+                        <AlertCircle size={14} className="me-1" /> {errors.department}
+                      </div>
                     )}
                   </div>
+
 
                   <div className='col-12 col-md-6'>
                     <label className='form-label'>Employment Type *</label>
@@ -508,7 +536,7 @@ const CreateJob = () => {
                       value={formData.location}
                       onChange={(e) => handleInputChange('location', e.target.value)}
                       className={`form-control ${errors.location ? 'is-invalid' : ''}`}
-                      placeholder='e.g. San Francisco, CA'
+                      placeholder='e.g. Hyderabad, India'
                       disabled={formData.isRemote}
                     />
                     {errors.location && (
@@ -521,7 +549,7 @@ const CreateJob = () => {
 
             <div className='card border shadow-none'>
               <div className='card-body p-24'>
-                <h6 className='mb-16'>Job Details</h6>
+                <h4 className="fw-semibold fs-3 mb-0 text-dark">Job Details</h4>
                 <div className='d-grid gap-3'>
                   <div>
                     <label className='form-label'>Job Description *</label>
@@ -564,7 +592,7 @@ const CreateJob = () => {
 
             <div className='card border shadow-none'>
               <div className='card-body p-24'>
-                <h6 className='mb-16'>Compensation & Benefits</h6>
+                <h4 className="fw-semibold fs-3 mb-0 text-dark">Compensation & Benefits</h4>
                 <div className='d-grid gap-3'>
                   <div className='row g-3'>
                     <div className='col-12 col-md-4'>
@@ -620,7 +648,7 @@ const CreateJob = () => {
 
             <div className='card border shadow-none'>
               <div className='card-body p-24'>
-                <h6 className='mb-16'>Skills & Keywords</h6>
+                <h4 className="fw-semibold fs-3 mb-0 text-dark">Skills & Keywords</h4>
                 <div>
                   <label className='form-label'>Required Skills</label>
                   <div className='mb-2 d-flex flex-wrap gap-2'>
@@ -673,7 +701,7 @@ const CreateJob = () => {
 
             <div className='card border shadow-none'>
               <div className='card-body p-24'>
-                <h6 className='mb-16'>Attachments</h6>
+                <h4 className="fw-semibold fs-3 mb-0 text-dark">Attachments</h4>
                 <div>
                   <label className='form-label'>Upload JD Document (PDF/DOC/DOCX)</label>
                   <input
@@ -753,18 +781,18 @@ const CreateJob = () => {
                     <CheckCircle size={28} className='text-success' />
                   </div>
                   <h6 className='mb-4'>
-                    {isEditMode 
-                      ? (isDraft ? 'Draft Saved!' : 'Job Updated Successfully!') 
+                    {isEditMode
+                      ? (isDraft ? 'Draft Saved!' : 'Job Updated Successfully!')
                       : (isDraft ? 'Draft Saved!' : 'Job Posted Successfully!')}
                   </h6>
                   <p className='text-secondary-light mb-16'>
-                    {isEditMode 
-                      ? (isDraft 
-                          ? 'Your job draft has been saved. You can continue editing it later.' 
-                          : 'Your job changes have been saved successfully.')
+                    {isEditMode
+                      ? (isDraft
+                        ? 'Your job draft has been saved. You can continue editing it later.'
+                        : 'Your job changes have been saved successfully.')
                       : (isDraft
-                          ? 'Your job draft has been saved. You can continue editing it later.'
-                          : 'Your job listing is now live and candidates can apply.')}
+                        ? 'Your job draft has been saved. You can continue editing it later.'
+                        : 'Your job listing is now live and candidates can apply.')}
                   </p>
                   <div className='d-flex justify-content-center gap-2'>
                     <button type='button' className='btn btn-link' onClick={() => setShowSuccessModal(false)}>

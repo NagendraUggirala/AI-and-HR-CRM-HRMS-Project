@@ -929,7 +929,7 @@ const AllEmployees = () => {
         <div className="mb-4">
           <h5 className="text-3xl fw-bold text-dark mb-2 mt-3 d-flex align-items-center gap-2">
             <Icon icon="heroicons:user-group" />
-            Employee Master Data
+            Employee Data
           </h5>
           <p className="text-muted">
             Manage all employee information, profiles, and employment details in one place.

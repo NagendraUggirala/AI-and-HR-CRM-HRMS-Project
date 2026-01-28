@@ -1255,7 +1255,7 @@ const PayrollReports = () => {
                 <p className="card-text small text-secondary">Monthly payroll, cost analysis, salary breakdowns</p>
                 <div className="d-flex justify-content-between align-items-center">
                   <button 
-                    className="btn btn-sm btn-outline-primary"
+                    className="btn btn-sm btn-outline-primary "
                     onClick={() => handleQuickFilter('Salary')}
                   >
                     View All
@@ -1274,12 +1274,12 @@ const PayrollReports = () => {
                 <p className="card-text small text-secondary">PF, ESI, TDS, PT returns and compliance forms</p>
                 <div className="d-flex justify-content-between align-items-center">
                   <button 
-                    className="btn btn-sm btn-outline-warning"
+                    className="btn btn-sm btn-outline-warning mt-4"
                     onClick={() => handleQuickFilter('Statutory')}
                   >
                     View All
                   </button>
-                  <span className="badge bg-warning">
+                  <span className="badge bg-warning mt-4">
                     {reports.filter(r => r.category === 'Statutory').length}
                   </span>
                 </div>
@@ -1293,12 +1293,12 @@ const PayrollReports = () => {
                 <p className="card-text small text-secondary">Loan, advances, arrears and other deductions</p>
                 <div className="d-flex justify-content-between align-items-center">
                   <button 
-                    className="btn btn-sm btn-outline-info"
+                    className="btn btn-sm btn-outline-info mt-4"
                     onClick={() => handleQuickFilter('Deduction')}
                   >
                     View All
                   </button>
-                  <span className="badge bg-info">
+                  <span className="badge bg-info mt-4">
                     {reports.filter(r => r.category === 'Deduction').length}
                   </span>
                 </div>

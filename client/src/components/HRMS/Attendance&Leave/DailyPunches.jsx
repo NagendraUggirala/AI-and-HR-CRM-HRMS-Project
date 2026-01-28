@@ -115,7 +115,7 @@ function DailyPunches() {
     search: "",
   });
   const [selectedPunchFilter, setSelectedPunchFilter] = useState("all");
-  
+
   // Initialize date to today
   const getFormattedDate = (dateObj) => {
     const day = String(dateObj.getDate()).padStart(2, "0");
@@ -123,10 +123,10 @@ function DailyPunches() {
     const year = dateObj.getFullYear();
     return `${day}-${month}-${year}`;
   };
-  
+
   const [selectedDate, setSelectedDate] = useState(getFormattedDate(new Date()));
   const [selectedPunch, setSelectedPunch] = useState(null);
-  
+
   // Add punch form state
   const [punchFormData, setPunchFormData] = useState({
     date: "",
@@ -134,7 +134,7 @@ function DailyPunches() {
     remarks: "",
     type: "selfie",
   });
-  
+
   // Employee punches tracking
   const [employeePunches, setEmployeePunches] = useState({});
 
@@ -179,7 +179,7 @@ function DailyPunches() {
       const name = (p.name || "").toLowerCase();
       const code = (p.code || "").toLowerCase();
       const designation = (p.designation || "").toLowerCase();
-      
+
       if (!name.includes(searchLower) && !code.includes(searchLower) && !designation.includes(searchLower)) {
         return false;
       }
@@ -459,27 +459,38 @@ function DailyPunches() {
         </div>
       </div>
 
-      {/* ===== Radio Filters (clean) ===== */}
-      <div className="d-flex flex-wrap gap-4 mt-2">
+      {/* ===== Radio Filters (interactive) ===== */}
+      <div className="d-flex flex-wrap gap-3 mt-3">
         {[
           { label: "Show All", value: "all" },
           { label: "Late Coming Only", value: "late" },
           { label: "Absent Only", value: "absent" },
           { label: "No Punches", value: "nopunch" },
-        ].map((f) => (
-          <label key={f.value} className="d-flex align-items-center gap-2">
-            <input
-              type="radio"
-              name="selectedPunchFilter"
-              value={f.value}
-              checked={selectedPunchFilter === f.value}
-              onChange={onPunchFilterChange}
-              style={{ accentColor: "#0d6efd" }}
-            />
-            {f.label}
-          </label>
-        ))}
+        ].map((f) => {
+          const isActive = selectedPunchFilter === f.value;
+
+          return (
+            <label
+              key={f.value}
+              className={`px-3 py-1 rounded-pill border small fw-semibold cursor-pointer
+          ${isActive ? "bg-primary text-white border-primary" : "bg-white text-dark border-secondary"}
+        `}
+              style={{ cursor: "pointer" }}
+            >
+              <input
+                type="radio"
+                name="selectedPunchFilter"
+                value={f.value}
+                checked={isActive}
+                onChange={onPunchFilterChange}
+                className="d-none"
+              />
+              {f.label}
+            </label>
+          );
+        })}
       </div>
+
 
       {/* ===== Date + Search ===== */}
       <div className="d-flex flex-wrap align-items-center gap-3 mt-3">
@@ -524,151 +535,158 @@ function DailyPunches() {
       </div>
 
 
-     {/* ===== Table ===== */}
-<div className="card mt-3 w-100">
-  <div className="table-responsive">
-    <table className="table table-hover align-middle mb-0">
-      <thead className="table-light">
-        <tr>
-          <th>SN</th>
-          <th>Employee</th>
-          <th>Designation</th>
-          <th className="text-center">Start</th>
-          <th className="text-center">End</th>
-          <th className="text-center">Duration</th>
-          <th className="text-center">Attendance</th>
-          <th className="text-center">Actions</th>
-        </tr>
-      </thead>
+      {/* ===== Table ===== */}
+      <div className="card mt-3 w-100">
+        <div className="table-responsive">
+          <table className="table table-hover align-middle mb-0">
+            <thead className="table-light">
+              <tr>
+                {/* SN */}
+                <th className="ps-3" style={{ width: "60px" }}>
+                  SN
+                </th>
+                <th>Employee</th>
+                <th>Designation</th>
+                <th className="text-center">Start</th>
+                <th className="text-center">End</th>
+                <th className="text-center">Duration</th>
+                <th className="text-center">Attendance</th>
+                <th className="text-center">Actions</th>
+              </tr>
+            </thead>
 
-      <tbody>
-        {currentData.length > 0 ? (
-          currentData.map((p, i) => (
-            <tr key={p.id}>
-              <td>{startIndex + i + 1}</td>
+            <tbody>
+              {currentData.length > 0 ? (
+                currentData.map((p, i) => (
+                  <tr key={p.id}>
+                    {/* SN */}
+                    <td className="ps-3 fw-semibold" style={{ width: "60px", backgroundColor:"red", textAlign:"center" }} >
+                      {startIndex + i + 1}
+                    </td>
 
-              {/* Employee */}
-              <td>
-                <div className="fw-semibold text-dark">{p.name}</div>
-                <small className="text-muted">{p.code}</small>
-              </td>
+                    {/* Employee */}
+                    <td>
+                      <div className="fw-semibold text-dark">{p.name}</div>
+                      <small className="text-muted">{p.code}</small>
+                    </td>
 
-              {/* Designation */}
-              <td>{p.designation}</td>
+                    {/* Designation */}
+                    <td>{p.designation}</td>
 
-              {/* Start */}
-              <td className="text-center">
-                <div className="d-inline-flex align-items-center gap-2">
-                  <i
-                    className="fa-solid fa-camera text-primary"
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      setSelectedPunchForModal(p);
-                      setShowModal(true);
-                    }}
-                  />
-                  <span>{p.start}</span>
-                  <i
-                    className="fa-solid fa-location-dot text-success"
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      setSelectedPunchForModal(p);
-                      setShowLocationModal(true);
-                    }}
-                  />
-                </div>
-              </td>
+                    {/* Start */}
+                    <td className="text-center">
+                      <div className="d-inline-flex align-items-center gap-2">
+                        <i
+                          className="fa-solid fa-camera text-primary"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => {
+                            setSelectedPunchForModal(p);
+                            setShowModal(true);
+                          }}
+                        />
+                        <span>{p.start}</span>
+                        <i
+                          className="fa-solid fa-location-dot text-success"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => {
+                            setSelectedPunchForModal(p);
+                            setShowLocationModal(true);
+                          }}
+                        />
+                      </div>
+                    </td>
 
-              {/* End */}
-              <td className="text-center">
-                <div className="d-inline-flex align-items-center gap-2">
-                  <i
-                    className="fa-solid fa-camera text-primary"
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      setSelectedPunchForModal(p);
-                      setShowModal(true);
-                    }}
-                  />
-                  <span>{p.end || "--"}</span>
-                  <i
-                    className="fa-solid fa-location-dot text-success"
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      setSelectedPunchForModal(p);
-                      setShowLocationModal(true);
-                    }}
-                  />
-                </div>
-              </td>
+                    {/* End */}
+                    <td className="text-center">
+                      <div className="d-inline-flex align-items-center gap-2">
+                        <i
+                          className="fa-solid fa-camera text-primary"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => {
+                            setSelectedPunchForModal(p);
+                            setShowModal(true);
+                          }}
+                        />
+                        <span>{p.end || "--"}</span>
+                        <i
+                          className="fa-solid fa-location-dot text-success"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => {
+                            setSelectedPunchForModal(p);
+                            setShowLocationModal(true);
+                          }}
+                        />
+                      </div>
+                    </td>
 
-              {/* Duration */}
-              <td className="text-center">{p.duration}</td>
+                    {/* Duration */}
+                    <td className="text-center">{p.duration}</td>
 
-              {/* Attendance */}
-              <td className="text-center">
-                <span
-                  className="d-inline-flex align-items-center justify-content-center fw-semibold"
-                  style={{
-                    width: 36,
-                    height: 24,
-                    background: "#7ADCE7",
-                    borderRadius: 4,
-                  }}
-                >
-                  {p.attendance}
-                </span>
-              </td>
+                    {/* Attendance */}
+                    <td className="text-center">
+                      <span
+                        className="d-inline-flex align-items-center justify-content-center fw-semibold"
+                        style={{
+                          width: 36,
+                          height: 24,
+                          background: "#7ADCE7",
+                          borderRadius: 4,
+                        }}
+                      >
+                        {p.attendance}
+                      </span>
+                    </td>
 
-              {/* Actions */}
-              <td className="text-center">
-                <div className="d-flex justify-content-center gap-2">
-                  <button
-                    className="btn btn-sm btn-primary rounded-circle d-flex justify-content-center align-items-center "
-                    style={{ width: 32, height: 32 }}
-                    onClick={() => {
-                      setSelectedPunch(p);
-                      setSelectedPunchForModal(p);
-                      setPunchFormData({
-                        date: new Date().toISOString().split("T")[0],
-                        time: { hh: "", mm: "", ss: "" },
-                        remarks: "",
-                        type: "selfie",
-                      });
-                      setShowAddPunchModal(true);
-                    }}
-                    title="Add Punch"
-                  >
-                    <i className="fa-solid fa-plus"></i>
-                  </button>
+                    {/* Actions */}
+                    <td className="text-center">
+                      <div className="d-flex justify-content-center gap-2">
+                        <button
+                          className="btn btn-sm btn-primary rounded-circle d-flex justify-content-center align-items-center"
+                          style={{ width: 32, height: 32 }}
+                          onClick={() => {
+                            setSelectedPunch(p);
+                            setSelectedPunchForModal(p);
+                            setPunchFormData({
+                              date: new Date().toISOString().split("T")[0],
+                              time: { hh: "", mm: "", ss: "" },
+                              remarks: "",
+                              type: "selfie",
+                            });
+                            setShowAddPunchModal(true);
+                          }}
+                          title="Add Punch"
+                        >
+                          <i className="fa-solid fa-plus"></i>
+                        </button>
 
-                  <button
-                    className="btn btn-sm btn-secondary rounded-circle d-flex justify-content-center align-items-center "
-                    style={{ width: 32, height: 32 }}
-                    onClick={() => {
-                      setSelectedPunch(p);
-                      setSelectedPunchForModal(p);
-                      setShowAllPunchesModal(true);
-                    }}
-                    title="View All Punches"
-                  >
-                    <i className="fa-solid fa-ellipsis"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))
-        ) : (
-          <tr>
-            <td colSpan="8" className="text-center text-muted py-4">
-              No records found.
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  </div>
-</div>
+                        <button
+                          className="btn btn-sm btn-secondary rounded-circle d-flex justify-content-center align-items-center"
+                          style={{ width: 32, height: 32 }}
+                          onClick={() => {
+                            setSelectedPunch(p);
+                            setSelectedPunchForModal(p);
+                            setShowAllPunchesModal(true);
+                          }}
+                          title="View All Punches"
+                        >
+                          <i className="fa-solid fa-ellipsis"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="8" className="text-center text-muted py-4">
+                    No records found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
 
 
 
@@ -681,70 +699,70 @@ function DailyPunches() {
       />
 
       <nav className="mt-3">
-  <ul className="pagination justify-content-center align-items-center gap-1 mb-0">
+        <ul className="pagination justify-content-center align-items-center gap-1 mb-0">
 
-    {/* Previous */}
-    <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-      <button
-        className="page-link d-flex align-items-center justify-content-center"
-        onClick={() => goToPage(currentPage - 1)}
-        disabled={currentPage === 1}
-        style={{ width: "40px", height: "40px" }}
-      >
-        <i className="fa-solid fa-chevron-left"></i>
-      </button>
-    </li>
-
-    {/* Page Numbers */}
-    {totalPages > 0 ? (
-      [...Array(Math.min(totalPages, 5))].map((_, i) => {
-        let pageNum;
-        if (totalPages <= 5) {
-          pageNum = i + 1;
-        } else if (currentPage <= 3) {
-          pageNum = i + 1;
-        } else if (currentPage >= totalPages - 2) {
-          pageNum = totalPages - 4 + i;
-        } else {
-          pageNum = currentPage - 2 + i;
-        }
-        return (
-          <li
-            key={pageNum}
-            className={`page-item ${currentPage === pageNum ? "active" : ""}`}
-          >
+          {/* Previous */}
+          <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
             <button
               className="page-link d-flex align-items-center justify-content-center"
-              onClick={() => goToPage(pageNum)}
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
               style={{ width: "40px", height: "40px" }}
             >
-              {pageNum}
+              <i className="fa-solid fa-chevron-left"></i>
             </button>
           </li>
-        );
-      })
-    ) : (
-      <li className="page-item active">
-        <button className="page-link d-flex align-items-center justify-content-center" style={{ width: "40px", height: "40px" }}>
-          1
-        </button>
-      </li>
-    )}
 
-    {/* Next */}
-    <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
-      <button
-        className="page-link d-flex align-items-center justify-content-center"
-        onClick={() => goToPage(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        style={{ width: "40px", height: "40px" }}
-      >
-        <i className="fa-solid fa-chevron-right"></i>
-      </button>
-    </li>
+          {/* Page Numbers */}
+          {totalPages > 0 ? (
+            [...Array(Math.min(totalPages, 5))].map((_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+              return (
+                <li
+                  key={pageNum}
+                  className={`page-item ${currentPage === pageNum ? "active" : ""}`}
+                >
+                  <button
+                    className="page-link d-flex align-items-center justify-content-center"
+                    onClick={() => goToPage(pageNum)}
+                    style={{ width: "40px", height: "40px" }}
+                  >
+                    {pageNum}
+                  </button>
+                </li>
+              );
+            })
+          ) : (
+            <li className="page-item active">
+              <button className="page-link d-flex align-items-center justify-content-center" style={{ width: "40px", height: "40px" }}>
+                1
+              </button>
+            </li>
+          )}
 
-  </ul>
-</nav>
+          {/* Next */}
+          <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
+            <button
+              className="page-link d-flex align-items-center justify-content-center"
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              style={{ width: "40px", height: "40px" }}
+            >
+              <i className="fa-solid fa-chevron-right"></i>
+            </button>
+          </li>
+
+        </ul>
+      </nav>
 
       <div className="mt-3 mb-1 small text-dark">Punch Legend:</div>
       <div
@@ -823,7 +841,7 @@ function DailyPunches() {
             }
           }}
         >
-          <div 
+          <div
             className="modal-dialog modal-dialog-centered"
             onClick={(e) => e.stopPropagation()}
           >
@@ -934,7 +952,7 @@ function DailyPunches() {
             }
           }}
         >
-          <div 
+          <div
             className="modal-dialog modal-lg modal-dialog-centered"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1006,27 +1024,27 @@ function DailyPunches() {
             }
           }}
         >
-          <div 
+          <div
             className="modal-dialog modal-md modal-dialog-centered"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Add Time Punch</h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={() => {
-                      setShowAddPunchModal(false);
-                      setSelectedPunchForModal(null);
-                      setPunchFormData({
-                        date: "",
-                        time: { hh: "", mm: "", ss: "" },
-                        remarks: "",
-                        type: "selfie",
-                      });
-                    }}
-                  ></button>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => {
+                    setShowAddPunchModal(false);
+                    setSelectedPunchForModal(null);
+                    setPunchFormData({
+                      date: "",
+                      time: { hh: "", mm: "", ss: "" },
+                      remarks: "",
+                      type: "selfie",
+                    });
+                  }}
+                ></button>
               </div>
               <div className="modal-body">
                 <div className="mb-3">
@@ -1139,7 +1157,7 @@ function DailyPunches() {
                     }));
 
                     toast.success(`Punch added: ${punchFormData.date} ${finalTime} (${punchTypeLabel})`);
-                    
+
                     // Reset form
                     setPunchFormData({
                       date: "",
@@ -1182,7 +1200,7 @@ function DailyPunches() {
             }
           }}
         >
-          <div 
+          <div
             className="modal-dialog modal-md modal-dialog-centered"
             onClick={(e) => e.stopPropagation()}
           >

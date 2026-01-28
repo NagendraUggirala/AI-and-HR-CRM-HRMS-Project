@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Icon } from "@iconify/react";
 import {
   Search,
   Download,
@@ -518,8 +519,7 @@ const CustomReportBuilder = () => {
     doc.text("Employee Master Report", 105, 20, { align: "center" });
     doc.setFontSize(10);
     doc.text(
-      `Generated: ${new Date().toLocaleDateString()} | Total Employees: ${
-        filteredEmployees.length
+      `Generated: ${new Date().toLocaleDateString()} | Total Employees: ${filteredEmployees.length
       }`,
       105,
       28,
@@ -572,7 +572,7 @@ const CustomReportBuilder = () => {
     doc.text(
       `• Average Salary: $${Math.round(
         filteredEmployees.reduce((sum, emp) => sum + emp.salary, 0) /
-          filteredEmployees.length
+        filteredEmployees.length
       ).toLocaleString()}`,
       14,
       finalY + 21
@@ -887,12 +887,12 @@ const CustomReportBuilder = () => {
         prev.map((emp) =>
           emp.id === newEmployeeData.id
             ? {
-                ...emp,
-                ...newEmployeeData,
-                lastUpdated: today,
-                // Keep original employeeId if not provided
-                employeeId: newEmployeeData.employeeId || emp.employeeId,
-              }
+              ...emp,
+              ...newEmployeeData,
+              lastUpdated: today,
+              // Keep original employeeId if not provided
+              employeeId: newEmployeeData.employeeId || emp.employeeId,
+            }
             : emp
         )
       );
@@ -977,14 +977,15 @@ const CustomReportBuilder = () => {
     <>
       <div className="container-fluid p-4">
         {/* Header */}
-        <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-          <div>
-            <h4 className="mb-0">Custom Report Builder</h4>
-            <small className="text-muted">
-              Manage report features and generate employee reports
-            </small>
-          </div>
+
+        <div className="mb-4">
+          <h5 className="text-3xl fw-bold text-dark mb-2 mt-3 d-flex align-items-center gap-2">
+            <Icon icon="heroicons: Pencil-Edit" />
+            Custom Report Builder
+          </h5>
+          <p className="text-muted"> Manage report features and generate employee reports</p>
         </div>
+
 
         {/* KPIs - Always visible */}
         <div className="row g-2 g-md-3 mb-4">
@@ -1051,61 +1052,58 @@ const CustomReportBuilder = () => {
         </div>
 
         {/* Navigation Tabs */}
-<div className="mb-4">
-  <div className="d-flex overflow-auto">
-    <div className="d-flex flex-nowrap gap-2 w-100">
+        <div className="mb-4">
+          <div className="d-flex overflow-auto">
+            <div className="d-flex flex-nowrap gap-2 w-100">
 
-      {/* Report Builder */}
-      <button
-        type="button"
-        onClick={() => {
-          setActiveTab("features");
-          setIsBuilderView(true);
-        }}
-        className={`btn d-flex align-items-center gap-2 px-4 py-2.5 rounded flex-shrink-0 ${
-          activeTab === "features" && isBuilderView
-            ? "btn-primary text-white"
-            : "btn-outline-primary"
-        }`}
-      >
-        <Settings size={18} />
-        <span>Report Builder</span>
-      </button>
+              {/* Report Builder */}
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("features");
+                  setIsBuilderView(true);
+                }}
+                className={`btn d-flex align-items-center gap-2 px-4 py-2.5 rounded flex-shrink-0 ${activeTab === "features" && isBuilderView
+                  ? "btn-primary text-white"
+                  : "btn-outline-primary"
+                  }`}
+              >
+                <Settings size={18} />
+                <span>Report Builder</span>
+              </button>
 
-      {/* Report Sharing */}
-      <button
-        type="button"
-        onClick={() => {
-          setActiveTab("features");
-          setIsBuilderView(false);
-        }}
-        className={`btn d-flex align-items-center gap-2 px-4 py-2.5 rounded flex-shrink-0 ${
-          activeTab === "features" && !isBuilderView
-            ? "btn-primary text-white"
-            : "btn-outline-primary"
-        }`}
-      >
-        <Share2 size={18} />
-        <span>Report Sharing</span>
-      </button>
+              {/* Report Sharing */}
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("features");
+                  setIsBuilderView(false);
+                }}
+                className={`btn d-flex align-items-center gap-2 px-4 py-2.5 rounded flex-shrink-0 ${activeTab === "features" && !isBuilderView
+                  ? "btn-primary text-white"
+                  : "btn-outline-primary"
+                  }`}
+              >
+                <Share2 size={18} />
+                <span>Report Sharing</span>
+              </button>
 
-      {/* Employee Reports */}
-      <button
-        type="button"
-        onClick={() => setActiveTab("employees")}
-        className={`btn d-flex align-items-center gap-2 px-4 py-2.5 rounded flex-shrink-0 ${
-          activeTab === "employees"
-            ? "btn-primary text-white"
-            : "btn-outline-primary"
-        }`}
-      >
-        <Users size={18} />
-        <span>Employee Reports</span>
-      </button>
+              {/* Employee Reports */}
+              <button
+                type="button"
+                onClick={() => setActiveTab("employees")}
+                className={`btn d-flex align-items-center gap-2 px-4 py-2.5 rounded flex-shrink-0 ${activeTab === "employees"
+                  ? "btn-primary text-white"
+                  : "btn-outline-primary"
+                  }`}
+              >
+                <Users size={18} />
+                <span>Employee Reports</span>
+              </button>
 
-    </div>
-  </div>
-</div>
+            </div>
+          </div>
+        </div>
 
 
         {/* FEATURES TAB CONTENT */}
@@ -1171,23 +1169,23 @@ const CustomReportBuilder = () => {
                   <div className="col-12 col-lg-3">
                     <div className="d-flex flex-column flex-md-row flex-lg-column flex-xl-row gap-2 h-100">
                       <button
-                        className="btn btn-dark btn-sm flex-fill"
+                        className="btn btn-dark btn-sm flex-fill d-flex align-items-center justify-content-center gap-1"
                         onClick={exportCSV}
                       >
-                        <Download size={14} className="me-1" />
+                        <Download size={14} />
                         <span className="d-none d-sm-inline">Export CSV</span>
-                        <span className="d-sm-none">Export CSV</span>
+                        <span className="d-sm-none">Export</span>
                       </button>
+
                       <button
-                        className="btn btn-primary btn-sm flex-fill"
+                        className="btn btn-primary btn-sm flex-fill d-flex align-items-center justify-content-center gap-1"
                         onClick={handleAddNewReport}
                       >
-                        <Plus size={14} className="me-1" />
-                        <span className="d-none d-sm-inline">
-                          Add New Report
-                        </span>
-                        <span className="d-sm-none">Add New Report</span>
+                        <Plus size={14} />
+                        <span className="d-none d-sm-inline">Add New Report</span>
+                        <span className="d-sm-none">Add</span>
                       </button>
+
                     </div>
                   </div>
                 </div>
@@ -1235,12 +1233,13 @@ const CustomReportBuilder = () => {
                               <Eye size={14} />
                             </button>
                             <button
-                              className="btn btn-outline-info"
+                              className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center"
                               onClick={() => openEditModal(item)}
                               title="Edit"
                             >
                               <Edit size={14} />
                             </button>
+
                             <button
                               className="btn btn-outline-success"
                               onClick={() => handlePublish(item)}
@@ -1333,55 +1332,55 @@ const CustomReportBuilder = () => {
         {/* EMPLOYEES TAB CONTENT */}
         {activeTab === "employees" && (
           <div id="employeeReportsSection">
-<div className="mb-3">
-  <div className="row g-2 align-items-center">
+            <div className="mb-3">
+              <div className="row g-2 align-items-center">
 
-    {/* Title */}
-    <div className="col-12 col-md-auto">
-      <h5 className="mb-0">Employee Reports</h5>
-    </div>
+                {/* Title */}
+                <div className="col-12 col-md-auto">
+                  <h5 className="mb-0">Employee Reports</h5>
+                </div>
 
-    {/* Actions */}
-    <div className="col-12 col-md">
-      <div className="d-flex flex-column flex-sm-row flex-wrap gap-2 justify-content-md-end">
+                {/* Actions */}
+                <div className="col-12 col-md">
+                  <div className="d-flex flex-column flex-sm-row flex-wrap gap-2 justify-content-md-end">
 
-        <button
-          className="btn btn-success d-flex align-items-center justify-content-center"
-          onClick={handleAddNewEmployee}
-        >
-          <Plus size={16} className="me-1" />
-          Add Employee
-        </button>
+                    <button
+                      className="btn btn-success d-flex align-items-center justify-content-center"
+                      onClick={handleAddNewEmployee}
+                    >
+                      <Plus size={16} className="me-1" />
+                      Add Employee
+                    </button>
 
-        <button
-          className="btn btn-outline-success btn-sm d-flex align-items-center justify-content-center"
-          onClick={exportSelectedEmployees}
-        >
-          <Download size={14} className="me-1" />
-          Export Selected
-        </button>
+                    <button
+                      className="btn btn-outline-success btn-sm d-flex align-items-center justify-content-center"
+                      onClick={exportSelectedEmployees}
+                    >
+                      <Download size={14} className="me-1" />
+                      Export Selected
+                    </button>
 
-        <button
-          className="btn btn-success btn-sm d-flex align-items-center justify-content-center"
-          onClick={exportAllEmployeesExcel}
-        >
-          <FileSpreadsheet size={14} className="me-1" />
-          Export All Excel
-        </button>
+                    <button
+                      className="btn btn-success btn-sm d-flex align-items-center justify-content-center"
+                      onClick={exportAllEmployeesExcel}
+                    >
+                      <FileSpreadsheet size={14} className="me-1" />
+                      Export All Excel
+                    </button>
 
-        <button
-          className="btn btn-primary btn-sm d-flex align-items-center justify-content-center"
-          onClick={exportAllEmployeesPDF}
-        >
-          <File size={14} className="me-1" />
-          Export All PDF
-        </button>
+                    <button
+                      className="btn btn-primary btn-sm d-flex align-items-center justify-content-center"
+                      onClick={exportAllEmployeesPDF}
+                    >
+                      <File size={14} className="me-1" />
+                      Export All PDF
+                    </button>
 
-      </div>
-    </div>
+                  </div>
+                </div>
 
-  </div>
-</div>
+              </div>
+            </div>
 
 
             {/* Employee Filters */}
@@ -1513,7 +1512,7 @@ const CustomReportBuilder = () => {
                           className="form-check-input"
                           checked={
                             selectedEmployees.length ===
-                              filteredEmployees.length &&
+                            filteredEmployees.length &&
                             filteredEmployees.length > 0
                           }
                           onChange={selectAllEmployees}
@@ -1584,13 +1583,12 @@ const CustomReportBuilder = () => {
                         </td>
                         <td>
                           <span
-                            className={`badge ${
-                              employee.status === "Active"
-                                ? "bg-success"
-                                : employee.status === "On Leave"
+                            className={`badge ${employee.status === "Active"
+                              ? "bg-success"
+                              : employee.status === "On Leave"
                                 ? "bg-warning"
                                 : "bg-danger"
-                            }`}
+                              }`}
                           >
                             {employee.status}
                           </span>
@@ -1883,13 +1881,12 @@ const CustomReportBuilder = () => {
                         <p>
                           <strong>Status:</strong>
                           <span
-                            className={`badge ms-2 ${
-                              selectedEmployee.status === "Active"
-                                ? "bg-success"
-                                : selectedEmployee.status === "On Leave"
+                            className={`badge ms-2 ${selectedEmployee.status === "Active"
+                              ? "bg-success"
+                              : selectedEmployee.status === "On Leave"
                                 ? "bg-warning"
                                 : "bg-danger"
-                            }`}
+                              }`}
                           >
                             {selectedEmployee.status}
                           </span>
