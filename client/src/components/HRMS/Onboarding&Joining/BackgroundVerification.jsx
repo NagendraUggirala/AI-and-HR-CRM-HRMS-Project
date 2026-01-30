@@ -62,15 +62,17 @@ const BackgroundVerification = () => {
 
   // Required documents list
   const requiredDocuments = [
-    { id: "aadhar", name: "Aadhar Card", required: true },
+    { id: "aadhar", name: "Aadhaar Card", required: true },
     { id: "pan", name: "PAN Card", required: true },
     { id: "passport", name: "Passport", required: false },
     { id: "driving", name: "Driving License", required: false },
     { id: "education", name: "Education Certificates", required: true },
-    { id: "experience", name: "Experience Letters", required: true },
+    { id: "experience", name: "Experience Letters / Relieving Letters", required: true },
+    { id: "salary", name: "Last 3–6 Months Salary Slips", required: true },
+    { id: "pf", name: "PF / UAN Details", required: false },
     { id: "address", name: "Address Proof", required: true },
-    { id: "bank", name: "Bank Statement", required: false },
-    { id: "photo", name: "Passport Size Photo", required: true },
+    { id: "bank", name: "Bank Statement (Last 6 Months)", required: false },
+    { id: "photo", name: "Passport Size Photo", required: true }
   ];
 
   // Load employees from localStorage

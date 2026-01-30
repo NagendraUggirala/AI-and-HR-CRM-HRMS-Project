@@ -56,7 +56,9 @@ const StatutoryCompliance = () => {
     vpfRate: '',
     month: ''
   });
-
+// Add these with your other useState declarations
+const [selectedChallan, setSelectedChallan] = useState(null);
+const [showChallanDetailsModal, setShowChallanDetailsModal] = useState(false);
   // PF Configuration State
   const [pfConfig, setPfConfig] = useState({
     employeeContribution: 12,
@@ -1091,59 +1093,59 @@ const StatutoryCompliance = () => {
         return (
           <div className="row g-3">
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Employee Name</label>
-              <p className="form-control-plaintext fw-bold">{data.name}</p>
+              <label className=" small fw-bold">Employee Name</label>
+              <p className="form-control-plaintext ">{data.name}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Employee ID</label>
+              <label className=" small fw-bold">Employee ID</label>
               <p className="form-control-plaintext">{data.employeeId}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Department</label>
+              <label className=" small fw-bold">Department</label>
               <p className="form-control-plaintext">{data.department}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Date of Joining</label>
+              <label className=" small fw-bold">Date of Joining</label>
               <p className="form-control-plaintext">{formatDate(data.doj)}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Basic Salary</label>
+              <label className=" small fw-bold">Basic Salary</label>
               <p className="form-control-plaintext fw-bold text-primary">{formatCurrency(data.basicSalary)}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Gross Salary</label>
+              <label className=" small fw-bold">Gross Salary</label>
               <p className="form-control-plaintext">{formatCurrency(data.grossSalary)}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">PF Contribution</label>
+              <label className=" small fw-bold">PF Contribution</label>
               <p className="form-control-plaintext">{formatCurrency(data.pfContribution)}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">ESI Contribution</label>
+              <label className=" small fw-bold">ESI Contribution</label>
               <p className="form-control-plaintext">{formatCurrency(data.esiContribution)}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">TDS Deduction</label>
+              <label className=" small fw-bold">TDS Deduction</label>
               <p className="form-control-plaintext">{formatCurrency(data.tdsDeduction)}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Professional Tax</label>
+              <label className=" small fw-bold">Professional Tax</label>
               <p className="form-control-plaintext">{formatCurrency(data.ptDeduction)}</p>
             </div>
             <div className="col-12">
-              <label className="form-label small fw-semibold">PF UAN Number</label>
+              <label className=" small fw-bold">PF UAN Number</label>
               <p className="form-control-plaintext">{data.pfUAN || 'N/A'}</p>
             </div>
             <div className="col-12">
-              <label className="form-label small fw-semibold">ESI Number</label>
+              <label className=" small fw-bold">ESI Number</label>
               <p className="form-control-plaintext">{data.esiNumber || 'N/A'}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">PF Eligible</label>
+              <label className=" small fw-bold">PF Eligible</label>
               <p className="form-control-plaintext">{data.pfEligible ? 'Yes' : 'No'}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">ESI Eligible</label>
+              <label className=" small fw-bold">ESI Eligible</label>
               <p className="form-control-plaintext">{data.esiEligible ? 'Yes' : 'No'}</p>
             </div>
           </div>
@@ -1153,27 +1155,27 @@ const StatutoryCompliance = () => {
         return (
           <div className="row g-3">
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Employee ID</label>
-              <p className="form-control-plaintext fw-bold">{data.employeeId}</p>
+              <label className=" small fw-bold">Employee ID</label>
+              <p className="form-control-plaintext">{data.employeeId}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Month</label>
+              <label className="small fw-bold">Month</label>
               <p className="form-control-plaintext">{data.month}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Employee Contribution</label>
+              <label className=" small fw-bold">Employee Contribution</label>
               <p className="form-control-plaintext fw-bold text-primary">{formatCurrency(data.employeeContribution)}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Employer Contribution</label>
+              <label className=" small fw-bold">Employer Contribution</label>
               <p className="form-control-plaintext fw-bold text-success">{formatCurrency(data.employerContribution)}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Total PF</label>
+              <label className=" small fw-bold">Total PF</label>
               <p className="form-control-plaintext fw-bold">{formatCurrency(data.total)}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Status</label>
+              <label className=" small fw-bold">Status</label>
               <div>{getStatusBadge(data.status)}</div>
             </div>
           </div>
@@ -1302,35 +1304,35 @@ const StatutoryCompliance = () => {
         return (
           <div className="row g-3">
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Month</label>
-              <p className="form-control-plaintext fw-bold">{data.month}</p>
+              <label className=" small fw-bold">Month</label>
+              <p className="form-control-plaintext">{data.month}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Total Employees</label>
+              <label className=" small fw-bold">Total Employees</label>
               <p className="form-control-plaintext">{data.totalEmployees}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Total Wages</label>
+              <label className=" small fw-bold">Total Wages</label>
               <p className="form-control-plaintext fw-bold text-primary">{formatCurrency(data.totalWages)}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">EPF Contribution</label>
+              <label className=" small fw-bold">EPF Contribution</label>
               <p className="form-control-plaintext">{formatCurrency(data.epfContribution)}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">EPS Contribution</label>
+              <label className=" small fw-bold">EPS Contribution</label>
               <p className="form-control-plaintext">{formatCurrency(data.epsContribution)}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">EDLI Contribution</label>
+              <label className=" small fw-bold">EDLI Contribution</label>
               <p className="form-control-plaintext">{formatCurrency(data.edliContribution)}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Status</label>
+              <label className=" small fw-bold">Status</label>
               <div>{getStatusBadge(data.status)}</div>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Submitted Date</label>
+              <label className=" small fw-bold">Submitted Date</label>
               <p className="form-control-plaintext">{formatDate(data.submittedDate)}</p>
             </div>
           </div>
@@ -1340,27 +1342,27 @@ const StatutoryCompliance = () => {
         return (
           <div className="row g-3">
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Employee Name</label>
-              <p className="form-control-plaintext fw-bold">{data.name}</p>
+              <label className=" small fw-bold">Employee Name</label>
+              <p className="form-control-plaintext ">{data.name}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Employee ID</label>
+              <label className=" small fw-bold">Employee ID</label>
               <p className="form-control-plaintext">{data.employeeId}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">VPF Rate</label>
+              <label className=" small fw-bold">VPF Rate</label>
               <p className="form-control-plaintext fw-bold text-primary">{data.vpfRate}%</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">VPF Amount</label>
+              <label className=" small fw-bold">VPF Amount</label>
               <p className="form-control-plaintext">{formatCurrency(data.vpfAmount)}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Month</label>
+              <label className=" small fw-bold">Month</label>
               <p className="form-control-plaintext">{data.month}</p>
             </div>
             <div className="col-md-6">
-              <label className="form-label small fw-semibold">Status</label>
+              <label className=" small fw-bold">Status</label>
               <div>{getStatusBadge(data.status)}</div>
             </div>
           </div>
@@ -1524,7 +1526,7 @@ const StatutoryCompliance = () => {
                 className="btn-primary"
                 onClick={() => handleGenerateForm('PF')}
               >
-                Generate Form 5/10C
+                Generate Form 
               </ButtonWithIcon>
             </div>
           </div>
@@ -1539,7 +1541,7 @@ const StatutoryCompliance = () => {
                   <div className="card-body">
                     <div className="row g-3">
                       <div className="col-md-6">
-                        <label className="form-label">Employee Contribution</label>
+                        <label className="fw-bold form-label">Employee Contribution</label>
                         <input 
                           type="number" 
                           className="form-control"
@@ -1549,7 +1551,7 @@ const StatutoryCompliance = () => {
                         />
                       </div>
                       <div className="col-md-6">
-                        <label className="form-label">Employer Contribution</label>
+                        <label className="fw-bold form-label">Employer Contribution</label>
                         <input 
                           type="number" 
                           className="form-control"
@@ -1559,7 +1561,7 @@ const StatutoryCompliance = () => {
                         />
                       </div>
                       <div className="col-md-6">
-                        <label className="form-label">EPS Contribution</label>
+                        <label className=" fw-bold form-label">EPS Contribution</label>
                         <input 
                           type="number" 
                           className="form-control"
@@ -1569,7 +1571,7 @@ const StatutoryCompliance = () => {
                         />
                       </div>
                       <div className="col-md-6">
-                        <label className="form-label">EDLI Contribution</label>
+                        <label className="fw-bold  form-label">EDLI Contribution</label>
                         <input 
                           type="number" 
                           className="form-control"
@@ -1641,14 +1643,14 @@ const StatutoryCompliance = () => {
                     
                     <div className="row g-3">
                       <div className="col-12">
-                        <label className="form-label">Ceiling Limit (₹)</label>
+                        <label className=" fw-bold form-label">Ceiling Limit (₹)</label>
                         <input 
                           type="number" 
                           className="form-control"
                           value={pfConfig.ceilingLimit}
                           onChange={(e) => handleUpdateConfig('pf', 'ceilingLimit', parseFloat(e.target.value))}
                         />
-                        <small className="text-muted">PF contribution calculated on basic up to this limit</small>
+                        <small className=" fw-bold text-muted">PF contribution calculated on basic up to this limit</small>
                       </div>
                       <div className="col-12">
                         <div className="form-check d-flex align-items-center">
@@ -1690,7 +1692,7 @@ const StatutoryCompliance = () => {
                       </div>
                       {pfConfig.vpfEnabled && (
                         <div className="col-12">
-                          <label className="form-label">Default VPF Rate (%)</label>
+                          <label className=" fw-bold form-label">Default VPF Rate (%)</label>
                           <input 
                             type="number" 
                             className="form-control"
@@ -1700,7 +1702,7 @@ const StatutoryCompliance = () => {
                             min="0"
                             max="100"
                           />
-                          <small className="text-muted">Default VPF contribution rate (optional, employees can customize)</small>
+                          <small className=" fw-bold text-muted">Default VPF contribution rate (optional, employees can customize)</small>
                         </div>
                       )}
                     </div>
@@ -1766,7 +1768,7 @@ const StatutoryCompliance = () => {
                     
                     <div className="row g-3">
                       <div className="col-md-6">
-                        <label className="form-label">Minimum Salary (₹)</label>
+                        <label className=" fw-bold form-label">Minimum Salary (₹)</label>
                         <input 
                           type="number" 
                           className="form-control"
@@ -1775,7 +1777,7 @@ const StatutoryCompliance = () => {
                         />
                       </div>
                       <div className="col-md-6">
-                        <label className="form-label">Maximum Salary (₹)</label>
+                        <label className=" fw-bold form-label">Maximum Salary (₹)</label>
                         <input 
                           type="number" 
                           className="form-control"
@@ -1785,7 +1787,7 @@ const StatutoryCompliance = () => {
                         />
                       </div>
                       <div className="col-12">
-                        <label className="form-label">Employment Types</label>
+                        <label className=" fw-bold form-label">Employment Types</label>
                         <div className="form-check d-flex align-items-center">
                           <input 
                             className="form-check-input custom-checkbox-tick"
@@ -1818,7 +1820,7 @@ const StatutoryCompliance = () => {
                         </div>
                       </div>
                       <div className="col-12">
-                        <label className="form-label">Probation Period (days)</label>
+                        <label className=" fw-bold form-label">Probation Period (days)</label>
                         <input 
                           type="number" 
                           className="form-control"
@@ -1835,7 +1837,7 @@ const StatutoryCompliance = () => {
                             checked={pfConfig.eligibilityRules.autoEnrollment}
                             onChange={(e) => handleUpdateConfig('pf', 'eligibilityRules', { ...pfConfig.eligibilityRules, autoEnrollment: e.target.checked })}
                           />
-                          <label className="form-check-label" htmlFor="autoEnrollment">
+                          <label className=" fw-bold form-check-label" htmlFor="autoEnrollment">
                             Auto-enroll eligible employees
                           </label>
                         </div>
@@ -1950,12 +1952,12 @@ const StatutoryCompliance = () => {
                               <td>{remittance.remittanceDate}</td>
                               <td>{getStatusBadge(remittance.status)}</td>
                               <td>
-                                <button 
-                                  className="btn btn-sm btn-outline-primary"
-                                  onClick={() => handleViewChallan(remittance.challanNo)}
-                                >
-                                  View Challan
-                                </button>
+                              <button 
+  className="btn btn-sm btn-outline-primary"
+  onClick={() => alert(`Viewing challan: ${remittance.challanNo}`)}
+>
+  View Challan
+</button>
                               </td>
                             </tr>
                           ))}
@@ -3213,8 +3215,8 @@ const StatutoryCompliance = () => {
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
-                    <p className="text-muted small mb-1">Total PF Contribution</p>
-                    <h4 className="kpi-number text-primary mb-0">{formatCurrency(kpis.totalPFContribution)}</h4>
+                    <p className="fw-bold ">Total PF Contribution</p>
+                    <h6 className="kpi-number text-primary mb-0">{formatCurrency(kpis.totalPFContribution)}</h6>
                   </div>
                   <div className="bg-primary-subtle text-primary p-2 rounded">
                     <Icon icon="heroicons:building-library" style={{ fontSize: '1rem' }} />
@@ -3228,8 +3230,8 @@ const StatutoryCompliance = () => {
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
-                    <p className="text-muted small mb-1">Total ESI Contribution</p>
-                    <h4 className="kpi-number text-info mb-0">{formatCurrency(kpis.totalESIContribution)}</h4>
+                    <p className="fw-bold ">Total ESI Contribution</p>
+                    <h6 className="kpi-number text-info mb-0">{formatCurrency(kpis.totalESIContribution)}</h6>
                   </div>
                   <div className="bg-info-subtle text-info p-2 rounded">
                     <Icon icon="heroicons:heart" style={{ fontSize: '1rem' }} />
@@ -3243,8 +3245,8 @@ const StatutoryCompliance = () => {
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
-                    <p className="text-muted small mb-1">Total TDS Deduction</p>
-                    <h4 className="kpi-number text-success mb-0">{formatCurrency(kpis.totalTDSDeduction)}</h4>
+                    <p className="fw-bold ">Total TDS Deduction</p>
+                    <h6 className="kpi-number text-success mb-0">{formatCurrency(kpis.totalTDSDeduction)}</h6>
                   </div>
                   <div className="bg-success-subtle text-success p-2 rounded">
                     <Icon icon="heroicons:banknotes" style={{ fontSize: '1rem' }} />
@@ -3258,8 +3260,8 @@ const StatutoryCompliance = () => {
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
-                    <p className="text-muted small mb-1">Pending Declarations</p>
-                    <h4 className="kpi-number text-warning mb-0">{formatNumber(kpis.pendingDeclarations)}</h4>
+                    <p className="fw-bold ">Pending Declarations</p>
+                    <h6 className="kpi-number text-warning mb-0">{formatNumber(kpis.pendingDeclarations)}</h6>
                   </div>
                   <div className="bg-warning-subtle text-warning p-2 rounded">
                     <Icon icon="heroicons:clock" style={{ fontSize: '1rem' }} />
@@ -3274,373 +3276,422 @@ const StatutoryCompliance = () => {
         {renderContent()}
 
         {/* View Data Modal - NEW */}
-        {showModal && viewModalData && (
-          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
-            <div className="modal-dialog modal-lg">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title d-flex align-items-center gap-2">
-                    <Icon icon="heroicons:eye" />
-                    {viewModalData.type === 'employee' ? 'Employee Details' : 
-                     viewModalData.type === 'pfStatement' ? 'PF Statement Details' :
-                     viewModalData.type === 'form' ? 'Form Details' :
-                     viewModalData.type === 'declaration' ? 'Declaration Details' :
-                     viewModalData.type === 'report' ? 'Report Details' :
-                     viewModalData.type === 'ecr' ? 'ECR Details' :
-                     viewModalData.type === 'vpf' ? 'VPF Details' : 'Details'}
-                  </h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={() => {
-                      setShowModal(false);
-                      setViewModalData(null);
-                    }}
-                  ></button>
-                </div>
-                <div className="modal-body">
-                  {renderViewModalContent()}
-                </div>
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => {
-                      setShowModal(false);
-                      setViewModalData(null);
-                    }}
-                  >
-                    Close
-                  </button>
-                  {viewModalData.type === 'form' && viewModalData.data.status === 'generated' && (
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={() => {
-                        handleDownloadForm(viewModalData.data.id);
-                        setShowModal(false);
-                        setViewModalData(null);
-                      }}
-                    >
-                      Download Form
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+    {showModal && viewModalData && (
+  <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ 
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 1050
+  }}>
+    <div className="modal-dialog modal-lg">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h5 className="modal-title d-flex align-items-center gap-2">
+            <Icon icon="heroicons:eye" />
+            {viewModalData.type === 'employee' ? 'Employee Details' : 
+             viewModalData.type === 'pfStatement' ? 'PF Statement Details' :
+             viewModalData.type === 'form' ? 'Form Details' :
+             viewModalData.type === 'declaration' ? 'Declaration Details' :
+             viewModalData.type === 'report' ? 'Report Details' :
+             viewModalData.type === 'ecr' ? 'ECR Details' :
+             viewModalData.type === 'vpf' ? 'VPF Details' : 'Details'}
+          </h5>
+          <button
+            type="button"
+            className="btn-close"
+            onClick={() => {
+              setShowModal(false);
+              setViewModalData(null);
+            }}
+          ></button>
+        </div>
+        <div className="modal-body">
+          {renderViewModalContent()}
+        </div>
+        <div className="modal-footer">
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => {
+              setShowModal(false);
+              setViewModalData(null);
+            }}
+          >
+            Close
+          </button>
+          {viewModalData.type === 'form' && viewModalData.data.status === 'generated' && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => {
+                handleDownloadForm(viewModalData.data.id);
+                setShowModal(false);
+                setViewModalData(null);
+              }}
+            >
+              Download Form
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
         {/* Generate Form Modal */}
-        {showFormModal && selectedForm && (
-          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-lg">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title d-flex align-items-center gap-2">
-                    <Icon icon="heroicons:document-plus" />
-                    Generate {selectedForm} Form
-                  </h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={() => {
-                      setShowFormModal(false);
-                      setSelectedForm(null);
-                    }}
-                  ></button>
-                </div>
-                <div className="modal-body">
-                  <div className="mb-4">
-                    <label className="form-label">Select Period</label>
-                    <select className="form-select">
-                      <option>March 2024</option>
-                      <option>Q4 FY 2023-24</option>
-                      <option>Full Year 2023-24</option>
-                    </select>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <label className="form-label">Format</label>
-                    <div className="d-flex gap-3">
-                      <div className="form-check">
-                        <input className="form-check-input" type="radio" name="format" id="pdf" defaultChecked />
-                        <label className="form-check-label" htmlFor="pdf">
-                          PDF
-                        </label>
-                      </div>
-                      <div className="form-check">
-                        <input className="form-check-input" type="radio" name="format" id="excel" />
-                        <label className="form-check-label" htmlFor="excel">
-                          Excel
-                        </label>
-                      </div>
-                      <div className="form-check">
-                        <input className="form-check-input" type="radio" name="format" id="csv" />
-                        <label className="form-check-label" htmlFor="csv">
-                          CSV
-                        </label>
-                      </div>
-                    </div>
-                  </div>
+      {showFormModal && selectedForm && (
+  <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+    <div className="modal-dialog modal-lg">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h6 className=" fw-bold modal-title d-flex align-items-center gap-2">
+            <Icon icon="heroicons:document-plus" />
+            Generate {selectedForm} Form
+          </h6>
+          <button
+            type="button"
+            className="btn-close"
+            onClick={() => {
+              setShowFormModal(false);
+              setSelectedForm(null);
+            }}
+          ></button>
+        </div>
+        <div className="modal-body">
+          <div className="mb-4">
+            <label className=" fw-bold  mb-2">Select Period</label>
+            <select className="form-select">
+              <option>March 2024</option>
+              <option>Q4 FY 2023-24</option>
+              <option>Full Year 2023-24</option>
+            </select>
+          </div>
+          
+          <div className="mb-4">
+            <label className=" fw-bold mb-2">Format</label>
+          <div className="d-flex gap-3">
+  <div className="form-check">
+    <input 
+      className="form-check-input" 
+      type="radio" 
+      name="format" 
+      id="pdf" 
+      value="pdf" 
+      defaultChecked 
+      style={{
+        width: '1.25em',
+        height: '1.25em',
+        backgroundColor: '#fff',
+        border: '1px solid #adb5bd'
+      }}
+    />
+    <label className="form-check-label" htmlFor="pdf">
+      PDF
+    </label>
+  </div>
+  <div className="form-check">
+    <input 
+      className="form-check-input" 
+      type="radio" 
+      name="format" 
+      id="excel" 
+      value="excel"
+      style={{
+        width: '1.25em',
+        height: '1.25em',
+        backgroundColor: '#fff',
+        border: '1px solid #adb5bd'
+      }}
+    />
+    <label className="form-check-label" htmlFor="excel">
+      Excel
+    </label>
+  </div>
+  <div className="form-check">
+    <input 
+      className="form-check-input" 
+      type="radio" 
+      name="format" 
+      id="csv" 
+      value="csv"
+      style={{
+        width: '1.25em',
+        height: '1.25em',
+        backgroundColor: '#fff',
+        border: '1px solid #adb5bd'
+      }}
+    />
+    <label className="form-check-label" htmlFor="csv">
+      CSV
+    </label>
+  </div>
+</div>
+          </div>
 
-                  <div className="alert alert-info">
-                    <Icon icon="heroicons:information-circle" className="me-2" />
-                    The form will be generated with all relevant employee data and calculations.
-                  </div>
-
-                  <div className="modal-footer">
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => {
-                        setShowFormModal(false);
-                        setSelectedForm(null);
-                      }}
-                    >
-                      Cancel
-                    </button>
-                    <ButtonWithIcon 
-                      icon="heroicons:document-arrow-down"
-                      className="btn-primary"
-                      onClick={() => {
-                        const formatInput = document.querySelector('input[name="format"]:checked');
-                        const format = formatInput ? formatInput.value : 'PDF';
-                        
-                        generateAndDownloadForm(format);
-                        setShowFormModal(false);
-                        setSelectedForm(null);
-                      }}
-                    >
-                      Generate & Download
-                    </ButtonWithIcon>
-                  </div>
-                </div>
-              </div>
+          <div className="alert alert-info d-flex align-items-start">
+            <Icon icon="heroicons:information-circle" className="me-2 flex-shrink-0 mt-1" />
+            <div>
+              The form will be generated with all relevant employee data and calculations.
             </div>
           </div>
-        )}
+        </div>
+        <div className="modal-footer">
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => {
+              setShowFormModal(false);
+              setSelectedForm(null);
+            }}
+          >
+            Cancel
+          </button>
+          <button 
+            className="btn btn-primary d-flex align-items-center gap-2"
+            onClick={() => {
+              const formatInput = document.querySelector('input[name="format"]:checked');
+              const format = formatInput ? formatInput.value : 'pdf';
+              
+              generateAndDownloadForm(format);
+              setShowFormModal(false);
+              setSelectedForm(null);
+            }}
+          >
+            <Icon icon="heroicons:document-arrow-down" />
+            Generate & Download
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
         {/* UAN Activation Modal */}
-        {showUANModal && (
-          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-lg">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">UAN Activation & Management</h5>
-                  <button type="button" className="btn-close" onClick={() => setShowUANModal(false)}></button>
-                </div>
-                <div className="modal-body">
-                  <div className="mb-3">
-                    <label className="form-label">Select Employee</label>
-                    <select 
-                      className="form-select"
-                      value={selectedEmployeeForUAN?.id || ''}
-                      onChange={(e) => setSelectedEmployeeForUAN(employees.find(emp => emp.id === e.target.value))}
-                    >
-                      <option value="">Select employee...</option>
-                      {employees.map(emp => (
-                        <option key={emp.id} value={emp.id}>{emp.name} ({emp.employeeId})</option>
-                      ))}
-                    </select>
-                  </div>
-                  {selectedEmployeeForUAN && (
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <label className="form-label">UAN Number</label>
-                        <input 
-                          type="text" 
-                          className="form-control"
-                          placeholder="Enter 12-digit UAN"
-                          maxLength="12"
-                          value={uanFormData.uanNumber}
-                          onChange={(e) => setUanFormData({...uanFormData, uanNumber: e.target.value})}
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label">Activation Date</label>
-                        <input 
-                          type="date" 
-                          className="form-control"
-                          value={uanFormData.activationDate}
-                          onChange={(e) => setUanFormData({...uanFormData, activationDate: e.target.value})}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowUANModal(false)}>Cancel</button>
-                  <button type="button" className="btn btn-primary" onClick={handleActivateUAN}>Activate UAN</button>
-                </div>
+     {showUANModal && (
+  <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ 
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 1050
+  }}>
+    <div className="modal-dialog modal-lg">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h6 className=" fw-bold modal-title">UAN Activation & Management</h6>
+          <button type="button" className="btn-close" onClick={() => setShowUANModal(false)}></button>
+        </div>
+        <div className="modal-body">
+          <div className="mb-3">
+            <label className="fw-bold ">Select Employee</label>
+            <select 
+              className="form-select"
+              value={selectedEmployeeForUAN?.id || ''}
+              onChange={(e) => setSelectedEmployeeForUAN(employees.find(emp => emp.id === e.target.value))}
+            >
+              <option value="">Select employee...</option>
+              {employees.map(emp => (
+                <option key={emp.id} value={emp.id}>{emp.name} ({emp.employeeId})</option>
+              ))}
+            </select>
+          </div>
+          {selectedEmployeeForUAN && (
+            <div className="row g-3">
+              <div className="col-md-6">
+                <label className="fw-bold ">UAN Number</label>
+                <input 
+                  type="text" 
+                  className="form-control"
+                  placeholder="Enter 12-digit UAN"
+                  maxLength="12"
+                  value={uanFormData.uanNumber}
+                  onChange={(e) => setUanFormData({...uanFormData, uanNumber: e.target.value})}
+                />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Activation Date</label>
+                <input 
+                  type="date" 
+                  className="form-control"
+                  value={uanFormData.activationDate}
+                  onChange={(e) => setUanFormData({...uanFormData, activationDate: e.target.value})}
+                />
               </div>
             </div>
-          </div>
-        )}
-
+          )}
+        </div>
+        <div className="modal-footer">
+          <button type="button" className="btn btn-secondary" onClick={() => setShowUANModal(false)}>Cancel</button>
+          <button type="button" className="btn btn-primary" onClick={handleActivateUAN}>Activate UAN</button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
         {/* ECR Generation Modal */}
-        {showECRModal && (
-          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-lg">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">Generate ECR (Electronic Challan cum Return)</h5>
-                  <button type="button" className="btn-close" onClick={() => setShowECRModal(false)}></button>
-                </div>
-                <div className="modal-body">
-                  <div className="mb-3">
-                    <label className="form-label">Select Month</label>
-                    <select 
-                      className="form-select"
-                      value={ecrFormData.month}
-                      onChange={(e) => setEcrFormData({...ecrFormData, month: e.target.value})}
-                    >
-                      <option value="">Select month...</option>
-                      <option value="March 2024">March 2024</option>
-                      <option value="February 2024">February 2024</option>
-                      <option value="January 2024">January 2024</option>
-                    </select>
-                  </div>
-                  <div className="row g-3">
-                    <div className="col-md-6">
-                      <label className="form-label">Total Wages (₹)</label>
-                      <input 
-                        type="number" 
-                        className="form-control"
-                        value={ecrFormData.totalWages}
-                        onChange={(e) => setEcrFormData({...ecrFormData, totalWages: e.target.value})}
-                        placeholder="Total wages for the month"
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">EPF Contribution (₹)</label>
-                      <input 
-                        type="number" 
-                        className="form-control"
-                        value={ecrFormData.epfContribution}
-                        onChange={(e) => setEcrFormData({...ecrFormData, epfContribution: e.target.value})}
-                        placeholder="EPF contribution amount"
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">EPS Contribution (₹)</label>
-                      <input 
-                        type="number" 
-                        className="form-control"
-                        value={ecrFormData.epsContribution}
-                        onChange={(e) => setEcrFormData({...ecrFormData, epsContribution: e.target.value})}
-                        placeholder="EPS contribution amount"
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">EDLI Contribution (₹)</label>
-                      <input 
-                        type="number" 
-                        className="form-control"
-                        value={ecrFormData.edliContribution}
-                        onChange={(e) => setEcrFormData({...ecrFormData, edliContribution: e.target.value})}
-                        placeholder="EDLI contribution amount"
-                      />
-                    </div>
-                  </div>
-                  <div className="alert alert-info d-flex align-items-start mt-3">
-                    <Icon icon="heroicons:information-circle" className="me-2 flex-shrink-0 mt-1" />
-                    <div>
-                      ECR will include all eligible employees with their wages, EPF, EPS, and EDLI contributions.
-                    </div>
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowECRModal(false)}>Cancel</button>
-                  <button type="button" className="btn btn-primary" onClick={handleGenerateECR}>Generate ECR</button>
-                </div>
-              </div>
+    {showECRModal && (
+  <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ 
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 1050
+  }}>
+    <div className="modal-dialog modal-lg">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h6 className=" fw-bold modal-title">Generate ECR (Electronic Challan cum Return)</h6>
+          <button type="button" className="btn-close" onClick={() => setShowECRModal(false)}></button>
+        </div>
+        <div className="modal-body">
+          <div className="mb-3">
+            <label className="fw-bold ">Select Month</label>
+            <select 
+              className="form-select"
+              value={ecrFormData.month}
+              onChange={(e) => setEcrFormData({...ecrFormData, month: e.target.value})}
+            >
+              <option value="">Select month...</option>
+              <option value="March 2024">March 2024</option>
+              <option value="February 2024">February 2024</option>
+              <option value="January 2024">January 2024</option>
+            </select>
+          </div>
+          <div className="row g-3">
+            <div className="col-md-6">
+              <label className="fw-bold ">Total Wages (₹)</label>
+              <input 
+                type="number" 
+                className="form-control"
+                value={ecrFormData.totalWages}
+                onChange={(e) => setEcrFormData({...ecrFormData, totalWages: e.target.value})}
+                placeholder="Total wages for the month"
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="fw-bold ">EPF Contribution (₹)</label>
+              <input 
+                type="number" 
+                className="form-control"
+                value={ecrFormData.epfContribution}
+                onChange={(e) => setEcrFormData({...ecrFormData, epfContribution: e.target.value})}
+                placeholder="EPF contribution amount"
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="fw-bold ">EPS Contribution (₹)</label>
+              <input 
+                type="number" 
+                className="form-control"
+                value={ecrFormData.epsContribution}
+                onChange={(e) => setEcrFormData({...ecrFormData, epsContribution: e.target.value})}
+                placeholder="EPS contribution amount"
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="fw-bold ">EDLI Contribution (₹)</label>
+              <input 
+                type="number" 
+                className="form-control"
+                value={ecrFormData.edliContribution}
+                onChange={(e) => setEcrFormData({...ecrFormData, edliContribution: e.target.value})}
+                placeholder="EDLI contribution amount"
+              />
             </div>
           </div>
-        )}
+          <div className="alert alert-info d-flex align-items-start mt-3">
+            <Icon icon="heroicons:information-circle" className="me-2 flex-shrink-0 mt-1" />
+            <div>
+              ECR will include all eligible employees with their wages, EPF, EPS, and EDLI contributions.
+            </div>
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button type="button" className="btn btn-secondary" onClick={() => setShowECRModal(false)}>Cancel</button>
+          <button type="button" className="btn btn-primary" onClick={handleGenerateECR}>Generate ECR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
         {/* Remittance Modal */}
-        {showRemittanceModal && (
-          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-lg">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">
-                    {remittanceType === 'pf' ? 'PF' : remittanceType === 'esi' ? 'ESI' : 'PT'} Remittance
-                  </h5>
-                  <button type="button" className="btn-close" onClick={() => setShowRemittanceModal(false)}></button>
-                </div>
-                <div className="modal-body">
-                  <div className="row g-3">
-                    <div className="col-md-6">
-                      <label className="form-label">Month/Period</label>
-                      <input 
-                        type="text" 
-                        className="form-control" 
-                        placeholder="March 2024" 
-                        value={remittanceFormData.month}
-                        onChange={(e) => setRemittanceFormData({...remittanceFormData, month: e.target.value})}
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Challan Number</label>
-                      <input 
-                        type="text" 
-                        className="form-control" 
-                        placeholder="Enter challan number" 
-                        value={remittanceFormData.challanNo}
-                        onChange={(e) => setRemittanceFormData({...remittanceFormData, challanNo: e.target.value})}
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Total Contribution (₹)</label>
-                      <input 
-                        type="number" 
-                        className="form-control" 
-                        placeholder="Enter amount" 
-                        value={remittanceFormData.totalContribution}
-                        onChange={(e) => setRemittanceFormData({...remittanceFormData, totalContribution: e.target.value})}
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Employee Contribution (₹)</label>
-                      <input 
-                        type="number" 
-                        className="form-control" 
-                        placeholder="Employee share" 
-                        value={remittanceFormData.employeeContribution}
-                        onChange={(e) => setRemittanceFormData({...remittanceFormData, employeeContribution: e.target.value})}
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Employer Contribution (₹)</label>
-                      <input 
-                        type="number" 
-                        className="form-control" 
-                        placeholder="Employer share" 
-                        value={remittanceFormData.employerContribution}
-                        onChange={(e) => setRemittanceFormData({...remittanceFormData, employerContribution: e.target.value})}
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Remittance Date</label>
-                      <input 
-                        type="date" 
-                        className="form-control" 
-                        value={remittanceFormData.remittanceDate}
-                        onChange={(e) => setRemittanceFormData({...remittanceFormData, remittanceDate: e.target.value})}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowRemittanceModal(false)}>Cancel</button>
-                  <button type="button" className="btn btn-primary" onClick={handleAddRemittance}>Save Remittance</button>
-                </div>
-              </div>
+     {showRemittanceModal && (
+  <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ 
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 1050
+  }}>
+    <div className="modal-dialog modal-lg">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h6 className=" fw-bold modal-title">
+            {remittanceType === 'pf' ? 'PF' : remittanceType === 'esi' ? 'ESI' : 'PT'} Remittance
+          </h6>
+          <button type="button" className="btn-close" onClick={() => setShowRemittanceModal(false)}></button>
+        </div>
+        <div className="modal-body">
+          <div className="row g-3">
+            <div className="col-md-6">
+              <label className=" fw-bold ">Month/Period</label>
+              <input 
+                type="text" 
+                className="form-control" 
+                placeholder="March 2024" 
+                value={remittanceFormData.month}
+                onChange={(e) => setRemittanceFormData({...remittanceFormData, month: e.target.value})}
+              />
+            </div>
+            <div className="col-md-6">
+              <label className=" fw-bold  ">Challan Number</label>
+              <input 
+                type="text" 
+                className="form-control" 
+                placeholder="Enter challan number" 
+                value={remittanceFormData.challanNo}
+                onChange={(e) => setRemittanceFormData({...remittanceFormData, challanNo: e.target.value})}
+              />
+            </div>
+            <div className="col-md-6">
+              <label className=" fw-bold">Total Contribution (₹)</label>
+              <input 
+                type="number" 
+                className="form-control" 
+                placeholder="Enter amount" 
+                value={remittanceFormData.totalContribution}
+                onChange={(e) => setRemittanceFormData({...remittanceFormData, totalContribution: e.target.value})}
+              />
+            </div>
+            <div className="col-md-6">
+              <label className= " fw-bold ">Employee Contribution (₹)</label>
+              <input 
+                type="number" 
+                className="form-control" 
+                placeholder="Employee share" 
+                value={remittanceFormData.employeeContribution}
+                onChange={(e) => setRemittanceFormData({...remittanceFormData, employeeContribution: e.target.value})}
+              />
+            </div>
+            <div className="col-md-6">
+              <label className=" fw-bold ">Employer Contribution (₹)</label>
+              <input 
+                type="number" 
+                className="form-control" 
+                placeholder="Employer share" 
+                value={remittanceFormData.employerContribution}
+                onChange={(e) => setRemittanceFormData({...remittanceFormData, employerContribution: e.target.value})}
+              />
+            </div>
+            <div className="col-md-6">
+              <label className=" fw-bold ">Remittance Date</label>
+              <input 
+                type="date" 
+                className="form-control" 
+                value={remittanceFormData.remittanceDate}
+                onChange={(e) => setRemittanceFormData({...remittanceFormData, remittanceDate: e.target.value})}
+              />
             </div>
           </div>
-        )}
+        </div>
+        <div className="modal-footer">
+          <button type="button" className="btn btn-secondary" onClick={() => setShowRemittanceModal(false)}>Cancel</button>
+          <button type="button" className="btn btn-primary" onClick={handleAddRemittance}>Save Remittance</button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
         {/* Challan Modal */}
         {showChallanModal && (
@@ -3705,127 +3756,138 @@ const StatutoryCompliance = () => {
             </div>
           </div>
         )}
+    
 
         {/* Reconciliation Modal */}
-        {showReconciliationModal && (
-          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-xl">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">
-                    {remittanceType === 'pf' ? 'PF' : remittanceType === 'esi' ? 'ESI' : 'TDS'} Reconciliation Report
-                  </h5>
-                  <button type="button" className="btn-close" onClick={() => setShowReconciliationModal(false)}></button>
-                </div>
-                <div className="modal-body">
-                  <div className="row g-3 mb-3">
-                    <div className="col-md-6">
-                      <label className="form-label">Period</label>
-                      <input type="text" className="form-control" placeholder="March 2024" />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Format</label>
-                      <select className="form-select">
-                        <option>PDF</option>
-                        <option>Excel</option>
-                        <option>CSV</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="alert alert-info">
-                    <Icon icon="heroicons:information-circle" className="me-2" />
-                    Reconciliation report will compare deducted vs deposited amounts and highlight any discrepancies.
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowReconciliationModal(false)}>Cancel</button>
-                  <button type="button" className="btn btn-primary" onClick={() => {
-                    let content = `${remittanceType.toUpperCase()} Reconciliation Report\n`;
-                    content += `Period: March 2024\n`;
-                    content += `Generated: ${new Date().toLocaleDateString()}\n\n`;
-                    
-                    if (remittanceType === 'pf') {
-                      content += `Total PF Contribution: ${formatCurrency(kpis.totalPFContribution)}\n`;
-                      content += `Employee Share: ${formatCurrency(kpis.totalPFContribution * 0.5)}\n`;
-                      content += `Employer Share: ${formatCurrency(kpis.totalPFContribution * 0.5)}\n`;
-                    } else if (remittanceType === 'tds') {
-                      content += `Total TDS Deducted: ${formatCurrency(kpis.totalTDSDeduction)}\n`;
-                      content += `Total TDS Deposited: ${formatCurrency(kpis.totalTDSDeduction)}\n`;
-                      content += `Variance: ₹0\n`;
-                    }
-                    
-                    downloadFile(content, `${remittanceType.toUpperCase()}_Reconciliation_Report`, 'PDF');
-                    setShowReconciliationModal(false);
-                  }}>Generate Report</button>
-                </div>
-              </div>
+      {showReconciliationModal && (
+  <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ 
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 1050
+  }}>
+    <div className="modal-dialog modal-xl">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h5 className="modal-title">
+            {remittanceType === 'pf' ? 'PF' : remittanceType === 'esi' ? 'ESI' : 'TDS'} Reconciliation Report
+          </h5>
+          <button type="button" className="btn-close" onClick={() => setShowReconciliationModal(false)}></button>
+        </div>
+        <div className="modal-body">
+          <div className="row g-3 mb-3">
+            <div className="col-md-6">
+              <label className="form-label">Period</label>
+              <input type="text" className="form-control" placeholder="March 2024" />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label">Format</label>
+              <select className="form-select">
+                <option>PDF</option>
+                <option>Excel</option>
+                <option>CSV</option>
+              </select>
             </div>
           </div>
-        )}
+          <div className="alert alert-info d-flex align-items-start">
+            <Icon icon="heroicons:information-circle" className="me-2 flex-shrink-0 mt-1" />
+            <div>
+              Reconciliation report will compare deducted vs deposited amounts and highlight any discrepancies.
+            </div>
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button type="button" className="btn btn-secondary" onClick={() => setShowReconciliationModal(false)}>Cancel</button>
+          <button type="button" className="btn btn-primary" onClick={() => {
+            let content = `${remittanceType.toUpperCase()} Reconciliation Report\n`;
+            content += `Period: March 2024\n`;
+            content += `Generated: ${new Date().toLocaleDateString()}\n\n`;
+            
+            if (remittanceType === 'pf') {
+              content += `Total PF Contribution: ${formatCurrency(kpis.totalPFContribution)}\n`;
+              content += `Employee Share: ${formatCurrency(kpis.totalPFContribution * 0.5)}\n`;
+              content += `Employer Share: ${formatCurrency(kpis.totalPFContribution * 0.5)}\n`;
+            } else if (remittanceType === 'tds') {
+              content += `Total TDS Deducted: ${formatCurrency(kpis.totalTDSDeduction)}\n`;
+              content += `Total TDS Deposited: ${formatCurrency(kpis.totalTDSDeduction)}\n`;
+              content += `Variance: ₹0\n`;
+            }
+            
+            downloadFile(content, `${remittanceType.toUpperCase()}_Reconciliation_Report`, 'PDF');
+            setShowReconciliationModal(false);
+          }}>Generate Report</button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
         {/* VPF Modal */}
-        {showVPFModal && (
-          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-lg">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">Add VPF (Voluntary Provident Fund)</h5>
-                  <button type="button" className="btn-close" onClick={() => setShowVPFModal(false)}></button>
-                </div>
-                <div className="modal-body">
-                  <div className="row g-3">
-                    <div className="col-md-6">
-                      <label className="form-label">Select Employee</label>
-                      <select 
-                        className="form-select"
-                        value={vpfFormData.employeeId}
-                        onChange={(e) => setVpfFormData({...vpfFormData, employeeId: e.target.value})}
-                      >
-                        <option value="">Select employee...</option>
-                        {employees.map(emp => (
-                          <option key={emp.id} value={emp.id}>{emp.name} ({emp.employeeId})</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">VPF Rate (%)</label>
-                      <input 
-                        type="number" 
-                        className="form-control"
-                        placeholder="Enter VPF rate"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                        value={vpfFormData.vpfRate}
-                        onChange={(e) => setVpfFormData({...vpfFormData, vpfRate: e.target.value})}
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Effective Month</label>
-                      <input 
-                        type="text" 
-                        className="form-control" 
-                        placeholder="March 2024" 
-                        value={vpfFormData.month}
-                        onChange={(e) => setVpfFormData({...vpfFormData, month: e.target.value})}
-                      />
-                    </div>
-                    <div className="col-12">
-                      <div className="alert alert-info">
-                        <Icon icon="heroicons:information-circle" className="me-2" />
-                        VPF is a voluntary contribution over and above the statutory PF contribution. Employees can contribute up to 100% of their basic salary.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowVPFModal(false)}>Cancel</button>
-                  <button type="button" className="btn btn-primary" onClick={handleAddVPF}>Add VPF</button>
+       {showVPFModal && (
+  <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ 
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 1050
+  }}>
+    <div className="modal-dialog modal-lg">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h6 className=" fw-bold modal-title">Add VPF (Voluntary Provident Fund)</h6>
+          <button type="button" className="btn-close" onClick={() => setShowVPFModal(false)}></button>
+        </div>
+        <div className="modal-body">
+          <div className="row g-3">
+            <div className="col-md-6">
+              <label className="fw-bold ">Select Employee</label>
+              <select 
+                className="form-select"
+                value={vpfFormData.employeeId}
+                onChange={(e) => setVpfFormData({...vpfFormData, employeeId: e.target.value})}
+              >
+                <option value="">Select employee...</option>
+                {employees.map(emp => (
+                  <option key={emp.id} value={emp.id}>{emp.name} ({emp.employeeId})</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-md-6">
+              <label className="fw-bold ">VPF Rate (%)</label>
+              <input 
+                type="number" 
+                className="form-control"
+                placeholder="Enter VPF rate"
+                min="0"
+                max="100"
+                step="0.01"
+                value={vpfFormData.vpfRate}
+                onChange={(e) => setVpfFormData({...vpfFormData, vpfRate: e.target.value})}
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="fw-bold ">Effective Month</label>
+              <input 
+                type="text" 
+                className="form-control" 
+                placeholder="March 2024" 
+                value={vpfFormData.month}
+                onChange={(e) => setVpfFormData({...vpfFormData, month: e.target.value})}
+              />
+            </div>
+            <div className="col-12">
+              <div className="alert alert-info d-flex align-items-start">
+                <Icon icon="heroicons:information-circle" className="me-2 flex-shrink-0 mt-1" />
+                <div>
+                  VPF is a voluntary contribution over and above the statutory PF contribution. Employees can contribute up to 100% of their basic salary.
                 </div>
               </div>
             </div>
           </div>
-        )}
+        </div>
+        <div className="modal-footer">
+          <button type="button" className="btn btn-secondary" onClick={() => setShowVPFModal(false)}>Cancel</button>
+          <button type="button" className="btn btn-primary" onClick={handleAddVPF}>Add VPF</button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
       </div>
     </>
   );

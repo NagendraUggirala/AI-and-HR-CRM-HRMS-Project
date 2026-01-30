@@ -49,20 +49,27 @@ import {
   Target,
   Activity,
   Heading6,
-  AlertTriangle
+  AlertTriangle,
+  ChevronDown
 } from "lucide-react";
     
 
 const styles = `
+/* Reset any overflow properties that might interfere */
+* {
+  box-sizing: border-box;
+}
+
 .page {
   background: #f8fafc;
   min-height: 100vh;
   padding-bottom: 40px;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   color: #334155;
+  position: relative;
 }
 
-/* HEADER */
+/* HEADER - FIXED STICKY POSITION */
 .header-top {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   padding: 20px 28px;
@@ -73,7 +80,9 @@ const styles = `
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .header-title {
@@ -998,49 +1007,6 @@ const styles = `
   margin-bottom: 16px;
 }
 
-/* NOTIFICATIONS */
-.notification {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  padding: 16px 20px;
-  border-radius: 12px;
-  background: white;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  z-index: 1001;
-  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  min-width: 300px;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.notification.success {
-  border-left: 4px solid #10b981;
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-}
-
-.notification.error {
-  border-left: 4px solid #ef4444;
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-}
-
-.notification.warning {
-  border-left: 4px solid #f59e0b;
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-}
-
 /* LOADING */
 .loading-overlay {
   position: fixed;
@@ -1090,6 +1056,9 @@ const styles = `
     flex-direction: column;
     gap: 20px;
     align-items: stretch;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
   }
   
   .search-box {
@@ -1221,6 +1190,45 @@ const styles = `
   justify-content: flex-end;
   gap: 8px;
   height: 100%;
+}
+
+/* Toast notifications for top right */
+#top-right-toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 350px;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Ensure no parent containers interfere with sticky header */
+body, html, #root {
+  overflow-x: hidden;
 }
 `;
 
@@ -1439,8 +1447,6 @@ const PayrollProcessSteps = ({ currentStep, onStepClick, onRefresh, onViewDetail
           );
         })}
       </div>
-      
-     
     </div>
   );
 };
@@ -1450,7 +1456,6 @@ const PayrollIntegration = () => {
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("payroll-admin");
   const [isLoading, setIsLoading] = useState(false);
-  const [notification, setNotification] = useState(null);
   
   const [filters, setFilters] = useState({
     period: "current-month",
@@ -1554,11 +1559,10 @@ const PayrollIntegration = () => {
   // Also add state for selected report
   const [selectedReport, setSelectedReport] = useState(null);
 
-  // Define handler functions that were previously outside the component
+  // Define handler functions
   const handleViewDetails = (record) => {
     console.log('View details:', record);
     setSelectedRecord(record);
-    // Optionally open a details modal
   };
 
   const handleEditRecord = (record) => {
@@ -1569,7 +1573,6 @@ const PayrollIntegration = () => {
 
   const handleExportRecord = (record) => {
     console.log('Export record:', record);
-    // Implement single record export logic
     const headers = [
       'Employee ID',
       'Employee Name', 
@@ -1620,9 +1623,104 @@ const PayrollIntegration = () => {
     showNotification(`${record.employeeName}'s data exported successfully`, "success");
   };
 
+  // Updated notification function for top-right toasts
   const showNotification = (message, type = "success") => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 4000);
+    // Create toast container if it doesn't exist
+    let toastContainer = document.getElementById('top-right-toast-container');
+    
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.id = 'top-right-toast-container';
+      toastContainer.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-width: 350px;
+      `;
+      document.body.appendChild(toastContainer);
+    }
+    
+    // Create toast element
+    const toastId = 'toast-' + Date.now();
+    const toast = document.createElement('div');
+    toast.id = toastId;
+    toast.style.cssText = `
+      background: ${type === 'success' ? '#10b981' : 
+                   type === 'error' ? '#ef4444' : 
+                   type === 'warning' ? '#f59e0b' : '#3b82f6'};
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: slideInRight 0.3s ease;
+      max-width: 100%;
+    `;
+    
+    toast.innerHTML = `
+      <div style="flex: 1; min-width: 0;">
+        <div style="font-weight: 600; font-size: 14px; margin-bottom: 2px;">
+          ${type === 'success' ? 'Success' : 
+            type === 'error' ? 'Error' : 
+            type === 'warning' ? 'Warning' : 'Notification'}
+        </div>
+        <div style="font-size: 13px; opacity: 0.9; word-break: break-word;">${message}</div>
+      </div>
+      <button onclick="document.getElementById('${toastId}').remove()" 
+              style="background: none; border: none; color: white; cursor: pointer; opacity: 0.7; padding: 4px; font-size: 16px;">
+        ✕
+      </button>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+      const toastElement = document.getElementById(toastId);
+      if (toastElement) {
+        toastElement.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => {
+          if (toastElement.parentNode) {
+            toastElement.parentNode.removeChild(toastElement);
+          }
+        }, 300);
+      }
+    }, 3000);
+    
+    // Add CSS animations if not already added
+    if (!document.getElementById('toast-animations')) {
+      const style = document.createElement('style');
+      style.id = 'toast-animations';
+      style.textContent = `
+        @keyframes slideInRight {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        @keyframes slideOutRight {
+          from {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          to {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
   };
 
   useEffect(() => {
@@ -2691,76 +2789,231 @@ const PayrollIntegration = () => {
       
       <div className="dashboard-grid">
         <div>
-          <div className="chart-card">
-            <div className="chart-title">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <BarChart3 size={20} color="#8b5cf6" />
-                <span style={{ lineHeight: '1' }}>Payroll Impact Analysis</span>
-              </div>
-              <select 
-                className="form-select"
-                style={{ width: '180px' }}
-                value={filters.period}
-                onChange={(e) => setFilters({ ...filters, period: e.target.value })}
-              >
-                <option value="current-month">Current Month</option>
-                <option value="last-month">Last Month</option>
-                <option value="quarter">Quarterly</option>
-              </select>
-            </div>
-            <div style={{ height: '240px', display: 'flex', alignItems: 'flex-end', gap: '12px', padding: '24px 0' }}>
-              {filteredData.slice(0, 8).map((emp, index) => (
-                <div key={index} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
-                    <div style={{ 
-                      width: '20px', 
-                      height: `${(emp.basicSalary / 6000) * 100}%`, 
-                      background: 'linear-gradient(to top, #8b5cf6, #7c3aed)',
-                      borderRadius: '6px 6px 0 0',
-                      transition: 'height 0.3s'
-                    }} />
-                    <div style={{ 
-                      width: '20px', 
-                      height: `${(emp.netPay / 6000) * 100}%`, 
-                      background: 'linear-gradient(to top, #10b981, #059669)',
-                      borderRadius: '6px 6px 0 0',
-                      transition: 'height 0.3s'
-                    }} />
-                    <div style={{ 
-                      width: '20px', 
-                      height: `${(emp.lossOfPay / 1000) * 100}%`, 
-                      background: 'linear-gradient(to top, #ef4444, #dc2626)',
-                      borderRadius: '6px 6px 0 0',
-                      transition: 'height 0.3s'
-                    }} />
-                  </div>
-                  <div style={{ 
-                    fontSize: '12px', 
-                    color: '#64748b', 
-                    marginTop: '12px', 
-                    textAlign: 'center',
-                    fontWeight: 500 
-                  }}>
-                    {emp.employeeName.split(' ')[0]}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', fontSize: '13px', color: '#64748b', marginTop: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '12px', height: '12px', background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', borderRadius: '3px' }} />
-                Basic Salary
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '12px', height: '12px', background: 'linear-gradient(135deg, #10b981, #059669)', borderRadius: '3px' }} />
-                Net Pay
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '12px', height: '12px', background: 'linear-gradient(135deg, #ef4444, #dc2626)', borderRadius: '3px' }} />
-                Deductions
-              </div>
-            </div>
+        <div className="chart-card">
+  <div className="chart-title">
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <BarChart3 size={20} color="#8b5cf6" />
+      <span style={{ lineHeight: '1' }}>Payroll Impact Analysis</span>
+    </div>
+    <select 
+      className="form-select"
+      style={{ width: '180px' }}
+      value={filters.period}
+      onChange={(e) => setFilters({ ...filters, period: e.target.value })}
+    >
+      <option value="current-month">Current Month</option>
+      <option value="last-month">Last Month</option>
+      <option value="quarter">Quarterly</option>
+    </select>
+  </div>
+  
+  {/* Bar Chart Container */}
+  <div style={{ height: '280px', padding: '20px 0' }}>
+    <div style={{ 
+      position: 'relative', 
+      height: '100%', 
+      display: 'flex', 
+      alignItems: 'flex-end', 
+      gap: '16px',
+      borderBottom: '2px solid #e2e8f0',
+      paddingBottom: '24px'
+    }}>
+      {/* Y-axis labels */}
+      <div style={{
+        position: 'absolute',
+        left: '-30px',
+        top: 0,
+        bottom: '40px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+        fontSize: '10px',
+        color: '#94a3b8',
+        paddingRight: '8px'
+      }}>
+        {[100, 75, 50, 25, 0].map((percent, idx) => (
+          <div key={idx} style={{ display: 'flex', alignItems: 'center' }}>
+            <span>₹{(6000 * (percent/100) / 1000).toFixed(0)}k</span>
           </div>
+        ))}
+      </div>
+      
+      {/* Chart bars for each employee */}
+      {filteredData.slice(0, 8).map((emp, index) => (
+        <div key={index} style={{ 
+          flex: 1, 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center',
+          height: '100%'
+        }}>
+          {/* Bar chart columns - grouped for each employee */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'flex-end', 
+            justifyContent: 'center',
+            gap: '6px',
+            height: 'calc(100% - 40px)',
+            width: '100%',
+            position: 'relative'
+          }}>
+            {/* Basic Salary Bar */}
+            <div style={{ 
+              width: '22px', 
+              height: `${(emp.basicSalary / 6000) * 100}%`, 
+              background: 'linear-gradient(to top, #8b5cf6, #a78bfa)',
+              borderRadius: '4px 4px 0 0',
+              position: 'relative',
+              transition: 'height 0.3s ease'
+            }}>
+              {/* Value label on hover */}
+              <div style={{
+                position: 'absolute',
+                top: '-22px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                fontSize: '10px',
+                fontWeight: 600,
+                color: '#8b5cf6',
+                opacity: 0,
+                transition: 'opacity 0.2s',
+                whiteSpace: 'nowrap'
+              }}>
+                ₹{emp.basicSalary.toLocaleString()}
+              </div>
+            </div>
+            
+            {/* Net Pay Bar */}
+            <div style={{ 
+              width: '22px', 
+              height: `${(emp.netPay / 6000) * 100}%`, 
+              background: 'linear-gradient(to top, #10b981, #34d399)',
+              borderRadius: '4px 4px 0 0',
+              position: 'relative',
+              transition: 'height 0.3s ease'
+            }}>
+              {/* Value label on hover */}
+              <div style={{
+                position: 'absolute',
+                top: '-22px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                fontSize: '10px',
+                fontWeight: 600,
+                color: '#10b981',
+                opacity: 0,
+                transition: 'opacity 0.2s',
+                whiteSpace: 'nowrap'
+              }}>
+                ₹{emp.netPay.toLocaleString()}
+              </div>
+            </div>
+            
+            {/* Loss of Pay Bar (if any) */}
+            {emp.lossOfPay > 0 && (
+              <div style={{ 
+                width: '14px', 
+                height: `${Math.min((emp.lossOfPay / 1000) * 100, 100)}%`, 
+                background: 'linear-gradient(to top, #ef4444, #f87171)',
+                borderRadius: '4px 4px 0 0',
+                marginLeft: '4px',
+                position: 'relative'
+              }}>
+                {/* Value label on hover */}
+                <div style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  fontSize: '9px',
+                  fontWeight: 600,
+                  color: '#ef4444',
+                  opacity: 0,
+                  transition: 'opacity 0.2s'
+                }}>
+                  -₹{emp.lossOfPay.toLocaleString()}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* X-axis labels (Employee names) */}
+          <div style={{ 
+            fontSize: '12px', 
+            color: '#64748b', 
+            marginTop: '12px', 
+            textAlign: 'center',
+            fontWeight: 500,
+            height: '40px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%'
+          }}>
+            {emp.employeeName.split(' ')[0]}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+  
+  {/* Chart Legend */}
+  <div style={{ 
+    display: 'flex', 
+    justifyContent: 'center', 
+    gap: '24px', 
+    fontSize: '13px', 
+    color: '#64748b', 
+    marginTop: '20px',
+    paddingTop: '16px',
+    borderTop: '1px solid #f1f5f9'
+  }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{ 
+        width: '16px', 
+        height: '16px', 
+        background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)', 
+        borderRadius: '3px' 
+      }} />
+      Basic Salary
+    </div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{ 
+        width: '16px', 
+        height: '16px', 
+        background: 'linear-gradient(135deg, #10b981, #34d399)', 
+        borderRadius: '3px' 
+      }} />
+      Net Pay
+    </div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{ 
+        width: '12px', 
+        height: '12px', 
+        background: 'linear-gradient(135deg, #ef4444, #f87171)', 
+        borderRadius: '3px' 
+      }} />
+      Loss of Pay
+    </div>
+  </div>
+</div>
+
+{/* Add CSS for hover effects */}
+<style jsx>{`
+  .chart-card:hover .bar-container div > div > div {
+    opacity: 1;
+  }
+  
+  /* Alternative: Add hover effect directly with inline styles */
+  .bar-container {
+    position: relative;
+  }
+  
+  .bar-container:hover .value-label {
+    opacity: 1 !important;
+  }
+`}</style>
 
           <div className="chart-card" style={{ marginTop: '24px' }}>
             <div className="chart-title">
@@ -2988,136 +3241,148 @@ const PayrollIntegration = () => {
             </div>
           </div>
 
-          <div className="chart-card" style={{ marginTop: '20px' }}>
-            <div className="chart-title">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Bell size={20} color="#8b5cf6" />
-                <span style={{ lineHeight: '1' }}>Action Required</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600 }}>
-                  {alerts.filter(a => !a.resolved).length} Active
-                </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button 
-                    className="btn-secondary"
-                    onClick={() => {
-                      // Handle mark all resolved
-                      setAlerts(prev => prev.map(alert => ({ ...alert, resolved: true })));
-                      showNotification("All alerts marked as resolved", "success");
-                    }}
-                    style={{ 
-                      padding: '6px 12px', 
-                      fontSize: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}
-                  >
-                    <CheckCircle size={12} />
-                    Mark All
-                  </button>
-                  <button 
-                    className="btn-primary"
-                    onClick={() => setActiveTab('reports')}
-                    style={{ 
-                      padding: '6px 12px', 
-                      fontSize: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}
-                  >
-                    <Eye size={12} />
-                    View All
-                  </button>
-                </div>
-              </div>
+       <div className="chart-card" style={{ marginTop: '20px' }}>
+  <div className="chart-title">
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <Bell size={20} color="#8b5cf6" />
+      <span style={{ lineHeight: '1' }}>Action Required</span>
+    </div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600 }}>
+        {alerts.filter(a => !a.resolved).length} Active
+      </div>
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <button 
+          className="btn-secondary"
+          onClick={() => {
+            setAlerts(prev => prev.map(alert => ({ ...alert, resolved: true })));
+            showNotification("All alerts marked as resolved", "success");
+          }}
+          style={{ 
+            padding: '6px 12px', 
+            fontSize: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}
+        >
+          <CheckCircle size={12} />
+          Mark All
+        </button>
+        <button 
+          className="btn-primary"
+          onClick={() => {
+            setActiveTab('reports');
+            showNotification("Viewing all reports", "info");
+          }}
+          style={{ 
+            padding: '6px 12px', 
+            fontSize: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}
+        >
+          <Eye size={12} />
+          View All
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <div style={{ marginTop: '16px' }}>
+    {alerts.slice(0, 4).map((alert, index) => (
+      <div key={index} style={{ 
+        display: 'flex', 
+        alignItems: 'flex-start',
+        gap: '16px',
+        padding: '16px',
+        borderBottom: index < 3 ? '1px solid #f1f5f9' : 'none',
+        backgroundColor: alert.resolved ? '#f8fafc' : 'white',
+        opacity: alert.resolved ? 0.6 : 1
+      }}>
+        <div style={{ 
+          width: '28px', 
+          height: '28px', 
+          borderRadius: '8px',
+          background: alert.severity === 'high' 
+            ? 'linear-gradient(135deg, #fee2e2, #fecaca)' 
+            : alert.severity === 'medium' 
+            ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
+            : 'linear-gradient(135deg, #eff6ff, #bfdbfe)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <AlertCircle size={16} color={alert.severity === 'high' ? '#dc2626' : alert.severity === 'medium' ? '#d97706' : '#2563eb'} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
+            <div style={{ 
+              fontSize: '14px', 
+              fontWeight: 700, 
+              textTransform: 'uppercase',
+              color: alert.severity === 'high' ? '#dc2626' : alert.severity === 'medium' ? '#d97706' : '#2563eb',
+              letterSpacing: '0.5px'
+            }}>
+              {alert.type}
             </div>
-            <div style={{ marginTop: '16px' }}>
-              {alerts.slice(0, 4).map((alert, index) => (
-                <div key={index} style={{ 
-                  display: 'flex', 
-                  alignItems: 'flex-start',
-                  gap: '16px',
-                  padding: '16px',
-                  borderBottom: index < 3 ? '1px solid #f1f5f9' : 'none',
-                  backgroundColor: alert.resolved ? '#f8fafc' : 'white',
-                  opacity: alert.resolved ? 0.6 : 1
-                }}>
-                  <div style={{ 
-                    width: '28px', 
-                    height: '28px', 
-                    borderRadius: '8px',
-                    background: alert.severity === 'high' 
-                      ? 'linear-gradient(135deg, #fee2e2, #fecaca)' 
-                      : alert.severity === 'medium' 
-                      ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
-                      : 'linear-gradient(135deg, #eff6ff, #bfdbfe)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <AlertCircle size={16} color={alert.severity === 'high' ? '#dc2626' : alert.severity === 'medium' ? '#d97706' : '#2563eb'} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
-                      <div style={{ 
-                        fontSize: '14px', 
-                        fontWeight: 700, 
-                        textTransform: 'uppercase',
-                        color: alert.severity === 'high' ? '#dc2626' : alert.severity === 'medium' ? '#d97706' : '#2563eb',
-                        letterSpacing: '0.5px'
-                      }}>
-                        {alert.type}
-                      </div>
-                      <div style={{ fontSize: '12px', color: '#94a3b8' }}>
-                        {alert.date}
-                      </div>
-                    </div>
-                    <div style={{ fontSize: '13px', color: '#475569', marginBottom: '12px' }}>
-                      {alert.message}
-                    </div>
-                    {!alert.resolved && (
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button 
-                          className="btn-secondary"
-                          style={{ 
-                            padding: '6px 12px', 
-                            fontSize: '12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px'
-                          }}
-                          onClick={() => handleResolveAlert(alert.id)}
-                        >
-                          <CheckCircle size={12} />
-                          Mark Resolved
-                        </button>
-                        <button 
-                          className="btn-primary"
-                          style={{ 
-                            padding: '6px 12px', 
-                            fontSize: '12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px'
-                          }}
-                          onClick={() => {
-                            if (alert.type === 'correction') setActiveTab('corrections');
-                            if (alert.type === 'freeze') handleToggleFreeze();
-                          }}
-                        >
-                          <AlertTriangle size={12} />
-                          {alert.action}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+            <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+              {alert.date}
             </div>
           </div>
+          <div style={{ fontSize: '13px', color: '#475569', marginBottom: '12px' }}>
+            {alert.message}
+          </div>
+          {!alert.resolved && (
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                className="btn-secondary"
+                style={{ 
+                  padding: '6px 12px', 
+                  fontSize: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+                onClick={() => {
+                  handleResolveAlert(alert.id);
+                  showNotification("Alert marked as resolved", "success");
+                }}
+              >
+                <CheckCircle size={12} />
+                Mark Resolved
+              </button>
+              <button 
+                className="btn-primary"
+                style={{ 
+                  padding: '6px 12px', 
+                  fontSize: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+                onClick={() => {
+                  if (alert.type === 'correction') {
+                    setActiveTab('corrections');
+                    showNotification("Redirecting to corrections", "info");
+                  }
+                  if (alert.type === 'freeze') {
+                    handleToggleFreeze();
+                    showNotification("Freeze status updated", "success");
+                  }
+                }}
+              >
+                <AlertTriangle size={12} />
+                {alert.action}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
         </div>
       </div>
     </>
@@ -4466,8 +4731,7 @@ const renderRuleEditModal = () => (
 }}>
   <button 
     onClick={() => {
-      console.log('Reset to Defaults clicked');
-      alert('Reset to Defaults clicked!');
+      showNotification("Reset to Defaults clicked!", "info");
     }}
     style={{
       display: 'flex',
@@ -4492,8 +4756,7 @@ const renderRuleEditModal = () => (
   
   <button 
     onClick={() => {
-      console.log('Save Settings clicked');
-      alert('Settings saved successfully!');
+      showNotification("Settings saved successfully!", "success");
     }}
     style={{
       display: 'flex',
@@ -5018,8 +5281,8 @@ const renderRuleEditModal = () => (
     type="button"
     className="btn-secondary" 
     onClick={() => {
-      console.log('Cancel clicked');
       setShowSettingsModal(false);
+      showNotification("Configuration cancelled", "info");
     }}
     style={{
       display: 'flex',
@@ -5042,8 +5305,8 @@ const renderRuleEditModal = () => (
     type="button"
     className="btn-primary"
     onClick={() => {
-      console.log('Save Configuration clicked');
-      alert('Configuration saved!');
+      setShowSettingsModal(false);
+      showNotification("Configuration saved successfully!", "success");
     }}
     style={{
       display: 'flex',
@@ -5077,97 +5340,51 @@ const renderRuleEditModal = () => (
         </div>
       )}
 
-      {notification && (
-        <div className={`notification ${notification.type}`}>
-          <div style={{ 
-            width: '32px', 
-            height: '32px', 
-            borderRadius: '8px',
-            background: notification.type === 'success' ? '#d1fae5' : 
-                        notification.type === 'error' ? '#fee2e2' : '#fef3c7',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            {notification.type === 'success' ? <CheckCircle size={18} color="#10b981" /> :
-             notification.type === 'error' ? <XCircle size={18} color="#ef4444" /> :
-             <AlertCircle size={18} color="#f59e0b" />}
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 600, fontSize: '14px', color: '#1e293b' }}>
-              {notification.type === 'success' ? 'Success' : 
-               notification.type === 'error' ? 'Error' : 'Warning'}
-            </div>
-            <div style={{ fontSize: '13px', color: '#475569' }}>
-              {notification.message}
-            </div>
-          </div>
-          <button 
-            onClick={() => setNotification(null)}
-            style={{ 
-              background: 'none', 
-              border: 'none', 
-              cursor: 'pointer', 
-              color: '#94a3b8',
-              width: '32px',
-              height: '32px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: '6px'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-          >
-            ×
-          </button>
-        </div>
-      )}
-
       <div className="page">
-        {/* HEADER */}
-     <div className="header-top">
+        {/* HEADER - Now properly sticky */}
+   <div className="header-top">
   <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
     <div style={{
-      width: '48px', // Reduced from 56px
-      height: '48px', // Reduced from 56px
-      background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', // Keep original purple background
-      borderRadius: '12px', // Slightly smaller
+      width: '48px',
+      height: '48px',
+      background: 'none',
+      border: '2px solid #e2e8f0',
+      borderRadius: '12px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
     }}>
-      <Calculator size={20} color="white" /> {/* Reduced from 28px */}
+      <Calculator size={20} color="#475569" />
     </div>
     <div>
       <div className="header-title" style={{ 
-        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', // Dark text gradient
+        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
         WebkitBackgroundClip: 'text',
         WebkitTextFillColor: 'transparent',
-        fontSize: '22px', // Reduced from 24px
+        fontSize: '22px',
         fontWeight: 700,
         marginBottom: '6px'
       }}>
         Attendance-Payroll Integration
       </div>
       <div className="header-sub" style={{ 
-        fontSize: '13px', // Reduced from 14px
-        color: '#475569' // Darker text color
+        fontSize: '13px',
+        color: '#475569'
       }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Database size={12} color="#64748b" /> {/* Reduced from 14px, darker color */}
-          <span style={{ color: '#475569' }}>HRMS Dashboard</span> {/* Darker text */}
+          <Database size={12} color="#64748b" />
+          <span style={{ color: '#475569' }}>HRMS Dashboard</span>
         </span>
-        <span style={{ color: '#94a3b8' }}>•</span> {/* Lighter separator */}
+        <span style={{ color: '#94a3b8' }}>•</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <RefreshCw size={12} color="#64748b" /> {/* Reduced from 14px, darker color */}
-          <span style={{ color: '#475569' }}>Seamless Integration</span> {/* Darker text */}
+          <RefreshCw size={12} color="#64748b" />
+          <span style={{ color: '#475569' }}>Seamless Integration</span>
         </span>
-        <span style={{ color: '#94a3b8' }}>•</span> {/* Lighter separator */}
+        <span style={{ color: '#94a3b8' }}>•</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Zap size={12} color="#64748b" /> {/* Reduced from 14px, darker color */}
-          <span style={{ color: '#475569' }}>Real-time Data Sync</span> {/* Darker text */}
+          <Zap size={12} color="#64748b" />
+          <span style={{ color: '#475569' }}>Real-time Data Sync</span>
         </span>
       </div>
     </div>
@@ -5180,39 +5397,56 @@ const renderRuleEditModal = () => (
         position: "absolute", 
         left: 16, 
         top: 12, 
-        color: "#64748b" // Darker icon color
-      }} /> {/* Reduced from 18px */}
+        color: "#64748b"
+      }} />
       <input
         className="search-box"
         placeholder="Search employees, payroll, or corrections..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         style={{ 
-          padding: '10px 16px 10px 40px', // Adjusted for smaller icon
-          fontSize: '13px' // Slightly smaller font
+          padding: '10px 16px 10px 40px',
+          fontSize: '13px'
         }}
       />
     </div>
 
-    <select
-      value={role}
-      onChange={(e) => setRole(e.target.value)}
-      style={{ 
-        width: '160px', // Reduced from 180px
-        padding: '10px 16px', // Reduced padding
-        borderRadius: '10px',
-        border: '1px solid #cbd5e1',
-        fontSize: '13px', // Reduced font size
-        color: '#475569', // Darker text
-        background: 'white',
-        cursor: 'pointer'
-      }}
-    >
-      <option value="payroll-admin">Payroll Admin</option>
-      <option value="hr">HR Manager</option>
-      <option value="finance">Finance</option>
-      <option value="admin">System Admin</option>
-    </select>
+    {/* Role selector with chevron arrow */}
+    <div style={{ position: "relative", display: "inline-block" }}>
+      <select
+        value={role}
+        onChange={(e) => setRole(e.target.value)}
+        style={{ 
+          width: '160px',
+          padding: '10px 40px 10px 16px',
+          borderRadius: '10px',
+          border: '1px solid #cbd5e1',
+          fontSize: '13px',
+          color: '#475569',
+          background: 'white',
+          cursor: 'pointer',
+          appearance: 'none',
+          WebkitAppearance: 'none',
+          MozAppearance: 'none'
+        }}
+      >
+        <option value="payroll-admin">Payroll Admin</option>
+        <option value="hr">HR Manager</option>
+        <option value="finance">Finance</option>
+        <option value="admin">System Admin</option>
+      </select>
+      {/* Custom chevron arrow */}
+      <div style={{
+        position: 'absolute',
+        right: '12px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        pointerEvents: 'none',
+        color: '#64748b'
+      }}>
+        <ChevronDown size={14} />
+      </div>
+    </div>
   </div>
 </div>
         {/* FILTERS */}
@@ -5327,149 +5561,149 @@ const renderRuleEditModal = () => (
         </div>
 
         {/* KPI */}
-        <div className="kpi-section">
-          <div className="kpi-grid">
-            <div className="kpi-card">
-              <div className="kpi-content">
-                <div className="kpi-label">
-                  <RefreshCw size={14} />
-                  Real-time Sync
-                </div>
-                <div className="kpi-value">{integrationStatus.dataFreshness?.hoursAgo || 0.5}h</div>
-                <div className="kpi-trend">
-                  <Clock size={12} />
-                  Last sync: Just now
-                </div>
-              </div>
-              <div className="kpi-icon realtime">
-                <RefreshCw size={24} />
-              </div>
-            </div>
-
-            <div className="kpi-card">
-              <div className="kpi-content">
-                <div className="kpi-label">
-                  {freezeStatus.isFrozen ? <Lock size={14} /> : <Unlock size={14} />}
-                  Data Status
-                </div>
-                <div className="kpi-value">{freezeStatus.isFrozen ? 'Frozen' : 'Live'}</div>
-                <div className="kpi-trend" style={{ color: freezeStatus.isFrozen ? '#ef4444' : '#10b981' }}>
-                  {freezeStatus.isFrozen ? <Lock size={12} /> : <Unlock size={12} />}
-                  {freezeStatus.isFrozen ? 'For payroll processing' : 'Ready for updates'}
-                </div>
-              </div>
-              <div className="kpi-icon frozen">
-                {freezeStatus.isFrozen ? <Lock size={24} /> : <Unlock size={24} />}
-              </div>
-            </div>
-
-            <div className="kpi-card">
-              <div className="kpi-content">
-                <div className="kpi-label">
-                  <TrendingDown size={14} />
-                  Total Loss of Pay
-                </div>
-                <div className="kpi-value">$${statistics.totalLossOfPay || 0}</div>
-                <div className="kpi-trend negative">
-                  <AlertCircle size={12} />
-                  Affects {filteredData.filter(x => x.lossOfPay > 0).length} employees
-                </div>
-              </div>
-              <div className="kpi-icon loss">
-                <TrendingDown size={24} />
-              </div>
-            </div>
-
-            <div className="kpi-card">
-              <div className="kpi-content">
-                <div className="kpi-label">
-                  <Zap size={14} />
-                  Overtime Pay
-                </div>
-                <div className="kpi-value">$${statistics.totalOvertimePay || 0}</div>
-                <div className="kpi-trend">
-                  <Clock size={12} />
-                  {statistics.avgOvertimeHours || 0}h avg per employee
-                </div>
-              </div>
-              <div className="kpi-icon overtime">
-                <Zap size={24} />
-              </div>
-            </div>
-
-            <div className="kpi-card">
-              <div className="kpi-content">
-                <div className="kpi-label">
-                  <CalendarDays size={14} />
-                  Holiday Pay
-                </div>
-                <div className="kpi-value">$${statistics.totalHolidayPay || 0}</div>
-                <div className="kpi-trend">
-                  <CalendarDays size={12} />
-                  Double pay for holiday work
-                </div>
-              </div>
-              <div className="kpi-icon holiday">
-                <CalendarDays size={24} />
-              </div>
-            </div>
-
-            <div className="kpi-card">
-              <div className="kpi-content">
-                <div className="kpi-label">
-                  <UserX size={14} />
-                  Leave Without Pay
-                </div>
-                <div className="kpi-value">
-                  {filteredData.reduce((sum, x) => sum + x.leaveWithoutPay, 0)} days
-                </div>
-                <div className="kpi-trend negative">
-                  <DollarSign size={12} />
-                  $${statistics.leaveWithoutPayTotal?.toFixed(2) || 0} deduction
-                </div>
-              </div>
-              <div className="kpi-icon leave">
-                <UserX size={24} />
-              </div>
-            </div>
-
-            <div className="kpi-card">
-              <div className="kpi-content">
-                <div className="kpi-label">
-                  <AlertCircle size={14} />
-                  Pending Corrections
-                </div>
-                <div className="kpi-value">{statistics.totalCorrections || 0}</div>
-                <div className="kpi-trend warning">
-                  <Edit size={12} />
-                  Requires review
-                </div>
-              </div>
-              <div className="kpi-icon corrections">
-                <AlertCircle size={24} />
-              </div>
-            </div>
-
-            <div className="kpi-card">
-              <div className="kpi-content">
-                <div className="kpi-label">
-                  <CheckCircle size={14} />
-                  Processed Payroll
-                </div>
-                <div className="kpi-value">
-                  $${(statistics.totalNetPay || 0).toLocaleString()}
-                </div>
-                <div className="kpi-trend">
-                  <Users size={12} />
-                  For {statistics.totalEmployees || 0} employees
-                </div>
-              </div>
-              <div className="kpi-icon processed">
-                <CheckCircle size={24} />
-              </div>
-            </div>
-          </div>
+      <div className="kpi-section">
+  <div className="kpi-grid">
+    <div className="kpi-card">
+      <div className="kpi-content">
+        <div className="kpi-label">
+          <RefreshCw size={14} />
+          Real-time Sync
         </div>
+        <div className="kpi-value">{integrationStatus.dataFreshness?.hoursAgo || 0.5}h</div>
+        <div className="kpi-trend">
+          <Clock size={12} />
+          Last sync: Just now
+        </div>
+      </div>
+      <div className="kpi-icon realtime">
+        <RefreshCw size={24} />
+      </div>
+    </div>
+
+    <div className="kpi-card">
+      <div className="kpi-content">
+        <div className="kpi-label">
+          {freezeStatus.isFrozen ? <Lock size={14} /> : <Unlock size={14} />}
+          Data Status
+        </div>
+        <div className="kpi-value">{freezeStatus.isFrozen ? 'Frozen' : 'Live'}</div>
+        <div className="kpi-trend" style={{ color: freezeStatus.isFrozen ? '#ef4444' : '#10b981' }}>
+          {freezeStatus.isFrozen ? <Lock size={12} /> : <Unlock size={12} />}
+          {freezeStatus.isFrozen ? 'For payroll processing' : 'Ready for updates'}
+        </div>
+      </div>
+      <div className="kpi-icon frozen">
+        {freezeStatus.isFrozen ? <Lock size={24} /> : <Unlock size={24} />}
+      </div>
+    </div>
+
+    <div className="kpi-card">
+      <div className="kpi-content">
+        <div className="kpi-label">
+          <TrendingDown size={14} />
+          Total Loss of Pay
+        </div>
+        <div className="kpi-value">₹{statistics.totalLossOfPay || 0}</div>
+        <div className="kpi-trend negative">
+          <AlertCircle size={12} />
+          Affects {filteredData.filter(x => x.lossOfPay > 0).length} employees
+        </div>
+      </div>
+      <div className="kpi-icon loss">
+        <TrendingDown size={24} />
+      </div>
+    </div>
+
+    <div className="kpi-card">
+      <div className="kpi-content">
+        <div className="kpi-label">
+          <Zap size={14} />
+          Overtime Pay
+        </div>
+        <div className="kpi-value">₹{statistics.totalOvertimePay || 0}</div>
+        <div className="kpi-trend">
+          <Clock size={12} />
+          {statistics.avgOvertimeHours || 0}h avg per employee
+        </div>
+      </div>
+      <div className="kpi-icon overtime">
+        <Zap size={24} />
+      </div>
+    </div>
+
+    <div className="kpi-card">
+      <div className="kpi-content">
+        <div className="kpi-label">
+          <CalendarDays size={14} />
+          Holiday Pay
+        </div>
+        <div className="kpi-value">₹{statistics.totalHolidayPay || 0}</div>
+        <div className="kpi-trend">
+          <CalendarDays size={12} />
+          Double pay for holiday work
+        </div>
+      </div>
+      <div className="kpi-icon holiday">
+        <CalendarDays size={24} />
+      </div>
+    </div>
+
+    <div className="kpi-card">
+      <div className="kpi-content">
+        <div className="kpi-label">
+          <UserX size={14} />
+          Leave Without Pay
+        </div>
+        <div className="kpi-value">
+          {filteredData.reduce((sum, x) => sum + x.leaveWithoutPay, 0)} days
+        </div>
+        <div className="kpi-trend negative">
+          <span style={{ fontSize: '12px', fontWeight: 'bold' }}>₹</span>
+          ₹{statistics.leaveWithoutPayTotal?.toFixed(2) || 0} deduction
+        </div>
+      </div>
+      <div className="kpi-icon leave">
+        <UserX size={24} />
+      </div>
+    </div>
+
+    <div className="kpi-card">
+      <div className="kpi-content">
+        <div className="kpi-label">
+          <AlertCircle size={14} />
+          Pending Corrections
+        </div>
+        <div className="kpi-value">{statistics.totalCorrections || 0}</div>
+        <div className="kpi-trend warning">
+          <Edit size={12} />
+          Requires review
+        </div>
+      </div>
+      <div className="kpi-icon corrections">
+        <AlertCircle size={24} />
+      </div>
+    </div>
+
+    <div className="kpi-card">
+      <div className="kpi-content">
+        <div className="kpi-label">
+          <CheckCircle size={14} />
+          Processed Payroll
+        </div>
+        <div className="kpi-value">
+          ₹{(statistics.totalNetPay || 0).toLocaleString()}
+        </div>
+        <div className="kpi-trend">
+          <Users size={12} />
+          For {statistics.totalEmployees || 0} employees
+        </div>
+      </div>
+      <div className="kpi-icon processed">
+        <CheckCircle size={24} />
+      </div>
+    </div>
+  </div>
+</div>
 
         {/* TABS */}
         <div className="tabs">

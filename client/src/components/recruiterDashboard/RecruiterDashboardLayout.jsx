@@ -1054,9 +1054,10 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
             </ul>
           </div>
         </aside>
+        
 
-        <main className={(sidebarActive ? "dashboard-main active" : "dashboard-main") + " bg-neutral-50"}>
-          <div className='navbar-header bg-base'>
+        <main className={(sidebarActive ? "dashboard-main active " : "dashboard-main") + " bg-neutral-50"}>
+          <div className='navbar-header bg-base' style={{ minHeight: "90px" }} >
             <div className='row align-items-center justify-content-between'>
               <div className='col-auto'>
                 <div className='d-flex flex-wrap align-items-center gap-4'>

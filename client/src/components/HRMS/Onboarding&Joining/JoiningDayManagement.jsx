@@ -514,7 +514,7 @@ const JoiningDayManagement = () => {
                     Select work profile for this employee. If you do not select these values now, system will assign default values, which you can edit later.
                   </Typography>
                   
-                  <Grid container spacing={2} sx={{ mb: 4 }}>
+                  <Grid container  spacing={2} sx={{ mb: 4 }}>
                     {/* Department */}
                     <Grid item xs={12}>
                       <FormControl fullWidth size="small">

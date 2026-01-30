@@ -767,45 +767,45 @@ const LeaveManagement = () => {
     alert(`Comp-off added successfully (Policy: ${compOffForm.policyType})`);
   };
 
- const handleApplyCompOff = (compOffId) => {
-  const compOff = compOffs.find((co) => co.id === compOffId);
-  if (!compOff) return;
+  const handleApplyCompOff = (compOffId) => {
+    const compOff = compOffs.find((co) => co.id === compOffId);
+    if (!compOff) return;
 
-  const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toISOString().split("T")[0];
 
-  const application = {
-    id: Date.now(),
-    employeeId: compOff.employeeId,
-    leaveTypeId: "COMP_OFF",        // 🔴 important (not null)
-    leaveTypeName: "Comp-Off",
-    startDate: today,
-    endDate: today,
-    days: Number((compOff.hours / 8).toFixed(2)),
-    status: "pending",              // 🔴 always string
-    appliedAt: new Date().toISOString(),
-    reason: `Comp-off application for ${compOff.hours} hours`,
-    isCompOff: true,
-    compOffId: compOffId,
+    const application = {
+      id: Date.now(),
+      employeeId: compOff.employeeId,
+      leaveTypeId: "COMP_OFF",        // 🔴 important (not null)
+      leaveTypeName: "Comp-Off",
+      startDate: today,
+      endDate: today,
+      days: Number((compOff.hours / 8).toFixed(2)),
+      status: "pending",              // 🔴 always string
+      appliedAt: new Date().toISOString(),
+      reason: `Comp-off application for ${compOff.hours} hours`,
+      isCompOff: true,
+      compOffId: compOffId,
+    };
+
+    // Add leave application
+    dispatch({
+      type: "ADD_LEAVE_APPLICATION",
+      payload: application,
+    });
+
+    // Update comp-off safely
+    dispatch({
+      type: "UPDATE_COMP_OFF",
+      payload: {
+        ...compOff,
+        applied: true,
+        status: "applied",             // 🔴 always exists
+      },
+    });
+
+    alert("Comp-off application submitted");
   };
-
-  // Add leave application
-  dispatch({
-    type: "ADD_LEAVE_APPLICATION",
-    payload: application,
-  });
-
-  // Update comp-off safely
-  dispatch({
-    type: "UPDATE_COMP_OFF",
-    payload: {
-      ...compOff,
-      applied: true,
-      status: "applied",             // 🔴 always exists
-    },
-  });
-
-  alert("Comp-off application submitted");
-};
 
 
   // ==================== UTILITY FUNCTIONS ====================
@@ -852,7 +852,7 @@ const LeaveManagement = () => {
     const today = new Date();
     const startDate = exitDate ? new Date(exitDate) : (joiningDate ? new Date(joiningDate) : new Date(today.getFullYear(), 0, 1));
     const endDate = exitDate ? new Date(exitDate) : new Date(today.getFullYear(), 11, 31);
-    
+
     const totalDays = (endDate - startDate) / (1000 * 60 * 60 * 24);
     const fullYearDays = 365;
     const proratedAmount = (leaveType.accrualAmount * totalDays) / fullYearDays;
@@ -910,7 +910,7 @@ const LeaveManagement = () => {
             let initialAccrual = leaveType.accrualAmount;
             // Note: In real scenario, you'd get employee joining date
             // For now, using full accrual, but structure supports proration
-            
+
             const newBalance = {
               id: Date.now(),
               employeeId: employee.id,
@@ -1014,9 +1014,9 @@ const LeaveManagement = () => {
   const getEffectiveApprover = (originalApprover, applicationDate) => {
     const delegation = approvalDelegations.find(
       d => d.fromApprover === originalApprover &&
-      new Date(d.startDate) <= new Date(applicationDate) &&
-      new Date(d.endDate) >= new Date(applicationDate) &&
-      d.isActive
+        new Date(d.startDate) <= new Date(applicationDate) &&
+        new Date(d.endDate) >= new Date(applicationDate) &&
+        d.isActive
     );
     return delegation ? delegation.toApprover : originalApprover;
   };
@@ -1043,7 +1043,7 @@ const LeaveManagement = () => {
 
   // Export leave balance statement
   const exportLeaveBalanceStatement = (employeeId, format = 'csv') => {
-    const balances = employeeId 
+    const balances = employeeId
       ? leaveBalances.filter(b => b.employeeId === employeeId)
       : leaveBalances;
 
@@ -1136,21 +1136,21 @@ const LeaveManagement = () => {
   };
 
   // ==================== FILTERED DATA ====================
- const safeLower = (v) => (v || "").toLowerCase();
+  const safeLower = (v) => (v || "").toLowerCase();
 
-const filteredApplications = leaveApplications.filter((app) => {
-  const search = safeLower(searchTerm);
+  const filteredApplications = leaveApplications.filter((app) => {
+    const search = safeLower(searchTerm);
 
-  const matchesSearch =
-    safeLower(app.appliedBy).includes(search) ||
-    safeLower(app.leaveTypeName).includes(search);
+    const matchesSearch =
+      safeLower(app.appliedBy).includes(search) ||
+      safeLower(app.leaveTypeName).includes(search);
 
-  const matchesStatus =
-    filterStatus === "All" ||
-    safeLower(app.status) === safeLower(filterStatus);
+    const matchesStatus =
+      filterStatus === "All" ||
+      safeLower(app.status) === safeLower(filterStatus);
 
-  return matchesSearch && matchesStatus;
-});
+    return matchesSearch && matchesStatus;
+  });
 
 
   // ==================== RENDER FUNCTIONS ====================
@@ -1159,42 +1159,46 @@ const filteredApplications = leaveApplications.filter((app) => {
       <div className="col-12">
         <div className="card border-0 shadow-sm">
           <div className="card-header bg-white py-3">
-            <div className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0 d-flex align-items-center">
-                <Settings size={20} className="me-2 text-primary" />
+            <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+
+              {/* Title */}
+              <h5 className="mb-0 d-flex align-items-center fw-semibold text-dark fs-4">
+                <Settings size={18} className="me-2 text-primary" />
                 Leave Type Configuration
               </h5>
-           <button
-  className="btn btn-primary btn-sm d-flex align-items-center"
-  onClick={() => {
-    setEditingLeaveType(null);
-    setLeaveTypeForm({
-      name: "",
-      code: "",
-      isPaid: true,
-      accrualType: "monthly",
-      accrualAmount: 1,
-      maxAccrual: 12,
-      carryForward: { enabled: true, maxDays: 3, expiryMonths: 3 },
-      encashment: { enabled: false, maxDays: 0, rate: 0 },
-      allowNegative: false,
-      probationApplicable: false,
-      sandwichLeave: true,
-      allowBackdated: false,
-      allowHalfDay: true,
-      allowShortLeave: false,
-      isOptional: false,
-      usageLimit: null,
-      description: "",
-    });
-    setShowLeaveTypeModal(true);
-  }}
->
-  <Plus size={16} className="me-2" />
-  <span>Add Leave Type</span>
-</button>
+              {/* Action Button */}
+              <button
+                className="btn btn-primary btn-sm d-flex align-items-center fw-medium"
+                onClick={() => {
+                  setEditingLeaveType(null);
+                  setLeaveTypeForm({
+                    name: "",
+                    code: "",
+                    isPaid: true,
+                    accrualType: "monthly",
+                    accrualAmount: 1,
+                    maxAccrual: 12,
+                    carryForward: { enabled: true, maxDays: 3, expiryMonths: 3 },
+                    encashment: { enabled: false, maxDays: 0, rate: 0 },
+                    allowNegative: false,
+                    probationApplicable: false,
+                    sandwichLeave: true,
+                    allowBackdated: false,
+                    allowHalfDay: true,
+                    allowShortLeave: false,
+                    isOptional: false,
+                    usageLimit: null,
+                    description: "",
+                  });
+                  setShowLeaveTypeModal(true);
+                }}
+              >
+                <Plus size={16} className="me-2" />
+                Add Leave Type
+              </button>
 
             </div>
+
           </div>
           <div className="card-body">
             <div className="table-responsive">
@@ -1301,54 +1305,57 @@ const filteredApplications = leaveApplications.filter((app) => {
         <div className="card border-0 shadow-sm">
           <div className="card-header bg-white py-3">
             <div className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0 d-flex align-items-center">
-                <BarChart3 size={20} className="me-2 text-primary" />
+              <h5 className="mb-0 d-flex align-items-center fw-semibold text-dark fs-4">
+                <BarChart3 size={20} className="me-2 text-dark" />
                 Leave Balance Management
               </h5>
-             <div className="d-flex gap-2">
-  <button
-    className="btn btn-success btn-sm d-flex align-items-center"
-    onClick={processAutoAccrual}
-    title="Process monthly accrual"
-  >
-    <RefreshCw size={16} className="me-2" />
-    <span>Auto Accrual</span>
-  </button>
 
-  <button
-    className="btn btn-warning btn-sm d-flex align-items-center"
-    onClick={processLeaveLapse}
-    title="Process expired carry-forward leaves"
-  >
-    <AlertTriangle size={16} className="me-2" />
-    <span>Process Lapse</span>
-  </button>
+              <div className="d-flex gap-2">
+                <button
+                  className="btn btn-success btn-sm d-flex align-items-center"
+                  onClick={processAutoAccrual}
+                  title="Process monthly accrual"
+                >
+                  <RefreshCw size={16} className="me-2" />
+                  <span>Auto Accrual</span>
+                </button>
 
-  <button
-    className="btn btn-info btn-sm d-flex align-items-center"
-    onClick={() => exportLeaveBalanceStatement(null, "csv")}
-    title="Export leave balance statement"
-  >
-    <Download size={16} className="me-2" />
-    <span>Export Statement</span>
-  </button>
+                <button
+                  className="btn btn-warning btn-sm d-flex align-items-center"
+                  onClick={processLeaveLapse}
+                  title="Process expired carry-forward leaves"
+                >
+                  <AlertTriangle size={16} className="me-2" />
+                  <span>Process Lapse</span>
+                </button>
 
-  <button
-    className="btn btn-primary btn-sm d-flex align-items-center"
-    onClick={() => setShowBalanceModal(true)}
-  >
-    <Plus size={16} className="me-2" />
-    <span>Add / Adjust Balance</span>
-  </button>
-</div>
+                <button
+                  className="btn btn-info btn-sm d-flex align-items-center"
+                  onClick={() => exportLeaveBalanceStatement(null, "csv")}
+                  title="Export leave balance statement"
+                >
+                  <Download size={16} className="me-2" />
+                  <span>Export Statement</span>
+                </button>
+
+                <button
+                  className="btn btn-primary btn-sm d-flex align-items-center"
+                  onClick={() => setShowBalanceModal(true)}
+                >
+                  <Plus size={16} className="me-2" />
+                  <span>Adjust Balance</span>
+                </button>
+              </div>
 
             </div>
           </div>
           <div className="card-body">
             {leaveBalances.length === 0 ? (
-              <div className="text-center py-5">
+              <div className="d-flex flex-column align-items-center justify-content-center py-5">
                 <BarChart3 size={48} className="text-muted mb-3" />
-                <p className="text-muted">No leave balances recorded</p>
+
+                <p className="text-muted mb-3">No leave balances recorded</p>
+
                 <button
                   className="btn btn-primary"
                   onClick={() => setShowBalanceModal(true)}
@@ -1416,9 +1423,8 @@ const filteredApplications = leaveApplications.filter((app) => {
                           </td>
                           <td>
                             <span
-                              className={`badge bg-${
-                                balance.balance >= 0 ? "success" : "danger"
-                              }`}
+                              className={`badge bg-${balance.balance >= 0 ? "success" : "danger"
+                                }`}
                             >
                               {balance.balance || 0}
                             </span>
@@ -1484,175 +1490,175 @@ const filteredApplications = leaveApplications.filter((app) => {
     </div>
   );
 
- const renderLeaveApplications = () => (
-  <div className="row g-4">
-    <div className="col-12">
-      <div className="card border-0 shadow-sm">
-        <div className="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-          <h5 className="mb-0 d-flex align-items-center">
-            <FileText size={20} className="me-2 text-primary" />
-            Leave Applications & Approval
-          </h5>
-          <button
-            className="btn btn-primary btn-sm d-flex align-items-center"
-            onClick={() => setShowApplicationModal(true)}
-          >
-            <Plus size={16} className="me-2" />
-            <span>New Application</span>
-          </button>
-        </div>
+  const renderLeaveApplications = () => (
+    <div className="row g-4">
+      <div className="col-12">
+        <div className="card border-0 shadow-sm">
+          <div className="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 className="mb-0 d-flex align-items-center fw-semibold text-dark fs-4">
+              <FileText size={20} className="me-2 text-dark" />
+              Leave Applications & Approval
+            </h5>
 
-        <div className="card-body">
-          {/* Search & Filter - using the main component's state */}
-          <div className="row g-3 mb-3">
-            <div className="col-md-6">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Search applications..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="col-md-6">
-              <select
-                className="form-select"
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-              >
-                <option value="All">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
+            <button
+              className="btn btn-primary btn-sm d-flex align-items-center"
+              onClick={() => setShowApplicationModal(true)}
+            >
+              <Plus size={16} className="me-2" />
+              <span>New Application</span>
+            </button>
           </div>
 
-          {/* Applications Table */}
-          <div className="table-responsive">
-            <table className="table table-hover">
-              <thead className="table-light">
-                <tr>
-                  <th>Employee</th>
-                  <th>Leave Type</th>
-                  <th>Dates</th>
-                  <th>Days</th>
-                  <th>Reason</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredApplications.length === 0 ? (
+          <div className="card-body">
+            {/* Search & Filter - using the main component's state */}
+            <div className="row g-3 mb-3">
+              <div className="col-md-6">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search applications..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <div className="col-md-6">
+                <select
+                  className="form-select"
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                >
+                  <option value="All">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Applications Table */}
+            <div className="table-responsive">
+              <table className="table table-hover">
+                <thead className="table-light">
                   <tr>
-                    <td colSpan="7" className="text-center py-4">
-                      <p className="text-muted mb-0">No leave applications</p>
-                    </td>
+                    <th>Employee</th>
+                    <th>Leave Type</th>
+                    <th>Dates</th>
+                    <th>Days</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                   </tr>
-                ) : (
-                  filteredApplications.map((app) => {
-                    const employee = initialEmployees.find(
-                      (e) => e.id === app.employeeId
-                    );
-                    return (
-                      <tr key={app.id}>
-                        <td>{employee?.name || app.employeeId}</td>
-                        <td>
-                          <span className="badge bg-info">
-                            {app.leaveTypeName}
-                          </span>
-                        </td>
-                        <td>
-                          <small>
-                            {app.startDate}
-                            {app.endDate && app.endDate !== app.startDate
-                              ? ` - ${app.endDate}`
-                              : ""}
-                            {app.halfDay && ` (${app.halfDayType} half)`}
-                          </small>
-                        </td>
-                        <td>{app.days}</td>
-                        <td>
-                          <small>{app.reason || "N/A"}</small>
-                        </td>
-                        <td>
-                          <span
-                            className={`badge bg-${
-                              app.status === "approved"
+                </thead>
+                <tbody>
+                  {filteredApplications.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" className="text-center py-4">
+                        <p className="text-muted mb-0">No leave applications</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredApplications.map((app) => {
+                      const employee = initialEmployees.find(
+                        (e) => e.id === app.employeeId
+                      );
+                      return (
+                        <tr key={app.id}>
+                          <td>{employee?.name || app.employeeId}</td>
+                          <td>
+                            <span className="badge bg-info">
+                              {app.leaveTypeName}
+                            </span>
+                          </td>
+                          <td>
+                            <small>
+                              {app.startDate}
+                              {app.endDate && app.endDate !== app.startDate
+                                ? ` - ${app.endDate}`
+                                : ""}
+                              {app.halfDay && ` (${app.halfDayType} half)`}
+                            </small>
+                          </td>
+                          <td>{app.days}</td>
+                          <td>
+                            <small>{app.reason || "N/A"}</small>
+                          </td>
+                          <td>
+                            <span
+                              className={`badge bg-${app.status === "approved"
                                 ? "success"
                                 : app.status === "rejected"
-                                ? "danger"
-                                : "warning"
-                            }`}
-                          >
-                            {app.status}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="d-flex gap-2 align-items-center">
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-success"
-                              onClick={() =>
-                                handleApproveApplication(app.id, true)
-                              }
-                              disabled={app.status === "approved"}
-                              data-bs-toggle="tooltip"
-                              title="Approve"
+                                  ? "danger"
+                                  : "warning"
+                                }`}
                             >
-                              <Check size={14} />
-                            </button>
+                              {app.status}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="d-flex gap-2 align-items-center">
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-success"
+                                onClick={() =>
+                                  handleApproveApplication(app.id, true)
+                                }
+                                disabled={app.status === "approved"}
+                                data-bs-toggle="tooltip"
+                                title="Approve"
+                              >
+                                <Check size={14} />
+                              </button>
 
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-danger"
-                              onClick={() =>
-                                handleApproveApplication(app.id, false)
-                              }
-                              disabled={app.status === "rejected"}
-                              data-bs-toggle="tooltip"
-                              title="Reject"
-                            >
-                              <X size={14} />
-                            </button>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={() =>
+                                  handleApproveApplication(app.id, false)
+                                }
+                                disabled={app.status === "rejected"}
+                                data-bs-toggle="tooltip"
+                                title="Reject"
+                              >
+                                <X size={14} />
+                              </button>
 
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-warning"
-                              onClick={() => handleWithdrawApplication(app.id)}
-                              data-bs-toggle="tooltip"
-                              title="Withdraw"
-                            >
-                              <XCircle size={14} />
-                            </button>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-warning"
+                                onClick={() => handleWithdrawApplication(app.id)}
+                                data-bs-toggle="tooltip"
+                                title="Withdraw"
+                              >
+                                <XCircle size={14} />
+                              </button>
 
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-primary"
-                              disabled={!app.attachment}
-                              data-bs-toggle="tooltip"
-                              title="View Attachment"
-                              onClick={() =>
-                                app.attachment &&
-                                window.open(app.attachment, "_blank")
-                              }
-                            >
-                              <Eye size={14} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-primary"
+                                disabled={!app.attachment}
+                                data-bs-toggle="tooltip"
+                                title="View Attachment"
+                                onClick={() =>
+                                  app.attachment &&
+                                  window.open(app.attachment, "_blank")
+                                }
+                              >
+                                <Eye size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
   const renderLeaveCalendar = () => {
     const currentMonth = selectedDate.getMonth();
     const currentYear = selectedDate.getFullYear();
@@ -1705,13 +1711,14 @@ const filteredApplications = leaveApplications.filter((app) => {
           <div className="card border-0 shadow-sm">
             <div className="card-header bg-white py-3">
               <div className="d-flex justify-content-between align-items-center">
-                <h5 className="mb-0 d-flex align-items-center">
-                  <Calendar size={20} className="me-2 text-primary" />
+                <h5 className="mb-0 d-flex align-items-center fw-semibold text-dark fs-4">
+                  <Calendar size={20} className="me-2 text-dark" />
                   Leave Calendar & Planning
                 </h5>
+
                 <div className="d-flex gap-2">
                   <button
-                    className="btn btn-sm btn-outline-secondary"
+                    className="btn btn-sm btn-primary"
                     onClick={() => {
                       const prevMonth = new Date(selectedDate);
                       prevMonth.setMonth(prevMonth.getMonth() - 1);
@@ -1727,7 +1734,7 @@ const filteredApplications = leaveApplications.filter((app) => {
                     })}
                   </span>
                   <button
-                    className="btn btn-sm btn-outline-secondary"
+                    className="btn btn-sm btn-primary"
                     onClick={() => {
                       const nextMonth = new Date(selectedDate);
                       nextMonth.setMonth(nextMonth.getMonth() + 1);
@@ -1737,101 +1744,101 @@ const filteredApplications = leaveApplications.filter((app) => {
                     <ChevronRight size={16} />
                   </button>
                 </div>
+
               </div>
             </div>
-             <div className="card-body">
-      {/* Department-wise Statistics */}
-      <div className="mb-4">
-   <h6 className="mb-3 text-dark fw-semibold">
-  Department-wise Leave Summary
-</h6>
+            <div className="card-body">
+              {/* Department-wise Statistics */}
+              <div className="mb-4">
+                <h6 className="mb-3 text-dark">
+                  Department-wise Leave Summary
+                </h6>
 
 
-        <div className="dept-grid">
-          {Object.entries(departmentStats).map(([dept, stats]) => (
-            <div key={dept} className="dept-card">
-              <div className="fw-bold text-primary">{dept}</div>
-              <div className="small text-muted">
-                {stats.employees.size} employees,{" "}
-                {stats.count.toFixed(1)} days
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Calendar */}
-      <div className="calendar-wrapper">
-        {/* Week Header */}
-        <div className="calendar-header">
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-            <div key={day} className="calendar-day-name">
-              {day}
-            </div>
-          ))}
-        </div>
-
-        {/* Calendar Body */}
-        <div className="calendar-grid">
-          {calendarDays.map((day, index) => {
-            const leaves = getLeavesForDate(day);
-            const hasOverlap = leaves.length > 3;
-
-            return (
-              <div
-                key={index}
-                className={`calendar-cell ${
-                  hasOverlap ? "overlap" : ""
-                }`}
-              >
-                {day && (
-                  <>
-                    <div className="calendar-date">
-                      <span>{day}</span>
-                      {hasOverlap && (
-                        <AlertTriangle
-                          size={12}
-                          className="warning-icon"
-                          title="High leave overlap"
-                        />
-                      )}
+                <div className="dept-grid">
+                  {Object.entries(departmentStats).map(([dept, stats]) => (
+                    <div key={dept} className="dept-card">
+                      <div className="fw-bold text-primary">{dept}</div>
+                      <div className="small text-muted">
+                        {stats.employees.size} employees,{" "}
+                        {stats.count.toFixed(1)} days
+                      </div>
                     </div>
-
-                    <div className="leave-list">
-                      {leaves.slice(0, 3).map((leave) => {
-                        const emp = initialEmployees.find(
-                          (e) => e.id === leave.employeeId
-                        );
-
-                        return (
-                          <div
-                            key={leave.id}
-                            className="leave-badge"
-                            title={`${emp?.name || leave.employeeId} - ${leave.leaveTypeName}`}
-                          >
-                            {(emp?.name?.split(" ")[0] ||
-                              leave.employeeId)}{" "}
-                            - {leave.leaveTypeName}
-                          </div>
-                        );
-                      })}
-
-                      {leaves.length > 3 && (
-                        <div className="more-text">
-                          +{leaves.length - 3} more
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
+                  ))}
+                </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
 
-      {/* CSS */}
-      <style>{`
+              {/* Calendar */}
+              <div className="calendar-wrapper">
+                {/* Week Header */}
+                <div className="calendar-header">
+                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                    <div key={day} className="calendar-day-name">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Calendar Body */}
+                <div className="calendar-grid">
+                  {calendarDays.map((day, index) => {
+                    const leaves = getLeavesForDate(day);
+                    const hasOverlap = leaves.length > 3;
+
+                    return (
+                      <div
+                        key={index}
+                        className={`calendar-cell ${hasOverlap ? "overlap" : ""
+                          }`}
+                      >
+                        {day && (
+                          <>
+                            <div className="calendar-date">
+                              <span>{day}</span>
+                              {hasOverlap && (
+                                <AlertTriangle
+                                  size={12}
+                                  className="warning-icon"
+                                  title="High leave overlap"
+                                />
+                              )}
+                            </div>
+
+                            <div className="leave-list">
+                              {leaves.slice(0, 3).map((leave) => {
+                                const emp = initialEmployees.find(
+                                  (e) => e.id === leave.employeeId
+                                );
+
+                                return (
+                                  <div
+                                    key={leave.id}
+                                    className="leave-badge"
+                                    title={`${emp?.name || leave.employeeId} - ${leave.leaveTypeName}`}
+                                  >
+                                    {(emp?.name?.split(" ")[0] ||
+                                      leave.employeeId)}{" "}
+                                    - {leave.leaveTypeName}
+                                  </div>
+                                );
+                              })}
+
+                              {leaves.length > 3 && (
+                                <div className="more-text">
+                                  +{leaves.length - 3} more
+                                </div>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* CSS */}
+              <style>{`
         /* Department cards */
         .dept-grid {
           display: grid;
@@ -1918,7 +1925,7 @@ const filteredApplications = leaveApplications.filter((app) => {
           color: #ffc107;
         }
       `}</style>
-    </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1927,7 +1934,7 @@ const filteredApplications = leaveApplications.filter((app) => {
 
   const renderLeavePlanning = () => {
     const departments = [...new Set(initialEmployees.map(e => e.department))];
-    const coverage = selectedDept === "All" 
+    const coverage = selectedDept === "All"
       ? departments.map(dept => calculateLeaveCoverage(dept, planningStartDate, planningEndDate))
       : [calculateLeaveCoverage(selectedDept, planningStartDate, planningEndDate)];
 
@@ -1962,18 +1969,19 @@ const filteredApplications = leaveApplications.filter((app) => {
           <div className="card border-0 shadow-sm">
             <div className="card-header bg-white py-3">
               <div className="d-flex justify-content-between align-items-center">
-                <h5 className="mb-0 d-flex align-items-center">
-                  <CalendarDays size={20} className="me-2 text-primary" />
+                <h5 className="mb-0 d-flex align-items-center fw-semibold text-dark fs-4">
+                  <CalendarDays size={20} className="me-2 text-dark" />
                   Leave Planning & Coverage
                 </h5>
+
                 <div className="d-flex gap-2">
-                 <button
-  className="btn btn-primary btn-sm d-inline-flex align-items-center gap-2"
-  onClick={() => setShowCampaignModal(true)}
->
-  <Plus size={16} />
-  <span>Create Campaign</span>
-</button>
+                  <button
+                    className="btn btn-primary btn-sm d-inline-flex align-items-center gap-2"
+                    onClick={() => setShowCampaignModal(true)}
+                  >
+                    <Plus size={16} />
+                    <span>Create Campaign</span>
+                  </button>
 
                 </div>
               </div>
@@ -1981,12 +1989,12 @@ const filteredApplications = leaveApplications.filter((app) => {
             <div className="card-body">
               <div className="row g-3 mb-4">
                 <div className="col-md-4">
-               <label 
-  className="form-label mb-3 fw-semibold" 
-  style={{ color: "#000000" }}
->
-  Department
-</label>
+                  <label
+                    className="form-label mb-3 fw-semibold"
+                    style={{ color: "#000000" }}
+                  >
+                    Department
+                  </label>
 
 
                   <select
@@ -2001,8 +2009,8 @@ const filteredApplications = leaveApplications.filter((app) => {
                   </select>
                 </div>
                 <div className="col-md-4">
-                  <label  className="form-label mb-3 fw-semibold" 
-  style={{ color: "#000000" }} >Start Date</label>
+                  <label className="form-label mb-3 fw-semibold"
+                    style={{ color: "#000000" }} >Start Date</label>
                   <input
                     type="date"
                     className="form-control"
@@ -2011,8 +2019,8 @@ const filteredApplications = leaveApplications.filter((app) => {
                   />
                 </div>
                 <div className="col-md-4">
-                  <label  className="form-label mb-3 fw-semibold" 
-  style={{ color: "#000000" }}>End Date</label>
+                  <label className="form-label mb-3 fw-semibold"
+                    style={{ color: "#000000" }}>End Date</label>
                   <input
                     type="date"
                     className="form-control"
@@ -2022,36 +2030,36 @@ const filteredApplications = leaveApplications.filter((app) => {
                 </div>
               </div>
 
- <h6 className="mb-0 d-flex align-items-center">
-                 Coverage Analysis
-                </h6><br></br>
-             
-           <div className="row g-3 mb-4">
-  {coverage.map((cov, idx) => (
-    <div key={idx} className="col-md-3">
-      <div className="card border">
-        <div className="card-body">
-          <div className="fw-bold text-primary">
-            {selectedDept === "All" ? departments[idx] : selectedDept}
-          </div>
-          <div className="mt-2">
-            <small className="text-muted">Total Employees: {cov.totalEmployees}</small>
-            <br />
-            <small className="text-muted">On Leave: {cov.employeesOnLeave}</small>
-            <br />
-            <div className={`mt-2 badge bg-${parseFloat(cov.coverage) >= 80 ? 'success' : parseFloat(cov.coverage) >= 60 ? 'warning' : 'danger'}`}>
-              Coverage: {cov.coverage}%
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  ))}
-</div>
+              <h6 className="mb-0 d-flex align-items-center">
+                Coverage Analysis
+              </h6><br></br>
 
-                <h6 className="mb-0 d-flex align-items-center">
+              <div className="row g-3 mb-4">
+                {coverage.map((cov, idx) => (
+                  <div key={idx} className="col-md-3">
+                    <div className="card border">
+                      <div className="card-body">
+                        <div className="fw-bold text-primary">
+                          {selectedDept === "All" ? departments[idx] : selectedDept}
+                        </div>
+                        <div className="mt-2">
+                          <small className="text-muted">Total Employees: {cov.totalEmployees}</small>
+                          <br />
+                          <small className="text-muted">On Leave: {cov.employeesOnLeave}</small>
+                          <br />
+                          <div className={`mt-2 badge bg-${parseFloat(cov.coverage) >= 80 ? 'success' : parseFloat(cov.coverage) >= 60 ? 'warning' : 'danger'}`}>
+                            Coverage: {cov.coverage}%
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <h6 className="mb-0 d-flex align-items-center">
                 Active Planning Campaigns
-                </h6><br></br>
+              </h6><br></br>
               <div className="table-responsive">
                 <table className="table table-hover">
                   <thead className="table-light">
@@ -2203,17 +2211,18 @@ const filteredApplications = leaveApplications.filter((app) => {
           <div className="card border-0 shadow-sm">
             <div className="card-header bg-white py-3">
               <div className="d-flex justify-content-between align-items-center">
-                <h5 className="mb-0 d-flex align-items-center">
-                  <Users size={20} className="me-2 text-primary" />
+                <h5 className="mb-0 d-flex align-items-center fw-semibold text-dark fs-4">
+                  <Users size={20} className="me-2 text-dark" />
                   Approval Delegation Management
                 </h5>
-              <button
-  className="btn btn-primary btn-sm d-inline-flex align-items-center gap-2"
-  onClick={() => setShowDelegationModal(true)}
->
-  <Plus size={16} />
-  <span>Setup Delegation</span>
-</button>
+
+                <button
+                  className="btn btn-primary btn-sm d-inline-flex align-items-center gap-2"
+                  onClick={() => setShowDelegationModal(true)}
+                >
+                  <Plus size={16} />
+                  <span>Setup Delegation</span>
+                </button>
 
               </div>
             </div>
@@ -2239,7 +2248,7 @@ const filteredApplications = leaveApplications.filter((app) => {
                       </tr>
                     ) : (
                       approvalDelegations.map(delegation => {
-                        const isActive = delegation.isActive && 
+                        const isActive = delegation.isActive &&
                           new Date(delegation.startDate) <= new Date() &&
                           new Date(delegation.endDate) >= new Date();
                         return (
@@ -2267,8 +2276,14 @@ const filteredApplications = leaveApplications.filter((app) => {
 
         {/* Delegation Modal */}
         {showDelegationModal && (
-          <div className="modal show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-            <div className="modal-dialog">
+          <div
+            className="modal show d-block"
+            style={{
+              backgroundColor: "rgba(0,0,0,0.5)",
+              zIndex: 1050,
+            }}
+          >
+            <div className="modal-dialog modal-dialog-centered"> {/* Centered here */}
               <div className="modal-content">
                 <div className="modal-header">
                   <h5 className="modal-title">Setup Approval Delegation</h5>
@@ -2286,7 +2301,12 @@ const filteredApplications = leaveApplications.filter((app) => {
                         type="text"
                         className="form-control"
                         value={delegationForm.fromApprover}
-                        onChange={(e) => setDelegationForm({ ...delegationForm, fromApprover: e.target.value })}
+                        onChange={(e) =>
+                          setDelegationForm({
+                            ...delegationForm,
+                            fromApprover: e.target.value,
+                          })
+                        }
                         placeholder="e.g., Manager, HR"
                       />
                     </div>
@@ -2296,7 +2316,12 @@ const filteredApplications = leaveApplications.filter((app) => {
                         type="text"
                         className="form-control"
                         value={delegationForm.toApprover}
-                        onChange={(e) => setDelegationForm({ ...delegationForm, toApprover: e.target.value })}
+                        onChange={(e) =>
+                          setDelegationForm({
+                            ...delegationForm,
+                            toApprover: e.target.value,
+                          })
+                        }
                         placeholder="e.g., Deputy Manager, HR Manager"
                       />
                     </div>
@@ -2306,7 +2331,12 @@ const filteredApplications = leaveApplications.filter((app) => {
                         type="date"
                         className="form-control"
                         value={delegationForm.startDate}
-                        onChange={(e) => setDelegationForm({ ...delegationForm, startDate: e.target.value })}
+                        onChange={(e) =>
+                          setDelegationForm({
+                            ...delegationForm,
+                            startDate: e.target.value,
+                          })
+                        }
                       />
                     </div>
                     <div className="col-md-6">
@@ -2315,7 +2345,12 @@ const filteredApplications = leaveApplications.filter((app) => {
                         type="date"
                         className="form-control"
                         value={delegationForm.endDate}
-                        onChange={(e) => setDelegationForm({ ...delegationForm, endDate: e.target.value })}
+                        onChange={(e) =>
+                          setDelegationForm({
+                            ...delegationForm,
+                            endDate: e.target.value,
+                          })
+                        }
                       />
                     </div>
                     <div className="col-12">
@@ -2324,7 +2359,12 @@ const filteredApplications = leaveApplications.filter((app) => {
                         className="form-control"
                         rows="3"
                         value={delegationForm.reason}
-                        onChange={(e) => setDelegationForm({ ...delegationForm, reason: e.target.value })}
+                        onChange={(e) =>
+                          setDelegationForm({
+                            ...delegationForm,
+                            reason: e.target.value,
+                          })
+                        }
                         placeholder="Reason for delegation (e.g., On leave, Out of office)"
                       />
                     </div>
@@ -2366,6 +2406,7 @@ const filteredApplications = leaveApplications.filter((app) => {
             </div>
           </div>
         )}
+
       </div>
     );
   };
@@ -2376,17 +2417,18 @@ const filteredApplications = leaveApplications.filter((app) => {
         <div className="card border-0 shadow-sm">
           <div className="card-header bg-white py-3">
             <div className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0 d-flex align-items-center">
-                <Gift size={20} className="me-2 text-primary" />
+              <h5 className="mb-0 d-flex align-items-center fw-semibold text-dark fs-4">
+                <Gift size={20} className="me-2 text-dark" />
                 Compensatory Off Management
               </h5>
-            <button
-  className="btn btn-primary btn-sm d-flex align-items-center gap-2"
-  onClick={() => setShowCompOffModal(true)}
->
-  <Plus size={16} />
-  <span>Add Comp-Off</span>
-</button>
+
+              <button
+                className="btn btn-primary btn-sm d-flex align-items-center gap-2"
+                onClick={() => setShowCompOffModal(true)}
+              >
+                <Plus size={16} />
+                <span>Add Comp-Off</span>
+              </button>
 
             </div>
           </div>
@@ -2397,12 +2439,12 @@ const filteredApplications = leaveApplications.filter((app) => {
                   <tr>
                     <th>Employee</th>
                     <th>Earned Date</th>
-                      <th>Hours</th>
-                      <th>Source</th>
-                      <th>Policy Type</th>
-                      <th>Expiry Date</th>
-                      <th>Status</th>
-                      <th>Actions</th>
+                    <th>Hours</th>
+                    <th>Source</th>
+                    <th>Policy Type</th>
+                    <th>Expiry Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2445,33 +2487,32 @@ const filteredApplications = leaveApplications.filter((app) => {
                           </td>
                           <td>
                             <span
-                              className={`badge bg-${
-                                co.status === "applied"
-                                  ? "secondary"
-                                  : isExpired
+                              className={`badge bg-${co.status === "applied"
+                                ? "secondary"
+                                : isExpired
                                   ? "danger"
                                   : "success"
-                              }`}
+                                }`}
                             >
                               {co.status === "applied"
                                 ? "Applied"
                                 : isExpired
-                                ? "Expired"
-                                : "Available"}
+                                  ? "Expired"
+                                  : "Available"}
                             </span>
                           </td>
-                      <td>
-  {co.status === "available" && !co.applied && !isExpired ? (
-    <button
-      className="btn btn-sm btn-outline-primary"
-      onClick={() => handleApplyCompOff(co.id)}
-    >
-      Apply
-    </button>
-  ) : (
-    <span className="badge bg-secondary">Applied</span>
-  )}
-</td>
+                          <td>
+                            {co.status === "available" && !co.applied && !isExpired ? (
+                              <button
+                                className="btn btn-sm btn-outline-primary"
+                                onClick={() => handleApplyCompOff(co.id)}
+                              >
+                                Apply
+                              </button>
+                            ) : (
+                              <span className="badge bg-secondary">Applied</span>
+                            )}
+                          </td>
 
                         </tr>
                       );
@@ -2490,7 +2531,11 @@ const filteredApplications = leaveApplications.filter((app) => {
     <div className="container-fluid py-4">
       <div className="row mb-4">
         <div className="col-12">
-          <h4 className="mb-2">Leave Management System</h4>
+          <h5 className="text-3xl fw-bold text-dark mb-2 mt-3 d-flex align-items-center gap-2">
+            <CalendarDays size={22} className="me-2 text-dark" />
+            Leave Management System
+          </h5>
+
           <p className="text-muted">
             Manage leave types, balances, applications, calendar, and comp-off
           </p>
@@ -2498,91 +2543,84 @@ const filteredApplications = leaveApplications.filter((app) => {
       </div>
 
       {/* Tabs */}
- <ul className="nav nav-tabs mb-4">
-  <li className="nav-item">
-    <button
-      className={`nav-link d-flex align-items-center ${
-        activeTab === "leaveTypes" ? "active" : ""
-      }`}
-      onClick={() => setActiveTab("leaveTypes")}
-    >
-      <Settings size={16} className="me-2" />
-      <span>Leave Types</span>
-    </button>
-  </li>
+      <ul className="nav nav-tabs mb-4">
+        <li className="nav-item">
+          <button
+            className={`nav-link d-flex align-items-center ${activeTab === "leaveTypes" ? "active" : ""
+              }`}
+            onClick={() => setActiveTab("leaveTypes")}
+          >
+            <Settings size={16} className="me-2" />
+            <span>Leave Types</span>
+          </button>
+        </li>
 
-  <li className="nav-item">
-    <button
-      className={`nav-link d-flex align-items-center ${
-        activeTab === "balance" ? "active" : ""
-      }`}
-      onClick={() => setActiveTab("balance")}
-    >
-      <BarChart3 size={16} className="me-2" />
-      <span>Leave Balance</span>
-    </button>
-  </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link d-flex align-items-center ${activeTab === "balance" ? "active" : ""
+              }`}
+            onClick={() => setActiveTab("balance")}
+          >
+            <BarChart3 size={16} className="me-2" />
+            <span>Leave Balance</span>
+          </button>
+        </li>
 
-  <li className="nav-item">
-    <button
-      className={`nav-link d-flex align-items-center ${
-        activeTab === "applications" ? "active" : ""
-      }`}
-      onClick={() => setActiveTab("applications")}
-    >
-      <FileText size={16} className="me-2" />
-      <span>Applications</span>
-    </button>
-  </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link d-flex align-items-center ${activeTab === "applications" ? "active" : ""
+              }`}
+            onClick={() => setActiveTab("applications")}
+          >
+            <FileText size={16} className="me-2" />
+            <span>Applications</span>
+          </button>
+        </li>
 
-  <li className="nav-item">
-    <button
-      className={`nav-link d-flex align-items-center ${
-        activeTab === "calendar" ? "active" : ""
-      }`}
-      onClick={() => setActiveTab("calendar")}
-    >
-      <Calendar size={16} className="me-2" />
-      <span>Calendar</span>
-    </button>
-  </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link d-flex align-items-center ${activeTab === "calendar" ? "active" : ""
+              }`}
+            onClick={() => setActiveTab("calendar")}
+          >
+            <Calendar size={16} className="me-2" />
+            <span>Calendar</span>
+          </button>
+        </li>
 
-  <li className="nav-item">
-    <button
-      className={`nav-link d-flex align-items-center ${
-        activeTab === "compOff" ? "active" : ""
-      }`}
-      onClick={() => setActiveTab("compOff")}
-    >
-      <Gift size={16} className="me-2" />
-      <span>Comp-Off</span>
-    </button>
-  </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link d-flex align-items-center ${activeTab === "compOff" ? "active" : ""
+              }`}
+            onClick={() => setActiveTab("compOff")}
+          >
+            <Gift size={16} className="me-2" />
+            <span>Comp-Off</span>
+          </button>
+        </li>
 
-  <li className="nav-item">
-    <button
-      className={`nav-link d-flex align-items-center ${
-        activeTab === "planning" ? "active" : ""
-      }`}
-      onClick={() => setActiveTab("planning")}
-    >
-      <CalendarDays size={16} className="me-2" />
-      <span>Planning</span>
-    </button>
-  </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link d-flex align-items-center ${activeTab === "planning" ? "active" : ""
+              }`}
+            onClick={() => setActiveTab("planning")}
+          >
+            <CalendarDays size={16} className="me-2" />
+            <span>Planning</span>
+          </button>
+        </li>
 
-  <li className="nav-item">
-    <button
-      className={`nav-link d-flex align-items-center ${
-        activeTab === "delegation" ? "active" : ""
-      }`}
-      onClick={() => setActiveTab("delegation")}
-    >
-      <Users size={16} className="me-2" />
-      <span>Delegation</span>
-    </button>
-  </li>
-</ul>
+        <li className="nav-item">
+          <button
+            className={`nav-link d-flex align-items-center ${activeTab === "delegation" ? "active" : ""
+              }`}
+            onClick={() => setActiveTab("delegation")}
+          >
+            <Users size={16} className="me-2" />
+            <span>Delegation</span>
+          </button>
+        </li>
+      </ul>
 
 
       {/* Tab Content */}
@@ -2599,736 +2637,382 @@ const filteredApplications = leaveApplications.filter((app) => {
       {/* Leave Type Modal */}
       {showLeaveTypeModal && (
         <div
-          className="modal show d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          className="d-flex justify-content-center align-items-center"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0,0,0,0.5)",
+            zIndex: 1050,
+            overflowY: "auto",
+            padding: "1rem",
+          }}
         >
-          <div className="modal-dialog modal-lg modal-dialog-scrollable">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {editingLeaveType ? "Edit Leave Type" : "Add New Leave Type"}
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => {
-                    setShowLeaveTypeModal(false);
-                    setEditingLeaveType(null);
-                  }}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <label className="form-label">Leave Type Name *</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={leaveTypeForm.name}
-                      onChange={(e) =>
-                        setLeaveTypeForm({ ...leaveTypeForm, name: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Code *</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={leaveTypeForm.code}
-                      onChange={(e) =>
-                        setLeaveTypeForm({ ...leaveTypeForm, code: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Accrual Type</label>
-                    <select
-                      className="form-select"
-                      value={leaveTypeForm.accrualType}
-                      onChange={(e) =>
-                        setLeaveTypeForm({
-                          ...leaveTypeForm,
-                          accrualType: e.target.value,
-                        })
-                      }
-                    >
-                      <option value="monthly">Monthly</option>
-                      <option value="quarterly">Quarterly</option>
-                      <option value="annual">Annual</option>
-                      <option value="on-joining">On Joining</option>
-                    </select>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Accrual Amount</label>
-                    <input
-                      type="number"
-                      step="0.25"
-                      className="form-control"
-                      value={leaveTypeForm.accrualAmount}
-                      onChange={(e) =>
-                        setLeaveTypeForm({
-                          ...leaveTypeForm,
-                          accrualAmount: parseFloat(e.target.value),
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Max Accrual (days)</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      value={leaveTypeForm.maxAccrual}
-                      onChange={(e) =>
-                        setLeaveTypeForm({
-                          ...leaveTypeForm,
-                          maxAccrual: parseInt(e.target.value),
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="col-12">
-                    <h6 className="mt-3 mb-2">Carry Forward Rules</h6>
-                    <div className="row g-3">
-                      <div className="col-md-4">
-                        <div className="form-check form-switch">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={leaveTypeForm.carryForward.enabled}
-                            onChange={(e) =>
-                              setLeaveTypeForm({
-                                ...leaveTypeForm,
-                                carryForward: {
-                                  ...leaveTypeForm.carryForward,
-                                  enabled: e.target.checked,
-                                },
-                              })
-                            }
-                          />
-                          <label className="form-check-label">Enable Carry Forward</label>
-                        </div>
-                      </div>
-                      {leaveTypeForm.carryForward.enabled && (
-                        <>
-                          <div className="col-md-4">
-                            <label className="form-label">Max Days</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              value={leaveTypeForm.carryForward.maxDays}
-                              onChange={(e) =>
-                                setLeaveTypeForm({
-                                  ...leaveTypeForm,
-                                  carryForward: {
-                                    ...leaveTypeForm.carryForward,
-                                    maxDays: parseInt(e.target.value),
-                                  },
-                                })
-                              }
-                            />
-                          </div>
-                          <div className="col-md-4">
-                            <label className="form-label">Expiry (months)</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              value={leaveTypeForm.carryForward.expiryMonths}
-                              onChange={(e) =>
-                                setLeaveTypeForm({
-                                  ...leaveTypeForm,
-                                  carryForward: {
-                                    ...leaveTypeForm.carryForward,
-                                    expiryMonths: parseInt(e.target.value),
-                                  },
-                                })
-                              }
-                            />
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <div className="col-12">
-                    <h6 className="mt-3 mb-2">Encashment Rules</h6>
-                    <div className="row g-3">
-                      <div className="col-md-4">
-                        <div className="form-check form-switch">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={leaveTypeForm.encashment.enabled}
-                            onChange={(e) =>
-                              setLeaveTypeForm({
-                                ...leaveTypeForm,
-                                encashment: {
-                                  ...leaveTypeForm.encashment,
-                                  enabled: e.target.checked,
-                                },
-                              })
-                            }
-                          />
-                          <label className="form-check-label">Enable Encashment</label>
-                        </div>
-                      </div>
-                      {leaveTypeForm.encashment.enabled && (
-                        <>
-                          <div className="col-md-4">
-                            <label className="form-label">Max Days</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              value={leaveTypeForm.encashment.maxDays}
-                              onChange={(e) =>
-                                setLeaveTypeForm({
-                                  ...leaveTypeForm,
-                                  encashment: {
-                                    ...leaveTypeForm.encashment,
-                                    maxDays: parseInt(e.target.value),
-                                  },
-                                })
-                              }
-                            />
-                          </div>
-                          <div className="col-md-4">
-                            <label className="form-label">Rate (multiplier)</label>
-                            <input
-                              type="number"
-                              step="0.1"
-                              className="form-control"
-                              value={leaveTypeForm.encashment.rate}
-                              onChange={(e) =>
-                                setLeaveTypeForm({
-                                  ...leaveTypeForm,
-                                  encashment: {
-                                    ...leaveTypeForm.encashment,
-                                    rate: parseFloat(e.target.value),
-                                  },
-                                })
-                              }
-                            />
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <div className="col-12">
-                    <h6 className="mt-3 mb-2">Other Rules</h6>
-                    <div className="row g-3">
-                      <div className="col-md-4">
-                        <div className="form-check form-switch">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={leaveTypeForm.isPaid}
-                            onChange={(e) =>
-                              setLeaveTypeForm({
-                                ...leaveTypeForm,
-                                isPaid: e.target.checked,
-                              })
-                            }
-                          />
-                          <label className="form-check-label">Paid Leave</label>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="form-check form-switch">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={leaveTypeForm.allowNegative}
-                            onChange={(e) =>
-                              setLeaveTypeForm({
-                                ...leaveTypeForm,
-                                allowNegative: e.target.checked,
-                              })
-                            }
-                          />
-                          <label className="form-check-label">Allow Negative Balance</label>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="form-check form-switch">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={leaveTypeForm.probationApplicable}
-                            onChange={(e) =>
-                              setLeaveTypeForm({
-                                ...leaveTypeForm,
-                                probationApplicable: e.target.checked,
-                              })
-                            }
-                          />
-                          <label className="form-check-label">Probation Applicable</label>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="form-check form-switch">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={leaveTypeForm.sandwichLeave}
-                            onChange={(e) =>
-                              setLeaveTypeForm({
-                                ...leaveTypeForm,
-                                sandwichLeave: e.target.checked,
-                              })
-                            }
-                          />
-                          <label className="form-check-label">Sandwich Leave</label>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="form-check form-switch">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={leaveTypeForm.allowBackdated}
-                            onChange={(e) =>
-                              setLeaveTypeForm({
-                                ...leaveTypeForm,
-                                allowBackdated: e.target.checked,
-                              })
-                            }
-                          />
-                          <label className="form-check-label">Allow Backdated</label>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="form-check form-switch">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={leaveTypeForm.allowHalfDay}
-                            onChange={(e) =>
-                              setLeaveTypeForm({
-                                ...leaveTypeForm,
-                                allowHalfDay: e.target.checked,
-                              })
-                            }
-                          />
-                          <label className="form-check-label">Allow Half Day</label>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="form-check form-switch">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={leaveTypeForm.allowShortLeave}
-                            onChange={(e) =>
-                              setLeaveTypeForm({
-                                ...leaveTypeForm,
-                                allowShortLeave: e.target.checked,
-                              })
-                            }
-                          />
-                          <label className="form-check-label">Allow Short Leave</label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-12">
-                    <h6 className="mt-3 mb-2">Proration Rules</h6>
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <div className="form-check form-switch">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={leaveTypeForm.proration?.enabled !== false}
-                            onChange={(e) =>
-                              setLeaveTypeForm({
-                                ...leaveTypeForm,
-                                proration: {
-                                  ...leaveTypeForm.proration,
-                                  enabled: e.target.checked,
-                                  method: leaveTypeForm.proration?.method || "proportional",
-                                },
-                              })
-                            }
-                          />
-                          <label className="form-check-label">Enable Proration</label>
-                        </div>
-                        <small className="text-muted">Apply proration for mid-year joiners and exits</small>
-                      </div>
-                      {leaveTypeForm.proration?.enabled !== false && (
-                        <div className="col-md-6">
-                          <label className="form-label">Proration Method</label>
-                          <select
-                            className="form-select"
-                            value={leaveTypeForm.proration?.method || "proportional"}
-                            onChange={(e) =>
-                              setLeaveTypeForm({
-                                ...leaveTypeForm,
-                                proration: {
-                                  ...leaveTypeForm.proration,
-                                  method: e.target.value,
-                                },
-                              })
-                            }
-                          >
-                            <option value="proportional">Proportional (based on days worked)</option>
-                            <option value="full">Full (no proration)</option>
-                            <option value="none">None (no accrual for mid-year)</option>
-                          </select>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="col-12">
-                    <h6 className="mt-3 mb-2">Approval Workflow</h6>
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <label className="form-label">Number of Approval Levels</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          min="1"
-                          max="5"
-                          value={leaveTypeForm.approvalWorkflow?.levels || 1}
-                          onChange={(e) => {
-                            const levels = parseInt(e.target.value) || 1;
-                            const approvers = [];
-                            for (let i = 1; i <= levels; i++) {
-                              approvers.push({
-                                level: i,
-                                role: i === 1 ? "Manager" : i === 2 ? "HR" : "Director",
-                                required: true,
-                              });
-                            }
-                            setLeaveTypeForm({
-                              ...leaveTypeForm,
-                              approvalWorkflow: {
-                                levels,
-                                approvers,
-                              },
-                            });
-                          }}
-                        />
-                        <small className="text-muted">Number of approval levels required</small>
-                      </div>
-                    </div>
-                    {leaveTypeForm.approvalWorkflow?.approvers?.map((approver, idx) => (
-                      <div key={idx} className="row g-3 mt-2">
-                        <div className="col-md-6">
-                          <label className="form-label">Level {approver.level} Approver Role</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={approver.role}
-                            onChange={(e) => {
-                              const approvers = [...(leaveTypeForm.approvalWorkflow?.approvers || [])];
-                              approvers[idx].role = e.target.value;
-                              setLeaveTypeForm({
-                                ...leaveTypeForm,
-                                approvalWorkflow: {
-                                  ...leaveTypeForm.approvalWorkflow,
-                                  approvers,
-                                },
-                              });
-                            }}
-                            placeholder="e.g., Manager, HR, Director"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <div className="form-check form-switch mt-4">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              checked={approver.required !== false}
-                              onChange={(e) => {
-                                const approvers = [...(leaveTypeForm.approvalWorkflow?.approvers || [])];
-                                approvers[idx].required = e.target.checked;
-                                setLeaveTypeForm({
-                                  ...leaveTypeForm,
-                                  approvalWorkflow: {
-                                    ...leaveTypeForm.approvalWorkflow,
-                                    approvers,
-                                  },
-                                });
-                              }}
-                            />
-                            <label className="form-check-label">Required</label>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="col-12">
-                    <label className="form-label">Description</label>
-                    <textarea
-                      className="form-control"
-                      rows="3"
-                      value={leaveTypeForm.description}
-                      onChange={(e) =>
-                        setLeaveTypeForm({
-                          ...leaveTypeForm,
-                          description: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
+          {/* Smaller Modal Card */}
+          <div className="modal-content shadow-lg rounded-4 w-100" style={{ maxWidth: "500px" }}>
+            {/* Header */}
+            <div className="modal-header bg-light">
+              <h5 className="modal-title">
+                {editingLeaveType ? "Edit Leave Type" : "Add New Leave Type"}
+              </h5>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => {
+                  setShowLeaveTypeModal(false);
+                  setEditingLeaveType(null);
+                }}
+              ></button>
+            </div>
+
+            {/* Body */}
+            <div className="modal-body p-3" style={{ maxHeight: "80vh", overflowY: "auto" }}>
+              <div className="row g-3">
+
+                {/* Leave Type Name */}
+                <div className="col-12">
+                  <label className="form-label fw-semibold">
+                    Leave Type Name <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={leaveTypeForm.name}
+                    onChange={(e) =>
+                      setLeaveTypeForm({ ...leaveTypeForm, name: e.target.value })
+                    }
+                  />
                 </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setShowLeaveTypeModal(false);
-                    setEditingLeaveType(null);
-                  }}
-                >
-                  Cancel
-                </button>
-               <button
-  type="button"
-  className="btn btn-primary d-flex align-items-center"
-  onClick={handleAddLeaveType}
->
-  <Save size={16} className="me-2" />
-  <span>
-    {editingLeaveType ? "Update" : "Save"} Leave Type
-  </span>
-</button>
+
+                {/* Code */}
+                <div className="col-12">
+                  <label className="form-label fw-semibold">
+                    Code <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={leaveTypeForm.code}
+                    onChange={(e) =>
+                      setLeaveTypeForm({ ...leaveTypeForm, code: e.target.value })
+                    }
+                  />
+                </div>
+
+                {/* Accrual Type */}
+                <div className="col-12">
+                  <label className="form-label fw-semibold">Accrual Type</label>
+                  <select
+                    className="form-select"
+                    value={leaveTypeForm.accrualType}
+                    onChange={(e) =>
+                      setLeaveTypeForm({
+                        ...leaveTypeForm,
+                        accrualType: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="annual">Annual</option>
+                    <option value="on-joining">On Joining</option>
+                  </select>
+                </div>
+
+                {/* Accrual Amount */}
+                <div className="col-12">
+                  <label className="form-label fw-semibold">Accrual Amount</label>
+                  <input
+                    type="number"
+                    step="0.25"
+                    className="form-control"
+                    value={leaveTypeForm.accrualAmount}
+                    onChange={(e) =>
+                      setLeaveTypeForm({
+                        ...leaveTypeForm,
+                        accrualAmount: Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+
+                {/* Max Accrual */}
+                <div className="col-12">
+                  <label className="form-label fw-semibold">Max Accrual (days)</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={leaveTypeForm.maxAccrual}
+                    onChange={(e) =>
+                      setLeaveTypeForm({
+                        ...leaveTypeForm,
+                        maxAccrual: Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
 
               </div>
+            </div>
+
+
+            {/* Footer */}
+            <div className="modal-footer bg-light">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => {
+                  setShowLeaveTypeModal(false);
+                  setEditingLeaveType(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary d-flex align-items-center"
+                onClick={handleAddLeaveType}
+              >
+                <Save size={16} className="me-2" />
+                <span>{editingLeaveType ? "Update" : "Save"} Leave Type</span>
+              </button>
             </div>
           </div>
         </div>
       )}
+
 
       {/* Leave Application Modal */}
       {showApplicationModal && (
         <div
-          className="modal show d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1050 }}
         >
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">New Leave Application</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowApplicationModal(false)}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <label className="form-label">Employee *</label>
-                    <select
-                      className="form-select"
-                      value={applicationForm.employeeId}
-                      onChange={(e) =>
-                        setApplicationForm({
-                          ...applicationForm,
-                          employeeId: e.target.value,
-                        })
-                      }
-                    >
-                      <option value="">Select employee...</option>
-                      {initialEmployees.map((emp) => (
-                        <option key={emp.id} value={emp.id}>
-                          {emp.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Leave Type *</label>
-                    <select
-                      className="form-select"
-                      value={applicationForm.leaveTypeId}
-                      onChange={(e) =>
-                        setApplicationForm({
-                          ...applicationForm,
-                          leaveTypeId: e.target.value,
-                        })
-                      }
-                    >
-                      <option value="">Select leave type...</option>
-                      {leaveTypes.map((lt) => (
-                        <option key={lt.id} value={lt.id}>
-                          {lt.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Start Date *</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      value={applicationForm.startDate}
-                      onChange={(e) =>
-                        setApplicationForm({
-                          ...applicationForm,
-                          startDate: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">End Date</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      value={applicationForm.endDate}
-                      onChange={(e) =>
-                        setApplicationForm({
-                          ...applicationForm,
-                          endDate: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  {applicationForm.leaveTypeId &&
-                    leaveTypes.find((lt) => lt.id === applicationForm.leaveTypeId)
-                      ?.allowHalfDay && (
-                      <div className="col-12">
-                        <div className="form-check form-switch">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={applicationForm.halfDay}
+          <div className="card shadow-lg" style={{ maxWidth: "700px", width: "100%" }}>
+
+            {/* Header */}
+            <div className="card-header d-flex justify-content-between align-items-center border-bottom">
+              <h6 className="mb-0 fw-semibold text-dark">
+                New Leave Application
+              </h6>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => setShowApplicationModal(false)}
+              />
+            </div>
+
+            {/* Body */}
+            <div className="card-body">
+              <div className="row g-3">
+
+                <div className="col-md-6">
+                  <label className="form-label fw-medium">
+                    Employee <span className="text-danger">*</span>
+                  </label>
+                  <select
+                    className="form-select fs-6"
+                    value={applicationForm.employeeId}
+                    onChange={(e) =>
+                      setApplicationForm({ ...applicationForm, employeeId: e.target.value })
+                    }
+                  >
+                    <option value="">Select employee...</option>
+                    {initialEmployees.map((emp) => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-medium">
+                    Leave Type <span className="text-danger">*</span>
+                  </label>
+                  <select
+                    className="form-select fs-6"
+                    value={applicationForm.leaveTypeId}
+                    onChange={(e) =>
+                      setApplicationForm({ ...applicationForm, leaveTypeId: e.target.value })
+                    }
+                  >
+                    <option value="">Select leave type...</option>
+                    {leaveTypes.map((lt) => (
+                      <option key={lt.id} value={lt.id}>
+                        {lt.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-medium">
+                    Start Date <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    className="form-control fs-6"
+                    value={applicationForm.startDate}
+                    onChange={(e) =>
+                      setApplicationForm({ ...applicationForm, startDate: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-medium">End Date</label>
+                  <input
+                    type="date"
+                    className="form-control fs-6"
+                    value={applicationForm.endDate}
+                    onChange={(e) =>
+                      setApplicationForm({ ...applicationForm, endDate: e.target.value })
+                    }
+                  />
+                </div>
+
+                {applicationForm.leaveTypeId &&
+                  leaveTypes.find((lt) => lt.id === applicationForm.leaveTypeId)?.allowHalfDay && (
+                    <div className="col-12">
+                      <div className="form-check form-switch">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          checked={applicationForm.halfDay}
+                          onChange={(e) =>
+                            setApplicationForm({ ...applicationForm, halfDay: e.target.checked })
+                          }
+                        />
+                        <label className="form-check-label fw-medium">
+                          Half Day Leave
+                        </label>
+                      </div>
+
+                      {applicationForm.halfDay && (
+                        <div className="mt-2">
+                          <select
+                            className="form-select fs-6"
+                            value={applicationForm.halfDayType}
                             onChange={(e) =>
                               setApplicationForm({
                                 ...applicationForm,
-                                halfDay: e.target.checked,
+                                halfDayType: e.target.value,
+                              })
+                            }
+                          >
+                            <option value="first">First Half</option>
+                            <option value="second">Second Half</option>
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                <div className="col-12">
+                  <label className="form-label fw-medium">
+                    Reason <span className="text-danger">*</span>
+                  </label>
+                  <textarea
+                    className="form-control fs-6"
+                    rows="3"
+                    value={applicationForm.reason}
+                    onChange={(e) =>
+                      setApplicationForm({ ...applicationForm, reason: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="col-12">
+                  <label className="form-label fw-medium text-muted">
+                    Attachment <small>(Medical Certificate, etc.)</small>
+                  </label>
+                  <input
+                    type="file"
+                    className="form-control fs-6"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) =>
+                      setApplicationForm({
+                        ...applicationForm,
+                        attachment: e.target.files[0],
+                      })
+                    }
+                  />
+                  {applicationForm.attachment && (
+                    <small className="text-muted mt-1 d-block">
+                      Selected: {applicationForm.attachment.name}
+                    </small>
+                  )}
+                </div>
+
+                <div className="col-12">
+                  <div className="form-check form-switch">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={applicationForm.isBulk}
+                      onChange={(e) =>
+                        setApplicationForm({ ...applicationForm, isBulk: e.target.checked })
+                      }
+                    />
+                    <label className="form-check-label fw-medium text-muted">
+                      Bulk Leave Application (Team Outing)
+                    </label>
+                  </div>
+
+                  {applicationForm.isBulk && (
+                    <div className="mt-2 border rounded p-2" style={{ maxHeight: "150px", overflowY: "auto" }}>
+                      {initialEmployees.map((emp) => (
+                        <div key={emp.id} className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={applicationForm.bulkEmployees.includes(emp.id)}
+                            onChange={(e) =>
+                              setApplicationForm({
+                                ...applicationForm,
+                                bulkEmployees: e.target.checked
+                                  ? [...applicationForm.bulkEmployees, emp.id]
+                                  : applicationForm.bulkEmployees.filter((id) => id !== emp.id),
                               })
                             }
                           />
-                          <label className="form-check-label">Half Day Leave</label>
+                          <label className="form-check-label">{emp.name}</label>
                         </div>
-                        {applicationForm.halfDay && (
-                          <div className="mt-2">
-                            <select
-                              className="form-select"
-                              value={applicationForm.halfDayType}
-                              onChange={(e) =>
-                                setApplicationForm({
-                                  ...applicationForm,
-                                  halfDayType: e.target.value,
-                                })
-                              }
-                            >
-                              <option value="first">First Half</option>
-                              <option value="second">Second Half</option>
-                            </select>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  <div className="col-12">
-                    <label className="form-label">Reason *</label>
-                    <textarea
-                      className="form-control"
-                      rows="3"
-                      value={applicationForm.reason}
-                      onChange={(e) =>
-                        setApplicationForm({
-                          ...applicationForm,
-                          reason: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="col-12">
-                    <label className="form-label">Attachment (Medical Certificate, etc.)</label>
-                    <input
-                      type="file"
-                      className="form-control"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={(e) =>
-                        setApplicationForm({
-                          ...applicationForm,
-                          attachment: e.target.files[0],
-                        })
-                      }
-                    />
-                    {applicationForm.attachment && (
-                      <small className="text-muted mt-1 d-block">
-                        Selected: {applicationForm.attachment.name}
-                      </small>
-                    )}
-                  </div>
-                  <div className="col-12">
-                    <div className="form-check form-switch">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        checked={applicationForm.isBulk}
-                        onChange={(e) =>
-                          setApplicationForm({
-                            ...applicationForm,
-                            isBulk: e.target.checked,
-                          })
-                        }
-                      />
-                      <label className="form-check-label">Bulk Leave Application (Team Outing)</label>
+                      ))}
                     </div>
-                    {applicationForm.isBulk && (
-                      <div className="mt-2">
-                        <label className="form-label">Select Employees</label>
-                        <div style={{ maxHeight: "150px", overflowY: "auto", border: "1px solid #dee2e6", borderRadius: "0.375rem", padding: "0.5rem" }}>
-                          {initialEmployees.map((emp) => (
-                            <div key={emp.id} className="form-check">
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                                checked={applicationForm.bulkEmployees.includes(emp.id)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setApplicationForm({
-                                      ...applicationForm,
-                                      bulkEmployees: [...applicationForm.bulkEmployees, emp.id],
-                                    });
-                                  } else {
-                                    setApplicationForm({
-                                      ...applicationForm,
-                                      bulkEmployees: applicationForm.bulkEmployees.filter(
-                                        (id) => id !== emp.id
-                                      ),
-                                    });
-                                  }
-                                }}
-                              />
-                              <label className="form-check-label">{emp.name}</label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowApplicationModal(false)}
-                >
-                  Cancel
-                </button>
-              <button
-  type="button"
-  className="btn btn-primary d-inline-flex align-items-center gap-2"
-  onClick={handleSubmitApplication}
->
-  <Send size={16} />
-  <span>Submit Application</span>
-</button>
 
               </div>
             </div>
+
+            {/* Footer */}
+            <div className="card-footer d-flex justify-content-end gap-2 border-top">
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={() => setShowApplicationModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary d-inline-flex align-items-center gap-2"
+                onClick={handleSubmitApplication}
+              >
+                <Send size={16} />
+                Submit Application
+              </button>
+            </div>
+
           </div>
         </div>
+
       )}
+
 
       {/* Leave Balance Modal */}
       {showBalanceModal && (
@@ -3336,135 +3020,78 @@ const filteredApplications = leaveApplications.filter((app) => {
           className="modal show d-block"
           style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
         >
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Add/Adjust Leave Balance</h5>
+          <div className="modal-dialog modal-md modal-dialog-centered">
+            <div className="modal-content shadow">
+              <div className="modal-header border-bottom">
+                <h6 className="modal-title fw-semibold text-dark d-flex align-items-center">
+                  Adjust Leave Balance
+                </h6>
+
                 <button
                   type="button"
                   className="btn-close"
                   onClick={() => setShowBalanceModal(false)}
-                ></button>
+                />
               </div>
               <div className="modal-body">
                 <div className="row g-3">
+
                   <div className="col-12">
-                    <label className="form-label">Employee *</label>
-                    <select
-                      className="form-select"
-                      value={balanceForm.employeeId}
-                      onChange={(e) =>
-                        setBalanceForm({
-                          ...balanceForm,
-                          employeeId: e.target.value,
-                        })
-                      }
-                    >
-                      <option value="">Select employee...</option>
-                      {initialEmployees.map((emp) => (
-                        <option key={emp.id} value={emp.id}>
-                          {emp.name}
-                        </option>
-                      ))}
+                    <label className="form-label fw-medium">
+                      Employee <span className="text-danger">*</span>
+                    </label>
+                    <select className="form-select fs-6">
+                      ...
                     </select>
                   </div>
+
                   <div className="col-12">
-                    <label className="form-label">Leave Type *</label>
-                    <select
-                      className="form-select"
-                      value={balanceForm.leaveTypeId}
-                      onChange={(e) =>
-                        setBalanceForm({
-                          ...balanceForm,
-                          leaveTypeId: e.target.value,
-                        })
-                      }
-                    >
-                      <option value="">Select leave type...</option>
-                      {leaveTypes.map((lt) => (
-                        <option key={lt.id} value={lt.id}>
-                          {lt.name}
-                        </option>
-                      ))}
+                    <label className="form-label fw-medium">
+                      Leave Type <span className="text-danger">*</span>
+                    </label>
+                    <select className="form-select fs-6">
+                      ...
                     </select>
                   </div>
+
                   <div className="col-12">
-                    <label className="form-label">Opening Balance (for new joiners)</label>
-                    <input
-                      type="number"
-                      step="0.5"
-                      className="form-control"
-                      value={balanceForm.openingBalance}
-                      onChange={(e) =>
-                        setBalanceForm({
-                          ...balanceForm,
-                          openingBalance: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                    />
+                    <label className="form-label fw-medium text-muted">
+                      Opening Balance <small>(for new joiners)</small>
+                    </label>
+                    <input className="form-control fs-6" type="number" />
                   </div>
+
                   <div className="col-12">
-                    <label className="form-label">Adjustment Type</label>
-                    <select
-                      className="form-select"
-                      value={balanceForm.adjustmentType}
-                      onChange={(e) =>
-                        setBalanceForm({
-                          ...balanceForm,
-                          adjustmentType: e.target.value,
-                        })
-                      }
-                    >
-                      <option value="credit">Credit (Add Leave)</option>
-                      <option value="debit">Debit (Deduct Leave)</option>
+                    <label className="form-label fw-medium">Adjustment Type</label>
+                    <select className="form-select fs-6">
+                      ...
                     </select>
                   </div>
+
                   <div className="col-12">
-                    <label className="form-label">Adjustment Amount</label>
-                    <input
-                      type="number"
-                      step="0.5"
-                      className="form-control"
-                      value={balanceForm.adjustmentAmount}
-                      onChange={(e) =>
-                        setBalanceForm({
-                          ...balanceForm,
-                          adjustmentAmount: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                    />
+                    <label className="form-label fw-medium">Adjustment Amount</label>
+                    <input className="form-control fs-6" type="number" />
                   </div>
+
                   <div className="col-12">
-                    <label className="form-label">Effective Date</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      value={balanceForm.effectiveDate}
-                      onChange={(e) =>
-                        setBalanceForm({
-                          ...balanceForm,
-                          effectiveDate: e.target.value,
-                        })
-                      }
-                    />
+                    <label className="form-label fw-medium">Effective Date</label>
+                    <input className="form-control fs-6" type="date" />
                   </div>
+
                   <div className="col-12">
-                    <label className="form-label">Reason *</label>
+                    <label className="form-label fw-medium">
+                      Reason <span className="text-danger">*</span>
+                    </label>
                     <textarea
-                      className="form-control"
+                      className="form-control fs-6"
                       rows="3"
-                      value={balanceForm.reason}
-                      onChange={(e) =>
-                        setBalanceForm({
-                          ...balanceForm,
-                          reason: e.target.value,
-                        })
-                      }
                       placeholder="Reason for adjustment (e.g., Opening balance for mid-year joiner, Leave lapse, etc.)"
                     />
                   </div>
+
                 </div>
               </div>
+
               <div className="modal-footer">
                 <button
                   type="button"
@@ -3473,14 +3100,14 @@ const filteredApplications = leaveApplications.filter((app) => {
                 >
                   Cancel
                 </button>
-               <button
-  type="button"
-  className="btn btn-primary d-inline-flex align-items-center gap-2"
-  onClick={handleAddBalance}
->
-  <Save size={16} />
-  <span>Save Balance</span>
-</button>
+                <button
+                  type="button"
+                  className="btn btn-primary d-inline-flex align-items-center gap-2"
+                  onClick={handleAddBalance}
+                >
+                  <Save size={16} />
+                  <span>Save Balance</span>
+                </button>
 
               </div>
             </div>
@@ -3632,14 +3259,14 @@ const filteredApplications = leaveApplications.filter((app) => {
                 >
                   Cancel
                 </button>
-              <button
-  type="button"
-  className="btn btn-primary d-inline-flex align-items-center gap-2"
-  onClick={handleAddCompOff}
->
-  <Save size={16} />
-  <span>Add Comp-Off</span>
-</button>
+                <button
+                  type="button"
+                  className="btn btn-primary d-inline-flex align-items-center gap-2"
+                  onClick={handleAddCompOff}
+                >
+                  <Save size={16} />
+                  <span>Add Comp-Off</span>
+                </button>
 
               </div>
             </div>
@@ -3651,4 +3278,3 @@ const filteredApplications = leaveApplications.filter((app) => {
 };
 
 export default LeaveManagement;
-           
