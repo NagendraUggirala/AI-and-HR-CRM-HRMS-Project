@@ -1,28 +1,24 @@
 from pydantic_settings import BaseSettings
+from pydantic import Field
 
 
 class Settings(BaseSettings):
-    # App
     PROJECT_NAME: str = "hrms-backend"
+    DEBUG: bool = False
 
-    # Database
     DATABASE_URL: str
+    SECRET_KEY: str
 
-    # SMTP / Email
     SMTP_HOST: str
     SMTP_PORT: int
     SMTP_USERNAME: str
     SMTP_PASSWORD: str
     SMTP_FROM: str
 
-    # Admin
     ADMIN_USERNAME: str
     ADMIN_PASSWORD: str
 
-    # Business
-    SCORE_THRESHOLD: float
-
-    # OpenAI
+    SCORE_THRESHOLD: float = Field(default=25.0)
     OPENAI_API_KEY: str
 
     class Config:

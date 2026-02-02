@@ -95,6 +95,7 @@ from routers.HR_Automation.attendance.routers import attendance, leave
 from routers.AI_Interview_Bot.routes import interviews
 from routers.CRM import contacts, company, deals, leads, pipelines, activities, analytics,projects, clients, tasks
 from routers.onboarding.admin_candidates import router as onboarding_candidate_router
+from routers.onboarding import bank_details, present_address, statutory, onboarding, approval, employee, family_details, documents, personal_info, address
 
 
 
@@ -210,7 +211,16 @@ app.include_router(tasks.router)
 # Onboarding Routes
 
 app.include_router(onboarding_candidate_router, prefix="/admin_candidates", tags=["Onboarding Candidates"])
-
+app.include_router(bank_details.router)
+app.include_router(present_address.router)
+app.include_router(statutory.router)
+app.include_router(onboarding.router)
+app.include_router(approval.router)
+app.include_router(employee.router)
+app.include_router(family_details.router)
+app.include_router(documents.router)
+app.include_router(personal_info.router)
+app.include_router(address.router)
  
 
 # STATIC FILES

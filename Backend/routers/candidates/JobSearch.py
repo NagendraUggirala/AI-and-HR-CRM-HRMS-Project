@@ -1,35 +1,59 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-import model.models
-from core.database import SessionLocal
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+
+from core.database import get_db
 from schema import schemas
+import model.models
+
+router = APIRouter(prefix="/job-search", tags=["JobSearch"])
 
 
-router = APIRouter()
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
+# =====================================================
+# CREATE JOB SEARCH
+# =====================================================
 @router.post("/", response_model=schemas.JobSearch)
-def create_jobsearch(job: schemas.JobSearchCreate, db: Session = Depends(get_db)):
-    db_job = model.models.JobSearch(title=job.title, company=job.company, location=job.location)
+async def create_jobsearch(
+    job: schemas.JobSearchCreate,
+    db: AsyncSession = Depends(get_db),
+):
+    db_job = JobSearch(
+        title=job.title,
+        company=job.company,
+        location=job.location,
+    )
+
     db.add(db_job)
-    db.commit()
-    db.refresh(db_job)
+    await db.commit()
+    await db.refresh(db_job)
+
     return db_job
 
-@router.get("/", response_model=list[schemas.JobSearch])
-def read_jobsearch(db: Session = Depends(get_db)):
-    return db.query(model.models.JobSearch).all()
 
+# =====================================================
+# READ JOB SEARCH LIST
+# =====================================================
+@router.get("/", response_model=list[schemas.JobSearch])
+async def read_jobsearch(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(JobSearch))
+    return result.scalars().all()
+
+
+# =====================================================
+# DELETE JOB SEARCH
+# =====================================================
 @router.delete("/{job_id}", status_code=204)
-def delete_jobsearch(job_id: int, db: Session = Depends(get_db)):
-    job = db.query(model.models.JobSearch).filter(model.models.JobSearch.id == job_id).first()
+async def delete_jobsearch(
+    job_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(JobSearch).where(JobSearch.id == job_id)
+    )
+    job = result.scalars().first()
+
     if not job:
         raise HTTPException(status_code=404, detail="JobSearch item not found")
-    db.delete(job)
-    db.commit()
+
+    await db.delete(job)
+    await db.commit()

@@ -6,7 +6,7 @@ from core.database import Base
 
 
 class Candidate(Base):
-    __tablename__ = "onboarding_forms"
+    __tablename__ = "onboarding_forms_candidates"
 
     id = Column(Integer, primary_key=True, index=True)
 
@@ -32,3 +32,4 @@ class Candidate(Base):
         default=datetime.utcnow,
         onupdate=datetime.utcnow
     )
+   

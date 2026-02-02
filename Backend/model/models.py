@@ -4,7 +4,7 @@ from datetime import datetime, date
 from typing import Optional, List
 
 from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import Column, Integer, String, Text, Date, ForeignKey, JSON as SA_JSON, Enum as SAEnum,Float, DateTime
+from sqlalchemy import Column, Integer, String, Text, Date, ForeignKey, JSON as SA_JSON, Enum as SAEnum,Float, DateTime,Boolean
 from sqlalchemy.orm import relationship
 from core.database import Base, engine
 
@@ -313,3 +313,12 @@ class SavedJob(SQLModel, table=True):
 
     user: Optional["User"] = Relationship()
     job: Optional["Job"] = Relationship()
+
+
+class Notifications(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    message = Column(String, nullable=False)
+    is_read = Column(Boolean, default=False)
+
