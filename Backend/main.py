@@ -17,51 +17,51 @@ app = FastAPI(title="AI Recruitment HR Platform")
  
 # ADMIN BASIC AUTH MIDDLEWARE
 
-@app.middleware("http")
-async def admin_protect(request: Request, call_next):
+# @app.middleware("http")
+# async def admin_protect(request: Request, call_next):
  
-    if request.url.path.startswith("/admin"):
-        auth = request.headers.get("Authorization")
+#     if request.url.path.startswith("/admin"):
+#         auth = request.headers.get("Authorization")
  
-        if not auth or not auth.startswith("Basic "):
-            return Response(
-                status_code=401,
-                headers={
-                    "WWW-Authenticate": 'Basic realm="AdminPanel"',
-                    "Cache-Control": "no-store"
-                },
-                content="Authentication required"
-            )
+#         if not auth or not auth.startswith("Basic "):
+#             return Response(
+#                 status_code=401,
+#                 headers={
+#                     "WWW-Authenticate": 'Basic realm="AdminPanel"',
+#                     "Cache-Control": "no-store"
+#                 },
+#                 content="Authentication required"
+#             )
  
-        try:
-            encoded = auth.split(" ")[1]
-            decoded = base64.b64decode(encoded).decode()
-            username, password = decoded.split(":", 1)
+#         try:
+#             encoded = auth.split(" ")[1]
+#             decoded = base64.b64decode(encoded).decode()
+#             username, password = decoded.split(":", 1)
  
-            ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
-            ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+#             ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
+#             ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
  
-            if username != ADMIN_USERNAME or password != ADMIN_PASSWORD:
-                return Response(
-                    status_code=401,
-                    headers={
-                        "WWW-Authenticate": 'Basic realm="AdminPanel"',
-                        "Cache-Control": "no-store"
-                    },
-                    content="Invalid username or password"
-                )
+#             if username != ADMIN_USERNAME or password != ADMIN_PASSWORD:
+#                 return Response(
+#                     status_code=401,
+#                     headers={
+#                         "WWW-Authenticate": 'Basic realm="AdminPanel"',
+#                         "Cache-Control": "no-store"
+#                     },
+#                     content="Invalid username or password"
+#                 )
  
-        except Exception:
-            return Response(
-                status_code=401,
-                headers={
-                    "WWW-Authenticate": 'Basic realm="AdminPanel"',
-                    "Cache-Control": "no-store"
-                },
-                content="Invalid authentication format"
-            )
+#         except Exception:
+#             return Response(
+#                 status_code=401,
+#                 headers={
+#                     "WWW-Authenticate": 'Basic realm="AdminPanel"',
+#                     "Cache-Control": "no-store"
+#                 },
+#                 content="Invalid authentication format"
+#             )
  
-    return await call_next(request)
+#     return await call_next(request)
  
  
 
@@ -97,6 +97,7 @@ from routers.CRM import contacts, company, deals, leads, pipelines, activities, 
 from routers.onboarding.admin_candidates import router as onboarding_candidate_router
 from routers.onboarding import bank_details, present_address, statutory, onboarding, approval, employee, family_details, documents, personal_info, address
 from routers.HR_Operations.assets import router as assets_router
+from routers.Company_Settings import currency, financial_year, localization, policy,company_profile
 
 
 
@@ -225,6 +226,14 @@ app.include_router(address.router)
 
 #HR Operations - Assets Management
 app.include_router(assets_router, prefix="/assets", tags=["Assets"])
+
+# Company Settings - Currency Management
+app.include_router(currency.router)
+app.include_router(financial_year.router)
+app.include_router(localization.router)
+app.include_router(policy.router)
+app.include_router(company_profile.router)
+
  
 
 # STATIC FILES

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from sqlmodel import Session, select
+from sqlalchemy.orm import Session
+from sqlalchemy import select
 from pydantic import BaseModel, EmailStr
 from typing import Optional, Literal, List
 from passlib.context import CryptContext
@@ -85,8 +86,12 @@ def require_roles(allowed_roles: List[str]):
 # ---------------- SIGNUP ----------------
 @router.post("/signup", status_code=201)
 def signup(payload: SignupRequest, db: Session = Depends(get_db)):
-    if db.exec(select(User).where(User.email == payload.email)).first():
-        raise HTTPException(409, "Email already registered")
+    existing_user = db.execute(
+        select(User).where(User.email == payload.email)
+    ).scalar_one_or_none()
+
+    if existing_user:
+        raise HTTPException(status_code=409, detail="Email already registered")
 
     user = User(
         name=payload.name,
@@ -95,7 +100,7 @@ def signup(payload: SignupRequest, db: Session = Depends(get_db)):
         role=payload.role,
         company_name=payload.company_name,
         company_website=payload.company_website,
-        is_active=False  # 🔒 admin approval required
+        is_active=False  # admin approval required
     )
 
     db.add(user)
@@ -107,13 +112,15 @@ def signup(payload: SignupRequest, db: Session = Depends(get_db)):
 # ---------------- LOGIN JSON (Frontend) ----------------
 @router.post("/login-json", response_model=TokenResponse)
 def login_json(payload: LoginJSON, db: Session = Depends(get_db)):
-    user = db.exec(select(User).where(User.email == payload.email)).first()
+    user = db.execute(
+        select(User).where(User.email == payload.email)
+    ).scalar_one_or_none()
 
     if not user or not verify_password(payload.password, user.hashed_password):
-        raise HTTPException(401, "Invalid email or password")
+        raise HTTPException(status_code=401, detail="Invalid email or password")
 
     if not user.is_active:
-        raise HTTPException(403, "Account not activated by admin")
+        raise HTTPException(status_code=403, detail="Account not activated by admin")
 
     token = create_access_token({"sub": str(user.id)})
     return {"access_token": token, "token_type": "bearer"}
@@ -124,13 +131,15 @@ def login_form(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-    user = db.exec(select(User).where(User.email == form_data.username)).first()
+    user = db.execute(
+        select(User).where(User.email == form_data.username)
+    ).scalar_one_or_none()
 
     if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(401, "Invalid email or password")
+        raise HTTPException(status_code=401, detail="Invalid email or password")
 
     if not user.is_active:
-        raise HTTPException(403, "Account not activated by admin")
+        raise HTTPException(status_code=403, detail="Account not activated by admin")
 
     token = create_access_token({"sub": str(user.id)})
     return {"access_token": token, "token_type": "bearer"}

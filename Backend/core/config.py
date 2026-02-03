@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     DATABASE_URL: str
+    UPLOAD_DIR: str = "uploads"
     SECRET_KEY: str
 
     SMTP_HOST: str

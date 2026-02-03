@@ -1,24 +1,37 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlmodel import Session, select, func
+from sqlalchemy.orm import Session
+from sqlalchemy import select, func
 from typing import List, Optional
 from datetime import datetime, timedelta
-from schema import schemas
+
 from core.database import get_db
-from model.models import Job, Candidate, User, Application, CandidateRecord
 from core.dependencies import require_roles
+from model.models import Job, Candidate, User, Application, CandidateRecord
 from schema.schemas import JobCreate, JobRead, JobUpdate, CandidateRead
 
 router = APIRouter()
 
- 
+
+# -------------------- JOBS --------------------
+
 @router.post("/jobs", response_model=JobRead)
-def create_job(payload: JobCreate, db: Session = Depends(get_db), user: User = Depends(require_roles(["recruiter", "admin"]))):
+def create_job(
+    payload: JobCreate,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(["recruiter", "admin"]))
+):
     now = datetime.utcnow()
-    job = Job(**payload.dict(), recruiter_id=user.id, created_at=now, updated_at=now)
+    job = Job(
+        **payload.dict(),
+        recruiter_id=user.id,
+        created_at=now,
+        updated_at=now
+    )
     db.add(job)
     db.commit()
     db.refresh(job)
     return job
+
 
 @router.get("/jobs", response_model=List[JobRead])
 def list_jobs(
@@ -30,51 +43,73 @@ def list_jobs(
     db: Session = Depends(get_db),
     user: User = Depends(require_roles(["recruiter", "admin"]))
 ):
-    statement = select(Job).where(Job.recruiter_id == user.id)
+    stmt = select(Job).where(Job.recruiter_id == user.id)
+
     if status:
-        statement = statement.where(Job.status.ilike(f"%{status}%"))
+        stmt = stmt.where(Job.status.ilike(f"%{status}%"))
     if title:
-        statement = statement.where(Job.title.ilike(f"%{title}%"))
+        stmt = stmt.where(Job.title.ilike(f"%{title}%"))
     if location:
-        statement = statement.where(Job.location.ilike(f"%{location}%"))
+        stmt = stmt.where(Job.location.ilike(f"%{location}%"))
     if start_date:
-        statement = statement.where(Job.created_at >= start_date)
+        stmt = stmt.where(Job.created_at >= start_date)
     if end_date:
-        statement = statement.where(Job.created_at <= end_date)
-    return db.exec(statement).all()
+        stmt = stmt.where(Job.created_at <= end_date)
+
+    return db.execute(stmt).scalars().all()
+
 
 @router.get("/jobs/{job_id}", response_model=JobRead)
-def job_detail(job_id: int, db: Session = Depends(get_db), user: User = Depends(require_roles(["recruiter", "admin"]))):
+def job_detail(
+    job_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(["recruiter", "admin"]))
+):
     job = db.get(Job, job_id)
     if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
+        raise HTTPException(404, "Job not found")
     if job.recruiter_id != user.id and user.role.lower() != "admin":
-        raise HTTPException(status_code=403, detail="Access forbidden")
+        raise HTTPException(403, "Access forbidden")
     return job
 
+
 @router.put("/jobs/{job_id}", response_model=JobRead)
-def update_job(job_id: int, payload: JobUpdate, db: Session = Depends(get_db), user: User = Depends(require_roles(["recruiter", "admin"]))):
+def update_job(
+    job_id: int,
+    payload: JobUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(["recruiter", "admin"]))
+):
     job = db.get(Job, job_id)
     if not job or (job.recruiter_id != user.id and user.role.lower() != "admin"):
-        raise HTTPException(status_code=404, detail="Job not found or unauthorized")
+        raise HTTPException(404, "Job not found or unauthorized")
+
     for key, value in payload.dict(exclude_unset=True).items():
         setattr(job, key, value)
+
     job.updated_at = datetime.utcnow()
-    db.add(job)
     db.commit()
     db.refresh(job)
     return job
 
+
 @router.delete("/jobs/{job_id}")
-def delete_job(job_id: int, db: Session = Depends(get_db), user: User = Depends(require_roles(["recruiter", "admin"]))):
+def delete_job(
+    job_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(["recruiter", "admin"]))
+):
     job = db.get(Job, job_id)
     if not job or (job.recruiter_id != user.id and user.role.lower() != "admin"):
-        raise HTTPException(status_code=404, detail="Job not found or unauthorized")
+        raise HTTPException(404, "Job not found or unauthorized")
+
     db.delete(job)
     db.commit()
     return {"detail": "Job deleted"}
 
- 
+
+# -------------------- CANDIDATES --------------------
+
 @router.get("/candidates")
 def list_candidates(
     skills: Optional[str] = Query(None),
@@ -83,142 +118,130 @@ def list_candidates(
     db: Session = Depends(get_db),
     user: User = Depends(require_roles(["recruiter", "admin"]))
 ):
-    
+    # Get job IDs
     if user.role.lower() == "admin":
-        
-        job_ids = list(db.exec(select(Job.id)).all())
+        job_ids = db.execute(select(Job.id)).scalars().all()
     else:
-        
-        job_ids = list(db.exec(select(Job.id).where(Job.recruiter_id == user.id)).all())
-    
+        job_ids = db.execute(
+            select(Job.id).where(Job.recruiter_id == user.id)
+        ).scalars().all()
+
     if not job_ids:
         return []
-    
-    
-    application_statement = select(Application).where(Application.job_id.in_(job_ids))
+
+    # Applications
+    app_stmt = select(Application).where(Application.job_id.in_(job_ids))
     if job_id:
-        application_statement = application_statement.where(Application.job_id == job_id)
-    applications = db.exec(application_statement).all()
-    
-    
-    candidate_ids = list(set([app.candidate_id for app in applications]))
-    
+        app_stmt = app_stmt.where(Application.job_id == job_id)
+
+    applications = db.execute(app_stmt).scalars().all()
+    candidate_ids = list({app.candidate_id for app in applications})
+
     if not candidate_ids:
         return []
-    
-    
-    candidate_statement = select(Candidate).where(Candidate.id.in_(candidate_ids))
+
+    # Candidates
+    cand_stmt = select(Candidate).where(Candidate.id.in_(candidate_ids))
     if stage:
-        candidate_statement = candidate_statement.where(Candidate.stage == stage)
+        cand_stmt = cand_stmt.where(Candidate.stage == stage)
     if skills:
-        candidate_statement = candidate_statement.where(Candidate.skills.ilike(f"%{skills}%"))
-    
-    candidates = db.exec(candidate_statement).all()
-    candidate_emails = [c.email.lower().strip() for c in candidates if c.email]
-    resume_screened_map = {}
-    if candidate_emails:
-        from sqlalchemy.orm import Session as SQLSession
-        if isinstance(db, SQLSession):
-            candidate_records = db.query(CandidateRecord).filter(
-                func.lower(func.trim(CandidateRecord.candidate_email)).in_(
-                    [email.lower().strip() for email in candidate_emails]
-                )
-            ).all()
-        else:
-            try:
-                candidate_records = db.exec(
-                    select(CandidateRecord).where(
-                        func.lower(func.trim(CandidateRecord.candidate_email)).in_(
-                            [email.lower().strip() for email in candidate_emails]
-                        )
-                    )
-                ).all()
-            except:
-                candidate_records = []
-        for record in candidate_records:
-            if record.candidate_email:
-                email_key = record.candidate_email.lower().strip()
-                resume_screened_map[email_key] = getattr(record, 'resume_screened', 'no')
-    
-    result = []
-    for candidate in candidates:
-        email_key = candidate.email.lower().strip() if candidate.email else None
-        resume_screened = resume_screened_map.get(email_key, 'no') if email_key else 'no'
-        
-        result.append({
-            "id": candidate.id,
-            "name": candidate.name,
-            "email": candidate.email,
-            "role": candidate.role,
-            "skills": candidate.skills,
-            "stage": candidate.stage,
-            "resume_url": candidate.resume_url,
-            "notes": candidate.notes,
-            "recruiter_comments": candidate.recruiter_comments,
-            "resume_screened": resume_screened  
-        })
-    
-    return result
+        cand_stmt = cand_stmt.where(Candidate.skills.ilike(f"%{skills}%"))
 
-@router.get("/candidates/{candidate_id}", response_model=CandidateRead)
-def candidate_detail(candidate_id: int, db: Session = Depends(get_db), user: User = Depends(require_roles(["recruiter", "admin"]))):
-    candidate = db.get(Candidate, candidate_id)
-    if not candidate:
-        raise HTTPException(status_code=404, detail="Candidate not found")
-    
-    if user.role.lower() != "admin":
-        applications = db.exec(select(Application).where(Application.candidate_id == candidate_id)).all()
-        if not applications:
-            raise HTTPException(status_code=403, detail="Access forbidden")
-        job_ids = [app.job_id for app in applications]
-        recruiter_jobs = db.exec(select(Job.id).where(Job.id.in_(job_ids), Job.recruiter_id == user.id)).all()
-        if not recruiter_jobs:
-            raise HTTPException(status_code=403, detail="Access forbidden")
-    
-    return candidate
+    candidates = db.execute(cand_stmt).scalars().all()
 
-#  Pipeline
+    # Resume screened map
+    emails = [c.email.lower().strip() for c in candidates if c.email]
+    screened_map = {}
+
+    if emails:
+        records = db.execute(
+            select(CandidateRecord).where(
+                func.lower(func.trim(CandidateRecord.candidate_email)).in_(emails)
+            )
+        ).scalars().all()
+
+        for r in records:
+            screened_map[r.candidate_email.lower().strip()] = r.resume_screened
+
+    # Response
+    return [
+        {
+            "id": c.id,
+            "name": c.name,
+            "email": c.email,
+            "role": c.role,
+            "skills": c.skills,
+            "stage": c.stage,
+            "resume_url": c.resume_url,
+            "notes": c.notes,
+            "recruiter_comments": c.recruiter_comments,
+            "resume_screened": screened_map.get(
+                c.email.lower().strip(), "no"
+            ) if c.email else "no"
+        }
+        for c in candidates
+    ]
+
+
+# -------------------- PIPELINE --------------------
+
 @router.get("/pipeline/{job_id}")
-def pipeline_view(job_id: int, db: Session = Depends(get_db), user: User = Depends(require_roles(["recruiter", "admin"]))):
+def pipeline_view(
+    job_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(["recruiter", "admin"]))
+):
     job = db.get(Job, job_id)
     if not job or (job.recruiter_id != user.id and user.role.lower() != "admin"):
-        raise HTTPException(status_code=404, detail="Job not found or unauthorized")
-    applications = db.exec(select(Application).where(Application.job_id == job_id)).all()
-    candidate_ids = [app.candidate_id for app in applications]
-    
-    if not candidate_ids:
-        return {}
-    stages = db.exec(
+        raise HTTPException(404, "Job not found or unauthorized")
+
+    rows = db.execute(
         select(Candidate.stage, func.count(Candidate.id))
-        .where(Candidate.id.in_(candidate_ids))
+        .join(Application, Application.candidate_id == Candidate.id)
+        .where(Application.job_id == job_id)
         .group_by(Candidate.stage)
     ).all()
-    return {stage[0]: stage[1] for stage in stages}
 
-#  Analytics 
+    return {stage: count for stage, count in rows}
+
+
+# -------------------- ANALYTICS --------------------
+
 @router.get("/analytics/applications-over-time")
-def applications_over_time(days: int = 30, db: Session = Depends(get_db), user: User = Depends(require_roles(["recruiter", "admin"]))):
+def applications_over_time(
+    days: int = 30,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(["recruiter", "admin"]))
+):
     start_date = datetime.utcnow() - timedelta(days=days)
-    job_ids = list(db.exec(select(Job.id).where(Job.recruiter_id == user.id)).all())
-    
+
+    job_ids = db.execute(
+        select(Job.id).where(Job.recruiter_id == user.id)
+    ).scalars().all()
+
     if not job_ids:
         return []
-    
-    # Get applications for these jobs
-    applications = db.exec(select(Application).where(Application.job_id.in_(job_ids))).all()
-    candidate_ids = list(set([app.candidate_id for app in applications]))
-    
-    if not candidate_ids:
-        return []
-    
-    # Get candidates and group by date
-    query = select(func.date(Candidate.created_at), func.count(Candidate.id)).where(
-        Candidate.id.in_(candidate_ids),
-        Candidate.created_at >= start_date
-    ).group_by(func.date(Candidate.created_at)).order_by(func.date(Candidate.created_at))
-    return [{"date": d[0], "count": d[1]} for d in db.exec(query).all()]
 
-#  Settings 
+    rows = db.execute(
+        select(func.date(Candidate.created_at), func.count(Candidate.id))
+        .join(Application, Application.candidate_id == Candidate.id)
+        .where(
+            Application.job_id.in_(job_ids),
+            Candidate.created_at >= start_date
+        )
+        .group_by(func.date(Candidate.created_at))
+        .order_by(func.date(Candidate.created_at))
+    ).all()
+
+    return [{"date": d, "count": c} for d, c in rows]
+
+
+# -------------------- SETTINGS --------------------
+
 @router.get("/settings")
 def recruiter_settings(user: User = Depends(require_roles(["recruiter", "admin"]))):
-    return {"user_id": user.id, "email": user.email, "role": user.role}
+    return {
+        "user_id": user.id,
+        "email": user.email,
+        "role": user.role
+    }
