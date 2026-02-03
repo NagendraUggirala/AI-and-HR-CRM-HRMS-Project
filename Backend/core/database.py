@@ -1,8 +1,9 @@
 # core/database.py
 
-from sqlmodel import SQLModel, create_engine, Session
-from sqlalchemy.orm import sessionmaker, declarative_base
-from core.config import settings  # your settings
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlmodel import SQLModel, Session
+from core.config import settings
 
 # ----------------------------
 # Database URL
@@ -10,27 +11,28 @@ from core.config import settings  # your settings
 DATABASE_URL = settings.DATABASE_URL
 
 # ----------------------------
-# Engine (shared)
+# Engine (SYNC — REQUIRED)
 # ----------------------------
 engine = create_engine(
     DATABASE_URL,
     echo=True,
-    pool_pre_ping=True
+    pool_pre_ping=True,
 )
 
 # ----------------------------
-# For SQLAlchemy models
+# Unified Base (IMPORTANT)
 # ----------------------------
-Base = declarative_base()
+class Base(DeclarativeBase):
+    pass
 
 # ----------------------------
-# SQLModel Session maker
+# Session maker
 # ----------------------------
 SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
     bind=engine,
-    class_=Session   # <-- IMPORTANT (ensures session.exec works)
+    autoflush=False,
+    autocommit=False,
+    class_=Session,  # allows session.exec() AND session.query()
 )
 
 # ----------------------------
@@ -44,8 +46,11 @@ def get_db():
         db.close()
 
 # ----------------------------
-# Initialize DB (run at startup)
+# Initialize DB (startup only)
 # ----------------------------
 def init_db():
-    SQLModel.metadata.create_all(engine)
-    Base.metadata.create_all(engine)
+    # SQLModel tables
+    SQLModel.metadata.create_all(bind=engine)
+
+    # SQLAlchemy tables
+    Base.metadata.create_all(bind=engine)
