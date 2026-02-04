@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 from core.database import get_db
-from model.HR_Operations.asset import Asset
-from schema.HR_Operations.asset import (
+from model.HR_Operations.Asset_Management.asset import Asset
+from schema.HR_Operations.Asset_Management.asset import (
     AssetCreate,
     AssetUpdate,
     AssetResponse,

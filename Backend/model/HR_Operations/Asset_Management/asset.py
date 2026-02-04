@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Date, Numeric
 from core.database import Base
 
+
 class Asset(Base):
     __tablename__ = "assets"
 
@@ -19,7 +20,12 @@ class Asset(Base):
 
     depreciation_rate = Column(Integer, nullable=False)
 
+    # 🔹 Physical state of the asset
     condition = Column(String(50), nullable=False)
+
+    # 🔹 Lifecycle state (REQUIRED for allocation system)
+    status = Column(String(50), nullable=False, default="AVAILABLE")
+
     location = Column(String(100), nullable=False)
     department = Column(String(100), nullable=False)
 

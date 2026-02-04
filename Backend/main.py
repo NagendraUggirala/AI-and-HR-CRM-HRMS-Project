@@ -96,7 +96,7 @@ from routers.AI_Interview_Bot.routes import interviews
 from routers.CRM import contacts, company, deals, leads, pipelines, activities, analytics,projects, clients, tasks
 from routers.onboarding.admin_candidates import router as onboarding_candidate_router
 from routers.onboarding import bank_details, present_address, statutory, onboarding, approval, employee, family_details, documents, personal_info, address
-from routers.HR_Operations.assets import router as assets_router
+from routers.HR_Operations.Asset_Management import assets, asset_allocation, asset_return, asset_maintenance
 from routers.Company_Settings import currency, financial_year, localization, policy,company_profile
 
 
@@ -225,7 +225,11 @@ app.include_router(personal_info.router)
 app.include_router(address.router)
 
 #HR Operations - Assets Management
-app.include_router(assets_router, prefix="/assets", tags=["Assets"])
+app.include_router(assets.router)
+app.include_router(asset_allocation.router)
+app.include_router(asset_return.router)
+app.include_router(asset_maintenance.router)
+
 
 # Company Settings - Currency Management
 app.include_router(currency.router)
