@@ -7,26 +7,34 @@ class Asset(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    asset_name = Column(String(255), nullable=False)
-    category = Column(String(100), nullable=False)
+    # --- Basic Info ---
+    asset_name = Column(String(255), nullable=False, index=True)
+    category = Column(String(100), nullable=False, index=True)
 
     make = Column(String(100), nullable=False)
-    model = Column(String(100), nullable=False)
+    model = Column(String(150), nullable=False)
 
-    serial_number = Column(String(100), unique=True, nullable=False)
+    serial_number = Column(String(120), unique=True, nullable=False, index=True)
 
+    # --- Purchase Details ---
     purchase_date = Column(Date, nullable=False)
     purchase_price = Column(Numeric(12, 2), nullable=False)
 
     depreciation_rate = Column(Integer, nullable=False)
 
-    # 🔹 Physical state of the asset
+    # --- Physical Condition ---
     condition = Column(String(50), nullable=False)
 
-    # 🔹 Lifecycle state (REQUIRED for allocation system)
-    status = Column(String(50), nullable=False, default="AVAILABLE")
+    # --- Lifecycle Status ---
+    # AVAILABLE | ALLOCATED | UNDER_MAINTENANCE | RETIRED
+    status = Column(
+        String(50),
+        nullable=False,
+        server_default="AVAILABLE"
+    )
 
-    location = Column(String(100), nullable=False)
-    department = Column(String(100), nullable=False)
+    # --- Location Info ---
+    location = Column(String(150), nullable=False)
+    department = Column(String(150), nullable=False)
 
     warranty_until = Column(Date, nullable=True)
