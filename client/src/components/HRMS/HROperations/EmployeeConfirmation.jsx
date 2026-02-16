@@ -332,7 +332,7 @@ const EmployeeConfirmation = () => {
 
   // ---------------- STATE VARIABLES ----------------
   const [employees, setEmployees] = useState(initialEmployees);
-  
+
   // UI States
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
@@ -342,11 +342,11 @@ const EmployeeConfirmation = () => {
   const [showReportModal, setShowReportModal] = useState(false);
   const [showLetterModal, setShowLetterModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  
+
   // Selected items
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [selectedEmployees, setSelectedEmployees] = useState([]);
-  
+
   // Form States
   const [reviewForm, setReviewForm] = useState({
     reviewType: 'final',
@@ -359,7 +359,7 @@ const EmployeeConfirmation = () => {
     comments: '',
     attachments: []
   });
-  
+
   const [confirmationForm, setConfirmationForm] = useState({
     confirmationDate: new Date().toISOString().split('T')[0],
     effectiveDate: new Date().toISOString().split('T')[0],
@@ -372,7 +372,7 @@ const EmployeeConfirmation = () => {
     notifyEmployee: true,
     notifyManager: true
   });
-  
+
   const [extensionForm, setExtensionForm] = useState({
     extensionDays: 30,
     newConfirmationDate: '',
@@ -382,7 +382,7 @@ const EmployeeConfirmation = () => {
     notifyEmployee: true,
     notifyManager: true
   });
-  
+
   const [rejectionForm, setRejectionForm] = useState({
     reason: '',
     terminationDate: new Date().toISOString().split('T')[0],
@@ -391,7 +391,7 @@ const EmployeeConfirmation = () => {
     comments: '',
     exitInterview: true
   });
-  
+
   const [bulkAction, setBulkAction] = useState({
     action: 'confirm',
     date: new Date().toISOString().split('T')[0],
@@ -402,7 +402,7 @@ const EmployeeConfirmation = () => {
     generateLetters: true,
     message: ''
   });
-  
+
   const [reportFilters, setReportFilters] = useState({
     startDate: '2024-01-01',
     endDate: new Date().toISOString().split('T')[0],
@@ -410,7 +410,7 @@ const EmployeeConfirmation = () => {
     status: 'all',
     exportFormat: 'pdf'
   });
-  
+
   // Filter and Sort States
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -420,11 +420,11 @@ const EmployeeConfirmation = () => {
   const [sortOrder, setSortOrder] = useState('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
-  
+
   // Auto-trigger states
   const [autoTriggerEnabled, setAutoTriggerEnabled] = useState(true);
   const [reminderDays, setReminderDays] = useState([7, 3, 1]); // Days before due date to send reminders
-  
+
   // ---------------- STATISTICS ----------------
   const stats = {
     total: employees.length,
@@ -439,7 +439,7 @@ const EmployeeConfirmation = () => {
     conditional: employees.filter(e => e.confirmationEligibility === 'conditional').length,
     notEligible: employees.filter(e => e.confirmationEligibility === 'not_eligible').length
   };
-  
+
   // ---------------- HELPER FUNCTIONS ----------------
   const formatDate = (date) => {
     if (!date) return 'N/A';
@@ -449,14 +449,14 @@ const EmployeeConfirmation = () => {
       year: 'numeric'
     });
   };
-  
+
   const calculateDaysRemaining = (dueDate) => {
     const due = new Date(dueDate);
     const today = new Date();
     const diffTime = due - today;
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
-  
+
   // ---------------- FILTER + SORT ----------------
   const filteredEmployees = employees
     .filter(emp => {
@@ -465,90 +465,90 @@ const EmployeeConfirmation = () => {
         emp.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
         emp.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
         emp.designation.toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       const statusMatch = filterStatus === 'all' || emp.status === filterStatus;
       const deptMatch = filterDepartment === 'all' || emp.department === filterDepartment;
       const eligibilityMatch = filterEligibility === 'all' || emp.confirmationEligibility === filterEligibility;
-      
+
       return searchMatch && statusMatch && deptMatch && eligibilityMatch;
     })
     .sort((a, b) => {
       let A = a[sortBy], B = b[sortBy];
-      
+
       if (sortBy === 'name' || sortBy === 'designation' || sortBy === 'department') {
         A = A.toLowerCase();
         B = B.toLowerCase();
       }
-      
+
       if (sortBy === 'daysRemaining') {
         A = a.daysRemaining;
         B = b.daysRemaining;
       }
-      
+
       if (sortBy === 'confirmationDueDate' || sortBy === 'joiningDate' || sortBy === 'confirmationDate') {
         A = new Date(a[sortBy]);
         B = new Date(b[sortBy]);
       }
-      
+
       return sortOrder === 'asc' ? (A > B ? 1 : -1) : (A < B ? 1 : -1);
     });
-  
+
   // ---------------- PAGINATION ----------------
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
   const paginatedEmployees = filteredEmployees.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-  
+
   // ---------------- AUTO-TRIGGER FUNCTIONALITY ----------------
   useEffect(() => {
     if (!autoTriggerEnabled) return;
-    
+
     // Check for employees due for confirmation and auto-trigger reviews
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const employeesToReview = employees.filter(emp => {
       if (emp.status === 'confirmed' || emp.status === 'terminated' || emp.status === 'extended') {
         return false;
       }
-      
+
       const dueDate = new Date(emp.confirmationDueDate);
       dueDate.setHours(0, 0, 0, 0);
       const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-      
+
       // Auto-trigger review if due date is within 7 days and no review initiated
-      return daysUntilDue <= 7 && daysUntilDue >= 0 && 
-             (emp.status === 'in_progress' || emp.status === 'pending_review');
+      return daysUntilDue <= 7 && daysUntilDue >= 0 &&
+        (emp.status === 'in_progress' || emp.status === 'pending_review');
     });
-    
+
     // Auto-trigger reminders based on reminder days
     reminderDays.forEach(reminderDay => {
       const reminderDate = new Date(today);
       reminderDate.setDate(reminderDate.getDate() + reminderDay);
-      
+
       const employeesToRemind = employees.filter(emp => {
         if (emp.status === 'confirmed' || emp.status === 'terminated') {
           return false;
         }
-        
+
         const dueDate = new Date(emp.confirmationDueDate);
         dueDate.setHours(0, 0, 0, 0);
-        
-        return dueDate.getTime() === reminderDate.getTime() && 
-               (emp.status === 'in_progress' || emp.status === 'pending_review');
+
+        return dueDate.getTime() === reminderDate.getTime() &&
+          (emp.status === 'in_progress' || emp.status === 'pending_review');
       });
-      
+
       if (employeesToRemind.length > 0) {
         // In a real application, this would send emails/notifications
         console.log(`Auto-reminder: ${employeesToRemind.length} employees due in ${reminderDay} days`);
       }
     });
-    
+
   }, [employees, autoTriggerEnabled, reminderDays]);
-  
+
   // ---------------- EVENT HANDLERS ----------------
-  
+
   // Initiate Review
   const handleInitiateReview = (employee) => {
     setSelectedEmployee(employee);
@@ -565,20 +565,20 @@ const EmployeeConfirmation = () => {
     });
     setShowReviewModal(true);
   };
-  
+
   // Submit Review
   const handleSubmitReview = (e) => {
     e.preventDefault();
-    
+
     const updatedEmployees = employees.map(emp => {
       if (emp.id === selectedEmployee.id) {
         const updatedEmp = { ...emp };
-        
+
         // Update review data
         updatedEmp.managerComments = reviewForm.managerAssessment;
         updatedEmp.hrComments = reviewForm.hrAssessment;
         updatedEmp.currentRating = reviewForm.rating.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-        
+
         // Update recommendations based on decision
         if (reviewForm.decision === 'confirm') {
           updatedEmp.managerRecommendation = 'recommended';
@@ -593,24 +593,24 @@ const EmployeeConfirmation = () => {
           updatedEmp.hrRecommendation = 'rejected';
           updatedEmp.status = 'pending_approval';
         }
-        
+
         // Update final review completion
         updatedEmp.review90 = {
           completed: true,
           date: reviewForm.reviewDate,
           rating: reviewForm.rating.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
         };
-        
+
         return updatedEmp;
       }
       return emp;
     });
-    
+
     setEmployees(updatedEmployees);
     setShowReviewModal(false);
     alert(`Final review submitted for ${selectedEmployee.name}`);
   };
-  
+
   // Confirm Employee
   const handleConfirmEmployee = (employee) => {
     setSelectedEmployee(employee);
@@ -628,10 +628,10 @@ const EmployeeConfirmation = () => {
     });
     setShowConfirmationModal(true);
   };
-  
+
   const handleSubmitConfirmation = (e) => {
     e.preventDefault();
-    
+
     const updatedEmployees = employees.map(emp => {
       if (emp.id === selectedEmployee.id) {
         return {
@@ -647,18 +647,18 @@ const EmployeeConfirmation = () => {
       }
       return emp;
     });
-    
+
     setEmployees(updatedEmployees);
     setShowConfirmationModal(false);
     alert(`${selectedEmployee.name} has been confirmed as permanent employee`);
   };
-  
+
   // Extend Probation
   const handleExtendProbation = (employee) => {
     setSelectedEmployee(employee);
     const newDate = new Date(employee.confirmationDueDate);
     newDate.setDate(newDate.getDate() + 30);
-    
+
     setExtensionForm({
       extensionDays: 30,
       newConfirmationDate: newDate.toISOString().split('T')[0],
@@ -670,15 +670,15 @@ const EmployeeConfirmation = () => {
     });
     setShowExtensionModal(true);
   };
-  
+
   const handleSubmitExtension = (e) => {
     e.preventDefault();
-    
+
     const updatedEmployees = employees.map(emp => {
       if (emp.id === selectedEmployee.id) {
         const newDate = new Date(extensionForm.newConfirmationDate);
         const daysRemaining = calculateDaysRemaining(newDate);
-        
+
         return {
           ...emp,
           status: 'extended',
@@ -695,12 +695,12 @@ const EmployeeConfirmation = () => {
       }
       return emp;
     });
-    
+
     setEmployees(updatedEmployees);
     setShowExtensionModal(false);
     alert(`Probation extended for ${selectedEmployee.name} until ${formatDate(extensionForm.newConfirmationDate)}`);
   };
-  
+
   // Reject Confirmation
   const handleRejectConfirmation = (employee) => {
     setSelectedEmployee(employee);
@@ -714,10 +714,10 @@ const EmployeeConfirmation = () => {
     });
     setShowRejectionModal(true);
   };
-  
+
   const handleSubmitRejection = (e) => {
     e.preventDefault();
-    
+
     const updatedEmployees = employees.map(emp => {
       if (emp.id === selectedEmployee.id) {
         return {
@@ -732,18 +732,18 @@ const EmployeeConfirmation = () => {
       }
       return emp;
     });
-    
+
     setEmployees(updatedEmployees);
     setShowRejectionModal(false);
     alert(`Confirmation rejected for ${selectedEmployee.name}. Termination initiated.`);
   };
-  
+
   // Generate Confirmation Letter
   const handleGenerateLetter = (employee) => {
     setSelectedEmployee(employee);
     setShowLetterModal(true);
   };
-  
+
   const handleSubmitLetter = () => {
     const updatedEmployees = employees.map(emp => {
       if (emp.id === selectedEmployee.id) {
@@ -754,12 +754,12 @@ const EmployeeConfirmation = () => {
       }
       return emp;
     });
-    
+
     setEmployees(updatedEmployees);
     setShowLetterModal(false);
     alert(`Confirmation letter generated for ${selectedEmployee.name}`);
   };
-  
+
   // Bulk Actions
   const handleSelectEmployee = (id) => {
     if (selectedEmployees.includes(id)) {
@@ -768,7 +768,7 @@ const EmployeeConfirmation = () => {
       setSelectedEmployees([...selectedEmployees, id]);
     }
   };
-  
+
   const handleSelectAll = () => {
     if (selectedEmployees.length === paginatedEmployees.length) {
       setSelectedEmployees([]);
@@ -776,11 +776,11 @@ const EmployeeConfirmation = () => {
       setSelectedEmployees(paginatedEmployees.map(emp => emp.id));
     }
   };
-  
+
   const handleBulkActionSubmit = (e) => {
     e.preventDefault();
-    
-    switch(bulkAction.action) {
+
+    switch (bulkAction.action) {
       case 'confirm':
         const confirmedEmployees = employees.map(emp => {
           if (selectedEmployees.includes(emp.id)) {
@@ -802,7 +802,7 @@ const EmployeeConfirmation = () => {
         const notificationText = bulkAction.notifyEmployees ? ' and notifications sent' : '';
         alert(`${selectedEmployees.length} employees confirmed${letterText}${notificationText}`);
         break;
-        
+
       case 'extend':
         const extendedEmployees = employees.map(emp => {
           if (selectedEmployees.includes(emp.id)) {
@@ -823,42 +823,42 @@ const EmployeeConfirmation = () => {
         setEmployees(extendedEmployees);
         alert(`Probation extended for ${selectedEmployees.length} employees`);
         break;
-        
+
       case 'remind_managers':
         alert(`Reminders sent to managers of ${selectedEmployees.length} employees`);
         break;
-        
+
       case 'export_data':
         alert(`Exporting data for ${selectedEmployees.length} employees`);
         break;
     }
-    
+
     setShowBulkActionModal(false);
     setSelectedEmployees([]);
   };
-  
+
   // Quick Actions
   const handleSendReminders = () => {
     const pendingReviews = employees.filter(
       emp => emp.status === 'pending_review' || emp.status === 'under_review'
     );
-    
+
     if (pendingReviews.length === 0) {
       alert('No pending reviews at this time');
       return;
     }
-    
+
     alert(`Reminders sent to managers of ${pendingReviews.length} employees for pending reviews`);
   };
-  
+
   const handleApprovePending = () => {
     const pendingApprovals = employees.filter(emp => emp.status === 'pending_approval');
-    
+
     if (pendingApprovals.length === 0) {
       alert('No pending approvals at this time');
       return;
     }
-    
+
     const updatedEmployees = employees.map(emp => {
       if (emp.status === 'pending_approval') {
         return {
@@ -871,52 +871,52 @@ const EmployeeConfirmation = () => {
       }
       return emp;
     });
-    
+
     setEmployees(updatedEmployees);
     alert(`${pendingApprovals.length} pending approvals confirmed`);
   };
-  
+
   const handleGenerateReport = () => {
     alert(`Report generated for period ${formatDate(reportFilters.startDate)} to ${formatDate(reportFilters.endDate)}`);
     setShowReportModal(false);
   };
-  
+
   const handleExportData = () => {
     setShowReportModal(true);
   };
-  
+
   // View Details
   const handleViewDetails = (employee) => {
     setSelectedEmployee(employee);
     setShowDetailModal(true);
   };
-  
+
   // Auto-trigger review for employees due soon
   const handleAutoTriggerReviews = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const employeesToReview = employees.filter(emp => {
       if (emp.status === 'confirmed' || emp.status === 'terminated' || emp.status === 'extended') {
         return false;
       }
-      
+
       const dueDate = new Date(emp.confirmationDueDate);
       dueDate.setHours(0, 0, 0, 0);
       const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-      
-      return daysUntilDue <= 7 && daysUntilDue >= 0 && 
-             (emp.status === 'in_progress' || emp.status === 'pending_review');
+
+      return daysUntilDue <= 7 && daysUntilDue >= 0 &&
+        (emp.status === 'in_progress' || emp.status === 'pending_review');
     });
-    
+
     if (employeesToReview.length === 0) {
       alert('No employees require auto-triggered reviews at this time');
       return;
     }
-    
+
     alert(`Auto-triggered reviews for ${employeesToReview.length} employees due within 7 days`);
   };
-  
+
   // ---------------- UI COMPONENTS ----------------
   const getStatusBadge = (status) => {
     const config = {
@@ -928,32 +928,32 @@ const EmployeeConfirmation = () => {
       overdue: { label: 'Overdue', color: 'danger' },
       terminated: { label: 'Terminated', color: 'dark' }
     };
-    
+
     const { label, color } = config[status] || { label: status, color: 'secondary' };
-    
+
     return (
       <span className={`badge bg-${color}-subtle text-${color}`}>
         {label}
       </span>
     );
   };
-  
+
   const getEligibilityBadge = (eligibility) => {
     const config = {
       eligible: { label: 'Eligible', color: 'success' },
       conditional: { label: 'Conditional', color: 'warning' },
       not_eligible: { label: 'Not Eligible', color: 'danger' }
     };
-    
+
     const { label, color } = config[eligibility] || { label: eligibility, color: 'secondary' };
-    
+
     return (
       <span className={`badge bg-${color}-subtle text-${color}`}>
         {label}
       </span>
     );
   };
-  
+
   const getRecommendationBadge = (recommendation) => {
     const config = {
       recommended: { label: 'Recommended', color: 'success' },
@@ -964,16 +964,16 @@ const EmployeeConfirmation = () => {
       approved_extension: { label: 'Extension Approved', color: 'info' },
       rejected: { label: 'Rejected', color: 'danger' }
     };
-    
+
     const { label, color } = config[recommendation] || { label: recommendation, color: 'secondary' };
-    
+
     return (
       <span className={`badge bg-${color}-subtle text-${color}`}>
         {label}
       </span>
     );
   };
-  
+
   const ApprovalWorkflow = ({ employee }) => {
     const steps = [
       { key: 'managerRecommendation', label: 'Manager', value: employee.managerRecommendation, icon: 'heroicons-solid:user-circle' },
@@ -981,7 +981,7 @@ const EmployeeConfirmation = () => {
       { key: 'departmentHeadApproval', label: 'Dept Head', value: employee.departmentHeadApproval, icon: 'heroicons-solid:user-group' },
       { key: 'confirmationAuthority', label: 'Authority', value: employee.confirmationAuthority, icon: 'heroicons-solid:check-circle' }
     ];
-    
+
     const getStepStatus = (value) => {
       if (value === 'approved' || value === 'recommended' || value === 'approved_extension') {
         return 'completed';
@@ -993,7 +993,7 @@ const EmployeeConfirmation = () => {
         return 'rejected';
       }
     };
-    
+
     return (
       <div className="d-flex gap-2 align-items-center flex-wrap">
         {steps.map((step, index) => {
@@ -1001,13 +1001,12 @@ const EmployeeConfirmation = () => {
           return (
             <div key={step.key} className="d-flex align-items-center">
               <div className="text-center">
-                <div 
-                  className={`rounded-circle d-inline-flex align-items-center justify-content-center ${
-                    status === 'completed' ? 'bg-success text-white' :
+                <div
+                  className={`rounded-circle d-inline-flex align-items-center justify-content-center ${status === 'completed' ? 'bg-success text-white' :
                     status === 'conditional' ? 'bg-warning text-white' :
-                    status === 'rejected' ? 'bg-danger text-white' :
-                    'bg-light text-muted'
-                  }`}
+                      status === 'rejected' ? 'bg-danger text-white' :
+                        'bg-light text-muted'
+                    }`}
                   style={{ width: '32px', height: '32px', fontSize: '14px' }}
                   title={`${step.label}: ${step.value.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}`}
                 >
@@ -1028,7 +1027,7 @@ const EmployeeConfirmation = () => {
       </div>
     );
   };
-  
+
   // ---------------- SIDEBAR MENU ----------------
   const menuItems = [
     {
@@ -1074,42 +1073,48 @@ const EmployeeConfirmation = () => {
       link: '/hr/settings'
     }
   ];
-  
+
   const userInfo = {
     name: 'HR Manager',
     role: 'Human Resources',
     email: 'hr@company.com'
   };
-  
+
   return (
     <>
       <div className="container-fluid p-3 p-md-4">
-        
+
         {/* HEADER */}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
             <h5 className="mb-2 d-flex align-items-center">
               <Icon icon="heroicons-solid:document-check" className="me-2" width={24} height={24} />
-              Employee Confirmation Management
+              <div className="fw-bold h5 h2-md">   Employee Confirmation Management</div>
             </h5>
-            <p className="text-muted d-none d-md-block">Manage employee confirmation processes after probation period</p>
+
+            <div className="text-muted" style={{ fontSize: "0.85rem" }}>
+              Manage employee confirmation processes after probation period
+            </div>
           </div>
-          
-          <div className="d-flex gap-2 flex-wrap">
+          <div className="d-flex align-items-center gap-2">
             <button
-              className="btn btn-outline-primary btn-sm"
+              className="btn btn-outline-primary btn-sm d-flex align-items-center"
               onClick={() => setShowReportModal(true)}
             >
-              <Icon icon="heroicons-solid:chart-bar" className="me-1" /> Reports
+              <Icon icon="heroicons-solid:chart-bar" className="me-1" />
+              Reports
             </button>
+
             <button
-              className="btn btn-outline-primary btn-sm"
+              className="btn btn-outline-primary btn-sm d-flex align-items-center"
               onClick={() => setShowBulkActionModal(true)}
               disabled={selectedEmployees.length === 0}
             >
-              <Icon icon="heroicons-solid:collection" className="me-1" /> Bulk ({selectedEmployees.length})
+              <Icon icon="heroicons-solid:collection" className="me-1" />
+              Bulk ({selectedEmployees.length})
             </button>
           </div>
+
         </div>
 
         {/* STATISTICS */}
@@ -1170,41 +1175,53 @@ const EmployeeConfirmation = () => {
         </div>
 
         {/* QUICK ACTIONS */}
-        <div className="card p-2 p-md-3 mb-4">
-          <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
-            <div className="mb-2 mb-md-0">
-              <strong>Quick Actions</strong>
-              <p className="text-muted mb-0 small">Common confirmation management tasks</p>
+        <div className="card p-3 mb-4">
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+
+            {/* Left Section */}
+            <div>
+              <strong className="d-block">Quick Actions</strong>
+              <p className="text-muted mb-0 small">
+                Common confirmation management tasks
+              </p>
             </div>
-            <div className="d-flex gap-2 flex-wrap">
-              <button 
-                className="btn btn-sm btn-outline-primary"
+
+            {/* Right Section */}
+            <div className="d-flex flex-wrap gap-2 align-items-center">
+
+              <button
+                className="btn btn-sm btn-outline-primary d-flex align-items-center"
                 onClick={handleSendReminders}
               >
                 Send Reminders
               </button>
-              <button 
-                className="btn btn-sm btn-outline-primary"
+
+              <button
+                className="btn btn-sm btn-outline-primary d-flex align-items-center"
                 onClick={handleApprovePending}
               >
                 Approve Pending
               </button>
-              <button 
-                className="btn btn-sm btn-outline-primary"
+
+              <button
+                className="btn btn-sm btn-outline-primary d-flex align-items-center"
                 onClick={handleExportData}
               >
                 Export Data
               </button>
-              <button 
-                className="btn btn-sm btn-outline-success"
+
+              <button
+                className="btn btn-sm btn-outline-success d-flex align-items-center"
                 onClick={handleAutoTriggerReviews}
               >
                 <Icon icon="heroicons-solid:clock" className="me-1" />
                 Auto-Trigger Reviews
               </button>
+
             </div>
           </div>
         </div>
+
 
         {/* FILTERS */}
         <div className="card p-2 p-md-3 mb-4">
@@ -1218,10 +1235,10 @@ const EmployeeConfirmation = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            
+
             <div className="col-md-3 col-lg-2">
-              <select 
-                className="form-select form-select-sm" 
+              <select
+                className="form-select form-select-sm"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
               >
@@ -1234,10 +1251,10 @@ const EmployeeConfirmation = () => {
                 <option value="overdue">Overdue</option>
               </select>
             </div>
-            
+
             <div className="col-md-3 col-lg-2">
-              <select 
-                className="form-select form-select-sm" 
+              <select
+                className="form-select form-select-sm"
                 value={filterDepartment}
                 onChange={(e) => setFilterDepartment(e.target.value)}
               >
@@ -1251,10 +1268,10 @@ const EmployeeConfirmation = () => {
                 <option value="Quality Assurance">QA</option>
               </select>
             </div>
-            
+
             <div className="col-md-3 col-lg-2">
-              <select 
-                className="form-select form-select-sm" 
+              <select
+                className="form-select form-select-sm"
                 value={filterEligibility}
                 onChange={(e) => setFilterEligibility(e.target.value)}
               >
@@ -1264,7 +1281,7 @@ const EmployeeConfirmation = () => {
                 <option value="not_eligible">Not Eligible</option>
               </select>
             </div>
-            
+
             <div className="col-md-6 col-lg-3 d-flex gap-2">
               <select
                 className="form-select form-select-sm"
@@ -1276,7 +1293,7 @@ const EmployeeConfirmation = () => {
                 <option value="daysRemaining">Sort by Days Remaining</option>
                 <option value="joiningDate">Sort by Joining Date</option>
               </select>
-              
+
               <button
                 className="btn btn-sm btn-outline-secondary"
                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
@@ -1293,7 +1310,7 @@ const EmployeeConfirmation = () => {
             <div>
               <strong>{selectedEmployees.length} employees</strong> selected for bulk actions
             </div>
-            <button 
+            <button
               className="btn btn-sm btn-outline-danger"
               onClick={() => setSelectedEmployees([])}
             >
@@ -1324,7 +1341,7 @@ const EmployeeConfirmation = () => {
                   <th className="text-center" style={{ minWidth: '150px' }}>Actions</th>
                 </tr>
               </thead>
-              
+
               <tbody>
                 {paginatedEmployees.map((emp) => (
                   <tr key={emp.id} className={selectedEmployees.includes(emp.id) ? 'table-active' : ''}>
@@ -1336,7 +1353,7 @@ const EmployeeConfirmation = () => {
                         onChange={() => handleSelectEmployee(emp.id)}
                       />
                     </td>
-                    
+
                     <td>
                       <div>
                         <div className="d-flex align-items-center gap-1">
@@ -1351,7 +1368,7 @@ const EmployeeConfirmation = () => {
                         </div>
                       </div>
                     </td>
-                    
+
                     <td className="text-center d-none d-lg-table-cell">
                       {getStatusBadge(emp.status)}
                       {emp.confirmationDate && (
@@ -1360,34 +1377,33 @@ const EmployeeConfirmation = () => {
                         </div>
                       )}
                     </td>
-                    
+
                     <td className="text-center">
                       {getEligibilityBadge(emp.confirmationEligibility)}
                       <div className="small text-muted mt-1">
                         {emp.extensionCount > 0 ? `Extended ${emp.extensionCount}x` : 'Regular'}
                       </div>
                     </td>
-                    
+
                     <td className="text-center d-none d-md-table-cell">
                       <ApprovalWorkflow employee={emp} />
                       <div className="small text-muted mt-1">
                         Manager: {getRecommendationBadge(emp.managerRecommendation)}
                       </div>
                     </td>
-                    
+
                     <td className="text-center">
-                      <div className={`fw-bold ${
-                        emp.daysRemaining <= 0 ? 'text-danger' :
+                      <div className={`fw-bold ${emp.daysRemaining <= 0 ? 'text-danger' :
                         emp.daysRemaining <= 7 ? 'text-danger' :
-                        emp.daysRemaining <= 30 ? 'text-warning' : 'text-success'
-                      }`}>
+                          emp.daysRemaining <= 30 ? 'text-warning' : 'text-success'
+                        }`}>
                         {emp.daysRemaining <= 0 ? Math.abs(emp.daysRemaining) + ' days overdue' : emp.daysRemaining + ' days'}
                       </div>
                       <div className="small text-muted">
                         Due: {formatDate(emp.confirmationDueDate)}
                       </div>
                     </td>
-                    
+
                     <td className="text-center">
                       <div className="btn-group btn-group-sm flex-wrap">
                         <button
@@ -1397,7 +1413,7 @@ const EmployeeConfirmation = () => {
                         >
                           <Icon icon="heroicons-solid:eye" />
                         </button>
-                        
+
                         {emp.status !== 'confirmed' && emp.status !== 'terminated' && (
                           <>
                             {emp.status === 'pending_review' || emp.status === 'under_review' ? (
@@ -1409,7 +1425,7 @@ const EmployeeConfirmation = () => {
                                 Review
                               </button>
                             ) : null}
-                            
+
                             {emp.status === 'pending_approval' ? (
                               <>
                                 <button
@@ -1417,27 +1433,30 @@ const EmployeeConfirmation = () => {
                                   onClick={() => handleConfirmEmployee(emp)}
                                   title="Confirm Employee"
                                 >
-                                  Confirm
+                                  <Icon icon="mdi:check-circle-outline" width="20" />
                                 </button>
+
                                 <button
                                   className="btn btn-outline-warning"
                                   onClick={() => handleExtendProbation(emp)}
                                   title="Extend Probation"
                                 >
-                                  Extend
+                                  <Icon icon="mdi:clock-outline" width="20" />
                                 </button>
+
                                 <button
                                   className="btn btn-outline-danger"
                                   onClick={() => handleRejectConfirmation(emp)}
                                   title="Reject Confirmation"
                                 >
-                                  Reject
+                                  <Icon icon="mdi:close-circle-outline" width="20" />
                                 </button>
                               </>
+
                             ) : null}
                           </>
                         )}
-                        
+
                         {emp.status === 'confirmed' && !emp.confirmationLetterGenerated && (
                           <button
                             className="btn btn-outline-secondary"
@@ -1451,7 +1470,7 @@ const EmployeeConfirmation = () => {
                     </td>
                   </tr>
                 ))}
-                
+
                 {paginatedEmployees.length === 0 && (
                   <tr>
                     <td colSpan="7" className="text-center py-5 text-muted">
@@ -1463,30 +1482,30 @@ const EmployeeConfirmation = () => {
               </tbody>
             </table>
           </div>
-          
+
           {/* PAGINATION */}
           {totalPages > 1 && (
             <div className="card-footer d-flex justify-content-between align-items-center py-2">
               <div className="text-muted small d-none d-md-block">
                 Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredEmployees.length)} of {filteredEmployees.length} employees
               </div>
-              
+
               <nav>
                 <ul className="pagination pagination-sm mb-0">
                   <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                    <button 
+                    <button
                       className="page-link"
                       onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     >
                       Previous
                     </button>
                   </li>
-                  
+
                   {[...Array(Math.min(5, totalPages))].map((_, i) => {
                     const pageNum = i + 1;
                     return (
                       <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
-                        <button 
+                        <button
                           className="page-link"
                           onClick={() => setCurrentPage(pageNum)}
                         >
@@ -1495,14 +1514,14 @@ const EmployeeConfirmation = () => {
                       </li>
                     );
                   })}
-                  
+
                   {totalPages > 5 && (
                     <>
                       <li className="page-item disabled">
                         <span className="page-link">...</span>
                       </li>
                       <li className={`page-item ${currentPage === totalPages ? 'active' : ''}`}>
-                        <button 
+                        <button
                           className="page-link"
                           onClick={() => setCurrentPage(totalPages)}
                         >
@@ -1511,9 +1530,9 @@ const EmployeeConfirmation = () => {
                       </li>
                     </>
                   )}
-                  
+
                   <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                    <button 
+                    <button
                       className="page-link"
                       onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     >
@@ -1537,13 +1556,13 @@ const EmployeeConfirmation = () => {
                   <h5 className="modal-title">Final Confirmation Review - {selectedEmployee.name}</h5>
                   <button className="btn-close" onClick={() => setShowReviewModal(false)}></button>
                 </div>
-                
+
                 <form onSubmit={handleSubmitReview}>
                   <div className="modal-body">
                     <div className="alert alert-info mb-3">
                       Reviewing <strong>{selectedEmployee.name}</strong> ({selectedEmployee.employeeId}) for confirmation
                     </div>
-                    
+
                     <div className="row g-3">
                       <div className="col-md-6">
                         <label className="form-label">Review Date *</label>
@@ -1551,17 +1570,17 @@ const EmployeeConfirmation = () => {
                           type="date"
                           className="form-control"
                           value={reviewForm.reviewDate}
-                          onChange={(e) => setReviewForm({...reviewForm, reviewDate: e.target.value})}
+                          onChange={(e) => setReviewForm({ ...reviewForm, reviewDate: e.target.value })}
                           required
                         />
                       </div>
-                      
+
                       <div className="col-md-6">
                         <label className="form-label">Performance Rating *</label>
                         <select
                           className="form-select"
                           value={reviewForm.rating}
-                          onChange={(e) => setReviewForm({...reviewForm, rating: e.target.value})}
+                          onChange={(e) => setReviewForm({ ...reviewForm, rating: e.target.value })}
                           required
                         >
                           <option value="exceeds_expectations">Exceeds Expectations</option>
@@ -1570,7 +1589,7 @@ const EmployeeConfirmation = () => {
                           <option value="unsatisfactory">Unsatisfactory</option>
                         </select>
                       </div>
-                      
+
                       <div className="col-12">
                         <label className="form-label">Manager Assessment *</label>
                         <textarea
@@ -1578,11 +1597,11 @@ const EmployeeConfirmation = () => {
                           rows="3"
                           placeholder="Enter manager's final assessment..."
                           value={reviewForm.managerAssessment}
-                          onChange={(e) => setReviewForm({...reviewForm, managerAssessment: e.target.value})}
+                          onChange={(e) => setReviewForm({ ...reviewForm, managerAssessment: e.target.value })}
                           required
                         />
                       </div>
-                      
+
                       <div className="col-12">
                         <label className="form-label">HR Assessment *</label>
                         <textarea
@@ -1590,17 +1609,17 @@ const EmployeeConfirmation = () => {
                           rows="3"
                           placeholder="Enter HR's final assessment..."
                           value={reviewForm.hrAssessment}
-                          onChange={(e) => setReviewForm({...reviewForm, hrAssessment: e.target.value})}
+                          onChange={(e) => setReviewForm({ ...reviewForm, hrAssessment: e.target.value })}
                           required
                         />
                       </div>
-                      
+
                       <div className="col-md-6">
                         <label className="form-label">Recommendation *</label>
                         <select
                           className="form-select"
                           value={reviewForm.decision}
-                          onChange={(e) => setReviewForm({...reviewForm, decision: e.target.value})}
+                          onChange={(e) => setReviewForm({ ...reviewForm, decision: e.target.value })}
                           required
                         >
                           <option value="confirm">Confirm Employment</option>
@@ -1608,7 +1627,7 @@ const EmployeeConfirmation = () => {
                           <option value="reject">Reject Confirmation</option>
                         </select>
                       </div>
-                      
+
                       <div className="col-md-6">
                         <label className="form-label">Additional Comments</label>
                         <input
@@ -1616,15 +1635,15 @@ const EmployeeConfirmation = () => {
                           className="form-control"
                           placeholder="Any additional comments..."
                           value={reviewForm.comments}
-                          onChange={(e) => setReviewForm({...reviewForm, comments: e.target.value})}
+                          onChange={(e) => setReviewForm({ ...reviewForm, comments: e.target.value })}
                         />
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="modal-footer">
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="btn btn-secondary"
                       onClick={() => setShowReviewModal(false)}
                     >
@@ -1649,35 +1668,35 @@ const EmployeeConfirmation = () => {
                   <h5 className="modal-title">Confirm Employee - {selectedEmployee.name}</h5>
                   <button className="btn-close" onClick={() => setShowConfirmationModal(false)}></button>
                 </div>
-                
+
                 <form onSubmit={handleSubmitConfirmation}>
                   <div className="modal-body">
                     <div className="alert alert-success mb-3">
                       Confirming <strong>{selectedEmployee.name}</strong> as permanent employee
                     </div>
-                    
+
                     <div className="mb-3">
                       <label className="form-label">Confirmation Date *</label>
                       <input
                         type="date"
                         className="form-control"
                         value={confirmationForm.confirmationDate}
-                        onChange={(e) => setConfirmationForm({...confirmationForm, confirmationDate: e.target.value})}
+                        onChange={(e) => setConfirmationForm({ ...confirmationForm, confirmationDate: e.target.value })}
                         required
                       />
                     </div>
-                    
+
                     <div className="mb-3">
                       <label className="form-label">Effective Date *</label>
                       <input
                         type="date"
                         className="form-control"
                         value={confirmationForm.effectiveDate}
-                        onChange={(e) => setConfirmationForm({...confirmationForm, effectiveDate: e.target.value})}
+                        onChange={(e) => setConfirmationForm({ ...confirmationForm, effectiveDate: e.target.value })}
                         required
                       />
                     </div>
-                    
+
                     <div className="mb-3">
                       <label className="form-label">Additional Comments</label>
                       <textarea
@@ -1685,38 +1704,38 @@ const EmployeeConfirmation = () => {
                         rows="2"
                         placeholder="Any additional comments..."
                         value={confirmationForm.additionalComments}
-                        onChange={(e) => setConfirmationForm({...confirmationForm, additionalComments: e.target.value})}
+                        onChange={(e) => setConfirmationForm({ ...confirmationForm, additionalComments: e.target.value })}
                       />
                     </div>
-                    
+
                     <div className="form-check mb-3">
-                      <input 
-                        className="form-check-input" 
+                      <input
+                        className="form-check-input"
                         type="checkbox"
                         checked={confirmationForm.generateLetter}
-                        onChange={(e) => setConfirmationForm({...confirmationForm, generateLetter: e.target.checked})}
+                        onChange={(e) => setConfirmationForm({ ...confirmationForm, generateLetter: e.target.checked })}
                       />
                       <label className="form-check-label">
                         Generate confirmation letter
                       </label>
                     </div>
-                    
+
                     <div className="form-check mb-3">
-                      <input 
-                        className="form-check-input" 
+                      <input
+                        className="form-check-input"
                         type="checkbox"
                         checked={confirmationForm.notifyEmployee}
-                        onChange={(e) => setConfirmationForm({...confirmationForm, notifyEmployee: e.target.checked})}
+                        onChange={(e) => setConfirmationForm({ ...confirmationForm, notifyEmployee: e.target.checked })}
                       />
                       <label className="form-check-label">
                         Notify employee
                       </label>
                     </div>
                   </div>
-                  
+
                   <div className="modal-footer">
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="btn btn-secondary"
                       onClick={() => setShowConfirmationModal(false)}
                     >
@@ -1741,13 +1760,13 @@ const EmployeeConfirmation = () => {
                   <h5 className="modal-title">Extend Probation - {selectedEmployee.name}</h5>
                   <button className="btn-close" onClick={() => setShowExtensionModal(false)}></button>
                 </div>
-                
+
                 <form onSubmit={handleSubmitExtension}>
                   <div className="modal-body">
                     <div className="alert alert-warning mb-3">
                       Extending probation period for <strong>{selectedEmployee.name}</strong>
                     </div>
-                    
+
                     <div className="mb-3">
                       <label className="form-label">Extension Duration (Days) *</label>
                       <select
@@ -1771,18 +1790,18 @@ const EmployeeConfirmation = () => {
                         <option value="90">90 Days</option>
                       </select>
                     </div>
-                    
+
                     <div className="mb-3">
                       <label className="form-label">New Confirmation Date *</label>
                       <input
                         type="date"
                         className="form-control"
                         value={extensionForm.newConfirmationDate}
-                        onChange={(e) => setExtensionForm({...extensionForm, newConfirmationDate: e.target.value})}
+                        onChange={(e) => setExtensionForm({ ...extensionForm, newConfirmationDate: e.target.value })}
                         required
                       />
                     </div>
-                    
+
                     <div className="mb-3">
                       <label className="form-label">Reason for Extension *</label>
                       <textarea
@@ -1790,11 +1809,11 @@ const EmployeeConfirmation = () => {
                         rows="3"
                         placeholder="Provide detailed reason for extension..."
                         value={extensionForm.reason}
-                        onChange={(e) => setExtensionForm({...extensionForm, reason: e.target.value})}
+                        onChange={(e) => setExtensionForm({ ...extensionForm, reason: e.target.value })}
                         required
                       />
                     </div>
-                    
+
                     <div className="mb-3">
                       <label className="form-label">Performance Improvement Plan</label>
                       <textarea
@@ -1802,14 +1821,14 @@ const EmployeeConfirmation = () => {
                         rows="2"
                         placeholder="Outline performance improvement plan..."
                         value={extensionForm.performancePlan}
-                        onChange={(e) => setExtensionForm({...extensionForm, performancePlan: e.target.value})}
+                        onChange={(e) => setExtensionForm({ ...extensionForm, performancePlan: e.target.value })}
                       />
                     </div>
                   </div>
-                  
+
                   <div className="modal-footer">
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="btn btn-secondary"
                       onClick={() => setShowExtensionModal(false)}
                     >
@@ -1834,13 +1853,13 @@ const EmployeeConfirmation = () => {
                   <h5 className="modal-title">Reject Confirmation - {selectedEmployee.name}</h5>
                   <button className="btn-close" onClick={() => setShowRejectionModal(false)}></button>
                 </div>
-                
+
                 <form onSubmit={handleSubmitRejection}>
                   <div className="modal-body">
                     <div className="alert alert-danger mb-3">
                       Rejecting confirmation for <strong>{selectedEmployee.name}</strong>. This will initiate termination.
                     </div>
-                    
+
                     <div className="mb-3">
                       <label className="form-label">Reason for Rejection *</label>
                       <textarea
@@ -1848,28 +1867,28 @@ const EmployeeConfirmation = () => {
                         rows="3"
                         placeholder="Provide detailed reason for rejection..."
                         value={rejectionForm.reason}
-                        onChange={(e) => setRejectionForm({...rejectionForm, reason: e.target.value})}
+                        onChange={(e) => setRejectionForm({ ...rejectionForm, reason: e.target.value })}
                         required
                       />
                     </div>
-                    
+
                     <div className="mb-3">
                       <label className="form-label">Termination Effective Date *</label>
                       <input
                         type="date"
                         className="form-control"
                         value={rejectionForm.terminationDate}
-                        onChange={(e) => setRejectionForm({...rejectionForm, terminationDate: e.target.value})}
+                        onChange={(e) => setRejectionForm({ ...rejectionForm, terminationDate: e.target.value })}
                         required
                       />
                     </div>
-                    
+
                     <div className="mb-3">
                       <label className="form-label">Notice Period</label>
                       <select
                         className="form-select"
                         value={rejectionForm.noticePeriod}
-                        onChange={(e) => setRejectionForm({...rejectionForm, noticePeriod: e.target.value})}
+                        onChange={(e) => setRejectionForm({ ...rejectionForm, noticePeriod: e.target.value })}
                       >
                         <option value="serving">Serving Notice Period</option>
                         <option value="waived">Notice Period Waived</option>
@@ -1877,10 +1896,10 @@ const EmployeeConfirmation = () => {
                       </select>
                     </div>
                   </div>
-                  
+
                   <div className="modal-footer">
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="btn btn-secondary"
                       onClick={() => setShowRejectionModal(false)}
                     >
@@ -1905,19 +1924,19 @@ const EmployeeConfirmation = () => {
                   <h5 className="modal-title">Bulk Actions ({selectedEmployees.length} employees)</h5>
                   <button className="btn-close" onClick={() => setShowBulkActionModal(false)}></button>
                 </div>
-                
+
                 <form onSubmit={handleBulkActionSubmit}>
                   <div className="modal-body">
                     <div className="alert alert-info mb-3">
                       Apply action to all selected employees
                     </div>
-                    
+
                     <div className="mb-3">
                       <label className="form-label">Select Action *</label>
                       <select
                         className="form-select"
                         value={bulkAction.action}
-                        onChange={(e) => setBulkAction({...bulkAction, action: e.target.value})}
+                        onChange={(e) => setBulkAction({ ...bulkAction, action: e.target.value })}
                         required
                       >
                         <option value="confirm">Confirm Employees</option>
@@ -1926,7 +1945,7 @@ const EmployeeConfirmation = () => {
                         <option value="export_data">Export Data</option>
                       </select>
                     </div>
-                    
+
                     {bulkAction.action === 'confirm' && (
                       <>
                         <div className="mb-3">
@@ -1935,38 +1954,38 @@ const EmployeeConfirmation = () => {
                             type="date"
                             className="form-control"
                             value={bulkAction.date}
-                            onChange={(e) => setBulkAction({...bulkAction, date: e.target.value})}
+                            onChange={(e) => setBulkAction({ ...bulkAction, date: e.target.value })}
                             required
                           />
                         </div>
                         <div className="form-check mb-3">
-                          <input 
-                            className="form-check-input" 
+                          <input
+                            className="form-check-input"
                             type="checkbox"
                             checked={bulkAction.generateLetters}
-                            onChange={(e) => setBulkAction({...bulkAction, generateLetters: e.target.checked})}
+                            onChange={(e) => setBulkAction({ ...bulkAction, generateLetters: e.target.checked })}
                           />
                           <label className="form-check-label">
                             Generate confirmation letters for all
                           </label>
                         </div>
                         <div className="form-check mb-3">
-                          <input 
-                            className="form-check-input" 
+                          <input
+                            className="form-check-input"
                             type="checkbox"
                             checked={bulkAction.notifyEmployees}
-                            onChange={(e) => setBulkAction({...bulkAction, notifyEmployees: e.target.checked})}
+                            onChange={(e) => setBulkAction({ ...bulkAction, notifyEmployees: e.target.checked })}
                           />
                           <label className="form-check-label">
                             Notify all employees via email
                           </label>
                         </div>
                         <div className="form-check">
-                          <input 
-                            className="form-check-input" 
+                          <input
+                            className="form-check-input"
                             type="checkbox"
                             checked={bulkAction.notifyManagers}
-                            onChange={(e) => setBulkAction({...bulkAction, notifyManagers: e.target.checked})}
+                            onChange={(e) => setBulkAction({ ...bulkAction, notifyManagers: e.target.checked })}
                           />
                           <label className="form-check-label">
                             Notify all managers
@@ -1974,14 +1993,14 @@ const EmployeeConfirmation = () => {
                         </div>
                       </>
                     )}
-                    
+
                     {bulkAction.action === 'extend' && (
                       <div className="mb-3">
                         <label className="form-label">Extension Days *</label>
                         <select
                           className="form-select"
                           value={bulkAction.extensionDays}
-                          onChange={(e) => setBulkAction({...bulkAction, extensionDays: e.target.value})}
+                          onChange={(e) => setBulkAction({ ...bulkAction, extensionDays: e.target.value })}
                           required
                         >
                           <option value="30">30 Days</option>
@@ -1991,10 +2010,10 @@ const EmployeeConfirmation = () => {
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="modal-footer">
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="btn btn-secondary"
                       onClick={() => setShowBulkActionModal(false)}
                     >
@@ -2019,12 +2038,12 @@ const EmployeeConfirmation = () => {
                   <h5 className="modal-title">Generate Confirmation Letter - {selectedEmployee.name}</h5>
                   <button className="btn-close" onClick={() => setShowLetterModal(false)}></button>
                 </div>
-                
+
                 <div className="modal-body">
                   <div className="alert alert-success mb-3">
                     Generating confirmation letter for <strong>{selectedEmployee.name}</strong> ({selectedEmployee.employeeId})
                   </div>
-                  
+
                   <div className="card mb-3">
                     <div className="card-header bg-light">
                       <strong>Letter Details</strong>
@@ -2050,7 +2069,7 @@ const EmployeeConfirmation = () => {
                           />
                         </div>
                       </div>
-                      
+
                       <div className="row mb-3">
                         <div className="col-md-6">
                           <label className="form-label">Employee Name</label>
@@ -2071,7 +2090,7 @@ const EmployeeConfirmation = () => {
                           />
                         </div>
                       </div>
-                      
+
                       <div className="row mb-3">
                         <div className="col-md-6">
                           <label className="form-label">Designation</label>
@@ -2092,7 +2111,7 @@ const EmployeeConfirmation = () => {
                           />
                         </div>
                       </div>
-                      
+
                       <div className="row">
                         <div className="col-md-6">
                           <label className="form-label">Joining Date</label>
@@ -2115,15 +2134,15 @@ const EmployeeConfirmation = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="card mb-3">
                     <div className="card-header bg-light">
                       <strong>Letter Options</strong>
                     </div>
                     <div className="card-body">
                       <div className="form-check mb-2">
-                        <input 
-                          className="form-check-input" 
+                        <input
+                          className="form-check-input"
                           type="checkbox"
                           defaultChecked
                           id="includeSalary"
@@ -2132,10 +2151,10 @@ const EmployeeConfirmation = () => {
                           Include salary details
                         </label>
                       </div>
-                      
+
                       <div className="form-check mb-2">
-                        <input 
-                          className="form-check-input" 
+                        <input
+                          className="form-check-input"
                           type="checkbox"
                           defaultChecked
                           id="includeTerms"
@@ -2144,10 +2163,10 @@ const EmployeeConfirmation = () => {
                           Include terms and conditions
                         </label>
                       </div>
-                      
+
                       <div className="form-check mb-2">
-                        <input 
-                          className="form-check-input" 
+                        <input
+                          className="form-check-input"
                           type="checkbox"
                           defaultChecked
                           id="sendEmail"
@@ -2156,10 +2175,10 @@ const EmployeeConfirmation = () => {
                           Send letter via email to employee
                         </label>
                       </div>
-                      
+
                       <div className="form-check">
-                        <input 
-                          className="form-check-input" 
+                        <input
+                          className="form-check-input"
                           type="checkbox"
                           defaultChecked
                           id="ccManager"
@@ -2170,7 +2189,7 @@ const EmployeeConfirmation = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="alert alert-info">
                     <strong>Letter Preview:</strong> The confirmation letter will be generated in PDF format and include:
                     <ul className="mb-0 mt-2">
@@ -2183,17 +2202,17 @@ const EmployeeConfirmation = () => {
                     </ul>
                   </div>
                 </div>
-                
+
                 <div className="modal-footer">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn btn-secondary"
                     onClick={() => setShowLetterModal(false)}
                   >
                     Cancel
                   </button>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn btn-primary"
                     onClick={handleSubmitLetter}
                   >
@@ -2215,7 +2234,7 @@ const EmployeeConfirmation = () => {
                   <h5 className="modal-title">Confirmation Reports</h5>
                   <button className="btn-close" onClick={() => setShowReportModal(false)}></button>
                 </div>
-                
+
                 <div className="modal-body">
                   <div className="row g-3">
                     <div className="col-md-6">
@@ -2224,26 +2243,26 @@ const EmployeeConfirmation = () => {
                         type="date"
                         className="form-control"
                         value={reportFilters.startDate}
-                        onChange={(e) => setReportFilters({...reportFilters, startDate: e.target.value})}
+                        onChange={(e) => setReportFilters({ ...reportFilters, startDate: e.target.value })}
                       />
                     </div>
-                    
+
                     <div className="col-md-6">
                       <label className="form-label">End Date</label>
                       <input
                         type="date"
                         className="form-control"
                         value={reportFilters.endDate}
-                        onChange={(e) => setReportFilters({...reportFilters, endDate: e.target.value})}
+                        onChange={(e) => setReportFilters({ ...reportFilters, endDate: e.target.value })}
                       />
                     </div>
-                    
+
                     <div className="col-md-6">
                       <label className="form-label">Department</label>
                       <select
                         className="form-select"
                         value={reportFilters.department}
-                        onChange={(e) => setReportFilters({...reportFilters, department: e.target.value})}
+                        onChange={(e) => setReportFilters({ ...reportFilters, department: e.target.value })}
                       >
                         <option value="all">All Departments</option>
                         <option value="Engineering">Engineering</option>
@@ -2252,13 +2271,13 @@ const EmployeeConfirmation = () => {
                         <option value="Marketing">Marketing</option>
                       </select>
                     </div>
-                    
+
                     <div className="col-md-6">
                       <label className="form-label">Status</label>
                       <select
                         className="form-select"
                         value={reportFilters.status}
-                        onChange={(e) => setReportFilters({...reportFilters, status: e.target.value})}
+                        onChange={(e) => setReportFilters({ ...reportFilters, status: e.target.value })}
                       >
                         <option value="all">All Status</option>
                         <option value="confirmed">Confirmed</option>
@@ -2266,7 +2285,7 @@ const EmployeeConfirmation = () => {
                         <option value="extended">Extended</option>
                       </select>
                     </div>
-                    
+
                     <div className="col-12">
                       <div className="card">
                         <div className="card-header bg-light">
@@ -2289,17 +2308,17 @@ const EmployeeConfirmation = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="modal-footer">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn btn-secondary"
                     onClick={() => setShowReportModal(false)}
                   >
                     Cancel
                   </button>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn btn-primary"
                     onClick={handleGenerateReport}
                   >
@@ -2311,216 +2330,188 @@ const EmployeeConfirmation = () => {
           </div>
         )}
 
-        {/* DETAILS MODAL */}
-        {showDetailModal && selectedEmployee && (
-          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-lg">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">Employee Details - {selectedEmployee.name}</h5>
-                  <button className="btn-close" onClick={() => setShowDetailModal(false)}></button>
-                </div>
-                
-                <div className="modal-body">
-                  <div className="row mb-4">
-                    <div className="col-md-8">
-                      <div>
-                        <h4 className="mb-1">{selectedEmployee.name}</h4>
-                        <p className="text-muted mb-1">{selectedEmployee.designation} • {selectedEmployee.department}</p>
-                        <div className="d-flex gap-2 flex-wrap">
-                          <span className="badge bg-secondary">{selectedEmployee.employeeId}</span>
-                          {getStatusBadge(selectedEmployee.status)}
-                          {getEligibilityBadge(selectedEmployee.confirmationEligibility)}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="col-md-4">
-                      <div className="d-grid gap-2">
-                        {selectedEmployee.status !== 'confirmed' && selectedEmployee.status !== 'terminated' && (
-                          <button 
-                            className="btn btn-primary"
-                            onClick={() => {
-                              setShowDetailModal(false);
-                              handleInitiateReview(selectedEmployee);
-                            }}
-                          >
-                            Initiate Review
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="row mb-4">
-                    <div className="col-md-6">
-                      <div className="card mb-3">
-                        <div className="card-header bg-light">
-                          <strong>Probation & Confirmation Details</strong>
-                        </div>
-                        <div className="card-body">
-                          <div className="row">
-                            <div className="col-6">
-                              <small className="text-muted d-block">Joining Date</small>
-                              <strong>{formatDate(selectedEmployee.joiningDate)}</strong>
-                            </div>
-                            <div className="col-6">
-                              <small className="text-muted d-block">Confirmation Due</small>
-                              <strong>{formatDate(selectedEmployee.confirmationDueDate)}</strong>
-                            </div>
-                            <div className="col-6">
-                              <small className="text-muted d-block">Days Remaining</small>
-                              <strong className={
-                                selectedEmployee.daysRemaining <= 0 ? 'text-danger' :
-                                selectedEmployee.daysRemaining <= 7 ? 'text-danger' :
-                                selectedEmployee.daysRemaining <= 30 ? 'text-warning' : 'text-success'
-                              }>
-                                {selectedEmployee.daysRemaining} days
-                              </strong>
-                            </div>
-                            <div className="col-6">
-                              <small className="text-muted d-block">Probation Period</small>
-                              <strong>{selectedEmployee.probationPeriod} days</strong>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="col-md-6">
-                      <div className="card mb-3">
-                        <div className="card-header bg-light">
-                          <strong>Approval Workflow</strong>
-                        </div>
-                        <div className="card-body">
-                          <div className="row">
-                            <div className="col-6">
-                              <small className="text-muted d-block">Manager</small>
-                              <div>{getRecommendationBadge(selectedEmployee.managerRecommendation)}</div>
-                            </div>
-                            <div className="col-6">
-                              <small className="text-muted d-block">HR</small>
-                              <div>{getRecommendationBadge(selectedEmployee.hrRecommendation)}</div>
-                            </div>
-                            <div className="col-6">
-                              <small className="text-muted d-block">Dept Head</small>
-                              <div>{getRecommendationBadge(selectedEmployee.departmentHeadApproval)}</div>
-                            </div>
-                            <div className="col-6">
-                              <small className="text-muted d-block">Authority</small>
-                              <div>{getRecommendationBadge(selectedEmployee.confirmationAuthority)}</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="card mb-3">
-                    <div className="card-header bg-light">
-                      <strong>Confirmation Workflow Status</strong>
-                    </div>
-                    <div className="card-body">
-                      <ApprovalWorkflow employee={selectedEmployee} />
-                      {selectedEmployee.confirmationEffectiveDate && (
-                        <div className="mt-3 p-2 bg-light rounded">
-                          <small className="text-muted d-block">Effective Date:</small>
-                          <strong className="text-success">{formatDate(selectedEmployee.confirmationEffectiveDate)}</strong>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="card">
-                    <div className="card-header bg-light">
-                      <strong>Review History</strong>
-                    </div>
-                    <div className="card-body">
-                      <div className="row">
-                        <div className="col-md-4">
-                          <div className="text-center p-3">
-                            <div className="fw-bold mb-1">30 Day Review</div>
-                            <div className={selectedEmployee.review30.completed ? 'text-success' : 'text-muted'}>
-                              {selectedEmployee.review30.completed ? 
-                                `${formatDate(selectedEmployee.review30.date)} - ${selectedEmployee.review30.rating}` : 
-                                'Pending'}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-md-4">
-                          <div className="text-center p-3">
-                            <div className="fw-bold mb-1">60 Day Review</div>
-                            <div className={selectedEmployee.review60.completed ? 'text-success' : 'text-muted'}>
-                              {selectedEmployee.review60.completed ? 
-                                `${formatDate(selectedEmployee.review60.date)} - ${selectedEmployee.review60.rating}` : 
-                                'Pending'}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-md-4">
-                          <div className="text-center p-3">
-                            <div className="fw-bold mb-1">90 Day Review</div>
-                            <div className={selectedEmployee.review90.completed ? 'text-success' : 'text-muted'}>
-                              {selectedEmployee.review90.completed ? 
-                                `${formatDate(selectedEmployee.review90.date)} - ${selectedEmployee.review90.rating}` : 
-                                'Pending'}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {selectedEmployee.confirmationDate && (
-                    <div className="card mt-3">
-                      <div className="card-header bg-success text-white">
-                        <strong>Confirmation Details</strong>
-                      </div>
-                      <div className="card-body">
-                        <div className="row">
-                          <div className="col-md-6">
-                            <small className="text-muted d-block">Confirmation Date</small>
-                            <strong>{formatDate(selectedEmployee.confirmationDate)}</strong>
-                          </div>
-                          <div className="col-md-6">
-                            <small className="text-muted d-block">Effective Date</small>
-                            <strong className="text-success">
-                              {selectedEmployee.confirmationEffectiveDate ? formatDate(selectedEmployee.confirmationEffectiveDate) : 'N/A'}
-                            </strong>
-                          </div>
-                          <div className="col-md-6 mt-3">
-                            <small className="text-muted d-block">Letter Generated</small>
-                            <span className={selectedEmployee.confirmationLetterGenerated ? 'badge bg-success' : 'badge bg-warning'}>
-                              {selectedEmployee.confirmationLetterGenerated ? 'Yes' : 'Pending'}
-                            </span>
-                          </div>
-                          <div className="col-md-6 mt-3">
-                            <small className="text-muted d-block">Days Since Confirmation</small>
-                            <strong>
-                              {selectedEmployee.confirmationDate ? 
-                                Math.ceil((new Date() - new Date(selectedEmployee.confirmationDate)) / (1000 * 60 * 60 * 24)) : 0} days
-                            </strong>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="modal-footer">
-                  <button 
-                    type="button" 
-                    className="btn btn-secondary"
-                    onClick={() => setShowDetailModal(false)}
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
+       {/* DETAILS MODAL */}
+{showDetailModal && selectedEmployee && (
+  <div
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100vw",
+      height: "100vh",
+      backgroundColor: "rgba(0,0,0,0.5)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 1000
+    }}
+  >
+    <div
+      style={{
+        width: "95%",
+        maxWidth: "1200px",
+        backgroundColor: "#fff",
+        borderRadius: "8px",
+        overflow: "hidden",
+        maxHeight: "95vh",
+        overflowY: "auto"
+      }}
+    >
+      {/* HEADER */}
+      <div
+        style={{
+          padding: "16px 20px",
+          borderBottom: "1px solid #ddd",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center"
+        }}
+      >
+        <h3 style={{ margin: 0 }}>
+          Employee Details - {selectedEmployee.name}
+        </h3>
+        <button
+          onClick={() => setShowDetailModal(false)}
+          style={{
+            border: "none",
+            background: "none",
+            fontSize: "20px",
+            cursor: "pointer"
+          }}
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* BODY */}
+      <div style={{ padding: "20px" }}>
+        {/* Top Section */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            marginBottom: "20px"
+          }}
+        >
+          <div style={{ flex: 1, minWidth: "300px" }}>
+            <h2 style={{ marginBottom: "5px" }}>
+              {selectedEmployee.name}
+            </h2>
+            <p style={{ color: "#666", marginBottom: "10px" }}>
+              {selectedEmployee.designation} • {selectedEmployee.department}
+            </p>
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+              {getStatusBadge(selectedEmployee.status)}
+              {getEligibilityBadge(selectedEmployee.confirmationEligibility)}
             </div>
           </div>
-        )}
-        
+
+          <div style={{ minWidth: "200px" }}>
+            {selectedEmployee.status !== "confirmed" &&
+              selectedEmployee.status !== "terminated" && (
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    handleInitiateReview(selectedEmployee);
+                  }}
+                  style={{
+                    padding: "10px 16px",
+                    backgroundColor: "#0d6efd",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                    width: "100%"
+                  }}
+                >
+                  Initiate Review
+                </button>
+              )}
+          </div>
+        </div>
+
+        {/* Content Grid */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))",
+            gap: "20px"
+          }}
+        >
+          {/* Probation Card */}
+          <div
+            style={{
+              border: "1px solid #ddd",
+              borderRadius: "6px",
+              padding: "15px"
+            }}
+          >
+            <h4>Probation & Confirmation Details</h4>
+            <p><strong>Joining:</strong> {formatDate(selectedEmployee.joiningDate)}</p>
+            <p><strong>Confirmation Due:</strong> {formatDate(selectedEmployee.confirmationDueDate)}</p>
+            <p><strong>Days Remaining:</strong> {selectedEmployee.daysRemaining} days</p>
+            <p><strong>Probation Period:</strong> {selectedEmployee.probationPeriod} days</p>
+          </div>
+
+          {/* Workflow Card */}
+          <div
+            style={{
+              border: "1px solid #ddd",
+              borderRadius: "6px",
+              padding: "15px"
+            }}
+          >
+            <h4>Approval Workflow</h4>
+            <div>{getRecommendationBadge(selectedEmployee.managerRecommendation)}</div>
+            <div>{getRecommendationBadge(selectedEmployee.hrRecommendation)}</div>
+            <div>{getRecommendationBadge(selectedEmployee.departmentHeadApproval)}</div>
+            <div>{getRecommendationBadge(selectedEmployee.confirmationAuthority)}</div>
+          </div>
+        </div>
+
+        {/* Review History */}
+        <div
+          style={{
+            marginTop: "20px",
+            border: "1px solid #ddd",
+            borderRadius: "6px",
+            padding: "15px"
+          }}
+        >
+          <h4>Review History</h4>
+          <p>30 Day: {selectedEmployee.review30.completed ? "Completed" : "Pending"}</p>
+          <p>60 Day: {selectedEmployee.review60.completed ? "Completed" : "Pending"}</p>
+          <p>90 Day: {selectedEmployee.review90.completed ? "Completed" : "Pending"}</p>
+        </div>
+      </div>
+
+      {/* FOOTER */}
+      <div
+        style={{
+          padding: "15px 20px",
+          borderTop: "1px solid #ddd",
+          textAlign: "right"
+        }}
+      >
+        <button
+          onClick={() => setShowDetailModal(false)}
+          style={{
+            padding: "8px 14px",
+            backgroundColor: "#6c757d",
+            color: "#fff",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer"
+          }}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
       </div>
     </>
   );

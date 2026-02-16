@@ -97,6 +97,10 @@ import {
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
+
+
+
+
 // Alert component for Snackbar
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -105,7 +109,7 @@ const Alert = React.forwardRef(function Alert(props, ref) {
 // Sample data for departments and locations
 const sampleDepartments = [
   'Engineering',
-  'Product Management', 
+  'Product Management',
   'Sales',
   'Marketing',
   'Human Resources',
@@ -116,7 +120,7 @@ const sampleDepartments = [
 
 const sampleLocations = [
   'Bangalore',
-  'Delhi', 
+  'Delhi',
   'Mumbai',
   'Hyderabad',
   'Chennai',
@@ -180,7 +184,7 @@ const TransferMovement = () => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  
+
   // Filters and Search State
   const [filters, setFilters] = useState({
     status: '',
@@ -189,18 +193,18 @@ const TransferMovement = () => {
     location: ''
   });
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Notification State
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
     severity: 'success'
   });
-  
+
   // Bulk Operations State
   const [selectedRows, setSelectedRows] = useState([]);
   const [bulkActionMenu, setBulkActionMenu] = useState(null);
-  
+
   // Form State
   const [newTransfer, setNewTransfer] = useState({
     employeeId: '',
@@ -221,7 +225,7 @@ const TransferMovement = () => {
     estimatedCost: '',
     attachments: []
   });
-  
+
   // Checklist States
   const [showTransferLetterModal, setShowTransferLetterModal] = useState(false);
   const [showRelievingChecklistModal, setShowRelievingChecklistModal] = useState(false);
@@ -229,14 +233,14 @@ const TransferMovement = () => {
   const [showHandoverModal, setShowHandoverModal] = useState(false);
   const [showAssetTransferModal, setShowAssetTransferModal] = useState(false);
   const [showRelocationSupportModal, setShowRelocationSupportModal] = useState(false);
-  
+
   // Checklist data
   const [relievingChecklist, setRelievingChecklist] = useState([]);
   const [joiningChecklist, setJoiningChecklist] = useState([]);
   const [handoverDocuments, setHandoverDocuments] = useState([]);
   const [assetTransferList, setAssetTransferList] = useState([]);
   const [relocationChecklist, setRelocationChecklist] = useState([]);
-  
+
   // Travel expense reimbursement state
   const [travelExpenses, setTravelExpenses] = useState({
     eligible: false,
@@ -259,7 +263,7 @@ const TransferMovement = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      
+
       // Create realistic employee data
       const employeeData = [
         {
@@ -520,7 +524,7 @@ const TransferMovement = () => {
     { id: 7, task: 'Update project documentation', status: 'pending', assignedTo: 'Employee', dueDate: '', priority: 'Medium' },
     { id: 8, task: 'Exit interview completion', status: 'pending', assignedTo: 'HR', dueDate: '', priority: 'Low' }
   ];
-  
+
   const getDefaultJoiningChecklist = () => [
     { id: 1, task: 'Update employee profile with new department/location', status: 'pending', assignedTo: 'HR', dueDate: '', priority: 'High' },
     { id: 2, task: 'System access provisioning for new role', status: 'pending', assignedTo: 'IT', dueDate: '', priority: 'High' },
@@ -531,7 +535,7 @@ const TransferMovement = () => {
     { id: 7, task: 'Update payroll with new designation/salary', status: 'pending', assignedTo: 'Finance', dueDate: '', priority: 'Medium' },
     { id: 8, task: 'Update organization chart and reporting structure', status: 'pending', assignedTo: 'HR', dueDate: '', priority: 'Low' }
   ];
-  
+
   const getDefaultHandoverItems = () => [
     { id: 1, item: 'Project documentation and files', status: 'pending', assignedTo: 'Employee', dueDate: '', category: 'Documents' },
     { id: 2, item: 'Client contact information and relationships', status: 'pending', assignedTo: 'Employee', dueDate: '', category: 'Contacts' },
@@ -539,14 +543,14 @@ const TransferMovement = () => {
     { id: 4, item: 'Process documentation and procedures', status: 'pending', assignedTo: 'Employee', dueDate: '', category: 'Processes' },
     { id: 5, item: 'Important passwords and access credentials', status: 'pending', assignedTo: 'Employee', dueDate: '', category: 'Access' }
   ];
-  
+
   const getDefaultAssetList = () => [
     { id: 1, asset: 'Laptop', assetId: 'LAP001', type: 'IT Equipment', status: 'transfer', condition: 'Good', assignedTo: 'Employee' },
     { id: 2, asset: 'Mobile Phone', assetId: 'MOB001', type: 'IT Equipment', status: 'return', condition: 'Good', assignedTo: 'IT' },
     { id: 3, asset: 'Access Card', assetId: 'ACC001', type: 'Access Card', status: 'return', condition: 'Good', assignedTo: 'Admin' },
     { id: 4, asset: 'Office Keys', assetId: 'KEY001', type: 'Access Card', status: 'return', condition: 'Good', assignedTo: 'Admin' }
   ];
-  
+
   const getDefaultRelocationChecklist = () => [
     { id: 1, task: 'Travel arrangements booking', status: 'pending', assignedTo: 'HR', dueDate: '', priority: 'High' },
     { id: 2, task: 'Temporary accommodation arrangement', status: 'pending', assignedTo: 'HR', dueDate: '', priority: 'High' },
@@ -582,7 +586,7 @@ const TransferMovement = () => {
   const filteredRequests = transferRequests.filter(request => {
     // Search term matching
     const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = 
+    const matchesSearch =
       request.employeeName.toLowerCase().includes(searchLower) ||
       request.employeeId.toLowerCase().includes(searchLower) ||
       request.id.toLowerCase().includes(searchLower) ||
@@ -592,15 +596,15 @@ const TransferMovement = () => {
       request.newLocation.toLowerCase().includes(searchLower) ||
       request.requestType.toLowerCase().includes(searchLower) ||
       request.status.toLowerCase().includes(searchLower);
-    
+
     // Filter matching
     const matchesStatus = !filters.status || request.status === filters.status;
     const matchesType = !filters.requestType || request.requestType === filters.requestType;
-    const matchesDept = !filters.department || 
-      request.currentDepartment === filters.department || 
+    const matchesDept = !filters.department ||
+      request.currentDepartment === filters.department ||
       request.newDepartment === filters.department;
-    const matchesLocation = !filters.location || 
-      request.currentLocation === filters.location || 
+    const matchesLocation = !filters.location ||
+      request.currentLocation === filters.location ||
       request.newLocation === filters.location;
 
     return matchesSearch && matchesStatus && matchesType && matchesDept && matchesLocation;
@@ -684,21 +688,21 @@ const TransferMovement = () => {
   const handleSubmitTransfer = () => {
     // Find employee details using employeeId
     const employee = employees.find(e => e.employeeId === newTransfer.employeeId);
-    
+
     if (!employee) {
       showNotification('Please select a valid employee', 'error');
       return;
     }
-    
+
     // Validate required fields
     if (!newTransfer.newDepartment || !newTransfer.newLocation || !newTransfer.reason) {
       showNotification('Please fill all required fields', 'error');
       return;
     }
-    
+
     // Generate new ID
     const newId = `TR${(transferRequests.length + 1).toString().padStart(3, '0')}`;
-    
+
     // Create new request
     const newRequest = {
       id: newId,
@@ -734,8 +738,8 @@ const TransferMovement = () => {
       } : null,
       documents: [],
       requestInitiator: newTransfer.requestInitiator || 'employee',
-      createdBy: newTransfer.requestInitiator === 'employee' ? employee.name : 
-                 newTransfer.requestInitiator === 'manager' ? employee.currentReportingManager : 'HR Department',
+      createdBy: newTransfer.requestInitiator === 'employee' ? employee.name :
+        newTransfer.requestInitiator === 'manager' ? employee.currentReportingManager : 'HR Department',
       lastModified: new Date()
     };
 
@@ -743,10 +747,10 @@ const TransferMovement = () => {
       setTransferRequests([newRequest, ...transferRequests]);
       showNotification('Transfer request submitted successfully!', 'success');
     } else if (dialogMode === 'edit' && selectedRequest) {
-      const updatedRequests = transferRequests.map(req => 
-        req.id === selectedRequest.id ? { 
-          ...newRequest, 
-          id: selectedRequest.id, 
+      const updatedRequests = transferRequests.map(req =>
+        req.id === selectedRequest.id ? {
+          ...newRequest,
+          id: selectedRequest.id,
           status: selectedRequest.status,
           submittedDate: selectedRequest.submittedDate,
           approvalWorkflow: selectedRequest.approvalWorkflow,
@@ -778,7 +782,7 @@ const TransferMovement = () => {
           status: newStatus,
           lastModified: new Date()
         };
-        
+
         if (newStatus === 'Approved' && !req.approvedDate) {
           updatedRequest.approvedDate = new Date();
         } else if (newStatus === 'Rejected' && !req.rejectionDate) {
@@ -786,12 +790,12 @@ const TransferMovement = () => {
         } else if (newStatus === 'Completed' && !req.completionDate) {
           updatedRequest.completionDate = new Date();
         }
-        
+
         return updatedRequest;
       }
       return req;
     });
-    
+
     setTransferRequests(updatedRequests);
     showNotification(`Transfer request ${newStatus.toLowerCase()} successfully!`, 'success');
   };
@@ -799,12 +803,12 @@ const TransferMovement = () => {
   const handleSendReminders = () => {
     // Find pending transfers that need reminders
     const pendingTransfers = transferRequests.filter(r => r.status === 'Pending');
-    
+
     if (pendingTransfers.length === 0) {
       showNotification('No pending transfers found for reminders', 'info');
       return;
     }
-    
+
     // Send reminders to all approvers
     const approversToRemind = [];
     pendingTransfers.forEach(transfer => {
@@ -819,7 +823,7 @@ const TransferMovement = () => {
         }
       });
     });
-    
+
     // Update reminders state
     const newReminders = approversToRemind.map((approver, index) => ({
       id: reminders.length + index + 1,
@@ -829,7 +833,7 @@ const TransferMovement = () => {
       requestId: approver.requestId,
       employee: approver.employee
     }));
-    
+
     setReminders([...reminders, ...newReminders]);
     showNotification(`Reminders sent to ${approversToRemind.length} approvers`, 'success');
   };
@@ -842,9 +846,9 @@ const TransferMovement = () => {
 
     switch (action) {
       case 'approve':
-        setTransferRequests(transferRequests.map(req => 
-          selectedRows.includes(req.id) ? { 
-            ...req, 
+        setTransferRequests(transferRequests.map(req =>
+          selectedRows.includes(req.id) ? {
+            ...req,
             status: 'Approved',
             approvedDate: new Date(),
             lastModified: new Date()
@@ -852,11 +856,11 @@ const TransferMovement = () => {
         ));
         showNotification(`${selectedRows.length} request(s) approved successfully!`, 'success');
         break;
-      
+
       case 'reject':
-        setTransferRequests(transferRequests.map(req => 
-          selectedRows.includes(req.id) ? { 
-            ...req, 
+        setTransferRequests(transferRequests.map(req =>
+          selectedRows.includes(req.id) ? {
+            ...req,
             status: 'Rejected',
             rejectionDate: new Date(),
             lastModified: new Date()
@@ -864,7 +868,7 @@ const TransferMovement = () => {
         ));
         showNotification(`${selectedRows.length} request(s) rejected successfully!`, 'success');
         break;
-      
+
       case 'delete':
         if (window.confirm(`Are you sure you want to delete ${selectedRows.length} request(s)?`)) {
           setTransferRequests(transferRequests.filter(req => !selectedRows.includes(req.id)));
@@ -872,16 +876,16 @@ const TransferMovement = () => {
           showNotification(`${selectedRows.length} request(s) deleted successfully!`, 'success');
         }
         break;
-      
+
       case 'print':
         printSelectedData();
         break;
-      
+
       case 'send_reminders':
         // Send reminders for selected transfers
         const selectedTransfers = transferRequests.filter(req => selectedRows.includes(req.id));
         const approvers = [];
-        
+
         selectedTransfers.forEach(transfer => {
           transfer.approvalWorkflow.forEach(step => {
             if (step.status === 'Pending') {
@@ -894,21 +898,21 @@ const TransferMovement = () => {
             }
           });
         });
-        
+
         if (approvers.length > 0) {
           const newReminders = approvers.map((approver, index) => ({
             id: reminders.length + index + 1,
             ...approver,
             daysPending: 1
           }));
-          
+
           setReminders([...reminders, ...newReminders]);
           showNotification(`Reminders sent to ${approvers.length} approvers for selected transfers`, 'success');
         } else {
           showNotification('No pending approvers found for selected transfers', 'info');
         }
         break;
-      
+
       case 'duplicate':
         // Duplicate selected transfers
         const duplicatedTransfers = transferRequests
@@ -928,21 +932,21 @@ const TransferMovement = () => {
               comments: ''
             }))
           }));
-        
+
         setTransferRequests([...duplicatedTransfers, ...transferRequests]);
         showNotification(`${duplicatedTransfers.length} request(s) duplicated successfully!`, 'success');
         break;
     }
-    
+
     setSelectedRows([]);
     setBulkActionMenu(null);
   };
 
   const exportToCSV = () => {
-    const selectedData = selectedRows.length > 0 
+    const selectedData = selectedRows.length > 0
       ? transferRequests.filter(req => selectedRows.includes(req.id))
       : transferRequests;
-    
+
     const csvContent = [
       ['Transfer ID', 'Employee ID', 'Employee Name', 'Request Type', 'Current Department', 'New Department', 'Current Location', 'New Location', 'Status', 'Transfer Date', 'Effective Date', 'Submitted Date', 'Reason'],
       ...selectedData.map(req => [
@@ -971,15 +975,15 @@ const TransferMovement = () => {
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
-    
+
     showNotification(`Data exported as CSV! (${selectedData.length} records)`, 'success');
   };
 
   const printSelectedData = () => {
-    const selectedData = selectedRows.length > 0 
+    const selectedData = selectedRows.length > 0
       ? transferRequests.filter(req => selectedRows.includes(req.id))
       : transferRequests;
-    
+
     const printWindow = window.open('', '_blank');
     const printContent = `
       <html>
@@ -1036,7 +1040,7 @@ const TransferMovement = () => {
         </body>
       </html>
     `;
-    
+
     printWindow.document.write(printContent);
     printWindow.document.close();
     printWindow.print();
@@ -1081,15 +1085,15 @@ const TransferMovement = () => {
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
     return (
-      <Box sx={{ 
-        p: 2, 
+      <Box sx={{
+        p: 2,
         borderBottom: '1px solid #e0e0e0',
         backgroundColor: '#f8f9fa'
       }}>
         {/* Main Search Row */}
-        <Box sx={{ 
-          display: 'flex', 
-          gap: 2, 
+        <Box sx={{
+          display: 'flex',
+          gap: 2,
           alignItems: 'center',
           mb: showAdvancedFilters ? 2 : 0
         }}>
@@ -1112,14 +1116,14 @@ const TransferMovement = () => {
                 }
               }}
             />
-            <SearchIcon 
-              sx={{ 
-                position: 'absolute', 
-                left: 12, 
-                top: '50%', 
+            <SearchIcon
+              sx={{
+                position: 'absolute',
+                left: 12,
+                top: '50%',
                 transform: 'translateY(-50%)',
                 color: 'text.secondary'
-              }} 
+              }}
             />
           </Box>
 
@@ -1137,7 +1141,7 @@ const TransferMovement = () => {
             >
               Pending
             </Button>
-            
+
             <Button
               size="small"
               variant={filters.status === 'Approved' ? "contained" : "outlined"}
@@ -1168,9 +1172,9 @@ const TransferMovement = () => {
         {/* Advanced Filters Section */}
         {showAdvancedFilters && (
           <Fade in={showAdvancedFilters}>
-            <Box sx={{ 
-              mt: 2, 
-              p: 2, 
+            <Box sx={{
+              mt: 2,
+              p: 2,
               backgroundColor: 'white',
               borderRadius: 2,
               border: '1px solid #e0e0e0',
@@ -1183,7 +1187,7 @@ const TransferMovement = () => {
                     <Select
                       value={filters.requestType}
                       label="Request Type"
-                      onChange={(e) => setFilters({...filters, requestType: e.target.value})}
+                      onChange={(e) => setFilters({ ...filters, requestType: e.target.value })}
                     >
                       <MenuItem value="">All Types</MenuItem>
                       <MenuItem value="Internal Transfer">Internal Transfer</MenuItem>
@@ -1200,7 +1204,7 @@ const TransferMovement = () => {
                     <Select
                       value={filters.department}
                       label="Department"
-                      onChange={(e) => setFilters({...filters, department: e.target.value})}
+                      onChange={(e) => setFilters({ ...filters, department: e.target.value })}
                     >
                       <MenuItem value="">All Departments</MenuItem>
                       {uniqueDepartments.map(dept => (
@@ -1216,7 +1220,7 @@ const TransferMovement = () => {
                     <Select
                       value={filters.location}
                       label="Location"
-                      onChange={(e) => setFilters({...filters, location: e.target.value})}
+                      onChange={(e) => setFilters({ ...filters, location: e.target.value })}
                     >
                       <MenuItem value="">All Locations</MenuItem>
                       {uniqueLocations.map(loc => (
@@ -1260,7 +1264,7 @@ const TransferMovement = () => {
               <Chip
                 label={`Status: ${filters.status}`}
                 size="small"
-                onDelete={() => setFilters({...filters, status: ''})}
+                onDelete={() => setFilters({ ...filters, status: '' })}
                 deleteIcon={<CloseIcon fontSize="small" />}
                 color="primary"
                 variant="outlined"
@@ -1270,7 +1274,7 @@ const TransferMovement = () => {
               <Chip
                 label={`Type: ${filters.requestType}`}
                 size="small"
-                onDelete={() => setFilters({...filters, requestType: ''})}
+                onDelete={() => setFilters({ ...filters, requestType: '' })}
                 deleteIcon={<CloseIcon fontSize="small" />}
                 color="primary"
                 variant="outlined"
@@ -1280,7 +1284,7 @@ const TransferMovement = () => {
               <Chip
                 label={`Dept: ${filters.department}`}
                 size="small"
-                onDelete={() => setFilters({...filters, department: ''})}
+                onDelete={() => setFilters({ ...filters, department: '' })}
                 deleteIcon={<CloseIcon fontSize="small" />}
                 color="primary"
                 variant="outlined"
@@ -1290,7 +1294,7 @@ const TransferMovement = () => {
               <Chip
                 label={`Location: ${filters.location}`}
                 size="small"
-                onDelete={() => setFilters({...filters, location: ''})}
+                onDelete={() => setFilters({ ...filters, location: '' })}
                 deleteIcon={<CloseIcon fontSize="small" />}
                 color="primary"
                 variant="outlined"
@@ -1319,12 +1323,12 @@ const TransferMovement = () => {
     const approvedTransfers = transferRequests.filter(r => r.status === 'Approved').length;
     const rejectedTransfers = transferRequests.filter(r => r.status === 'Rejected').length;
     const completedTransfers = transferRequests.filter(r => r.status === 'Completed').length;
-    
+
     // Calculate approval rate
-    const approvalRate = totalTransfers > 0 
-      ? Math.round((approvedTransfers / totalTransfers) * 100) 
+    const approvalRate = totalTransfers > 0
+      ? Math.round((approvedTransfers / totalTransfers) * 100)
       : 0;
-    
+
     // Calculate transfers ending soon (effective date within next 30 days)
     const endingSoon = transferRequests.filter(r => {
       const effectiveDate = new Date(r.effectiveDate);
@@ -1338,58 +1342,58 @@ const TransferMovement = () => {
     const completedRequests = transferRequests.filter(r => r.status === 'Completed' && r.submittedDate && r.completionDate);
     const avgProcessingDays = completedRequests.length > 0
       ? Math.round(completedRequests.reduce((sum, req) => {
-          const submitted = new Date(req.submittedDate);
-          const completed = new Date(req.completionDate);
-          const diffTime = completed - submitted;
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          return sum + diffDays;
-        }, 0) / completedRequests.length)
+        const submitted = new Date(req.submittedDate);
+        const completed = new Date(req.completionDate);
+        const diffTime = completed - submitted;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return sum + diffDays;
+      }, 0) / completedRequests.length)
       : 0;
 
     const stats = [
-      { 
-        title: 'Total Transfers', 
-        value: totalTransfers, 
+      {
+        title: 'Total Transfers',
+        value: totalTransfers,
         color: 'primary.main',
         icon: <TransferIcon />,
         progress: 100,
         description: 'All time transfers'
       },
-      { 
-        title: 'Pending', 
-        value: pendingTransfers, 
+      {
+        title: 'Pending',
+        value: pendingTransfers,
         color: 'warning.main',
         icon: <PendingIcon />,
         progress: totalTransfers > 0 ? (pendingTransfers / totalTransfers) * 100 : 0,
         description: 'Awaiting approval'
       },
-      { 
-        title: 'Approved', 
-        value: approvedTransfers, 
+      {
+        title: 'Approved',
+        value: approvedTransfers,
         color: 'success.main',
         icon: <CheckIcon />,
         progress: totalTransfers > 0 ? (approvedTransfers / totalTransfers) * 100 : 0,
         description: 'Successfully approved'
       },
-      { 
-        title: 'Rejected', 
-        value: rejectedTransfers, 
+      {
+        title: 'Rejected',
+        value: rejectedTransfers,
         color: 'error.main',
         icon: <CancelIcon />,
         progress: totalTransfers > 0 ? (rejectedTransfers / totalTransfers) * 100 : 0,
         description: 'Requests declined'
       },
-      { 
-        title: 'Approval Rate', 
-        value: `${approvalRate}%`, 
+      {
+        title: 'Approval Rate',
+        value: `${approvalRate}%`,
         color: 'info.main',
         icon: <TrendingUpIcon />,
         progress: approvalRate,
         description: 'Success ratio'
       },
-      { 
-        title: 'Avg Processing', 
-        value: `${avgProcessingDays}d`, 
+      {
+        title: 'Avg Processing',
+        value: `${avgProcessingDays}d`,
         color: 'secondary.main',
         icon: <TimeIcon />,
         progress: Math.min((avgProcessingDays / 30) * 100, 100),
@@ -1398,106 +1402,131 @@ const TransferMovement = () => {
     ];
 
     return (
-      <Card sx={{ height: '100%', boxShadow: 3, width: '100%', borderRadius: 2 }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h6" fontWeight="bold">
+      <Card
+        sx={{
+          width: "1400px",
+          borderRadius: 3,
+          boxShadow: 3
+        }}
+      >
+        <CardContent sx={{ p: 3 }}>
+
+          {/* Header */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 3
+            }}
+          >
+            <Typography variant="h6" fontWeight={600}>
               Transfer Statistics
             </Typography>
-            <Chip 
-              label={`${pendingTransfers} pending`} 
-              color="warning" 
+
+            <Chip
+              label={`${pendingTransfers} pending`}
+              color="warning"
               size="small"
               icon={<WarningIcon />}
             />
           </Box>
 
-          <Grid container spacing={2}>
+          {/* Grid Stats */}
+          <Grid container spacing={3}>
             {stats.map((stat, index) => (
-              <Grid item xs={6} md={4} lg={2} key={index}>
-                <Card 
-                  sx={{ 
-                    height: '100%',
-                    borderRadius: 2,
-                    border: '1px solid',
-                    borderColor: 'divider',
+              <Grid item xs={12} sm={6} md={4} lg={2.4} key={index}>
+                <Card
+                  sx={{
+                    height: "100%",
+                    width: "200px",
+                    borderRadius: 3,
+                    border: "1px solid",
+                    borderColor: "divider",
                     boxShadow: 1,
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    transition: "0.3s",
+                    "&:hover": {
                       boxShadow: 4,
-                      transform: 'translateY(-2px)'
+                      transform: "translateY(-3px)"
                     }
                   }}
                 >
-                  <CardContent sx={{ textAlign: 'center', p: 2 }}>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      justifyContent: 'center', 
-                      alignItems: 'center',
-                      mb: 1
-                    }}>
-                      <Box sx={{ 
-                        width: 40, 
-                        height: 40, 
-                        borderRadius: '50%', 
+                  <CardContent
+                    sx={{
+                      textAlign: "center",
+                      p: 2.5,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      height: "100%"
+                    }}
+                  >
+                    {/* Icon Circle */}
+                    <Box
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: "50%",
                         backgroundColor: `${stat.color}20`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        mb: 1
-                      }}>
-                        {React.cloneElement(stat.icon, { 
-                          sx: { 
-                            fontSize: 20, 
-                            color: stat.color 
-                          } 
-                        })}
-                      </Box>
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        mb: 1.5
+                      }}
+                    >
+                      {React.cloneElement(stat.icon, {
+                        sx: { fontSize: 22, color: stat.color }
+                      })}
                     </Box>
-                    
-                    <Typography 
-                      variant="h4" 
-                      sx={{ 
-                        fontWeight: 'bold',
+
+                    {/* Value */}
+                    <Typography
+                      variant="h5"
+                      sx={{
+                        fontWeight: 700,
                         color: stat.color,
                         mb: 0.5
                       }}
                     >
                       {stat.value}
                     </Typography>
-                    
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        fontWeight: 'medium',
-                        color: 'text.secondary',
-                        fontSize: '0.75rem',
+
+                    {/* Title */}
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontWeight: 500,
+                        color: "text.secondary",
                         mb: 1
                       }}
                     >
                       {stat.title}
                     </Typography>
-                    
-                    <LinearProgress 
-                      variant="determinate" 
-                      value={stat.progress} 
-                      sx={{ 
-                        height: 4, 
-                        borderRadius: 2,
+
+                    {/* Progress */}
+                    <LinearProgress
+                      variant="determinate"
+                      value={stat.progress}
+                      sx={{
+                        width: "100%",
+                        height: 6,
+                        borderRadius: 3,
+                        mb: 1,
                         backgroundColor: `${stat.color}20`,
-                        '& .MuiLinearProgress-bar': {
+                        "& .MuiLinearProgress-bar": {
                           backgroundColor: stat.color
                         }
-                      }} 
-                    />
-                    
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        display: 'block',
-                        mt: 1,
-                        color: 'text.disabled'
                       }}
+                    />
+
+                    {/* Description */}
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "text.disabled" }}
                     >
                       {stat.description}
                     </Typography>
@@ -1506,13 +1535,16 @@ const TransferMovement = () => {
               </Grid>
             ))}
           </Grid>
+
         </CardContent>
       </Card>
+
     );
   };
-
+  const [openTransferModal, setOpenTransferModal] = React.useState(false);
+  
   const QuickActionsCard = () => (
-    <Card sx={{ height: '100%', boxShadow: 3, borderRadius: 2 }}>
+    <Card sx={{ height: '100%', width: '1400px', boxShadow: 3, borderRadius: 2 }}>
       <CardContent>
         <Typography variant="h6" gutterBottom fontWeight="bold">
           Quick Actions
@@ -1524,7 +1556,7 @@ const TransferMovement = () => {
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => handleOpenDialog('create')}
-              sx={{ 
+              sx={{
                 py: 1.5,
                 borderRadius: 2,
                 background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
@@ -1597,7 +1629,7 @@ const TransferMovement = () => {
       <Paper sx={{ width: '100%', overflow: 'hidden', boxShadow: 3, borderRadius: 2 }}>
         {/* Search and Filter Bar */}
         <SearchFilterBar />
-        
+
         <TableContainer sx={{ maxHeight: 440 }}>
           <Table stickyHeader>
             <TableHead>
@@ -1628,13 +1660,13 @@ const TransferMovement = () => {
                         No matching transfers found
                       </Typography>
                       <Typography variant="body2" color="text.secondary" paragraph>
-                        {searchTerm || Object.values(filters).some(f => f) 
+                        {searchTerm || Object.values(filters).some(f => f)
                           ? 'Try adjusting your search or filters'
                           : 'No transfer requests found. Create your first transfer request!'}
                       </Typography>
                       {(searchTerm || Object.values(filters).some(f => f)) && (
-                        <Button 
-                          variant="outlined" 
+                        <Button
+                          variant="outlined"
                           onClick={clearFilters}
                           startIcon={<RefreshIcon />}
                         >
@@ -1650,11 +1682,11 @@ const TransferMovement = () => {
                   .map((request) => {
                     const isItemSelected = isSelected(request.id);
                     const employee = employees.find(e => e.employeeId === request.employeeId);
-                    
+
                     return (
-                      <TableRow 
-                        key={request.id} 
-                        hover 
+                      <TableRow
+                        key={request.id}
+                        hover
                         role="checkbox"
                         aria-checked={isItemSelected}
                         selected={isItemSelected}
@@ -1677,10 +1709,10 @@ const TransferMovement = () => {
                         </TableCell>
                         <TableCell>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Avatar sx={{ 
-                              width: 32, 
-                              height: 32, 
-                              bgcolor: employee?.avatarColor || 'primary.main' 
+                            <Avatar sx={{
+                              width: 32,
+                              height: 32,
+                              bgcolor: employee?.avatarColor || 'primary.main'
                             }}>
                               {request.employeeName.charAt(0)}
                             </Avatar>
@@ -1730,7 +1762,7 @@ const TransferMovement = () => {
                             size="small"
                             color={getStatusColor(request.status)}
                             variant="filled"
-                            sx={{ 
+                            sx={{
                               borderRadius: 1,
                               fontWeight: 'medium'
                             }}
@@ -1739,8 +1771,8 @@ const TransferMovement = () => {
                         <TableCell>
                           <Box sx={{ display: 'flex', gap: 0.5 }}>
                             <Tooltip title="View Details">
-                              <IconButton 
-                                size="small" 
+                              <IconButton
+                                size="small"
                                 onClick={() => handleOpenDialog('view', request)}
                                 sx={{ color: 'info.main' }}
                               >
@@ -1748,8 +1780,8 @@ const TransferMovement = () => {
                               </IconButton>
                             </Tooltip>
                             <Tooltip title="Edit">
-                              <IconButton 
-                                size="small" 
+                              <IconButton
+                                size="small"
                                 onClick={() => handleOpenDialog('edit', request)}
                                 disabled={request.status === 'Approved' || request.status === 'Completed' || request.status === 'Rejected'}
                                 sx={{ color: 'primary.main' }}
@@ -1760,8 +1792,8 @@ const TransferMovement = () => {
                             {request.status === 'Approved' && (
                               <>
                                 <Tooltip title="Generate Transfer Letter">
-                                  <IconButton 
-                                    size="small" 
+                                  <IconButton
+                                    size="small"
                                     onClick={() => {
                                       setSelectedRequest(request);
                                       setShowTransferLetterModal(true);
@@ -1772,8 +1804,8 @@ const TransferMovement = () => {
                                   </IconButton>
                                 </Tooltip>
                                 <Tooltip title="Relieving Checklist">
-                                  <IconButton 
-                                    size="small" 
+                                  <IconButton
+                                    size="small"
                                     onClick={() => {
                                       setSelectedRequest(request);
                                       setShowRelievingChecklistModal(true);
@@ -1784,8 +1816,8 @@ const TransferMovement = () => {
                                   </IconButton>
                                 </Tooltip>
                                 <Tooltip title="Joining Checklist">
-                                  <IconButton 
-                                    size="small" 
+                                  <IconButton
+                                    size="small"
                                     onClick={() => {
                                       setSelectedRequest(request);
                                       setShowJoiningChecklistModal(true);
@@ -1796,8 +1828,8 @@ const TransferMovement = () => {
                                   </IconButton>
                                 </Tooltip>
                                 <Tooltip title="Handover Documentation">
-                                  <IconButton 
-                                    size="small" 
+                                  <IconButton
+                                    size="small"
                                     onClick={() => {
                                       setSelectedRequest(request);
                                       setShowHandoverModal(true);
@@ -1808,8 +1840,8 @@ const TransferMovement = () => {
                                   </IconButton>
                                 </Tooltip>
                                 <Tooltip title="Asset Transfer">
-                                  <IconButton 
-                                    size="small" 
+                                  <IconButton
+                                    size="small"
                                     onClick={() => {
                                       setSelectedRequest(request);
                                       setShowAssetTransferModal(true);
@@ -1821,8 +1853,8 @@ const TransferMovement = () => {
                                 </Tooltip>
                                 {request.requestType === 'Location Transfer' && (
                                   <Tooltip title="Relocation Support">
-                                    <IconButton 
-                                      size="small" 
+                                    <IconButton
+                                      size="small"
                                       onClick={() => {
                                         setSelectedRequest(request);
                                         setShowRelocationSupportModal(true);
@@ -1836,8 +1868,8 @@ const TransferMovement = () => {
                               </>
                             )}
                             <Tooltip title="Approve">
-                              <IconButton 
-                                size="small" 
+                              <IconButton
+                                size="small"
                                 color="success"
                                 onClick={() => handleStatusChange(request.id, 'Approved')}
                                 disabled={request.status === 'Approved' || request.status === 'Completed' || request.status === 'Rejected'}
@@ -1846,8 +1878,8 @@ const TransferMovement = () => {
                               </IconButton>
                             </Tooltip>
                             <Tooltip title="Reject">
-                              <IconButton 
-                                size="small" 
+                              <IconButton
+                                size="small"
                                 color="error"
                                 onClick={() => handleStatusChange(request.id, 'Rejected')}
                                 disabled={request.status === 'Rejected' || request.status === 'Completed' || request.status === 'Approved'}
@@ -1864,7 +1896,7 @@ const TransferMovement = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        
+
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
@@ -1882,8 +1914,8 @@ const TransferMovement = () => {
   };
 
   const TransferRequestDialog = () => (
-    <Dialog 
-      open={openDialog} 
+    <Dialog
+      open={openDialog}
       onClose={handleCloseDialog}
       fullWidth
       maxWidth="md"
@@ -1894,15 +1926,15 @@ const TransferMovement = () => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <TransferIcon />
-            {dialogMode === 'create' ? 'Create New Transfer Request' : 
-             dialogMode === 'edit' ? 'Edit Transfer Request' : 'Transfer Request Details'}
+            {dialogMode === 'create' ? 'Create New Transfer Request' :
+              dialogMode === 'edit' ? 'Edit Transfer Request' : 'Transfer Request Details'}
           </Box>
           <IconButton onClick={handleCloseDialog} size="small">
             <CloseIcon />
           </IconButton>
         </Box>
       </DialogTitle>
-      
+
       <DialogContent dividers>
         {dialogMode === 'view' && selectedRequest ? (
           <Grid container spacing={3}>
@@ -2007,7 +2039,7 @@ const TransferMovement = () => {
                         </ListItem>
                       </List>
                     </Grid>
-                    
+
                     <Grid item xs={12} md={6}>
                       <Typography variant="subtitle2" gutterBottom>
                         New Details
@@ -2104,7 +2136,7 @@ const TransferMovement = () => {
                 </CardContent>
               </Card>
             </Grid>
-            
+
             {selectedRequest.status === 'Approved' && (
               <Grid item xs={12}>
                 <Card variant="outlined" sx={{ borderRadius: 2, bgcolor: 'action.hover' }}>
@@ -2201,7 +2233,7 @@ const TransferMovement = () => {
                 <Select
                   value={newTransfer.requestInitiator}
                   label="Request Initiated By *"
-                  onChange={(e) => setNewTransfer({...newTransfer, requestInitiator: e.target.value})}
+                  onChange={(e) => setNewTransfer({ ...newTransfer, requestInitiator: e.target.value })}
                 >
                   <MenuItem value="employee">Employee-Initiated</MenuItem>
                   <MenuItem value="manager">Manager-Initiated</MenuItem>
@@ -2212,7 +2244,7 @@ const TransferMovement = () => {
                 </FormHelperText>
               </FormControl>
             </Grid>
-            
+
             <Grid item xs={12}>
               <FormControl fullWidth size="small" required>
                 <InputLabel>Select Employee</InputLabel>
@@ -2247,7 +2279,7 @@ const TransferMovement = () => {
                 <Select
                   value={newTransfer.requestType}
                   label="Request Type"
-                  onChange={(e) => setNewTransfer({...newTransfer, requestType: e.target.value})}
+                  onChange={(e) => setNewTransfer({ ...newTransfer, requestType: e.target.value })}
                 >
                   <MenuItem value="Internal Transfer">Internal Transfer</MenuItem>
                   <MenuItem value="Location Transfer">Location Transfer</MenuItem>
@@ -2262,7 +2294,7 @@ const TransferMovement = () => {
                 label="Transfer Date"
                 type="date"
                 value={newTransfer.transferDate ? newTransfer.transferDate.toISOString().split('T')[0] : ''}
-                onChange={(e) => setNewTransfer({...newTransfer, transferDate: new Date(e.target.value)})}
+                onChange={(e) => setNewTransfer({ ...newTransfer, transferDate: new Date(e.target.value) })}
                 size="small"
                 fullWidth
                 required
@@ -2275,7 +2307,7 @@ const TransferMovement = () => {
                 label="Effective Date"
                 type="date"
                 value={newTransfer.effectiveDate ? newTransfer.effectiveDate.toISOString().split('T')[0] : ''}
-                onChange={(date) => setNewTransfer({...newTransfer, effectiveDate: new Date(date.target.value)})}
+                onChange={(date) => setNewTransfer({ ...newTransfer, effectiveDate: new Date(date.target.value) })}
                 size="small"
                 fullWidth
                 InputLabelProps={{ shrink: true }}
@@ -2288,7 +2320,7 @@ const TransferMovement = () => {
                 <Select
                   value={newTransfer.newDepartment}
                   label="New Department"
-                  onChange={(e) => setNewTransfer({...newTransfer, newDepartment: e.target.value})}
+                  onChange={(e) => setNewTransfer({ ...newTransfer, newDepartment: e.target.value })}
                 >
                   <MenuItem value="">Select department</MenuItem>
                   {sampleDepartments.map((dept) => (
@@ -2306,7 +2338,7 @@ const TransferMovement = () => {
                 <Select
                   value={newTransfer.newLocation}
                   label="New Location"
-                  onChange={(e) => setNewTransfer({...newTransfer, newLocation: e.target.value})}
+                  onChange={(e) => setNewTransfer({ ...newTransfer, newLocation: e.target.value })}
                 >
                   <MenuItem value="">Select location</MenuItem>
                   {sampleLocations.map((loc) => (
@@ -2324,7 +2356,7 @@ const TransferMovement = () => {
                 <Select
                   value={newTransfer.newDesignation}
                   label="New Designation"
-                  onChange={(e) => setNewTransfer({...newTransfer, newDesignation: e.target.value})}
+                  onChange={(e) => setNewTransfer({ ...newTransfer, newDesignation: e.target.value })}
                 >
                   <MenuItem value="">Select designation</MenuItem>
                   {organization.designations.map((designation) => (
@@ -2342,7 +2374,7 @@ const TransferMovement = () => {
                 <Select
                   value={newTransfer.newReportingManager}
                   label="New Reporting Manager"
-                  onChange={(e) => setNewTransfer({...newTransfer, newReportingManager: e.target.value})}
+                  onChange={(e) => setNewTransfer({ ...newTransfer, newReportingManager: e.target.value })}
                 >
                   <MenuItem value="">Select manager</MenuItem>
                   {organization.reportingManagers.map((manager) => (
@@ -2361,7 +2393,7 @@ const TransferMovement = () => {
                 rows={3}
                 label="Reason for Transfer *"
                 value={newTransfer.reason}
-                onChange={(e) => setNewTransfer({...newTransfer, reason: e.target.value})}
+                onChange={(e) => setNewTransfer({ ...newTransfer, reason: e.target.value })}
                 required
                 helperText="Please provide detailed reason for the transfer"
               />
@@ -2374,7 +2406,7 @@ const TransferMovement = () => {
                 rows={2}
                 label="Additional Notes"
                 value={newTransfer.notes}
-                onChange={(e) => setNewTransfer({...newTransfer, notes: e.target.value})}
+                onChange={(e) => setNewTransfer({ ...newTransfer, notes: e.target.value })}
                 helperText="Any additional information or special instructions"
               />
             </Grid>
@@ -2385,7 +2417,7 @@ const TransferMovement = () => {
                   <Switch
                     checked={newTransfer.relocationSupportRequired}
                     onChange={(e) => setNewTransfer({
-                      ...newTransfer, 
+                      ...newTransfer,
                       relocationSupportRequired: e.target.checked,
                       travelAssistance: e.target.checked ? newTransfer.travelAssistance : false,
                       accommodationSupport: e.target.checked ? newTransfer.accommodationSupport : false,
@@ -2410,7 +2442,7 @@ const TransferMovement = () => {
                           control={
                             <Checkbox
                               checked={newTransfer.travelAssistance}
-                              onChange={(e) => setNewTransfer({...newTransfer, travelAssistance: e.target.checked})}
+                              onChange={(e) => setNewTransfer({ ...newTransfer, travelAssistance: e.target.checked })}
                             />
                           }
                           label="Travel Assistance / Expense Reimbursement"
@@ -2421,7 +2453,7 @@ const TransferMovement = () => {
                           control={
                             <Checkbox
                               checked={newTransfer.accommodationSupport}
-                              onChange={(e) => setNewTransfer({...newTransfer, accommodationSupport: e.target.checked})}
+                              onChange={(e) => setNewTransfer({ ...newTransfer, accommodationSupport: e.target.checked })}
                             />
                           }
                           label="Temporary Accommodation Support"
@@ -2432,7 +2464,7 @@ const TransferMovement = () => {
                           control={
                             <Checkbox
                               checked={newTransfer.familyRelocation}
-                              onChange={(e) => setNewTransfer({...newTransfer, familyRelocation: e.target.checked})}
+                              onChange={(e) => setNewTransfer({ ...newTransfer, familyRelocation: e.target.checked })}
                             />
                           }
                           label="Family Relocation Support"
@@ -2443,7 +2475,7 @@ const TransferMovement = () => {
                           label="Estimated Relocation Cost (₹)"
                           type="number"
                           value={newTransfer.estimatedCost}
-                          onChange={(e) => setNewTransfer({...newTransfer, estimatedCost: e.target.value})}
+                          onChange={(e) => setNewTransfer({ ...newTransfer, estimatedCost: e.target.value })}
                           size="small"
                           fullWidth
                           InputLabelProps={{ shrink: true }}
@@ -2457,15 +2489,15 @@ const TransferMovement = () => {
           </Grid>
         )}
       </DialogContent>
-      
+
       <DialogActions>
         <Button onClick={handleCloseDialog} startIcon={<CloseIcon />}>
           Cancel
         </Button>
         {dialogMode !== 'view' && (
           <>
-            <Button 
-              variant="outlined" 
+            <Button
+              variant="outlined"
               startIcon={<SaveIcon />}
               onClick={() => {
                 showNotification('Draft saved successfully', 'info');
@@ -2474,8 +2506,8 @@ const TransferMovement = () => {
             >
               Save Draft
             </Button>
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               startIcon={<SendIcon />}
               onClick={handleSubmitTransfer}
               disabled={!newTransfer.employeeId || !newTransfer.reason || !newTransfer.newDepartment || !newTransfer.newLocation}
@@ -2502,7 +2534,7 @@ const TransferMovement = () => {
       const transfersIn = transferRequests.filter(r => r.newDepartment === dept.name).length;
       const transfersOut = transferRequests.filter(r => r.currentDepartment === dept.name).length;
       const netChange = transfersIn - transfersOut;
-      
+
       return {
         ...dept,
         transfersIn,
@@ -2517,7 +2549,7 @@ const TransferMovement = () => {
       const transfersIn = transferRequests.filter(r => r.newLocation === loc.name).length;
       const transfersOut = transferRequests.filter(r => r.currentLocation === loc.name).length;
       const netChange = transfersIn - transfersOut;
-      
+
       return {
         ...loc,
         transfersIn,
@@ -2532,7 +2564,7 @@ const TransferMovement = () => {
     transferRequests.forEach(request => {
       const routeKey = `${request.currentDepartment}:${request.currentLocation}->${request.newDepartment}:${request.newLocation}`;
       const existingRoute = transferRoutes.find(r => r.key === routeKey);
-      
+
       if (existingRoute) {
         existingRoute.count++;
         existingRoute.requests.push(request.id);
@@ -2587,7 +2619,7 @@ const TransferMovement = () => {
           {chartType === 'flow' ? (
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
-                <Card sx={{ height: '100%', boxShadow: 2, borderRadius: 2 }}>
+                <Card sx={{ height: '100%', width: '630px', boxShadow: 2, borderRadius: 2 }}>
                   <CardHeader
                     title="Department Transfer Flow"
                     subheader="Employee movements between departments"
@@ -2612,31 +2644,31 @@ const TransferMovement = () => {
                             </Box>
                           </Box>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Box sx={{ 
-                              width: '45%', 
-                              height: 8, 
+                            <Box sx={{
+                              width: '45%',
+                              height: 8,
                               bgcolor: 'error.light',
                               borderRadius: 4,
                               position: 'relative'
                             }}>
-                           
+
                             </Box>
                             <ArrowForwardIcon fontSize="small" color="action" />
-                            <Box sx={{ 
-                              width: '45%', 
-                              height: 8, 
+                            <Box sx={{
+                              width: '45%',
+                              height: 8,
                               bgcolor: 'success.light',
                               borderRadius: 4,
                               position: 'relative'
                             }}>
-                           
+
                             </Box>
                           </Box>
-                          <LinearProgress 
-                            variant="determinate" 
+                          <LinearProgress
+                            variant="determinate"
                             value={dept.transfersOut > 0 ? Math.min((dept.transfersOut / Math.max(...departmentStats.map(d => d.transfersOut))) * 100, 100) : 0}
-                            sx={{ 
-                              height: 4, 
+                            sx={{
+                              height: 4,
                               borderRadius: 2,
                               bgcolor: 'transparent',
                               mt: 0.5,
@@ -2645,11 +2677,11 @@ const TransferMovement = () => {
                               }
                             }}
                           />
-                          <LinearProgress 
-                            variant="determinate" 
+                          <LinearProgress
+                            variant="determinate"
                             value={dept.transfersIn > 0 ? Math.min((dept.transfersIn / Math.max(...departmentStats.map(d => d.transfersIn))) * 100, 100) : 0}
-                            sx={{ 
-                              height: 4, 
+                            sx={{
+                              height: 4,
                               borderRadius: 2,
                               bgcolor: 'transparent',
                               mt: 0.5,
@@ -2666,7 +2698,7 @@ const TransferMovement = () => {
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <Card sx={{ height: '100%', boxShadow: 2, borderRadius: 2 }}>
+                <Card sx={{ height: '100%', width: '630px', boxShadow: 2, borderRadius: 2 }}>
                   <CardHeader
                     title="Location Transfer Flow"
                     subheader="Employee movements between locations"
@@ -2691,27 +2723,27 @@ const TransferMovement = () => {
                             </Box>
                           </Box>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Box sx={{ 
-                              width: '45%', 
-                              height: 8, 
+                            <Box sx={{
+                              width: '45%',
+                              height: 8,
                               bgcolor: 'error.light',
                               borderRadius: 4
                             }} />
                             <ArrowForwardIcon fontSize="small" color="action" />
-                            <Box sx={{ 
-                              width: '45%', 
-                              height: 8, 
+                            <Box sx={{
+                              width: '45%',
+                              height: 8,
                               bgcolor: 'success.light',
                               borderRadius: 4
                             }} />
                           </Box>
                           <Box sx={{ mt: 0.5 }}>
                             <Typography variant="caption" color="text.secondary">
-                              Net Change: 
-                              <Typography 
-                                component="span" 
-                                variant="caption" 
-                                sx={{ 
+                              Net Change:
+                              <Typography
+                                component="span"
+                                variant="caption"
+                                sx={{
                                   ml: 1,
                                   color: loc.netChange > 0 ? 'success.main' : loc.netChange < 0 ? 'error.main' : 'text.secondary',
                                   fontWeight: 'bold'
@@ -2729,7 +2761,7 @@ const TransferMovement = () => {
               </Grid>
 
               <Grid item xs={12}>
-                <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
+                <Card sx={{ boxShadow: 2, borderRadius: 2, width: '1300px' }}>
                   <CardHeader
                     title="Top Transfer Routes"
                     subheader="Most frequent employee movement patterns"
@@ -2776,17 +2808,17 @@ const TransferMovement = () => {
                                 </Box>
                               </TableCell>
                               <TableCell align="center">
-                                <Chip 
-                                  label={route.count} 
-                                  size="small" 
+                                <Chip
+                                  label={route.count}
+                                  size="small"
                                   color="primary"
                                   variant="outlined"
                                 />
                               </TableCell>
                               <TableCell align="center">
-                                <Chip 
-                                  label="Active" 
-                                  size="small" 
+                                <Chip
+                                  label="Active"
+                                  size="small"
                                   color="success"
                                   variant="filled"
                                 />
@@ -2819,7 +2851,7 @@ const TransferMovement = () => {
                       </Typography>
                     </Grid>
                   ))}
-                  
+
                   {organization.departments.slice(0, 5).map(dept => (
                     <React.Fragment key={dept.id}>
                       <Grid item xs={2}>
@@ -2828,11 +2860,11 @@ const TransferMovement = () => {
                         </Typography>
                       </Grid>
                       {organization.locations.slice(0, 4).map(loc => {
-                        const transfers = transferRequests.filter(r => 
-                          r.currentDepartment === dept.name && 
+                        const transfers = transferRequests.filter(r =>
+                          r.currentDepartment === dept.name &&
                           r.currentLocation === loc.name
                         ).length;
-                        
+
                         return (
                           <Grid item xs={2} key={`${dept.id}-${loc.id}`}>
                             <Box
@@ -2841,8 +2873,8 @@ const TransferMovement = () => {
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                bgcolor: transfers > 0 ? 
-                                  `rgba(33, 150, 243, ${Math.min(transfers / 5, 1)})` : 
+                                bgcolor: transfers > 0 ?
+                                  `rgba(33, 150, 243, ${Math.min(transfers / 5, 1)})` :
                                   'white',
                                 borderRadius: 1,
                                 border: '1px solid #e0e0e0'
@@ -2865,8 +2897,8 @@ const TransferMovement = () => {
               <Typography variant="subtitle1" gutterBottom>
                 Network Visualization
               </Typography>
-              <Paper sx={{ 
-                p: 4, 
+              <Paper sx={{
+                p: 4,
                 bgcolor: '#fafafa',
                 height: 300,
                 display: 'flex',
@@ -2882,8 +2914,8 @@ const TransferMovement = () => {
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                     Showing connections between departments and locations
                   </Typography>
-                  <Button 
-                    variant="outlined" 
+                  <Button
+                    variant="outlined"
                     startIcon={<AutoGraphIcon />}
                     onClick={() => showNotification('Network visualization coming soon!', 'info')}
                   >
@@ -2906,8 +2938,8 @@ const TransferMovement = () => {
       approvedTransfers: transferRequests.filter(r => r.status === 'Approved').length,
       rejectedTransfers: transferRequests.filter(r => r.status === 'Rejected').length,
       completedTransfers: transferRequests.filter(r => r.status === 'Completed').length,
-      approvalRate: transferRequests.length > 0 
-        ? Math.round((transferRequests.filter(r => r.status === 'Approved').length / transferRequests.length) * 100) 
+      approvalRate: transferRequests.length > 0
+        ? Math.round((transferRequests.filter(r => r.status === 'Approved').length / transferRequests.length) * 100)
         : 0,
       avgProcessingTime: 7, // days
       departmentsInvolved: new Set(transferRequests.map(r => r.newDepartment)).size,
@@ -2928,102 +2960,147 @@ const TransferMovement = () => {
     })).sort((a, b) => b.transfersIn - a.transfersIn);
 
     return (
-      <Paper sx={{ p: 3, boxShadow: 3, borderRadius: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h6" fontWeight="bold">
-            <AssessmentIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+      <Box
+        sx={{
+          width: "100%",
+          background: "linear-gradient(to right, #f9fafb, #f1f5f9)",
+          borderRadius: 4,
+          p: { xs: 2, md: 4 }
+        }}
+      >
+        {/* ================= HEADER ================= */}
+        <Box
+          sx={{
+            mb: 5,
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            justifyContent: "space-between",
+            alignItems: { xs: "flex-start", md: "center" },
+            gap: 2
+          }}
+        >
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              gap: 2
+            }}
+          >
+            <AssessmentIcon sx={{ fontSize: 32 }} />
             Reports & Analytics
           </Typography>
-          <Box sx={{ display: 'flex', gap: 1 }}>
+
+          <Box sx={{ display: "flex", gap: 2 }}>
             <Button
               variant="outlined"
               startIcon={<DownloadIcon />}
               onClick={exportToCSV}
-              sx={{ borderRadius: 2 }}
+              sx={{ borderRadius: 3 }}
             >
-              Export as CSV
+              Export CSV
             </Button>
+
             <Button
               variant="contained"
               startIcon={<PrintIcon />}
               onClick={printSelectedData}
-              sx={{ borderRadius: 2 }}
+              sx={{
+                borderRadius: 3,
+                px: 3,
+                background:
+                  "linear-gradient(45deg, #1976D2 30%, #42A5F5 90%)"
+              }}
             >
               Print Report
             </Button>
           </Box>
         </Box>
-        
-        {/* Summary Stats */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
-              <CardContent>
-                <Typography variant="h4" color="primary" gutterBottom fontWeight="bold">
-                  {stats.totalTransfers}
+
+        {/* ================= SUMMARY STATS ================= */}
+        <Grid container spacing={4} sx={{ mb: 5 }}>
+          {[
+            {
+              label: "Total Transfers",
+              value: stats.totalTransfers,
+              gradient: "linear-gradient(135deg, #1976d2, #42a5f5)"
+            },
+            {
+              label: "Approval Rate",
+              value: `${stats.approvalRate}%`,
+              gradient: "linear-gradient(135deg, #2e7d32, #66bb6a)"
+            },
+            {
+              label: "Departments Involved",
+              value: stats.departmentsInvolved,
+              gradient: "linear-gradient(135deg, #ed6c02, #ffb74d)"
+            },
+            {
+              label: "Locations Involved",
+              value: stats.locationsInvolved,
+              gradient: "linear-gradient(135deg, #0288d1, #4fc3f7)"
+            }
+          ].map((item, index) => (
+            <Grid item xs={12} sm={6} lg={3} key={index}>
+              <Card
+                sx={{
+                  height: "100%",
+                  width: "250px",
+                  borderRadius: 4,
+                  boxShadow: 3,
+                  background: item.gradient,
+                  color: "#fff",
+                  textAlign: "center",
+                  py: 3
+                }}
+              >
+                <Typography variant="h3" fontWeight="bold">
+                  {item.value}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Total Transfers
+                <Typography variant="body1">
+                  {item.label}
                 </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
-              <CardContent>
-                <Typography variant="h4" color="success.main" gutterBottom fontWeight="bold">
-                  {stats.approvalRate}%
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Approval Rate
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
-              <CardContent>
-                <Typography variant="h4" color="warning.main" gutterBottom fontWeight="bold">
-                  {stats.departmentsInvolved}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Departments Involved
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
-              <CardContent>
-                <Typography variant="h4" color="info.main" gutterBottom fontWeight="bold">
-                  {stats.locationsInvolved}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Locations Involved
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+              </Card>
+            </Grid>
+          ))}
         </Grid>
 
-        {/* Transfer Type Distribution */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h6" gutterBottom fontWeight="bold">
+        {/* ================= TRANSFER TYPE DISTRIBUTION ================= */}
+        <Box sx={{ mb: 5 }}>
+          <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>
             Transfer Type Distribution
           </Typography>
-          <Grid container spacing={2}>
+
+          <Grid container spacing={3}>
             {transferTypeDistribution.map((item) => {
-              const percentage = stats.totalTransfers > 0 ? (item.count / stats.totalTransfers * 100).toFixed(1) : 0;
+              const percentage =
+                stats.totalTransfers > 0
+                  ? ((item.count / stats.totalTransfers) * 100).toFixed(1)
+                  : 0;
+
               return (
-                <Grid item xs={12} sm={6} md={3} key={item.type}>
-                  <Card variant="outlined" sx={{ boxShadow: 1, borderRadius: 2 }}>
-                    <CardContent>
-                      <Typography variant="h6">{item.type}</Typography>
-                      <Typography variant="h4" color="primary">{item.count}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {percentage}% of total
-                      </Typography>
-                    </CardContent>
+                <Grid item xs={12} sm={6} lg={3} key={item.type}>
+                  <Card
+                    sx={{
+                      borderRadius: 3,
+                      border: "1px solid",
+                      borderColor: "divider",
+                      boxShadow: 1,
+                      p: 3
+                    }}
+                  >
+                    <Typography variant="h6" fontWeight="600">
+                      {item.type}
+                    </Typography>
+
+                    <Typography variant="h4" color="primary" sx={{ my: 1 }}>
+                      {item.count}
+                    </Typography>
+
+                    <Typography variant="body2" color="text.secondary">
+                      {percentage}% of total transfers
+                    </Typography>
                   </Card>
                 </Grid>
               );
@@ -3031,81 +3108,124 @@ const TransferMovement = () => {
           </Grid>
         </Box>
 
-        {/* Department Statistics */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h6" gutterBottom fontWeight="bold">
+        {/* ================= DEPARTMENT TABLE ================= */}
+        <Box sx={{ mb: 5 }}>
+          <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>
             Department Transfer Statistics
           </Typography>
-          <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
-            <Table size="small">
+
+          <TableContainer
+            component={Paper}
+            sx={{
+              borderRadius: 4,
+              border: "1px solid",
+              borderColor: "divider",
+              boxShadow: 1
+            }}
+          >
+            <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Department</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }} align="right">Transfers In</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }} align="right">Transfers Out</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }} align="right">Net Change</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    Department
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>
+                    Transfers In
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>
+                    Transfers Out
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>
+                    Net Change
+                  </TableCell>
                 </TableRow>
               </TableHead>
+
               <TableBody>
-                {departmentStats.map((dept) => (
-                  <TableRow key={dept.name}>
-                    <TableCell>{dept.name}</TableCell>
-                    <TableCell align="right">{dept.transfersIn}</TableCell>
-                    <TableCell align="right">{dept.transfersOut}</TableCell>
-                    <TableCell align="right">
-                      <Typography color={dept.transfersIn - dept.transfersOut > 0 ? "success.main" : "error.main"}>
-                        {dept.transfersIn - dept.transfersOut > 0 ? '+' : ''}{dept.transfersIn - dept.transfersOut}
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {departmentStats.map((dept) => {
+                  const net = dept.transfersIn - dept.transfersOut;
+
+                  return (
+                    <TableRow key={dept.name}>
+                      <TableCell>{dept.name}</TableCell>
+                      <TableCell align="right">{dept.transfersIn}</TableCell>
+                      <TableCell align="right">{dept.transfersOut}</TableCell>
+                      <TableCell align="right">
+                        <Typography
+                          fontWeight="600"
+                          color={net >= 0 ? "success.main" : "error.main"}
+                        >
+                          {net >= 0 ? "+" : ""}
+                          {net}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </TableContainer>
         </Box>
 
-        {/* Status Distribution */}
+        {/* ================= STATUS DISTRIBUTION ================= */}
         <Box>
-          <Typography variant="h6" gutterBottom fontWeight="bold">
+          <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>
             Status Distribution
           </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ bgcolor: 'warning.light', borderRadius: 2 }}>
-                <CardContent>
-                  <Typography variant="h4" fontWeight="bold">{stats.pendingTransfers}</Typography>
-                  <Typography variant="body2">Pending</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ bgcolor: 'success.light', borderRadius: 2 }}>
-                <CardContent>
-                  <Typography variant="h4" fontWeight="bold">{stats.approvedTransfers}</Typography>
-                  <Typography variant="body2">Approved</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ bgcolor: 'error.light', borderRadius: 2 }}>
-                <CardContent>
-                  <Typography variant="h4" fontWeight="bold">{stats.rejectedTransfers}</Typography>
-                  <Typography variant="body2">Rejected</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ bgcolor: 'info.light', borderRadius: 2 }}>
-                <CardContent>
-                  <Typography variant="h4" fontWeight="bold">{stats.completedTransfers}</Typography>
-                  <Typography variant="body2">Completed</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
+
+          <Grid container spacing={4}>
+            {[
+              {
+                label: "Pending",
+                value: stats.pendingTransfers,
+                color: "warning.light"
+              },
+              {
+                label: "Approved",
+                value: stats.approvedTransfers,
+                color: "success.light"
+              },
+              {
+                label: "Rejected",
+                value: stats.rejectedTransfers,
+                color: "error.light"
+              },
+              {
+                label: "Completed",
+                value: stats.completedTransfers,
+                color: "info.light"
+              }
+            ].map((item, index) => (
+              <Grid item xs={12} sm={6} lg={3} key={index}>
+                <Card
+                  sx={{
+                    borderRadius: 4,
+                    bgcolor: item.color,
+                    minHeight: 100,
+                    width: "150px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    textAlign: "center",
+                    boxShadow: 1
+                  }}
+                >
+                  <Box>
+                    <Typography variant="h3" fontWeight="bold">
+                      {item.value}
+                    </Typography>
+                    <Typography variant="body1">
+                      {item.label}
+                    </Typography>
+                  </Box>
+                </Card>
+              </Grid>
+            ))}
           </Grid>
         </Box>
-      </Paper>
+      </Box>
     );
+
   };
 
 
@@ -3118,1100 +3238,307 @@ const TransferMovement = () => {
   }
 
   return (
-    <>
-      <Box sx={{ p: isMobile ? 1 : 3 }}>
-          {/* Header */}
-          <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-              <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <TransferIcon fontSize="large" />
-                Transfer & Movement Management
-              </Typography>
-              <Fab
-                color="primary"
-                size="small"
-                onClick={() => handleOpenDialog('create')}
-                sx={{ 
-                  display: isMobile ? 'none' : 'flex',
-                  background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-                  boxShadow: '0 3px 5px 2px rgba(33, 203, 243, .3)'
-                }}
-              >
-                <AddIcon />
-              </Fab>
-            </Box>
-            <Typography variant="body1" color="text.secondary">
-              Manage internal transfers, location changes, promotions, and employee movements
-            </Typography>
-          </Box>
-
-          {/* Tabs */}
-          <Paper sx={{ mb: 3, boxShadow: 2, borderRadius: 2 }}>
-            <Tabs 
-              value={activeTab} 
-              onChange={handleTabChange} 
-              variant={isMobile ? "scrollable" : "standard"}
-              scrollButtons={isMobile ? "auto" : false}
-              sx={{ 
-                borderBottom: 1, 
-                borderColor: 'divider',
-                '& .MuiTab-root': {
-                  fontWeight: 'bold'
-                }
-              }}
-            >
-              <Tab label="All Transfers" icon={<TransferIcon />} iconPosition="start" />
-              <Tab label="Pending Approvals" icon={<PendingIcon />} iconPosition="start" />
-              <Tab label="Transfer History" icon={<HistoryIcon />} iconPosition="start" />
-              <Tab label="Organization Chart" icon={<OrgChartIcon />} iconPosition="start" />
-              <Tab label="Reports & Analytics" icon={<AssessmentIcon />} iconPosition="start" />
-            </Tabs>
-          </Paper>
-
-          {/* Main Content */}
-          {activeTab === 0 && (
-            <>
-              <Grid container spacing={3} sx={{ mb: 3 }}>
-                <Grid item xs={12} md={8}>
-                  <TransferStatsCard />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <QuickActionsCard />
-                </Grid>
-              </Grid>
-              
-              <TransferRequestTable />
-              
-              {/* Floating Action Button for Mobile */}
-              <Fab
-                color="primary"
-                sx={{
-                  position: 'fixed',
-                  bottom: 16,
-                  right: 16,
-                  display: isMobile ? 'flex' : 'none',
-                  boxShadow: 3,
-                  background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)'
-                }}
-                onClick={() => handleOpenDialog('create')}
-              >
-                <AddIcon />
-              </Fab>
-            </>
-          )}
-
-          {activeTab === 1 && (
-            <Paper sx={{ p: 3, boxShadow: 3, borderRadius: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h6" fontWeight="bold">
-                  Pending Approvals 
-                  <Chip 
-                    label={transferRequests.filter(r => r.status === 'Pending').length} 
-                    color="warning" 
-                    size="small" 
-                    sx={{ ml: 2 }} 
-                    icon={<WarningIcon />}
-                  />
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<EmailIcon />}
-                    onClick={handleSendReminders}
-                    sx={{ borderRadius: 2 }}
-                  >
-                    Send Reminders
-                  </Button>
-                  <Button
-                    variant="contained"
-                    startIcon={<CheckIcon />}
-                    onClick={() => {
-                      const pendingIds = transferRequests
-                        .filter(r => r.status === 'Pending')
-                        .map(r => r.id);
-                      
-                      if (pendingIds.length > 0) {
-                        setSelectedRows(pendingIds);
-                        handleBulkAction('approve');
-                      } else {
-                        showNotification('No pending requests to approve', 'info');
-                      }
-                    }}
-                    sx={{ borderRadius: 2 }}
-                  >
-                    Approve All
-                  </Button>
-                </Box>
-              </Box>
-              
-              {transferRequests.filter(r => r.status === 'Pending').length === 0 ? (
-                <Alert severity="info" sx={{ mb: 3, borderRadius: 2 }}>
-                  No pending approvals. All transfer requests have been processed.
-                </Alert>
-              ) : (
-                <>
-                  {/* Pending Approvals Table */}
-                  <TableContainer component={Paper} variant="outlined" sx={{ mb: 3, borderRadius: 2 }}>
-                    <Table>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Request ID</TableCell>
-                          <TableCell>Employee</TableCell>
-                          <TableCell>Transfer Details</TableCell>
-                          <TableCell>Pending Since</TableCell>
-                          <TableCell>Approvers</TableCell>
-                          <TableCell align="right">Actions</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {transferRequests
-                          .filter(r => r.status === 'Pending')
-                          .map((request) => (
-                            <TableRow key={request.id} hover>
-                              <TableCell>
-                                <Typography variant="body2" fontWeight="medium" color="primary">
-                                  {request.id}
-                                </Typography>
-                              </TableCell>
-                              <TableCell>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <Avatar sx={{ width: 32, height: 32 }}>
-                                    {request.employeeName.charAt(0)}
-                                  </Avatar>
-                                  <Box>
-                                    <Typography variant="body2" fontWeight="medium">
-                                      {request.employeeName}
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                      {request.employeeId}
-                                    </Typography>
-                                  </Box>
-                                </Box>
-                              </TableCell>
-                              <TableCell>
-                                <Typography variant="body2">
-                                  {request.currentDepartment} → {request.newDepartment}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  {request.currentLocation} → {request.newLocation}
-                                </Typography>
-                              </TableCell>
-                              <TableCell>
-                                <Typography variant="body2">
-                                  {new Date(request.submittedDate).toLocaleDateString()}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  {Math.floor((new Date() - new Date(request.submittedDate)) / (1000 * 60 * 60 * 24))} days ago
-                                </Typography>
-                              </TableCell>
-                              <TableCell>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                                  {request.approvalWorkflow
-                                    .filter(step => step.status === 'Pending')
-                                    .map(step => (
-                                      <Chip
-                                        key={step.step}
-                                        label={`${step.approverName} (${step.approverRole})`}
-                                        size="small"
-                                        variant="outlined"
-                                        color="warning"
-                                        sx={{ borderRadius: 1 }}
-                                      />
-                                    ))}
-                                </Box>
-                              </TableCell>
-                              <TableCell align="right">
-                                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                                  <Button
-                                    variant="contained"
-                                    size="small"
-                                    color="success"
-                                    startIcon={<ApproveIcon />}
-                                    onClick={() => handleStatusChange(request.id, 'Approved')}
-                                    sx={{ borderRadius: 2 }}
-                                  >
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    variant="outlined"
-                                    size="small"
-                                    color="error"
-                                    startIcon={<RejectIcon />}
-                                    onClick={() => handleStatusChange(request.id, 'Rejected')}
-                                    sx={{ borderRadius: 2 }}
-                                  >
-                                    Reject
-                                  </Button>
-                                  <IconButton 
-                                    size="small" 
-                                    onClick={() => handleOpenDialog('view', request)}
-                                    sx={{ borderRadius: 2 }}
-                                  >
-                                    <VisibilityIcon />
-                                  </IconButton>
-                                </Box>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-
-                  {/* Reminders Section */}
-                  <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
-                    <CardHeader
-                      title="Pending Reminders"
-                      subheader="Approvers waiting for action"
-                      avatar={<EmailIcon color="warning" />}
-                      action={
-                        <Button
-                          size="small"
-                          startIcon={<RefreshIcon />}
-                          onClick={handleSendReminders}
-                        >
-                          Refresh
-                        </Button>
-                      }
-                    />
-                    <CardContent>
-                      {reminders.length === 0 ? (
-                        <Alert severity="info" sx={{ borderRadius: 2 }}>
-                          No pending reminders
-                        </Alert>
-                      ) : (
-                        <List dense>
-                          {reminders.map((reminder) => (
-                            <ListItem
-                              key={reminder.id}
-                              secondaryAction={
-                                <IconButton size="small" edge="end">
-                                  <EmailIcon />
-                                </IconButton>
-                              }
-                              divider
-                            >
-                              <ListItemAvatar>
-                                <Avatar sx={{ bgcolor: 'warning.light', width: 32, height: 32 }}>
-                                  <WarningIcon fontSize="small" />
-                                </Avatar>
-                              </ListItemAvatar>
-                              <ListItemText
-                                primary={
-                                  <Typography variant="body2" fontWeight="medium">
-                                    {reminder.approver} ({reminder.role})
-                                  </Typography>
-                                }
-                                secondary={
-                                  <Typography variant="caption" color="text.secondary">
-                                    Request: {reminder.requestId} • Employee: {reminder.employee} • Pending for {reminder.daysPending} days
-                                  </Typography>
-                                }
-                              />
-                            </ListItem>
-                          ))}
-                        </List>
-                      )}
-                    </CardContent>
-                  </Card>
-                </>
-              )}
-            </Paper>
-          )}
-
-          {activeTab === 2 && (
-            <Paper sx={{ p: 3, boxShadow: 3, borderRadius: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h6" fontWeight="bold">
-                  Transfer History
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<DownloadIcon />}
-                    onClick={exportToCSV}
-                    sx={{ borderRadius: 2 }}
-                  >
-                    Export All as CSV
-                  </Button>
-                  <Button
-                    variant="contained"
-                    startIcon={<PrintIcon />}
-                    onClick={printSelectedData}
-                    sx={{ borderRadius: 2 }}
-                  >
-                    Print All
-                  </Button>
-                </Box>
-              </Box>
-              <Typography variant="body2" color="text.secondary" paragraph>
-                Complete history of all employee transfers and movements
-              </Typography>
-              <TransferRequestTable />
-            </Paper>
-          )}
-
-          {activeTab === 3 && (
-            <OrganizationChart />
-          )}
-
-          {activeTab === 4 && (
-            <ReportsAnalytics />
-          )}
-
-          {/* Dialogs and Modals */}
-          <TransferRequestDialog />
-          
-          {/* Transfer Letter Generation Modal */}
-          <Dialog 
-            open={showTransferLetterModal} 
-            onClose={() => setShowTransferLetterModal(false)}
-            maxWidth="md"
-            fullWidth
-            PaperProps={{ sx: { borderRadius: 2 } }}
+    <Box
+      sx={{
+        width: "100%",
+        minHeight: "100vh",
+        background: "linear-gradient(to right, #f9fafb, #f1f5f9)",
+        px: { xs: 2, sm: 3, md: 5 },
+        py: 4
+      }}
+    >
+      {/* ================= HEADER ================= */}
+      <Box
+        sx={{
+          mb: 5,
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          justifyContent: "space-between",
+          alignItems: { xs: "flex-start", md: "center" },
+          gap: 3
+        }}
+      >
+        <Box>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              gap: 2
+            }}
           >
-            <DialogTitle>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <AttachFileIcon />
-                  Generate Transfer Letter
-                </Box>
-                <IconButton onClick={() => setShowTransferLetterModal(false)} size="small">
-                  <CloseIcon />
-                </IconButton>
-              </Box>
-            </DialogTitle>
-            <DialogContent dividers>
-              {selectedRequest && (
-                <Grid container spacing={3}>
-                  <Grid item xs={12}>
-                    <Alert severity="info" sx={{ mb: 2, borderRadius: 2 }}>
-                      Generating transfer letter for <strong>{selectedRequest.employeeName}</strong>
-                    </Alert>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      label="Transfer Letter Date"
-                      type="date"
-                      defaultValue={new Date().toISOString().split('T')[0]}
-                      size="small"
-                      fullWidth
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      label="Effective Date"
-                      type="date"
-                      value={selectedRequest.effectiveDate ? new Date(selectedRequest.effectiveDate).toISOString().split('T')[0] : ''}
-                      size="small"
-                      fullWidth
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControlLabel
-                      control={<Checkbox defaultChecked />}
-                      label="Include salary details (if applicable)"
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControlLabel
-                      control={<Checkbox defaultChecked />}
-                      label="Include relocation support details"
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControlLabel
-                      control={<Checkbox defaultChecked />}
-                      label="Send copy via email to employee"
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControlLabel
-                      control={<Checkbox />}
-                      label="CC Current Manager and New Manager"
-                    />
-                  </Grid>
-                </Grid>
-              )}
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setShowTransferLetterModal(false)} startIcon={<CloseIcon />}>
-                Cancel
-              </Button>
-              <Button 
-                variant="contained" 
-                onClick={() => {
-                  showNotification('Transfer letter generated successfully!', 'success');
-                  setShowTransferLetterModal(false);
-                }}
-                startIcon={<DownloadIcon />}
-              >
-                Generate & Download Letter
-              </Button>
-            </DialogActions>
-          </Dialog>
+            <TransferIcon sx={{ fontSize: 34 }} />
+            Transfer & Movement Management
+          </Typography>
 
-          {/* Relieving Checklist Modal */}
-          <Dialog 
-            open={showRelievingChecklistModal} 
-            onClose={() => setShowRelievingChecklistModal(false)}
-            maxWidth="lg"
-            fullWidth
-            PaperProps={{ sx: { borderRadius: 2 } }}
-          >
-            <DialogTitle>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <CheckIcon />
-                  Relieving Checklist - {selectedRequest?.employeeName}
-                </Box>
-                <IconButton onClick={() => setShowRelievingChecklistModal(false)} size="small">
-                  <CloseIcon />
-                </IconButton>
-              </Box>
-            </DialogTitle>
-            <DialogContent dividers>
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Task</TableCell>
-                      <TableCell>Assigned To</TableCell>
-                      <TableCell>Priority</TableCell>
-                      <TableCell>Due Date</TableCell>
-                      <TableCell align="center">Status</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {relievingChecklist.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.task}</TableCell>
-                        <TableCell>
-                          <Chip label={item.assignedTo} size="small" variant="outlined" />
-                        </TableCell>
-                        <TableCell>
-                          <Chip 
-                            label={item.priority} 
-                            size="small" 
-                            color={item.priority === 'High' ? 'error' : item.priority === 'Medium' ? 'warning' : 'default'}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            type="date"
-                            size="small"
-                            value={item.dueDate}
-                            onChange={(e) => {
-                              const updated = relievingChecklist.map(i => 
-                                i.id === item.id ? {...i, dueDate: e.target.value} : i
-                              );
-                              setRelievingChecklist(updated);
-                            }}
-                            InputLabelProps={{ shrink: true }}
-                          />
-                        </TableCell>
-                        <TableCell align="center">
-                          <Select
-                            value={item.status}
-                            size="small"
-                            onChange={(e) => {
-                              const updated = relievingChecklist.map(i => 
-                                i.id === item.id ? {...i, status: e.target.value} : i
-                              );
-                              setRelievingChecklist(updated);
-                            }}
-                            sx={{ minWidth: 120 }}
-                          >
-                            <MenuItem value="pending">Pending</MenuItem>
-                            <MenuItem value="in-progress">In Progress</MenuItem>
-                            <MenuItem value="completed">Completed</MenuItem>
-                          </Select>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setShowRelievingChecklistModal(false)}>Close</Button>
-              <Button variant="contained" onClick={() => {
-                showNotification('Relieving checklist updated successfully!', 'success');
-                setShowRelievingChecklistModal(false);
-              }}>
-                Save Checklist
-              </Button>
-            </DialogActions>
-          </Dialog>
-
-          {/* Joining Checklist Modal */}
-          <Dialog 
-            open={showJoiningChecklistModal} 
-            onClose={() => setShowJoiningChecklistModal(false)}
-            maxWidth="lg"
-            fullWidth
-            PaperProps={{ sx: { borderRadius: 2 } }}
-          >
-            <DialogTitle>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <CheckIcon />
-                  Joining Checklist - {selectedRequest?.employeeName}
-                </Box>
-                <IconButton onClick={() => setShowJoiningChecklistModal(false)} size="small">
-                  <CloseIcon />
-                </IconButton>
-              </Box>
-            </DialogTitle>
-            <DialogContent dividers>
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Task</TableCell>
-                      <TableCell>Assigned To</TableCell>
-                      <TableCell>Priority</TableCell>
-                      <TableCell>Due Date</TableCell>
-                      <TableCell align="center">Status</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {joiningChecklist.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.task}</TableCell>
-                        <TableCell>
-                          <Chip label={item.assignedTo} size="small" variant="outlined" />
-                        </TableCell>
-                        <TableCell>
-                          <Chip 
-                            label={item.priority} 
-                            size="small" 
-                            color={item.priority === 'High' ? 'error' : item.priority === 'Medium' ? 'warning' : 'default'}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            type="date"
-                            size="small"
-                            value={item.dueDate}
-                            onChange={(e) => {
-                              const updated = joiningChecklist.map(i => 
-                                i.id === item.id ? {...i, dueDate: e.target.value} : i
-                              );
-                              setJoiningChecklist(updated);
-                            }}
-                            InputLabelProps={{ shrink: true }}
-                          />
-                        </TableCell>
-                        <TableCell align="center">
-                          <Select
-                            value={item.status}
-                            size="small"
-                            onChange={(e) => {
-                              const updated = joiningChecklist.map(i => 
-                                i.id === item.id ? {...i, status: e.target.value} : i
-                              );
-                              setJoiningChecklist(updated);
-                            }}
-                            sx={{ minWidth: 120 }}
-                          >
-                            <MenuItem value="pending">Pending</MenuItem>
-                            <MenuItem value="in-progress">In Progress</MenuItem>
-                            <MenuItem value="completed">Completed</MenuItem>
-                          </Select>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setShowJoiningChecklistModal(false)}>Close</Button>
-              <Button variant="contained" onClick={() => {
-                showNotification('Joining checklist updated successfully!', 'success');
-                setShowJoiningChecklistModal(false);
-              }}>
-                Save Checklist
-              </Button>
-            </DialogActions>
-          </Dialog>
-
-          {/* Handover Documentation Modal */}
-          <Dialog 
-            open={showHandoverModal} 
-            onClose={() => setShowHandoverModal(false)}
-            maxWidth="lg"
-            fullWidth
-            PaperProps={{ sx: { borderRadius: 2 } }}
-          >
-            <DialogTitle>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <AttachFileIcon />
-                  Handover Documentation - {selectedRequest?.employeeName}
-                </Box>
-                <IconButton onClick={() => setShowHandoverModal(false)} size="small">
-                  <CloseIcon />
-                </IconButton>
-              </Box>
-            </DialogTitle>
-            <DialogContent dividers>
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Handover Item</TableCell>
-                      <TableCell>Category</TableCell>
-                      <TableCell>Assigned To</TableCell>
-                      <TableCell>Due Date</TableCell>
-                      <TableCell align="center">Status</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {handoverDocuments.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.item}</TableCell>
-                        <TableCell>
-                          <Chip label={item.category} size="small" color="primary" variant="outlined" />
-                        </TableCell>
-                        <TableCell>{item.assignedTo}</TableCell>
-                        <TableCell>
-                          <TextField
-                            type="date"
-                            size="small"
-                            value={item.dueDate}
-                            onChange={(e) => {
-                              const updated = handoverDocuments.map(i => 
-                                i.id === item.id ? {...i, dueDate: e.target.value} : i
-                              );
-                              setHandoverDocuments(updated);
-                            }}
-                            InputLabelProps={{ shrink: true }}
-                          />
-                        </TableCell>
-                        <TableCell align="center">
-                          <Select
-                            value={item.status}
-                            size="small"
-                            onChange={(e) => {
-                              const updated = handoverDocuments.map(i => 
-                                i.id === item.id ? {...i, status: e.target.value} : i
-                              );
-                              setHandoverDocuments(updated);
-                            }}
-                            sx={{ minWidth: 120 }}
-                          >
-                            <MenuItem value="pending">Pending</MenuItem>
-                            <MenuItem value="in-progress">In Progress</MenuItem>
-                            <MenuItem value="completed">Completed</MenuItem>
-                          </Select>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              <Box sx={{ mt: 2 }}>
-                <Button
-                  variant="outlined"
-                  startIcon={<AttachFileIcon />}
-                  onClick={() => showNotification('Upload handover document feature', 'info')}
-                >
-                  Upload Handover Documents
-                </Button>
-              </Box>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setShowHandoverModal(false)}>Close</Button>
-              <Button variant="contained" onClick={() => {
-                showNotification('Handover documentation updated successfully!', 'success');
-                setShowHandoverModal(false);
-              }}>
-                Save Documentation
-              </Button>
-            </DialogActions>
-          </Dialog>
-
-          {/* Asset Transfer/Return Modal */}
-          <Dialog 
-            open={showAssetTransferModal} 
-            onClose={() => setShowAssetTransferModal(false)}
-            maxWidth="lg"
-            fullWidth
-            PaperProps={{ sx: { borderRadius: 2 } }}
-          >
-            <DialogTitle>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <BusinessIcon />
-                  Asset Transfer/Return - {selectedRequest?.employeeName}
-                </Box>
-                <IconButton onClick={() => setShowAssetTransferModal(false)} size="small">
-                  <CloseIcon />
-                </IconButton>
-              </Box>
-            </DialogTitle>
-            <DialogContent dividers>
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Asset Name</TableCell>
-                      <TableCell>Asset ID</TableCell>
-                      <TableCell>Type</TableCell>
-                      <TableCell>Action</TableCell>
-                      <TableCell>Condition</TableCell>
-                      <TableCell>Assigned To</TableCell>
-                      <TableCell align="center">Status</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {assetTransferList.map((asset) => (
-                      <TableRow key={asset.id}>
-                        <TableCell>{asset.asset}</TableCell>
-                        <TableCell>{asset.assetId}</TableCell>
-                        <TableCell>
-                          <Chip label={asset.type} size="small" variant="outlined" />
-                        </TableCell>
-                        <TableCell>
-                          <Chip 
-                            label={asset.status === 'transfer' ? 'Transfer to New Dept' : 'Return to Company'} 
-                            size="small" 
-                            color={asset.status === 'transfer' ? 'primary' : 'secondary'}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Select
-                            value={asset.condition}
-                            size="small"
-                            onChange={(e) => {
-                              const updated = assetTransferList.map(a => 
-                                a.id === asset.id ? {...a, condition: e.target.value} : a
-                              );
-                              setAssetTransferList(updated);
-                            }}
-                            sx={{ minWidth: 100 }}
-                          >
-                            <MenuItem value="Excellent">Excellent</MenuItem>
-                            <MenuItem value="Good">Good</MenuItem>
-                            <MenuItem value="Fair">Fair</MenuItem>
-                            <MenuItem value="Poor">Poor</MenuItem>
-                          </Select>
-                        </TableCell>
-                        <TableCell>{asset.assignedTo}</TableCell>
-                        <TableCell align="center">
-                          <Select
-                            value={asset.status}
-                            size="small"
-                            onChange={(e) => {
-                              const updated = assetTransferList.map(a => 
-                                a.id === asset.id ? {...a, status: e.target.value} : a
-                              );
-                              setAssetTransferList(updated);
-                            }}
-                            sx={{ minWidth: 120 }}
-                          >
-                            <MenuItem value="pending">Pending</MenuItem>
-                            <MenuItem value="in-progress">In Progress</MenuItem>
-                            <MenuItem value="completed">Completed</MenuItem>
-                          </Select>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setShowAssetTransferModal(false)}>Close</Button>
-              <Button variant="contained" onClick={() => {
-                showNotification('Asset transfer/return updated successfully!', 'success');
-                setShowAssetTransferModal(false);
-              }}>
-                Save Asset Status
-              </Button>
-            </DialogActions>
-          </Dialog>
-
-          {/* Relocation Support Modal */}
-          <Dialog 
-            open={showRelocationSupportModal} 
-            onClose={() => setShowRelocationSupportModal(false)}
-            maxWidth="md"
-            fullWidth
-            PaperProps={{ sx: { borderRadius: 2 } }}
-          >
-            <DialogTitle>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <LocationIcon />
-                  Relocation Support - {selectedRequest?.employeeName}
-                </Box>
-                <IconButton onClick={() => setShowRelocationSupportModal(false)} size="small">
-                  <CloseIcon />
-                </IconButton>
-              </Box>
-            </DialogTitle>
-            <DialogContent dividers>
-              <Grid container spacing={3}>
-                <Grid item xs={12}>
-                  <Alert severity="info" sx={{ mb: 2, borderRadius: 2 }}>
-                    Track relocation support for location transfers
-                  </Alert>
-                </Grid>
-                
-                <Grid item xs={12}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Travel Expense Reimbursement
-                  </Typography>
-                  <Card variant="outlined" sx={{ mb: 2 }}>
-                    <CardContent>
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
-                          <FormControlLabel
-                            control={<Checkbox checked={travelExpenses.eligible} onChange={(e) => setTravelExpenses({...travelExpenses, eligible: e.target.checked})} />}
-                            label="Eligible for Travel Expense Reimbursement"
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <FormControl fullWidth size="small">
-                            <InputLabel>Expense Type</InputLabel>
-                            <Select
-                              value={travelExpenses.expenseType}
-                              label="Expense Type"
-                              onChange={(e) => setTravelExpenses({...travelExpenses, expenseType: e.target.value})}
-                              disabled={!travelExpenses.eligible}
-                            >
-                              <MenuItem value="reimbursement">Employee Reimbursement</MenuItem>
-                              <MenuItem value="company_arranged">Company Arranged Travel</MenuItem>
-                            </Select>
-                          </FormControl>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            label="Estimated Amount (₹)"
-                            type="number"
-                            value={travelExpenses.estimatedAmount}
-                            onChange={(e) => setTravelExpenses({...travelExpenses, estimatedAmount: e.target.value})}
-                            size="small"
-                            fullWidth
-                            disabled={!travelExpenses.eligible}
-                            InputLabelProps={{ shrink: true }}
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            label="Approved Amount (₹)"
-                            type="number"
-                            value={travelExpenses.approvedAmount}
-                            onChange={(e) => setTravelExpenses({...travelExpenses, approvedAmount: e.target.value})}
-                            size="small"
-                            fullWidth
-                            disabled={!travelExpenses.eligible}
-                            InputLabelProps={{ shrink: true }}
-                          />
-                        </Grid>
-                        <Grid item xs={12}>
-                          <Button
-                            variant="outlined"
-                            startIcon={<AttachFileIcon />}
-                            onClick={() => showNotification('Upload expense receipts feature', 'info')}
-                            disabled={!travelExpenses.eligible}
-                          >
-                            Upload Expense Receipts
-                          </Button>
-                        </Grid>
-                      </Grid>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                
-                <Grid item xs={12}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Accommodation Support
-                  </Typography>
-                  <Card variant="outlined" sx={{ mb: 2 }}>
-                    <CardContent>
-                      <Grid container spacing={2}>
-                        <Grid item xs={12}>
-                          <FormControlLabel
-                            control={<Checkbox checked={newTransfer.accommodationSupport} onChange={(e) => setNewTransfer({...newTransfer, accommodationSupport: e.target.checked})} />}
-                            label="Temporary Accommodation Support Required"
-                          />
-                        </Grid>
-                        {newTransfer.accommodationSupport && (
-                          <>
-                            <Grid item xs={12} sm={6}>
-                              <TextField
-                                label="Accommodation Start Date"
-                                type="date"
-                                size="small"
-                                fullWidth
-                                InputLabelProps={{ shrink: true }}
-                              />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                              <TextField
-                                label="Accommodation End Date"
-                                type="date"
-                                size="small"
-                                fullWidth
-                                InputLabelProps={{ shrink: true }}
-                              />
-                            </Grid>
-                            <Grid item xs={12}>
-                              <TextField
-                                label="Accommodation Type"
-                                select
-                                size="small"
-                                fullWidth
-                                defaultValue=""
-                              >
-                                <MenuItem value="">Select type</MenuItem>
-                                <MenuItem value="hotel">Hotel</MenuItem>
-                                <MenuItem value="serviced_apartment">Serviced Apartment</MenuItem>
-                                <MenuItem value="company_guest_house">Company Guest House</MenuItem>
-                                <MenuItem value="temporary_rental">Temporary Rental</MenuItem>
-                              </TextField>
-                            </Grid>
-                          </>
-                        )}
-                      </Grid>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                
-                <Grid item xs={12}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Family Relocation Support
-                  </Typography>
-                  <Card variant="outlined" sx={{ mb: 2 }}>
-                    <CardContent>
-                      <Grid container spacing={2}>
-                        <Grid item xs={12}>
-                          <FormControlLabel
-                            control={<Checkbox checked={newTransfer.familyRelocation} onChange={(e) => setNewTransfer({...newTransfer, familyRelocation: e.target.checked})} />}
-                            label="Family Relocation Support Required"
-                          />
-                        </Grid>
-                        {newTransfer.familyRelocation && (
-                          <>
-                            <Grid item xs={12} sm={6}>
-                              <TextField
-                                label="Number of Family Members"
-                                type="number"
-                                size="small"
-                                fullWidth
-                                InputLabelProps={{ shrink: true }}
-                              />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                              <FormControlLabel
-                                control={<Checkbox />}
-                                label="School Admission Support Required"
-                              />
-                            </Grid>
-                            <Grid item xs={12}>
-                              <TextField
-                                label="Additional Support Requirements"
-                                multiline
-                                rows={2}
-                                size="small"
-                                fullWidth
-                                placeholder="Specify any additional family relocation support needed..."
-                              />
-                            </Grid>
-                          </>
-                        )}
-                      </Grid>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                
-                <Grid item xs={12}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Relocation Checklist
-                  </Typography>
-                  <TableContainer>
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Task</TableCell>
-                          <TableCell>Assigned To</TableCell>
-                          <TableCell>Priority</TableCell>
-                          <TableCell align="center">Status</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {relocationChecklist.map((item) => (
-                          <TableRow key={item.id}>
-                            <TableCell>{item.task}</TableCell>
-                            <TableCell>
-                              <Chip label={item.assignedTo} size="small" variant="outlined" />
-                            </TableCell>
-                            <TableCell>
-                              <Chip 
-                                label={item.priority} 
-                                size="small" 
-                                color={item.priority === 'High' ? 'error' : item.priority === 'Medium' ? 'warning' : 'default'}
-                              />
-                            </TableCell>
-                            <TableCell align="center">
-                              <Select
-                                value={item.status}
-                                size="small"
-                                onChange={(e) => {
-                                  const updated = relocationChecklist.map(i => 
-                                    i.id === item.id ? {...i, status: e.target.value} : i
-                                  );
-                                  setRelocationChecklist(updated);
-                                }}
-                                sx={{ minWidth: 120 }}
-                              >
-                                <MenuItem value="pending">Pending</MenuItem>
-                                <MenuItem value="in-progress">In Progress</MenuItem>
-                                <MenuItem value="completed">Completed</MenuItem>
-                              </Select>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </Grid>
-              </Grid>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setShowRelocationSupportModal(false)}>Close</Button>
-              <Button variant="contained" onClick={() => {
-                showNotification('Relocation support details updated successfully!', 'success');
-                setShowRelocationSupportModal(false);
-              }}>
-                Save Relocation Support
-              </Button>
-            </DialogActions>
-          </Dialog>
-          
-          {/* Snackbar for notifications */}
-          <Snackbar 
-            open={snackbar.open} 
-            autoHideDuration={6000} 
-            onClose={() => setSnackbar({ ...snackbar, open: false })}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-          >
-            <Alert 
-              onClose={() => setSnackbar({ ...snackbar, open: false })} 
-              severity={snackbar.severity}
-              sx={{ width: '100%', borderRadius: 2 }}
-            >
-              {snackbar.message}
-            </Alert>
-          </Snackbar>
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
+            Manage internal transfers, promotions, department movements and employee transitions efficiently.
+          </Typography>
         </Box>
-    </>
+
+        <Button
+          variant="contained"
+          size="large"
+          startIcon={<AddIcon />}
+          onClick={() => setOpenTransferModal(true)}
+          sx={{
+            borderRadius: 3,
+            px: 4,
+            py: 1.2,
+            fontWeight: 600,
+            background:
+              "linear-gradient(45deg, #1976D2 30%, #42A5F5 90%)",
+            boxShadow: 3
+          }}
+        >
+          New Transfer
+        </Button>
+
+      </Box>
+
+      {/* ================= TABS ================= */}
+      <Paper
+        sx={{
+          mb: 4,
+          borderRadius: 3,
+          border: "1px solid",
+          borderColor: "divider",
+          boxShadow: 1
+        }}
+      >
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{
+            borderBottom: 1,
+            borderColor: "divider",
+            "& .MuiTab-root": {
+              textTransform: "none",
+              fontWeight: 600,
+              fontSize: 14
+            }
+          }}
+        >
+          <Tab label="All Transfers" icon={<TransferIcon />} iconPosition="start" />
+          <Tab label="Pending Approvals" icon={<PendingIcon />} iconPosition="start" />
+          <Tab label="Transfer History" icon={<HistoryIcon />} iconPosition="start" />
+          <Tab label="Organization Chart" icon={<OrgChartIcon />} iconPosition="start" />
+          <Tab label="Reports & Analytics" icon={<AssessmentIcon />} iconPosition="start" />
+        </Tabs>
+      </Paper>
+
+      {/* ================= TAB CONTENT ================= */}
+
+      {activeTab === 0 && (
+        <>
+          {/* Stats + Quick Actions */}
+          <Grid container spacing={4} sx={{ mb: 4 }}>
+            <Grid item xs={12} lg={9}>
+              <TransferStatsCard />
+            </Grid>
+
+            <Grid item xs={12} lg={3}>
+              <QuickActionsCard />
+            </Grid>
+          </Grid>
+
+          {/* Table */}
+          <Paper
+            sx={{
+              borderRadius: 3,
+              border: "1px solid",
+              borderColor: "divider",
+              boxShadow: 1,
+              p: 3
+            }}
+          >
+            <TransferRequestTable />
+          </Paper>
+        </>
+      )}
+
+      {activeTab === 1 && (
+        <Paper
+          sx={{
+            borderRadius: 3,
+            border: "1px solid",
+            borderColor: "divider",
+            boxShadow: 1,
+            p: 4
+          }}
+        >
+          <Typography variant="h6" fontWeight="bold" sx={{ mb: 3 }}>
+            Pending Approvals
+          </Typography>
+
+          {transferRequests.filter(r => r.status === "Pending").length === 0 ? (
+            <Alert severity="info" sx={{ borderRadius: 2 }}>
+              No pending approvals available.
+            </Alert>
+          ) : (
+            <TransferRequestTable />
+          )}
+        </Paper>
+      )}
+
+      {activeTab === 2 && (
+        <Paper
+          sx={{
+            borderRadius: 3,
+            border: "1px solid",
+            borderColor: "divider",
+            boxShadow: 1,
+            p: 4
+          }}
+        >
+          <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
+            Transfer History
+          </Typography>
+
+          <TransferRequestTable />
+        </Paper>
+      )}
+
+      {activeTab === 3 && <OrganizationChart />}
+
+      {activeTab === 4 && <ReportsAnalytics />}
+
+      {/* ================= SNACKBAR ================= */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: "100%", borderRadius: 2 }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Box>
+
+
+
   );
+
+  <Dialog
+    open={openTransferModal}
+    onClose={() => setOpenTransferModal(false)}
+    maxWidth="md"
+    fullWidth
+    PaperProps={{
+      sx: {
+        borderRadius: 4,
+        p: 2
+      }
+    }}
+  >
+    <DialogTitle sx={{ fontWeight: 700 }}>
+      Create New Transfer Request
+    </DialogTitle>
+
+    <DialogContent dividers>
+      <Grid container spacing={3} sx={{ mt: 1 }}>
+
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Employee Name"
+            fullWidth
+            size="small"
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Employee ID"
+            fullWidth
+            size="small"
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Current Department"
+            fullWidth
+            size="small"
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="New Department"
+            fullWidth
+            size="small"
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Current Location"
+            fullWidth
+            size="small"
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="New Location"
+            fullWidth
+            size="small"
+          />
+        </Grid>
+
+        <Grid item xs={12}>
+          <TextField
+            label="Reason for Transfer"
+            multiline
+            rows={3}
+            fullWidth
+            size="small"
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <TextField
+            type="date"
+            label="Effective Date"
+            fullWidth
+            size="small"
+            InputLabelProps={{ shrink: true }}
+          />
+        </Grid>
+
+      </Grid>
+    </DialogContent>
+
+    <DialogActions sx={{ p: 3 }}>
+      <Button
+        onClick={() => setOpenTransferModal(false)}
+        sx={{ borderRadius: 3 }}
+      >
+        Cancel
+      </Button>
+
+      <Button
+        variant="contained"
+        sx={{ borderRadius: 3 }}
+        onClick={() => {
+          // Add submit logic here
+          setOpenTransferModal(false);
+        }}
+      >
+        Submit Transfer
+      </Button>
+    </DialogActions>
+  </Dialog>
+
+
 };
 
 export default TransferMovement;

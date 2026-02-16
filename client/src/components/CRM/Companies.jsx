@@ -5,6 +5,7 @@ import { companiesAPI } from '../../utils/api';
 import { BASE_URL } from '../../config/api.config';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Icon } from '@iconify/react/dist/iconify.js';
 
 
 function Companies() {
@@ -148,7 +149,7 @@ function Companies() {
           location: company.location || company.country || '',
           rating: company.rating || 0,
           logo: company.logo || null, // Use logo path from backend
-          logoPath: company.logo 
+          logoPath: company.logo
             ? (company.logo.startsWith('http') ? company.logo : `${BASE_URL}${company.logo}`)
             : null,
           ...company // Keep all original fields
@@ -167,7 +168,7 @@ function Companies() {
       console.error('Error loading companies:', err);
       const status = err.status || (err.message && err.message.includes('404') ? 404 : null);
       let errorMessage = 'Failed to load companies. ';
-      
+
       if (status === 404 || err.message?.includes('404') || err.message?.includes('Not Found')) {
         errorMessage += 'The companies API endpoint is not available. Please ensure the backend companies endpoint is implemented.';
       } else if (err.message) {
@@ -175,7 +176,7 @@ function Companies() {
       } else {
         errorMessage += 'Please check if the backend API is running.';
       }
-      
+
       setError(errorMessage);
       // Fallback to sample data
       setCrmcompanies(sampleCompanies);
@@ -428,11 +429,11 @@ function Companies() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       setError(null);
       setLoading(true);
-      
+
       // Prepare company data for API - map frontend fields to backend schema
       const companyData = {
         company_name: formData.companyName || 'Untitled Company', // Backend expects 'company_name', not 'name'
@@ -481,10 +482,10 @@ function Companies() {
         await companiesAPI.update(selectedCompany.id, companyData, selectedFile);
         toast.success('Company updated successfully!');
       }
-      
+
       // Reload companies
       await loadCompanies();
-      
+
       // Close modal and reset form
       setShowModal(false);
       setActiveTab('basic-info');
@@ -562,7 +563,7 @@ function Companies() {
 
   const handleExportEXCEL = () => {
     const exportData = Crmcompanies.length > 0 ? Crmcompanies : sampleCompanies;
-    
+
     // Create CSV content
     const headers = ['Name', 'Email', 'Phone', 'Location', 'Rating'];
     const csvContent = [
@@ -587,24 +588,24 @@ function Companies() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    
+
     toast.success('Excel file downloaded successfully!');
   };
 
- const handleSortChange = (e) => {
-  const selectedLocation = e.target.value;
+  const handleSortChange = (e) => {
+    const selectedLocation = e.target.value;
 
-  if (selectedLocation === 'Sort by') {
-    // Reset to full list
-    setDisplayedCompanies(Crmcompanies);
-  } else {
-    const filtered = Crmcompanies.filter(c => 
-      (c.location && c.location.toLowerCase().includes(selectedLocation.toLowerCase())) ||
-      (c.country && c.country.toLowerCase().includes(selectedLocation.toLowerCase()))
-    );
-    setDisplayedCompanies(filtered);
-  }
-};
+    if (selectedLocation === 'Sort by') {
+      // Reset to full list
+      setDisplayedCompanies(Crmcompanies);
+    } else {
+      const filtered = Crmcompanies.filter(c =>
+        (c.location && c.location.toLowerCase().includes(selectedLocation.toLowerCase())) ||
+        (c.country && c.country.toLowerCase().includes(selectedLocation.toLowerCase()))
+      );
+      setDisplayedCompanies(filtered);
+    }
+  };
 
 
 
@@ -628,9 +629,17 @@ function Companies() {
 
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
-          <h3>Companies</h3>
+          <h5 className="text-3xl fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+            <span className="icon-circle text-primary">
+              <Icon icon="heroicons:link-20-solid" />
+            </span>
+            Companies
+          </h5>
+          <p className="text-muted mb-0">
+            Manage contacts, associated companies, and communication details from a single platform.
+          </p>
         </div>
-        
+
         {/* Right side: buttons */}
         <div className="d-flex gap-2">
           <div>
@@ -640,7 +649,7 @@ function Companies() {
                 <div className="dropdown">
                   <a
                     href="#"
-                    className="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                    className="dropdown-toggle btn btn-primary d-inline-flex align-items-center"
                     data-bs-toggle="dropdown"
                   >
                     <i className="ti ti-file-export me-1"></i>Export
@@ -668,10 +677,14 @@ function Companies() {
             </div>
           </div>
           <button
-            style={styles.button}
+            style={{
+              ...styles.button, backgroundColor: "#198754",
+              color: "#fff",
+              border: "none"
+            }}
             onClick={handleAddCompany}
           >
-            <i className='fe fe-plus-circle'></i>  Add Company
+            Add Company
           </button>
         </div>
       </div>
@@ -696,77 +709,150 @@ function Companies() {
 
         <div style={styles.grid}>
           {displayedCompanies.map((company, index) => (
-            <div key={company.id || index} style={styles.card}>
-              <div className="d-flex justify-content-between align-items-start mb-2">
-                <div style={styles.logo}>
+            <div
+              key={company.id || index}
+              style={{
+                ...styles.card,
+                backgroundColor: "#f8fafc", // soft background
+                borderRadius: "14px",
+                padding: "18px",
+                boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+                display: "flex",
+                flexDirection: "column",
+                height: "100%"
+              }}
+            >
+              {/* Top: Logo */}
+              <div className="d-flex justify-content-start mb-3">
+                <div
+                  style={{
+                    ...styles.logo,
+                    width: "64px",
+                    height: "64px",
+                    borderRadius: "12px",
+                    backgroundColor: "#e2e8f0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                    
+                  }}
+                >
                   {company.logoPath ? (
-                    <img 
-                      src={company.logoPath} 
+                    <img
+                      src={company.logoPath}
                       alt={company.name}
-                      style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }}
+                      style={{
+                        width: "56px",
+                        height: "56px",
+                        objectFit: "contain",
+                        borderRadius: "8px"
+                      }}
                       onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'block';
+                        e.target.style.display = "none";
+                        e.target.nextSibling.style.display = "flex";
                       }}
                     />
                   ) : null}
-                  <span style={{ display: company.logoPath ? 'none' : 'block', fontSize: '40px' }}>🏢</span>
-                </div>
-                <div className="d-flex gap-1">
-                  <button
-                    className="btn btn-sm btn-primary"
-                    onClick={() => handleEditCompany(company)}
-                    title="Edit Company"
-                    type="button"
-                    style={{ fontSize: '12px', padding: '4px 10px', minWidth: '65px' }}
+
+                  {/* React Icon instead of 🏢 */}
+                  <span
+                    style={{
+                      display: company.logoPath ? "none" : "flex",
+                      fontSize: "28px",
+                      color: "#334155"
+                    }}
                   >
-                    <i className="ti ti-edit me-1"></i>Edit
-                  </button>
-                  <button
-                    className="btn btn-sm btn-danger"
-                    onClick={() => handleDeleteCompany(company)}
-                    title="Delete Company"
-                    type="button"
-                    style={{ fontSize: '12px', padding: '4px 10px', minWidth: '75px' }}
-                  >
-                    <i className="ti ti-trash me-1"></i>Delete
-                  </button>
+                    <Icon icon="heroicons:building-office-2" />
+                  </span>
                 </div>
               </div>
-              <h5><b>{company.name}</b></h5>
-              <p><strong>Email:</strong> {company.email || 'N/A'}</p>
-              <p><strong>Phone:</strong> {company.phone || 'N/A'}</p>
-              <p><strong>Location:</strong> {company.location || 'N/A'}</p>
-              <p><strong>Rating:</strong> ⭐ {company.rating || 0}</p>
 
+              {/* Company Name */}
+              <h5
+                style={{
+                  fontSize: "20px",
+                  fontWeight: 500,
+                  marginBottom: "12px",
+                  lineHeight: "1.3"
+                }}
+              >
+                {company.name}
+              </h5>
+
+              {/* Details */}
+              <div
+                style={{
+                  fontSize: "14px",
+                  color: "#475569",
+                  lineHeight: "1.8",
+                  flexGrow: 1
+                }}
+              >
+                <div>
+                  <strong style={{ color: "#000" }}>Email:</strong>{" "}
+                  {company.email || "N/A"}
+                </div>
+                <div>
+                  <strong style={{ color: "#000" }}>Phone:</strong>{" "}
+                  {company.phone || "N/A"}
+                </div>
+                <div>
+                  <strong style={{ color: "#000" }}>Location:</strong>{" "}
+                  {company.location || "N/A"}
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  <strong style={{ color: "#000" }}>Rating:</strong>
+                  <span style={{ color: "#f59e0b", fontWeight: 600 }}>
+                    ⭐ {company.rating || 0}
+                  </span>
+                </div>
+              </div>
+
+              {/* Bottom Actions */}
+              <div className="d-flex justify-content-around gap-2 mt-3">
+                <button
+                  className="btn btn-sm btn-primary d-flex align-items-center justify-content-center"
+                  onClick={() => handleEditCompany(company)}
+                  title="Edit Company"
+                  type="button"
+                  style={{ fontSize: "12px", padding: "6px 14px", minWidth: "70px" }}
+                >
+                  <Icon icon="heroicons:pencil-square" className="me-1" width="16" />
+                  Edit
+                </button>
+
+                <button
+                  className="btn btn-sm btn-danger d-flex align-items-center justify-content-center"
+                  onClick={() => handleDeleteCompany(company)}
+                  title="Delete Company"
+                  type="button"
+                  style={{ fontSize: "12px", padding: "6px 14px", minWidth: "80px" }}
+                >
+                  <Icon icon="heroicons:trash" className="me-1" width="16" />
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
 
         </div>
-        <div
-          className="d-flex justify-content-center align-items-center"
-          style={{ height: "70px" }}
-        >
-          <button className="btn btn-secondary btn-sm">Load More</button>
-        </div>
-
       </div>
 
 
       {/* Add Company Modal */}
       {showModal && (
         <div
-          className="modal fade show"
+          className="modal show d-block"
           id="addCompanyModal"
           tabIndex="-1"
           aria-labelledby="addCompanyModalLabel"
           aria-hidden="false"
-          style={{ display: 'block' }}
+          style={{ display: 'block', backgroundColor: 'rgba(11, 11, 11, 0.5)' }}
           onClick={handleBackdropClick}
         >
-          <div className="modal-dialog modal-xl">
+          <div className="modal-dialog  modal-dialog-centered" style={{ width: "100vw" }}>
             <div className="modal-content">
-              <div className="modal-header">
+              <div className="modal-header" style={{ width: "40vw", backgroundColor: "white" }}>
                 <h4 className="modal-title">
                   {modalType === 'add' ? 'Add New Company' : 'Edit Company'}
                 </h4>
@@ -779,10 +865,10 @@ function Companies() {
                   <i className="ti ti-x"></i>
                 </button>
               </div>
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} style={{ width: "40vw", backgroundColor: "white" }}>
                 <div className="contact-grids-tab">
                   <ul className="nav nav-underline" id="myTab" role="tablist">
-                    <li className="nav-item" role="presentation">
+                    <li className="nav-item" style={{ marginLeft: "20px" }} role="presentation">
                       <button
                         className={`nav-link ${activeTab === 'basic-info' ? 'active' : ''}`}
                         id="info-tab"
@@ -837,16 +923,16 @@ function Companies() {
                             <div className="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
                               <div className="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames" style={{ position: 'relative', overflow: 'hidden' }}>
                                 {imagePreview ? (
-                                  <img 
-                                    src={imagePreview} 
-                                    alt="Logo preview" 
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                  <img
+                                    src={imagePreview}
+                                    alt="Logo preview"
+                                    style={{ width: '70px', height: '70px', objectFit: 'cover' }}
                                     onError={(e) => {
                                       e.target.style.display = 'none';
                                     }}
                                   />
                                 ) : (
-                                  <i className="ti ti-photo text-gray-2 fs-16"></i>
+                                  <Icon icon="heroicons:user-circle" className="text-secondary" width="48" height="48" />
                                 )}
                               </div>
                               <div className="profile-upload">
@@ -857,16 +943,16 @@ function Companies() {
                                 <div className="profile-uploader d-flex align-items-center">
                                   <label className="drag-upload-btn btn btn-sm btn-primary me-2" style={{ cursor: 'pointer', position: 'relative' }}>
                                     Upload
-                                    <input 
-                                      type="file" 
-                                      className="form-control image-sign" 
+                                    <input
+                                      type="file"
+                                      className="form-control image-sign"
                                       accept="image/*"
                                       onChange={handleFileChange}
                                       style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer', left: 0, top: 0 }}
                                     />
                                   </label>
                                   {(selectedFile || imagePreview) && (
-                                    <button 
+                                    <button
                                       type="button"
                                       onClick={handleRemoveImage}
                                       className="btn btn-light btn-sm"

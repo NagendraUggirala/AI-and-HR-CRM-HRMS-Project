@@ -3,8 +3,19 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+
+
 const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----------------  
   // Enhanced Probation Employees Data
+
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showExtendModal, setShowExtendModal] = useState(false);
+  const [showEarlyConfirmModal, setShowEarlyConfirmModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showNoteModal, setShowNoteModal] = useState(false);
+
+
   const initialProbationEmployees = [
     {
       id: 1,
@@ -333,7 +344,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
   const [confirmationEmployees, setConfirmationEmployees] = useState(initialConfirmationEmployees);
   const [promotionEmployees, setPromotionEmployees] = useState(initialPromotionEmployees);
   const [buddies, setBuddies] = useState(initialBuddies);
-  
+
   // Enhanced UI States
   const [showProbationReviewModal, setShowProbationReviewModal] = useState(false);
   const [showExtensionModal, setShowExtensionModal] = useState(false);
@@ -349,7 +360,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
-  
+
   // Enhanced Filter States
   const [filters, setFilters] = useState({
     search: '',
@@ -365,13 +376,13 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
-  
+
   // View and Layout States
   const [viewMode, setViewMode] = useState('table'); // 'table', 'card', 'timeline'
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
-  
+
   // Analytics Data
   const [analytics, setAnalytics] = useState({
     probation: {
@@ -488,9 +499,9 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
       active: { label: 'Active', color: 'success' },
       inactive: { label: 'Inactive', color: 'secondary' }
     };
-    
+
     const { label, color } = config[status] || { label: status, color: 'secondary' };
-    
+
     return (
       <span className={`badge bg-${color}-subtle text-${color} border border-${color}-subtle`}>
         {label}
@@ -507,16 +518,16 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
     };
 
     const color = getColor(progress);
-    
+
     return (
       <div className="d-flex align-items-center gap-2">
         <div className={`progress flex-grow-1 ${size === 'sm' ? 'progress-sm' : ''}`}>
-          <div 
+          <div
             className={`progress-bar bg-${color}`}
-            role="progressbar" 
+            role="progressbar"
             style={{ width: `${progress}%` }}
             aria-valuenow={progress}
-            aria-valuemin="0" 
+            aria-valuemin="0"
             aria-valuemax="100"
           >
           </div>
@@ -557,7 +568,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
       <div className="d-flex gap-2">
         {milestones.map(({ key, label, milestone }) => (
           <div key={key} className="text-center">
-            <div 
+            <div
               className={`badge ${milestone.completed ? 'bg-success' : 'bg-light text-muted border'} rounded-circle d-flex align-items-center justify-content-center`}
               style={{ width: '32px', height: '32px' }}
               title={`${label} Day: ${milestone.completed ? formatDate(milestone.date) : 'Pending'}`}
@@ -577,43 +588,43 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
 
   const EnhancedConfirmationWorkflow = ({ employee }) => {
     const steps = [
-      { 
-        key: 'probationReview', 
-        label: 'P', 
+      {
+        key: 'probationReview',
+        label: 'P',
         status: employee.probationReviewCompleted ? 'completed' : 'pending',
         tooltip: `Probation Review: ${employee.probationReviewCompleted ? 'Completed' : 'Pending'}`,
         date: employee.probationReviewCompleted ? employee.probationEndDate : null
       },
-      { 
-        key: 'managerReview', 
-        label: 'M', 
+      {
+        key: 'managerReview',
+        label: 'M',
         status: employee.managerRecommendation ? 'completed' : 'pending',
         tooltip: `Manager: ${employee.managerRecommendation || 'Pending'}`,
         date: employee.managerReviewDate
       },
-      { 
-        key: 'hrReview', 
-        label: 'H', 
+      {
+        key: 'hrReview',
+        label: 'H',
         status: employee.hrRecommendation ? 'completed' : 'pending',
         tooltip: `HR: ${employee.hrRecommendation || 'Pending'}`,
         date: employee.hrReviewDate
       },
-      { 
-        key: 'deptHead', 
-        label: 'D', 
+      {
+        key: 'deptHead',
+        label: 'D',
         status: employee.departmentHeadApproval ? 'completed' : 'pending',
         tooltip: `Dept Head: ${employee.departmentHeadApproval || 'Pending'}`,
         date: employee.departmentHeadReviewDate
       },
-      { 
-        key: 'authority', 
-        label: 'A', 
+      {
+        key: 'authority',
+        label: 'A',
         status: employee.confirmationAuthorityApproval ? 'completed' : 'pending',
         tooltip: `Authority: ${employee.confirmationAuthorityApproval || 'Pending'}`,
         date: employee.confirmationAuthorityReviewDate
       }
     ];
-    
+
     const completedCount = steps.filter(s => s.status === 'completed').length;
     const totalCount = steps.length;
     const progress = (completedCount / totalCount) * 100;
@@ -628,10 +639,9 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
         <div className="d-flex gap-1 align-items-center justify-content-center">
           {steps.map((step, index) => (
             <div key={step.key} className="d-flex align-items-center">
-              <span 
-                className={`badge rounded-circle ${
-                  step.status === 'completed' ? 'bg-success' : 'bg-light text-muted border'
-                }`}
+              <span
+                className={`badge rounded-circle ${step.status === 'completed' ? 'bg-success' : 'bg-light text-muted border'
+                  }`}
                 title={`${step.tooltip}${step.date ? ` - ${formatDate(step.date)}` : ''}`}
                 style={{ width: '24px', height: '24px', fontSize: '10px' }}
               >
@@ -663,12 +673,11 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
         <div className="d-flex gap-1 align-items-center justify-content-center flex-wrap">
           {steps.map((step, index) => (
             <div key={step.id} className="d-flex align-items-center">
-              <span 
-                className={`badge ${
-                  step.status === 'approved' ? 'bg-success' : 
-                  step.status === 'rejected' ? 'bg-danger' : 
-                  'bg-light text-muted border'
-                }`}
+              <span
+                className={`badge ${step.status === 'approved' ? 'bg-success' :
+                  step.status === 'rejected' ? 'bg-danger' :
+                    'bg-light text-muted border'
+                  }`}
                 title={`${step.level}: ${step.status}${step.approver ? ` by ${step.approver}` : ''}${step.date ? ` on ${formatDate(step.date)}` : ''}`}
                 style={{ fontSize: '10px', padding: '4px 8px' }}
               >
@@ -690,9 +699,9 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
       medium: { color: 'warning', icon: 'heroicons:exclamation-circle' },
       high: { color: 'danger', icon: 'heroicons:x-circle' }
     };
-    
+
     const { color, icon } = config[riskLevel] || { color: 'secondary', icon: 'heroicons:question-mark-circle' };
-    
+
     return (
       <div className={`d-flex align-items-center gap-1 text-${color}`}>
         <Icon icon={icon} width={16} height={16} />
@@ -704,7 +713,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
   const EmployeeAvatar = ({ name, size = 'sm' }) => {
     const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
     const sizeClass = size === 'sm' ? 'avatar-sm' : size === 'lg' ? 'avatar-lg' : '';
-    
+
     return (
       <div className={`avatar ${sizeClass} bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold`}>
         {initials}
@@ -715,7 +724,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
   // ---------------- FILTERING AND SORTING ----------------
   const filteredEmployees = useMemo(() => {
     let filtered = [];
-    
+
     switch (activeTab) {
       case 'probation':
         filtered = probationEmployees;
@@ -736,7 +745,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
     // Apply search filter
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
-      filtered = filtered.filter(emp => 
+      filtered = filtered.filter(emp =>
         emp.name.toLowerCase().includes(searchLower) ||
         emp.employeeId.toLowerCase().includes(searchLower) ||
         emp.designation.toLowerCase().includes(searchLower) ||
@@ -810,7 +819,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
 
   const handleBulkAction = (action) => {
     const selectedData = filteredEmployees.filter(emp => selectedRows.includes(emp.id));
-    
+
     switch (action) {
       case 'send_reminder':
         alert(`Send reminders to ${selectedData.length} selected employees`);
@@ -949,21 +958,21 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
   // ---------------- ENHANCED COMPONENT ----------------
   return (
     <div
-      menuItems={menuItems} 
+      menuItems={menuItems}
       userInfo={userInfo}
       appName="HRMS - HR Operations"
     >
       <div className="container-fluid p-4">
-        
+
         {/* ENHANCED HEADER */}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
             <h5 className="mb-2 d-flex align-items-center">
-              <Icon 
-                icon="heroicons:arrow-trending-up" 
-                className="me-2" 
-                width={24} 
-                height={24} 
+              <Icon
+                icon="heroicons:arrow-trending-up"
+                className="me-2"
+                width={24}
+                height={24}
               />
               Promotions & Career Progression
             </h5>
@@ -971,7 +980,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
               Manage probation, confirmation, promotions and buddy programs
             </p>
           </div>
-          
+
           <div className="d-flex gap-2">
             <button
               className="btn btn-outline-primary d-flex align-items-center"
@@ -1000,7 +1009,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
         {/* ENHANCED TABS */}
         <ul className="nav nav-tabs mb-4">
           <li className="nav-item">
-            <button 
+            <button
               className={`nav-link ${activeTab === 'probation' ? 'active' : ''} d-flex align-items-center`}
               onClick={() => setActiveTab('probation')}
             >
@@ -1012,7 +1021,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
             </button>
           </li>
           <li className="nav-item">
-            <button 
+            <button
               className={`nav-link ${activeTab === 'confirmation' ? 'active' : ''} d-flex align-items-center`}
               onClick={() => setActiveTab('confirmation')}
             >
@@ -1024,7 +1033,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
             </button>
           </li>
           <li className="nav-item">
-            <button 
+            <button
               className={`nav-link ${activeTab === 'promotions' ? 'active' : ''} d-flex align-items-center`}
               onClick={() => setActiveTab('promotions')}
             >
@@ -1034,7 +1043,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
             </button>
           </li>
           <li className="nav-item">
-            <button 
+            <button
               className={`nav-link ${activeTab === 'buddy' ? 'active' : ''} d-flex align-items-center`}
               onClick={() => setActiveTab('buddy')}
             >
@@ -1059,16 +1068,16 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                     className="form-control"
                     placeholder="Search employees..."
                     value={filters.search}
-                    onChange={(e) => setFilters({...filters, search: e.target.value})}
+                    onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                   />
                 </div>
               </div>
-              
+
               <div className="col-md-2">
-                <select 
+                <select
                   className="form-select"
                   value={filters.department}
-                  onChange={(e) => setFilters({...filters, department: e.target.value})}
+                  onChange={(e) => setFilters({ ...filters, department: e.target.value })}
                 >
                   <option value="All">All Departments</option>
                   <option value="Engineering">Engineering</option>
@@ -1078,12 +1087,12 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                   <option value="Finance">Finance</option>
                 </select>
               </div>
-              
+
               <div className="col-md-2">
-                <select 
+                <select
                   className="form-select"
                   value={filters.location}
-                  onChange={(e) => setFilters({...filters, location: e.target.value})}
+                  onChange={(e) => setFilters({ ...filters, location: e.target.value })}
                 >
                   <option value="All">All Locations</option>
                   <option value="Bangalore">Bangalore</option>
@@ -1092,12 +1101,12 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                   <option value="Hyderabad">Hyderabad</option>
                 </select>
               </div>
-              
+
               <div className="col-md-2">
-                <select 
+                <select
                   className="form-select"
                   value={filters.status}
-                  onChange={(e) => setFilters({...filters, status: e.target.value})}
+                  onChange={(e) => setFilters({ ...filters, status: e.target.value })}
                 >
                   <option value="All">All Status</option>
                   {activeTab === 'probation' && (
@@ -1128,38 +1137,51 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                   )}
                 </select>
               </div>
-              
-              <div className="col-md-3 d-flex gap-2">
-                <div className="btn-group">
-                  <button 
-                    className={`btn btn-outline-secondary ${viewMode === 'table' ? 'active' : ''}`}
-                    onClick={() => setViewMode('table')}
+
+              <div className="col-md-3">
+                <div className="d-flex justify-content-end align-items-center gap-3 flex-wrap">
+
+                  {/* View Mode Toggle */}
+                  <div className="btn-group" role="group">
+                    <button
+                      type="button"
+                      className={`btn btn-outline-secondary d-flex align-items-center justify-content-center ${viewMode === 'table' ? 'active' : ''}`}
+                      onClick={() => setViewMode('table')}
+                    >
+                      <Icon icon="heroicons:table-cells" width="18" />
+                    </button>
+
+                    <button
+                      type="button"
+                      className={`btn btn-outline-secondary d-flex align-items-center justify-content-center ${viewMode === 'card' ? 'active' : ''}`}
+                      onClick={() => setViewMode('card')}
+                    >
+                      <Icon icon="heroicons:squares-2x2" width="18" />
+                    </button>
+
+                    <button
+                      type="button"
+                      className={`btn btn-outline-secondary d-flex align-items-center justify-content-center ${viewMode === 'timeline' ? 'active' : ''}`}
+                      onClick={() => setViewMode('timeline')}
+                    >
+                      <Icon icon="heroicons:chart-bar" width="18" />
+                    </button>
+                  </div>
+
+                  {/* Bulk Action Button */}
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary d-flex align-items-center"
+                    onClick={() => setShowBulkActionModal(true)}
+                    disabled={selectedRows.length === 0}
                   >
-                    <Icon icon="heroicons:table-cells" />
+                    <Icon icon="heroicons:check-circle" width="18" className="me-2" />
+                    Bulk Actions ({selectedRows.length})
                   </button>
-                  <button 
-                    className={`btn btn-outline-secondary ${viewMode === 'card' ? 'active' : ''}`}
-                    onClick={() => setViewMode('card')}
-                  >
-                    <Icon icon="heroicons:squares-2x2" />
-                  </button>
-                  <button 
-                    className={`btn btn-outline-secondary ${viewMode === 'timeline' ? 'active' : ''}`}
-                    onClick={() => setViewMode('timeline')}
-                  >
-                    <Icon icon="heroicons:chart-bar" />
-                  </button>
+
                 </div>
-                
-                <button 
-                  className="btn btn-outline-primary"
-                  onClick={() => setShowBulkActionModal(true)}
-                  disabled={selectedRows.length === 0}
-                >
-                  <Icon icon="heroicons:check-circle" className="me-1" />
-                  Bulk Actions ({selectedRows.length})
-                </button>
               </div>
+
             </div>
           </div>
         </div>
@@ -1507,28 +1529,28 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
               <div className="d-flex gap-2 flex-wrap">
                 {activeTab === 'probation' && (
                   <>
-                    <button 
+                    <button
                       className="btn btn-sm btn-outline-primary d-flex align-items-center"
                       onClick={() => alert('Auto-schedule reviews for all employees')}
                     >
                       <Icon icon="heroicons:calendar" className="me-1" />
                       Auto-Schedule
                     </button>
-                    <button 
+                    <button
                       className="btn btn-sm btn-outline-primary d-flex align-items-center"
                       onClick={() => alert('Send milestone reminders')}
                     >
                       <Icon icon="heroicons:bell" className="me-1" />
                       Send Reminders
                     </button>
-                    <button 
+                    <button
                       className="btn btn-sm btn-outline-primary d-flex align-items-center"
                       onClick={() => setShowBuddyAssignmentModal(true)}
                     >
                       <Icon icon="heroicons:user-plus" className="me-1" />
                       Assign Buddies
                     </button>
-                    <button 
+                    <button
                       className="btn btn-sm btn-outline-primary d-flex align-items-center"
                       onClick={() => setShowImportModal(true)}
                     >
@@ -1537,31 +1559,31 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                     </button>
                   </>
                 )}
-                
+
                 {activeTab === 'confirmation' && (
                   <>
-                    <button 
+                    <button
                       className="btn btn-sm btn-outline-primary d-flex align-items-center"
                       onClick={() => alert('Auto-trigger confirmation process')}
                     >
                       <Icon icon="heroicons:play" className="me-1" />
                       Auto-Trigger
                     </button>
-                    <button 
+                    <button
                       className="btn btn-sm btn-outline-primary d-flex align-items-center"
                       onClick={() => alert('Send approval reminders')}
                     >
                       <Icon icon="heroicons:envelope" className="me-1" />
                       Send Reminders
                     </button>
-                    <button 
+                    <button
                       className="btn btn-sm btn-outline-primary d-flex align-items-center"
                       onClick={() => setShowBulkActionModal(true)}
                     >
                       <Icon icon="heroicons:check-circle" className="me-1" />
                       Bulk Process
                     </button>
-                    <button 
+                    <button
                       className="btn btn-sm btn-outline-primary d-flex align-items-center"
                       onClick={() => alert('Generate confirmation letters')}
                     >
@@ -1570,31 +1592,31 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                     </button>
                   </>
                 )}
-                
+
                 {activeTab === 'promotions' && (
                   <>
-                    <button 
+                    <button
                       className="btn btn-sm btn-outline-primary d-flex align-items-center"
                       onClick={() => setShowPromotionNominationModal(true)}
                     >
                       <Icon icon="heroicons:plus" className="me-1" />
                       New Nomination
                     </button>
-                    <button 
+                    <button
                       className="btn btn-sm btn-outline-primary d-flex align-items-center"
                       onClick={() => alert('Run eligibility check')}
                     >
                       <Icon icon="heroicons:check-circle" className="me-1" />
                       Check Eligibility
                     </button>
-                    <button 
+                    <button
                       className="btn btn-sm btn-outline-primary d-flex align-items-center"
                       onClick={() => alert('Schedule committee review')}
                     >
                       <Icon icon="heroicons:calendar" className="me-1" />
                       Schedule Review
                     </button>
-                    <button 
+                    <button
                       className="btn btn-sm btn-outline-primary d-flex align-items-center"
                       onClick={() => alert('Generate promotion letters')}
                     >
@@ -1603,31 +1625,31 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                     </button>
                   </>
                 )}
-                
+
                 {activeTab === 'buddy' && (
                   <>
-                    <button 
+                    <button
                       className="btn btn-sm btn-outline-primary d-flex align-items-center"
                       onClick={() => setShowBuddyAssignmentModal(true)}
                     >
                       <Icon icon="heroicons:user-plus" className="me-1" />
                       Assign Buddies
                     </button>
-                    <button 
+                    <button
                       className="btn btn-sm btn-outline-primary d-flex align-items-center"
                       onClick={() => alert('Auto-assign based on rules')}
                     >
                       <Icon icon="heroicons:cog" className="me-1" />
                       Auto-Assign
                     </button>
-                    <button 
+                    <button
                       className="btn btn-sm btn-outline-primary d-flex align-items-center"
                       onClick={() => alert('Collect feedback')}
                     >
                       <Icon icon="heroicons:chat-bubble-left-right" className="me-1" />
                       Collect Feedback
                     </button>
-                    <button 
+                    <button
                       className="btn btn-sm btn-outline-primary d-flex align-items-center"
                       onClick={() => setShowReportModal(true)}
                     >
@@ -1651,8 +1673,8 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                     {activeTab === 'probation' && (
                       <>
                         <th style={{ width: '40px' }}>
-                          <input 
-                            type="checkbox" 
+                          <input
+                            type="checkbox"
                             className="form-check-input"
                             checked={selectedRows.length === paginatedData.length}
                             onChange={handleSelectAll}
@@ -1670,8 +1692,8 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                     {activeTab === 'confirmation' && (
                       <>
                         <th style={{ width: '40px' }}>
-                          <input 
-                            type="checkbox" 
+                          <input
+                            type="checkbox"
                             className="form-check-input"
                             checked={selectedRows.length === paginatedData.length}
                             onChange={handleSelectAll}
@@ -1688,8 +1710,8 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                     {activeTab === 'promotions' && (
                       <>
                         <th style={{ width: '40px' }}>
-                          <input 
-                            type="checkbox" 
+                          <input
+                            type="checkbox"
                             className="form-check-input"
                             checked={selectedRows.length === paginatedData.length}
                             onChange={handleSelectAll}
@@ -1706,8 +1728,8 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                     {activeTab === 'buddy' && (
                       <>
                         <th style={{ width: '40px' }}>
-                          <input 
-                            type="checkbox" 
+                          <input
+                            type="checkbox"
                             className="form-check-input"
                             checked={selectedRows.length === paginatedData.length}
                             onChange={handleSelectAll}
@@ -1724,7 +1746,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                     )}
                   </tr>
                 </thead>
-                
+
                 <tbody>
                   {paginatedData.length === 0 ? (
                     <tr>
@@ -1732,7 +1754,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                         <div className="text-muted">
                           <Icon icon="heroicons:inbox" width={48} height={48} className="mb-3" />
                           <p>No data found with current filters</p>
-                          <button 
+                          <button
                             className="btn btn-sm btn-outline-primary"
                             onClick={() => setFilters({
                               search: '',
@@ -1753,14 +1775,14 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                     paginatedData.map((item) => (
                       <tr key={item.id} className={selectedRows.includes(item.id) ? 'table-active' : ''}>
                         <td>
-                          <input 
-                            type="checkbox" 
+                          <input
+                            type="checkbox"
                             className="form-check-input"
                             checked={selectedRows.includes(item.id)}
                             onChange={() => handleSelectRow(item.id)}
                           />
                         </td>
-                        
+
                         {activeTab === 'probation' && (
                           <>
                             <td>
@@ -1784,123 +1806,154 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                 </div>
                               </div>
                             </td>
-                            
+
                             <td className="text-center">
                               {getStatusBadge(item.status)}
                             </td>
-                            
+
                             <td className="text-center">
                               <ReviewMilestones employee={item} />
                             </td>
-                            
+
                             <td>
                               <ProgressBar progress={calculateProgress(item)} />
                             </td>
-                            
+
                             <td className="text-center">
-                              <div className={`fw-bold ${
-                                item.daysRemaining <= 0 ? 'text-danger' :
+                              <div className={`fw-bold ${item.daysRemaining <= 0 ? 'text-danger' :
                                 item.daysRemaining <= 7 ? 'text-danger' :
-                                item.daysRemaining <= 30 ? 'text-warning' : 'text-success'
-                              }`}>
+                                  item.daysRemaining <= 30 ? 'text-warning' : 'text-success'
+                                }`}>
                                 {item.daysRemaining <= 0 ? Math.abs(item.daysRemaining) + ' days overdue' : item.daysRemaining + ' days'}
                               </div>
                               <div className="small text-muted">
                                 Ends: {formatDate(item.probationEndDate)}
                               </div>
                             </td>
-                            
+
                             <td className="text-center">
                               <RiskIndicator riskLevel={item.riskLevel} />
                             </td>
-                            
-                            <td className="text-center">
-                              <div className="btn-group btn-group-sm">
+
+                            <td className="text-center align-middle">
+                              <div className="d-flex justify-content-center align-items-center gap-2 flex-wrap">
+
+                                {/* View */}
                                 <button
-                                  className="btn btn-outline-primary"
+                                  type="button"
+                                  className="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center"
                                   onClick={() => {
                                     setSelectedEmployee(item);
-                                    setShowDetailModal(true);
+                                    setShowViewModal(true);
                                   }}
+
                                   title="View Details"
                                 >
-                                  <Icon icon="heroicons:eye" />
+                                  <Icon icon="heroicons:eye" width="16" />
                                 </button>
-                                
+
+                                {/* Review */}
                                 <button
-                                  className="btn btn-outline-info"
+                                  type="button"
+                                  className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center"
                                   onClick={() => {
                                     setSelectedEmployee(item);
-                                    setShowProbationReviewModal(true);
+                                    setShowReviewModal(true);
                                   }}
+
                                   title="Conduct Review"
                                 >
-                                  <Icon icon="heroicons:clipboard-document-check" />
+                                  <Icon icon="heroicons:clipboard-document-check" width="16" />
                                 </button>
-                                
+
+                                {/* Extend */}
                                 <button
-                                  className="btn btn-outline-warning"
+                                  type="button"
+                                  className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center"
                                   onClick={() => {
                                     setSelectedEmployee(item);
-                                    setShowExtensionModal(true);
+                                    setShowExtendModal(true);
                                   }}
+
                                   title="Extend Probation"
                                 >
-                                  <Icon icon="heroicons:arrows-pointing-out" />
+                                  <Icon icon="heroicons:arrows-pointing-out" width="16" />
                                 </button>
-                                
+
+                                {/* Early Confirm */}
                                 <button
-                                  className="btn btn-outline-success"
+                                  type="button"
+                                  className="btn btn-outline-success btn-sm d-flex align-items-center justify-content-center"
                                   onClick={() => {
                                     setSelectedEmployee(item);
-                                    setShowEarlyConfirmationModal(true);
+                                    setShowEarlyConfirmModal(true);
                                   }}
+
                                   title="Early Confirmation"
                                 >
-                                  <Icon icon="heroicons:check-circle" />
+                                  <Icon icon="heroicons:check-circle" width="16" />
                                 </button>
-                                
+
+                                {/* Dropdown */}
                                 <div className="dropdown">
-                                  <button 
-                                    className="btn btn-outline-secondary dropdown-toggle" 
-                                    type="button" 
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center"
                                     data-bs-toggle="dropdown"
                                   >
-                                    <Icon icon="heroicons:ellipsis-vertical" />
+                                    <Icon icon="heroicons:ellipsis-vertical" width="16" />
                                   </button>
-                                  <ul className="dropdown-menu">
+
+                                  <ul className="dropdown-menu dropdown-menu-end shadow-sm">
                                     <li>
-                                      <button className="dropdown-item" onClick={() => alert('Send email')}>
-                                        <Icon icon="heroicons:envelope" className="me-2" />
+                                      <button
+                                        className="dropdown-item d-flex align-items-center gap-2"
+                                        onClick={() => {
+                                          setSelectedEmployee(item);
+                                          setShowEmailModal(true);
+                                        }}
+                                      >
+                                        <Icon icon="heroicons:envelope" width="16" />
                                         Send Email
                                       </button>
                                     </li>
+
                                     <li>
-                                      <button className="dropdown-item" onClick={() => alert('Add note')}>
-                                        <Icon icon="heroicons:chat-bubble-left" className="me-2" />
+                                      <button
+                                        className="dropdown-item d-flex align-items-center gap-2"
+                                        onClick={() => {
+                                          setSelectedEmployee(item);
+                                          setShowNoteModal(true);
+                                        }}
+                                      >
+                                        <Icon icon="heroicons:chat-bubble-left" width="16" />
                                         Add Note
                                       </button>
                                     </li>
+
                                     <li><hr className="dropdown-divider" /></li>
+
                                     <li>
-                                      <button 
-                                        className="dropdown-item text-danger"
+                                      <button
+                                        className="dropdown-item text-danger d-flex align-items-center gap-2"
                                         onClick={() => {
                                           setSelectedEmployee(item);
                                           setShowTerminationModal(true);
                                         }}
                                       >
-                                        <Icon icon="heroicons:x-circle" className="me-2" />
+                                        <Icon icon="heroicons:x-circle" width="16" />
                                         Terminate
                                       </button>
                                     </li>
                                   </ul>
                                 </div>
+
                               </div>
                             </td>
+
                           </>
                         )}
-                        
+
                         {activeTab === 'confirmation' && (
                           <>
                             <td>
@@ -1923,33 +1976,32 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                 </div>
                               </div>
                             </td>
-                            
+
                             <td className="text-center">
                               {getStatusBadge(item.confirmationStatus)}
                             </td>
-                            
+
                             <td>
                               <EnhancedConfirmationWorkflow employee={item} />
                             </td>
-                            
+
                             <td className="text-center">
-                              <div className={`fw-bold ${
-                                item.daysRemaining <= 0 ? 'text-danger' :
+                              <div className={`fw-bold ${item.daysRemaining <= 0 ? 'text-danger' :
                                 item.daysRemaining <= 7 ? 'text-danger' :
-                                item.daysRemaining <= 30 ? 'text-warning' : 'text-success'
-                              }`}>
+                                  item.daysRemaining <= 30 ? 'text-warning' : 'text-success'
+                                }`}>
                                 {item.daysRemaining <= 0 ? Math.abs(item.daysRemaining) + ' days overdue' : item.daysRemaining + ' days'}
                               </div>
                               <div className="small text-muted">
                                 Due: {formatDate(item.confirmationDueDate)}
                               </div>
                             </td>
-                            
+
                             <td className="text-center">
                               <RatingStars rating={Math.floor(item.performanceScore)} />
                               <small className="text-muted d-block mt-1">{item.currentRating}</small>
                             </td>
-                            
+
                             <td className="text-center">
                               <div className="btn-group btn-group-sm">
                                 <button
@@ -1962,7 +2014,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                 >
                                   <Icon icon="heroicons:eye" />
                                 </button>
-                                
+
                                 {!item.managerRecommendation && (
                                   <button
                                     className="btn btn-outline-warning"
@@ -1975,7 +2027,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                     <Icon icon="heroicons:user" />
                                   </button>
                                 )}
-                                
+
                                 {item.managerRecommendation && !item.hrRecommendation && (
                                   <button
                                     className="btn btn-outline-info"
@@ -1988,7 +2040,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                     <Icon icon="heroicons:shield-check" />
                                   </button>
                                 )}
-                                
+
                                 {item.hrRecommendation && !item.confirmationAuthorityApproval && (
                                   <button
                                     className="btn btn-outline-success"
@@ -2001,11 +2053,11 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                     <Icon icon="heroicons:lock-closed" />
                                   </button>
                                 )}
-                                
+
                                 <div className="dropdown">
-                                  <button 
-                                    className="btn btn-outline-secondary dropdown-toggle" 
-                                    type="button" 
+                                  <button
+                                    className="btn btn-outline-secondary dropdown-toggle"
+                                    type="button"
                                     data-bs-toggle="dropdown"
                                   >
                                     <Icon icon="heroicons:ellipsis-vertical" />
@@ -2035,7 +2087,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                             </td>
                           </>
                         )}
-                        
+
                         {activeTab === 'promotions' && (
                           <>
                             <td>
@@ -2058,7 +2110,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                 </div>
                               </div>
                             </td>
-                            
+
                             <td className="text-center">
                               <div className="fw-bold">
                                 <span className="text-secondary">{item.currentGrade}</span>
@@ -2069,11 +2121,11 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                 {item.currentDesignation} → {item.proposedDesignation}
                               </div>
                             </td>
-                            
+
                             <td>
                               <EnhancedPromotionWorkflow employee={item} />
                             </td>
-                            
+
                             <td className="text-center">
                               {getStatusBadge(item.promotionStatus)}
                               <div className="small text-muted mt-1">
@@ -2084,7 +2136,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                 )}
                               </div>
                             </td>
-                            
+
                             <td className="text-center">
                               <div className="fw-bold text-success">
                                 +{Math.round((parseInt(item.proposedSalary.replace(/[^0-9]/g, '')) - parseInt(item.currentSalary.replace(/[^0-9]/g, ''))) / parseInt(item.currentSalary.replace(/[^0-9]/g, '')) * 100)}%
@@ -2093,7 +2145,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                 {item.currentSalary} → {item.proposedSalary}
                               </div>
                             </td>
-                            
+
                             <td className="text-center">
                               <div className="btn-group btn-group-sm">
                                 <button
@@ -2106,7 +2158,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                 >
                                   <Icon icon="heroicons:eye" />
                                 </button>
-                                
+
                                 <button
                                   className="btn btn-outline-info"
                                   onClick={() => {
@@ -2117,7 +2169,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                 >
                                   <Icon icon="heroicons:clipboard-document-check" />
                                 </button>
-                                
+
                                 <button
                                   className="btn btn-outline-success"
                                   onClick={() => {
@@ -2129,7 +2181,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                 >
                                   <Icon icon="heroicons:check-circle" />
                                 </button>
-                                
+
                                 <button
                                   className="btn btn-outline-danger"
                                   onClick={() => {
@@ -2141,11 +2193,11 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                 >
                                   <Icon icon="heroicons:x-circle" />
                                 </button>
-                                
+
                                 <div className="dropdown">
-                                  <button 
-                                    className="btn btn-outline-secondary dropdown-toggle" 
-                                    type="button" 
+                                  <button
+                                    className="btn btn-outline-secondary dropdown-toggle"
+                                    type="button"
                                     data-bs-toggle="dropdown"
                                   >
                                     <Icon icon="heroicons:ellipsis-vertical" />
@@ -2175,7 +2227,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                             </td>
                           </>
                         )}
-                        
+
                         {activeTab === 'buddy' && (
                           <>
                             <td>
@@ -2195,7 +2247,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                 </div>
                               </div>
                             </td>
-                            
+
                             <td className="text-center">
                               {item.status === 'active' ? (
                                 <span className="badge bg-success-subtle text-success border border-success-subtle">
@@ -2207,7 +2259,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                 </span>
                               )}
                             </td>
-                            
+
                             <td className="text-center">
                               <div className="fw-bold">{item.newJoinerCount}</div>
                               <div className="small text-muted">
@@ -2221,28 +2273,28 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                 )}
                               </div>
                             </td>
-                            
+
                             <td className="text-center">
                               <div className="fw-bold">{item.experience}</div>
                               <div className="small text-muted">
                                 Joined {formatDate(item.joinDate)}
                               </div>
                             </td>
-                            
+
                             <td className="text-center">
                               <RatingStars rating={Math.floor(item.averageRating)} />
                               <div className="small text-muted">
                                 {item.averageRating.toFixed(1)}/5
                               </div>
                             </td>
-                            
+
                             <td className="text-center">
                               <ProgressBar progress={parseInt(item.currentLoad)} />
                               <div className="small text-muted">
                                 {item.currentLoad} capacity
                               </div>
                             </td>
-                            
+
                             <td className="text-center">
                               <div className="btn-group btn-group-sm">
                                 <button
@@ -2255,7 +2307,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                 >
                                   <Icon icon="heroicons:eye" />
                                 </button>
-                                
+
                                 <button
                                   className="btn btn-outline-info"
                                   onClick={() => {
@@ -2266,7 +2318,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                 >
                                   <Icon icon="heroicons:user-plus" />
                                 </button>
-                                
+
                                 <button
                                   className="btn btn-outline-success"
                                   onClick={() => {
@@ -2277,11 +2329,11 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                 >
                                   <Icon icon="heroicons:chat-bubble-left-right" />
                                 </button>
-                                
+
                                 <div className="dropdown">
-                                  <button 
-                                    className="btn btn-outline-secondary dropdown-toggle" 
-                                    type="button" 
+                                  <button
+                                    className="btn btn-outline-secondary dropdown-toggle"
+                                    type="button"
                                     data-bs-toggle="dropdown"
                                   >
                                     <Icon icon="heroicons:ellipsis-vertical" />
@@ -2301,7 +2353,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                                     </li>
                                     <li><hr className="dropdown-divider" /></li>
                                     <li>
-                                      <button 
+                                      <button
                                         className="dropdown-item text-danger"
                                         onClick={() => {
                                           setSelectedEmployee(item);
@@ -2324,7 +2376,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                 </tbody>
               </table>
             </div>
-            
+
             {/* PAGINATION */}
             {filteredEmployees.length > 0 && (
               <div className="card-footer border-top">
@@ -2337,8 +2389,8 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                   <div className="d-flex align-items-center gap-3">
                     <div className="d-flex align-items-center gap-2">
                       <small className="text-muted">Rows per page:</small>
-                      <select 
-                        className="form-select form-select-sm" 
+                      <select
+                        className="form-select form-select-sm"
                         style={{ width: '70px' }}
                         value={pageSize}
                         onChange={(e) => setPageSize(Number(e.target.value))}
@@ -2352,8 +2404,8 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                     <nav>
                       <ul className="pagination pagination-sm mb-0">
                         <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                          <button 
-                            className="page-link" 
+                          <button
+                            className="page-link"
                             onClick={() => setCurrentPage(currentPage - 1)}
                           >
                             Previous
@@ -2372,8 +2424,8 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                           }
                           return (
                             <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
-                              <button 
-                                className="page-link" 
+                              <button
+                                className="page-link"
                                 onClick={() => setCurrentPage(pageNum)}
                               >
                                 {pageNum}
@@ -2382,8 +2434,8 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                           );
                         })}
                         <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                          <button 
-                            className="page-link" 
+                          <button
+                            className="page-link"
                             onClick={() => setCurrentPage(currentPage + 1)}
                           >
                             Next
@@ -2425,7 +2477,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                             </div>
                             {getStatusBadge(item.status)}
                           </div>
-                          
+
                           <div className="mb-3">
                             <div className="d-flex justify-content-between mb-2">
                               <small className="text-muted">Progress</small>
@@ -2433,7 +2485,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                             </div>
                             <ProgressBar progress={calculateProgress(item)} />
                           </div>
-                          
+
                           <div className="row g-2 mb-3">
                             <div className="col-6">
                               <small className="text-muted d-block">Department</small>
@@ -2445,11 +2497,10 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                             </div>
                             <div className="col-6">
                               <small className="text-muted d-block">Days Remaining</small>
-                              <small className={`fw-bold ${
-                                item.daysRemaining <= 0 ? 'text-danger' :
+                              <small className={`fw-bold ${item.daysRemaining <= 0 ? 'text-danger' :
                                 item.daysRemaining <= 7 ? 'text-danger' :
-                                item.daysRemaining <= 30 ? 'text-warning' : 'text-success'
-                              }`}>
+                                  item.daysRemaining <= 30 ? 'text-warning' : 'text-success'
+                                }`}>
                                 {item.daysRemaining}
                               </small>
                             </div>
@@ -2458,7 +2509,7 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
                               <RiskIndicator riskLevel={item.riskLevel} />
                             </div>
                           </div>
-                          
+
                           <div className="d-flex justify-content-between">
                             <ReviewMilestones employee={item} />
                             <div className="btn-group">
@@ -2478,7 +2529,179 @@ const PromotionsCareer = () => {  // ---------------- ENHANCED INITIAL DATA ----
               ))
             )}
           </div>
-        )}        
+        )}
+
+        {showViewModal && selectedEmployee && (
+          <div className="modal show d-block" style={{ background: "rgba(0,0,0,0.5)" }}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Employee Details</h5>
+                  <button className="btn-close" onClick={() => setShowViewModal(false)} />
+                </div>
+
+                <div className="modal-body">
+                  <p><strong>Name:</strong> {selectedEmployee.name}</p>
+                  <p><strong>Department:</strong> {selectedEmployee.department}</p>
+                  <p><strong>Designation:</strong> {selectedEmployee.designation}</p>
+                </div>
+
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={() => setShowViewModal(false)}>
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showReviewModal && selectedEmployee && (
+          <div className="modal show d-block" style={{ background: "rgba(0,0,0,0.5)" }}>
+            <div className="modal-dialog">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Conduct Review</h5>
+                  <button className="btn-close" onClick={() => setShowReviewModal(false)} />
+                </div>
+
+                <div className="modal-body">
+                  <label className="form-label">Rating</label>
+                  <select className="form-select">
+                    <option>Excellent</option>
+                    <option>Good</option>
+                    <option>Average</option>
+                    <option>Poor</option>
+                  </select>
+                </div>
+
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={() => setShowReviewModal(false)}>Cancel</button>
+                  <button className="btn btn-info">Submit</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showExtendModal && selectedEmployee && (
+          <div className="modal show d-block" style={{ background: "rgba(0,0,0,0.5)" }}>
+            <div className="modal-dialog">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Extend Probation</h5>
+                  <button className="btn-close" onClick={() => setShowExtendModal(false)} />
+                </div>
+
+                <div className="modal-body">
+                  <label className="form-label">Extension Days</label>
+                  <input type="number" className="form-control" />
+                </div>
+
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={() => setShowExtendModal(false)}>Cancel</button>
+                  <button className="btn btn-warning">Extend</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showEarlyConfirmModal && selectedEmployee && (
+          <div className="modal show d-block" style={{ background: "rgba(0,0,0,0.5)" }}>
+            <div className="modal-dialog">
+              <div className="modal-content">
+                <div className="modal-header bg-success text-white">
+                  <h5 className="modal-title">Early Confirmation</h5>
+                  <button className="btn-close btn-close-white" onClick={() => setShowEarlyConfirmModal(false)} />
+                </div>
+
+                <div className="modal-body">
+                  <p>Are you sure you want to confirm <strong>{selectedEmployee.name}</strong> early?</p>
+                </div>
+
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={() => setShowEarlyConfirmModal(false)}>Cancel</button>
+                  <button className="btn btn-success">Confirm</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+
+        {showEmailModal && selectedEmployee && (
+          <div className="modal show d-block" style={{ background: "rgba(0,0,0,0.5)" }}>
+            <div className="modal-dialog">
+              <div className="modal-content">
+
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    Send Email - {selectedEmployee.name}
+                  </h5>
+                  <button className="btn-close" onClick={() => setShowEmailModal(false)} />
+                </div>
+
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <label className="form-label">Subject</label>
+                    <input type="text" className="form-control" />
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label">Message</label>
+                    <textarea className="form-control" rows="4" />
+                  </div>
+                </div>
+
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={() => setShowEmailModal(false)}>
+                    Cancel
+                  </button>
+                  <button className="btn btn-primary">
+                    Send
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        )}
+
+
+        {showNoteModal && selectedEmployee && (
+          <div className="modal show d-block" style={{ background: "rgba(0,0,0,0.5)" }}>
+            <div className="modal-dialog">
+              <div className="modal-content">
+
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    Add Note - {selectedEmployee.name}
+                  </h5>
+                  <button className="btn-close" onClick={() => setShowNoteModal(false)} />
+                </div>
+
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <label className="form-label">Note</label>
+                    <textarea className="form-control" rows="4" />
+                  </div>
+                </div>
+
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={() => setShowNoteModal(false)}>
+                    Cancel
+                  </button>
+                  <button className="btn btn-success">
+                    Save Note
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

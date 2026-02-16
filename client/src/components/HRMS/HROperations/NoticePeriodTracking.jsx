@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Search, 
-  Filter, 
-  Download, 
-  Printer, 
-  Eye, 
+import {
+  Search,
+  Filter,
+  Download,
+  Printer,
+  Eye,
   Edit,
   Calendar,
   Clock,
@@ -92,7 +92,7 @@ const NoticePeriodTracking = () => {
   const [lwdDate, setLwdDate] = useState('');
   const [buyoutAmount, setBuyoutAmount] = useState(0);
   const [shortfallAmount, setShortfallAmount] = useState(0);
-  
+
   // New states for added functionality
   const [showAIFilterModal, setShowAIFilterModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -100,10 +100,10 @@ const NoticePeriodTracking = () => {
   const [showAddEmployeeModal, setShowAddEmployeeModal] = useState(false);
   const [editingCase, setEditingCase] = useState(null);
   const [viewingCase, setViewingCase] = useState(null);
-  
+
   // Filtered cases state
   const [filteredCases, setFilteredCases] = useState([]);
-  
+
   // AI Filter states
   const [aiFilterCriteria, setAiFilterCriteria] = useState({
     riskLevel: 'all',
@@ -113,7 +113,7 @@ const NoticePeriodTracking = () => {
     hasPendingActions: false,
     highPriority: false
   });
-  
+
   // Calculator states
   const [calculatorData, setCalculatorData] = useState({
     resignationDate: new Date().toISOString().split('T')[0],
@@ -124,7 +124,7 @@ const NoticePeriodTracking = () => {
     extensionDays: '15',
     waiverDays: '15'
   });
-  
+
   // Calculator results state
   const [calculatorResults, setCalculatorResults] = useState({
     lwdResult: '',
@@ -133,7 +133,7 @@ const NoticePeriodTracking = () => {
     daysRemainingResult: '',
     waiverResult: ''
   });
-  
+
   const [automationStatus, setAutomationStatus] = useState({
     resignationWorkflow: true,
     autoCalculation: true,
@@ -310,7 +310,7 @@ const NoticePeriodTracking = () => {
   // Update filtered cases when search term or filter criteria changes
   useEffect(() => {
     let filtered = [...noticePeriodCases];
-    
+
     // Apply search term filter
     if (searchTerm) {
       filtered = filtered.filter(caseItem =>
@@ -321,10 +321,10 @@ const NoticePeriodTracking = () => {
         caseItem.role.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     // Apply AI filter criteria
     filtered = applyAIFilters(filtered, aiFilterCriteria);
-    
+
     setFilteredCases(filtered);
   }, [searchTerm, noticePeriodCases, aiFilterCriteria]);
 
@@ -568,7 +568,7 @@ const NoticePeriodTracking = () => {
   };
 
   const getStatusBadge = (status) => {
-    switch(status) {
+    switch (status) {
       case 'Active': return <span className="badge bg-warning text-dark">Active</span>;
       case 'Completed': return <span className="badge bg-success">Completed</span>;
       case 'Pending': return <span className="badge bg-secondary">Pending</span>;
@@ -609,22 +609,22 @@ const NoticePeriodTracking = () => {
   // ==================== FILTER FUNCTIONS ====================
   const applyAIFilters = (cases, criteria) => {
     let filtered = [...cases];
-    
+
     if (criteria.riskLevel !== 'all') {
       filtered = filtered.filter(caseItem => {
         const risk = getRiskLevel(caseItem.daysRemaining);
         return risk.level === criteria.riskLevel;
       });
     }
-    
+
     if (criteria.department !== 'all') {
-      filtered = filtered.filter(caseItem => 
+      filtered = filtered.filter(caseItem =>
         caseItem.department === criteria.department
       );
     }
-    
+
     if (criteria.daysRemaining !== 'all') {
-      switch(criteria.daysRemaining) {
+      switch (criteria.daysRemaining) {
         case 'critical':
           filtered = filtered.filter(c => c.daysRemaining <= 7);
           break;
@@ -639,27 +639,27 @@ const NoticePeriodTracking = () => {
           break;
       }
     }
-    
+
     if (criteria.status !== 'all') {
       filtered = filtered.filter(c => c.status === criteria.status);
     }
-    
+
     if (criteria.hasPendingActions) {
-      filtered = filtered.filter(c => 
-        !c.managerAcknowledged || 
-        !c.hrInterviewCompleted || 
+      filtered = filtered.filter(c =>
+        !c.managerAcknowledged ||
+        !c.hrInterviewCompleted ||
         c.counterOfferStatus === 'Pending'
       );
     }
-    
+
     if (criteria.highPriority) {
-      filtered = filtered.filter(c => 
-        c.daysRemaining <= 7 || 
-        !c.managerAcknowledged || 
+      filtered = filtered.filter(c =>
+        c.daysRemaining <= 7 ||
+        !c.managerAcknowledged ||
         c.resignationReason.includes('Better opportunity')
       );
     }
-    
+
     return filtered;
   };
 
@@ -678,27 +678,27 @@ const NoticePeriodTracking = () => {
 
   const generateAIFilterInsights = (filteredCases) => {
     if (filteredCases.length === 0) return "No cases match your criteria.";
-    
+
     const insights = [];
     const highRiskCount = filteredCases.filter(c => c.daysRemaining <= 7).length;
     const pendingManagerAck = filteredCases.filter(c => !c.managerAcknowledged).length;
     const pendingCounterOffers = filteredCases.filter(c => c.counterOfferStatus === 'Pending').length;
-    
+
     if (highRiskCount > 0) insights.push(`${highRiskCount} high-risk cases`);
     if (pendingManagerAck > 0) insights.push(`${pendingManagerAck} pending manager acknowledgments`);
     if (pendingCounterOffers > 0) insights.push(`${pendingCounterOffers} pending counter offers`);
-    
+
     return insights.length > 0 ? `Insights: ${insights.join(', ')}` : "All cases are on track.";
   };
 
   const handleAIFilterApply = () => {
     setSearchTerm(''); // Clear search term when applying AI filter
-    
+
     const insights = generateAIFilterInsights(
       applyAIFilters(noticePeriodCases, aiFilterCriteria)
     );
     showNotification(`AI filter applied. ${insights}`, 'info');
-    
+
     setShowAIFilterModal(false);
   };
 
@@ -760,7 +760,7 @@ const NoticePeriodTracking = () => {
   const handleResignationSubmit = (formData) => {
     const lastWorkingDay = calculateLastWorkingDay(formData.resignationDate, formData.noticePeriod);
     const daysRemaining = calculateDaysRemaining(lastWorkingDay);
-    
+
     const newCase = {
       id: noticePeriodCases.length + 1,
       ...formData,
@@ -794,7 +794,7 @@ const NoticePeriodTracking = () => {
 
   const handleBuyoutRequest = (formData) => {
     const calculatedAmount = calculateBuyoutAmount(formData.monthlySalary, parseInt(formData.daysToBuyout));
-    
+
     const newRequest = {
       id: buyoutRequests.length + 1,
       ...formData,
@@ -809,13 +809,13 @@ const NoticePeriodTracking = () => {
     };
 
     setBuyoutRequests(prev => [...prev, newRequest]);
-    
-    setNoticePeriodCases(prev => prev.map(emp => 
-      emp.employeeId === formData.employeeId 
+
+    setNoticePeriodCases(prev => prev.map(emp =>
+      emp.employeeId === formData.employeeId
         ? { ...emp, buyoutRequested: true }
         : emp
     ));
-    
+
     setShowBuyoutModal(false);
     showNotification(`Buyout request submitted for ${formData.employeeName}. Amount: ${formatCurrency(calculatedAmount)}`, 'success');
   };
@@ -832,30 +832,30 @@ const NoticePeriodTracking = () => {
     };
 
     setWaiverRequests(prev => [...prev, newRequest]);
-    
-    setNoticePeriodCases(prev => prev.map(emp => 
-      emp.employeeId === formData.employeeId 
+
+    setNoticePeriodCases(prev => prev.map(emp =>
+      emp.employeeId === formData.employeeId
         ? { ...emp, waiverRequested: true }
         : emp
     ));
-    
+
     setShowWaiverModal(false);
     showNotification(`Waiver request submitted for ${formData.employeeName}`, 'success');
   };
 
   const handleWaiverApprove = (id) => {
-    setWaiverRequests(prev => prev.map(req => 
-      req.id === id 
-        ? { 
-            ...req, 
-            status: 'Approved',
-            approvedByManager: true,
-            approvedByHR: true,
-            approvedByDirector: true
-          }
+    setWaiverRequests(prev => prev.map(req =>
+      req.id === id
+        ? {
+          ...req,
+          status: 'Approved',
+          approvedByManager: true,
+          approvedByHR: true,
+          approvedByDirector: true
+        }
         : req
     ));
-    
+
     const waiver = waiverRequests.find(w => w.id === id);
     if (waiver) {
       const employee = noticePeriodCases.find(e => e.employeeId === waiver.employeeId);
@@ -867,18 +867,18 @@ const NoticePeriodTracking = () => {
           lastWorkingDay: newLWD.toISOString().split('T')[0],
           daysRemaining: calculateDaysRemaining(newLWD.toISOString().split('T')[0])
         };
-        setNoticePeriodCases(prev => prev.map(e => 
+        setNoticePeriodCases(prev => prev.map(e =>
           e.id === employee.id ? updatedEmployee : e
         ));
       }
     }
-    
+
     showNotification('Waiver request approved and notice period updated', 'success');
   };
 
   const handleWaiverReject = (id) => {
-    setWaiverRequests(prev => prev.map(req => 
-      req.id === id 
+    setWaiverRequests(prev => prev.map(req =>
+      req.id === id
         ? { ...req, status: 'Rejected' }
         : req
     ));
@@ -886,10 +886,10 @@ const NoticePeriodTracking = () => {
   };
 
   const handleCounterOffer = (formData) => {
-    const hikePercentage = ((parseInt(formData.offeredSalary.replace(/[^0-9]/g, '')) - 
-                            parseInt(formData.currentSalary.replace(/[^0-9]/g, ''))) / 
-                            parseInt(formData.currentSalary.replace(/[^0-9]/g, ''))) * 100;
-    
+    const hikePercentage = ((parseInt(formData.offeredSalary.replace(/[^0-9]/g, '')) -
+      parseInt(formData.currentSalary.replace(/[^0-9]/g, ''))) /
+      parseInt(formData.currentSalary.replace(/[^0-9]/g, ''))) * 100;
+
     const newOffer = {
       id: counterOffers.length + 1,
       ...formData,
@@ -903,59 +903,59 @@ const NoticePeriodTracking = () => {
     };
 
     setCounterOffers(prev => [...prev, newOffer]);
-    
-    setNoticePeriodCases(prev => prev.map(emp => 
-      emp.employeeId === formData.employeeId 
-        ? { 
-            ...emp, 
-            counterOfferStatus: 'Pending',
-            retentionAttempted: true 
-          }
+
+    setNoticePeriodCases(prev => prev.map(emp =>
+      emp.employeeId === formData.employeeId
+        ? {
+          ...emp,
+          counterOfferStatus: 'Pending',
+          retentionAttempted: true
+        }
         : emp
     ));
-    
+
     setShowCounterOfferModal(false);
     showNotification(`Counter offer submitted for ${formData.employeeName} with ${Math.round(hikePercentage)}% hike`, 'success');
   };
 
   const handleCounterOfferApprove = (id) => {
-    setCounterOffers(prev => prev.map(offer => 
-      offer.id === id 
-        ? { 
-            ...offer, 
-            status: 'Accepted',
-            decisionDate: new Date().toISOString().split('T')[0],
-            managerApproved: true,
-            hrApproved: true
-          }
+    setCounterOffers(prev => prev.map(offer =>
+      offer.id === id
+        ? {
+          ...offer,
+          status: 'Accepted',
+          decisionDate: new Date().toISOString().split('T')[0],
+          managerApproved: true,
+          hrApproved: true
+        }
         : offer
     ));
-    
+
     const offer = counterOffers.find(c => c.id === id);
     if (offer) {
-      setNoticePeriodCases(prev => prev.map(emp => 
-        emp.employeeId === offer.employeeId 
-          ? { 
-              ...emp, 
-              counterOfferStatus: 'Accepted',
-              retentionSuccess: true,
-              status: 'Withdrawn'
-            }
+      setNoticePeriodCases(prev => prev.map(emp =>
+        emp.employeeId === offer.employeeId
+          ? {
+            ...emp,
+            counterOfferStatus: 'Accepted',
+            retentionSuccess: true,
+            status: 'Withdrawn'
+          }
           : emp
       ));
     }
-    
+
     showNotification('Counter offer accepted and employee retention successful', 'success');
   };
 
   const handleCounterOfferReject = (id) => {
-    setCounterOffers(prev => prev.map(offer => 
-      offer.id === id 
-        ? { 
-            ...offer, 
-            status: 'Rejected',
-            decisionDate: new Date().toISOString().split('T')[0]
-          }
+    setCounterOffers(prev => prev.map(offer =>
+      offer.id === id
+        ? {
+          ...offer,
+          status: 'Rejected',
+          decisionDate: new Date().toISOString().split('T')[0]
+        }
         : offer
     ));
     showNotification('Counter offer rejected', 'warning');
@@ -965,7 +965,7 @@ const NoticePeriodTracking = () => {
     const currentLWD = new Date(formData.currentLWD);
     const requestedLWD = new Date(formData.requestedLWD);
     const extensionDays = Math.ceil((requestedLWD - currentLWD) / (1000 * 60 * 60 * 24));
-    
+
     const newRequest = {
       id: extensionRequests.length + 1,
       ...formData,
@@ -978,73 +978,73 @@ const NoticePeriodTracking = () => {
     };
 
     setExtensionRequests(prev => [...prev, newRequest]);
-    
-    setNoticePeriodCases(prev => prev.map(emp => 
-      emp.employeeId === formData.employeeId 
-        ? { 
-            ...emp, 
-            extensionRequested: true,
-            lastWorkingDay: formData.requestedLWD,
-            daysRemaining: calculateDaysRemaining(formData.requestedLWD)
-          }
+
+    setNoticePeriodCases(prev => prev.map(emp =>
+      emp.employeeId === formData.employeeId
+        ? {
+          ...emp,
+          extensionRequested: true,
+          lastWorkingDay: formData.requestedLWD,
+          daysRemaining: calculateDaysRemaining(formData.requestedLWD)
+        }
         : emp
     ));
-    
+
     setShowExtensionModal(false);
     showNotification(`Extension request submitted for ${formData.employeeName}. New LWD: ${formData.requestedLWD}`, 'success');
   };
 
   const handleExtensionApprove = (id) => {
-    setExtensionRequests(prev => prev.map(req => 
-      req.id === id 
-        ? { 
-            ...req, 
-            status: 'Approved',
-            managerApproval: 'Approved',
-            hrApproval: 'Approved',
-            approvedByManager: true,
-            approvedByHR: true
-          }
+    setExtensionRequests(prev => prev.map(req =>
+      req.id === id
+        ? {
+          ...req,
+          status: 'Approved',
+          managerApproval: 'Approved',
+          hrApproval: 'Approved',
+          approvedByManager: true,
+          approvedByHR: true
+        }
         : req
     ));
     showNotification('Extension request approved', 'success');
   };
 
   const handleExtensionReject = (id) => {
-    setExtensionRequests(prev => prev.map(req => 
-      req.id === id 
-        ? { 
-            ...req, 
-            status: 'Rejected',
-            managerApproval: 'Rejected',
-            hrApproval: 'Rejected'
-          }
+    setExtensionRequests(prev => prev.map(req =>
+      req.id === id
+        ? {
+          ...req,
+          status: 'Rejected',
+          managerApproval: 'Rejected',
+          hrApproval: 'Rejected'
+        }
         : req
     ));
-    
+
     const extension = extensionRequests.find(e => e.id === id);
     if (extension) {
       const employee = noticePeriodCases.find(e => e.employeeId === extension.employeeId);
       if (employee) {
-        setNoticePeriodCases(prev => prev.map(e => 
-          e.id === employee.id 
-            ? { 
-                ...e, 
-                lastWorkingDay: extension.currentLWD,
-                daysRemaining: calculateDaysRemaining(extension.currentLWD)
-              }
+        setNoticePeriodCases(prev => prev.map(e =>
+          e.id === employee.id
+            ? {
+              ...e,
+              lastWorkingDay: extension.currentLWD,
+              daysRemaining: calculateDaysRemaining(extension.currentLWD)
+            }
             : e
         ));
       }
     }
-    
+
     showNotification('Extension request rejected', 'warning');
   };
 
   const handleSendAcceptanceLetter = () => {
     if (selectedEmployee) {
-      const updatedCases = noticePeriodCases.map(caseItem => 
-        caseItem.id === selectedEmployee.id 
+      const updatedCases = noticePeriodCases.map(caseItem =>
+        caseItem.id === selectedEmployee.id
           ? { ...caseItem, acceptanceLetterSent: true }
           : caseItem
       );
@@ -1055,13 +1055,13 @@ const NoticePeriodTracking = () => {
   };
 
   const handleManagerAcknowledgment = (caseId) => {
-    const updatedCases = noticePeriodCases.map(caseItem => 
-      caseItem.id === caseId 
-        ? { 
-            ...caseItem, 
-            managerAcknowledged: true,
-            managerAckDate: new Date().toISOString().split('T')[0]
-          }
+    const updatedCases = noticePeriodCases.map(caseItem =>
+      caseItem.id === caseId
+        ? {
+          ...caseItem,
+          managerAcknowledged: true,
+          managerAckDate: new Date().toISOString().split('T')[0]
+        }
         : caseItem
     );
     setNoticePeriodCases(updatedCases);
@@ -1069,8 +1069,8 @@ const NoticePeriodTracking = () => {
   };
 
   const handleScheduleHRInterview = (caseId, date) => {
-    const updatedCases = noticePeriodCases.map(caseItem => 
-      caseItem.id === caseId 
+    const updatedCases = noticePeriodCases.map(caseItem =>
+      caseItem.id === caseId
         ? { ...caseItem, hrInterviewScheduled: date }
         : caseItem
     );
@@ -1080,8 +1080,8 @@ const NoticePeriodTracking = () => {
   };
 
   const handleStartExitFormalities = (caseId) => {
-    const updatedCases = noticePeriodCases.map(caseItem => 
-      caseItem.id === caseId 
+    const updatedCases = noticePeriodCases.map(caseItem =>
+      caseItem.id === caseId
         ? { ...caseItem, exitFormalitiesStarted: true }
         : caseItem
     );
@@ -1091,8 +1091,8 @@ const NoticePeriodTracking = () => {
   };
 
   const handleRetentionConversation = (caseId) => {
-    const updatedCases = noticePeriodCases.map(caseItem => 
-      caseItem.id === caseId 
+    const updatedCases = noticePeriodCases.map(caseItem =>
+      caseItem.id === caseId
         ? { ...caseItem, retentionAttempted: true }
         : caseItem
     );
@@ -1111,7 +1111,7 @@ const NoticePeriodTracking = () => {
       statistics,
       exportedAt: new Date().toISOString()
     };
-    
+
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1121,7 +1121,7 @@ const NoticePeriodTracking = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
+
     setShowExportModal(false);
     showNotification('Report exported successfully', 'success');
   };
@@ -1132,10 +1132,10 @@ const NoticePeriodTracking = () => {
   };
 
   const handleSendReminders = () => {
-    const pendingCases = noticePeriodCases.filter(c => 
+    const pendingCases = noticePeriodCases.filter(c =>
       c.status === 'Active' && !c.managerAcknowledged
     );
-    
+
     if (pendingCases.length > 0) {
       showNotification(`Reminders sent to ${pendingCases.length} managers`, 'info');
     } else {
@@ -1162,7 +1162,7 @@ const NoticePeriodTracking = () => {
   };
 
   const handleUpdateCase = (updatedData) => {
-    setNoticePeriodCases(prev => prev.map(caseItem => 
+    setNoticePeriodCases(prev => prev.map(caseItem =>
       caseItem.id === editingCase.id ? { ...caseItem, ...updatedData } : caseItem
     ));
     setShowEditModal(false);
@@ -1184,64 +1184,64 @@ const NoticePeriodTracking = () => {
     }
   };
 
-const handleAddEmployee = (employeeData) => {
-  // Calculate last working day
-  const lastWorkingDay = calculateLastWorkingDay(
-    employeeData.resignationDate, 
-    employeeData.noticePeriodDays
-  );
-  
-  // Calculate days remaining
-  const daysRemaining = calculateDaysRemaining(lastWorkingDay);
-  
-  const newCase = {
-    id: noticePeriodCases.length + 1,
-    employeeId: `EMP${String(noticePeriodCases.length + 1).padStart(3, '0')}`,
-    ...employeeData,
-    lastWorkingDay: lastWorkingDay,
-    daysRemaining: daysRemaining,
-    noticePeriod: `${employeeData.noticePeriodDays} days`,
-    status: 'Active',
-    managerAcknowledged: false,
-    hrInterviewCompleted: false,
-    counterOfferStatus: 'Not Started',
-    buyoutRequested: false,
-    waiverRequested: false,
-    extensionRequested: false,
-    retentionAttempted: false,
-    retentionSuccess: false,
-    exitInterviewScheduled: false,
-    acceptanceLetterSent: false,
-    exitFormalitiesStarted: false,
-    dailyTracker: [
-      { date: employeeData.resignationDate, status: 'Resignation Submitted', completed: true }
-    ]
+  const handleAddEmployee = (employeeData) => {
+    // Calculate last working day
+    const lastWorkingDay = calculateLastWorkingDay(
+      employeeData.resignationDate,
+      employeeData.noticePeriodDays
+    );
+
+    // Calculate days remaining
+    const daysRemaining = calculateDaysRemaining(lastWorkingDay);
+
+    const newCase = {
+      id: noticePeriodCases.length + 1,
+      employeeId: `EMP${String(noticePeriodCases.length + 1).padStart(3, '0')}`,
+      ...employeeData,
+      lastWorkingDay: lastWorkingDay,
+      daysRemaining: daysRemaining,
+      noticePeriod: `${employeeData.noticePeriodDays} days`,
+      status: 'Active',
+      managerAcknowledged: false,
+      hrInterviewCompleted: false,
+      counterOfferStatus: 'Not Started',
+      buyoutRequested: false,
+      waiverRequested: false,
+      extensionRequested: false,
+      retentionAttempted: false,
+      retentionSuccess: false,
+      exitInterviewScheduled: false,
+      acceptanceLetterSent: false,
+      exitFormalitiesStarted: false,
+      dailyTracker: [
+        { date: employeeData.resignationDate, status: 'Resignation Submitted', completed: true }
+      ]
+    };
+
+    setNoticePeriodCases(prev => [...prev, newCase]);
+    setShowAddEmployeeModal(false);
+    showNotification(`New employee ${employeeData.employeeName} added successfully`, 'success');
   };
-  
-  setNoticePeriodCases(prev => [...prev, newCase]);
-  setShowAddEmployeeModal(false);
-  showNotification(`New employee ${employeeData.employeeName} added successfully`, 'success');
-};
 
   // ==================== BUYOUT FUNCTIONS ====================
   const handleBuyoutApprove = (id) => {
-    setBuyoutRequests(prev => prev.map(req => 
-      req.id === id 
-        ? { 
-            ...req, 
-            status: 'Approved',
-            approvedByManager: true,
-            approvedByHR: true,
-            approvedByFinance: true
-          }
+    setBuyoutRequests(prev => prev.map(req =>
+      req.id === id
+        ? {
+          ...req,
+          status: 'Approved',
+          approvedByManager: true,
+          approvedByHR: true,
+          approvedByFinance: true
+        }
         : req
     ));
     showNotification('Buyout request approved', 'success');
   };
 
   const handleBuyoutReject = (id) => {
-    setBuyoutRequests(prev => prev.map(req => 
-      req.id === id 
+    setBuyoutRequests(prev => prev.map(req =>
+      req.id === id
         ? { ...req, status: 'Rejected' }
         : req
     ));
@@ -1252,28 +1252,28 @@ const handleAddEmployee = (employeeData) => {
   const renderActionButtons = (caseItem) => {
     return (
       <div className="btn-group btn-group-sm">
-        <button 
+        <button
           className="btn btn-outline-warning"
           onClick={() => handleEditCase(caseItem)}
           title="Edit"
         >
           <Edit size={12} />
         </button>
-        <button 
+        <button
           className="btn btn-outline-primary"
           onClick={() => handleViewCase(caseItem)}
           title="View Details"
         >
           <Eye size={12} />
         </button>
-        <button 
+        <button
           className="btn btn-outline-danger"
           onClick={() => handleDeleteCase(caseItem.id)}
           title="Delete"
         >
           <Trash2 size={12} />
         </button>
-        <button 
+        <button
           className="btn btn-outline-success"
           onClick={() => {
             setSelectedEmployee(caseItem);
@@ -1293,14 +1293,14 @@ const handleAddEmployee = (employeeData) => {
       <div className="btn-group btn-group-sm">
         {type === 'buyout' && item.status === 'Pending' && (
           <>
-            <button 
+            <button
               className="btn btn-outline-success"
               onClick={() => handleBuyoutApprove(item.id)}
               title="Approve"
             >
               <Check size={12} />
             </button>
-            <button 
+            <button
               className="btn btn-outline-danger"
               onClick={() => handleBuyoutReject(item.id)}
               title="Reject"
@@ -1309,17 +1309,17 @@ const handleAddEmployee = (employeeData) => {
             </button>
           </>
         )}
-        
+
         {type === 'waiver' && item.status === 'Pending' && (
           <>
-            <button 
+            <button
               className="btn btn-outline-success"
               onClick={() => handleWaiverApprove(item.id)}
               title="Approve"
             >
               <Check size={12} />
             </button>
-            <button 
+            <button
               className="btn btn-outline-danger"
               onClick={() => handleWaiverReject(item.id)}
               title="Reject"
@@ -1328,17 +1328,17 @@ const handleAddEmployee = (employeeData) => {
             </button>
           </>
         )}
-        
+
         {type === 'counter' && item.status === 'Pending' && (
           <>
-            <button 
+            <button
               className="btn btn-outline-success"
               onClick={() => handleCounterOfferApprove(item.id)}
               title="Approve"
             >
               <Check size={12} />
             </button>
-            <button 
+            <button
               className="btn btn-outline-danger"
               onClick={() => handleCounterOfferReject(item.id)}
               title="Reject"
@@ -1347,17 +1347,17 @@ const handleAddEmployee = (employeeData) => {
             </button>
           </>
         )}
-        
+
         {type === 'extension' && item.status === 'Pending' && (
           <>
-            <button 
+            <button
               className="btn btn-outline-success"
               onClick={() => handleExtensionApprove(item.id)}
               title="Approve"
             >
               <Check size={12} />
             </button>
-            <button 
+            <button
               className="btn btn-outline-danger"
               onClick={() => handleExtensionReject(item.id)}
               title="Reject"
@@ -1366,9 +1366,9 @@ const handleAddEmployee = (employeeData) => {
             </button>
           </>
         )}
-        
+
         {/* View details button for all */}
-        <button 
+        <button
           className="btn btn-outline-info"
           onClick={() => {
             setViewingCase(item);
@@ -1564,32 +1564,39 @@ const handleAddEmployee = (employeeData) => {
       urgency: 'Normal'
     });
 
-    const calculatedAmount = formData.monthlySalary && formData.daysToBuyout 
+    const calculatedAmount = formData.monthlySalary && formData.daysToBuyout
       ? calculateBuyoutAmount(formData.monthlySalary, parseInt(formData.daysToBuyout))
       : 0;
 
     return (
-      <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-        <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '700px' }}>
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title fw-bold">
+      <div className="modal show d-block bg-dark bg-opacity-50">
+        <div className="modal-dialog modal-dialog-centered modal-lg">
+          <div className="modal-content shadow-lg rounded-4">
+
+            {/* ================= HEADER ================= */}
+            <div className="modal-header bg-light">
+              <h4 className="modal-title fw-bold text-dark">
                 Notice Period Buyout Request
-              </h5>
+              </h4>
               <button
+                type="button"
                 className="btn-close"
                 onClick={() => setShowBuyoutModal(false)}
               ></button>
             </div>
 
+            {/* ================= BODY ================= */}
             <div className="modal-body">
-              <div className="alert alert-info">
-                <strong>AI Calculation:</strong> Buyout amount = (Monthly Salary ÷ 30) × Days to Buyout
+
+              {/* Info */}
+              <div className="alert alert-info fw-semibold">
+                <strong>AI Calculation:</strong>{" "}
+                Buyout amount = (Monthly Salary ÷ 30) × Days to Buyout
               </div>
 
               {/* Select Employee */}
               <div className="mb-3">
-                <label className="form-label">
+                <label className="form-label fw-bold">
                   Select Employee <span className="text-danger">*</span>
                 </label>
                 <select
@@ -1602,18 +1609,18 @@ const handleAddEmployee = (employeeData) => {
                     setFormData({
                       ...formData,
                       employeeId: e.target.value,
-                      employeeName: employee?.employeeName || '',
-                      department: employee?.department || ''
+                      employeeName: employee?.employeeName || "",
+                      department: employee?.department || "",
                     });
                   }}
                   required
                 >
                   <option value="">Select Employee</option>
                   {noticePeriodCases
-                    .filter(c => c.status === 'Active')
+                    .filter(c => c.status === "Active")
                     .map(employee => (
                       <option key={employee.id} value={employee.employeeId}>
-                        {employee.employeeName} ({employee.employeeId}) - {employee.department}
+                        {employee.employeeName} ({employee.employeeId}) – {employee.department}
                       </option>
                     ))}
                 </select>
@@ -1621,8 +1628,8 @@ const handleAddEmployee = (employeeData) => {
 
               {/* Salary & Days */}
               <div className="row">
-                <div className="col-12 col-md-6 mb-3">
-                  <label className="form-label">
+                <div className="col-md-6 mb-3">
+                  <label className="form-label fw-bold">
                     Monthly Salary (₹) <span className="text-danger">*</span>
                   </label>
                   <input
@@ -1632,13 +1639,13 @@ const handleAddEmployee = (employeeData) => {
                     onChange={(e) =>
                       setFormData({ ...formData, monthlySalary: e.target.value })
                     }
-                    required
                     placeholder="₹1,50,000"
+                    required
                   />
                 </div>
 
-                <div className="col-12 col-md-6 mb-3">
-                  <label className="form-label">
+                <div className="col-md-6 mb-3">
+                  <label className="form-label fw-bold">
                     Days to Buyout <span className="text-danger">*</span>
                   </label>
                   <input
@@ -1648,15 +1655,15 @@ const handleAddEmployee = (employeeData) => {
                     onChange={(e) =>
                       setFormData({ ...formData, daysToBuyout: e.target.value })
                     }
-                    required
                     placeholder="30"
+                    required
                   />
                 </div>
               </div>
 
               {/* Reason */}
               <div className="mb-3">
-                <label className="form-label">
+                <label className="form-label fw-bold">
                   Reason for Buyout <span className="text-danger">*</span>
                 </label>
                 <textarea
@@ -1666,16 +1673,14 @@ const handleAddEmployee = (employeeData) => {
                   onChange={(e) =>
                     setFormData({ ...formData, reason: e.target.value })
                   }
-                  required
                   placeholder="Explain why buyout is required..."
+                  required
                 />
               </div>
 
               {/* Urgency */}
-              <div className="mb-3">
-                <label className="form-label">
-                  Urgency Level
-                </label>
+              <div className="mb-4">
+                <label className="form-label fw-bold">Urgency Level</label>
                 <select
                   className="form-select"
                   value={formData.urgency}
@@ -1689,37 +1694,53 @@ const handleAddEmployee = (employeeData) => {
                 </select>
               </div>
 
-              {/* Centered Summary Card */}
-              <div className="text-center">
-                <div className="d-inline-block" style={{ width: '100%', maxWidth: '500px' }}>
-                  <div className="card border">
-                    <div className="card-body">
-                      <h6 className="card-title mb-3">Buyout Summary</h6>
+              {/* ================= BUYOUT SUMMARY ================= */}
+              <div className="d-flex justify-content-center">
+                <div className="card w-100 shadow-sm" style={{ maxWidth: "520px" }}>
+                  <div className="card-body">
 
-                      <div className="row">
-                        <div className="col-6 text-center mb-3">
-                          <small className="text-muted d-block">Calculated Amount</small>
-                          <div className="h4 fw-bold text-success mt-2">
-                            {formatCurrency(calculatedAmount)}
-                          </div>
+                    <h6 className="fw-bold text-center mb-3">
+                      Buyout Summary
+                    </h6>
+
+                    <div className="row text-center">
+                      {/* Amount */}
+                      <div className="col-6 mb-3">
+                        <small className="text-muted d-block">
+                          Calculated Amount
+                        </small>
+                        <div className="h4 fw-bold text-success mt-2">
+                          {formatCurrency(calculatedAmount)}
                         </div>
+                      </div>
 
-                        <div className="col-6 text-center mb-3">
-                          <small className="text-muted d-block">Approval Workflow</small>
-                          <div className="mt-2">
-                            <div className="badge bg-secondary d-block mb-1">Manager</div>
-                            <div className="badge bg-secondary d-block mb-1">HR</div>
-                            <div className="badge bg-secondary d-block">Finance</div>
+                      {/* Approval Workflow */}
+                      <div className="col-6 mb-3">
+                        <small className="text-muted d-block mb-2">
+                          Approval Workflow
+                        </small>
+
+                        <div className="bg-light rounded-3 p-2">
+                          <div className="badge bg-primary w-100 mb-1">
+                            Manager Approval
+                          </div>
+                          <div className="badge bg-info text-dark w-100 mb-1">
+                            HR Approval
+                          </div>
+                          <div className="badge bg-success w-100">
+                            Finance Approval
                           </div>
                         </div>
                       </div>
                     </div>
+
                   </div>
                 </div>
               </div>
+
             </div>
 
-            {/* Footer */}
+            {/* ================= FOOTER ================= */}
             <div className="modal-footer">
               <button
                 className="btn btn-outline-secondary"
@@ -1729,7 +1750,7 @@ const handleAddEmployee = (employeeData) => {
               </button>
 
               <button
-                className="btn btn-primary d-flex align-items-center"
+                className="btn btn-primary fw-bold"
                 onClick={() => handleBuyoutRequest(formData)}
                 disabled={
                   !formData.employeeId ||
@@ -1741,9 +1762,11 @@ const handleAddEmployee = (employeeData) => {
                 Submit for Approval
               </button>
             </div>
+
           </div>
         </div>
       </div>
+
     );
   };
 
@@ -1952,9 +1975,8 @@ const handleAddEmployee = (employeeData) => {
                   <div className="d-flex justify-content-between">
                     <div className="text-center">
                       <div
-                        className={`badge ${
-                          formData.employeeId ? 'bg-primary' : 'bg-secondary'
-                        } p-2 mb-1`}
+                        className={`badge ${formData.employeeId ? 'bg-primary' : 'bg-secondary'
+                          } p-2 mb-1`}
                       >
                         Manager
                       </div>
@@ -2015,10 +2037,10 @@ const handleAddEmployee = (employeeData) => {
       notes: ''
     });
 
-    const hikePercentage = formData.currentSalary && formData.offeredSalary 
-      ? ((parseInt(formData.offeredSalary.replace(/[^0-9]/g, '')) - 
-         parseInt(formData.currentSalary.replace(/[^0-9]/g, ''))) / 
-         parseInt(formData.currentSalary.replace(/[^0-9]/g, ''))) * 100
+    const hikePercentage = formData.currentSalary && formData.offeredSalary
+      ? ((parseInt(formData.offeredSalary.replace(/[^0-9]/g, '')) -
+        parseInt(formData.currentSalary.replace(/[^0-9]/g, ''))) /
+        parseInt(formData.currentSalary.replace(/[^0-9]/g, ''))) * 100
       : 0;
 
     const retentionProbability = Math.min(95, Math.max(30, Math.round(hikePercentage * 2)));
@@ -2170,9 +2192,8 @@ const handleAddEmployee = (employeeData) => {
                     <div className="col-4">
                       <small className="text-muted">Salary Hike</small>
                       <div
-                        className={`h4 fw-bold ${
-                          hikePercentage > 0 ? 'text-success' : 'text-muted'
-                        }`}
+                        className={`h4 fw-bold ${hikePercentage > 0 ? 'text-success' : 'text-muted'
+                          }`}
                       >
                         {hikePercentage > 0 ? `${Math.round(hikePercentage)}%` : '--'}
                       </div>
@@ -2181,13 +2202,12 @@ const handleAddEmployee = (employeeData) => {
                     <div className="col-4">
                       <small className="text-muted">Retention Probability</small>
                       <div
-                        className={`h4 fw-bold ${
-                          retentionProbability > 70
-                            ? 'text-success'
-                            : retentionProbability > 50
+                        className={`h4 fw-bold ${retentionProbability > 70
+                          ? 'text-success'
+                          : retentionProbability > 50
                             ? 'text-warning'
                             : 'text-danger'
-                        }`}
+                          }`}
                       >
                         {hikePercentage > 0 ? `${retentionProbability}%` : '--'}
                       </div>
@@ -2244,7 +2264,7 @@ const handleAddEmployee = (employeeData) => {
       extensionDetails: ''
     });
 
-    const extensionDays = formData.currentLWD && formData.requestedLWD 
+    const extensionDays = formData.currentLWD && formData.requestedLWD
       ? Math.ceil((new Date(formData.requestedLWD) - new Date(formData.currentLWD)) / (1000 * 60 * 60 * 24))
       : 0;
 
@@ -2466,10 +2486,10 @@ const handleAddEmployee = (employeeData) => {
               </h5>
               <button className="btn-close" onClick={() => setShowAcceptanceModal(false)}></button>
             </div>
-            
+
             <div className="modal-body">
-              <div 
-                className="alert alert-success mx-auto d-flex align-items-center" 
+              <div
+                className="alert alert-success mx-auto d-flex align-items-center"
                 style={{ maxWidth: '600px' }}
               >
                 <CheckCircle size={20} className="me-2 flex-shrink-0" />
@@ -2477,7 +2497,7 @@ const handleAddEmployee = (employeeData) => {
                   This will send an official resignation acceptance letter to <strong>{selectedEmployee?.employeeName}</strong>
                 </span>
               </div>
-              
+
               <div className="card mx-auto mb-4 shadow-sm" style={{ maxWidth: '600px', borderRadius: '12px' }}>
                 <div className="card-body">
                   <h5 className="fw-bold mb-3 text-primary">Letter Preview</h5>
@@ -2488,23 +2508,23 @@ const handleAddEmployee = (employeeData) => {
                     <p className="mb-2"><strong>Department:</strong> {selectedEmployee?.department}</p>
                     <p className="mb-2"><strong>Subject:</strong> Acceptance of Resignation</p>
                     <p className="mb-2">
-                      This letter is to formally acknowledge and accept your resignation submitted on <strong>{selectedEmployee?.resignationDate}</strong>. 
+                      This letter is to formally acknowledge and accept your resignation submitted on <strong>{selectedEmployee?.resignationDate}</strong>.
                       Your last working day will be <strong>{selectedEmployee?.lastWorkingDay}</strong>.
                     </p>
                     <p className="mb-2">Please complete all exit formalities before your last working day.</p>
-                    <p className="mt-4">Sincerely,<br/><strong>HR Department</strong></p>
+                    <p className="mt-4">Sincerely,<br /><strong>HR Department</strong></p>
                   </div>
                 </div>
               </div>
             </div>
             <div className="modal-footer d-flex justify-content-end">
-              <button 
-                className="btn btn-outline-secondary me-3" 
+              <button
+                className="btn btn-outline-secondary me-3"
                 onClick={() => setShowAcceptanceModal(false)}
               >
                 Cancel
               </button>
-              <button 
+              <button
                 className="btn btn-success d-flex align-items-center"
                 onClick={handleSendAcceptanceLetter}
               >
@@ -2518,117 +2538,117 @@ const handleAddEmployee = (employeeData) => {
     );
   };
 
-const ExportModal = () => {
-  const [exportFormat, setExportFormat] = useState('json');
-  const [includeData, setIncludeData] = useState({
-    cases: true,
-    requests: true,
-    statistics: true,
-    analytics: true
-  });
+  const ExportModal = () => {
+    const [exportFormat, setExportFormat] = useState('json');
+    const [includeData, setIncludeData] = useState({
+      cases: true,
+      requests: true,
+      statistics: true,
+      analytics: true
+    });
 
-  // Function to handle export based on format
-  const handleExport = () => {
-    const exportData = {
-      cases: includeData.cases ? noticePeriodCases : [],
-      buyoutRequests: includeData.requests ? buyoutRequests : [],
-      waiverRequests: includeData.requests ? waiverRequests : [],
-      counterOffers: includeData.requests ? counterOffers : [],
-      extensionRequests: includeData.requests ? extensionRequests : [],
-      statistics: includeData.statistics ? statistics : {},
-      aiPredictions: includeData.analytics ? aiPredictions : {},
-      exportedAt: new Date().toISOString(),
-      exportedBy: userInfo.name
+    // Function to handle export based on format
+    const handleExport = () => {
+      const exportData = {
+        cases: includeData.cases ? noticePeriodCases : [],
+        buyoutRequests: includeData.requests ? buyoutRequests : [],
+        waiverRequests: includeData.requests ? waiverRequests : [],
+        counterOffers: includeData.requests ? counterOffers : [],
+        extensionRequests: includeData.requests ? extensionRequests : [],
+        statistics: includeData.statistics ? statistics : {},
+        aiPredictions: includeData.analytics ? aiPredictions : {},
+        exportedAt: new Date().toISOString(),
+        exportedBy: userInfo.name
+      };
+
+      switch (exportFormat) {
+        case 'json':
+          exportJSON(exportData);
+          break;
+        case 'csv':
+          exportCSV(exportData);
+          break;
+        case 'pdf':
+          exportPDF(exportData);
+          break;
+        case 'excel':
+          exportExcel(exportData);
+          break;
+        default:
+          exportJSON(exportData);
+      }
+
+      setShowExportModal(false);
+      showNotification(`Report exported as ${exportFormat.toUpperCase()} successfully`, 'success');
     };
 
-    switch(exportFormat) {
-      case 'json':
-        exportJSON(exportData);
-        break;
-      case 'csv':
-        exportCSV(exportData);
-        break;
-      case 'pdf':
-        exportPDF(exportData);
-        break;
-      case 'excel':
-        exportExcel(exportData);
-        break;
-      default:
-        exportJSON(exportData);
-    }
-    
-    setShowExportModal(false);
-    showNotification(`Report exported as ${exportFormat.toUpperCase()} successfully`, 'success');
-  };
+    // JSON Export Function
+    const exportJSON = (data) => {
+      const jsonString = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `notice-period-report-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
 
-  // JSON Export Function
-  const exportJSON = (data) => {
-    const jsonString = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `notice-period-report-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+    // CSV Export Function
+    const exportCSV = (data) => {
+      let csvContent = "data:text/csv;charset=utf-8,";
 
-  // CSV Export Function
-  const exportCSV = (data) => {
-    let csvContent = "data:text/csv;charset=utf-8,";
-    
-    // Add header
-    csvContent += "Notice Period Management Report\r\n";
-    csvContent += `Generated on: ${new Date().toLocaleDateString()}\r\n`;
-    csvContent += `Generated by: ${userInfo.name}\r\n\r\n`;
-    
-    // Cases data
-    if (data.cases.length > 0) {
-      csvContent += "ACTIVE CASES\r\n";
-      csvContent += "Employee ID,Employee Name,Department,Role,Resignation Date,Notice Period,Last Working Day,Days Remaining,Status,Manager Acknowledged\r\n";
-      
-      data.cases.forEach(caseItem => {
-        csvContent += `"${caseItem.employeeId}","${caseItem.employeeName}","${caseItem.department}","${caseItem.role}","${caseItem.resignationDate}","${caseItem.noticePeriod}","${caseItem.lastWorkingDay}",${caseItem.daysRemaining},"${caseItem.status}","${caseItem.managerAcknowledged ? 'Yes' : 'No'}"\r\n`;
-      });
-      csvContent += "\r\n";
-    }
-    
-    // Buyout requests
-    if (data.buyoutRequests.length > 0) {
-      csvContent += "BUYOUT REQUESTS\r\n";
-      csvContent += "Employee ID,Employee Name,Department,Buyout Amount,Requested Date,Status,Days to Buyout\r\n";
-      
-      data.buyoutRequests.forEach(req => {
-        csvContent += `"${req.employeeId}","${req.employeeName}","${req.department}","${req.buyoutAmount}","${req.requestedDate}","${req.status}",${req.daysToBuyout}\r\n`;
-      });
-      csvContent += "\r\n";
-    }
-    
-    // Statistics
-    if (Object.keys(data.statistics).length > 0) {
-      csvContent += "STATISTICS\r\n";
-      csvContent += "Metric,Value\r\n";
-      Object.entries(data.statistics).forEach(([key, value]) => {
-        csvContent += `"${key}","${value}"\r\n`;
-      });
-    }
-    
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `notice-period-report-${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+      // Add header
+      csvContent += "Notice Period Management Report\r\n";
+      csvContent += `Generated on: ${new Date().toLocaleDateString()}\r\n`;
+      csvContent += `Generated by: ${userInfo.name}\r\n\r\n`;
 
-  // PDF Export Function (simplified - in production you'd use a PDF library)
-  const exportPDF = (data) => {
-    // Create a simple HTML representation for PDF
-    let htmlContent = `
+      // Cases data
+      if (data.cases.length > 0) {
+        csvContent += "ACTIVE CASES\r\n";
+        csvContent += "Employee ID,Employee Name,Department,Role,Resignation Date,Notice Period,Last Working Day,Days Remaining,Status,Manager Acknowledged\r\n";
+
+        data.cases.forEach(caseItem => {
+          csvContent += `"${caseItem.employeeId}","${caseItem.employeeName}","${caseItem.department}","${caseItem.role}","${caseItem.resignationDate}","${caseItem.noticePeriod}","${caseItem.lastWorkingDay}",${caseItem.daysRemaining},"${caseItem.status}","${caseItem.managerAcknowledged ? 'Yes' : 'No'}"\r\n`;
+        });
+        csvContent += "\r\n";
+      }
+
+      // Buyout requests
+      if (data.buyoutRequests.length > 0) {
+        csvContent += "BUYOUT REQUESTS\r\n";
+        csvContent += "Employee ID,Employee Name,Department,Buyout Amount,Requested Date,Status,Days to Buyout\r\n";
+
+        data.buyoutRequests.forEach(req => {
+          csvContent += `"${req.employeeId}","${req.employeeName}","${req.department}","${req.buyoutAmount}","${req.requestedDate}","${req.status}",${req.daysToBuyout}\r\n`;
+        });
+        csvContent += "\r\n";
+      }
+
+      // Statistics
+      if (Object.keys(data.statistics).length > 0) {
+        csvContent += "STATISTICS\r\n";
+        csvContent += "Metric,Value\r\n";
+        Object.entries(data.statistics).forEach(([key, value]) => {
+          csvContent += `"${key}","${value}"\r\n`;
+        });
+      }
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `notice-period-report-${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    // PDF Export Function (simplified - in production you'd use a PDF library)
+    const exportPDF = (data) => {
+      // Create a simple HTML representation for PDF
+      let htmlContent = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -2651,11 +2671,11 @@ const ExportModal = () => {
           <p>Generated by: ${userInfo.name}</p>
         </div>
     `;
-    
-    // Add cases data
-    if (data.cases.length > 0) {
-      htmlContent += `<h2>Active Cases (${data.cases.length})</h2>`;
-      htmlContent += `<table>
+
+      // Add cases data
+      if (data.cases.length > 0) {
+        htmlContent += `<h2>Active Cases (${data.cases.length})</h2>`;
+        htmlContent += `<table>
         <tr>
           <th>Employee ID</th>
           <th>Employee Name</th>
@@ -2666,9 +2686,9 @@ const ExportModal = () => {
           <th>Days Remaining</th>
           <th>Status</th>
         </tr>`;
-      
-      data.cases.forEach(caseItem => {
-        htmlContent += `<tr>
+
+        data.cases.forEach(caseItem => {
+          htmlContent += `<tr>
           <td>${caseItem.employeeId}</td>
           <td>${caseItem.employeeName}</td>
           <td>${caseItem.department}</td>
@@ -2678,29 +2698,29 @@ const ExportModal = () => {
           <td>${caseItem.daysRemaining}</td>
           <td>${caseItem.status}</td>
         </tr>`;
-      });
-      htmlContent += `</table>`;
-    }
-    
-    // Add statistics
-    if (Object.keys(data.statistics).length > 0) {
-      htmlContent += `<h2>Statistics</h2>`;
-      htmlContent += `<table>
+        });
+        htmlContent += `</table>`;
+      }
+
+      // Add statistics
+      if (Object.keys(data.statistics).length > 0) {
+        htmlContent += `<h2>Statistics</h2>`;
+        htmlContent += `<table>
         <tr>
           <th>Metric</th>
           <th>Value</th>
         </tr>`;
-      
-      Object.entries(data.statistics).forEach(([key, value]) => {
-        htmlContent += `<tr>
+
+        Object.entries(data.statistics).forEach(([key, value]) => {
+          htmlContent += `<tr>
           <td>${key}</td>
           <td>${value}</td>
         </tr>`;
-      });
-      htmlContent += `</table>`;
-    }
-    
-    htmlContent += `
+        });
+        htmlContent += `</table>`;
+      }
+
+      htmlContent += `
         <div class="footer">
           <p>Report ID: NOTICE-${Date.now()}</p>
           <p>Confidential - For Internal Use Only</p>
@@ -2708,122 +2728,122 @@ const ExportModal = () => {
       </body>
       </html>
     `;
-    
-    // For PDF, we'll create a new window and print it
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    
-    // Wait for content to load then trigger print
-    printWindow.onload = function() {
-      setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-      }, 250);
+
+      // For PDF, we'll create a new window and print it
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+
+      // Wait for content to load then trigger print
+      printWindow.onload = function () {
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.close();
+        }, 250);
+      };
     };
-  };
 
-  // Excel Export Function (using CSV with .xls extension for simplicity)
-  const exportExcel = (data) => {
-    let csvContent = "data:text/csv;charset=utf-8,";
-    
-    // Add metadata
-    csvContent += "Notice Period Management Report\r\n";
-    csvContent += `Generated on: ${new Date().toLocaleDateString()}\r\n`;
-    csvContent += `Generated by: ${userInfo.name}\r\n\r\n`;
-    
-    // Cases sheet
-    csvContent += "ACTIVE CASES\r\n";
-    csvContent += "Employee ID\tEmployee Name\tDepartment\tRole\tResignation Date\tNotice Period\tLast Working Day\tDays Remaining\tStatus\tManager Acknowledged\r\n";
-    
-    data.cases.forEach(caseItem => {
-      csvContent += `${caseItem.employeeId}\t${caseItem.employeeName}\t${caseItem.department}\t${caseItem.role}\t${caseItem.resignationDate}\t${caseItem.noticePeriod}\t${caseItem.lastWorkingDay}\t${caseItem.daysRemaining}\t${caseItem.status}\t${caseItem.managerAcknowledged ? 'Yes' : 'No'}\r\n`;
-    });
-    
-    // Add separator for multiple sheets (using multiple CSV rows with sheet markers)
-    csvContent += "\r\n\r\n";
-    csvContent += "BUYOUT REQUESTS\r\n";
-    csvContent += "Employee ID\tEmployee Name\tDepartment\tBuyout Amount\tRequested Date\tStatus\tDays to Buyout\r\n";
-    
-    data.buyoutRequests.forEach(req => {
-      csvContent += `${req.employeeId}\t${req.employeeName}\t${req.department}\t${req.buyoutAmount}\t${req.requestedDate}\t${req.status}\t${req.daysToBuyout}\r\n`;
-    });
-    
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `notice-period-report-${new Date().toISOString().split('T')[0]}.xls`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+    // Excel Export Function (using CSV with .xls extension for simplicity)
+    const exportExcel = (data) => {
+      let csvContent = "data:text/csv;charset=utf-8,";
 
-  return (
-    <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title fw-bold d-flex align-items-center">
-              <Download className="me-2" size={20} />
-              Export Reports
-            </h5>
-            <button className="btn-close" onClick={() => setShowExportModal(false)}></button>
-          </div>
-          
-          <div className="modal-body">
-            <div className="mb-3">
-              <label className="form-label">Export Format</label>
-              <div className="d-flex flex-wrap gap-3">
-                {['json', 'csv', 'pdf', 'excel'].map(format => (
-                  <div key={format} className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="exportFormat"
-                      id={format}
-                      checked={exportFormat === format}
-                      onChange={() => setExportFormat(format)}
-                    />
-                    <label className="form-check-label fw-medium" htmlFor={format}>
-                      {format.toUpperCase()}
-                    </label>
-                  </div>
-                ))}
-              </div>
+      // Add metadata
+      csvContent += "Notice Period Management Report\r\n";
+      csvContent += `Generated on: ${new Date().toLocaleDateString()}\r\n`;
+      csvContent += `Generated by: ${userInfo.name}\r\n\r\n`;
+
+      // Cases sheet
+      csvContent += "ACTIVE CASES\r\n";
+      csvContent += "Employee ID\tEmployee Name\tDepartment\tRole\tResignation Date\tNotice Period\tLast Working Day\tDays Remaining\tStatus\tManager Acknowledged\r\n";
+
+      data.cases.forEach(caseItem => {
+        csvContent += `${caseItem.employeeId}\t${caseItem.employeeName}\t${caseItem.department}\t${caseItem.role}\t${caseItem.resignationDate}\t${caseItem.noticePeriod}\t${caseItem.lastWorkingDay}\t${caseItem.daysRemaining}\t${caseItem.status}\t${caseItem.managerAcknowledged ? 'Yes' : 'No'}\r\n`;
+      });
+
+      // Add separator for multiple sheets (using multiple CSV rows with sheet markers)
+      csvContent += "\r\n\r\n";
+      csvContent += "BUYOUT REQUESTS\r\n";
+      csvContent += "Employee ID\tEmployee Name\tDepartment\tBuyout Amount\tRequested Date\tStatus\tDays to Buyout\r\n";
+
+      data.buyoutRequests.forEach(req => {
+        csvContent += `${req.employeeId}\t${req.employeeName}\t${req.department}\t${req.buyoutAmount}\t${req.requestedDate}\t${req.status}\t${req.daysToBuyout}\r\n`;
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `notice-period-report-${new Date().toISOString().split('T')[0]}.xls`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    return (
+      <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title fw-bold d-flex align-items-center">
+                <Download className="me-2" size={20} />
+                Export Reports
+              </h5>
+              <button className="btn-close" onClick={() => setShowExportModal(false)}></button>
             </div>
-            
-            <div className="mb-3">
-              <label className="form-label">Include Data</label>
 
-              <div className="row">
-                {Object.entries(includeData).map(([key, value]) => (
-                  <div key={key} className="col-6 mb-2">
-                    <div className="form-check custom-checkbox">
+            <div className="modal-body">
+              <div className="mb-3">
+                <label className="form-label">Export Format</label>
+                <div className="d-flex flex-wrap gap-3">
+                  {['json', 'csv', 'pdf', 'excel'].map(format => (
+                    <div key={format} className="form-check">
                       <input
                         className="form-check-input"
-                        type="checkbox"
-                        id={`include-${key}`}
-                        checked={value}
-                        onChange={(e) =>
-                          setIncludeData(prev => ({
-                            ...prev,
-                            [key]: e.target.checked,
-                          }))
-                        }
+                        type="radio"
+                        name="exportFormat"
+                        id={format}
+                        checked={exportFormat === format}
+                        onChange={() => setExportFormat(format)}
                       />
-                      <label
-                        className="form-check-label"
-                        htmlFor={`include-${key}`}
-                      >
-                        {key.charAt(0).toUpperCase() + key.slice(1)}
+                      <label className="form-check-label fw-medium" htmlFor={format}>
+                        {format.toUpperCase()}
                       </label>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
 
-              <style>
-                {`
+              <div className="mb-3">
+                <label className="form-label">Include Data</label>
+
+                <div className="row">
+                  {Object.entries(includeData).map(([key, value]) => (
+                    <div key={key} className="col-6 mb-2">
+                      <div className="form-check custom-checkbox">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id={`include-${key}`}
+                          checked={value}
+                          onChange={(e) =>
+                            setIncludeData(prev => ({
+                              ...prev,
+                              [key]: e.target.checked,
+                            }))
+                          }
+                        />
+                        <label
+                          className="form-check-label"
+                          htmlFor={`include-${key}`}
+                        >
+                          {key.charAt(0).toUpperCase() + key.slice(1)}
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <style>
+                  {`
                   .custom-checkbox .form-check-input {
                     width: 1.1em;
                     height: 1.1em;
@@ -2849,86 +2869,86 @@ const ExportModal = () => {
                     transform: translate(-50%, -55%);
                   }
                 `}
-              </style>
-            </div>
-            
-            {/* Format Information */}
-            <div className="card border">
-              <div className="card-body">
-                <h6 className="card-title mb-3">Format Information</h6>
-                <div className="row">
-                  <div className="col-6 mb-2">
-                    <small className="text-muted d-block">JSON</small>
-                    <div className="small">Full data with structure</div>
+                </style>
+              </div>
+
+              {/* Format Information */}
+              <div className="card border">
+                <div className="card-body">
+                  <h6 className="card-title mb-3">Format Information</h6>
+                  <div className="row">
+                    <div className="col-6 mb-2">
+                      <small className="text-muted d-block">JSON</small>
+                      <div className="small">Full data with structure</div>
+                    </div>
+                    <div className="col-6 mb-2">
+                      <small className="text-muted d-block">CSV</small>
+                      <div className="small">Spreadsheet compatible</div>
+                    </div>
+                    <div className="col-6 mb-2">
+                      <small className="text-muted d-block">PDF</small>
+                      <div className="small">Print-ready format</div>
+                    </div>
+                    <div className="col-6 mb-2">
+                      <small className="text-muted d-block">Excel</small>
+                      <div className="small">Excel compatible (.xls)</div>
+                    </div>
                   </div>
-                  <div className="col-6 mb-2">
-                    <small className="text-muted d-block">CSV</small>
-                    <div className="small">Spreadsheet compatible</div>
-                  </div>
-                  <div className="col-6 mb-2">
-                    <small className="text-muted d-block">PDF</small>
-                    <div className="small">Print-ready format</div>
-                  </div>
-                  <div className="col-6 mb-2">
-                    <small className="text-muted d-block">Excel</small>
-                    <div className="small">Excel compatible (.xls)</div>
+                </div>
+              </div>
+
+              {/* Export Summary */}
+              <div className="card border mt-3">
+                <div className="card-body">
+                  <h6 className="card-title mb-3">Export Summary</h6>
+                  <div className="row">
+                    <div className="col-6">
+                      <small className="text-muted">Format</small>
+                      <div className="fw-bold">{exportFormat.toUpperCase()}</div>
+                    </div>
+                    <div className="col-6">
+                      <small className="text-muted">Items Included</small>
+                      <div className="fw-bold">
+                        {Object.values(includeData).filter(v => v).length} / 4
+                      </div>
+                    </div>
+                    <div className="col-12 mt-2">
+                      <small className="text-muted">Estimated Size</small>
+                      <div className="fw-bold">
+                        {exportFormat === 'json' ? '~500KB' :
+                          exportFormat === 'csv' ? '~300KB' :
+                            exportFormat === 'pdf' ? '~1MB' : '~400KB'}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Export Summary */}
-            <div className="card border mt-3">
-              <div className="card-body">
-                <h6 className="card-title mb-3">Export Summary</h6>
-                <div className="row">
-                  <div className="col-6">
-                    <small className="text-muted">Format</small>
-                    <div className="fw-bold">{exportFormat.toUpperCase()}</div>
-                  </div>
-                  <div className="col-6">
-                    <small className="text-muted">Items Included</small>
-                    <div className="fw-bold">
-                      {Object.values(includeData).filter(v => v).length} / 4
-                    </div>
-                  </div>
-                  <div className="col-12 mt-2">
-                    <small className="text-muted">Estimated Size</small>
-                    <div className="fw-bold">
-                      {exportFormat === 'json' ? '~500KB' : 
-                       exportFormat === 'csv' ? '~300KB' : 
-                       exportFormat === 'pdf' ? '~1MB' : '~400KB'}
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline-secondary" onClick={() => setShowExportModal(false)}>
+                Cancel
+              </button>
+              <button
+                className="btn btn-primary d-flex align-items-center gap-2"
+                onClick={handleExport}
+                disabled={!Object.values(includeData).some(v => v)}
+              >
+                <Download size={16} />
+                <span>Export Now</span>
+              </button>
             </div>
-          </div>
-          
-          <div className="modal-footer">
-            <button className="btn btn-outline-secondary" onClick={() => setShowExportModal(false)}>
-              Cancel
-            </button>
-            <button
-              className="btn btn-primary d-flex align-items-center gap-2"
-              onClick={handleExport}
-              disabled={!Object.values(includeData).some(v => v)}
-            >
-              <Download size={16} />
-              <span>Export Now</span>
-            </button>
           </div>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
   // ==================== NEW MODALS ====================
 
   const AIFilterModal = () => {
     const departments = [...new Set(noticePeriodCases.map(c => c.department))];
-    
+
     return (
       <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
         <div className="modal-dialog modal-dialog-centered">
@@ -2940,19 +2960,19 @@ const ExportModal = () => {
               </h5>
               <button className="btn-close" onClick={() => setShowAIFilterModal(false)}></button>
             </div>
-            
+
             <div className="modal-body">
               <div className="alert alert-info d-flex align-items-center">
                 <Sparkles size={16} className="me-2" />
                 <span>AI will analyze and prioritize cases based on multiple factors</span>
               </div>
-              
+
               <div className="mb-3">
                 <label className="form-label">Risk Level</label>
-                <select 
+                <select
                   className="form-select"
                   value={aiFilterCriteria.riskLevel}
-                  onChange={(e) => setAiFilterCriteria({...aiFilterCriteria, riskLevel: e.target.value})}
+                  onChange={(e) => setAiFilterCriteria({ ...aiFilterCriteria, riskLevel: e.target.value })}
                 >
                   <option value="all">All Risk Levels</option>
                   <option value="High">High Risk (≤7 days)</option>
@@ -2960,13 +2980,13 @@ const ExportModal = () => {
                   <option value="Low">{'Low Risk (>14 days)'}</option>
                 </select>
               </div>
-              
+
               <div className="mb-3">
                 <label className="form-label">Department</label>
-                <select 
+                <select
                   className="form-select"
                   value={aiFilterCriteria.department}
-                  onChange={(e) => setAiFilterCriteria({...aiFilterCriteria, department: e.target.value})}
+                  onChange={(e) => setAiFilterCriteria({ ...aiFilterCriteria, department: e.target.value })}
                 >
                   <option value="all">All Departments</option>
                   {departments.map(dept => (
@@ -2974,13 +2994,13 @@ const ExportModal = () => {
                   ))}
                 </select>
               </div>
-              
+
               <div className="mb-3">
                 <label className="form-label">Days Remaining</label>
-                <select 
+                <select
                   className="form-select"
                   value={aiFilterCriteria.daysRemaining}
-                  onChange={(e) => setAiFilterCriteria({...aiFilterCriteria, daysRemaining: e.target.value})}
+                  onChange={(e) => setAiFilterCriteria({ ...aiFilterCriteria, daysRemaining: e.target.value })}
                 >
                   <option value="all">All Timeframes</option>
                   <option value="critical">Critical (≤7 days)</option>
@@ -2990,13 +3010,13 @@ const ExportModal = () => {
 
                 </select>
               </div>
-              
+
               <div className="mb-3">
                 <label className="form-label">Status</label>
-                <select 
+                <select
                   className="form-select"
                   value={aiFilterCriteria.status}
-                  onChange={(e) => setAiFilterCriteria({...aiFilterCriteria, status: e.target.value})}
+                  onChange={(e) => setAiFilterCriteria({ ...aiFilterCriteria, status: e.target.value })}
                 >
                   <option value="all">All Statuses</option>
                   <option value="Active">Active</option>
@@ -3004,49 +3024,49 @@ const ExportModal = () => {
                   <option value="Pending">Pending</option>
                 </select>
               </div>
-              
-          <div className="mb-3">
-  <div className="form-check custom-checkbox">
-    <input
-      className="form-check-input"
-      type="checkbox"
-      id="pendingActions"
-      checked={aiFilterCriteria.hasPendingActions}
-      onChange={(e) =>
-        setAiFilterCriteria({
-          ...aiFilterCriteria,
-          hasPendingActions: e.target.checked
-        })
-      }
-    />
-    <label className="form-check-label" htmlFor="pendingActions">
-      Show only cases with pending actions
-    </label>
-  </div>
-</div>
 
-<div className="mb-3">
-  <div className="form-check custom-checkbox">
-    <input
-      className="form-check-input"
-      type="checkbox"
-      id="highPriority"
-      checked={aiFilterCriteria.highPriority}
-      onChange={(e) =>
-        setAiFilterCriteria({
-          ...aiFilterCriteria,
-          highPriority: e.target.checked
-        })
-      }
-    />
-    <label className="form-check-label" htmlFor="highPriority">
-      High priority only (AI recommended)
-    </label>
-  </div>
-</div>
+              <div className="mb-3">
+                <div className="form-check custom-checkbox">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="pendingActions"
+                    checked={aiFilterCriteria.hasPendingActions}
+                    onChange={(e) =>
+                      setAiFilterCriteria({
+                        ...aiFilterCriteria,
+                        hasPendingActions: e.target.checked
+                      })
+                    }
+                  />
+                  <label className="form-check-label" htmlFor="pendingActions">
+                    Show only cases with pending actions
+                  </label>
+                </div>
+              </div>
 
-<style>
-{`
+              <div className="mb-3">
+                <div className="form-check custom-checkbox">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="highPriority"
+                    checked={aiFilterCriteria.highPriority}
+                    onChange={(e) =>
+                      setAiFilterCriteria({
+                        ...aiFilterCriteria,
+                        highPriority: e.target.checked
+                      })
+                    }
+                  />
+                  <label className="form-check-label" htmlFor="highPriority">
+                    High priority only (AI recommended)
+                  </label>
+                </div>
+              </div>
+
+              <style>
+                {`
   .custom-checkbox .form-check-input {
     width: 1.2em;
     height: 1.2em;
@@ -3085,9 +3105,9 @@ const ExportModal = () => {
     color: #2c3e50;
   }
 `}
-</style>
+              </style>
             </div>
-            
+
             <div className="modal-footer">
               <button className="btn btn-outline-secondary" onClick={() => setShowAIFilterModal(false)}>
                 Cancel
@@ -3105,7 +3125,7 @@ const ExportModal = () => {
 
   const EditCaseModal = () => {
     const [formData, setFormData] = useState(editingCase || {});
-    
+
     useEffect(() => {
       if (editingCase) {
         setFormData(editingCase);
@@ -3119,14 +3139,14 @@ const ExportModal = () => {
     return (
       <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
         <div className="modal-dialog modal-dialog-centered modal-lg">
-          <div className="modal-content mx-auto" style={{maxWidth: '800px'}}>
+          <div className="modal-content mx-auto" style={{ maxWidth: '800px' }}>
             <div className="modal-header">
               <h5 className="modal-title fw-bold d-flex align-items-center">
                 Edit Case - {editingCase?.employeeName}
               </h5>
               <button className="btn-close" onClick={() => setShowEditModal(false)}></button>
             </div>
-            
+
             <div className="modal-body">
               <div className="row">
                 <div className="col-md-6 mb-3">
@@ -3135,16 +3155,16 @@ const ExportModal = () => {
                     type="text"
                     className="form-control"
                     value={formData.employeeName || ''}
-                    onChange={(e) => setFormData({...formData, employeeName: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, employeeName: e.target.value })}
                   />
                 </div>
-                
+
                 <div className="col-md-6 mb-3">
                   <label className="form-label">Department</label>
                   <select
                     className="form-select"
                     value={formData.department || ''}
-                    onChange={(e) => setFormData({...formData, department: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                   >
                     <option value="Engineering">Engineering</option>
                     <option value="Marketing">Marketing</option>
@@ -3155,7 +3175,7 @@ const ExportModal = () => {
                   </select>
                 </div>
               </div>
-              
+
               <div className="row">
                 <div className="col-md-6 mb-3">
                   <label className="form-label">Resignation Date</label>
@@ -3163,73 +3183,73 @@ const ExportModal = () => {
                     type="date"
                     className="form-control"
                     value={formData.resignationDate || ''}
-                    onChange={(e) => setFormData({...formData, resignationDate: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, resignationDate: e.target.value })}
                   />
                 </div>
-                
+
                 <div className="col-md-6 mb-3">
                   <label className="form-label">Notice Period (days)</label>
                   <input
                     type="number"
                     className="form-control"
                     value={formData.noticePeriodDays || ''}
-                    onChange={(e) => setFormData({...formData, noticePeriodDays: parseInt(e.target.value)})}
+                    onChange={(e) => setFormData({ ...formData, noticePeriodDays: parseInt(e.target.value) })}
                   />
                 </div>
               </div>
-              
+
               <div className="row">
                 <div className="col-md-6 mb-3">
                   <label className="form-label">Status</label>
                   <select
                     className="form-select"
                     value={formData.status || ''}
-                    onChange={(e) => setFormData({...formData, status: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   >
                     <option value="Active">Active</option>
                     <option value="Completed">Completed</option>
                     <option value="Withdrawn">Withdrawn</option>
                   </select>
                 </div>
-                
+
                 <div className="col-md-6 mb-3">
                   <label className="form-label">Manager Acknowledged</label>
                   <select
                     className="form-select"
                     value={formData.managerAcknowledged || false}
-                    onChange={(e) => setFormData({...formData, managerAcknowledged: e.target.value === 'true'})}
+                    onChange={(e) => setFormData({ ...formData, managerAcknowledged: e.target.value === 'true' })}
                   >
                     <option value="true">Yes</option>
                     <option value="false">No</option>
                   </select>
                 </div>
               </div>
-              
+
               <div className="mb-3">
                 <label className="form-label">Resignation Reason</label>
                 <select
                   className="form-select"
                   value={formData.resignationReason || ''}
-                  onChange={(e) => setFormData({...formData, resignationReason: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, resignationReason: e.target.value })}
                 >
                   {resignationReasons.map(reason => (
                     <option key={reason} value={reason}>{reason}</option>
                   ))}
                 </select>
               </div>
-              
+
               <div className="mb-3">
                 <label className="form-label">Comments</label>
                 <textarea
                   className="form-control"
                   rows="3"
                   value={formData.resignationComments || ''}
-                  onChange={(e) => setFormData({...formData, resignationComments: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, resignationComments: e.target.value })}
                   placeholder="Additional comments..."
                 />
               </div>
             </div>
-            
+
             <div className="modal-footer">
               <button className="btn btn-outline-secondary" onClick={() => setShowEditModal(false)}>
                 Cancel
@@ -3249,161 +3269,161 @@ const ExportModal = () => {
     if (!viewingCase) return null;
 
     return (
-    
 
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog modal-dialog-centered modal-lg">
-        <div className="modal-content mx-auto" style={{ maxWidth: '800px', width: '100%' }}>
-          <div className="modal-header">
-            <h5 className="modal-title fw-bold d-flex align-items-center">
-              <FileText size={20} className="me-2" />
-              Case Details - {viewingCase.employeeName}
-            </h5>
-            <button className="btn-close" onClick={() => setShowViewModal(false)}></button>
-          </div>
-          
-          <div className="modal-body">
-            <div className="row">
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <label className="form-label fw-bold text-primary">Employee ID</label>
-                  <div className="form-control-plaintext border-bottom pb-2">{viewingCase.employeeId}</div>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label fw-bold text-primary">Name</label>
-                  <div className="form-control-plaintext border-bottom pb-2">{viewingCase.employeeName}</div>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label fw-bold text-primary">Department</label>
-                  <div className="form-control-plaintext border-bottom pb-2">{viewingCase.department}</div>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label fw-bold text-primary">Role</label>
-                  <div className="form-control-plaintext border-bottom pb-2">{viewingCase.role}</div>
-                </div>
-              </div>
-              
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <label className="form-label fw-bold text-primary">Resignation Date</label>
-                  <div className="form-control-plaintext border-bottom pb-2">
-                    <div className="d-flex align-items-center">
-                      <Calendar size={16} className="me-2 text-muted" />
-                      {viewingCase.resignationDate}
-                    </div>
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label fw-bold text-primary">Notice Period</label>
-                  <div className="form-control-plaintext border-bottom pb-2">
-                    <div className="d-flex align-items-center">
-                      <Clock size={16} className="me-2 text-muted" />
-                      {viewingCase.noticePeriod}
-                    </div>
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label fw-bold text-primary">Last Working Day</label>
-                  <div className="form-control-plaintext border-bottom pb-2">
-                    <div className="d-flex align-items-center">
-                      <CalendarDays size={16} className="me-2 text-muted" />
-                      {viewingCase.lastWorkingDay}
-                    </div>
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label fw-bold text-primary">Days Remaining</label>
-                  <div className="form-control-plaintext border-bottom pb-2">
-                    <div className="d-flex align-items-center">
-                      <AlertCircle size={16} className="me-2 text-muted" />
-                      {viewingCase.daysRemaining} days
-                    </div>
-                  </div>
-                </div>
-              </div>
+
+      <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <div className="modal-dialog modal-dialog-centered modal-lg">
+          <div className="modal-content mx-auto" style={{ maxWidth: '800px', width: '100%' }}>
+            <div className="modal-header">
+              <h5 className="modal-title fw-bold d-flex align-items-center">
+                <FileText size={20} className="me-2" />
+                Case Details - {viewingCase.employeeName}
+              </h5>
+              <button className="btn-close" onClick={() => setShowViewModal(false)}></button>
             </div>
-            
-            <div className="mb-3">
-              <label className="form-label fw-bold text-primary">Resignation Reason</label>
-              <div className="form-control-plaintext border-bottom pb-2">
-                <div className="d-flex align-items-center">
-                  <Info size={16} className="me-2 text-muted" />
-                  {viewingCase.resignationReason}
-                </div>
-              </div>
-            </div>
-            
-            <div className="mb-3">
-              <label className="form-label fw-bold text-primary">Comments</label>
-              <div className="form-control-plaintext border p-3 rounded bg-light">
-                {viewingCase.resignationComments || 'No comments'}
-              </div>
-            </div>
-            
-            <div className="mb-3">
-              <label className="form-label fw-bold text-primary">Status</label>
-              <div className="d-flex align-items-center gap-2">
-                {getStatusBadge(viewingCase.status)}
-                {viewingCase.managerAcknowledged ? (
-                  <span className="badge bg-success d-flex align-items-center">
-                    <Check size={14} className="me-1" />
-                    Manager Acknowledged
-                  </span>
-                ) : (
-                  <span className="badge bg-warning d-flex align-items-center">
-                    <AlertCircle size={14} className="me-1" />
-                    Awaiting Manager Ack
-                  </span>
-                )}
-              </div>
-            </div>
-            
-            {/* Additional Information Section */}
-            <div className="mt-4 pt-3 border-top">
-              <h6 className="fw-bold mb-3 text-primary">Additional Information</h6>
+
+            <div className="modal-body">
               <div className="row">
                 <div className="col-md-6">
-                  <div className="mb-2">
-                    <small className="text-muted d-block">Manager Email</small>
-                    <div>{viewingCase.managerEmail || 'Not specified'}</div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold text-primary">Employee ID</label>
+                    <div className="form-control-plaintext border-bottom pb-2">{viewingCase.employeeId}</div>
                   </div>
-                  <div className="mb-2">
-                    <small className="text-muted d-block">HR Interview Scheduled</small>
-                    <div>{viewingCase.hrInterviewScheduled || 'Not scheduled'}</div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold text-primary">Name</label>
+                    <div className="form-control-plaintext border-bottom pb-2">{viewingCase.employeeName}</div>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold text-primary">Department</label>
+                    <div className="form-control-plaintext border-bottom pb-2">{viewingCase.department}</div>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold text-primary">Role</label>
+                    <div className="form-control-plaintext border-bottom pb-2">{viewingCase.role}</div>
                   </div>
                 </div>
+
                 <div className="col-md-6">
-                  <div className="mb-2">
-                    <small className="text-muted d-block">Counter Offer Status</small>
-                    <div>{viewingCase.counterOfferStatus}</div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold text-primary">Resignation Date</label>
+                    <div className="form-control-plaintext border-bottom pb-2">
+                      <div className="d-flex align-items-center">
+                        <Calendar size={16} className="me-2 text-muted" />
+                        {viewingCase.resignationDate}
+                      </div>
+                    </div>
                   </div>
-                  <div className="mb-2">
-                    <small className="text-muted d-block">Retention Attempted</small>
-                    <div>{viewingCase.retentionAttempted ? 'Yes' : 'No'}</div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold text-primary">Notice Period</label>
+                    <div className="form-control-plaintext border-bottom pb-2">
+                      <div className="d-flex align-items-center">
+                        <Clock size={16} className="me-2 text-muted" />
+                        {viewingCase.noticePeriod}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold text-primary">Last Working Day</label>
+                    <div className="form-control-plaintext border-bottom pb-2">
+                      <div className="d-flex align-items-center">
+                        <CalendarDays size={16} className="me-2 text-muted" />
+                        {viewingCase.lastWorkingDay}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold text-primary">Days Remaining</label>
+                    <div className="form-control-plaintext border-bottom pb-2">
+                      <div className="d-flex align-items-center">
+                        <AlertCircle size={16} className="me-2 text-muted" />
+                        {viewingCase.daysRemaining} days
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label fw-bold text-primary">Resignation Reason</label>
+                <div className="form-control-plaintext border-bottom pb-2">
+                  <div className="d-flex align-items-center">
+                    <Info size={16} className="me-2 text-muted" />
+                    {viewingCase.resignationReason}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label fw-bold text-primary">Comments</label>
+                <div className="form-control-plaintext border p-3 rounded bg-light">
+                  {viewingCase.resignationComments || 'No comments'}
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label fw-bold text-primary">Status</label>
+                <div className="d-flex align-items-center gap-2">
+                  {getStatusBadge(viewingCase.status)}
+                  {viewingCase.managerAcknowledged ? (
+                    <span className="badge bg-success d-flex align-items-center">
+                      <Check size={14} className="me-1" />
+                      Manager Acknowledged
+                    </span>
+                  ) : (
+                    <span className="badge bg-warning d-flex align-items-center">
+                      <AlertCircle size={14} className="me-1" />
+                      Awaiting Manager Ack
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Additional Information Section */}
+              <div className="mt-4 pt-3 border-top">
+                <h6 className="fw-bold mb-3 text-primary">Additional Information</h6>
+                <div className="row">
+                  <div className="col-md-6">
+                    <div className="mb-2">
+                      <small className="text-muted d-block">Manager Email</small>
+                      <div>{viewingCase.managerEmail || 'Not specified'}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted d-block">HR Interview Scheduled</small>
+                      <div>{viewingCase.hrInterviewScheduled || 'Not scheduled'}</div>
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="mb-2">
+                      <small className="text-muted d-block">Counter Offer Status</small>
+                      <div>{viewingCase.counterOfferStatus}</div>
+                    </div>
+                    <div className="mb-2">
+                      <small className="text-muted d-block">Retention Attempted</small>
+                      <div>{viewingCase.retentionAttempted ? 'Yes' : 'No'}</div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-          
-          <div className="modal-footer">
-            <button className="btn btn-outline-secondary" onClick={() => setShowViewModal(false)}>
-              Close
-            </button>
-            <button 
-              className="btn btn-primary d-flex align-items-center"
-              onClick={() => {
-                setShowViewModal(false);
-                handleEditCase(viewingCase);
-              }}
-            >
-              <Edit size={16} className="me-2" />
-              Edit Case
-            </button>
+
+            <div className="modal-footer">
+              <button className="btn btn-outline-secondary" onClick={() => setShowViewModal(false)}>
+                Close
+              </button>
+              <button
+                className="btn btn-primary d-flex align-items-center"
+                onClick={() => {
+                  setShowViewModal(false);
+                  handleEditCase(viewingCase);
+                }}
+              >
+                <Edit size={16} className="me-2" />
+                Edit Case
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
     );
   };
 
@@ -3443,7 +3463,7 @@ const ExportModal = () => {
               </h5>
               <button className="btn-close" onClick={() => setShowAddEmployeeModal(false)}></button>
             </div>
-            
+
             <div className="modal-body">
               {/* Employee Name */}
               <div className="mb-3">
@@ -3606,13 +3626,13 @@ const ExportModal = () => {
                 />
               </div>
             </div>
-            
+
             <div className="modal-footer">
               <button className="btn btn-outline-secondary" onClick={() => setShowAddEmployeeModal(false)}>
                 Cancel
               </button>
-              <button 
-                className="btn btn-primary d-flex align-items-center" 
+              <button
+                className="btn btn-primary d-flex align-items-center"
                 onClick={handleSubmit}
                 disabled={!formData.employeeName || !formData.role || !formData.lastWorkingDay}
               >
@@ -3643,9 +3663,9 @@ const ExportModal = () => {
               </span>
             </p>
           </div>
-          
+
           <div className="d-flex flex-nowrap gap-2">
-            <button 
+            <button
               className="btn btn-primary d-flex align-items-center gap-2 text-nowrap"
               onClick={() => setShowResignationModal(true)}
             >
@@ -3653,7 +3673,7 @@ const ExportModal = () => {
               <span>Submit Resignation</span>
             </button>
 
-            <button 
+            <button
               className="btn btn-primary d-flex align-items-center gap-2 text-nowrap"
               onClick={() => setShowExportModal(true)}
             >
@@ -3661,7 +3681,7 @@ const ExportModal = () => {
               <span>Export Reports</span>
             </button>
 
-            <button 
+            <button
               className="btn btn-outline-secondary d-flex align-items-center gap-2 text-nowrap"
               onClick={handlePrintReport}
             >
@@ -3702,14 +3722,17 @@ const ExportModal = () => {
 
       {/* Statistics */}
       <div className="row g-2 mb-3">
+        {/* Active Cases */}
         <div className="col-6 col-md-3">
-          <div className="p-2 bg-white border rounded shadow-sm">
+          <div className="p-3 bg-white border rounded shadow-sm">
             <div className="d-flex justify-content-between align-items-center">
               <div>
-                <div style={{ color: '#000000' }} className="small mb-1">
+                <div className="small fw-bold text-dark mb-1">
                   Active Cases
                 </div>
-                <div className="fw-bold h5 text-primary">{filteredCases.filter(c => c.status === 'Active').length}</div>
+                <div className="fw-bold h5 text-primary mb-0">
+                  {filteredCases.filter(c => c.status === 'Active').length}
+                </div>
               </div>
               <Clock size={20} className="text-primary opacity-75" />
             </div>
@@ -3720,53 +3743,71 @@ const ExportModal = () => {
           </div>
         </div>
 
+        {/* Pending Approvals */}
         <div className="col-6 col-md-3">
-          <div className="p-2 bg-white border rounded shadow-sm">
+          <div className="p-3 bg-white border rounded shadow-sm">
             <div className="d-flex justify-content-between align-items-center">
               <div>
-                <div style={{ color: '#000000' }} className="small mb-1">
+                <div className="small fw-bold text-dark mb-1">
                   Pending Approvals
                 </div>
-                <div className="fw-bold h5 text-warning">
-                  {filteredCases.filter(c => !c.managerAcknowledged && c.status === 'Active').length}
+                <div className="fw-bold h5 text-warning mb-0">
+                  {
+                    filteredCases.filter(
+                      c => !c.managerAcknowledged && c.status === 'Active'
+                    ).length
+                  }
                 </div>
               </div>
               <AlertCircle size={20} className="text-warning opacity-75" />
             </div>
-            <div className="small text-warning mt-1">Requires attention</div>
+            <div className="small fw-semibold text-warning mt-1">
+              Requires attention
+            </div>
           </div>
         </div>
 
+        {/* AI Time Saved */}
         <div className="col-6 col-md-3">
-          <div className="p-2 bg-white border rounded shadow-sm">
+          <div className="p-3 bg-white border rounded shadow-sm">
             <div className="d-flex justify-content-between align-items-center">
               <div>
-                <div style={{ color: '#000000' }} className="small mb-1">
+                <div className="small fw-bold text-dark mb-1">
                   AI Time Saved
                 </div>
-                <div className="fw-bold h5 text-success">{statistics.timeSaved}</div>
+                <div className="fw-bold h5 text-success mb-0">
+                  {statistics.timeSaved}
+                </div>
               </div>
               <Zap size={20} className="text-success opacity-75" />
             </div>
-            <div className="small text-muted mt-1">Through automation</div>
+            <div className="small text-muted mt-1">
+              Through automation
+            </div>
           </div>
         </div>
 
+        {/* Retention Success */}
         <div className="col-6 col-md-3">
-          <div className="p-2 bg-white border rounded shadow-sm">
+          <div className="p-3 bg-white border rounded shadow-sm">
             <div className="d-flex justify-content-between align-items-center">
               <div>
-                <div style={{ color: '#000000' }} className="small mb-1">
+                <div className="small fw-bold text-dark mb-1">
                   Retention Success
                 </div>
-                <div className="fw-bold h5 text-info">{statistics.retentionSuccess}</div>
+                <div className="fw-bold h5 text-info mb-0">
+                  {statistics.retentionSuccess}
+                </div>
               </div>
               <TrendingUp size={20} className="text-info opacity-75" />
             </div>
-            <div className="small text-success mt-1">{aiPredictions.retentionSuccessRate} success rate</div>
+            <div className="small fw-semibold text-success mt-1">
+              {aiPredictions.retentionSuccessRate} success rate
+            </div>
           </div>
         </div>
       </div>
+
 
       {/* Navigation Tabs */}
       <div className="mb-4">
@@ -3811,7 +3852,7 @@ const ExportModal = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                   {(searchTerm || aiFilterCriteria.riskLevel !== 'all' || aiFilterCriteria.department !== 'all' || aiFilterCriteria.hasPendingActions || aiFilterCriteria.highPriority) && (
-                    <button 
+                    <button
                       className="btn btn-outline-secondary"
                       type="button"
                       onClick={handleClearFilters}
@@ -3823,7 +3864,7 @@ const ExportModal = () => {
                 </div>
               </div>
 
-              <button 
+              <button
                 className="btn btn-primary d-flex align-items-center"
                 onClick={() => setShowAIFilterModal(true)}
               >
@@ -3834,7 +3875,7 @@ const ExportModal = () => {
                 )}
               </button>
             </div>
-            
+
             {/* Show active filter tags */}
             {(aiFilterCriteria.riskLevel !== 'all' || aiFilterCriteria.department !== 'all' || aiFilterCriteria.hasPendingActions || aiFilterCriteria.highPriority) && (
               <div className="mt-2">
@@ -3842,9 +3883,9 @@ const ExportModal = () => {
                 {aiFilterCriteria.riskLevel !== 'all' && (
                   <span className="badge bg-info me-1">
                     Risk: {aiFilterCriteria.riskLevel}
-                    <button 
+                    <button
                       className="btn btn-sm btn-link text-white p-0 ms-1"
-                      onClick={() => setAiFilterCriteria({...aiFilterCriteria, riskLevel: 'all'})}
+                      onClick={() => setAiFilterCriteria({ ...aiFilterCriteria, riskLevel: 'all' })}
                     >
                       <X size={10} />
                     </button>
@@ -3853,9 +3894,9 @@ const ExportModal = () => {
                 {aiFilterCriteria.department !== 'all' && (
                   <span className="badge bg-info me-1">
                     Dept: {aiFilterCriteria.department}
-                    <button 
+                    <button
                       className="btn btn-sm btn-link text-white p-0 ms-1"
-                      onClick={() => setAiFilterCriteria({...aiFilterCriteria, department: 'all'})}
+                      onClick={() => setAiFilterCriteria({ ...aiFilterCriteria, department: 'all' })}
                     >
                       <X size={10} />
                     </button>
@@ -3864,9 +3905,9 @@ const ExportModal = () => {
                 {aiFilterCriteria.hasPendingActions && (
                   <span className="badge bg-warning me-1">
                     Pending Actions
-                    <button 
+                    <button
                       className="btn btn-sm btn-link text-white p-0 ms-1"
-                      onClick={() => setAiFilterCriteria({...aiFilterCriteria, hasPendingActions: false})}
+                      onClick={() => setAiFilterCriteria({ ...aiFilterCriteria, hasPendingActions: false })}
                     >
                       <X size={10} />
                     </button>
@@ -3875,9 +3916,9 @@ const ExportModal = () => {
                 {aiFilterCriteria.highPriority && (
                   <span className="badge bg-danger me-1">
                     High Priority
-                    <button 
+                    <button
                       className="btn btn-sm btn-link text-white p-0 ms-1"
-                      onClick={() => setAiFilterCriteria({...aiFilterCriteria, highPriority: false})}
+                      onClick={() => setAiFilterCriteria({ ...aiFilterCriteria, highPriority: false })}
                     >
                       <X size={10} />
                     </button>
@@ -3913,15 +3954,15 @@ const ExportModal = () => {
                     type="date"
                     className="form-control"
                     value={calculatorData.resignationDate}
-                    onChange={(e) => setCalculatorData({...calculatorData, resignationDate: e.target.value})}
+                    onChange={(e) => setCalculatorData({ ...calculatorData, resignationDate: e.target.value })}
                   />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Notice Period (Days) *</label>
-                  <select 
-                    className="form-select" 
+                  <select
+                    className="form-select"
                     value={calculatorData.noticePeriod}
-                    onChange={(e) => setCalculatorData({...calculatorData, noticePeriod: e.target.value})}
+                    onChange={(e) => setCalculatorData({ ...calculatorData, noticePeriod: e.target.value })}
                   >
                     <option value="30">30 Days</option>
                     <option value="45">45 Days</option>
@@ -3941,7 +3982,7 @@ const ExportModal = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="col-12 col-md-6">
             <div className="card h-100">
               <div className="card-header bg-success text-white d-flex align-items-center">
@@ -3959,7 +4000,7 @@ const ExportModal = () => {
                     className="form-control"
                     placeholder="₹1,50,000"
                     value={calculatorData.monthlySalary}
-                    onChange={(e) => setCalculatorData({...calculatorData, monthlySalary: e.target.value})}
+                    onChange={(e) => setCalculatorData({ ...calculatorData, monthlySalary: e.target.value })}
                   />
                 </div>
                 <div className="mb-3">
@@ -3969,7 +4010,7 @@ const ExportModal = () => {
                     className="form-control"
                     placeholder="30"
                     value={calculatorData.buyoutDays}
-                    onChange={(e) => setCalculatorData({...calculatorData, buyoutDays: e.target.value})}
+                    onChange={(e) => setCalculatorData({ ...calculatorData, buyoutDays: e.target.value })}
                   />
                 </div>
                 <button className="btn btn-success w-100" onClick={handleCalculateBuyout}>
@@ -3984,7 +4025,7 @@ const ExportModal = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="col-12 col-md-6">
             <div className="card h-100">
               <div className="card-header bg-danger text-white d-flex align-items-center">
@@ -4160,7 +4201,11 @@ const ExportModal = () => {
           <div className="col-12">
             <div className="card">
               <div className="card-header d-flex justify-content-between align-items-center">
-                <h6 className="fw-bold mb-0 d-flex align-items-center">
+                <h6 className="mb-0 d-flex align-items-center" style={{
+                  fontWeight: 500,
+                  fontSize: "16px",
+                  color: "#000"
+                }}>
                   <FileText size={20} className="me-2" />
                   Active Notice Period Cases
                   {filteredCases.length < noticePeriodCases.length && (
@@ -4173,7 +4218,7 @@ const ExportModal = () => {
                   <span className="badge bg-primary d-flex justify-content-center align-items-center">
                     {filteredCases.filter(c => c.status === 'Active').length} cases
                   </span>
-                  <button 
+                  <button
                     className="btn btn-sm btn-primary d-flex align-items-center"
                     onClick={() => setShowAddEmployeeModal(true)}
                   >
@@ -4188,8 +4233,8 @@ const ExportModal = () => {
                     <AlertCircle size={48} className="text-muted mb-3" />
                     <h5>No cases found</h5>
                     <p className="text-muted">
-                      {searchTerm || aiFilterCriteria.riskLevel !== 'all' || aiFilterCriteria.department !== 'all' ? 
-                        "No cases match your current filters. Try clearing filters or adjusting your search." : 
+                      {searchTerm || aiFilterCriteria.riskLevel !== 'all' || aiFilterCriteria.department !== 'all' ?
+                        "No cases match your current filters. Try clearing filters or adjusting your search." :
                         "No active cases found. Add a new employee to get started."}
                     </p>
                     {(searchTerm || aiFilterCriteria.riskLevel !== 'all' || aiFilterCriteria.department !== 'all') && (
@@ -4204,8 +4249,8 @@ const ExportModal = () => {
                       <thead className="table-light">
                         <tr>
                           <th>
-                            <input 
-                              type="checkbox" 
+                            <input
+                              type="checkbox"
                               className="form-check-input"
                               onChange={(e) => {
                                 if (e.target.checked) {
@@ -4232,8 +4277,8 @@ const ExportModal = () => {
                           return (
                             <tr key={caseItem.id}>
                               <td>
-                                <input 
-                                  type="checkbox" 
+                                <input
+                                  type="checkbox"
                                   className="form-check-input"
                                   checked={selectedCases.includes(caseItem.id)}
                                   onChange={(e) => {
@@ -4285,7 +4330,11 @@ const ExportModal = () => {
           <div className="col-12">
             <div className="card">
               <div className="card-header d-flex justify-content-between align-items-center">
-                <h6 className="fw-bold mb-0 d-flex align-items-center">
+                <h6 className="mb-0 d-flex align-items-center" style={{
+                  fontWeight: 500,
+                  fontSize: "16px",
+                  color: "#000"
+                }}>
                   <DollarSign size={20} className="me-2" />
                   Buyout Requests
                 </h6>
@@ -4293,7 +4342,7 @@ const ExportModal = () => {
                   <span className="badge bg-primary d-inline-flex justify-content-center align-items-center">
                     {buyoutRequests.filter(r => r.status === 'Pending').length} pending
                   </span>
-                  <button 
+                  <button
                     className="btn btn-primary btn-sm d-flex align-items-center"
                     onClick={() => setShowBuyoutModal(true)}
                   >
@@ -4356,7 +4405,11 @@ const ExportModal = () => {
           <div className="col-12">
             <div className="card">
               <div className="card-header d-flex justify-content-between align-items-center">
-                <h6 className="d-flex align-items-center fw-bold mb-0">
+                <h6 className="d-flex align-items-center mb-0 " style={{
+                  fontWeight: 500,
+                  fontSize: "16px",
+                  color: "#000"
+                }}>
                   <Shield className="me-2" />
                   Notice Period Waiver Requests
                 </h6>
@@ -4366,7 +4419,7 @@ const ExportModal = () => {
                       {waiverRequests.filter(r => r.status === 'Pending').length} pending
                     </span>
                   </div>
-                  <button 
+                  <button
                     className="btn btn-primary d-flex align-items-center"
                     onClick={() => setShowWaiverModal(true)}
                   >
@@ -4444,7 +4497,11 @@ const ExportModal = () => {
           <div className="col-12">
             <div className="card">
               <div className="card-header d-flex justify-content-between align-items-center">
-                <h6 className="d-flex align-items-center fw-bold mb-0">
+                <h6 className="d-flex align-items-center mb-0" style={{
+                  fontWeight: 500,
+                  fontSize: "16px",
+                  color: "#000"
+                }}>
                   <Percent className="me-2" />
                   Counter Offers & Retention
                 </h6>
@@ -4452,7 +4509,7 @@ const ExportModal = () => {
                   <span className="badge bg-primary d-inline-flex justify-content-center align-items-center">
                     {counterOffers.filter(r => r.status === 'Pending').length} pending
                   </span>
-                  <button 
+                  <button
                     className="btn btn-primary btn-sm d-flex align-items-center"
                     onClick={() => setShowCounterOfferModal(true)}
                   >
@@ -4496,7 +4553,7 @@ const ExportModal = () => {
                           </td>
                           <td>
                             <div className="progress" style={{ height: '20px' }}>
-                              <div 
+                              <div
                                 className={`progress-bar ${parseInt(offer.retentionProbability) > 70 ? 'bg-success' : parseInt(offer.retentionProbability) > 50 ? 'bg-warning' : 'bg-danger'}`}
                                 style={{ width: `${offer.retentionProbability}` }}
                               >
@@ -4525,7 +4582,11 @@ const ExportModal = () => {
           <div className="col-12">
             <div className="card">
               <div className="card-header d-flex justify-content-between align-items-center">
-                <h6 className="fw-bold mb-0 d-flex align-items-center">
+                <h6 className=" mb-0 d-flex align-items-center" style={{
+                  fontWeight: 500,
+                  fontSize: "16px",
+                  color: "#000"
+                }}>
                   <CalendarDays size={18} className="me-2" />
                   <span>Notice Period Extension Requests</span>
                 </h6>
@@ -4601,19 +4662,41 @@ const ExportModal = () => {
       )}
 
       {/* Daily Countdown Tracker */}
-      <div className="mt-4 pt-3 border-top">
-        <h6 className="fw-semibold mb-3 d-flex align-items-center text-dark opacity-75" style={{ color: "#000" }}>
-          <Clock size={16} className="me-2 text-dark opacity-75" />
+      <div
+        className="mt-4 pt-3 border-top"
+        style={{
+          background: "#dce4f4",          // 👈 section background
+          borderRadius: "16px",
+          padding: "20px",
+        }}
+      >
+        <h6
+          className="mb-3 d-flex align-items-center"
+          style={{
+            fontWeight: 500,
+            fontSize: "14px",
+            color: "#000"
+          }}
+        >
+          <Clock size={22} className="me-2 text-primary" />
           Daily Countdown Tracker
+
           {filteredCases.length < noticePeriodCases.length && (
-            <span className="ms-2 small text-muted">
-              (Showing {filteredCases.filter(c => c.status === 'Active').length} filtered cases)
+            <span
+              style={{
+                marginLeft: "8px",
+                fontSize: "14px",
+                fontWeight: 500,
+                color: "#6b7280",
+              }}
+            >
+              (Showing {filteredCases.filter(c => c.status === "Active").length} filtered cases)
             </span>
           )}
         </h6>
 
         <div className="row g-3">
-          {filteredCases.filter(c => c.status === 'Active').map(caseItem => {
+          {filteredCases.filter(c => c.status === "Active").map(caseItem => {
             const risk = getRiskLevel(caseItem.daysRemaining);
             const progress =
               ((caseItem.noticePeriodDays - caseItem.daysRemaining) /
@@ -4622,61 +4705,153 @@ const ExportModal = () => {
 
             return (
               <div key={caseItem.id} className="col-12 col-md-6 col-lg-4">
-                <div className={`card h-100 border-${risk.color} shadow-sm`}>
+                <div
+                  className="card h-100"
+                  style={{
+                    background: "#ffffff",          // 👈 card background
+                    borderRadius: "14px",
+                    border: "1px solid #e5e7eb",
+                    boxShadow: "0 8px 18px rgba(0,0,0,0.08)",
+                  }}
+                >
                   <div className="card-body d-flex flex-column">
                     {/* Header */}
                     <div className="d-flex justify-content-between align-items-start mb-2">
                       <div>
-                        <h6 className="fw-bold mb-0">{caseItem.employeeName}</h6>
-                        <small className="text-muted">
+                        <h6
+                          style={{
+                            fontWeight: 600,
+                            fontSize: "15px",
+                            marginBottom: "2px",
+                            color: "#111827",
+                          }}
+                        >
+                          {caseItem.employeeName}
+                        </h6>
+                        <small style={{ color: "#6b7280" }}>
                           {caseItem.department} • {caseItem.employeeId}
                         </small>
                       </div>
+
                       <span
-                        className="badge"
-                        style={{ backgroundColor: '#d4edda', color: '#155724' }}
+                        style={{
+                          background: "#ecfdf5",
+                          color: "#047857",
+                          fontWeight: 700,
+                          fontSize: "12px",
+                          padding: "4px 10px",
+                          borderRadius: "20px",
+                        }}
                       >
                         {caseItem.daysRemaining} days left
                       </span>
                     </div>
 
                     {/* Progress */}
-                    <div className="progress my-2" style={{ height: '6px' }}>
+                    <div
+                      style={{
+                        height: "6px",
+                        background: "#e5e7eb",
+                        borderRadius: "6px",
+                        margin: "10px 0",
+                        overflow: "hidden",
+                      }}
+                    >
                       <div
-                        className={`progress-bar bg-${risk.color}`}
-                        style={{ width: `${progress}%` }}
+                        style={{
+                          width: `${progress}%`,
+                          height: "100%",
+                          background:
+                            risk.color === "danger"
+                              ? "#dc2626"
+                              : risk.color === "warning"
+                                ? "#f59e0b"
+                                : "#16a34a",
+                          borderRadius: "6px",
+                        }}
                       />
                     </div>
 
                     {/* Dates */}
-                    <div className="d-flex justify-content-between small text-muted">
+                    <div
+                      className="d-flex justify-content-between"
+                      style={{ fontSize: "12px", color: "#6b7280" }}
+                    >
                       <span>Started: {caseItem.resignationDate}</span>
                       <span>Ends: {caseItem.lastWorkingDay}</span>
                     </div>
 
                     {/* Status Badges */}
-                    <div className="mt-auto pt-2 d-flex flex-wrap gap-1">
+                    <div className="mt-auto pt-3 d-flex flex-wrap gap-1">
                       {caseItem.waiverRequested && (
-                        <span className="badge bg-warning bg-opacity-25 text-warning d-flex align-items-center">
-                          <Shield size={12} className="me-1" /> Waiver Requested
+                        <span
+                          style={{
+                            background: "#fef3c7",
+                            color: "#92400e",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            padding: "4px 8px",
+                            borderRadius: "16px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                          }}
+                        >
+                          <Shield size={12} /> Waiver Requested
                         </span>
                       )}
 
-                      {caseItem.counterOfferStatus === 'Pending' && (
-                        <span className="badge bg-primary bg-opacity-25 text-primary d-flex align-items-center">
-                          <Percent size={12} className="me-1" /> Counter Offer
+                      {caseItem.counterOfferStatus === "Pending" && (
+                        <span
+                          style={{
+                            background: "#e0f2fe",
+                            color: "#075985",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            padding: "4px 8px",
+                            borderRadius: "16px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                          }}
+                        >
+                          <Percent size={12} /> Counter Offer
                         </span>
                       )}
 
                       {caseItem.extensionRequested && (
-                        <span className="badge bg-info bg-opacity-25 text-info d-flex align-items-center">
-                          <CalendarDays size={12} className="me-1" /> Extension
+                        <span
+                          style={{
+                            background: "#ecfeff",
+                            color: "#155e75",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            padding: "4px 8px",
+                            borderRadius: "16px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                          }}
+                        >
+                          <CalendarDays size={12} /> Extension
                         </span>
                       )}
 
                       {!caseItem.managerAcknowledged && (
-                        <span className="badge bg-danger bg-opacity-25 text-danger d-flex align-items-center">
-                          <AlertCircle size={12} className="me-1" /> Manager Ack Pending
+                        <span
+                          style={{
+                            background: "#fee2e2",
+                            color: "#991b1b",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            padding: "4px 8px",
+                            borderRadius: "16px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                          }}
+                        >
+                          <AlertCircle size={12} /> Manager Ack Pending
                         </span>
                       )}
                     </div>
@@ -4686,9 +4861,12 @@ const ExportModal = () => {
             );
           })}
 
-          {filteredCases.filter(c => c.status === 'Active').length === 0 && (
+          {/* Empty State */}
+          {filteredCases.filter(c => c.status === "Active").length === 0 && (
             <div className="col-12 text-center py-4">
-              <p className="text-muted">No active cases match your current filters.</p>
+              <p style={{ color: "#6b7280", fontWeight: 600 }}>
+                No active cases match your current filters.
+              </p>
               <button className="btn btn-primary" onClick={handleClearFilters}>
                 Clear Filters
               </button>
@@ -4696,6 +4874,7 @@ const ExportModal = () => {
           )}
         </div>
       </div>
+
 
       {/* Modals */}
       {showResignationModal && <ResignationSubmissionModal />}

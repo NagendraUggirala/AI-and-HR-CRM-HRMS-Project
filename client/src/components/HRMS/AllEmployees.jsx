@@ -248,13 +248,13 @@ const [employees, setEmployees] = useState([
         { 
           name: 'John Johnson', 
           relation: 'Spouse', 
-          phoneNo: '+1 (555) 123-4569',
+          phone: '+1 (555) 123-4569',
           percentage: 70 
         },
         { 
           name: 'Emma Johnson', 
           relation: 'Daughter', 
-          phoneNo: '+1 (555) 987-6543',
+          phone: '+1 (555) 987-6543',
           percentage: 30 
         }
       ],
@@ -402,7 +402,7 @@ const [employees, setEmployees] = useState([
           ifscCode: 'BANK0005678',
           bankName: 'Bank of America',
           branch: 'New York Midtown',
-          accountType: 'Checking'
+          accountType: 'Savings'
         }
       },
       paymentMode: 'Bank Transfer',
@@ -537,7 +537,7 @@ const [employees, setEmployees] = useState([
         { 
           name: 'Susan Chen', 
           relation: 'Sister', 
-          phoneNo: '+1 (555) 234-5680',
+          phone: '+1 (555) 234-5680',
           percentage: 100 
         }
       ],
@@ -772,7 +772,7 @@ const [employees, setEmployees] = useState([
       nominees: [
         { 
           name: 'Maria Rivera',
-          phoneNo: '+1 (555) 345-6791',
+          phone: '+1 (555) 345-6791',
           relation: 'Spouse', 
           percentage: 100 
         }
@@ -902,6 +902,7 @@ const [employees, setEmployees] = useState([
         amount: 3000
       }
     },
+
     statutoryInfo: {
       pan: {
         number: 'CDEFG3456H',
@@ -990,7 +991,7 @@ const [employees, setEmployees] = useState([
       nominees: [
         { 
           name: 'Robert Davis', 
-          phoneNo: '+1 (555) 456-7892',
+          phone: '+1 (555) 456-7892',
           relation: 'Father', 
           percentage: 100 
         }
@@ -1213,16 +1214,19 @@ const [employees, setEmployees] = useState([
       nominees: [
         { 
           name: 'Jessica Wilson', 
+          phone: '+1 (555) 567-8903',
           relation: 'Spouse', 
           percentage: 60 
         },
         { 
           name: 'Michael Wilson', 
+          phone: '+1 (555) 567-8904',
           relation: 'Son', 
           percentage: 20 
         },
         { 
           name: 'Sophia Wilson', 
+          phone: '+1 (555) 567-8905',
           relation: 'Daughter', 
           percentage: 20 
         }
@@ -1367,7 +1371,7 @@ const [employees, setEmployees] = useState([
           ifscCode: 'BANK0006789',
           bankName: 'Bank of Texas',
           branch: 'Austin West',
-          accountType: 'Checking'
+          accountType: 'Savings'
         }
       },
       paymentMode: 'Bank Transfer',
@@ -1492,7 +1496,7 @@ const [employees, setEmployees] = useState([
       nominees: [
         { 
           name: 'Tom Anderson',
-          phoneNo: '+1 (555) 678-9014', 
+          phone: '+1 (555) 678-9014', 
           relation: 'Brother', 
           percentage: 100 
         }
@@ -1704,7 +1708,7 @@ const [employees, setEmployees] = useState([
       nominees: [
         { 
           name: 'Susan Miller', 
-          phoneNo: '+1 (555) 789-0125',
+          phone: '+1 (555) 789-0125',
           relation: 'Sister', 
           percentage: 100 
         }
@@ -1946,7 +1950,7 @@ const [employees, setEmployees] = useState([
       nominees: [
         { 
           name: 'James Lee',
-          phoneNo: '+1 (555) 890-1236', 
+          phone: '+1 (555) 890-1236', 
           relation: 'Father', 
           percentage: 100 
         }
@@ -2483,9 +2487,10 @@ const handleAddEmployee = () => {
         .map(nominee => ({
           name: nominee.name,
           relation: nominee.relation || '',
+           phone: nominee.phone || nominee.contactNo || '', // Ensure 'phone' field
           percentage: parseInt(nominee.percentage) || 0,
           isNomineeAccepted: nominee.isNomineeAccepted || false,
-          contactNo: nominee.contactNo || ''
+          
         }))
     : [];
 
@@ -2877,6 +2882,7 @@ const handleSaveEditedEmployee = () => {
     personalInfo: editEmployeeData.personalInfo,
     employmentInfo: editEmployeeData.employmentInfo,
     jobHistory: editEmployeeData.jobHistory,
+    nominees: editEmployeeData.personalInfo?.nominees || [],
     salaryInfo: editEmployeeData.salaryInfo,
     statutoryInfo: editEmployeeData.statutoryInfo
   });
@@ -3503,11 +3509,11 @@ const handleEditEmployee = (employee) => {
           <thead className="bg-light">
             <tr>
               <th 
-                className="border-0 px-2 py-2 text-uppercase fw-bold text-muted cursor-pointer"
+                className="border-0  px-5 py-7 text-uppercase fw-bold text-black cursor-pointer"
                 onClick={() => handleSort('name')}
                 style={{ cursor: 'pointer' }}
               >
-                <div className="d-flex align-items-center justify-content-center gap-2">
+                <div className="d-flex align-items-center gap-2">
                   Employee
                   <Icon 
                     icon={`heroicons:chevron-${sortConfig.key === 'name' && sortConfig.direction === 'asc' ? 'up' : 'down'}`} 
@@ -3516,7 +3522,7 @@ const handleEditEmployee = (employee) => {
                 </div>
               </th>
               <th 
-                className="border-0 px-3 py-3 text-uppercase fw-bold text-muted cursor-pointer text-center"
+                className="border-0 px-3 py-3 text-uppercase fw-bold text-black cursor-pointer text-center"
                 onClick={() => handleSort('department')}
                 style={{ cursor: 'pointer' }}
               >
@@ -3528,10 +3534,10 @@ const handleEditEmployee = (employee) => {
                   />
                 </div>
               </th>
-              <th className="border-0 px-3 py-3 text-uppercase fw-bold text-muted text-center">Contact</th>
+              <th className="border-0 px-3 py-3 text-uppercase fw-bold text-black text-center">Contact</th>
 
-              <th className="border-0 px-3 py-3 text-uppercase fw-bold text-muted text-center">Status</th>
-              <th className="border-0 px-3 py-3 text-uppercase fw-bold text-muted text-center">Actions</th>
+              <th className="border-0 px-3 py-3 text-uppercase fw-bold text-black text-center">Status</th>
+              <th className="border-0 px-3 py-3 text-uppercase fw-bold text-black text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -3580,11 +3586,11 @@ const handleEditEmployee = (employee) => {
                   </div>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <div className="text-muted">{(employee.employmentInfo || {}).department || employee.department}</div>
+                  <div>{(employee.employmentInfo || {}).department || employee.department}</div>
                   <div className="small text-muted">{(employee.employmentInfo || {}).location || employee.location}</div>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <div className="text-muted">{employee.email || (employee.employmentInfo || {}).workEmail}</div>
+                  <div>{employee.email || (employee.employmentInfo || {}).workEmail}</div>
                   <div className="small text-muted">{employee.phone || (employee.personalInfo || {}).phonePrimary}</div>
                 </td>
                 <td className="px-4 py-3 align-middle text-center" style={{width:"120px"}}>
@@ -3981,8 +3987,10 @@ const handleEditEmployee = (employee) => {
 
     {/* === Basic Information === */}
     <div className="col-12">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
         <Icon icon="heroicons:identification" />
+        </span>
         Basic Information
       </h6>
     </div>
@@ -4129,8 +4137,10 @@ const handleEditEmployee = (employee) => {
 
     {/* === Contact Information === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <Icon icon="heroicons:phone" />
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:phone" />
+        </span>
         Contact Information
       </h6>
     </div>
@@ -4208,8 +4218,10 @@ const handleEditEmployee = (employee) => {
 
     {/* === Current Address === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <Icon icon="heroicons:map-pin" />
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:map-pin" />
+        </span>
         Current Address
       </h6>
     </div>
@@ -4288,8 +4300,10 @@ const handleEditEmployee = (employee) => {
 
     {/* Permanent Address Section */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <Icon icon="heroicons:home" />
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:home" />
+        </span>
         Permanent Address
       </h6>
     </div>
@@ -4489,8 +4503,10 @@ const handleEditEmployee = (employee) => {
     {/* === Emergency Contacts === */}
     <div className="col-12 mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h6 className="fw-bold text-muted d-flex align-items-center gap-2 mb-0">
-          <Icon icon="heroicons:user-group" />
+        <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
+          <span className="text-primary">
+            <Icon icon="heroicons:user-group" />
+          </span>
           Emergency Contacts
         </h6>
 
@@ -4608,8 +4624,11 @@ const handleEditEmployee = (employee) => {
     {/* === Family Members (Optional) === */}
     <div className="col-12 mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h6 className="fw-bold text-muted d-flex align-items-center gap-2 mb-0">
-          <Icon icon="heroicons:home" />
+        <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
+         
+          <span className="text-primary">
+            <Icon icon="heroicons:home" />
+          </span>
           Family Members (Optional)
         </h6>
 
@@ -4679,19 +4698,16 @@ const handleEditEmployee = (employee) => {
                     </select>
                   </td>
                   
-              <td>
-                <input
-                  type="date"
-                  className="form-control form-control-sm"
-                  value={member.dateOfBirth || ''}
-                  onChange={(e) => {
-                    console.log('Updating dateOfBirth at index', index, 'to:', e.target.value);
-                    handleEditArrayUpdate('personalInfo.familyMembers', index, 'dateOfBirth', e.target.value);
-                  }}
-                  // Add min date for validation (optional)
-                  max={new Date().toISOString().split('T')[0]}
-                />
-              </td>
+    <td>
+      <input
+        type="date"
+        className="form-control form-control-sm"
+        // Use dob instead of dateOfBirth for consistency
+        value={member.dob || ''}
+        onChange={(e) => handleEditArrayUpdate('personalInfo.familyMembers', index, 'dob', e.target.value)}
+        max={new Date().toISOString().split('T')[0]}
+      />
+    </td>
 
                   <td>
                     <button
@@ -4718,8 +4734,10 @@ const handleEditEmployee = (employee) => {
     {/* === Nominee Information === */}
     <div className="col-12 mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h6 className="fw-bold text-muted d-flex align-items-center gap-2 mb-0">
+        <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
+          <span className="text-primary">
           <Icon icon="heroicons:gift" />
+          </span>
           Nominee Information
         </h6>
 
@@ -4736,7 +4754,7 @@ const handleEditEmployee = (employee) => {
               id: Date.now(),
               name: "",
               relation: "",
-              contactNo: "",
+              phone: "",
               isNomineeAccepted: false,
               percentage: "",
             };
@@ -4788,21 +4806,32 @@ const handleEditEmployee = (employee) => {
                       <option value="Other">Other</option>
                     </select>
                   </td>
-                  <td>
-                    <input
-                      type="tel"
-                      className="form-control form-control-sm"
-                      value={nominee.contactNo || ''}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '');
-                        if (value.length <= 10) {
-                          handleEditArrayUpdate('personalInfo.nominees', index, 'contactNo', value);
-                        }
-                      }}
-                      placeholder="10 digits"
-                      maxLength="10"
-                    />
-                  </td>
+
+              <td>
+                <input
+                  type="tel"
+                  className="form-control form-control-sm"
+                  value={nominee.phone || nominee.phoneNo || ''} // Check both fields
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    if (value.length <= 10) {
+                      // Update both fields for backward compatibility
+                      const updatedNominee = {
+                        ...nominee,
+                        phone: value,
+                        phoneNo: value // Also update phoneNo for data consistency
+                      };
+                      const currentNominees = editEmployeeData.personalInfo?.nominees || [];
+                      const updatedNominees = [...currentNominees];
+                      updatedNominees[index] = updatedNominee;
+                      handleEditInputChange('nominees', updatedNominees, 'personalInfo.nominees');
+                    }
+                  }}
+                  placeholder="10 digits"
+                  maxLength="10"
+                />
+              </td>
+                  
                   <td>
                     <select
                       className="form-select form-select-sm"
@@ -4865,8 +4894,11 @@ const handleEditEmployee = (employee) => {
 
     {/* === Identification Documents === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <Icon icon="heroicons:document-text" />
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+       
+        <span className="text-primary">
+          <Icon icon="heroicons:document-text" />
+          </span>
         Identification Documents
       </h6>
     </div>
@@ -4945,7 +4977,16 @@ const handleEditEmployee = (employee) => {
 {/* Employment Information Tab - Modified for Edit */}
 {activeEditTab === 'employment' && (
   <div className="row g-3">
+     <div className="col-12">
+        <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 text-muted d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:briefcase" />
+          </span>
+            <span>Employment Details</span>
+              </h6>
+            </div>
     {/* Row 1: Employee ID and Date of Joining */}
+
     <div className="col-md-6">
       <label className="form-label fw-bold">Employee ID <span className="text-danger">*</span></label>
       <input
@@ -5283,8 +5324,10 @@ const handleEditEmployee = (employee) => {
 {activeEditTab === 'jobHistory' && (
   <div className="row g-3">
     <div className="col-12 d-flex justify-content-between align-items-center">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
         <Icon icon="heroicons:clock" />
+        </span>
         Complete Job History
       </h6>
 
@@ -5597,8 +5640,10 @@ const handleEditEmployee = (employee) => {
     {(editEmployeeData.jobHistory || []).length > 0 && (
       <div className="col-12 mt-4">
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h6 className="fw-bold text-muted d-flex align-items-center gap-2 mb-0">
+          <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
+            <span className="text-primary">
             <Icon icon="heroicons:table-cells" className="me-2" />
+            </span>
             Job History Summary Table
           </h6>
           <small className="text-muted">
@@ -5749,8 +5794,10 @@ const handleEditEmployee = (employee) => {
   <div className="row g-3">
     {/* === Current Compensation === */}
     <div className="col-12">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
         <Icon icon="heroicons:currency-dollar" />
+        </span>
         Current Compensation
       </h6>
     </div>
@@ -5815,8 +5862,10 @@ const handleEditEmployee = (employee) => {
 
     {/* === CTC Breakdown === */}
 <div className="col-12 mt-4">
-  <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-    <Icon icon="heroicons:chart-bar" />
+  <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+    <span className="text-primary">
+      <Icon icon="heroicons:chart-bar" />
+    </span>
     CTC Breakdown
   </h6>
   
@@ -6148,8 +6197,11 @@ const handleEditEmployee = (employee) => {
 
     {/* === Bank Account Details === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <Icon icon="heroicons:building-library" />
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        
+        <span className="text-primary">
+          <Icon icon="heroicons:building-library" />
+        </span>
         Bank Account Details
       </h6>
     </div>
@@ -6169,8 +6221,10 @@ const handleEditEmployee = (employee) => {
 
     {/* Primary Bank Account */}
     <div className="col-12 mt-3">
-      <h6 className="fw-bold mb-3 text-muted d-flex align-items-center gap-2">
-        <Icon icon="heroicons:banknotes" />
+      <h6 className="fw-bold fs-5 mb-3 text-muted d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:banknotes" />
+        </span>
         Primary Bank Account
       </h6>
     </div>
@@ -6303,8 +6357,10 @@ const handleEditEmployee = (employee) => {
     {/* Secondary Bank Account (Optional) */}
     <div className="col-12 mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h6 className="fw-bold text-muted d-flex align-items-center gap-2 mb-0">
+        <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
+          <span className="text-primary">
           <Icon icon="heroicons:plus-circle" />
+          </span>
           Secondary Bank Account 
         </h6>
         <button
@@ -6476,8 +6532,10 @@ const handleEditEmployee = (employee) => {
 
     {/* === Provident Fund & ESI === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <Icon icon="heroicons:shield-check" />
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:shield-check" />
+        </span>
         Provident Fund & ESI
       </h6>
     </div>
@@ -6548,8 +6606,10 @@ const handleEditEmployee = (employee) => {
 
     {/* === Tax & Benefits === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <Icon icon="heroicons:document-check" />
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:document-check" />
+        </span>
         Tax & Benefits
       </h6>
     </div>
@@ -6649,7 +6709,7 @@ const handleEditEmployee = (employee) => {
       <small className="text-muted">
         {editEmployeeData.salaryInfo?.bonusEligibility?.amount > 0 ? (
           <span className="text-success">
-            Eligible (₹{formatCurrency(editEmployeeData.salaryInfo.bonusEligibility.amount || 0)})
+            Eligible ({formatCurrency(editEmployeeData.salaryInfo.bonusEligibility.amount || 0)})
           </span>
         ) : (
           <span className="text-secondary">Not eligible (₹0)</span>
@@ -6660,8 +6720,10 @@ const handleEditEmployee = (employee) => {
     {/* === Salary Revision History === */}
     <div className="col-12 mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h6 className="fw-bold text-muted d-flex align-items-center gap-2 mb-0">
-          <Icon icon="heroicons:chart-bar" />
+        <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
+          <span className="text-primary">
+            <Icon icon="heroicons:chart-bar" />
+          </span>
           Salary Revision History
         </h6>
         <button
@@ -6848,16 +6910,20 @@ const handleEditEmployee = (employee) => {
   <div className="row g-3">
     {/* Note Section */}
     <div className="col-12 mb-3">
-       <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+       <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
           <Icon icon="heroicons:shield-check" />
+        </span>
             Statutory & Compliance Information
         </h6>
     </div>
 
     {/* === PAN Card Details === */}
     <div className="col-12">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <Icon icon="heroicons:credit-card" />
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:credit-card" />
+        </span>
         PAN Card Details
       </h6>
     </div>
@@ -6904,8 +6970,10 @@ const handleEditEmployee = (employee) => {
 
     {/* === Aadhaar Card Details === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <Icon icon="heroicons:identification" />
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:identification" />
+        </span>
         Aadhaar Card Details
       </h6>
     </div>
@@ -6952,8 +7020,10 @@ const handleEditEmployee = (employee) => {
 
     {/* === Provident Fund Membership === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <Icon icon="heroicons:banknotes" />
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:banknotes" />
+        </span>
         Provident Fund Membership
       </h6>
     </div>
@@ -7048,8 +7118,10 @@ const handleEditEmployee = (employee) => {
 
     {/* === ESI Registration === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <Icon icon="heroicons:heart" />
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:heart" />
+        </span>
         ESI Registration
       </h6>
     </div>
@@ -7109,8 +7181,10 @@ const handleEditEmployee = (employee) => {
 
     {/* === Professional Tax === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <Icon icon="heroicons:document-text" />
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:document-text" />
+        </span>
         Professional Tax
       </h6>
     </div>
@@ -7181,8 +7255,10 @@ const handleEditEmployee = (employee) => {
 
     {/* === Labour Welfare Fund === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <Icon icon="heroicons:users" />
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:users" />
+        </span>
         Labour Welfare Fund
       </h6>
     </div>
@@ -7221,8 +7297,10 @@ const handleEditEmployee = (employee) => {
 
     {/* === Gratuity === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <Icon icon="heroicons:gift" />
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:gift" />
+        </span>
         Gratuity
       </h6>
     </div>
@@ -7261,8 +7339,10 @@ const handleEditEmployee = (employee) => {
 
     {/* === Bonus Act === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <Icon icon="heroicons:currency-rupee" />
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:currency-rupee" />
+        </span>
         Bonus Act
       </h6>
     </div>
@@ -7281,8 +7361,10 @@ const handleEditEmployee = (employee) => {
 
     {/* === Shops and Establishment Act === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <Icon icon="heroicons:building-office" />
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:building-office" />
+        </span>
         Shops and Establishment Act
       </h6>
     </div>
@@ -7310,16 +7392,33 @@ const handleEditEmployee = (employee) => {
 
     {editEmployeeData.statutoryInfo?.shopsAndEstablishment?.registered && (
       <>
-        <div className="col-md-6">
-          <label className="form-label fw-bold">Registration Number</label>
-          <input
-            type="text"
-            className="form-control"
-            value={editEmployeeData.statutoryInfo?.shopsAndEstablishment?.registrationNumber || ''}
-            onChange={(e) => handleEditInputChange('registrationNumber', e.target.value, 'statutoryInfo.shopsAndEstablishment.registrationNumber')}
-            placeholder="Registration number"
-          />
-        </div>
+<div className="col-md-6">
+  <label className="form-label fw-bold">Registration Number</label>
+
+  <input
+    type="text"
+    className="form-control"
+    value={
+      editEmployeeData.statutoryInfo?.shopsAndEstablishment?.registrationNumber || ''
+    }
+    onChange={(e) => {
+      const value = e.target.value.toUpperCase();
+
+      // Allow only A–Z, 0–9, and hyphen, max 15 chars
+      if (value.length <= 15 && /^[A-Z0-9-]*$/.test(value)) {
+        handleEditInputChange(
+          'registrationNumber',
+          value,
+          'statutoryInfo.shopsAndEstablishment.registrationNumber'
+        );
+      }
+    }}
+    placeholder="Registration number"
+    maxLength={15}
+  />
+
+</div>
+
 
         <div className="col-md-6">
           <label className="form-label fw-bold">Registration Date</label>
@@ -7511,8 +7610,10 @@ const handleEditEmployee = (employee) => {
 
         {/* === Basic Information === */}
         <div className="col-12">
-          <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+            <span className="text-primary">
             <Icon icon="heroicons:identification" />
+            </span>
             Basic Information
           </h6>
         </div>
@@ -7699,8 +7800,10 @@ const handleEditEmployee = (employee) => {
     
         {/* === Contact Information === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+           <span className="text-primary">
             <Icon icon="heroicons:phone" />
+            </span>
             Contact Information
           </h6>
         </div>
@@ -7815,8 +7918,10 @@ const handleEditEmployee = (employee) => {
     
         {/* === Current Address === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+            <span className="text-primary">
             <Icon icon="heroicons:map-pin" />
+            </span>
             Current Address
           </h6>
         </div>
@@ -7932,8 +8037,10 @@ const handleEditEmployee = (employee) => {
     
         {/* Permanent Address Section */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+            <span className="text-primary">
             <Icon icon="heroicons:home" />
+            </span>
             Permanent Address
           </h6>
         </div>
@@ -8182,8 +8289,10 @@ const handleEditEmployee = (employee) => {
         {/* === Emergency Contacts === */}
         <div className="col-12 mt-4">
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h6 className="fw-bold text-muted d-flex align-items-center gap-2 mb-0">
+            <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
+              <span className="text-primary">
               <Icon icon="heroicons:user-group" />
+              </span>
               Emergency Contacts
             </h6>
     
@@ -8365,8 +8474,10 @@ const handleEditEmployee = (employee) => {
         {/* === Family Members (Optional) === */}
         <div className="col-12 mt-4">
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h6 className="fw-bold text-muted d-flex align-items-center gap-2 mb-0">
+            <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
+              <span className="text-primary">
               <Icon icon="heroicons:home" />
+              </span>
               Family Members (Optional) 
             </h6>
     
@@ -8516,8 +8627,10 @@ const handleEditEmployee = (employee) => {
         {/* === Nominee Information === */}
         <div className="col-12 mt-4">
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h6 className="fw-bold text-muted d-flex align-items-center gap-2 mb-0">
+            <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
+              <span className="text-primary">
               <Icon icon="heroicons:gift" />
+              </span>
               Nominee Information
             </h6>
     
@@ -8533,7 +8646,7 @@ const handleEditEmployee = (employee) => {
           id: Date.now(),
           name: "",
           relation: "",
-          phoneNo: "",
+          phone: "",
           isNomineeAccepted: false,
           percentage: "",
         };
@@ -8738,7 +8851,7 @@ const handleEditEmployee = (employee) => {
     
         {/* === Identification Documents === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
             <Icon icon="heroicons:document-text" />
             Identification Documents
           </h6>
@@ -8885,7 +8998,16 @@ const handleEditEmployee = (employee) => {
                         {/* Employment Information Tab */}
     
     {activeAddTab === 'employment' && (
+
       <div className="row g-3">
+        <div className="col-12">
+            <h6 className="fw-bold fs-5 mb-3 border-bottom text-muted pb-2 d-flex align-items-center gap-2">
+               <span className="icon-circle text-primary">
+                  <Icon icon="heroicons:briefcase" />
+                   </span>
+                      <span>Employment Details</span>
+              </h6>
+            </div>
         {/* Row 1 */}
         <div className="col-md-6">
           <label className="form-label fw-bold">Employee ID <span className="text-danger">*</span></label>
@@ -9301,8 +9423,10 @@ const handleEditEmployee = (employee) => {
 {activeAddTab === 'jobHistory' && (
   <div className="row g-3">
     <div className="col-12 d-flex justify-content-between align-items-center">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+       <span className="icon-circle  text-primary">
         <Icon icon="heroicons:clock" />
+        </span>
         Complete Job History
       </h6>
 
@@ -9902,8 +10026,10 @@ const handleEditEmployee = (employee) => {
     {Array.isArray(newEmployee.jobHistory) && newEmployee.jobHistory.length > 0 && (
       <div className="col-12 mt-4">
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h6 className="fw-bold text-muted d-flex align-items-center gap-2 mb-0">
+          <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
+            <span className="text-primary">
             <Icon icon="heroicons:table-cells" className="me-2" />
+            </span>
             Job History Summary Table
           </h6>
           <small className="text-muted">
@@ -10051,8 +10177,10 @@ const handleEditEmployee = (employee) => {
       <div className="row g-3">
         {/* === Current Compensation === */}
         <div className="col-12">
-          <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+            <span className="text-primary">
             <Icon icon="heroicons:currency-dollar" />
+            </span>
             Current Compensation
           </h6>
         </div>
@@ -10115,9 +10243,12 @@ const handleEditEmployee = (employee) => {
     
         {/* === CTC Breakdown === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+            <span className="text-primary">
             <Icon icon="heroicons:chart-bar" />
+            </span>
             CTC Breakdown
+
           </h6>
           <div className="table-responsive">
             <table className="table table-sm table-bordered">
@@ -10321,8 +10452,10 @@ const handleEditEmployee = (employee) => {
     
         {/* === Bank Account Details === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+            <span className="text-primary">
             <Icon icon="heroicons:building-library" />
+            </span>
             Bank Account Details
           </h6>
         </div>
@@ -10345,8 +10478,10 @@ const handleEditEmployee = (employee) => {
     
         {/* Primary Bank Account */}
         <div className="col-12 mt-3">
-          <h6 className="fw-bold mb-3 text-muted d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 text-muted d-flex align-items-center gap-2">
+            <span className="text-primary">
             <Icon icon="heroicons:banknotes" />
+            </span>
             Primary Bank Account
           </h6>
         </div>
@@ -10497,8 +10632,10 @@ const handleEditEmployee = (employee) => {
         {/* Secondary Bank Account (Optional) */}
         <div className="col-12 mt-4">
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h6 className="fw-bold text-muted d-flex align-items-center gap-2 mb-0">
+            <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
+              <span className="text-primary">
               <Icon icon="heroicons:plus-circle" />
+              </span>
               Secondary Bank Account 
             </h6>
     <button
@@ -10702,8 +10839,10 @@ const handleEditEmployee = (employee) => {
     
         {/* === Provident Fund & ESI === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+       <span className="text-primary">
         <Icon icon="heroicons:shield-check" />
+        </span>
         Provident Fund & ESI
       </h6>
     </div>
@@ -10804,8 +10943,10 @@ const handleEditEmployee = (employee) => {
     
         {/* === Tax & Benefits === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+            <span className="text-primary">
             <Icon icon="heroicons:document-check" />
+            </span>
             Tax & Benefits
           </h6>
         </div>
@@ -10953,8 +11094,10 @@ const handleEditEmployee = (employee) => {
         {/* === Salary Revision History === */}
         <div className="col-12 mt-4">
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h6 className="fw-bold text-muted d-flex align-items-center gap-2 mb-0">
+            <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
+              <span className="text-primary">
               <Icon icon="heroicons:chart-bar" />
+              </span>
               Salary Revision History
             </h6>
             <button
@@ -11388,16 +11531,20 @@ const handleEditEmployee = (employee) => {
       <div className="row g-3">
         {/* Note Section */}
         <div className="col-12 mb-3">
-                      <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+                      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+                        <span className="text-primary">
                         <Icon icon="heroicons:shield-check" />
+                        </span>
                         Statutory & Compliance Information
                       </h6>
         </div>
     
         {/* === PAN Card Details === */}
         <div className="col-12">
-          <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <Icon icon="heroicons:credit-card" />
+          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+            <span className="text-primary">
+              <Icon icon="heroicons:credit-card" />
+            </span>
             PAN Card Details
           </h6>
         </div>
@@ -11466,8 +11613,10 @@ const handleEditEmployee = (employee) => {
     
         {/* === Aadhaar Card Details === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <Icon icon="heroicons:identification" />
+          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+            <span className="text-primary">
+              <Icon icon="heroicons:identification" />
+            </span>
             Aadhaar Card Details
           </h6>
         </div>
@@ -11535,8 +11684,10 @@ const handleEditEmployee = (employee) => {
     
         {/* === Provident Fund Membership === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <Icon icon="heroicons:banknotes" />
+          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+            <span className="text-primary">
+              <Icon icon="heroicons:banknotes" />
+            </span>
             Provident Fund Membership
           </h6>
         </div>
@@ -11660,8 +11811,10 @@ const handleEditEmployee = (employee) => {
     
         {/* === ESI Registration === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+            <span className="text-primary">
             <Icon icon="heroicons:heart" />
+            </span>
             ESI Registration
           </h6>
         </div>
@@ -11736,8 +11889,10 @@ const handleEditEmployee = (employee) => {
     
         {/* === Professional Tax === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+           <span className="text-primary">
             <Icon icon="heroicons:document-text" />
+            </span>
             Professional Tax
           </h6>
         </div>
@@ -11829,8 +11984,11 @@ const handleEditEmployee = (employee) => {
     
         {/* === Labour Welfare Fund === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <Icon icon="heroicons:users" />
+          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+           
+            <span className="text-primary">
+              <Icon icon="heroicons:users" />
+              </span>
             Labour Welfare Fund
           </h6>
         </div>
@@ -11877,8 +12035,11 @@ const handleEditEmployee = (employee) => {
     
         {/* === Gratuity === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <Icon icon="heroicons:gift" />
+          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+            
+            <span className="text-primary">
+              <Icon icon="heroicons:gift" />
+            </span>
             Gratuity
           </h6>
         </div>
@@ -11925,8 +12086,10 @@ const handleEditEmployee = (employee) => {
     
         {/* === Bonus Act === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <Icon icon="heroicons:currency-rupee" />
+          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+            <span className="text-primary">
+              <Icon icon="heroicons:currency-rupee" />
+            </span>
             Bonus Act
           </h6>
         </div>
@@ -11951,8 +12114,10 @@ const handleEditEmployee = (employee) => {
     
         {/* === Shops and Establishment Act === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <Icon icon="heroicons:building-office" />
+          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+            <span className="text-primary">
+              <Icon icon="heroicons:building-office" />
+            </span>
             Shops and Establishment Act
           </h6>
         </div>
@@ -11982,22 +12147,43 @@ const handleEditEmployee = (employee) => {
     
         {newEmployee.statutoryInfo.shopsAndEstablishment.registered && (
           <>
-            <div className="col-md-6">
-              <label className="form-label fw-bold">Registration Number</label>
-              <input
-                type="text"
-                className="form-control"
-                value={newEmployee.statutoryInfo.shopsAndEstablishment.registrationNumber}
-                onChange={(e) => setNewEmployee({
-                  ...newEmployee,
-                  statutoryInfo: {
-                    ...newEmployee.statutoryInfo,
-                    shopsAndEstablishment: {...newEmployee.statutoryInfo.shopsAndEstablishment, registrationNumber: e.target.value}
-                  }
-                })}
-                placeholder="Registration number"
-              />
-            </div>
+<div className="col-md-6">
+  <label className="form-label fw-bold">Registration Number</label>
+
+  <input
+    type="text"
+    className="form-control"
+    value={newEmployee.statutoryInfo?.shopsAndEstablishment?.registrationNumber || ''}
+    onChange={(e) => {
+      const value = e.target.value.toUpperCase();
+
+      if (value.length <= 15 && /^[A-Z0-9-]*$/.test(value)) {
+        setNewEmployee({
+          ...newEmployee,
+          statutoryInfo: {
+            ...newEmployee.statutoryInfo,
+            shopsAndEstablishment: {
+              ...newEmployee.statutoryInfo.shopsAndEstablishment,
+              registrationNumber: value
+            }
+          }
+        });
+      }
+    }}
+    placeholder="Registration number"
+    maxLength="15"
+  />
+
+  {newEmployee.statutoryInfo?.shopsAndEstablishment?.registrationNumber &&
+    !/^[A-Z0-9-]{5,15}$/.test(
+      newEmployee.statutoryInfo.shopsAndEstablishment.registrationNumber
+    ) && (
+      <div className="text-danger small mt-1">
+        Registration number must be 5 to 15 characters, alphanumeric or hyphens only
+      </div>
+    )}
+</div>
+
     
             <div className="col-md-6">
               <label className="form-label fw-bold">Registration Date</label>
@@ -12061,74 +12247,93 @@ const PersonalInfoTab = ({ employee, formatDate }) => {
   const personalInfo = employee.personalInfo || {};
   const identification = personalInfo.identification || {};
 
+  // Helper function to format date safely
+  const safeFormatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      return formatDate(dateString);
+    } catch (error) {
+      return dateString || 'N/A';
+    }
+  };
+
   return (
     <div>
       <div className="row g-4">
         {/* Basic Information */}
         <div className="col-12">
-          <h6 className="d-flex align-items-center gap-2 fw-bold mb-3 border-bottom pb-2">
+          <h6 className="d-flex align-items-center gap-2 fw-bold fs-5 mb-3 border-bottom pb-2" >
             <span className="icon-circle  text-primary">
               <Icon icon="heroicons:identification" />
             </span>
             <span>Basic Information</span>
           </h6>
-
         </div>
+        
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">Full Name</label>
-          <p className="form-control-plaintext">{employee.name}</p>
+          <p className="form-control-plaintext">{employee.name || 'N/A'}</p>
         </div>
+        
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">Date of Birth</label>
-          <p className="form-control-plaintext">{personalInfo.dateOfBirth ? formatDate(personalInfo.dateOfBirth) : '07-07-1990'}</p>
+          <p className="form-control-plaintext">{safeFormatDate(personalInfo.dateOfBirth)}</p>
         </div>
+        
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">Gender</label>
-          <p className="form-control-plaintext">{personalInfo.gender || 'Female'}</p>
+          <p className="form-control-plaintext">{personalInfo.gender || 'N/A'}</p>
         </div>
+        
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">Blood Group</label>
-          <p className="form-control-plaintext">{personalInfo.bloodGroup || 'AB-'}</p>
+          <p className="form-control-plaintext">{personalInfo.bloodGroup || 'N/A'}</p>
         </div>
+        
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">Marital Status</label>
-          <p className="form-control-plaintext">{personalInfo.maritalStatus || 'Single'}</p>
+          <p className="form-control-plaintext">{personalInfo.maritalStatus || 'N/A'}</p>
         </div>
+        
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">Nationality</label>
-          <p className="form-control-plaintext">{personalInfo.nationality || 'Indian'}</p>
+          <p className="form-control-plaintext">{personalInfo.nationality || 'N/A'}</p>
         </div>
+        
         <div className="col-md-12">
           <label className="form-label fw-bold small fw-semibold">Languages</label>
           <p className="form-control-plaintext">
             {personalInfo.languages && personalInfo.languages.length > 0
               ? personalInfo.languages.join(', ')
-              : 'english, hindi'}
+              : 'N/A'}
           </p>
         </div>
 
         {/* Contact Information */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
             <span className="icon-circle text-primary">
               <Icon icon="heroicons:phone" />
             </span>
             <span>Contact Information</span>
           </h6>
-
         </div>
+        
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">Personal Email</label>
-          <p className="form-control-plaintext">{personalInfo.personalEmail || 'xxxxxxxxx@gmail.com'}</p>
+          <p className="form-control-plaintext">{personalInfo.personalEmail || 'N/A'}</p>
         </div>
+        
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">Primary Phone</label>
-          <p className="form-control-plaintext">{personalInfo.phonePrimary || '12345678901'}</p>
+          <p className="form-control-plaintext">{personalInfo.phonePrimary || 'N/A'}</p>
         </div>
+        
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">Secondary Phone</label>
-          <p className="form-control-plaintext">{personalInfo.phoneSecondary || '0987654321'}</p>
+          <p className="form-control-plaintext">{personalInfo.phoneSecondary || 'N/A'}</p>
         </div>
+        
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">Emergency Phone</label>
           <p className="form-control-plaintext">{personalInfo.phoneEmergency || 'N/A'}</p>
@@ -12136,42 +12341,45 @@ const PersonalInfoTab = ({ employee, formatDate }) => {
 
         {/* Address Information */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
             <span className="icon-circle text-primary">
               <Icon icon="heroicons:map-pin" />
             </span>
             <span>Address Information</span>
           </h6>
-
         </div>
+        
         <div className="col-md-6">
-          <label className="form-label fw-bold small fw-semibold ">Current Address</label>
+          <label className="form-label fw-bold small fw-semibold">Current Address</label>
           <div className="form-control-plaintext">
-            <p>Address
-              500081, Hyderabad,<br />
-              Telangana         <br/>
-               Based on your past activity  <br/>
-               Update location  <br/>
-            </p>
             {personalInfo.currentAddress ? (
               <div>
-                <div>{personalInfo.currentAddress.line1}</div>
+                <div>{personalInfo.currentAddress.line1 || ''}</div>
                 {personalInfo.currentAddress.line2 && <div>{personalInfo.currentAddress.line2}</div>}
-                <div>{personalInfo.currentAddress.city}, {personalInfo.currentAddress.state} {personalInfo.currentAddress.pincode}</div>
-                <div>{personalInfo.currentAddress.country}</div>
+                <div>
+                  {[personalInfo.currentAddress.city, personalInfo.currentAddress.state, personalInfo.currentAddress.pincode]
+                    .filter(Boolean)
+                    .join(', ')}
+                </div>
+                <div>{personalInfo.currentAddress.country || ''}</div>
               </div>
             ) : 'N/A'}
           </div>
         </div>
+        
         <div className="col-md-6">                                                 
           <label className="form-label fw-bold small fw-semibold">Permanent Address</label>
           <div className="form-control-plaintext">
             {personalInfo.permanentAddress ? (
               <div>
-                <div>{personalInfo.permanentAddress.line1}</div>
+                <div>{personalInfo.permanentAddress.line1 || ''}</div>
                 {personalInfo.permanentAddress.line2 && <div>{personalInfo.permanentAddress.line2}</div>}
-                <div>{personalInfo.permanentAddress.city}, {personalInfo.permanentAddress.state} {personalInfo.permanentAddress.pincode}</div>
-                <div>{personalInfo.permanentAddress.country}</div>
+                <div>
+                  {[personalInfo.permanentAddress.city, personalInfo.permanentAddress.state, personalInfo.permanentAddress.pincode]
+                    .filter(Boolean)
+                    .join(', ')}
+                </div>
+                <div>{personalInfo.permanentAddress.country || ''}</div>
               </div>
             ) : 'N/A'}
           </div>
@@ -12179,8 +12387,8 @@ const PersonalInfoTab = ({ employee, formatDate }) => {
 
         {/* Emergency Contacts */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="icon-circle text-primary ">
+          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+            <span className="icon-circle text-primary">
               <Icon icon="heroicons:user-group" />
             </span>
             <span>Emergency Contacts</span>
@@ -12200,10 +12408,10 @@ const PersonalInfoTab = ({ employee, formatDate }) => {
                 <tbody>
                   {personalInfo.emergencyContacts.map((contact, idx) => (
                     <tr key={idx}>
-                      <td>{contact.name}</td>
-                      <td>{contact.relation}</td>
-                      <td>{contact.phone}</td>
-                      <td><span className="badge bg-primary">{contact.priority}</span></td>
+                      <td>{contact.name || 'N/A'}</td>
+                      <td>{contact.relation || 'N/A'}</td>
+                      <td>{contact.phone || 'N/A'}</td>
+                      <td><span className="badge bg-primary">{contact.priority || 'Primary'}</span></td>
                     </tr>
                   ))}
                 </tbody>
@@ -12216,8 +12424,8 @@ const PersonalInfoTab = ({ employee, formatDate }) => {
 
         {/* Family Members */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="icon-circle  text-primary ">
+          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+            <span className="icon-circle text-primary">
               <Icon icon="heroicons:home" />
             </span>
             <span>Family Members</span>
@@ -12234,13 +12442,17 @@ const PersonalInfoTab = ({ employee, formatDate }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {personalInfo.familyMembers.map((member, idx) => (
-                    <tr key={idx}>
-                      <td>{member.name}</td>
-                      <td>{member.relation}</td>
-                      <td>{member.dob ? formatDate(member.dob) : 'N/A'}</td>
-                    </tr>
-                  ))}
+                  {personalInfo.familyMembers.map((member, idx) => {
+                    // Handle both 'dob' and 'dateOfBirth' property names
+                    const dob = member.dob || member.dateOfBirth || '';
+                    return (
+                      <tr key={idx}>
+                        <td>{member.name || 'N/A'}</td>
+                        <td>{member.relation || 'N/A'}</td>
+                        <td>{dob ? safeFormatDate(dob) : 'N/A'}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -12251,7 +12463,7 @@ const PersonalInfoTab = ({ employee, formatDate }) => {
 
         {/* Nominees */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
             <span className="icon-circle text-primary">
               <Icon icon="heroicons:gift" />
             </span>
@@ -12270,14 +12482,21 @@ const PersonalInfoTab = ({ employee, formatDate }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {personalInfo.nominees.map((nominee, idx) => (
-                    <tr key={idx}>
-                      <td>{nominee.name}</td>
-                      <td>{nominee.relation}</td>
-                      <td>{nominee.phone}</td>
-                      <td>{nominee.percentage}%</td>
-                    </tr>
-                  ))}
+                  {personalInfo.nominees.map((nominee, idx) => {
+                    // Handle different property names
+                    const phoneNumber = nominee.phone || nominee.phoneNo || nominee.contactNo || 'N/A';
+                    const percentage = nominee.percentage !== undefined ? nominee.percentage : 
+                                      nominee.percentageShare !== undefined ? nominee.percentageShare : 'N/A';
+                    
+                    return (
+                      <tr key={idx}>
+                        <td>{nominee.name || 'N/A'}</td>
+                        <td>{nominee.relation || 'N/A'}</td>
+                        <td>{phoneNumber}</td>
+                        <td>{percentage !== 'N/A' ? `${percentage}%` : 'N/A'}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -12288,13 +12507,14 @@ const PersonalInfoTab = ({ employee, formatDate }) => {
 
         {/* Identification Documents */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
             <span className="icon-circle text-primary">
               <Icon icon="heroicons:document-text" />
             </span>
-            Identification Documents
+            <span>Identification Documents</span>
           </h6>
         </div>
+        
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">PAN Number</label>
           <div className="d-flex align-items-center gap-2">
@@ -12304,6 +12524,7 @@ const PersonalInfoTab = ({ employee, formatDate }) => {
             )}
           </div>
         </div>
+        
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">Aadhaar Number</label>
           <div className="d-flex align-items-center gap-2">
@@ -12313,6 +12534,7 @@ const PersonalInfoTab = ({ employee, formatDate }) => {
             )}
           </div>
         </div>
+        
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">Passport Number</label>
           <div className="d-flex align-items-center gap-2">
@@ -12322,9 +12544,10 @@ const PersonalInfoTab = ({ employee, formatDate }) => {
             )}
           </div>
           {identification.passport?.expiryDate && (
-            <small className="text-muted">Expiry: {formatDate(identification.passport.expiryDate)}</small>
+            <small className="text-muted">Expiry: {safeFormatDate(identification.passport.expiryDate)}</small>
           )}
         </div>
+        
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">Voter ID Number</label>
           <div className="d-flex align-items-center gap-2">
@@ -12347,7 +12570,7 @@ const EmploymentInfoTab = ({ employee, formatDate, getStatusBadge, getEmployment
     <div>
       <div className="row g-4">
         <div className="col-12">
-          <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
             <span className="icon-circle  text-primary">
               <Icon icon="heroicons:briefcase" />
             </span>
@@ -12456,7 +12679,7 @@ const JobHistoryTab = ({ employee, formatDate, formatCurrency }) => {
     <div>
       <div className="row g-4">
         <div className="col-12">
-          <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
             <span className="icon-circle text-primary">
               <Icon icon="heroicons:clock" />
             </span>
@@ -12609,7 +12832,7 @@ const SalaryInfoTab = ({ employee, formatCurrency, formatDate }) => {
       <div className="row g-4">
         {/* Current CTC */}
         <div className="col-12">
-          <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
             <span className="icon-circle text-primary">
               <Icon icon="heroicons:currency-dollar" />
             </span>
@@ -12629,7 +12852,7 @@ const SalaryInfoTab = ({ employee, formatCurrency, formatDate }) => {
 
         {/* CTC Breakdown */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 border-bottom pb-2">CTC Breakdown</h6>
+          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2">CTC Breakdown</h6>
           <div className="table-responsive">
             <table className="table table-bordered">
               <thead className="bg-light">
@@ -12695,7 +12918,7 @@ const SalaryInfoTab = ({ employee, formatCurrency, formatDate }) => {
 
         {/* Bank Accounts */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center gap-2 ">
+          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2 ">
             <span className="icon-circle text-primary">
               <Icon icon="heroicons:building-library" />
             </span>
@@ -12706,9 +12929,14 @@ const SalaryInfoTab = ({ employee, formatCurrency, formatDate }) => {
           <label className="form-label fw-bold small fw-semibold">Payment Mode</label>
           <p className="form-control-plaintext">{salaryInfo.paymentMode || 'N/A'}</p>
         </div>
+
         <div className="col-md-6"></div>
+
         <div className="col-md-6">
-          <h6 className="small fw-bold mt-3">Primary Bank Account</h6>
+          <h6 className="fw-bold fs-5 mb-3 text-muted d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:banknotes" />
+        </span>Primary Bank Account</h6>
           <div className="card border">
             <div className="card-body">
               <div className="mb-2">
@@ -12736,7 +12964,10 @@ const SalaryInfoTab = ({ employee, formatCurrency, formatDate }) => {
         </div>
         {bankAccounts.secondary && (
           <div className="col-md-6">
-            <h6 className="small fw-bold mt-3">Secondary Bank Account</h6>
+          <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
+          <span className="text-primary">
+          <Icon icon="heroicons:plus-circle" />
+          </span>Secondary Bank Account</h6>
             <div className="card border">
               <div className="card-body">
                 <div className="mb-2">
@@ -12751,6 +12982,14 @@ const SalaryInfoTab = ({ employee, formatCurrency, formatDate }) => {
                   <label className="form-label fw-bold small fw-semibold">Bank Name</label>
                   <p className="form-control-plaintext">{bankAccounts.secondary.bankName || 'N/A'}</p>
                 </div>
+                <div className="mb-2">
+                  <label className="form-label fw-bold small fw-semibold">Branch</label>
+                  <p className="form-control-plaintext">{bankAccounts.secondary.branch || 'N/A'}</p>
+                </div>
+                <div className="mb-2">
+                  <label className="form-label fw-bold small fw-semibold">Account Type</label>
+                  <p className="form-control-plaintext">{bankAccounts.secondary.accountType || 'N/A'}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -12758,7 +12997,7 @@ const SalaryInfoTab = ({ employee, formatCurrency, formatDate }) => {
 
         {/* PF & ESI */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
             <span className="icon-circle text-primary">
               <Icon icon="heroicons:shield-check" />
             </span>
@@ -12784,7 +13023,7 @@ const SalaryInfoTab = ({ employee, formatCurrency, formatDate }) => {
 
         {/* Tax & Variable Pay */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
             <span className="icon-circle text-primary">
               <Icon icon="heroicons:document-check" />
             </span>
@@ -12829,8 +13068,10 @@ const SalaryInfoTab = ({ employee, formatCurrency, formatDate }) => {
         {/* Salary Revision History */}
         {salaryInfo.salaryRevisionHistory && salaryInfo.salaryRevisionHistory.length > 0 && (
           <div className="col-12 mt-4">
-            <h6 className="fw-bold mb-3 border-bottom pb-2">
-              <Icon icon="heroicons:chart-bar" className="me-2" />
+            <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+              <span className="text-primary">
+                <Icon icon="heroicons:chart-bar"/>
+              </span>
               Salary Revision History
             </h6>
             <div className="table-responsive">
@@ -12874,7 +13115,7 @@ const StatutoryInfoTab = ({ employee, formatDate }) => {
     <div>
       <div className="row g-4">
         <div className="col-12">
-          <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
             <span className="icon-circle text-primary">
               <Icon icon="heroicons:shield-check" />
             </span>
@@ -12884,8 +13125,12 @@ const StatutoryInfoTab = ({ employee, formatDate }) => {
 
         {/* PAN Details */}
         <div className="col-12">
-          <h6 className="fw-semibold mb-3">PAN Card Details</h6>
+         <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:credit-card" />
+        </span>PAN Card Details</h6>
         </div>
+
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">PAN Number</label>
           <div className="d-flex align-items-center gap-2">
@@ -12902,7 +13147,10 @@ const StatutoryInfoTab = ({ employee, formatDate }) => {
 
         {/* Aadhaar Details */}
         <div className="col-12 mt-4">
-          <h6 className="fw-semibold mb-3">Aadhaar Card Details</h6>
+        <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:identification" />
+        </span>Aadhaar Card Details</h6>
         </div>
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">Aadhaar Number</label>
@@ -12920,7 +13168,10 @@ const StatutoryInfoTab = ({ employee, formatDate }) => {
 
         {/* PF Membership */}
         <div className="col-12 mt-4">
-          <h6 className="fw-semibold mb-3">Provident Fund Membership</h6>
+         <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:banknotes" />
+        </span>Provident Fund Membership</h6>
         </div>
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">PF Enrolled</label>
@@ -12947,7 +13198,10 @@ const StatutoryInfoTab = ({ employee, formatDate }) => {
 
         {/* ESI Registration */}
         <div className="col-12 mt-4">
-          <h6 className="fw-semibold mb-3">ESI Registration</h6>
+       <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:heart" />
+        </span>ESI Registration</h6>
         </div>
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">ESI Enrolled</label>
@@ -12970,7 +13224,10 @@ const StatutoryInfoTab = ({ employee, formatDate }) => {
 
         {/* Professional Tax */}
         <div className="col-12 mt-4">
-          <h6 className="fw-semibold mb-3">Professional Tax</h6>
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:document-text" />
+        </span>Professional Tax</h6>
         </div>
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">Applicable</label>
@@ -12993,7 +13250,10 @@ const StatutoryInfoTab = ({ employee, formatDate }) => {
 
         {/* Labour Welfare Fund */}
         <div className="col-12 mt-4">
-          <h6 className="fw-semibold mb-3">Labour Welfare Fund</h6>
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:users" />
+        </span>Labour Welfare Fund</h6>
         </div>
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">Enrolled</label>
@@ -13012,7 +13272,10 @@ const StatutoryInfoTab = ({ employee, formatDate }) => {
 
         {/* Gratuity */}
         <div className="col-12 mt-4">
-          <h6 className="fw-semibold mb-3">Gratuity</h6>
+      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:gift" />
+        </span>Gratuity</h6>
         </div>
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">Eligible</label>
@@ -13031,7 +13294,10 @@ const StatutoryInfoTab = ({ employee, formatDate }) => {
 
         {/* Bonus Act */}
         <div className="col-12 mt-4">
-          <h6 className="fw-semibold mb-3">Bonus Act</h6>
+       <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:currency-rupee" />
+        </span>Bonus Act</h6>
         </div>
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">Applicable</label>
@@ -13046,7 +13312,10 @@ const StatutoryInfoTab = ({ employee, formatDate }) => {
 
         {/* Shops and Establishment */}
         <div className="col-12 mt-4">
-          <h6 className="fw-semibold mb-3">Shops and Establishment Act</h6>
+        <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary">
+          <Icon icon="heroicons:building-office" />
+        </span>Shops and Establishment Act</h6>
         </div>
         <div className="col-md-6">
           <label className="form-label fw-bold small fw-semibold">Registered</label>

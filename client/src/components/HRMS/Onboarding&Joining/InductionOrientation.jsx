@@ -1234,17 +1234,42 @@ const PolicyUploadModal = () => {
   };
 
   return (
-    <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-       <div className="modal-dialog modal-dialog-centered modal-md">
-            <div className="modal-content border-0 shadow-lg rounded-3">
-                <div className="modal-header border-0 pb-3">
+  <div
+    className="modal show d-block"
+    style={{
+      backgroundColor: "rgba(0,0,0,0.5)",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1050,
+    }}
+  >
+    <div
+      className="modal-content bg-white"
+      style={{
+        width: "60%",
+        maxWidth: "800px",
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        maxHeight: "90vh",
+        overflowY: "auto",
+        borderRadius: "8px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+      }}
+    >
+      {/* Header */}
+      <div className="modal-header bg-white border-bottom">
             <h5 className="modal-title fw-bold">Upload New Policy</h5>
             <button className="btn-close" onClick={() => setShowPolicyUploadModal(false)}></button>
           </div>
           
           <div className="modal-body pt-0">
             <div className="mb-3">
-              <label className="form-label">Policy Name *</label>
+              <label className="form-label fw-bold">Policy Name <span className="text-danger">*</span></label>
               <input
                 type="text"
                 className="form-control"
@@ -1257,7 +1282,7 @@ const PolicyUploadModal = () => {
 
             <div className="row">
               <div className="col-md-6 mb-3">
-                <label className="form-label">Category *</label>
+                <label className="form-label fw-bold">Category <span className="text-danger">*</span></label>
                 <select
                   className="form-select"
                   value={policyForm.category}
@@ -1272,7 +1297,7 @@ const PolicyUploadModal = () => {
               </div>
               
               <div className="col-md-6 mb-3">
-                <label className="form-label">Version *</label>
+                <label className="form-label fw-bold">Version <span className="text-danger">*</span></label>
                 <input
                   type="text"
                   className="form-control"
@@ -1285,7 +1310,7 @@ const PolicyUploadModal = () => {
             </div>
 
             <div className="mb-3">
-              <label className="form-label">Description</label>
+              <label className="form-label fw-bold">Description</label>
               <textarea
                 className="form-control"
                 rows="3"
@@ -1297,7 +1322,7 @@ const PolicyUploadModal = () => {
 
             <div className="row">
               <div className="col-md-6 mb-3">
-                <label className="form-label">Effective Date *</label>
+                <label className="form-label fw-bold">Effective Date <span className="text-danger">*</span></label>
                 <input
                   type="date"
                   className="form-control"
@@ -1308,7 +1333,7 @@ const PolicyUploadModal = () => {
               </div>
               
               <div className="col-md-6 mb-3">
-                <label className="form-label">Estimated Read Time</label>
+                <label className="form-label fw-bold">Estimated Read Time</label>
                 <input
                   type="text"
                   className="form-control"
@@ -1321,7 +1346,7 @@ const PolicyUploadModal = () => {
 
             <div className="row">
               <div className="col-md-6 mb-3">
-                <label className="form-label">Status</label>
+                <label className="form-label fw-bold">Status</label>
                 <select
                   className="form-select"
                   value={policyForm.status}
@@ -1334,7 +1359,7 @@ const PolicyUploadModal = () => {
               </div>
               
               <div className="col-md-6 mb-3">
-                <label className="form-label">Passing Score (%)</label>
+                <label className="form-label fw-bold">Passing Score (%)</label>
                 <input
                   type="number"
                   className="form-control"
@@ -1395,7 +1420,7 @@ const PolicyUploadModal = () => {
 
             {/* File Upload */}
             <div className="mb-4">
-              <label className="form-label">Upload Policy Document</label>
+              <label className="form-label fw-bold">Upload Policy Document</label>
               <input
                 type="file"
                 className="form-control"
@@ -1470,7 +1495,7 @@ const PolicyUploadModal = () => {
                     </div>
                     
                     <div className="mb-3">
-                      <label className="form-label">Question</label>
+                      <label className="form-label fw-bold">Question</label>
                       <input
                         type="text"
                         className="form-control"
@@ -1481,7 +1506,7 @@ const PolicyUploadModal = () => {
                     </div>
                     
                     <div className="mb-3">
-                      <label className="form-label">Options</label>
+                      <label className="form-label fw-bold">Options</label>
                       {question.options.map((option, optIndex) => (
                         <div key={optIndex} className="input-group mb-2">
                           <span className="input-group-text">{String.fromCharCode(65 + optIndex)}</span>
@@ -1585,7 +1610,7 @@ const PolicyUploadModal = () => {
                     </div>
                     
                     <div className="mb-3">
-                      <label className="form-label">Module Title</label>
+                      <label className="form-label fw-bold">Module Title</label>
                       <input
                         type="text"
                         className="form-control"
@@ -1596,7 +1621,7 @@ const PolicyUploadModal = () => {
                     </div>
                     
                     <div className="mb-3">
-                      <label className="form-label">Content</label>
+                      <label className="form-label fw-bold">Content</label>
                       <textarea
                         className="form-control"
                         rows="4"
@@ -1633,7 +1658,7 @@ const PolicyUploadModal = () => {
           </div>
         </div>
       </div>
-    </div>
+
   );
 };
   // 2. Trainer Assignment Modal
@@ -1649,7 +1674,7 @@ const PolicyUploadModal = () => {
             
             <div className="modal-body pt-0">
               <div className="mb-3">
-                <label className="form-label">Select Program</label>
+                <label className="form-label fw-bold">Select Program</label>
                 <select 
                   className="form-select"
                   value={trainerAssignmentData.programId || ''}
@@ -1668,7 +1693,7 @@ const PolicyUploadModal = () => {
               </div>
               
               <div className="mb-3">
-                <label className="form-label">Trainer Name *</label>
+                <label className="form-label fw-bold">Trainer Name *</label>
                 <input
                   type="text"
                   className="form-control"
@@ -1680,7 +1705,7 @@ const PolicyUploadModal = () => {
               </div>
               
               <div className="mb-3">
-                <label className="form-label">Trainer Role</label>
+                <label className="form-label fw-bold">Trainer Role</label>
                 <input
                   type="text"
                   className="form-control"
@@ -1689,7 +1714,7 @@ const PolicyUploadModal = () => {
               </div>
               
               <div className="mb-3">
-                <label className="form-label">Trainer Email</label>
+                <label className="form-label fw-bold">Trainer Email</label>
                 <input
                   type="email"
                   className="form-control"
@@ -1738,20 +1763,45 @@ const PolicyUploadModal = () => {
   const attendanceStats = getAttendanceStats();
 
     return (
-      <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-       <div className="modal-dialog modal-dialog-centered modal-md">
-            <div className="modal-content border-0 shadow-lg rounded-3">
-            <div className="modal-header border-0 pb-4">
-              <h5 className="modal-title fw-bold fs-3">{selectedProgram.name}</h5>
+     <div
+    className="modal show d-block"
+    style={{
+      backgroundColor: "rgba(0,0,0,0.5)",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1050,
+    }}
+  >
+    <div
+      className="modal-content bg-white"
+      style={{
+        width: "60%",
+        maxWidth: "800px",
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        maxHeight: "90vh",
+        overflowY: "auto",
+        borderRadius: "8px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+      }}
+    >
+      {/* Header */}
+      <div className="modal-header bg-white border-bottom">
+               <h5 className="modal-title fw-bold">{selectedProgram.name}</h5>
               <button className="btn-close" onClick={() => setSelectedProgram(null)}></button>
             </div>
             
-            <div className="modal-body pt-0  bg-danger">
-              <div className="row mb-4">
+            <div className="modal-body pt-20">
+              <div className="row mb-12">
                 <div className="col-md-6">
                   <div className="card border h-100">
                     <div className="card-body">
-                      <h6 className="fw-bold mb-3">Program Details</h6>
+                      <h6 className="fw-bold mb-3 text-muted">Program Details</h6>
                       <div className="mb-2">
                         <small className="text-muted">Description</small>
                         <div>{selectedProgram.description}</div>
@@ -1773,7 +1823,7 @@ const PolicyUploadModal = () => {
                 <div className="col-md-6">
                   <div className="card border h-100">
                     <div className="card-body">
-                      <h6 className="fw-bold mb-3">Schedule</h6>
+                      <h6 className="fw-bold mb-3 text-muted">Schedule</h6>
                       <div className="mb-2">
                         <small className="text-muted">Duration</small>
                         <div>{selectedProgram.duration}</div>
@@ -1799,7 +1849,7 @@ const PolicyUploadModal = () => {
                 <div className="col-md-6">
                   <div className="card border h-100">
                     <div className="card-body">
-                      <h6 className="fw-bold mb-3">Participants</h6>
+                      <h6 className="fw-bold mb-3 text-muted">Participants</h6>
                       <div className="mb-2">
                         <small className="text-muted">Total Participants</small>
                         <div>{selectedProgram.totalParticipants}</div>
@@ -1818,7 +1868,7 @@ const PolicyUploadModal = () => {
                 <div className="col-md-6">
                   <div className="card border h-100">
                     <div className="card-body">
-                      <h6 className="fw-bold mb-3">Progress</h6>
+                      <h6 className="fw-bold mb-3 text-muted">Progress</h6>
                       <div className="mb-2">
                         <small className="text-muted">Sessions</small>
                         <div>{selectedProgram.completedSessions}/{selectedProgram.totalSessions} completed</div>
@@ -1840,15 +1890,15 @@ const PolicyUploadModal = () => {
 
               {selectedProgram.schedule && selectedProgram.schedule.length > 0 && (
                 <div className="mb-4">
-                  <h6 className="fw-bold mb-3">Upcoming Sessions</h6>
+                  <h6 className="fw-bold mb-3 text-muted">Upcoming Sessions</h6>
                   <div className="table-responsive">
                     <table className="table table-sm">
                       <thead>
                         <tr>
-                          <th>Session</th>
-                          <th>Date</th>
-                          <th>Time</th>
-                          <th>Trainer</th>
+                          <th className="text-muted">Session</th>
+                          <th className="text-muted">Date</th>
+                          <th className="text-muted">Time</th>
+                          <th className="text-muted">Trainer</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1884,7 +1934,7 @@ const PolicyUploadModal = () => {
             </div>
           </div>
         </div>
-      </div>
+
     );
   };
   // 3. Bulk Attendance Modal
@@ -2114,14 +2164,39 @@ const getProgramParticipants = (programId) => {
   const programSummary = getProgramSummary();
 
   return (
-    <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered modal-md">
-            <div className="modal-content border-0 shadow-lg rounded-3">
-                <div className="modal-header border-0 pb-3">
-            <h4 className="modal-title fw-bold fs-4">
+  <div
+    className="modal show d-block"
+    style={{
+      backgroundColor: "rgba(0,0,0,0.5)",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1050,
+    }}
+  >
+    <div
+      className="modal-content bg-white"
+      style={{
+        width: "60%",
+        maxWidth: "800px",
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        maxHeight: "90vh",
+        overflowY: "auto",
+        borderRadius: "8px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+      }}
+    >
+      {/* Header */}
+      <div className="modal-header bg-white border-bottom">
+            <h5 className="modal-title fw-bold">
               <i className="bi bi-people me-2"></i>
               Bulk Attendance Management
-            </h4>
+            </h5>
             <button className="btn-close btn-close" onClick={() => setShowBulkAttendanceModal(false)}></button>
           </div>
           
@@ -2420,7 +2495,7 @@ const getProgramParticipants = (programId) => {
               }}
               disabled={isSaving}
             >
-              <i className="bi bi-x-circle me-1"></i> Cancel
+              Cancel
             </button>
             <button 
               className="btn btn-primary" 
@@ -2439,7 +2514,6 @@ const getProgramParticipants = (programId) => {
                 </>
               ) : (
                 <>
-                  <i className="bi bi-save me-1"></i>
                   Save Attendance
                 </>
               )}
@@ -2447,7 +2521,7 @@ const getProgramParticipants = (programId) => {
           </div>
         </div>
       </div>
-    </div>
+
   );
 };
 
@@ -2619,7 +2693,7 @@ const handleDeleteEmployee = (employeeId) => {
       <div className="card border mb-4">
         <div className="card-header bg-light d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
           <div>
-            <h6 className="mb-2 mb-md-0 fw-bold">Employees List</h6>
+            <h6 className="mb-2 mb-md-0 fw-bold fs-4">Employees List</h6>
             <small className="text-muted d-none d-md-block">
               Manage employee induction program assignments
             </small>
@@ -2684,22 +2758,6 @@ const handleDeleteEmployee = (employeeId) => {
                 <option value="HR">HR</option>
               </select>
             </div>
-            
-            {/* Action Buttons */}
-            <div className="col-12 col-sm-2 col-md-4 col-lg-2">
-              <div className="d-flex flex-wrap gap-2">
-                <button 
-                  className="btn btn-sm btn-outline-primary flex-grow-1"
-                  onClick={handleSelectAllEmployees}
-                  style={{ minWidth: '120px' }}
-                >
-                  <i className={`bi ${selectedEmployees.length === filteredEmployees.length && filteredEmployees.length > 0 ? 'bi-check-square' : 'bi-square'} me-1`}></i>
-                  {selectedEmployees.length === filteredEmployees.length && filteredEmployees.length > 0 
-                    ? 'Deselect All' 
-                    : 'Select All'}
-                </button>
-              </div>
-            </div>
 
           </div>
         </div>
@@ -2714,7 +2772,7 @@ const handleDeleteEmployee = (employeeId) => {
             <div className="d-flex flex-column align-items-center justify-content-center">
                 <label 
                 htmlFor="selectAllCheckbox" 
-                className="form-check-label small text-dark mb-0"
+                className="form-check-label small text-muted mb-0"
                 style={{ cursor: 'pointer' }}
               >
                 Select All
@@ -2730,13 +2788,13 @@ const handleDeleteEmployee = (employeeId) => {
     
             </div>
           </th>
-          <th style={{ minWidth: '170px' }}>Employee</th>
-          <th style={{ minWidth: '160px' }}>Contact</th>
-          <th style={{ minWidth: '140px' }}>Department</th>
-          <th style={{ minWidth: '140px' }}>Joining Date</th>
-          <th style={{ minWidth: '150px' }}>Program Assigned</th>
-          <th style={{ minWidth: '140px' }}>Attendance</th>
-          <th style={{ minWidth: '100px' }} >Actions</th>
+          <th className="text-muted" style={{ minWidth: '170px' }}>Employee</th>
+          <th className="text-muted" style={{ minWidth: '160px' }}>Contact</th>
+          <th className="text-muted" style={{ minWidth: '140px' }}>Department</th>
+          <th className="text-muted" style={{ minWidth: '140px' }}>Joining Date</th>
+          <th className="text-muted" style={{ minWidth: '150px' }}>Program Assigned</th>
+          <th className="text-muted" style={{ minWidth: '120px' }}>Attendance</th>
+          <th style={{ minWidth: '80px' }} >Actions</th>
         </tr>
       </thead>
               <tbody>
@@ -2862,10 +2920,35 @@ const handleDeleteEmployee = (employeeId) => {
 
       {/* Add Employee Modal */}
       {showAddEmployeeModal && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog modal-dialog-centered modal-md">
-        <div className="modal-content border-0 shadow-lg rounded-3">
-          <div className="modal-header border-0 pb-4">
+  <div
+    className="modal show d-block"
+    style={{
+      backgroundColor: "rgba(0,0,0,0.5)",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1050,
+    }}
+  >
+    <div
+      className="modal-content bg-white"
+      style={{
+        width: "60%",
+        maxWidth: "800px",
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        maxHeight: "90vh",
+        overflowY: "auto",
+        borderRadius: "8px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+      }}
+    >
+      {/* Header */}
+      <div className="modal-header bg-white border-bottom">
                 <h4 className="modal-title fw-bold fs-4">Add New Employee</h4>
                 <button className="btn-close" onClick={() => setShowAddEmployeeModal(false)}></button>
               </div>
@@ -2873,7 +2956,7 @@ const handleDeleteEmployee = (employeeId) => {
               <div className="modal-body pt-0">
                 <div className="row">
                   <div className="col-12 col-md-6 mb-3">
-                    <label className="form-label">Employee Name <span className="text-danger">*</span></label>
+                    <label className="form-label fw-bold">Employee Name <span className="text-danger">*</span></label>
                     <input
                       type="text"
                       className="form-control"
@@ -2885,7 +2968,7 @@ const handleDeleteEmployee = (employeeId) => {
                   </div>
                   
                   <div className="col-12 col-md-6 mb-3">
-                    <label className="form-label">Employee ID <span className="text-danger">*</span></label>
+                    <label className="form-label fw-bold">Employee ID <span className="text-danger">*</span></label>
                     <input
                       type="text"
                       className="form-control"
@@ -2899,7 +2982,7 @@ const handleDeleteEmployee = (employeeId) => {
 
                 <div className="row">
                   <div className="col-12 col-md-6 mb-3">
-                    <label className="form-label">Email <span className="text-danger">*</span></label>
+                    <label className="form-label fw-bold">Email <span className="text-danger">*</span></label>
                     <input
                       type="email"
                       className="form-control"
@@ -2911,7 +2994,7 @@ const handleDeleteEmployee = (employeeId) => {
                   </div>
                   
                   <div className="col-12 col-md-6 mb-3">
-                    <label className="form-label">Phone Number</label>
+                    <label className="form-label fw-bold">Phone Number</label>
                     <input
                       type="tel"
                       className="form-control"
@@ -2924,7 +3007,7 @@ const handleDeleteEmployee = (employeeId) => {
 
                 <div className="row">
                   <div className="col-12 col-md-6 mb-3">
-                    <label className="form-label">Department <span className="text-danger">*</span></label>
+                    <label className="form-label fw-bold">Department <span className="text-danger">*</span></label>
                     <select
                       className="form-select"
                       value={employeeForm.department}
@@ -2940,7 +3023,7 @@ const handleDeleteEmployee = (employeeId) => {
                   </div>
                   
                   <div className="col-12 col-md-6 mb-3">
-                    <label className="form-label">Designation</label>
+                    <label className="form-label fw-bold">Designation</label>
                     <input
                       type="text"
                       className="form-control"
@@ -2953,7 +3036,7 @@ const handleDeleteEmployee = (employeeId) => {
 
                 <div className="row">
                   <div className="col-12 col-md-6 mb-3">
-                    <label className="form-label">Joining Date</label>
+                    <label className="form-label fw-bold">Joining Date</label>
                     <input
                       type="date"
                       className="form-control"
@@ -2963,7 +3046,7 @@ const handleDeleteEmployee = (employeeId) => {
                   </div>
                   
                   <div className="col-12 col-md-6 mb-3">
-                    <label className="form-label">Assign to Program</label>
+                    <label className="form-label fw-bold">Assign to Program</label>
                     <select
                       className="form-select"
                       value={employeeForm.programAssigned || ''}
@@ -2994,15 +3077,40 @@ const handleDeleteEmployee = (employeeId) => {
               </div>
             </div>
           </div>
-        </div>
+
       )}
 
       {/* Edit Employee Modal */}
       {showEditEmployeeModal && editingEmployee && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog modal-dialog-centered modal-md">
-        <div className="modal-content border-0 shadow-lg rounded-3">
-          <div className="modal-header border-0 pb-4">
+    <div
+    className="modal show d-block"
+    style={{
+      backgroundColor: "rgba(0,0,0,0.5)",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1050,
+    }}
+  >
+    <div
+      className="modal-content bg-white"
+      style={{
+        width: "60%",
+        maxWidth: "800px",
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        maxHeight: "90vh",
+        overflowY: "auto",
+        borderRadius: "8px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+      }}
+    >
+      {/* Header */}
+      <div className="modal-header bg-white border-bottom">
                 <h4 className="modal-title fw-bold fs-4">Edit Employee</h4>
                 <button className="btn-close" onClick={() => setShowEditEmployeeModal(false)}></button>
               </div>
@@ -3010,7 +3118,7 @@ const handleDeleteEmployee = (employeeId) => {
               <div className="modal-body pt-0">
                 <div className="row">
                   <div className="col-12 col-md-6 mb-3">
-                    <label className="form-label">Employee Name <span className="text-danger">*</span></label>
+                    <label className="form-label fw-bold">Employee Name <span className="text-danger">*</span></label>
                     <input
                       type="text"
                       className="form-control"
@@ -3021,7 +3129,7 @@ const handleDeleteEmployee = (employeeId) => {
                   </div>
                   
                   <div className="col-12 col-md-6 mb-3">
-                    <label className="form-label">Employee ID <span className="text-danger">*</span></label>
+                    <label className="form-label fw-bold">Employee ID <span className="text-danger">*</span></label>
                     <input
                       type="text"
                       className="form-control"
@@ -3034,7 +3142,7 @@ const handleDeleteEmployee = (employeeId) => {
 
                 <div className="row">
                   <div className="col-12 col-md-6 mb-3">
-                    <label className="form-label">Email <span className="text-danger">*</span></label>
+                    <label className="form-label fw-bold">Email <span className="text-danger">*</span></label>
                     <input
                       type="email"
                       className="form-control"
@@ -3045,7 +3153,7 @@ const handleDeleteEmployee = (employeeId) => {
                   </div>
                   
                   <div className="col-12 col-md-6 mb-3">
-                    <label className="form-label">Phone Number</label>
+                    <label className="form-label fw-bold">Phone Number</label>
                     <input
                       type="tel"
                       className="form-control"
@@ -3057,7 +3165,7 @@ const handleDeleteEmployee = (employeeId) => {
 
                 <div className="row">
                   <div className="col-12 col-md-6 mb-3">
-                    <label className="form-label">Department <span className="text-danger">*</span></label>
+                    <label className="form-label fw-bold">Department <span className="text-danger">*</span></label>
                     <select
                       className="form-select"
                       value={editingEmployee.department}
@@ -3073,7 +3181,7 @@ const handleDeleteEmployee = (employeeId) => {
                   </div>
                   
                   <div className="col-12 col-md-6 mb-3">
-                    <label className="form-label">Designation</label>
+                    <label className="form-label fw-bold">Designation</label>
                     <input
                       type="text"
                       className="form-control"
@@ -3085,7 +3193,7 @@ const handleDeleteEmployee = (employeeId) => {
 
                 <div className="row">
                   <div className="col-12 col-md-6 mb-3">
-                    <label className="form-label">Joining Date</label>
+                    <label className="form-label fw-bold">Joining Date</label>
                     <input
                       type="date"
                       className="form-control"
@@ -3095,7 +3203,7 @@ const handleDeleteEmployee = (employeeId) => {
                   </div>
                   
                   <div className="col-12 col-md-6 mb-3">
-                    <label className="form-label">Assign to Program</label>
+                    <label className="form-label fw-bold">Assign to Program</label>
                     <select
                       className="form-select"
                       value={editingEmployee.programAssigned || ''}
@@ -3113,7 +3221,7 @@ const handleDeleteEmployee = (employeeId) => {
 
                 <div className="row">
                   <div className="col-12 col-md-6 mb-3">
-                    <label className="form-label">Attendance Status</label>
+                    <label className="form-label fw-bold">Attendance Status</label>
                     <select
                       className="form-select"
                       value={editingEmployee.attendanceStatus}
@@ -3128,7 +3236,7 @@ const handleDeleteEmployee = (employeeId) => {
                   </div>
                   
                   <div className="col-12 col-md-6 mb-3">
-                    <label className="form-label">Status</label>
+                    <label className="form-label fw-bold">Status</label>
                     <select
                       className="form-select"
                       value={editingEmployee.status || 'Active'}
@@ -3156,7 +3264,7 @@ const handleDeleteEmployee = (employeeId) => {
               </div>
             </div>
           </div>
-        </div>
+
       )}
       
     </>
@@ -3168,10 +3276,35 @@ const handleDeleteEmployee = (employeeId) => {
     const policy = selectedPolicy || policies[0];
     
     return (
-      <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-       <div className="modal-dialog modal-dialog-centered modal-md">
-            <div className="modal-content border-0 shadow-lg rounded-3">
-                <div className="modal-header border-0 pb-3">
+  <div
+    className="modal show d-block"
+    style={{
+      backgroundColor: "rgba(0,0,0,0.5)",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1050,
+    }}
+  >
+    <div
+      className="modal-content bg-white"
+      style={{
+        width: "50%",
+        maxWidth: "600px",
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        maxHeight: "90vh",
+        overflowY: "auto",
+        borderRadius: "8px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+      }}
+    >
+      {/* Header */}
+      <div className="modal-header bg-white border-bottom">
               <h5 className="modal-title fw-bold">{policy?.name}</h5>
               <button className="btn-close" onClick={() => setShowPolicyModal(false)}></button>
             </div>
@@ -3268,7 +3401,6 @@ const handleDeleteEmployee = (employeeId) => {
             </div>
           </div>
         </div>
-      </div>
     );
   };
 
@@ -3285,7 +3417,7 @@ const handleDeleteEmployee = (employeeId) => {
             
             <div className="modal-body pt-0">
               <div className="mb-3">
-                <label className="form-label">Select Program *</label>
+                <label className="form-label fw-bold">Select Program *</label>
                 <select 
                   className="form-select"
                   value={materialForm.programId || ''}
@@ -3305,7 +3437,7 @@ const handleDeleteEmployee = (employeeId) => {
 
               <div className="row">
                 <div className="col-12 col-md-8 mb-3">
-                  <label className="form-label">Material Name *</label>
+                  <label className="form-label fw-bold">Material Name *</label>
                   <input
                     type="text"
                     className="form-control"
@@ -3317,7 +3449,7 @@ const handleDeleteEmployee = (employeeId) => {
                 </div>
                 
                 <div className="col-12 col-md-4 mb-3">
-                  <label className="form-label">Material Type *</label>
+                  <label className="form-label fw-bold">Material Type *</label>
                   <select
                     className="form-select"
                     value={materialForm.materialType}
@@ -3333,7 +3465,7 @@ const handleDeleteEmployee = (employeeId) => {
               </div>
 
               <div className="mb-3">
-                <label className="form-label">Description</label>
+                <label className="form-label fw-bold">Description</label>
                 <textarea
                   className="form-control"
                   rows="3"
@@ -3344,7 +3476,7 @@ const handleDeleteEmployee = (employeeId) => {
               </div>
 
               <div className="mb-3">
-                <label className="form-label">Upload File</label>
+                <label className="form-label fw-bold">Upload File</label>
                 <input
                   type="file"
                   className="form-control"
@@ -3385,7 +3517,7 @@ const handleDeleteEmployee = (employeeId) => {
             
             <div className="modal-body pt-0">
               <div className="mb-3">
-                <label className="form-label">Select Program *</label>
+                <label className="form-label fw-bold">Select Program *</label>
                 <select 
                   className="form-select"
                   value={venueForm.programId || ''}
@@ -3405,7 +3537,7 @@ const handleDeleteEmployee = (employeeId) => {
 
               <div className="row">
                 <div className="col-12 col-md-6 mb-3">
-                  <label className="form-label">Venue Name *</label>
+                  <label className="form-label fw-bold">Venue Name *</label>
                   <input
                     type="text"
                     className="form-control"
@@ -3417,7 +3549,7 @@ const handleDeleteEmployee = (employeeId) => {
                 </div>
                 
                 <div className="col-12 col-md-6 mb-3">
-                  <label className="form-label">Capacity</label>
+                  <label className="form-label fw-bold">Capacity</label>
                   <input
                     type="number"
                     className="form-control"
@@ -3429,7 +3561,7 @@ const handleDeleteEmployee = (employeeId) => {
               </div>
 
               <div className="mb-3">
-                <label className="form-label">Address</label>
+                <label className="form-label fw-bold">Address</label>
                 <textarea
                   className="form-control"
                   rows="2"
@@ -3441,7 +3573,7 @@ const handleDeleteEmployee = (employeeId) => {
 
               <div className="row">
                 <div className="col-12 col-md-4 mb-3">
-                  <label className="form-label">Booking Date *</label>
+                  <label className="form-label fw-bold">Booking Date *</label>
                   <input
                     type="date"
                     className="form-control"
@@ -3452,7 +3584,7 @@ const handleDeleteEmployee = (employeeId) => {
                 </div>
                 
                 <div className="col-12 col-md-4 mb-3">
-                  <label className="form-label">Start Time</label>
+                  <label className="form-label fw-bold">Start Time</label>
                   <input
                     type="time"
                     className="form-control"
@@ -3462,7 +3594,7 @@ const handleDeleteEmployee = (employeeId) => {
                 </div>
                 
                 <div className="col-12 col-md-4 mb-3">
-                  <label className="form-label">End Time</label>
+                  <label className="form-label fw-bold">End Time</label>
                   <input
                     type="time"
                     className="form-control"
@@ -3594,10 +3726,35 @@ const FeedbackModal = () => {
   };
 
   return (
-    <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog modal-dialog-centered modal-md">
-         <div className="modal-content border-0 shadow-lg rounded-3">
-           <div className="modal-header border-0 pb-3">
+  <div
+    className="modal show d-block"
+    style={{
+      backgroundColor: "rgba(0,0,0,0.5)",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1050,
+    }}
+  >
+    <div
+      className="modal-content bg-white"
+      style={{
+        width: "60%",
+        maxWidth: "800px",
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        maxHeight: "90vh",
+        overflowY: "auto",
+        borderRadius: "8px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+      }}
+    >
+      {/* Header */}
+      <div className="modal-header bg-white border-bottom">
             <h4 className="modal-title fw-bold fs-4">
               <i className="bi bi-star me-2"></i>
               Program Feedback
@@ -3635,80 +3792,68 @@ const FeedbackModal = () => {
               </select>
             </div>
 
-            {/* Program Information */}
-            {selectedFeedbackProgram && (
-              <div className="alert alert-light mb-4">
-                <div className="row">
-                  <div className="col-12">
-                    <div className="d-flex justify-content-between align-items-start">
-                      <div>
-                        <h6 className="fw-bold mb-1">{selectedFeedbackProgram.name}</h6>
-                        <small className="text-muted">{selectedFeedbackProgram.description}</small>
-                      </div>
-                      <div className="text-end">
-                        <div className="d-flex align-items-center">
-                          <span className="fw-bold me-2">
-                            Current Rating: {selectedFeedbackProgram.overallRating}/5
-                          </span>
-                          <div className="text-warning">
-                            {'★'.repeat(Math.floor(selectedFeedbackProgram.overallRating || 0))}
-                          </div>
-                        </div>
-                        <small className="text-muted">
-                          {selectedFeedbackProgram.feedback?.length || 0} feedbacks received
-                        </small>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Feedback Form */}
-            {selectedFeedbackProgram && (
-              <>
+              <div>
                 {/* Rating Section */}
-                <div className="mb-4">
-                  <label className="form-label fw-bold">
-                    Overall Rating <span className="text-danger">*</span>
-                  </label>
-                  <div className="d-flex justify-content-between mb-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        className={`btn btn-lg ${localFeedback.rating >= star ? 'btn-warning' : 'btn-outline-warning'} p-3`}
-                        onClick={() => handleInputChange('rating', star)}
-                        style={{ 
-                          width: '45px', 
-                          height: '45px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}
-                      >
-                        <i className="bi bi-star-fill fs-5"></i>
-                      </button>
-                    ))}
-                  </div>
-                  <div className="text-center">
-                    <span className={`fw-bold ${
-                      localFeedback.rating >= 4 ? 'text-success' :
-                      localFeedback.rating >= 3 ? 'text-warning' : 'text-danger'
-                    }`}>
-                      {(() => {
-                        const ratings = {
-                          1: 'Poor - Very dissatisfied',
-                          2: 'Fair - Needs improvement',
-                          3: 'Good - Met expectations',
-                          4: 'Very Good - Exceeded expectations',
-                          5: 'Excellent - Outstanding experience'
-                        };
-                        return ratings[localFeedback.rating] || 'Select a rating';
-                      })()}
-                    </span>
-                  </div>
-                </div>
+<div className="mb-3">
+  <label className="form-label fw-bold d-flex align-items-center justify-content-center">
+    Overall Rating <span className="text-danger ms-1">*</span>
+  </label>
+  
+  {/* Star Rating - Compact */}
+  <div className="d-flex justify-content-center align-items-center mb-2">
+    {[1, 2, 3, 4, 5].map((star) => (
+      <button
+        key={star}
+        type="button"
+        className={`btn ${localFeedback.rating >= star ? 'btn-warning' : 'btn-outline-warning'} border-0 mx-1`}
+        onClick={() => handleInputChange('rating', star)}
+        style={{ 
+          width: '38px', 
+          height: '38px',
+          padding: '0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: '8px',
+          transition: 'all 0.2s ease'
+        }}
+      >
+        <i className="bi bi-star-fill fs-5"></i>
+      </button>
+    ))}
+  </div>
+  
+  {/* Rating Description - Compact */}
+  <div className="text-center">
+    <span className={`fw-bold small ${
+      localFeedback.rating >= 4 ? 'text-success' :
+      localFeedback.rating >= 3 ? 'text-warning' : 'text-danger'
+    }`}>
+      {(() => {
+        const ratings = {
+          1: 'Poor',
+          2: 'Fair',
+          3: 'Good',
+          4: 'Very Good',
+          5: 'Excellent'
+        };
+        const descriptions = {
+          1: 'Very dissatisfied',
+          2: 'Needs improvement',
+          3: 'Met expectations',
+          4: 'Exceeded expectations',
+          5: 'Outstanding experience'
+        };
+        return localFeedback.rating > 0 
+          ? `${ratings[localFeedback.rating]} - ${descriptions[localFeedback.rating]}`
+          : 'Select a rating';
+      })()}
+    </span>
+  </div>
+</div>
+
 
                 {/* Comments Section */}
                 <div className="mb-3">
@@ -3814,8 +3959,7 @@ const FeedbackModal = () => {
 </div>
 
 
-              </>
-            )}
+              </div>
           </div>
           
           <div className="modal-footer border-0">
@@ -3836,7 +3980,7 @@ const FeedbackModal = () => {
                 });
               }}
             >
-              <i className="bi bi-x-circle me-1"></i> Cancel
+              Cancel
             </button>  
             <button 
               type="button"
@@ -3844,12 +3988,12 @@ const FeedbackModal = () => {
               onClick={handleSubmit}
               disabled={!selectedFeedbackProgram || !localFeedback.rating || localFeedback.rating === 0}
             >
-              <i className="bi bi-check-circle me-1"></i> Submit Feedback
+               Submit Feedback
             </button>
           </div>
         </div>
       </div>
-    </div>
+
   );
 };
 
@@ -3905,10 +4049,35 @@ const PolicyModuleModal = () => {
   };
 
   return (
-    <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog modal-dialog-centered modal-md">
-        <div className="modal-content border-0 shadow-lg rounded-3">
-          <div className="modal-header border-0 pb-3 bg-light text-dark">
+  <div
+    className="modal show d-block"
+    style={{
+      backgroundColor: "rgba(0,0,0,0.5)",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1050,
+    }}
+  >
+    <div
+      className="modal-content bg-white"
+      style={{
+        width: "60%",
+        maxWidth: "800px",
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        maxHeight: "90vh",
+        overflowY: "auto",
+        borderRadius: "8px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+      }}
+    >
+      {/* Header */}
+      <div className="modal-header bg-white border-bottom">
             <h5 className="modal-title fw-bold fs-4">
               <i className="bi bi-book me-2"></i>
               {policy.name}
@@ -4114,7 +4283,7 @@ const PolicyModuleModal = () => {
           </div>
         </div>
       </div>
-    </div>
+
   );
 };
   // 10. Policy Quiz Modal
@@ -4124,10 +4293,35 @@ const PolicyModuleModal = () => {
     if (!policy || !policy.quiz || policy.quiz.length === 0) return null;
 
     return (
-      <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-       <div className="modal-dialog modal-dialog-centered modal-md">
-            <div className="modal-content border-0 shadow-lg rounded-3">
-                <div className="modal-header border-0 pb-3">
+  <div
+    className="modal show d-block"
+    style={{
+      backgroundColor: "rgba(0,0,0,0.5)",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1050,
+    }}
+  >
+    <div
+      className="modal-content bg-white"
+      style={{
+        width: "60%",
+        maxWidth: "800px",
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        maxHeight: "90vh",
+        overflowY: "auto",
+        borderRadius: "8px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+      }}
+    >
+      {/* Header */}
+      <div className="modal-header bg-white border-bottom">
               <h5 className="modal-title fw-bold fs-4">{policy.name} - Quiz</h5>
               <button className="btn-close" onClick={() => setShowPolicyQuizModal(false)}></button>
             </div>
@@ -4140,7 +4334,7 @@ const PolicyModuleModal = () => {
 {policy.quiz.map((question, index) => (
   <div key={question.id} className="card border mb-3">
     <div className="card-body">
-      <h6 className="fw-bold mb-3">
+      <h6 className="fw-bold mb-2 text-dark fs-5">
         Question {index + 1}: {question.question}
       </h6>
 
@@ -4148,6 +4342,7 @@ const PolicyModuleModal = () => {
         {question.options.map((option, optIndex) => (
           <label
             key={optIndex}
+            className="text-muted"
             htmlFor={`option-${question.id}-${optIndex}`}
             style={{
               display: "flex",
@@ -4163,8 +4358,8 @@ const PolicyModuleModal = () => {
             {/* Custom radio circle */}
             <div
               style={{
-                width: "20px",
-                height: "20px",
+                width: "15px",
+                height: "15px",
                 borderRadius: "50%",
                 border: `2px solid ${
                   quizAnswers[question.id] === optIndex
@@ -4230,240 +4425,52 @@ const PolicyModuleModal = () => {
             </div>
           </div>
         </div>
-      </div>
+
     );
   };
 
-
-// Edit Session Modal
-const EditSessionModal = () => {
-  if (!editingSession || !showEditSessionModal) return null; // Added condition check
-
-  return (
-    <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog modal-dialog-centered modal-md">
-        <div className="modal-content border-0 shadow-lg rounded-3">
-          <div className="modal-header border-0 pb-4">
-            <h5 className="modal-title fw-bold">Edit Session</h5>
-            <button className="btn-close" onClick={() => setShowEditSessionModal(false)}></button>
-          </div>
-          
-          <div className="modal-body pt-0">
-            {/* Program Selection */}
-            <div className="mb-3">
-              <label className="form-label">Select Program *</label>           
-              <select 
-                className="form-select"
-                value={editingSession.programId || ''}
-                onChange={(e) =>
-                  setEditingSession({
-                    ...editingSession,
-                    programId: parseInt(e.target.value)
-                  })
-                }
-                required
-              >
-                <option value="">Choose program...</option>
-                {inductionPrograms.map(program => (
-                  <option key={program.id} value={program.id}>
-                    {program.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Session Title <span className="text-danger">*</span></label>
-              <input
-                type="text"
-                className="form-control"
-                value={editingSession.sessionTitle || ''}
-                onChange={(e) => setEditingSession({...editingSession, sessionTitle: e.target.value})}
-                placeholder="e.g., Company Culture & Values"
-                required
-              />
-            </div>
-
-            <div className="row">
-              <div className="col-12 col-md-6 mb-3">
-                <label className="form-label">Session Date <span className="text-danger">*</span></label>
-                <input
-                  type="date"
-                  className="form-control"
-                  value={editingSession.sessionDate || ''}
-                  onChange={(e) => setEditingSession({...editingSession, sessionDate: e.target.value})}
-                  required
-                />
-              </div>
-              
-              <div className="col-12 col-md-3 mb-3">
-                <label className="form-label">Start Time <span className="text-danger">*</span></label>
-                <input
-                  type="time"
-                  className="form-control"
-                  value={editingSession.startTime || ''}
-                  onChange={(e) => setEditingSession({...editingSession, startTime: e.target.value})}
-                  required
-                />
-              </div>
-              
-              <div className="col-12 col-md-3 mb-3">
-                <label className="form-label">End Time <span className="text-danger">*</span></label>
-                <input
-                  type="time"
-                  className="form-control"
-                  value={editingSession.endTime || ''}
-                  onChange={(e) => setEditingSession({...editingSession, endTime: e.target.value})}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Agenda/Description</label>
-              <textarea
-                className="form-control"
-                rows="3"
-                value={editingSession.agenda || ''}
-                onChange={(e) => setEditingSession({...editingSession, agenda: e.target.value})}
-                placeholder="Detailed agenda for this session"
-              />
-            </div>
-
-            <div className="mb-3">
-              <label
-                htmlFor="virtualSession"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  cursor: "pointer",
-                  color: editingSession.isVirtual ? "#3B82F6" : "#4B5563",
-                  transition: "color 0.3s ease",
-                }}
-              >
-                {/* Custom checkbox box */}
-                <div
-                  style={{
-                    width: "20px",
-                    height: "20px",
-                    borderRadius: "4px",
-                    border: `2px solid ${editingSession.isVirtual ? "#3B82F6" : "#9CA3AF"}`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginRight: "10px",
-                    background: editingSession.isVirtual ? "#3B82F6" : "transparent",
-                    transition: "all 0.3s ease",
-                  }}
-                >
-                  {editingSession.isVirtual && (
-                    <span
-                      style={{
-                        color: "white",
-                        fontSize: "12px",
-                        fontWeight: "bold",
-                        lineHeight: 1,
-                      }}
-                    >
-                      ✓
-                    </span>
-                  )}
-                </div>
-
-                {/* Hidden input */}
-                <input
-                  type="checkbox"
-                  id="virtualSession"
-                  checked={editingSession.isVirtual || false}
-                  onChange={(e) => setEditingSession({
-                    ...editingSession,
-                    isVirtual: e.target.checked
-                  })}
-                  style={{ display: "none" }}
-                />
-
-                <span className="fw-medium">Virtual Session</span>
-              </label>
-            </div>
-
-            {editingSession.isVirtual ? (
-              <div className="mb-3">
-                <label className="form-label">Meeting Link</label>
-                <input
-                  type="url"
-                  className="form-control"
-                  value={editingSession.meetingLink || ''}
-                  onChange={(e) => setEditingSession({...editingSession, meetingLink: e.target.value})}
-                  placeholder="https://zoom.us/j/..."
-                />
-              </div>
-            ) : (
-              <div className="mb-3">
-                <label className="form-label">Venue</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={editingSession.venue || ''}
-                  onChange={(e) => setEditingSession({...editingSession, venue: e.target.value})}
-                  placeholder="e.g., Conference Room A"
-                />
-              </div>
-            )}
-
-            {/* Additional Session Details */}
-            <div className="mb-3">
-              <label className="form-label">Session Status</label>
-              <select
-                className="form-select"
-                value={editingSession.status || 'scheduled'}
-                onChange={(e) => setEditingSession({...editingSession, status: e.target.value})}
-              >
-                <option value="scheduled">Scheduled</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="postponed">Postponed</option>
-              </select>
-            </div>
-
-          </div>
-          
-          <div className="modal-footer border-0">
-            <button 
-              className="btn btn-outline-secondary" 
-              onClick={() => setShowEditSessionModal(false)}
-            >
-              Cancel
-            </button>
-            <button 
-              className="btn btn-primary" 
-              onClick={handleEditSession}
-            >
-              Update Session
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}; 
 
 // Session Details Modal
 const SessionDetailsModal = () => {
   if (!selectedSession) return null;
 
   return (
-    <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog modal-dialog-centered modal-md">
-        <div className="modal-content border-0 shadow-lg rounded-3">
-          <div className="modal-header border-0 pb-4">
-            <h5 className="modal-title fw-bold">{selectedSession.sessionTitle}</h5>
+  <div
+    className="modal show d-block"
+    style={{
+      backgroundColor: "rgba(0,0,0,0.5)",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1050,
+    }}
+  >
+    <div
+      className="modal-content bg-white"
+      style={{
+        width: "60%",
+        maxWidth: "800px",
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        maxHeight: "90vh",
+        overflowY: "auto",
+        borderRadius: "8px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+      }}
+    >
+      {/* Header */}
+      <div className="modal-header bg-white border-bottom">
+            <h5 className="modal-title fw-bold">Session Details</h5>
             <button className="btn-close" onClick={() => setSelectedSession(null)}></button>
           </div>
           
           <div className="modal-body pt-0">
             <div className="card border mb-3">
               <div className="card-body">
-                <h6 className="fw-bold mb-3">Session Details</h6>
                 <div className="mb-2">
                   <small className="text-muted">Program</small>
                   <div className="fw-bold">{selectedSession.programName || 'N/A'}</div>
@@ -4541,7 +4548,7 @@ const SessionDetailsModal = () => {
           </div>
         </div>
       </div>
-    </div>
+
   );
 };
   // ==================== HELPER FUNCTIONS ====================
@@ -4704,7 +4711,7 @@ const SessionDetailsModal = () => {
         {/* Induction Programs Table - Responsive */}
         <div className="card border mb-4">
           <div className="card-header bg-light d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
-            <h6 className="mb-2 mb-md-0 fw-bold">Induction Programs</h6>
+            <h6 className="mb-2 mb-md-0 fw-bold fs-4">Induction Programs</h6>
             <span className="badge bg-primary">{filteredPrograms.length} programs</span>
           </div>
           
@@ -4713,13 +4720,14 @@ const SessionDetailsModal = () => {
               <table className="table table-hover mb-0">
                 <thead className="table-light">
                   <tr>
-                    <th className="text-nowrap ps-4 card-title text-muted mb-1">Program Name</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>Schedule</th>
-                    <th>Participants</th>
-                    <th>Rating</th>
-                    <th>Actions</th>
+                    <th className="text-muted ps-4">Program Name</th>
+                    <th className="text-muted">Type</th>
+                    <th className="text-muted">Status</th>
+
+                    <th className="text-muted">Schedule</th>
+                    <th className="text-muted">Participants</th>
+                    <th className="text-muted">Rating</th>
+                    <th className="text-muted">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -4846,7 +4854,7 @@ const SessionDetailsModal = () => {
   <div className="col-12">
     <div className="card border">
       <div className="card-header bg-light d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
-        <h6 className="mb-2 mb-md-0 fw-bold">Sessions Management</h6>
+        <h6 className="mb-2 mb-md-0 fw-bold fs-4">Sessions Management</h6>
         <div className="d-flex gap-2">
           <button 
             className="btn btn-sm btn-outline-primary"
@@ -4913,12 +4921,12 @@ const SessionDetailsModal = () => {
             <table className="table table-hover mb-0">
               <thead className="table-light">
                 <tr>
-                  <th className="ps-4">Session</th>
-                  <th>Program</th>
-                  <th>Date & Time</th>
-                  <th>Mode</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                  <th className="text-muted ps-4">Session</th>
+                  <th className="text-muted">Program</th>
+                  <th className="text-muted">Date & Time</th>
+                  <th className="text-muted">Mode</th>
+                  <th className="text-muted">Status</th>
+                  <th className="text-muted">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -5021,7 +5029,7 @@ const SessionDetailsModal = () => {
     <div className="card border">
       <div className="card-header bg-light d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
         <div>
-          <h6 className="mb-2 mb-md-0 fw-bold">Policy Acknowledgment</h6>
+          <h6 className="mb-2 mb-md-0 fw-bold fs-4">Policy Acknowledgment</h6>
           <small className="text-muted d-none d-md-block">
             Track and manage policy compliance across employees
           </small>
@@ -5039,12 +5047,12 @@ const SessionDetailsModal = () => {
           <table className="table table-hover mb-0">
             <thead className="table-light">
               <tr>
-                <th className="ps-4 pe-4">Policy</th>
-                <th className="px-3">Category</th>
-                <th className="px-3">Status</th>
-                <th className="px-4">Completion</th>
-                <th className="px-4">Progress</th>
-                <th className="px-4 pe-4">Actions</th>
+                <th className="ps-4 pe-4 text-muted">Policy</th>
+                <th className="px-3 text-muted">Category</th>
+                <th className="px-3 text-muted">Status</th>
+                <th className="px-4 text-muted">Completion</th>
+                <th className="px-4 text-muted">Progress</th>
+                <th className="px-4 pe-4 text-muted">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -5251,18 +5259,43 @@ const SessionDetailsModal = () => {
         
         {/* Enhanced Modals */}
         {showCreateProgram && (
-          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-       <div className="modal-dialog modal-dialog-centered modal-md">
-            <div className="modal-content border-0 shadow-lg rounded-3">
-                <div className="modal-header border-0 pb-3">
-                  <h4 className="modal-title fw-bold fs-4">Create New Induction Program</h4>
+  <div
+    className="modal show d-block"
+    style={{
+      backgroundColor: "rgba(0,0,0,0.5)",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1050,
+    }}
+  >
+    <div
+      className="modal-content bg-white"
+      style={{
+        width: "60%",
+        maxWidth: "800px",
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        maxHeight: "90vh",
+        overflowY: "auto",
+        borderRadius: "8px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+      }}
+    >
+      {/* Header */}
+      <div className="modal-header bg-white border-bottom">
+                  <h5 className="modal-title fw-bold">Create New Induction Program</h5>
                   <button className="btn-close" onClick={() => setShowCreateProgram(false)}></button>
                 </div>
                 
                 <div className="modal-body pt-0">
                   <div className="row">
                     <div className="col-12 col-md-6 mb-3">
-                      <label className="form-label">Program Name *</label>
+                      <label className="form-label fw-bold">Program Name  <span className="text-danger">*</span></label>
                       <input
                         type="text"
                         className="form-control"
@@ -5274,7 +5307,7 @@ const SessionDetailsModal = () => {
                     </div>
                     
                     <div className="col-12 col-md-6 mb-3">
-                      <label className="form-label">Program Type *</label>
+                      <label className="form-label fw-bold">Program Type  <span className="text-danger">*</span></label>
                       <select
                         className="form-select"
                         value={programForm.type}
@@ -5288,7 +5321,7 @@ const SessionDetailsModal = () => {
                   </div>
                   
                   <div className="mb-3">
-                    <label className="form-label">Description</label>
+                    <label className="form-label fw-bold">Description</label>
                     <textarea
                       className="form-control"
                       rows="3"
@@ -5300,7 +5333,7 @@ const SessionDetailsModal = () => {
                   
                   <div className="row">
                     <div className="col-12 col-md-6 mb-3">
-                      <label className="form-label">Start Date *</label>
+                      <label className="form-label fw-bold">Start Date  <span className="text-danger">*</span></label>
                       <input
                         type="date"
                         className="form-control"
@@ -5311,7 +5344,7 @@ const SessionDetailsModal = () => {
                     </div>
                     
                     <div className="col-12 col-md-6 mb-3">
-                      <label className="form-label">End Date *</label>
+                      <label className="form-label fw-bold">End Date  <span className="text-danger">*</span></label>
                       <input
                         type="date"
                         className="form-control"
@@ -5324,7 +5357,7 @@ const SessionDetailsModal = () => {
                   
                   <div className="row">
                     <div className="col-12 col-md-8 mb-3">
-                      <label className="form-label">Location *</label>
+                      <label className="form-label fw-bold">Location  <span className="text-danger">*</span></label>
                       <input
                         type="text"
                         className="form-control"
@@ -5336,7 +5369,7 @@ const SessionDetailsModal = () => {
                     </div>
                     
                     <div className="col-12 col-md-4 mb-3">
-                      <label className="form-label">Max Participants</label>
+                      <label className="form-label fw-bold">Max Participants</label>
                       <input
                         type="number"
                         className="form-control"
@@ -5362,56 +5395,88 @@ const SessionDetailsModal = () => {
                 </div>
               </div>
             </div>
-          </div>
         )}
           {showTrainerAssignmentModal && <TrainerAssignmentModal />}
         {showBulkAttendanceModal && <BulkAttendanceModal />}
         {showPolicyModal && <PolicyModal />}
         {showSessionAgendaModal && (
-      <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-       <div className="modal-dialog modal-dialog-centered modal-md">
-            <div className="modal-content border-0 shadow-lg rounded-3">
-            <div className="modal-header border-0 pb-4">
+  <div
+    className="modal show d-block"
+    style={{
+      backgroundColor: "rgba(0,0,0,0.5)",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1050,
+    }}
+  >
+    <div
+      className="modal-content bg-white"
+      style={{
+        width: "60%",
+        maxWidth: "800px",
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        maxHeight: "90vh",
+        overflowY: "auto",
+        borderRadius: "8px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+      }}
+    >
+      {/* Header */}
+      <div className="modal-header bg-white border-bottom">
               <h5 className="modal-title fw-bold">Create Session Agenda</h5>
               <button className="btn-close" onClick={() => setShowSessionAgendaModal(false)}></button>
             </div>
             
             <div className="modal-body pt-0">
               
-              <div className="mb-3">
-                <label className="form-label">Select Program *</label>
-                <select 
-                  className="form-select"
-                  value={sessionAgendaForm.programId || ''}
-                  onChange={(e) => setSessionAgendaForm({
-                    ...sessionAgendaForm, 
-                    programId: parseInt(e.target.value)
-                  })}
-                >
-                  <option value="">Choose program...</option>
-                  {inductionPrograms.map(program => (
-                    <option key={program.id} value={program.id}>
-                      {program.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label">Session Title *</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={sessionAgendaForm.sessionTitle}
-                  onChange={(e) => setSessionAgendaForm({...sessionAgendaForm, sessionTitle: e.target.value})}
-                  placeholder="e.g., Company Culture & Values"
-                  required
-                />
-              </div>
+<div className="row mb-3">
+  {/* First card - Program Select */}
+  <div className="col-md-6">
+    <div className="mb-3">
+      <label className="form-label fw-bold">Select Program <span className="text-danger">*</span></label>
+      <select 
+        className="form-select"
+        value={sessionAgendaForm.programId || ''}
+        onChange={(e) => setSessionAgendaForm({
+          ...sessionAgendaForm, 
+          programId: parseInt(e.target.value)
+        })}
+      >
+        <option value="">Choose program...</option>
+        {inductionPrograms.map(program => (
+          <option key={program.id} value={program.id}>
+            {program.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  </div>
+  
+  {/* Second card - Session Title */}
+  <div className="col-md-6">
+    <div className="mb-3">
+      <label className="form-label fw-bold">Session Title <span className="text-danger">*</span></label>
+      <input
+        type="text"
+        className="form-control"
+        value={sessionAgendaForm.sessionTitle}
+        onChange={(e) => setSessionAgendaForm({...sessionAgendaForm, sessionTitle: e.target.value})}
+        placeholder="e.g., Company Culture & Values"
+        required
+      />
+    </div>
+  </div>
+</div>
 
               <div className="row">
                 <div className="col-12 col-md-6 mb-3">
-                  <label className="form-label">Session Date *</label>
+                  <label className="form-label fw-bold">Session Date <span className="text-danger">*</span></label>
                   <input
                     type="date"
                     className="form-control"
@@ -5422,7 +5487,7 @@ const SessionDetailsModal = () => {
                 </div>
                 
                 <div className="col-12 col-md-3 mb-3">
-                  <label className="form-label">Start Time *</label>
+                  <label className="form-label fw-bold">Start Time <span className="text-danger">*</span></label>
                   <input
                     type="time"
                     className="form-control"
@@ -5433,7 +5498,7 @@ const SessionDetailsModal = () => {
                 </div>
                 
                 <div className="col-12 col-md-3 mb-3">
-                  <label className="form-label">End Time *</label>
+                  <label className="form-label fw-bold">End Time <span className="text-danger">*</span></label>
                   <input
                     type="time"
                     className="form-control"
@@ -5445,7 +5510,7 @@ const SessionDetailsModal = () => {
               </div>
 
               <div className="mb-3">
-                <label className="form-label">Agenda/Description</label>
+                <label className="form-label fw-bold">Agenda/Description</label>
                 <textarea
                   className="form-control"
                   rows="4"
@@ -5455,7 +5520,35 @@ const SessionDetailsModal = () => {
                 />
               </div>
 
-<div className="mb-3">
+
+
+
+              {sessionAgendaForm.isVirtual ? (
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Meeting Link <span className="text-danger">*</span></label>
+                  <input
+                    type="url"
+                    className="form-control"
+                    value={sessionAgendaForm.meetingLink}
+                    onChange={(e) => setSessionAgendaForm({...sessionAgendaForm, meetingLink: e.target.value})}
+                    placeholder="https://zoom.us/j/..."
+                    required={sessionAgendaForm.isVirtual}
+                  />
+                </div>
+              ) : (
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Venue <span className="text-danger">*</span></label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={sessionAgendaForm.venue}
+                    onChange={(e) => setSessionAgendaForm({...sessionAgendaForm, venue: e.target.value})}
+                    placeholder="e.g., Conference Room A"
+                    required={!sessionAgendaForm.isVirtual}
+                  />
+                </div>
+              )}
+              <div className="mb-3">
   <label
     htmlFor="session-isVirtual"
     style={{
@@ -5512,33 +5605,6 @@ const SessionDetailsModal = () => {
     <span className="fw-medium">Virtual Session</span>
   </label>
 </div>
-
-
-              {sessionAgendaForm.isVirtual ? (
-                <div className="mb-3">
-                  <label className="form-label">Meeting Link *</label>
-                  <input
-                    type="url"
-                    className="form-control"
-                    value={sessionAgendaForm.meetingLink}
-                    onChange={(e) => setSessionAgendaForm({...sessionAgendaForm, meetingLink: e.target.value})}
-                    placeholder="https://zoom.us/j/..."
-                    required={sessionAgendaForm.isVirtual}
-                  />
-                </div>
-              ) : (
-                <div className="mb-3">
-                  <label className="form-label">Venue *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={sessionAgendaForm.venue}
-                    onChange={(e) => setSessionAgendaForm({...sessionAgendaForm, venue: e.target.value})}
-                    placeholder="e.g., Conference Room A"
-                    required={!sessionAgendaForm.isVirtual}
-                  />
-                </div>
-              )}
             </div>
             
             <div className="modal-footer border-0">
@@ -5555,54 +5621,87 @@ const SessionDetailsModal = () => {
             </div>
           </div>
         </div>
-      </div>
+
     )}
     {showEditSessionModal && (
-          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog modal-dialog-centered modal-md">
-        <div className="modal-content border-0 shadow-lg rounded-3">
-          <div className="modal-header border-0 pb-4">
-            <h5 className="modal-title fw-bold">Edit Session</h5>
+  <div
+    className="modal show d-block"
+    style={{
+      backgroundColor: "rgba(0,0,0,0.5)",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1050,
+    }}
+  >
+    <div
+      className="modal-content bg-white"
+      style={{
+        width: "60%",
+        maxWidth: "800px",
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        maxHeight: "90vh",
+        overflowY: "auto",
+        borderRadius: "8px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+      }}
+    >
+      {/* Header */}
+      <div className="modal-header bg-white border-bottom">
+            <h5 className="modal-title fw-bold mb-0">Edit Session</h5>
             <button className="btn-close" onClick={() => setShowEditSessionModal(false)}></button>
           </div>
           
           <div className="modal-body pt-0">
             {/* Program Selection */}
-            <div className="mb-3">
-              <label className="form-label">Select Program *</label>
-              <select 
-                className="form-select"
-                value={editingSession.programId || ''}
-                onChange={(e) => setEditingSession({
-                  ...editingSession, 
-                  programId: parseInt(e.target.value)
-                })}
-                required
-              >
-                <option value="">Choose program...</option>
-                {inductionPrograms.map(program => (
-                  <option key={program.id} value={program.id}>
-                    {program.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Session Title *</label>
-              <input
-                type="text"
-                className="form-control"
-                value={editingSession.sessionTitle || ''}
-                onChange={(e) => setEditingSession({...editingSession, sessionTitle: e.target.value})}
-                placeholder="e.g., Company Culture & Values"
-                required
-              />
-            </div>
+<div className="row mb-2">
+  {/* First column - Select Program */}
+  <div className="col-md-6">
+    <div className="mb-3">
+      <label className="form-label fw-bold">Select Program <span className="text-danger">*</span></label>
+      <select 
+        className="form-select"
+        value={editingSession.programId || ''}
+        onChange={(e) => setEditingSession({
+          ...editingSession, 
+          programId: parseInt(e.target.value)
+        })}
+        required
+      >
+        <option value="">Choose program...</option>
+        {inductionPrograms.map(program => (
+          <option key={program.id} value={program.id}>
+            {program.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  </div>
+  
+  {/* Second column - Session Title */}
+  <div className="col-md-6">
+    <div className="mb-3">
+      <label className="form-label fw-bold">Session Title <span className="text-danger">*</span></label>
+      <input
+        type="text"
+        className="form-control"
+        value={editingSession.sessionTitle || ''}
+        onChange={(e) => setEditingSession({...editingSession, sessionTitle: e.target.value})}
+        placeholder="e.g., Company Culture & Values"
+        required
+      />
+    </div>
+  </div>
+</div>
 
             <div className="row">
               <div className="col-12 col-md-6 mb-3">
-                <label className="form-label">Session Date *</label>
+                <label className="form-label fw-bold">Session Date <span className="text-danger">*</span></label>
                 <input
                   type="date"
                   className="form-control"
@@ -5613,7 +5712,7 @@ const SessionDetailsModal = () => {
               </div>
               
               <div className="col-12 col-md-3 mb-3">
-                <label className="form-label">Start Time *</label>
+                <label className="form-label fw-bold">Start Time <span className="text-danger">*</span></label>
                 <input
                   type="time"
                   className="form-control"
@@ -5624,7 +5723,7 @@ const SessionDetailsModal = () => {
               </div>
               
               <div className="col-12 col-md-3 mb-3">
-                <label className="form-label">End Time *</label>
+                <label className="form-label fw-bold">End Time <span className="text-danger">*</span></label>
                 <input
                   type="time"
                   className="form-control"
@@ -5635,8 +5734,8 @@ const SessionDetailsModal = () => {
               </div>
             </div>
 
-            <div className="mb-3">
-              <label className="form-label">Agenda/Description</label>
+            <div className="mb-2">
+              <label className="form-label fw-bold">Agenda/Description</label>
               <textarea
                 className="form-control"
                 rows="4"
@@ -5647,7 +5746,37 @@ const SessionDetailsModal = () => {
             </div>
 
             {/* Virtual Session Checkbox */}
-            <div className="mb-3">
+
+
+ <div className="row mb-2">
+  {/* First column - Meeting Link / Venue */}
+  <div className="col-md-6">
+    {editingSession.isVirtual ? (
+      <div className="mb-3">
+        <label className="form-label fw-bold">Meeting Link <span className="text-danger">*</span></label>
+        <input
+          type="url"
+          className="form-control"
+          value={editingSession.meetingLink || ''}
+          onChange={(e) => setEditingSession({...editingSession, meetingLink: e.target.value})}
+          placeholder="https://zoom.us/j/..."
+          required={editingSession.isVirtual}
+        />
+      </div>
+    ) : (
+      <div className="mb-3">
+        <label className="form-label fw-bold">Venue <span className="text-danger">*</span></label>
+        <input
+          type="text"
+          className="form-control"
+          value={editingSession.venue || ''}
+          onChange={(e) => setEditingSession({...editingSession, venue: e.target.value})}
+          placeholder="e.g., Conference Room A"
+          required={!editingSession.isVirtual}
+        />
+      </div>
+    )}
+                <div className="mb-3">
               <label
                 htmlFor="edit-session-isVirtual"
                 style={{
@@ -5702,47 +5831,26 @@ const SessionDetailsModal = () => {
                 <span className="fw-medium">Virtual Session</span>
               </label>
             </div>
+  </div>
+  
+  {/* Second column - Session Status */}
+  <div className="col-md-6">
+    <div className="mb-3">
+      <label className="form-label fw-bold">Session Status</label>
+      <select
+        className="form-select"
+        value={editingSession.status || 'scheduled'}
+        onChange={(e) => setEditingSession({...editingSession, status: e.target.value})}
+      >
+        <option value="scheduled">Scheduled</option>
+        <option value="completed">Completed</option>
+        <option value="cancelled">Cancelled</option>
+        <option value="postponed">Postponed</option>
+      </select>
+    </div>
+  </div>
+</div>
 
-            {editingSession.isVirtual ? (
-              <div className="mb-3">
-                <label className="form-label">Meeting Link *</label>
-                <input
-                  type="url"
-                  className="form-control"
-                  value={editingSession.meetingLink || ''}
-                  onChange={(e) => setEditingSession({...editingSession, meetingLink: e.target.value})}
-                  placeholder="https://zoom.us/j/..."
-                  required={editingSession.isVirtual}
-                />
-              </div>
-            ) : (
-              <div className="mb-3">
-                <label className="form-label">Venue *</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={editingSession.venue || ''}
-                  onChange={(e) => setEditingSession({...editingSession, venue: e.target.value})}
-                  placeholder="e.g., Conference Room A"
-                  required={!editingSession.isVirtual}
-                />
-              </div>
-            )}
-
-            {/* Session Status Field (as requested) */}
-            <div className="mb-3">
-              <label className="form-label">Session Status</label>
-              <select
-                className="form-select"
-                value={editingSession.status || 'scheduled'}
-                onChange={(e) => setEditingSession({...editingSession, status: e.target.value})}
-              >
-                <option value="scheduled">Scheduled</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="postponed">Postponed</option>
-              </select>
-            </div>
           </div>
           
           <div className="modal-footer border-0">
@@ -5762,7 +5870,6 @@ const SessionDetailsModal = () => {
           </div>
         </div>
       </div>
-    </div>
     )}
 {selectedSession && <SessionDetailsModal />}
         {/* Session Schedules Section */}
