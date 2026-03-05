@@ -24,5 +24,7 @@ class AssetAllocation(Base):
     allocation_reason = Column(Text, nullable=False)
 
     allocated_at = Column(DateTime, default=datetime.utcnow)
+    status = Column(String, nullable=False, default="Available")
+
 
     asset = relationship("Asset")

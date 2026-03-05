@@ -224,20 +224,19 @@ app.include_router(documents.router)
 app.include_router(personal_info.router)
 app.include_router(address.router)
 
+# Company Settings - Currency Management
+app.include_router(currency.router) 
+app.include_router(financial_year.router)
+app.include_router(localization.router)
+app.include_router(policy.router)
+app.include_router(company_profile.router)
+
 #HR Operations - Assets Management
 app.include_router(assets.router)
 app.include_router(asset_allocation.router)
 app.include_router(asset_return.router)
 app.include_router(asset_maintenance.router)
 app.include_router(asset_insurance.router)
-
-
-# Company Settings - Currency Management
-app.include_router(currency.router)
-app.include_router(financial_year.router)
-app.include_router(localization.router)
-app.include_router(policy.router)
-app.include_router(company_profile.router)
 
  
 
