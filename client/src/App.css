@@ -42,11 +42,1760 @@
   max-width: 1400px;   /* prevent ultra-wide stretching */
 }
 
-/* button */
 
-.allButtonsExport{
-  background-color: rgb(41, 178, 41);
-  height: 40px;
-  border-radius: 10px;
-  
+
+/* Sidebar container */
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
+
+/* Make all link text black */
+.sidebar-menu li a {
+  color: rgb(0, 0, 0) !important;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+}
+
+/* Keep text black on hover */
+.sidebar-menu li a:hover {
+  color:#0d6efd !important;
+  /* light gray hover */
+  border-radius: 6px;
+}
+
+/* Active link styling */
+.sidebar-menu li a.active {
+  color: black !important;
+  font-weight: 600;
+}
+
+
+.sidebar-menu-group-title {
+  font-weight: 700 !important;
+  color: #000 !important;
+}
+/* Sidebar base style */
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-menu li a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  color: #000;
+  transition: all 0.2s ease;
+}
+
+/* Hover (only when not active) */
+.sidebar-menu li a:not(.active-link):hover {
+  color: #0d6efd;
+}
+
+.sidebar-menu li a:not(.active-link):hover svg {
+  color: #0d6efd;
+}
+
+/* Active state */
+.sidebar-menu li a.active-link {
+  background-color: #0d6efd;
+  color: #fff;
+}
+
+.sidebar-menu li a.active-link span,
+.sidebar-menu li a.active-link svg {
+  color: #fff;
+}
+
+
+/* big  modal css */
+ 
+.job-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+ 
+.job-modal-dialog {
+  width: 800px;
+  max-width: 95%;
+}
+ 
+.job-modal-content {
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  color: #000;
+}
+ 
+.job-modal-content * {
+  color: #000 !important;
+}
+ 
+.job-modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+ 
+ 
+.job-modal-subtitle {
+  font-size: 12px;
+  text-transform: uppercase;
+  margin: 0;
+  font-weight: 700; /* 👈 BOLD */
+  color: #000;
+}
+ 
+/* Optional: keep title strong */
+.job-modal-title {
+  margin: 0;
+  font-weight: 600;
+  color: #000;
+}
+ 
+.custom-modal-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+ 
+.job-modal-close {
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  cursor: pointer;
+}
+ 
+.job-modal-body {
+  padding: 20px;
+  overflow-y: auto;
+}
+ 
+.job-modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid #eee;
+  text-align: right;
+}
+ 
+.job-btn-secondary {
+  padding: 8px 16px;
+  border: 1px solid #ccc;
+  background: #f8f9fa;
+  border-radius: 6px;
+  cursor: pointer;
+}
+ 
+.job-section {
+  margin-bottom: 20px;
+}
+ 
+.job-section-title {
+ font-size: 15px;
+  color: #19191a;
+  text-transform: uppercase;
+  margin: 0;
+  font-weight: bold;
+}
+ 
+ 
+.job-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+ 
+.job-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  background: #e9ecef;
+}
+ 
+.job-badge.primary {
+  background: #e7f1ff;
+  color: #0d6efd;
+}
+ 
+.job-badge.secondary {
+  background: #f1f3f5;
+  color: #6c757d;
+}
+ 
+.job-meta {
+  display: flex;
+  gap: 15px;
+  color: #6c757d;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+ 
+.job-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+ 
+.job-info-card {
+  border: 2px solid #0c0b0b;
+  border-radius: 8px;
+  padding: 12px;
+}
+ 
+.job-info-text {
+  font-size: 8px;
+  font-weight: bold;
+}
+ 
+ 
+.job-info-label {
+  font-size: 15px;
+  color: #6c757d;
+  text-transform: uppercase;
+  margin: 0;
+  font-weight: bold;
+}
+ 
+.job-info-value {
+  margin: 0;
+  font-weight: 600;
+}
+ 
+.job-skills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+ 
+.job-skill {
+  background: #f1f3f5;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 15px;
+}
+ 
+.custom-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+ 
+ 
+.custom-modal-xl {
+  max-width: 800px;
+}
+ 
+ 
+/* Scroll area inside modal */
+.job-preview-modal-wrapper {
+  max-height: calc(90vh - 60px); /* header height */
+  overflow-y: auto;
+}
+ 
+/* Preview content inside modal */
+.job-preview-content {
+  padding: 20px 24px;
+  background: white;
+  box-shadow: none;
+  border-radius: 0;
+  width: 100%;
+}
+ 
+ 
+ 
+.custom-modal {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+ 
+.custom-modal-scroll {
+  overflow-y: auto;
+  max-height: calc(90vh - 50px); /* header height adjust */
+}
+.custom-modal-header {
+  padding: 16px 20px;
+  border-bottom: 8px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+ 
+/*  small css model 2 */
+ 
+/* Overlay */
+.hrms-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+ 
+/* Base modal */
+.hrms-modal {
+  background: #fff;
+  border-radius: 10px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  animation: hrmsModalFade 0.18s ease;
+}
+ 
+/* Sizes */
+.hrms-modal-sm { max-width: 420px; }
+.hrms-modal-md { max-width: 650px; }
+.hrms-modal-lg { max-width: 900px; }
+.hrms-modal-xl { max-width: 1150px; }
+ 
+/* Header */
+.hrms-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid #eee;
+}
+ 
+.hrms-modal-header h5 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+ 
+/* Close */
+.hrms-modal-close {
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+}
+ 
+/* Body */
+.hrms-modal-body {
+  padding: 18px;
+  overflow-y: auto;
+}
+ 
+/* Footer */
+.hrms-modal-footer {
+  border-top: 1px solid #eee;
+  padding: 12px 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+ 
+/* Form */
+.hrms-form-group {
+  margin-bottom: 14px;
+}
+ 
+.hrms-form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+ 
+.req { color: #e54848; }
+ 
+.hrms-input {
+  width: 100%;
+  height: 34px;
+  border: 1px solid #dcdcdc;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+ 
+.hrms-input:focus {
+  outline: none;
+  border-color: #4c8bf5;
+}
+ 
+/* Time row */
+.hrms-time-row {
+  display: flex;
+  gap: 6px;
+}
+ 
+.hrms-time-input {
+  width: 70px;
+  text-align: center;
+}
+ 
+/* Buttons */
+.hrms-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+ 
+.hrms-btn-secondary {
+  background: #e4e6eb;
+}
+ 
+.hrms-btn-success {
+  background: #22c55e;
+  color: #fff;
+}
+ 
+/* Animation */
+@keyframes hrmsModalFade {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+ 
+.hrms-notification-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1055;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 320px;
+}
+ 
+.hrms-notification {
+  margin: 0;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  border-radius: 8px;
+}
+ 
+ 
+/* ===== Offer Preview Extra Large Modal ===== */
+.hrms-modal-offer-xl {
+  width: 1000px;
+  min-width: 1000px;
+  max-width: 1000px;
+  flex: 0 0 1000px;
+}
+
+
+/*center of the */
+/* Overlay Full Screen Center */
+.modal.show.d-block {
+  display: flex !important;
+  align-items: center;     /* Vertical center */
+  justify-content: center; /* Horizontal center */
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* Dialog width control (optional clean look) */
+.modal-dialog {
+  margin: 0;
+  max-width: 600px; /* Adjust if needed */
+  width: 100%;
+}
+
+/* Smooth entry animation (optional but clean) */
+.modal-content {
+  border-radius: 12px;
+  animation: modalFadeIn 0.25s ease-in-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+ 
+ 
+/* ===== Analytics Modal (Independent System) ===== */
+ 
+.analytics-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1055;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+ 
+.analytics-modal-dialog {
+  width: 1000px;
+  max-width: 1000px;
+}
+ 
+.analytics-modal-content {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+ 
+.analytics-modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+ 
+.analytics-modal-body {
+  padding: 12px 20px;
+  overflow-y: auto;
+}
+ 
+.analytics-modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+
+
+/*Check Boxs ✓ */
+
+.custom-checkbox {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: #4B5563;
+  transition: color 0.3s ease;
+  font-weight: 500;
+}
+
+
+.checkbox-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid #9CA3AF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  transition: all 0.3s ease;
+}
+
+.custom-checkbox.checked .checkbox-box {
+  border-color: #3B82F6;
+  background-color: #3B82F6;
+}
+
+.checkmark {
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.checkbox-label {
+  user-select: none;
+}
+
+
+
+
+.job-listings-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid #0d6efd;   /* Orange theme */
+  background-color: transparent;
+  color: #0d6efd;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+/* Hover Effect */
+.job-listings-btn:hover {
+  background-color: #0d6efd;
+  color: #ffffff;
+}
+
+/* Click Effect */
+.job-listings-btn:active {
+  transform: scale(0.97);
+}
+
+/* Icon Size */
+.job-listings-btn svg {
+  width: 16px;
+  height: 16px;
+}
+ 
+
+/* ===== Upload Policy Button ===== */
+.upload-policy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  background-color: transparent;
+  border: 2px solid #0dcaf0;   /* Info Blue */
+  color: #0dcaf0;
+
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Hover */
+.upload-policy-btn:hover {
+  background-color: #0dcaf0;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(13, 202, 240, 0.3);
+}
+
+/* Active Click */
+.upload-policy-btn:active {
+  transform: scale(0.97);
+}
+
+/* Disabled */
+.upload-policy-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Icon size */
+.upload-policy-btn i {
+  font-size: 16px;
+}
+
+.create-job-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background-color: #0d6efd;   /* Primary Blue */
+  border: 1px solid #0d6efd;
+  color: #ffffff;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+/* Hover */
+.create-job-btn:hover {
+  background-color: #0b5ed7;
+  border-color: #0b5ed7;
+  transform: translateY(-2px);
+}
+
+/* Active */
+.create-job-btn:active {
+  transform: scale(0.97);
+}
+
+/* Icon size control */
+.create-job-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.refresh-btn {
+  background-color: #0d6efd;   /* Main color */
+  border-color: #0d6efd;
+  color: #ffffff;
+  transition: all 0.3s ease;
+}
+
+/* Hover */
+.refresh-btn:hover {
+  background-color: #0b5ed7;
+  border-color: #0a58b4;
+}
+
+/* Disabled */
+.refresh-btn:disabled {
+  background-color: #9ca3af;
+  border-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+
+
+
+.sync-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background-color: #198754;   /* Success Green */
+  border: 1px solid #198754;
+  color: #ffffff;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+/* Hover */
+.sync-btn:hover {
+  background-color: #157347;
+  border-color: #157347;
+  transform: translateY(-2px);
+}
+
+/* Click Effect */
+.sync-btn:active {
+  transform: scale(0.97);
+}
+
+/* Icon Styling */
+.sync-btn svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.4s ease;
+}
+
+/* Rotate icon on hover */
+.sync-btn:hover svg {
+  transform: rotate(180deg);
+}
+
+
+.tab-btn {
+  padding: 12px 24px;
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #6c757d; /* Secondary Light */
+}
+
+/* Hover */
+.tab-btn:hover {
+  color: #0d6efd;
+}
+
+/* Active Tab */
+.tab-btn.active {
+  color: #0d6efd;
+  border-bottom: 2px solid #0d6efd;
+}
+
+/* Icon size */
+.tab-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.resume-submit-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background-color: #6f42c1;   /* AI Purple Theme */
+  border: 1px solid #6f42c1;
+  color: #ffffff;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+/* Hover */
+.resume-submit-btn:hover:not(:disabled) {
+  background-color: #5a32a3;
+  border-color: #5a32a3;
+  transform: translateY(-2px);
+}
+
+/* Disabled State */
+.resume-submit-btn:disabled {
+  background-color: #c5b3e6;
+  border-color: #c5b3e6;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+/* Icon size */
+.resume-submit-btn svg {
+  width: 16px;
+  height: 16px;
+}
+.create-assessment-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  background-color: #198754;   /* Success Green */
+  border: 1px solid #198754;
+  color: #ffffff;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+/* Hover */
+.create-assessment-btn:hover {
+  background-color: #157347;
+  border-color: #157347;
+  transform: translateY(-2px);
+}
+
+/* Active */
+.create-assessment-btn:active {
+  transform: scale(0.97);
+}
+
+/* Icon size */
+.create-assessment-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.save-template-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  background-color: #0d6efd;   /* Primary Blue */
+  border: 1px solid #0d6efd;
+  color: #ffffff;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+/* Hover */
+.save-template-btn:hover {
+  background-color: #0b5ed7;
+  border-color: #0b5ed7;
+  transform: translateY(-2px);
+}
+
+/* Active */
+.save-template-btn:active {
+  transform: scale(0.97);
+}
+
+/* Icon size */
+.save-template-btn svg {
+  width: 16px;
+  height: 16px;
+}
+.close-btn {
+  background-color: transparent;
+  color: #6c757d;
+  border: 1px solid #6c757d;
+  padding: 6px 14px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  background-color: #6c757d;
+  color: #ffffff;
+}.select-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;                  /* Icon + text spacing */
+
+  background-color:  #6c757d;  /* Primary blue */
+  color: #ffffff;
+  border: none;
+
+  padding: 8px 16px;          /* Small button padding */
+  font-size: 15px;            /* Slightly smaller than main action buttons */
+  font-weight: 600;
+  border-radius: 8px;
+
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Hover */
+.select-all-btn:hover:not(:disabled) {
+  background-color: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(37, 99, 235, 0.3);
+}
+
+/* Active / Clicked */
+.select-all-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Disabled */
+.select-all-btn:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.clear-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;                  /* Icon + text spacing */
+
+  background-color: #dc2626;  /* Red */
+  color: #ffffff;
+  border: none;
+
+  padding: 8px 16px;          /* Small button padding */
+  font-size: 15px;            /* Slightly smaller text */
+  font-weight: 600;
+  border-radius: 8px;
+
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Hover */
+.clear-all-btn:hover:not(:disabled) {
+  background-color: #b91c1c;   /* Darker red */
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(220, 38, 38, 0.3);
+}
+
+/* Active / Clicked */
+.clear-all-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Disabled */
+.clear-all-btn:disabled {
+  background-color: #fca5a5;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.assign-btn {
+  width: 100%;
+  padding: 12px 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: #0d6efd;   /* Primary Blue */
+  border: 1px solid #0d6efd;
+  color: #ffffff;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+/* Hover */
+.assign-btn:hover:not(:disabled) {
+  background-color: #0b5ed7;
+  border-color: #0b5ed7;
+  transform: translateY(-2px);
+}
+
+/* Active */
+.assign-btn:active {
+  transform: scale(0.97);
+}
+
+/* Disabled */
+.assign-btn:disabled {
+  background-color: #9ec5fe;
+  border-color: #9ec5fe;
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+/* Icon size */
+.assign-btn svg {
+  width: 18px;
+  height: 18px;
+} 
+/* Cancel Button */
+.cancel-btn {
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: #dc3545;   /* Bootstrap danger red */
+  border: 1px solid #b02a37;   /* slightly darker red border */
+  color: #ffffff;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+ 
+/* Hover */
+.cancel-btn:hover {
+  background-color: #c82333;   /* darker red on hover */
+  border-color: #c82333;
+}
+ 
+/* Active (click) */
+.cancel-btn:active {
+  transform: scale(0.96);
+}
+
+.add-employee {
+  /* btn */
+  display: inline-flex;
+  font-weight: 400;
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  border-radius: 0.375rem;
+  border: 1px solid transparent;
+  transition: all 0.15s ease-in-out;
+
+  /* btn-success */
+  background-color: #198754;
+  color: #ffffff;
+  border-color: #198754;
+
+  /* d-flex */
+  display: inline-flex;
+
+  /* align-items-center */
+  align-items: center;
+}
+
+.add-employee:hover {
+  background-color: #157347;
+  border-color: #146c43;
+  color: #ffffff;
+}
+.back-to-list {
+  /* btn */
+  display: inline-block;
+  font-weight: 400;
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  border-radius: 0.375rem;
+  border: 1px solid transparent;
+  transition: all 0.15s ease-in-out;
+
+  /* btn-secondary */
+  background-color: #6c757d;
+  color: #fff;
+  border-color: #6c757d;
+}
+
+.back-to-list:hover {
+  background-color: #5c636a;
+  border-color: #565e64;
+  color: #fff;
+}
+
+/* d-flex */
+.back-to-list {
+  display: inline-flex;
+}
+
+/* align-items-center */
+.back-to-list {
+  align-items: center;
+}
+
+/* gap-2 */
+.back-to-list {
+  gap: 0.5rem; /* 8px */
+}
+.add-btn {
+  background-color: #ffffff;
+  color: #0dcaf0;
+  border: 2px solid #0dcaf0;
+  padding: 8px 18px;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+ 
+/* Hover */
+.add-btn:hover {
+  background-color: #e6f9ff;
+}
+ 
+/* Click ayinappudu shrink avvakunda */
+.add-btn:active {
+  transform: none;
+}
+ 
+/* Disabled state */
+.add-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #dc3545;   /* Bootstrap Danger Red */
+  background-color: #ffffff;    /* Light background */
+  color: #dc3545;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Hover */
+.delete-btn:hover {
+  background-color: #dc3545;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+/* Active */
+.delete-btn:active {
+  transform: scale(0.97);
+}
+
+/* Disabled */
+.delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Icon inside button */
+.delete-btn .icon {
+  font-size: 16px;
+}
+/* Common Style */
+
+.send-btn {
+
+  background-color: #ffffff;
+
+  border: 2px solid #0dcaf0;
+
+  padding: 10px 20px;
+
+  border-radius: 8px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 8px;
+
+  cursor: pointer;
+
+  transition: 0.3s ease;
+
+}
+ 
+/* API Button */
+
+.send-api-btn {
+
+  color: #0dcaf0;
+
+}
+ 
+/* Clipboard Button */
+
+.send-clipboard-btn {
+
+  color: #20c997;   /* Green shade */
+
+  border-color: #20c997;
+
+}
+ 
+/* Email Client Button */
+
+.send-client-btn {
+
+  color: #6f42c1;   /* Purple shade */
+
+  border-color: #6f42c1;
+
+}
+ 
+/* Hover Effects */
+
+.send-api-btn:hover {
+
+  background-color: #e6f9ff;
+
+}
+ 
+.send-clipboard-btn:hover {
+
+  background-color: #e6fff5;
+
+}
+ 
+.send-client-btn:hover {
+
+  background-color: #f3e8ff;
+
+}
+
+/* ===== Help Button ===== */
+.help-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 8px;
+  border: none;
+  background-color: #ffc107; /* Bootstrap Warning Yellow */
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+/* Hover */
+.help-btn:hover {
+  background-color: #e0a800; /* Darker warning */
+  transform: translateY(-2px);
+}
+
+/* Active */
+.help-btn:active {
+  transform: scale(0.97);
+}
+
+/* Disabled */
+.help-btn:disabled {
+  background-color: #d6d8d9;
+  cursor: not-allowed;
+}
+.read-modules-btn {
+  background-color: #0dcaf0;   /* info color */
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.read-modules-btn:hover {
+  background-color: #31d2f2;
+}
+
+.read-modules-btn:active {
+  transform: scale(0.98);
+}
+.take-quiz-btn {
+  background-color: #ffc107;   /* warning color */
+  color: #000000;
+  border: none;
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.take-quiz-btn:hover {
+  background-color: #e0a800;
+}
+
+.take-quiz-btn:active {
+  transform: scale(0.98);
+}
+.previous-btn {
+  background-color: transparent;
+  color: #0d4d85;
+  border: 1px solid #6c757d;
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 4px; 
+  cursor: pointer;
+}
+
+.previous-btn:hover {
+  background-color: #6c757d;
+  color: #ffffff;
+}
+
+.previous-btn:active {
+  transform: scale(0.98);
+}
+.extend-probation-btn {
+  background-color: #f59e0b;   /* Warning yellow */
+  border: none;
+  color: #ffffff;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+/* Hover Effect */
+.extend-probation-btn:hover {
+  background-color: #d97706;
+  transform: translateY(-2px);
+}
+
+/* Active Effect */
+.extend-probation-btn:active {
+  transform: scale(0.98);
+}
+
+/* Disabled State */
+.extend-probation-btn:disabled {
+  background-color: #fcd34d;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.record-communication-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  background-color: transparent;
+  border: 2px solid #06b6d4;   /* Info cyan */
+  color: #06b6d4;
+
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+/* Icon size */
+.record-communication-btn i {
+  font-size: 16px;
+}
+
+/* Hover */
+.record-communication-btn:hover {
+  background-color: #06b6d4;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(6, 182, 212, 0.3);
+}
+
+/* Active */
+.record-communication-btn:active {
+  transform: scale(0.97);
+}
+
+/* Disabled */
+.record-communication-btn:disabled {
+  border-color: #a5f3fc;
+  color: #a5f3fc;
+  cursor: not-allowed;
+}
+/* ===== Record Communication Submit Button ===== */
+.record-communication-submit-btn {
+  background: linear-gradient(135deg, #2563eb, #2563eb);
+  border: none;
+  color: #ffffff;
+  padding: 8px 22px;
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  transition: all 0.3s ease;
+}
+
+/* Hover */
+.record-communication-submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(6, 182, 212, 0.3);
+}
+
+/* Active */
+.record-communication-submit-btn:active {
+  transform: scale(0.97);
+}
+
+/* Disabled */
+.record-communication-submit-btn:disabled {
+  background: #93c5fd;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+/* ===== Buddies Toggle Button ===== */
+.buddies-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+ 
+  background-color: transparent;
+  border: 2px solid #16a34a;
+  color: #16a34a;
+ 
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+ 
+  transition: all 0.3s ease;
+}
+ 
+/* Icon size */
+.buddies-toggle-btn i {
+  font-size: 16px;
+}
+ 
+/* Hover */
+.buddies-toggle-btn:hover {
+  background-color: #16a34a;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+ 
+/* Active State */
+.buddies-toggle-btn.active {
+  background-color: #16a34a;
+  color: #ffffff;
+  box-shadow: 0 5px 12px rgba(22, 163, 74, 0.3);
+}
+/* ===== New Joiners Toggle Button ===== */
+.new-joiners-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+ justify-content: center;
+  background-color: transparent;
+  border: 2px solid #f59e0b;
+  color: #f59e0b;
+ 
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+ 
+  transition: all 0.3s ease;
+}
+ 
+/* Icon size */
+.new-joiners-toggle-btn i {
+  font-size: 16px;
+}
+ 
+/* Hover */
+.new-joiners-toggle-btn:hover {
+  background-color: #f59e0b;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+ 
+/* Active State */
+.new-joiners-toggle-btn.active {
+  background-color: #f59e0b;
+  color: #ffffff;
+  box-shadow: 0 5px 12px rgba(245, 158, 11, 0.3);
+}
+.add-assignment-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  background-color: #16a34a;   /* Green */
+  border: none;
+  color: #ffffff;
+
+  padding: 5px 14px;   /* Small size */
+  font-size: 14px;
+  border-radius: 6px;
+  font-weight: 500;
+
+  transition: all 0.3s ease;
+}
+
+/* Icon size */
+.add-assignment-btn i {
+  font-size: 16px;
+}
+
+/* Hover */
+.add-assignment-btn:hover {
+  background-color: #15803d;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(22, 163, 74, 0.3);
+}
+
+/* Active / Clicked */
+.add-assignment-btn:active {
+  transform: scale(0.97);
+}
+
+/* Disabled */
+.add-assignment-btn:disabled {
+  background-color: #86efac;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+
+
+/* ===== Review High-Risk Employees Button ===== */
+.highrisk-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  border: none;
+  background-color: #dc3545;
+  /* Bootstrap danger red */
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+ 
+/* Hover effect */
+.highrisk-btn:hover {
+  background-color: #c82333;
+  /* slightly darker red */
+}
+ 
+/* Badge inside button */
+.highrisk-btn .btn-badge {
+  background-color: #fff;
+  color: #dc3545;
+  /* same as button red */
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+ 
+/* Text inside button */
+.highrisk-btn .btn-text {
+  display: inline-block;
+}
+
+
+/* ===== Review High-Risk Employees Button ===== */
+.highrisk-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  border: none;
+  background-color: #dc3545;
+  /* Bootstrap danger red */
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+ 
+/* Hover effect */
+.highrisk-btn:hover {
+  background-color: #c82333;
+  /* slightly darker red */
+}
+ 
+/* Badge inside button */
+.highrisk-btn .btn-badge {
+  background-color: #fff;
+  color: #dc3545;
+  /* same as button red */
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+ 
+/* Text inside button */
+.highrisk-btn .btn-text {
+  display: inline-block;
+}
+
+
+/* ===== Process Pending Alerts Button ===== */
+.pending-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  border: none;
+  background-color: #ffc107;
+  /* Bootstrap warning yellow */
+  color: #212529;
+  /* dark text for contrast */
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+ 
+/* Hover effect */
+.pending-btn:hover {
+  background-color: #e0a800;
+  /* slightly darker yellow */
+}
+ 
+/* Badge inside button */
+.pending-btn .btn-badge {
+  background-color: #fff;
+  color: #ffc107;
+  /* same as button yellow */
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+ 
+/* Text inside button */
+.pending-btn .btn-text {
+  display: inline-block;
+}
+ 
+/* ===== Optimize AI Models Button ===== */
+.optimize-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  border: none;
+  background-color: #198754;
+  /* Bootstrap success green */
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+ 
+/* Hover effect */
+.optimize-btn:hover {
+  background-color: #157347;
+  /* slightly darker green */
+}
+ 
+/* Text inside button */
+.optimize-btn .btn-text {
+  display: inline-block;
+}
+ 
+/* Badge inside button */
+.optimize-btn .btn-badge {
+  background-color: #fff;
+  color: #198754;
+  /* same as button green */
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+ 
+
+/* Upload Button Styling */
+.upload-btn {
+  height: 60px;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 8px;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Hover Effect */
+.upload-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* Active Click Effect */
+.upload-btn:active {
+  transform: scale(0.97);
+}
+
+/* Icon Styling */
+.upload-btn .upload-icon {
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+/* Icon Hover Animation */
+.upload-btn:hover .upload-icon {
+  transform: scale(1.1);
+}
+
+/* Disabled State */
+.upload-btn:disabled,
+.upload-btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+
+.modal.show.d-block {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+
