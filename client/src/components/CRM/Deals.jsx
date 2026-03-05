@@ -433,7 +433,7 @@ export default function Deals() {
                     </h5>
 
                     <p className="text-muted mb-4">
-                         Monitor pipeline performance and move deals smoothly from
+                        Monitor pipeline performance and move deals smoothly from
                         prospect to closure.
                     </p>
                 </div>
@@ -580,12 +580,17 @@ export default function Deals() {
                                             }}
                                             title="Add Deal"
                                         >
-                                            <span style={{
-                                                fontSize: '18px',
-                                                lineHeight: '1',
-                                                letterSpacing: '2px',
-                                                fontWeight: 'bold'
-                                            }}>⋯</span>
+                                            <span
+                                                style={{
+                                                    fontSize: '18px',
+                                                    lineHeight: '1',
+                                                    letterSpacing: '2px',
+                                                    fontWeight: 'bold',
+                                                    textDecoration: 'none', // extra safety
+                                                }}
+                                            >
+                                                ⋯
+                                            </span>
                                         </button>
                                     </div>
                                 </div>

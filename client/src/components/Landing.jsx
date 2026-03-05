@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Star, Zap, FileText, Code, BarChart3, Bot, ShieldCheck } from "lucide-react";
+import { Zap, FileText, Code, BarChart3, Bot, ShieldCheck } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { getUserRole } from '../utils/auth';
 import { Link } from 'react-router-dom';
@@ -370,7 +370,7 @@ const ClientFeaturesSection = ({ clients }) => {
                     transition: 'color 0.3s ease'
                   }}
                 >
-                  Powerful Features for Modern Hiring...
+                  All in one: AI Recruiter & HR Automation, CRM, Productivity, HRMS
                 </h4>
                 <p 
                   className="text-base text-md-lg text-dark mb-3"
@@ -380,7 +380,7 @@ const ClientFeaturesSection = ({ clients }) => {
                     transition: 'color 0.3s ease'
                   }}
                 >
-                  Our AI solutions have driven innovation, streamlined operations, and fueled exceptional business growth.
+                  One platform for recruiting, sales, productivity, and HR. Streamline operations and grow with confidence.
                 </p>
                 <button 
                   className="btn btn-primary"
@@ -403,17 +403,18 @@ const ClientFeaturesSection = ({ clients }) => {
               </div>
             </ScrollAnimatedCard>
 
-            {/* Client Logos Grid */}
+            {/* Four pillar cards with images */}
             <div className="d-flex flex-column gap-3 w-100" style={{ maxWidth: '500px' }}>
               {clients.map((client, index) => (
                 <ScrollAnimatedCard key={index} delay={index * 100 + 200} isVisible={isVisible}>
                   <div
-                    className="d-flex align-items-center justify-content-start bg-white rounded p-3 shadow-sm border border-gray-200 w-100 client-card"
+                    className="d-flex align-items-center justify-content-start bg-white rounded-3 p-0 overflow-hidden shadow-sm border border-gray-200 w-100 client-card"
                     style={{
                       transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                       cursor: 'pointer',
                       animation: `fadeInUp 0.8s ease-out ${(index * 100) + 200}ms forwards`,
-                      opacity: 0
+                      opacity: 0,
+                      minHeight: '80px'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'translateX(10px) scale(1.02)';
@@ -428,12 +429,22 @@ const ClientFeaturesSection = ({ clients }) => {
                       e.currentTarget.style.backgroundColor = '#ffffff';
                     }}
                   >
+                    {client.image && (
+                      <div className="flex-shrink-0" style={{ width: '90px', height: '80px' }}>
+                        <img
+                          src={client.image}
+                          alt={client.name}
+                          className="w-100 h-100"
+                          style={{ objectFit: 'cover' }}
+                        />
+                      </div>
+                    )}
                     <div 
-                      className="rounded-circle bg-black d-flex align-items-center justify-content-center me-3" 
+                      className="rounded-circle bg-black d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
                       style={{ 
-                        width: '50px', 
-                        height: '50px', 
-                        flexShrink: 0,
+                        width: '44px', 
+                        height: '44px',
+                        marginLeft: client.image ? '0.75rem' : '1rem',
                         transition: 'all 0.3s ease'
                       }}
                       onMouseEnter={(e) => {
@@ -447,12 +458,7 @@ const ClientFeaturesSection = ({ clients }) => {
                     >
                       {client.icon}
                     </div>
-                    <h3 
-                      className="h6 fw-bold text-gray-900 mb-0"
-                      style={{
-                        transition: 'color 0.3s ease'
-                      }}
-                    >
+                    <h3 className="h6 fw-bold text-gray-900 mb-0 py-3 pe-3" style={{ transition: 'color 0.3s ease' }}>
                       {client.name}
                     </h3>
                   </div>
@@ -466,428 +472,138 @@ const ClientFeaturesSection = ({ clients }) => {
   );
 };
 
-// Testimonial Section Component with Animations and Hover Effects
-const TestimonialSection = ({ testimonials, activeTestimonial, setActiveTestimonial }) => {
-  const [ref, isVisible] = useIntersectionObserver(true);
+// Testimonial Section — header only (testimonial cards removed)
+const TestimonialSection = () => {
+  const [isVisible] = useIntersectionObserver(true);
 
   return (
     <div className='container'>
       <div className="mx-auto px-3">
-        {/* Section Header */}
         <ScrollAnimatedCard delay={0} isVisible={isVisible}>
           <div className="text-center mb-4 mb-md-5 mt-2">
             <h3 className='display-6 display-md-5 fw-bold mb-3 text-primary'>
               Loved by HR Teams Worldwide
             </h3>
             <p className="text-base text-md-xl text-success">
-              See what our customers have to say
+              Trusted by 500+ hiring teams
             </p>
           </div>
         </ScrollAnimatedCard>
-
-        {/* Testimonial Cards */}
-        <div ref={ref} className="position-relative" style={{ overflow: "hidden" }}>
-          <div
-            className="d-flex transition-transform"
-            style={{
-              transform: `translateX(-${activeTestimonial * 100}%)`,
-              transition: 'transform 0.5s ease-in-out'
-            }}
-          >
-            {testimonials.map((testimonial, idx) => (
-              <div key={idx} className="d-flex justify-content-center px-2 px-md-4" style={{ minWidth: "100%" }}>
-                <ScrollAnimatedCard delay={idx * 100} isVisible={isVisible}>
-                  <div 
-                    className="bg-white rounded-3 shadow p-3 p-md-4 w-100 testimonial-card" 
-                    style={{ 
-                      maxWidth: "720px",
-                      transition: 'all 0.3s ease',
-                      transform: 'translateY(0)',
-                      animation: `fadeInUp 0.8s ease-out ${idx * 100}ms forwards`,
-                      opacity: 0
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-10px) scale(1.02)';
-                      e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.15)';
-                      e.currentTarget.style.border = '2px solid #3B82F6';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                      e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1)';
-                      e.currentTarget.style.border = 'none';
-                    }}
-                  >
-                    {/* Rating Stars (top-left) */}
-                    <div 
-                      className="d-flex mb-3"
-                      style={{
-                        transition: 'all 0.3s ease'
-                      }}
-                    >
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <div key={i} style={{ transition: 'all 0.3s ease' }}>
-                          <Star size={18} color="#FBBF24" fill="#FBBF24" className="me-1" />
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Feedback */}
-                    <p 
-                      className="fs-6 fs-md-5 mb-4 fw-medium"
-                      style={{
-                        transition: 'color 0.3s ease'
-                      }}
-                    >
-                      "{testimonial.feedback}"
-                    </p>
-
-                    {/* Author Info */}
-                    <div 
-                      className="d-flex align-items-center"
-                      style={{
-                        transition: 'all 0.3s ease'
-                      }}
-                    >
-                      <div
-                        className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold me-3"
-                        style={{ 
-                          width: "56px", 
-                          height: "56px", 
-                          background: "linear-gradient(135deg, #3B82F6 0%, #A855F7 100%)",
-                          transition: 'all 0.3s ease',
-                          animation: 'scaleIn 0.8s ease-out forwards'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'scale(1.1) rotate(5deg)';
-                          e.currentTarget.style.background = "linear-gradient(135deg, #EC4899 0%, #F59E0B 100%)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
-                          e.currentTarget.style.background = "linear-gradient(135deg, #3B82F6 0%, #A855F7 100%)";
-                        }}
-                      >
-                        {testimonial.photo}
-                      </div>
-                      <div>
-                        <div className="fw-bold text-dark">{testimonial.name}</div>
-                        <div className="text-muted small">{testimonial.role} at {testimonial.company}</div>
-                      </div>
-                    </div>
-                  </div>
-                </ScrollAnimatedCard>
-              </div>
-            ))}
-          </div>
-
-          {/* Dots Navigation */}
-          <ScrollAnimatedCard delay={400} isVisible={isVisible}>
-            <div className="d-flex justify-content-center mt-4 gap-2">
-              {testimonials.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveTestimonial(idx)}
-                  className={`rounded-pill transition-all ${idx === activeTestimonial
-                      ? "bg-primary"
-                      : "bg-light"
-                    }`}
-                  style={{ 
-                    width: idx === activeTestimonial ? '32px' : '12px', 
-                    height: '12px', 
-                    border: 'none',
-                    transition: 'all 0.3s ease',
-                    animation: `fadeInUp 0.8s ease-out ${(idx * 100) + 400}ms forwards`,
-                    opacity: 0
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'scale(1.2)';
-                    e.currentTarget.style.backgroundColor = '#3B82F6';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'scale(1)';
-                  }}
-                />
-              ))}
-            </div>
-          </ScrollAnimatedCard>
-        </div>
       </div>
     </div>
   );
 };
 
-// What We Offer Section Component with Row-by-Row Scroll Animations
+// Shared 4 platform topics — hero carousel and What We Offer (all in one platform)
+const PLATFORM_TOPICS = [
+  {
+    id: 'ai-recruiter',
+    title: 'AI Recruiter & HR Automation',
+    subtitle: 'Source, screen, and hire faster with AI. Automate recruiting and focus on great conversations.',
+    badge: '✨ AI Talent Platform',
+    points: ['Smart resume screening & shortlisting', 'Automated interview scheduling', 'AI-powered candidate matching', 'Pipeline from job post to offer'],
+    bg: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1920&q=80',
+    color: '#3B82F6',
+    bgLight: '#EFF6FF',
+    icon: 'Bot'
+  },
+  {
+    id: 'crm',
+    title: 'CRM',
+    subtitle: 'Manage leads, deals, and customer relationships in one powerful platform.',
+    badge: '📊 Customer Relations',
+    points: ['Leads, contacts & deal pipeline', 'Activity tracking & follow-ups', 'Sales forecasting & reports', 'Integrations with email & calendar'],
+    bg: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=1920&q=80',
+    color: '#10B981',
+    bgLight: '#ECFDF5',
+    icon: 'BarChart3'
+  },
+  {
+    id: 'productivity',
+    title: 'Productivity',
+    subtitle: 'Boost team productivity with smart workflows and real-time collaboration.',
+    badge: '⚡ Work Smarter',
+    points: ['Tasks, projects & deadlines', 'Team dashboards & visibility', 'Workflow automation', 'Docs and knowledge base'],
+    bg: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920&q=80',
+    color: '#F59E0B',
+    bgLight: '#FFFBEB',
+    icon: 'Zap'
+  },
+  {
+    id: 'hrms',
+    title: 'HRMS',
+    subtitle: 'Complete HR management: payroll, attendance, leave, and employee lifecycle.',
+    badge: '👥 Human Resources',
+    points: ['Payroll & compliance', 'Attendance & leave management', 'Onboarding & offboarding', 'Performance & appraisals'],
+    bg: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?w=1920&q=80',
+    color: '#EC4899',
+    bgLight: '#FDF2F8',
+    icon: 'FileText'
+  }
+];
+
+// What We Offer — 4 topics: AI Recruiter & HR Automation, CRM, Productivity, HRMS (all in one)
 const WhatWeOfferSection = () => {
   const [ref, isVisible] = useIntersectionObserver(true);
+  const iconMap = { Bot, Zap, FileText, BarChart3 };
 
   return (
-    <section ref={ref} className='py-3 py-md-5'>
+    <section ref={ref} id='features' className='py-3 py-md-5'>
       <div className='container px-3'>
-        {/* Section Header */}
         <ScrollAnimatedCard delay={0} isVisible={isVisible}>
           <div className='text-center mb-4 mb-md-5'>
-            <span className='badge bg-primary-subtle text-primary mb-3 px-3 py-2'>Our Services</span>
+            <span className='badge bg-primary-subtle text-primary mb-3 px-3 py-2'>Our Platform</span>
             <h3 className='display-6 display-md-5 fw-bold mb-3'>
               <span style={{ color: '#3B82F6' }}>What</span> <span style={{ color: '#EC4899' }}>We</span> <span style={{ color: '#3B82F6' }}>Offer</span>
             </h3>
-            <p className='lead text-success mx-auto px-2' style={{ maxWidth: '600px' }}>
-              At CloudFlow, we prioritize innovation, agility, and customer-centricity. Our solutions are designed to provide scalable, secure, and efficient AI services tailored to your business needs.
+            <p className='lead text-dark mx-auto px-2' style={{ maxWidth: '600px' }}>
+              All in one: AI Recruiter & HR Automation, CRM, Productivity, and HRMS. Built for hiring teams, sales, and HR.
             </p>
           </div>
         </ScrollAnimatedCard>
 
-        {/* Service Cards Grid - Original Layout with Row-by-Row Animation */}
         <div className='row g-3 g-md-4'>
           <style>{`
-            .service-card {
-              position: relative;
-              overflow: hidden;
-              transition: all 0.3s ease;
-            }
-            .service-card::after {
-              content: '';
-              position: absolute;
-              bottom: 0;
-              left: -100%;
-              width: 100%;
-              height: 4px;
-              background: currentColor;
-              transition: left 0.5s ease;
-            }
-            .service-card:hover::after {
-              left: 0;
-            }
-            .service-card-purple::after {
-              background: #7C3AED;
-            }
-            .service-card-orange::after {
-              background: #F97316;
-            }
-            .service-card-pink::after {
-              background: #EC4899;
-            }
-            .service-card-cyan::after {
-              background: #0891B2;
-            }
-            .service-card-blue::after {
-              background: #3B82F6;
-            }
-            .service-card-red::after {
-              background: #DC2626;
-            }
-            .service-card:hover {
-              transform: translateY(-5px);
-            }
+            .platform-card { position: relative; overflow: hidden; transition: all 0.3s ease; }
+            .platform-card::after { content: ''; position: absolute; bottom: 0; left: -100%; width: 100%; height: 4px; background: var(--accent, #3B82F6); transition: left 0.5s ease; }
+            .platform-card:hover::after { left: 0; }
+            .platform-card:hover { transform: translateY(-5px); }
           `}</style>
-
-          {/* Card 1 - Large */}
-          <div className='col-12 col-lg-7 col-md-6'>
-            <ScrollAnimatedCard delay={100} isVisible={isVisible}>
-              <div className='card border-0 shadow-lg h-100 service-card service-card-purple' style={{ backgroundColor: '#f0f4ff' }}>
-                <div className='card-body p-3 p-md-5'>
-                  <div className='d-flex align-items-start justify-content-between mb-4'>
-                    <div className='flex-grow-1'>
-                      <div className='rounded-3 d-inline-block p-3 p-md-4 mb-3 mb-md-4 rounded-circle' style={{ backgroundColor: '#9f2222ff' }}>
-                        {/* <i className='ri-layout-grid-fill text-white fs-4'></i> */}
-                        <FileText size={28} className="d-md-none" />
-                        <FileText size={36} color="white" className="d-none d-md-block" />
-                      </div>
-                      <h5 className='fw-bold mb-3 fs-6' style={{ color: "#EC4899" }}>Custom AI Agent Development</h5>
-                      <p className='text-muted mb-0 small' style={{ fontSize: '14px', lineHeight: '1.6' }}>Build intelligent agents tailored to your business needs with advanced machine learning capabilities and cutting-edge AI technologies.</p>
-                    </div>
-                  </div>
-                  <div className='d-flex flex-column flex-md-row justify-content-between align-items-start mt-4 mt-md-5 pt-3 pt-md-4 border-top gap-3'>
-                    <div className='d-flex gap-4'>
-                      <div>
-                        <p className='text-muted small mb-1'>Success Rate</p>
-                        <h6 className='fw-bold text-primary mb-0'>98%</h6>
-                      </div>
-                      <div>
-                        <p className='text-muted small mb-1'>Delivery Time</p>
-                        <h6 className='fw-bold text-primary mb-0'>4-6 weeks</h6>
-                      </div>
-                    </div>
-                    <div className='d-flex gap-2 flex-wrap'>
-                      <span className='badge bg-primary-subtle text-primary small'>Custom Architecture</span>
-                      <span className='badge bg-primary-subtle text-primary small'>Scalable Solutions</span>
-                      <span className='badge bg-primary-subtle text-primary small'>24/7 Support</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </ScrollAnimatedCard>
-          </div>
-
-          {/* Card 2 - Small with Most Popular Badge */}
-          <div className='col-12 col-lg-5 col-md-6'>
-            <ScrollAnimatedCard delay={200} isVisible={isVisible}>
-              <div className='position-relative h-100'>
-              
-                <div className='card border-0 shadow-lg h-100 service-card service-card-cyan' style={{ backgroundColor: '#f0fdf4', marginTop: '15px' }}>
-                  <div className='card-body p-3 p-md-4'>
-                      <div className='d-flex align-items-start justify-content-between mb-3'>
-                      <div className='flex-grow-1'>
-                        <div className='rounded-2 d-inline-block p-2 p-md-3 mb-3 rounded-circle' style={{ backgroundColor: '#10B981' }}>
-                          <Zap size={28} className="d-md-none" />
-                          <Zap size={36} color="white" className="d-none d-md-block" />
+          {PLATFORM_TOPICS.map((topic, index) => {
+            const Icon = iconMap[topic.icon];
+            return (
+              <div key={topic.id} className='col-12 col-md-6 col-lg-6'>
+                <ScrollAnimatedCard delay={100 + index * 100} isVisible={isVisible}>
+                  <div
+                    className='card border-0 shadow-lg h-100 platform-card'
+                    style={{ backgroundColor: topic.bgLight, ['--accent']: topic.color }}
+                  >
+                    <div className='card-body p-3 p-md-4'>
+                      <div className='d-flex align-items-start mb-3'>
+                        <div className='rounded-2 d-inline-block p-2 p-md-3 mb-2 rounded-circle' style={{ backgroundColor: topic.color }}>
+                          {Icon && <Icon size={28} color="white" className="d-md-none" />}
+                          {Icon && <Icon size={36} color="white" className="d-none d-md-block" />}
                         </div>
-                        <h5 className='fw-bold mb-3 text-primary fs-6'>Workflow Integration & Automation</h5>
-                        <p className='text-muted small mb-0'>Streamline operations by integrating AI into existing workflows and automating repetitive tasks for maximum efficiency.</p>
-                      </div>
-                    </div>
-                    <div className='mt-4 pt-3 border-top'>
-                      <div className='mb-3'>
-                        <div className='d-flex align-items-center justify-content-between mb-2'>
-                          <p className='text-muted small mb-0'>Efficiency Gain</p>
-                          <h6 className='fw-bold text-success mb-0'>75%</h6>
+                        <div className='ps-2 flex-grow-1'>
+                          <span className='badge mb-2' style={{ backgroundColor: topic.bgLight, color: topic.color }}>{topic.badge}</span>
+                          <h5 className='fw-bold mb-2 fs-6' style={{ color: topic.color }}>{topic.title}</h5>
+                          <p className='text-muted small mb-0' style={{ lineHeight: '1.5' }}>{topic.subtitle}</p>
                         </div>
                       </div>
-                      <div className='d-flex align-items-center gap-2 mb-3'>
-                        <i className='ri-check-circle-fill text-success'></i>
-                        <span className='text-success small fw-medium'>Automation Ready</span>
-                      </div>
+                      <ul className='list-unstyled small mb-0 pt-3 border-top'>
+                        {topic.points.map((point, i) => (
+                          <li key={i} className='d-flex align-items-center gap-2 mb-2'>
+                            <span style={{ color: topic.color }}>✓</span>
+                            <span className='text-muted'>{point}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
-                </div>
+                </ScrollAnimatedCard>
               </div>
-            </ScrollAnimatedCard>
-          </div>
-
-          {/* Card 3 - Small */}
-          <div className='col-12 col-lg-5 col-md-6'>
-            <ScrollAnimatedCard delay={300} isVisible={isVisible}>
-              <div className='card border-0 shadow-lg h-100 service-card service-card-orange' style={{ backgroundColor: '#fffbf0' }}>
-                <div className='card-body p-3 p-md-4'>
-                  <div className='d-flex align-items-start justify-content-between mb-3'>
-                    <div className='flex-grow-1'>
-                      <div className='rounded-2 d-inline-block p-2 p-md-3 mb-3 rounded-circle' style={{ backgroundColor: '#F97316' }}>
-                        <Code size={28} className="d-md-none" />
-                        <Code size={36} color="white" className="d-none d-md-block" />
-                      </div>
-                      <h5 className='fw-bold text-success mb-2 fs-6'>MVP's, Prototypes, and Pilot Projects</h5>
-                      <p className='text-muted small mb-0'>Rapid development of proof-of-concepts to validate ideas and accelerate time-to-market with agile methodologies.</p>
-                    </div>
-                  </div>
-                  <div className='mt-4 pt-3 border-top'>
-                    <div className='p-3 rounded-2 mb-3' style={{ backgroundColor: '#fef3c7' }}>
-                      <p className='text-muted small mb-1'>Launch Time</p>
-                      <h6 className='fw-bold' style={{ color: '#F97316' }}>2-3 weeks</h6>
-                    </div>
-                    <div className='d-flex gap-2 flex-wrap'>
-                      <span className='badge' style={{ backgroundColor: '#fed7aa', color: '#92400e' }}>Rapid Prototyping</span>
-                      <span className='badge' style={{ backgroundColor: '#fed7aa', color: '#92400e' }}>Market Validation</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </ScrollAnimatedCard>
-          </div>
-
-          {/* Card 4 - Large with 24/7 Available */}
-          <div className='col-12 col-lg-7 col-md-6'>
-            <ScrollAnimatedCard delay={400} isVisible={isVisible}>
-              <div className='position-relative h-100'>
-               
-                <div className='card border-0 shadow-lg h-100 service-card service-card-pink' style={{ backgroundColor: '#f5f0ff' }}>
-                  <div className='card-body p-3 p-md-5'>
-                    <div className='d-flex align-items-start justify-content-between mb-4'>
-                      <div className='flex-grow-1'>
-                        <div className='rounded-3 d-inline-block p-3 p-md-4 mb-3 mb-md-4 rounded-circle' style={{ backgroundColor: '#EC4899' }}>
-                          <Bot size={28} className="d-md-none" />
-                          <Bot size={36} color="white" className="d-none d-md-block" />
-                        </div>
-                        <h5 className='fw-bold text-danger mb-3 fs-6'>Conversational AI & Virtual Assistants</h5>
-                        <p className='text-muted mb-0' style={{ fontSize: '14px', lineHeight: '1.6' }}>Deploy intelligent chatbots and voice assistants to enhance customer experience and provide 24/7 support.</p>
-                      </div>
-                    </div>
-                    <div className='d-flex flex-column flex-md-row justify-content-between align-items-start mt-4 mt-md-5 pt-3 pt-md-4 border-top gap-3'>
-                      <div className='d-flex gap-4'>
-                        <div>
-                          <p className='text-muted small mb-1'>Response Rate</p>
-                          <h6 className='fw-bold text-primary mb-0'>95%</h6>
-                        </div>
-                        <div>
-                          <p className='text-muted small mb-1'>Languages</p>
-                          <h6 className='fw-bold text-primary mb-0'>50+</h6>
-                        </div>
-                        <div>
-                          <p className='text-muted small mb-1'>Availability</p>
-                          <h6 className='fw-bold text-primary mb-0'>24/7</h6>
-                        </div>
-                      </div>
-                      <div className='d-flex gap-2 flex-wrap'>
-                        <span className='badge bg-danger-subtle text-danger small'>Multi-language</span>
-                        <span className='badge bg-danger-subtle text-danger small'>Context Aware</span>
-                        <span className='badge bg-danger-subtle text-danger small'>Learning Capable</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </ScrollAnimatedCard>
-          </div>
-
-          {/* Card 5 */}
-          <div className='col-12 col-lg-6 col-md-6'>
-            <ScrollAnimatedCard delay={500} isVisible={isVisible}>
-              <div className='card border-0 shadow-lg h-100 service-card service-card-blue' style={{ backgroundColor: '#f0f9ff' }}>
-                <div className='card-body p-3 p-md-4'>
-                  <div className='d-flex align-items-start justify-content-between mb-3'>
-                    <div className='flex-grow-1'>
-                      <div className='rounded-2 d-inline-block p-2 p-md-3 mb-3 rounded-circle' style={{ backgroundColor: '#3B82F6' }}>
-                        <BarChart3 size={28} className="d-md-none" />
-                        <BarChart3 size={36} color="white" className="d-none d-md-block" />
-                      </div>
-                      <h5 className='fw-bold text-warning mb-2 fs-6'>Analytics Dashboards & Insights</h5>
-                      <p className='text-muted small mb-0'>Gain actionable insights with comprehensive analytics, real-time visualization, and predictive modeling.</p>
-                    </div>
-                  </div>
-                  <div className='d-flex justify-content-between align-items-center mt-4 pt-3 border-top'>
-                    <div>
-                      <p className='text-muted small mb-1'>Real-time</p>
-                      <h6 className='fw-bold text-dark mb-0'>100%</h6>
-                    </div>
-                    <div className='d-flex gap-1'>
-                      <span className='badge bg-success-subtle text-success small'>Interactive Dashboard</span>
-                      <span className='badge bg-primary-subtle text-primary small'>Predictive Analysis</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </ScrollAnimatedCard>
-          </div>
-
-          {/* Card 6 */}
-          <div className='col-12 col-lg-6 col-md-6'>
-            <ScrollAnimatedCard delay={600} isVisible={isVisible}>
-              <div className='card border-0 shadow-lg h-100 service-card service-card-red' style={{ backgroundColor: '#fef2f2' }}>
-                <div className='card-body p-3 p-md-4'>
-                  <div className='d-flex align-items-start justify-content-between mb-3'>
-                    <div className='flex-grow-1'>
-                      <div className='rounded-2 d-inline-block p-2 p-md-3 mb-3 rounded-circle' style={{ backgroundColor: '#DC2626' }}>
-                        <ShieldCheck size={28} className="d-md-none" />
-                        <ShieldCheck size={36} color="white" className="d-none d-md-block" />
-                      </div>
-                      <h5 className='fw-bold text-secondary mb-2 fs-6'>Enterprise Grade Security & Compliance</h5>
-                      <p className='text-muted small mb-0'>Ensure data protection with industry-compliant security, SSL/TLS encryption, and audit trails.</p>
-                    </div>
-                  </div>
-                  <div className='d-flex justify-content-between align-items-center mt-4 pt-3 border-top'>
-                    <div>
-                      <p className='text-muted small mb-1'>Uptime</p>
-                      <h6 className='fw-bold text-dark mb-0'>99.9%</h6>
-                    </div>
-                    <div className='d-flex gap-1 flex-wrap'>
-                      <span className='badge bg-danger-subtle text-danger small'>GDPR Ready</span>
-                      <span className='badge bg-secondary-subtle text-secondary small'>ISO 27 Compliant</span>
-                      <span className='badge bg-dark-subtle text-dark small'>Data Trail</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </ScrollAnimatedCard>
-          </div>
-
-
+            );
+          })}
         </div>
       </div>
     </section>
@@ -925,19 +641,6 @@ const Landing = () => {
   const [openFAQ, setOpenFAQ] = React.useState(null);
   const navigate = useNavigate();
   const [isYearly, setIsYearly] = useState(false);
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
-
-
-
-
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [testimonials.length]);
-
 
   useEffect(() => {
     // Super Admins should not see pricing page, redirect them directly to Super Admin Panel
@@ -1025,60 +728,10 @@ const Landing = () => {
 
 
   const clients = [
-    {
-      name: 'Smart Screening',
-      icon: (
-        <svg viewBox="0 0 40 40" fill="none" className="w-10 h-10">
-          <path d="M5 10 L20 5 L35 10 L20 35 Z" fill="#EC4899" />
-        </svg>
-      )
-    },
-    {
-      name: 'Automated Interviewing',
-      icon: (
-        <svg viewBox="0 0 40 40" fill="none" className="w-10 h-10">
-          <rect x="8" y="8" width="4" height="24" fill="#0dd72bff" />
-          <rect x="14" y="12" width="4" height="20" fill="#05ed4bff" />
-          <rect x="20" y="6" width="4" height="26" fill="#13ef4aff" />
-          <rect x="26" y="14" width="4" height="18" fill="#10ec43ff" />
-        </svg>
-      )
-    },
-    {
-      name: 'HR Analytics',
-      icon: (
-        <svg viewBox="0 0 40 40" fill="none" className="w-10 h-10">
-          <path d="M8 12 L14 28 L20 8 L26 28 L32 12" stroke="#3B82F6" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      )
-    },
-    {
-      name: 'AI Screening',
-      icon: (
-        <svg viewBox="0 0 40 40" fill="none" className="w-10 h-10">
-          <circle cx="20" cy="20" r="12" stroke="#3B82F6" strokeWidth="3" fill="none" />
-          <path d="M20 12 L20 20 L26 26" stroke="#3B82F6" strokeWidth="3" strokeLinecap="round" />
-        </svg>
-      )
-    },
-    {
-      name: 'Collaboration',
-      icon: (
-        <svg viewBox="0 0 40 40" fill="none" className="w-10 h-10">
-          <path d="M8 20 L15 12 L22 18 L32 8" stroke="#DC2626" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M8 28 L15 22 L22 26 L32 18" stroke="#DC2626" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      )
-    },
-    {
-      name: 'Visualy Analytics',
-      icon: (
-        <svg viewBox="0 0 40 40" fill="none" className="w-10 h-10">
-          <path d="M10 30 L20 10 L30 30 Z" stroke="#F59E0B" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          <circle cx="20" cy="22" r="3" fill="#F59E0B" />
-        </svg>
-      )
-    }
+    { name: 'AI Recruiter & HR Automation', image: PLATFORM_TOPICS[0].bg, icon: <svg viewBox="0 0 40 40" fill="none" className="w-10 h-10"><path d="M5 10 L20 5 L35 10 L20 35 Z" fill="#3B82F6" /></svg> },
+    { name: 'CRM', image: PLATFORM_TOPICS[1].bg, icon: <svg viewBox="0 0 40 40" fill="none" className="w-10 h-10"><path d="M8 12 L14 28 L20 8 L26 28 L32 12" stroke="#10B981" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+    { name: 'Productivity', image: PLATFORM_TOPICS[2].bg, icon: <svg viewBox="0 0 40 40" fill="none" className="w-10 h-10"><path d="M8 20 L15 12 L22 18 L32 8" stroke="#F59E0B" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" /><path d="M8 28 L15 22 L22 26 L32 18" stroke="#F59E0B" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+    { name: 'HRMS', image: PLATFORM_TOPICS[3].bg, icon: <svg viewBox="0 0 40 40" fill="none" className="w-10 h-10"><circle cx="20" cy="20" r="12" stroke="#EC4899" strokeWidth="3" fill="none" /><path d="M20 12 L20 20 L26 26" stroke="#EC4899" strokeWidth="3" strokeLinecap="round" /></svg> }
   ];
   const toggleFAQ = (index) => {
     setOpenFAQ(openFAQ === index ? null : index);
@@ -1195,89 +848,89 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* Hero Section with Staggered Animations */}
-      <section
-        className='py-5 px-3 px-md-0'
-        style={{
-          backgroundImage: 'url(https://sana.flatheme.net/assets/images/business-bg.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          position: 'relative',
-          marginBottom: '20px'
-        }}
-      >
-        {/* Overlay */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.4)',
-            zIndex: 1,
-            borderRadius: '20px'
-          }}
-        ></div>
-
-        <div className='container position-relative' style={{ zIndex: 2 }}>
-          <div className='row align-items-center justify-content-center'>
-            <div className='col-lg-8 text-center text-white'>
-              {/* Badge - Appears First (0ms) */}
-              <AnimatedSection delay={0}>
-                <div className='mb-4'>
-                  <span 
-                    className='badge bg-primary-50 text-primary-600 border px-3 py-2'
-                    style={{
-                      transition: 'all 0.3s ease',
-                      cursor: 'default'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'scale(1.1)';
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'scale(1)';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
-                  >
-                    ✨ AI Talent Platform
-                  </span>
+      {/* Hero Carousel — 4 topics: AI Recruiter & HR Automation, CRM, Productivity, HRMS */}
+      <section className='hero-carousel-wrapper py-0 px-3 px-md-0 mb-4' style={{ marginBottom: '20px' }}>
+        <style>{`
+          .hero-carousel-wrapper .slick-slider { overflow: hidden; border-radius: 20px; }
+          .hero-carousel-wrapper .slick-list, .hero-carousel-wrapper .slick-track { height: 100%; }
+          .hero-carousel-wrapper .slick-slide > div { height: 100%; }
+          .hero-carousel-wrapper .hero-slide {
+            min-height: 560px;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+          }
+          .hero-carousel-wrapper .hero-slide-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.45);
+            border-radius: 20px;
+          }
+          .hero-carousel-wrapper .hero-slide-content { position: relative; z-index: 2; width: 100%; }
+          .hero-carousel-wrapper .slick-prev, .hero-carousel-wrapper .slick-next { z-index: 10; }
+          .hero-carousel-wrapper .slick-prev { left: 16px; }
+          .hero-carousel-wrapper .slick-next { right: 16px; }
+          .hero-carousel-wrapper .slick-dots { bottom: 20px; }
+          .hero-carousel-wrapper .slick-dots li button:before { color: rgba(255,255,255,0.8); font-size: 10px; }
+          .hero-carousel-wrapper .slick-dots li.slick-active button:before { color: #fff; }
+          @media (min-width: 768px) { .hero-carousel-wrapper .hero-slide { min-height: 720px; } }
+          .hero-carousel-wrapper .hero-points {
+            list-style: none; padding: 0; margin: 0 0 1.25rem 0;
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem 1.25rem;
+          }
+          .hero-carousel-wrapper .hero-points li {
+            color: rgba(255,255,255,0.9); font-size: 0.9rem;
+            display: flex; align-items: center; gap: 0.35rem;
+          }
+          .hero-carousel-wrapper .hero-points li::before { content: "✓"; color: #4ade80; font-weight: bold; }
+        `}</style>
+        <Slider
+          dots
+          infinite
+          speed={600}
+          slidesToShow={1}
+          slidesToScroll={1}
+          autoplay
+          autoplaySpeed={2000}
+          pauseOnHover
+          arrows
+          fade
+          adaptiveHeight
+        >
+          {PLATFORM_TOPICS.map((slide, idx) => (
+            <div key={slide.id}>
+              <div className='hero-slide' style={{ backgroundImage: `url(${slide.bg})` }}>
+                <div className='hero-slide-overlay' />
+                <div className='container hero-slide-content'>
+                  <div className='row align-items-center justify-content-center'>
+                    <div className='col-lg-8 text-center text-white'>
+                      <div className='mb-3'>
+                        <span className='badge bg-primary bg-opacity-90 text-white border-0 px-3 py-2'>{slide.badge}</span>
+                      </div>
+                      <h1 className='display-5 display-md-4 fw-bold mb-3 px-3'>{slide.title}</h1>
+                      <p className='lead mb-3 px-3 text-white-50'>{slide.subtitle}</p>
+                      <ul className='hero-points px-3 mb-4'>
+                        {slide.points.map((point, i) => (
+                          <li key={i}>{point}</li>
+                        ))}
+                      </ul>
+                      <div className='d-flex flex-column flex-sm-row justify-content-center gap-3 px-3'>
+                        <Link to='/login' className='btn btn-primary btn-sm btn-md-lg px-4 btn-hover-lift'>Get Started</Link>
+                        <Link to='/pricing' className='btn btn-outline-light btn-sm btn-md-lg px-4 btn-hover-lift'>View Pricing</Link>
+                      </div>
+                      <div className='d-flex justify-content-center text-white-50 mt-4 px-3'>
+                        <span className='small'>✅ Trusted by 500+ hiring teams</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </AnimatedSection>
-
-              {/* Title - Appears Second (400ms) */}
-              <AnimatedSection delay={400}>
-                <h1 className='display-5 display-md-4 fw-bold mb-4 px-3'>Source, screen, and hire faster with AI</h1>
-              </AnimatedSection>
-
-              {/* Paragraph - Appears Third (800ms) */}
-              <AnimatedSection delay={800}>
-                <p className='lead mb-5 px-3'>
-                  Automate repetitive recruiting tasks and focus on great conversations.
-                  Our recruiter dashboard gives you full visibility from job posting to offer.
-                </p>
-              </AnimatedSection>
-
-              {/* Buttons - Appears Fourth (1200ms) */}
-              <AnimatedSection delay={1200}>
-                <div className='d-flex flex-column flex-sm-row justify-content-center gap-3 mb-5 px-3'>
-                  <Link to='/login' className='btn btn-primary btn-sm btn-md-lg px-4 btn-hover-lift'> Get Started</Link>
-                  <Link to='/pricing' className='btn btn-outline-light btn-sm btn-md-lg px-4 btn-hover-lift'>View Pricing</Link>
-                </div>
-              </AnimatedSection>
-
-              {/* Trusted By - Appears Fifth (1600ms) */}
-              <AnimatedSection delay={1600}>
-                <div className='d-flex justify-content-center align-items-center gap-3 text-white-50 px-3'>
-                  <img src='assets/images/users/user1.png' alt='users' className='w-32-px h-38-px' />
-                  <span className='small'>✅ Trusted by 500+ hiring teams</span>
-                </div>
-              </AnimatedSection>
+              </div>
             </div>
-          </div>
-        </div>
+          ))}
+        </Slider>
       </section>
 
       {/* How it works */}
@@ -1285,27 +938,17 @@ const Landing = () => {
         <HowItWorksSection />
       </section>
 
-
-      {/* What We Offer Section */}
       <WhatWeOfferSection />
 
-
-      {/*  Testimonials */}
-
-      <section className='px-3 px-md-5'>
+      <section id='platform-features' className='px-3 px-md-5'>
         <ClientFeaturesSection clients={clients} />
       </section>
 
-      {/* Scrolled Testimonials */}
-
       <section className='px-3 px-md-5 py-3'>
-        <TestimonialSection testimonials={testimonials} activeTestimonial={activeTestimonial} setActiveTestimonial={setActiveTestimonial} />
+        <TestimonialSection />
       </section>
 
-
-
-
-      {/* About Us Section */}
+      {/* About Us */}
       <section className='py-3 py-md-5'>
         <ScrollAnimatedCard delay={0} isVisible={true}>
           <div
@@ -1353,7 +996,7 @@ const Landing = () => {
                       >
                         <img
                           className='rounded-3 shadow-sm about-image'
-                          src="assets\images\landing1.png"
+                          src="/assets/images/landing1.png"
                           style={{
                             width: "250px",
                             transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -1448,7 +1091,7 @@ const Landing = () => {
                         >
                           <img
                             className='rounded-3 shadow-sm about-image'
-                            src='assets\images\landing2.png'
+                            src="/assets/images/landing2.png"
                             style={{
                               width: "250px",
                               transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -1487,7 +1130,7 @@ const Landing = () => {
                         e.currentTarget.style.color = 'inherit';
                       }}
                     >
-                      Satisfied customer is the best business strategy of all
+                      All in one: AI Recruiter & HR Automation, CRM, Productivity, HRMS
                     </h3>
                     <p
                       className='text-secondary-light mb-4 about-description'
@@ -1497,7 +1140,7 @@ const Landing = () => {
                         opacity: 0
                       }}
                     >
-                      Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestiae modi dicta ea autem harum commodi quo obcaecati accusantium
+                      One platform for recruiting, sales, productivity, and HR. Hire, sell, and manage people from a single place.
                     </p>
                     <button
                       type="button"
@@ -1537,7 +1180,7 @@ const Landing = () => {
 
       {/* Testimonials */}
       <section className='container px-3 pb-5'>
-       <h3 className='display-6 display-md-5 fw-bold mb-3 mb-md-4 text-primary text-center'>HR Automation</h3>
+       <h3 className='display-6 display-md-5 fw-bold mb-3 mb-md-4 text-primary text-center'>AI Recruiter, CRM, Productivity & HRMS</h3>
 
        
 

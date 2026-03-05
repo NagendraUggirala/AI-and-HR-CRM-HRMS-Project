@@ -881,15 +881,15 @@ const JobsListPage = () => {
                
               >
 
-                <div className="modal-content">
-                  <div className="modal-header align-items-center">
+                <div className="modal-content" >
+                  <div className="modal-header align-items-center" style={{backgroundColor:"white", width:"35vw"}}>
                     <div>
                       <p className="text-uppercase text-muted small mb-1">Job Details</p>
                       <h5 className="modal-title mb-0">{selectedJob.fullData?.title || selectedJob.title}</h5>
                     </div>
                     <button type="button" className="btn-close" onClick={() => setShowJobDetailModal(false)}></button>
                   </div>
-                  <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto', maxWidth: "90%" }}>
+                  <div className="modal-body" style={{backgroundColor:"white", width:"35vw"}}>
                     <div className="mb-4 pb-3 border-bottom">
                       <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
                         <span className={`badge ${modalStatusClass}`}>{selectedJob.status || 'Status not set'}</span>
@@ -977,7 +977,7 @@ const JobsListPage = () => {
                       </div>
                     )}
                   </div>
-                  <div className="modal-footer">
+                  <div className="modal-footer" style={{backgroundColor:"white", width:"35vw"}}>
                     <button type="button" className="btn btn-secondary" onClick={() => setShowJobDetailModal(false)}>
                       Close
                     </button>

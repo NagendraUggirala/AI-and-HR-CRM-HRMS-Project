@@ -3476,7 +3476,7 @@ const handleEditEmployee = (employee) => {
 </button>
                 <button
                   onClick={exportToCSV}
-                  className="btn btn-primary d-flex align-items-center"
+                  className="allButtonsExport"
                 >
                   <Icon icon="heroicons:document-arrow-down" className="me-2" />
                   Export CSV

@@ -42,3 +42,11 @@
   max-width: 1400px;   /* prevent ultra-wide stretching */
 }
 
+/* button */
+
+.allButtonsExport{
+  background-color: rgb(41, 178, 41);
+  height: 40px;
+  border-radius: 10px;
+  
+}

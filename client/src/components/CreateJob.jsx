@@ -755,8 +755,8 @@ const CreateJob = () => {
       {showPreview && (
         <>
           <div className='modal d-block' tabIndex='-1' role='dialog'>
-            <div className='modal-dialog modal-xl' role='document'>
-              <div className='modal-content'>
+            <div className='modal-dialog modal-xl modal-dialog-centered' role='document'>
+              <div className='modal-content '>
                 <div className='modal-header'>
                   <h6 className='modal-title mb-0'>Job Preview</h6>
                   <button type='button' className='btn-close' aria-label='Close' onClick={() => setShowPreview(false)}></button>

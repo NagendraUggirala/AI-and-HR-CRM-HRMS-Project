@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-
+import "../../App.css";
 const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, onTabChange }) => {
   let [sidebarActive, seSidebarActive] = useState(false);
   let [mobileMenu, setMobileMenu] = useState(false);
@@ -190,47 +190,80 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
   };
 
   // Add CSS to ensure active state is visible
-  const activeStyles = `
-    .sidebar-menu li > a.active-page {
-      background-color: #007bff !important;
-      color: #fff !important;
-      border-radius: 8px;
-    }
-    .sidebar-menu .sidebar-submenu li > a.active-page {
-      background-color: #6c757d !important;
-      color: #fff !important;
-      border-radius: 6px;
-    }
-    .sidebar-menu .dropdown.open > a {
-      background-color: #007bff !important;
-      color: #fff !important;
-      border-radius: 8px;
-    }
-    .sidebar-menu .dropdown > a {
-      background-color: transparent !important;
-      color: inherit !important;
-    }
-    .sidebar-menu .dropdown.has-active-submenu > a {
-      background-color: #007bff !important;
-      color: #fff !important;
-      border-radius: 8px;
-    }
-    .navbar-header.sticky-top {
-      background-color: #fff;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      z-index: 1020;
-    }
-    .sidebar-submenu li {
-      list-style: none !important;
-    }
-    .sidebar-submenu li::before {
-      display: none !important;
-    }
-    .sidebar-submenu {
-      list-style-type: none !important;
-    }
-  `;
+const activeStyles = `
+  .sidebar-menu li > a.active-page {
+    background-color: #007bff !important;
+    color: #fff !important;
+    border-radius: 8px;
+  }
+  /* Add this rule to make icons white in active parent menu items */
+  .sidebar-menu li > a.active-page .menu-icon {
+    color: #fff !important;
+  }
+  
+  .sidebar-menu .sidebar-submenu li > a.active-page {
+    background-color: #6c757d !important;
+    color: #fff !important;
+    border-radius: 6px;
+  }
+  /* Add this rule to make icons white in active submenu items */
+  .sidebar-menu .sidebar-submenu li > a.active-page .icon,
+  .sidebar-menu .sidebar-submenu li > a.active-page .menu-icon {
+    color: #fff !important;
+  }
+  
+  .sidebar-menu .dropdown.open > a {
+    background-color: #007bff !important;
+    color: #fff !important;
+    border-radius: 8px;
+  }
+  /* Add this rule to make icons white when dropdown is open */
+  .sidebar-menu .dropdown.open > a .menu-icon {
+    color: #fff !important;
+  }
+  
+  .sidebar-menu .dropdown > a {
+    background-color: transparent !important;
+    color: inherit !important;
+  }
+  
+  .sidebar-menu .dropdown.has-active-submenu > a {
+    background-color: #007bff !important;
+    color: #fff !important;
+    border-radius: 8px;
+  }
+  /* Add this rule for dropdowns that have active submenu */
+  .sidebar-menu .dropdown.has-active-submenu > a .menu-icon {
+    color: #fff !important;
+  }
 
+  /* Additional rules for the custom styled links */
+  .active-link svg {
+    color: #fff !important;
+  }
+  
+  .active-link .menu-icon {
+    color: #fff !important;
+  }
+  
+  .navbar-header.sticky-top {
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    z-index: 1020;
+  }
+  
+  .sidebar-submenu li {
+    list-style: none !important;
+  }
+  
+  .sidebar-submenu li::before {
+    display: none !important;
+  }
+  
+  .sidebar-submenu {
+    list-style-type: none !important;
+  }
+`;
   return (
     <>
       <style>{activeStyles}</style>
@@ -487,7 +520,8 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
                         navData.isActive ? "active-page" : ""
                       }
                     >
-                      <Icon icon='heroicons:building-office' className='icon text-sm me-2 fs-5' />
+                     <Icon icon="heroicons:funnel" className="icon text-sm me-2 fs-5" />
+
                       Leads
                     </NavLink>
                   </li>
@@ -520,7 +554,8 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
                         navData.isActive ? "active-page" : ""
                       }
                     >
-                      <Icon icon='heroicons:credit-card' className='icon text-sm me-2 fs-5' />
+                      <Icon icon="heroicons:calendar-days" className="icon text-sm me-2 fs-5" />
+
                       Activities
                     </NavLink>
                   </li>
@@ -651,7 +686,7 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
                   </li>
                   <li>
                     <NavLink to='/attendance/daily-punches' className={(navData) => navData.isActive ? "active-page" : ""}>
-                      <Icon icon='heroicons:clock' className='icon text-sm me-2 fs-5' />
+<Icon icon="heroicons:camera" className="icon text-sm me-2 fs-5" />
                       Daily Punches
                     </NavLink>
                   </li>
@@ -778,7 +813,7 @@ const RecruiterDashboardLayout = ({ children, internalNav = false, activeTab, on
                   </li>
                   <li>
                     <NavLink to='/payroll/processing' className={(navData) => navData.isActive ? "active-page" : ""}>
-                      <Icon icon='heroicons:arrow-path' className='icon text-sm me-2 fs-5' />
+                      <Icon icon='heroicons:cog' className='icon text-sm me-2 fs-5' />
                       Payroll Processing
                     </NavLink>
                   </li>
