@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { contactsAPI } from "../../utils/api";
-import { Icon } from '@iconify/react/dist/iconify.js';
 import { BASE_URL } from "../../config/api.config";
 
 const Contacts = () => {
@@ -155,58 +154,6 @@ const Contacts = () => {
   const isAllSelected = contacts.length > 0 && selectedContacts.size === contacts.length;
   const isIndeterminate = selectedContacts.size > 0 && selectedContacts.size < contacts.length;
 
-  const styles = {
-    container: {
-      fontFamily: 'Arial, sans-serif',
-      padding: '20px',
-      backgroundColor: '#f4f6f8',
-    },
-    header: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '20px',
-    },
-    actions: {
-      display: 'flex',
-      gap: '10px',
-    },
-    button: {
-      padding: '6px 12px',
-      backgroundColor: '#3B7080',
-      color: 'white',
-      border: 'none',
-      borderRadius: '6px',  // medium rounded corners
-      cursor: 'pointer',
-    },
-
-    select: {
-      padding: '6px 12px',
-      backgroundColor: '#3B7080',
-      color: 'white',
-      border: 'none',
-      borderRadius: '6px',
-      cursor: 'pointer',
-    },
-    grid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-      gap: '20px',
-    },
-    card: {
-      backgroundColor: 'white',
-      padding: '15px',
-      borderRadius: '8px',
-      boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-      transition: 'transform 0.2s ease',
-      position: 'relative',
-    },
-    logo: {
-      fontSize: '14px',
-      marginBottom: '10px',
-    },
-  };
-
   const handleAddContact = () => {
     setModalType('add');
     resetForm();
@@ -308,10 +255,10 @@ const Contacts = () => {
 
   const handleSave = async (e) => {
     if (e) e.preventDefault();
-
+    
     try {
       setError(null);
-
+      
       // Handle profile photo path - preserve existing photo if no new file selected
       let profilePhotoPath = null;
       if (modalType === 'edit' && selectedContact) {
@@ -334,7 +281,7 @@ const Contacts = () => {
         // For add mode, use formData.img or null
         profilePhotoPath = formData.img || null;
       }
-
+      
       // Prepare contact data for API - map frontend fields to backend schema
       const contactData = {
         // Basic Information
@@ -393,7 +340,7 @@ const Contacts = () => {
       } else if (selectedContact) {
         await contactsAPI.update(selectedContact.id, contactData);
       }
-
+      
       await loadContacts();
       setShowModal(false);
       resetForm();
@@ -468,121 +415,79 @@ const Contacts = () => {
     <div>
 
 
+      
 
-      <div className="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3">
-        {/* Left Section: Title + Description */}
+      <div className="d-flex my-xl-auto justify-content-between flex-wrap">
+        {/* Export Dropdown */}
         <div>
-          <h5 className="text-3xl fw-bold text-dark mb-1 d-flex align-items-center gap-2">
-            <span className="icon-circle text-primary">
-              <Icon icon="heroicons:building-office" />
-            </span>
-            Contacts
-          </h5>
-          <p className="text-muted mb-0">
-            Manage all contact information, profiles, and communication details in one place.
-          </p>
+          <h3>Contacts</h3>
         </div>
-
-        {/* Right Section: Actions */}
-        <div className="d-flex align-items-center gap-2">
-          {/* Export Dropdown */}
+        <div className="d-flex gap-2">
           <div className="dropdown">
-            <button
-              type="button"
-              className="btn btn-primary d-flex align-items-center"
+            <a
+              href="#"
+              className="dropdown-toggle btn btn-white d-inline-flex align-items-center"
               data-bs-toggle="dropdown"
             >
-              <i className="ti ti-file-export me-1"></i>
-              Export CSV
-            </button>
-
-            <ul className="dropdown-menu dropdown-menu-end shadow-sm">
+              <i className="ti ti-file-export me-1"></i>Export
+            </a>
+            <ul className="dropdown-menu dropdown-menu-end p-3">
               <li>
-                <button className="dropdown-item d-flex align-items-center">
-                  <i className="ti ti-file-type-pdf me-2"></i>
-                  Export as PDF
-                </button>
+                <a href="#" className="dropdown-item rounded-1">
+                  <i className="ti ti-file-type-pdf me-1"></i>Export as PDF
+                </a>
               </li>
               <li>
-                <button className="dropdown-item d-flex align-items-center">
-                  <i className="ti ti-file-type-xls me-2"></i>
-                  Export as Excel
-                </button>
+                <a href="#" className="dropdown-item rounded-1">
+                  <i className="ti ti-file-type-xls me-1"></i>Export as Excel
+                </a>
               </li>
             </ul>
           </div>
 
           {/* Add Contact */}
-          <button
-            onClick={handleAddContact}
-            className="btn btn-success d-flex align-items-center"
-            style={{
-              ...styles.button, backgroundColor: "#198754",
-              color: "#fff",
-              border: "none",
-              height:"50px"
-            }}
-          >
-
-            Add Contact
-          </button>
-        </div>
-      </div>
-
-      {/* Contact Table Header */}
-      <div className="card w-100 border-0 shadow-sm">
-        <div className="card-body px-4 py-3 bg-white rounded-3">
-          <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-
-            {/* Left: Title + Selection Info */}
-            <div className="d-flex align-items-center gap-3">
-              <h5 className="mb-0 fw-bold text-dark fs-6">
-                Contact Table
-              </h5>
-
-              {selectedContacts.size > 0 && (
-                <span className="badge bg-primary bg-opacity-10 text-primary d-flex align-items-center gap-2 px-3 py-2 rounded-pill fw-medium">
-                  <i className="ti ti-check"></i>
-                  {selectedContacts.size}{" "}
-                  {selectedContacts.size === 1 ? "contact" : "contacts"} selected
-                </span>
-              )}
-            </div>
-
-            {/* Right: Sort Dropdown */}
-            <div className="dropdown">
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 fw-medium"
-                data-bs-toggle="dropdown"
-              >
-                Sort By:
-                <span className="text-dark">Last 7 Days</span>
-              </button>
-
-              <ul className="dropdown-menu dropdown-menu-end shadow-sm">
-                <li>
-                  <button className="dropdown-item">Recently Added</button>
-                </li>
-                <li>
-                  <button className="dropdown-item">Ascending</button>
-                </li>
-                <li>
-                  <button className="dropdown-item">Descending</button>
-                </li>
-                <li>
-                  <button className="dropdown-item">Last Month</button>
-                </li>
-                <li>
-                  <button className="dropdown-item active">Last 7 Days</button>
-                </li>
-              </ul>
-            </div>
-
+          <div className="mb-2">
+            <button
+              onClick={handleAddContact}
+              className="btn btn-secondary d-flex align-items-center"
+            >
+              <i className="ti ti-circle-plus me-2"></i>Add Contact
+            </button>
           </div>
         </div>
       </div>
-
+      {/* Contact Table Header */}
+      <div className="card w-100">
+        <div className="card-body p-3">
+          <div className="d-flex align-items-center justify-content-between">
+            <div className="d-flex align-items-center gap-3">
+              <h5 className="mb-0">Contact Table</h5>
+              {selectedContacts.size > 0 && (
+                <span className="badge bg-primary d-flex align-items-center gap-2">
+                  <i className="ti ti-check"></i>
+                  {selectedContacts.size} {selectedContacts.size === 1 ? 'contact' : 'contacts'} selected
+                </span>
+              )}
+            </div>
+            <div className="dropdown">
+              <a
+                href="#"
+                className="dropdown-toggle btn btn-sm btn-white d-inline-flex align-items-center"
+                data-bs-toggle="dropdown"
+              >
+                Sort By : Last 7 Days
+              </a>
+              <ul className="dropdown-menu dropdown-menu-end p-3">
+                <li><a href="#" className="dropdown-item rounded-1">Recently Added</a></li>
+                <li><a href="#" className="dropdown-item rounded-1">Ascending</a></li>
+                <li><a href="#" className="dropdown-item rounded-1">Descending</a></li>
+                <li><a href="#" className="dropdown-item rounded-1">Last Month</a></li>
+                <li><a href="#" className="dropdown-item rounded-1">Last 7 Days</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Contacts Table */}
       {loading && (
@@ -600,7 +505,7 @@ const Contacts = () => {
           <p className="text-muted">No contacts found. Add your first contact!</p>
         </div>
       )}
-
+      
       {!loading && contacts.length > 0 && (
         <div className="card w-100">
           <style>{`
@@ -678,18 +583,11 @@ const Contacts = () => {
               <table className="table table-hover">
                 <thead>
                   <tr>
-                    <th
-                      style={{
-                        width: '50px',
-                        textAlign: 'center',
-                        verticalAlign: 'middle',
-                        padding: '12px 8px'
-                      }}
-                    >
-                      <div className="d-flex justify-content-center align-items-center h-100">
-                        <input
-                          className="contact-table-checkbox"
-                          type="checkbox"
+                    <th style={{ width: '50px', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>
+                      <div className="d-flex justify-content-center align-items-center" style={{ width: '100%', height: '100%' }}>
+                        <input 
+                          className="contact-table-checkbox" 
+                          type="checkbox" 
                           checked={isAllSelected}
                           ref={(input) => {
                             if (input) input.indeterminate = isIndeterminate;
@@ -699,32 +597,25 @@ const Contacts = () => {
                         />
                       </div>
                     </th>
-
-                    <th className="text-center align-middle">Contact</th>
-                    <th className="text-center align-middle">Email</th>
-                    <th className="text-center align-middle">Phone</th>
-                    <th className="text-center align-middle">Company</th>
-                    <th className="text-center align-middle">Job Title</th>
-                    <th className="text-center align-middle">Location</th>
-                    <th className="text-center align-middle">Industry</th>
-                    <th className="text-center align-middle">Rating</th>
-                    <th
-                      className="text-center align-middle"
-                      style={{ width: '180px', minWidth: '180px' }}
-                    >
-                      Actions
-                    </th>
+                    <th>Contact</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Company</th>
+                    <th>Job Title</th>
+                    <th>Location</th>
+                    <th>Industry</th>
+                    <th>Rating</th>
+                    <th style={{ width: '180px', minWidth: '180px' }}>Actions</th>
                   </tr>
                 </thead>
-
                 <tbody>
                   {contacts.map((c) => (
                     <tr key={c.id}>
                       <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>
                         <div className="d-flex justify-content-center align-items-center" style={{ width: '100%', height: '100%' }}>
-                          <input
-                            className="contact-table-checkbox"
-                            type="checkbox"
+                          <input 
+                            className="contact-table-checkbox" 
+                            type="checkbox" 
                             checked={selectedContacts.has(c.id)}
                             onChange={() => handleSelectContact(c.id)}
                             title={selectedContacts.has(c.id) ? 'Unselect contact' : 'Select contact'}
@@ -733,11 +624,11 @@ const Contacts = () => {
                       </td>
                       <td>
                         <div className="d-flex align-items-center">
-                          <div
-                            className="avatar avatar-sm avatar-rounded me-2 flex-shrink-0"
-                            style={{
-                              width: '40px',
-                              height: '40px',
+                          <div 
+                            className="avatar avatar-sm avatar-rounded me-2 flex-shrink-0" 
+                            style={{ 
+                              width: '40px', 
+                              height: '40px', 
                               overflow: 'hidden',
                               borderRadius: '50%',
                               display: 'flex',
@@ -746,7 +637,7 @@ const Contacts = () => {
                               backgroundColor: '#f0f0f0'
                             }}
                           >
-                            <img
+                            <img 
                               src={(() => {
                                 if (!c.profile_photo) return '/assets/images/users/user1.png';
                                 if (c.profile_photo.startsWith('http://') || c.profile_photo.startsWith('https://')) {
@@ -759,9 +650,9 @@ const Contacts = () => {
                               })()}
                               alt={`${c.name || 'Contact'}`}
                               className="img-fluid"
-                              style={{
-                                width: '100%',
-                                height: '100%',
+                              style={{ 
+                                width: '100%', 
+                                height: '100%', 
                                 objectFit: 'cover',
                                 objectPosition: 'center',
                                 display: 'block'
@@ -826,10 +717,10 @@ const Contacts = () => {
                       <td>
                         {c.job_title ? (
                           <div className="d-flex align-items-center">
-                            <i className="ti ti-building text-gray-5 me-2"></i>
-                            <span>{c.job_title}</span>
-                          </div>
-
+                          <i className="ti ti-building text-gray-5 me-2"></i>
+                          <span>{c.job_title}</span>
+                        </div>
+                          
                         ) : (
                           <span className="text-muted">N/A</span>
                         )}
@@ -899,16 +790,16 @@ const Contacts = () => {
 
       {/* Add/Edit Contact Modal */}
       {showModal && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(11, 11, 11, 0.5)' }}>
-          <div className="modal-dialog  modal-dialog-centered" style={{ width: "100vw" }}  >
-            <div className="modal-content" >
-              <div className="modal-header" style={{ width: "40vw", backgroundColor: "white" }} >
-                <h5 className="modal-title " style={{ width: "40vw" }}>
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
                   {modalType === 'add' ? 'Add Contact' : 'Edit Contact'}
                 </h5>
                 <button type="button" className="btn-close" onClick={handleCancel}></button>
               </div>
-              <div className="modal-body" style={{ width: "40vw", backgroundColor: "white" }} >
+              <div className="modal-body">
                 {error && (
                   <div className="alert alert-danger" role="alert">
                     {error}
@@ -953,75 +844,75 @@ const Contacts = () => {
                 {/* Tab Content */}
                 {activeTab === 'basic' && (
                   <form onSubmit={handleSave}>
-
+                   
                     <div className="col-md-12">
-                      <div className="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
-                        <div
-                          className="d-flex align-items-center justify-content-center border border-dashed me-2 flex-shrink-0 text-dark frames"
-                          style={{
-                            position: 'relative',
-                            overflow: 'hidden',
-                            width: '120px',
-                            height: '120px',
-                            borderRadius: '50%',
-                            backgroundColor: '#f8f9fa',
-                            minWidth: '120px',
-                            minHeight: '120px'
-                          }}
-                        >
-                          {imagePreview ? (
-                            <img
-                              src={imagePreview}
-                              alt="Profile preview"
-                              className="img-fluid"
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover',
-                                objectPosition: 'center',
-                                display: 'block',
-                                borderRadius: '50%'
-                              }}
-                              onError={(e) => {
-                                if (e.target.src !== '/assets/images/users/user1.png') {
-                                  e.target.onerror = null;
-                                  e.target.src = '/assets/images/users/user1.png';
-                                }
-                              }}
-                            />
-                          ) : (
-                            <i className="ti ti-photo text-gray-2 fs-16" style={{ fontSize: '48px' }}></i>
-                          )}
-                        </div>
-                        <div className="profile-upload">
-                          <div className="mb-2">
-                            <h6 className="mb-1">Upload Profile Image</h6>
-                            <p className="fs-12">Image should be below 4 mb</p>
-                          </div>
-                          <div className="profile-uploader d-flex align-items-center">
-                            <label className="drag-upload-btn btn btn-sm btn-primary me-2" style={{ cursor: 'pointer', position: 'relative' }}>
-                              Upload
-                              <input
-                                type="file"
-                                className="form-control image-sign"
-                                accept="image/*"
-                                onChange={handleFileChange}
-                                style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer', left: 0, top: 0 }}
-                              />
-                            </label>
-                            {(selectedFile || imagePreview) && (
-                              <button
-                                type="button"
-                                onClick={handleRemoveImage}
-                                className="btn btn-light btn-sm"
+                            <div className="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
+                              <div 
+                                className="d-flex align-items-center justify-content-center border border-dashed me-2 flex-shrink-0 text-dark frames" 
+                                style={{ 
+                                  position: 'relative', 
+                                  overflow: 'hidden',
+                                  width: '120px',
+                                  height: '120px',
+                                  borderRadius: '50%',
+                                  backgroundColor: '#f8f9fa',
+                                  minWidth: '120px',
+                                  minHeight: '120px'
+                                }}
                               >
-                                Remove
-                              </button>
-                            )}
+                                {imagePreview ? (
+                                  <img 
+                                    src={imagePreview} 
+                                    alt="Profile preview"
+                                    className="img-fluid"
+                                    style={{ 
+                                      width: '100%', 
+                                      height: '100%', 
+                                      objectFit: 'cover',
+                                      objectPosition: 'center',
+                                      display: 'block',
+                                      borderRadius: '50%'
+                                    }}
+                                    onError={(e) => {
+                                      if (e.target.src !== '/assets/images/users/user1.png') {
+                                        e.target.onerror = null;
+                                        e.target.src = '/assets/images/users/user1.png';
+                                      }
+                                    }}
+                                  />
+                                ) : (
+                                  <i className="ti ti-photo text-gray-2 fs-16" style={{ fontSize: '48px' }}></i>
+                                )}
+                              </div>
+                              <div className="profile-upload">
+                                <div className="mb-2">
+                                  <h6 className="mb-1">Upload Profile Image</h6>
+                                  <p className="fs-12">Image should be below 4 mb</p>
+                                </div>
+                                <div className="profile-uploader d-flex align-items-center">
+                                  <label className="drag-upload-btn btn btn-sm btn-primary me-2" style={{ cursor: 'pointer', position: 'relative' }}>
+                                    Upload
+                                    <input 
+                                      type="file" 
+                                      className="form-control image-sign" 
+                                      accept="image/*"
+                                      onChange={handleFileChange}
+                                      style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer', left: 0, top: 0 }}
+                                    />
+                                  </label>
+                                  {(selectedFile || imagePreview) && (
+                                    <button 
+                                      type="button"
+                                      onClick={handleRemoveImage}
+                                      className="btn btn-light btn-sm"
+                                    >
+                                      Remove
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    </div>
                     <div className="row">
                       <div className="col-md-4">
                         <div className="mb-3">
@@ -1304,18 +1195,18 @@ const Contacts = () => {
                       </div>
                     </div>
                     <div className="modal-footer">
-                      <button
-                        type="button"
-                        className="btn btn-light me-2"
-                        onClick={handleCloseModal}
-                      >
-                        Cancel
-                      </button>
-                      <button type="submit" className="btn btn-primary">Save</button>
-                    </div>
+                        <button
+                          type="button"
+                          className="btn btn-light me-2"
+                          onClick={handleCloseModal}
+                        >
+                          Cancel
+                        </button>
+                        <button type="submit" className="btn btn-primary">Save</button>
+                      </div>
                   </form>
                 )}
-
+ 
                 {activeTab === 'address' && (
                   <div>
                     <div className="row">
@@ -1390,18 +1281,18 @@ const Contacts = () => {
                       </div>
                     </div>
                     <div className="modal-footer">
-                      <button
-                        type="button"
-                        className="btn btn-light me-2"
-                        onClick={handleCloseModal}
-                      >
-                        Cancel
-                      </button>
-                      <button type="button" onClick={handleSave} className="btn btn-primary">Save</button>
-                    </div>
+                        <button
+                          type="button"
+                          className="btn btn-light me-2"
+                          onClick={handleCloseModal}
+                        >
+                          Cancel
+                        </button>
+                        <button type="button" onClick={handleSave} className="btn btn-primary">Save</button>
+                      </div>
                   </div>
                 )}
-
+                 
 
                 {activeTab === 'social' && (
                   <div>
@@ -1490,115 +1381,115 @@ const Contacts = () => {
                       </div>
                     </div>
                     <div className="modal-footer">
-                      <button
-                        type="button"
-                        className="btn btn-light me-2"
-                        onClick={handleCloseModal}
-                      >
-                        Cancel
-                      </button>
-                      <button type="button" onClick={handleSave} className="btn btn-primary">Save</button>
-                    </div>
+                        <button
+                          type="button"
+                          className="btn btn-light me-2"
+                          onClick={handleCloseModal}
+                        >
+                          Cancel
+                        </button>
+                        <button type="button" onClick={handleSave} className="btn btn-primary">Save</button>
+                      </div>
                   </div>
                 )}
+                
+                      
 
-
-
-
-                {activeTab === 'access' && (
-                  <div>
-                    <div className="row">
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="form-label">Access Level</label>
-                          <select
-                            className="form-select"
-                            name="accessLevel"
-                            value={formData.accessLevel}
-                            onChange={handleInputChange}
-                          >
-                            <option value="">Select Access Level</option>
-                            <option value="Public">Public</option>
-                            <option value="Private">Private</option>
-                            <option value="Restricted">Restricted</option>
-                            <option value="Internal">Internal</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="form-label">Department</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            name="department"
-                            value={formData.department}
-                            onChange={handleInputChange}
-                            placeholder="Department"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="row">
-                      <div className="col-md-12">
-                        <div className="mb-3">
-                          <h6 className="fs-14 fw-medium mb-3">Permissions</h6>
-                          <div className="form-check mb-2">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              name="allowEmailAccess"
-                              id="allowEmailAccess"
-                              checked={formData.allowEmailAccess}
+               
+                 {activeTab === 'access' && (
+                    <div>
+                      <div className="row">
+                        <div className="col-md-6">
+                          <div className="mb-3">
+                            <label className="form-label">Access Level</label>
+                            <select
+                              className="form-select"
+                              name="accessLevel"
+                              value={formData.accessLevel}
                               onChange={handleInputChange}
-                            />
-                            <label className="form-check-label" htmlFor="allowEmailAccess">
-                              Allow Email Access
-                            </label>
+                            >
+                              <option value="">Select Access Level</option>
+                              <option value="Public">Public</option>
+                              <option value="Private">Private</option>
+                              <option value="Restricted">Restricted</option>
+                              <option value="Internal">Internal</option>
+                            </select>
                           </div>
-                          <div className="form-check mb-2">
+                        </div>
+                        <div className="col-md-6">
+                          <div className="mb-3">
+                            <label className="form-label">Department</label>
                             <input
-                              className="form-check-input"
-                              type="checkbox"
-                              name="allowPhoneAccess"
-                              id="allowPhoneAccess"
-                              checked={formData.allowPhoneAccess}
+                              type="text"
+                              className="form-control"
+                              name="department"
+                              value={formData.department}
                               onChange={handleInputChange}
+                              placeholder="Department"
                             />
-                            <label className="form-check-label" htmlFor="allowPhoneAccess">
-                              Allow Phone Access
-                            </label>
-                          </div>
-                          <div className="form-check mb-2">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              name="allowDataExport"
-                              id="allowDataExport"
-                              checked={formData.allowDataExport}
-                              onChange={handleInputChange}
-                            />
-                            <label className="form-check-label" htmlFor="allowDataExport">
-                              Allow Data Export
-                            </label>
                           </div>
                         </div>
                       </div>
+                      <div className="row">
+                        <div className="col-md-12">
+                          <div className="mb-3">
+                            <h6 className="fs-14 fw-medium mb-3">Permissions</h6>
+                            <div className="form-check mb-2">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                name="allowEmailAccess"
+                                id="allowEmailAccess"
+                                checked={formData.allowEmailAccess}
+                                onChange={handleInputChange}
+                              />
+                              <label className="form-check-label" htmlFor="allowEmailAccess">
+                                Allow Email Access
+                              </label>
+                            </div>
+                            <div className="form-check mb-2">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                name="allowPhoneAccess"
+                                id="allowPhoneAccess"
+                                checked={formData.allowPhoneAccess}
+                                onChange={handleInputChange}
+                              />
+                              <label className="form-check-label" htmlFor="allowPhoneAccess">
+                                Allow Phone Access
+                              </label>
+                            </div>
+                            <div className="form-check mb-2">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                name="allowDataExport"
+                                id="allowDataExport"
+                                checked={formData.allowDataExport}
+                                onChange={handleInputChange}
+                              />
+                              <label className="form-check-label" htmlFor="allowDataExport">
+                                Allow Data Export
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="modal-footer">
+                        <button
+                          type="button"
+                          className="btn btn-light me-2"
+                          onClick={handleCloseModal}
+                        >
+                          Cancel
+                        </button>
+                        <button type="button" onClick={handleSave} className="btn btn-primary">Save</button>
+                      </div>
                     </div>
-                    <div className="modal-footer">
-                      <button
-                        type="button"
-                        className="btn btn-light me-2"
-                        onClick={handleCloseModal}
-                      >
-                        Cancel
-                      </button>
-                      <button type="button" onClick={handleSave} className="btn btn-primary">Save</button>
-                    </div>
-                  </div>
-                )}
+                  )}
               </div>
-
+             
             </div>
           </div>
         </div>
@@ -1606,9 +1497,9 @@ const Contacts = () => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="modal show d-block " style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog ">
-            <div className="modal-content modal-xl modal-dialog-centered">
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-sm">
+            <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Confirm Delete</h5>
                 <button
@@ -1646,7 +1537,7 @@ const Contacts = () => {
           </div>
         </div>
       )}
-
+      
     </div>
 
   );

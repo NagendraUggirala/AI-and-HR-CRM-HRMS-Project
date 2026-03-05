@@ -30,10 +30,25 @@ export const apiCall = async (endpoint, options = {}) => {
     } else {
       // Handle error responses
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `API Error: ${response.status}`);
+      let message = errorData.message || `API Error: ${response.status} ${response.statusText}`;
+      const detail = errorData.detail;
+      if (detail != null) {
+        if (typeof detail === 'string') {
+          message = detail;
+        } else if (Array.isArray(detail)) {
+          message = detail.map((d) => (d && d.msg) ? `${d.msg}${d.loc && d.loc.length ? ` (${d.loc.join('.')})` : ''}` : String(d)).filter(Boolean).join('; ') || message;
+        } else if (typeof detail === 'object') {
+          message = JSON.stringify(detail);
+        }
+      }
+      throw new Error(message);
     }
   } catch (err) {
     console.error('API Call Error:', err);
+    // If it's a network error, provide more helpful message
+    if (err.name === 'TypeError' && err.message.includes('fetch')) {
+      throw new Error(`Failed to connect to backend at ${BASE_URL}. Please ensure the backend server is running.`);
+    }
     throw err;
   }
 };
@@ -114,6 +129,74 @@ export const jobAPI = {
   // Search jobs
   search: (query) => 
     apiCall(`/api/jobs/search?q=${encodeURIComponent(query)}`)
+};
+
+// ==========================================
+// ASSET MANAGEMENT APIs (HR Operations)
+// ==========================================
+export const assetsAPI = {
+  // Assets
+  listAssets: () => apiCall('/assets'),
+  getAsset: (id) => apiCall(`/assets/${id}`),
+  createAsset: (data) =>
+    apiCall('/assets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
+  updateAsset: (id, data) =>
+    apiCall(`/assets/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
+  deleteAsset: (id) =>
+    apiCall(`/assets/${id}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(id),
+     }),
+
+  // Allocations
+  listAllocations: () => apiCall('/asset-allocations'),
+  createAllocation: (data) =>
+    apiCall('/asset-allocations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
+
+  // Returns
+  listReturns: () => apiCall('/asset-returns'),
+  createReturn: (data) =>
+    apiCall('/asset-returns', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
+
+  // Maintenances
+  listMaintenances: () => apiCall('/asset-maintenances'),
+  createMaintenance: (data) =>
+    apiCall('/asset-maintenances', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
+
+  // Insurance Policies (asset-insurances)
+  listInsurances: () => apiCall('/asset-insurances'),
+  getInsurance: (policy_id) => apiCall(`/asset-insurances/${policy_id}`),
+  createInsurance: (data) =>
+    apiCall('/asset-insurances', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
+  deleteInsurance: (policy_id) =>
+    apiCall(`/asset-insurances/${policy_id}`, {
+      method: 'DELETE',
+    }),
 };
 
 // ==========================================

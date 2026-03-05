@@ -6,7 +6,7 @@ import jsPDF from "jspdf";
 import { dealsAPI } from "../../utils/api";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Icon } from '@iconify/react/dist/iconify.js';
+
 
 
 
@@ -173,7 +173,7 @@ export default function Deals() {
             // Check if it's a 404 (endpoint doesn't exist) or other error
             const status = err.status || (err.message && err.message.includes('404') ? 404 : null);
             let errorMessage = "Failed to load deals. ";
-
+            
             if (status === 404 || err.message?.includes('404') || err.message?.includes('Not Found')) {
                 errorMessage += "The deals API endpoint is not available. Please ensure the backend deals endpoint is implemented.";
             } else if (err.message) {
@@ -181,7 +181,7 @@ export default function Deals() {
             } else {
                 errorMessage += "Please check if the backend API is running.";
             }
-
+            
             setError(errorMessage);
             // Set empty state so UI still renders
             setDealsState(stageConfig.map(s => ({ ...s, leads: 0, amount: "0/-", deals: [] })));
@@ -294,7 +294,7 @@ export default function Deals() {
 
             // Determine stage from form data or selected stage index
             const selectedStage = formData.stage || dealsState[selectedStageIndex]?.stage || "New";
-
+            
             // Prepare deal data for API - map frontend fields to backend schema
             const dealData = {
                 deal_name: formData.dealName || "Untitled Deal", // Backend expects 'deal_name'
@@ -383,7 +383,7 @@ export default function Deals() {
                 await dealsAPI.delete(deal.id);
                 toast.success("Deal deleted successfully!");
             }
-
+            
             // Reload deals from API
             await loadDeals();
 
@@ -406,7 +406,7 @@ export default function Deals() {
     return (
         <div>
             <ToastContainer position="top-right" autoClose={3000} />
-
+            
             {error && (
                 <div className="alert alert-warning alert-dismissible fade show" role="alert">
                     <strong>Note:</strong> {error}
@@ -423,22 +423,9 @@ export default function Deals() {
             )}
 
             <div className="d-flex justify-content-between">
-
-                <div className="gap-2">
-                    <h5 className="text-3xl fw-bold text-dark mb-1 d-flex align-items-center gap-2">
-                        <span className="icon-circle ">
-                            <Icon icon='heroicons:credit-card' className="primary" />
-                        </span>
-                        Deals
-                    </h5>
-
-                    <p className="text-muted mb-4">
-                        Monitor pipeline performance and move deals smoothly from
-                        prospect to closure.
-                    </p>
+                <div>
+                    <h1 className="mb-1 mt-2 fs-4"><b>Deals</b></h1>
                 </div>
-
-
 
                 <div className="d-flex my-xl-auto right-content align-items-center flex-wrap">
                     <div className="me-2 mb-2 dropdown">
@@ -471,7 +458,7 @@ export default function Deals() {
                     <div className="mb-2">
 
                         <Button
-                            variant="primary"
+                            variant="secondary"
                             onClick={() => {
                                 openAddModal(0);
                             }}
@@ -487,7 +474,7 @@ export default function Deals() {
             {/* Deals Grid Header */}
             <div className="card w-100 mb-3">
                 <div className="card-body p-3 d-flex justify-content-between">
-                    <h5 className="fs-6 text-dark"><b>Deals Grid</b></h5>
+                    <h5 className="fs-6"><b>Deals Grid</b></h5>
                     <div className="dropdown">
                         <button
                             className="btn btn-sm btn-white dropdown-toggle"
@@ -553,7 +540,6 @@ export default function Deals() {
                                     <div className="action-icon d-inline-flex">
                                         <button
                                             type="button"
-
                                             className="btn btn-sm btn-link p-0"
                                             onClick={() => openAddModal(stageIndex)}
                                             onMouseEnter={(e) => {
@@ -564,9 +550,9 @@ export default function Deals() {
                                                 e.currentTarget.style.color = '#6c757d';
                                                 e.currentTarget.style.transform = 'scale(1)';
                                             }}
-                                            style={{
-                                                width: 'auto',
-                                                height: 'auto',
+                                            style={{ 
+                                                width: 'auto', 
+                                                height: 'auto', 
                                                 padding: '2px 4px',
                                                 minWidth: 'auto',
                                                 border: 'none',
@@ -577,20 +563,15 @@ export default function Deals() {
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
                                                 transition: 'all 0.2s ease'
-                                            }}
+                                              }}
                                             title="Add Deal"
                                         >
-                                            <span
-                                                style={{
-                                                    fontSize: '18px',
-                                                    lineHeight: '1',
-                                                    letterSpacing: '2px',
-                                                    fontWeight: 'bold',
-                                                    textDecoration: 'none', // extra safety
-                                                }}
-                                            >
-                                                ⋯
-                                            </span>
+                                            <span style={{ 
+                                                fontSize: '18px', 
+                                                lineHeight: '1',
+                                                letterSpacing: '2px',
+                                                fontWeight: 'bold'
+                                            }}>⋯</span>
                                         </button>
                                     </div>
                                 </div>
@@ -678,8 +659,8 @@ export default function Deals() {
             </div>
 
             {/* Add / Edit Modal (react-bootstrap) */}
-            <Modal show={showAddEditModal} onHide={() => setShowAddEditModal(false)} size="lg" centered  >
-                <Form onSubmit={handleSave} style={{ width: "800px", backgroundColor: "white" }}>
+            <Modal show={showAddEditModal} onHide={() => setShowAddEditModal(false)} size="lg" centered>
+                <Form onSubmit={handleSave}>
                     <Modal.Header closeButton>
                         <Modal.Title>{isEditing ? "Edit Deal" : "Add New Deal"}</Modal.Title>
                     </Modal.Header>
@@ -713,16 +694,16 @@ export default function Deals() {
                             {/* Stage */}
                             <div className="col-md-6 mb-3">
                                 <Form.Label>Stage<span className="text-danger">*</span></Form.Label>
-                                <Form.Select
-                                    name="stage"
-                                    value={formData.stage}
+                                <Form.Select 
+                                    name="stage" 
+                                    value={formData.stage} 
                                     onChange={(e) => {
                                         handleChange(e);
                                         // Sync status with stage for backend (backend uses status field)
                                         if (e.target.value) {
                                             setFormData(prev => ({ ...prev, status: e.target.value }));
                                         }
-                                    }}
+                                    }} 
                                     required
                                 >
                                     <option value="">Select</option>
@@ -736,10 +717,10 @@ export default function Deals() {
                             {/* Status - Hidden or shown for compatibility */}
                             <div className="col-md-6 mb-3">
                                 <Form.Label>Status<span className="text-danger">*</span></Form.Label>
-                                <Form.Select
-                                    name="status"
-                                    value={formData.status || formData.stage}
-                                    onChange={handleChange}
+                                <Form.Select 
+                                    name="status" 
+                                    value={formData.status || formData.stage} 
+                                    onChange={handleChange} 
                                     required
                                 >
                                     <option value="">Select</option>
@@ -862,7 +843,7 @@ export default function Deals() {
                         <Button variant="light" onClick={() => setShowAddEditModal(false)}>
                             Cancel
                         </Button>
-                        <Button type="submit" variant="primary">
+                        <Button type="submit" variant="secondary">
                             {isEditing ? "Save" : "Add Deal"}
                         </Button>
                     </Modal.Footer>
@@ -896,7 +877,7 @@ export default function Deals() {
                     </div>
                 </Modal.Body>
             </Modal>
-
+            
         </div>
     );
 }

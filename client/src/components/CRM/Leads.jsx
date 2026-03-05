@@ -17,7 +17,7 @@ const Leads = () => {
   const [leadsData, setLeadsData] = useState([]);
   const [leadsKanban, setLeadsKanban] = useState({
     Contacted: { leads: [], count: 0, amount: '₹0' },
-    'Not Contacted': { leads: [], count: 0, amount: '₹0' },
+    'Not_Contacted': { leads: [], count: 0, amount: '₹0' },
     Closed: { leads: [], count: 0, amount: '₹0' },
     Lost: { leads: [], count: 0, amount: '₹0' }
   });
@@ -37,13 +37,13 @@ const Leads = () => {
     tags: '',
     description: '',
     visibility: 'private',
-    status: 'Not Contacted'
+    status: 'Not_Contacted'
   });
 
   // Stage configuration for Kanban board
   const statusConfig = [
     { status: 'Contacted', color: 'warning', displayName: 'Contacted' },
-    { status: 'Not Contacted', color: 'purple', displayName: 'Not Contacted' },
+    { status: 'Not_Contacted', color: 'purple', displayName: 'Not_Contacted' },
     { status: 'Closed', color: 'success', displayName: 'Closed' },
     { status: 'Lost', color: 'danger', displayName: 'Lost' }
   ];
@@ -75,13 +75,13 @@ const Leads = () => {
 
     const kanban = {
       Contacted: { leads: [], count: 0, amount: 0 },
-      'Not Contacted': { leads: [], count: 0, amount: 0 },
+      'Not_Contacted': { leads: [], count: 0, amount: 0 },
       Closed: { leads: [], count: 0, amount: 0 },
       Lost: { leads: [], count: 0, amount: 0 }
     };
 
     leads.forEach(lead => {
-      const status = lead.status || 'Not Contacted';
+      const status = lead.status || 'Not_Contacted';
       const leadCard = {
         id: lead.id,
         initials: makeInitials(lead.name || ''),
@@ -123,7 +123,7 @@ const Leads = () => {
         setLeadsData([]);
         setLeadsKanban({
           Contacted: { leads: [], count: 0, amount: '₹0' },
-          'Not Contacted': { leads: [], count: 0, amount: '₹0' },
+          'Not_Contacted': { leads: [], count: 0, amount: '₹0' },
           Closed: { leads: [], count: 0, amount: '₹0' },
           Lost: { leads: [], count: 0, amount: '₹0' }
         });
@@ -178,7 +178,7 @@ const Leads = () => {
       phone: '(179) 7382 829',
       location: 'Newyork, United States',
       value: '₹3,50,000',
-      status: 'Not Contacted'
+      status: 'Not_Contacted'
     },
     {
       name: 'Maria Garcia',
@@ -187,7 +187,7 @@ const Leads = () => {
       phone: '(120) 3728 039',
       location: 'Denver, United States',
       value: '₹4,10,000',
-      status: 'Not Contacted'
+      status: 'Not_Contacted'
     },
     {
       name: 'John Smith',
@@ -267,7 +267,7 @@ const Leads = () => {
       tags: '',
       description: '',
       visibility: 'private',
-      status: 'Not Contacted'
+      status: 'Not_Contacted'
     });
   };
 
@@ -310,7 +310,7 @@ const Leads = () => {
         tags: fullLeadData.tags || '',
         description: fullLeadData.description || '',
         visibility: fullLeadData.visibility || 'private',
-        status: fullLeadData.status || 'Not Contacted'
+        status: fullLeadData.status || 'Not_Contacted'
       });
       
       setShowAddLeadModal(true);
@@ -367,7 +367,7 @@ const Leads = () => {
         tags: formData.tags || null, // Backend expects string
         description: formData.description || null,
         visibility: formData.visibility || 'private',
-        status: formData.status || 'Not Contacted'
+        status: formData.status || 'Not_Contacted'
       };
 
       // Remove empty strings and convert to null

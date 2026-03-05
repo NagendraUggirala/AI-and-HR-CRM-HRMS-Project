@@ -116,6 +116,73 @@ export const API_ENDPOINTS = {
     SEND_ASSESSMENT: '/api/send-assessment-email',
   },
 
+  // Asset Management (HR Operations)
+  ASSETS: {
+    LIST: '/assets',
+    CREATE: '/assets',
+    GET: (id) => `/assets/${id}`,
+    UPDATE: (id) => `/assets/${id}`,
+    DELETE: (id) => `/assets/${id}`,
+  },
+  ASSET_ALLOCATIONS: {
+    LIST: '/asset-allocations',
+    CREATE: '/asset-allocations',
+    GET: (id) => `/asset-allocations/${id}`,
+  },
+  ASSET_RETURNS: {
+    LIST: '/asset-returns',
+    CREATE: '/asset-returns',
+    GET: (id) => `/asset-returns/${id}`,
+  },
+  ASSET_MAINTENANCES: {
+    LIST: '/asset-maintenances',
+    CREATE: '/asset-maintenances',
+    GET: (id) => `/asset-maintenances/${id}`,
+  },
+  ASSET_INSURANCES: {
+    LIST: '/asset-insurances',
+    GET: (policy_id) => `/asset-insurances/${policy_id}`,
+    CREATE: '/asset-insurances',
+    DELETE: (policy_id) => `/asset-insurances/${policy_id}`,
+  },
+
+  // Company Settings
+  COMPANY_SETTINGS: {
+    PROFILE: {
+      GET: '/company-profile',
+      CREATE: '/company-profile',
+      UPDATE: (id) => `/company-profile/${id}`,
+      DELETE: (id) => `/company-profile/${id}`,
+    },
+    CURRENCY: {
+      SETTINGS: {
+        GET: '/currency/settings',
+        SAVE: '/currency/settings',
+      },
+      RATES: {
+        LIST: '/currency/rate',
+        CREATE: '/currency/rate',
+        UPDATE: (id) => `/currency/rate/${id}`,
+        DELETE: (id) => `/currency/rate/${id}`,
+      },
+    },
+    FINANCIAL_YEAR: {
+      GET: '/financial-year/current',
+      SAVE: '/financial-year',
+    },
+    LOCALIZATION: {
+      GET: '/localization',
+      SAVE: '/localization',
+    },
+    POLICIES: {
+      LIST: '/policies',
+      GET: (id) => `/policies/${id}`,
+      CREATE: '/policies',
+      UPDATE: (id) => `/policies/${id}`,
+      DELETE: (id) => `/policies/${id}`,
+    },
+  },
+
   // Test endpoint
   TEST: '/api/test',
 };
