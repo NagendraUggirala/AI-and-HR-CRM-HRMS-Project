@@ -12,11 +12,7 @@ class Candidate(Base):
 
     full_name = Column(String, nullable=False)
     email = Column(String, nullable=True)
-    mobile: Optional[str] = Field(
-        default=None,
-        pattern=r"^[0-9]{10}$",
-        description="10 digit mobile number"
-    )
+    mobile = Column(String(10), nullable=True)
 
     invite_token = Column(String, unique=True, index=True, nullable=False)
     token_expires_at = Column(DateTime, nullable=False)

@@ -7,11 +7,7 @@ import re
 class CandidateCreate(BaseModel):
     full_name: str
     email: Optional[EmailStr] = None
-    mobile: Optional[str] = Field(
-        default=None,
-        pattern=r"^[6-9]\d{9}$",
-        description="10-digit Indian mobile number"
-    )
+    mobile: Optional[str] = Field(pattern="^[0-9]{10}$")
 
 class CandidateOut(BaseModel):
     id: int

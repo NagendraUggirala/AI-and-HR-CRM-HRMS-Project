@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 from typing import Optional, List
 from datetime import date
 
@@ -19,7 +19,7 @@ class ContactBase(BaseModel):
     industry: Optional[str] = None
     currency: Optional[str] = None
     language: Optional[str] = None
-    tags: Optional[List[str]] = []    
+    tags: List[str] = Field(default_factory=list) 
     source: Optional[str] = None
     location: Optional[str] = None
     city: Optional[str] = None

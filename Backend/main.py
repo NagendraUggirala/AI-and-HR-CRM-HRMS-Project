@@ -212,7 +212,7 @@ app.include_router(tasks.router)
 
 # Onboarding Routes
 
-app.include_router(onboarding_candidate_router, prefix="/admin_candidates", tags=["Onboarding Candidates"])
+app.include_router(onboarding_candidate_router)
 app.include_router(bank_details.router)
 app.include_router(present_address.router)
 app.include_router(statutory.router)

@@ -6,18 +6,34 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from uuid import uuid4
 from datetime import datetime, timedelta
+from typing import Optional
 
 from fastapi_mail import FastMail, MessageSchema, MessageType
+from pydantic import BaseModel
 
 from core.database import get_db
 from core.mail import mail_config
 from model.onboarding.candidate import Candidate
 from schema.onboarding.candidate import CandidateCreate
 
-router = APIRouter()
+
+router = APIRouter(
+    prefix="/api/onboarding-forms/candidates",
+    tags=["Onboarding Candidates"]
+)
 
 # =====================================================
-# SEND INVITE EMAIL (HTML)
+# UPDATE SCHEMA (for partial updates)
+# =====================================================
+
+class CandidateUpdate(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+    mobile: Optional[str] = None
+
+
+# =====================================================
+# SEND INVITE EMAIL
 # =====================================================
 
 async def send_invite_email(
@@ -108,7 +124,6 @@ async def invite_candidate(
 
     onboarding_link = f"https://yourdomain.com/onboarding/{token}"
 
-    # Send email (do NOT fail API if email fails)
     if payload.email:
         try:
             await send_invite_email(
@@ -130,20 +145,66 @@ async def invite_candidate(
 
 
 # =====================================================
-# LIST ALL CANDIDATES (TABLE VIEW)
+# LIST CANDIDATES (WITH PAGINATION)
 # =====================================================
 
 @router.get("/")
-def list_candidates(db: Session = Depends(get_db)):
-    return (
-        db.query(Candidate)
-        .order_by(Candidate.created_at.desc())
+def list_candidates(
+    page: int = 1,
+    size: int = 20,
+    db: Session = Depends(get_db)
+):
+
+    query = db.query(Candidate)
+
+    total = query.count()
+
+    candidates = (
+        query.order_by(Candidate.created_at.desc())
+        .offset((page - 1) * size)
+        .limit(size)
         .all()
     )
 
+    return {
+        "total": total,
+        # "page": page,
+        # "size": size,
+        "data": candidates
+    }
+
 
 # =====================================================
-# APPROVE CANDIDATE (ADMIN ACTION)
+# UPDATE CANDIDATE
+# =====================================================
+
+@router.put("/{candidate_id}")
+def update_candidate(
+    candidate_id: int,
+    payload: CandidateUpdate,
+    db: Session = Depends(get_db)
+):
+
+    candidate = db.query(Candidate).filter(
+        Candidate.id == candidate_id
+    ).first()
+
+    if not candidate:
+        raise HTTPException(404, "Candidate not found")
+
+    update_data = payload.dict(exclude_unset=True)
+
+    for key, value in update_data.items():
+        setattr(candidate, key, value)
+
+    db.commit()
+    db.refresh(candidate)
+
+    return candidate
+
+
+# =====================================================
+# APPROVE CANDIDATE
 # =====================================================
 
 @router.put("/{candidate_id}/approve")
@@ -151,6 +212,7 @@ def approve_candidate(
     candidate_id: int,
     db: Session = Depends(get_db)
 ):
+
     candidate = db.query(Candidate).filter(
         Candidate.id == candidate_id
     ).first()
@@ -182,6 +244,7 @@ def delete_candidate(
     candidate_id: int,
     db: Session = Depends(get_db)
 ):
+
     candidate = db.query(Candidate).filter(
         Candidate.id == candidate_id
     ).first()

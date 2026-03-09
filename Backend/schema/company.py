@@ -19,7 +19,6 @@ class CompanyBase(BaseModel):
     currency: Optional[str]
     language: Optional[str]
     about: Optional[str]
-    contact: Optional[str]
     address: Optional[str]
     country: Optional[str]
     state: Optional[str]
