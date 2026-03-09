@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { contactsAPI, leadsAPI, dealsAPI, companiesAPI, activitiesAPI, analyticsAPI } from "../../utils/api";
+import { contactsAPI, leadsAPI, dealsAPI, companiesAPI, activitiesAPI } from "../../utils/api";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Chart from "react-apexcharts";

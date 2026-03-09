@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "@iconify/react";
 
 // Initial/static sample forms
@@ -71,98 +70,6 @@ const [formData, setFormData] = useState({
   const [formToDelete, setFormToDelete] = useState(null);
   const [deleteCandidateName, setDeleteCandidateName] = useState("");
   
-    // Newhire form state
-    const [showNewhireForm, setShowNewhireForm] = useState(false);
-    const [currentFormId, setCurrentFormId] = useState(null);
-    const [currentCandidateName, setCurrentCandidateName] = useState("");
-    const [currentStep, setCurrentStep] = useState(0);
-    
-    // Newhire form data
-    const [profilePic, setProfilePic] = useState(null);
-    const [basicData, setBasicData] = useState({
-      firstName: "",
-      middleName: "",
-      lastName: "",
-      gender: "",
-      dob: "",
-    });
-    const [basicErrors, setBasicErrors] = useState({});
-  
-    const [contactData, setContactData] = useState({
-      mobile: "",
-      email: "",
-      homePhone: "",
-      emergencyContact: "",
-    });
-    const [otpSent, setOtpSent] = useState(false);
-    const [otpVerified, setOtpVerified] = useState(false);
-  
-    const [personalData, setPersonalData] = useState({
-      bloodGroup: "",
-      passport: "",
-      drivingLicense: "",
-    });
-  
-    const [statutoryData, setStatutoryData] = useState({
-      aadhar: "",
-      pan: "",
-      uan: "",
-      esi: "",
-    });
-    const [statutoryErrors, setStatutoryErrors] = useState({
-      aadhar: "",
-      pan: "",
-    });
-  
-    const [maritalStatus, setMaritalStatus] = useState("");
-    const [familyData, setFamilyData] = useState({
-      fatherName: "",
-      fatherPhone: "",
-      fatherDOB: "",
-      motherName: "",
-      motherPhone: "",
-      motherDOB: "",
-    });
-  
-    const [presentAddress, setPresentAddress] = useState({
-      address1: "",
-      address2: "",
-      city: "",
-      pincode: "",
-      state: "",
-      country: "India",
-    });
-  
-    const [permanentAddress, setPermanentAddress] = useState({
-      address1: "2-21/A BC WADA",
-      address2: "Sardhapor",
-      city: "Sircilla",
-      pincode: "505301",
-      state: "Telangana",
-      country: "India",
-    });
-  
-    const [bankData, setBankData] = useState({
-      bankName: "",
-      ifscCode: "",
-      accountNumber: "",
-      accountHolder: "",
-    });
-  
-    const [documents, setDocuments] = useState({
-      pan: null,
-      aadhar: null,
-      photo: null,
-      uan: null,
-      bank: null,
-      esi: null,
-      dl: null,
-      passport: null,
-    });
-  
-
-  const { formId } = useParams();
-  const candidate = location.state?.candidate;
   const processedFormsRef = useRef(new Set()); // Track processed form IDs
 
   // Load forms from localStorage on component mount
@@ -1796,13 +1703,13 @@ const handleEdit = (formId) => {
                       </div>
                     </div>
                     
-                    <a 
-                      href="#" 
-                      className="text-primary text-decoration-none mt-2 d-inline-block"
+                    <button
+                      type="button"
+                      className="btn btn-link text-primary text-decoration-none p-0 mt-2 d-inline-block border-0 align-baseline"
                       style={{ fontSize: "0.75rem" }}
                     >
                       Buy Credits
-                    </a>
+                    </button>
                   </div>
                 </div>
               </div>

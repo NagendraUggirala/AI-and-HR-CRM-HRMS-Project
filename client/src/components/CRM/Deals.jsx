@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { Modal, Button, Form } from "react-bootstrap";
+import React, { useState, useEffect, useCallback } from "react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import { dealsAPI } from "../../utils/api";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-
+import { Icon } from '@iconify/react/dist/iconify.js';
 
 
 const defaultAvatar =
@@ -20,6 +18,91 @@ const stageConfig = [
     { stage: "Proposal", color: "warning", apiStage: "Proposal" },
     { stage: "Won", color: "success", apiStage: "Won" },
 ];
+
+// Helper function to format amount
+const formatAmount = (value) => {
+    if (!value || value === 0) return "0/-";
+    const numValue = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value;
+    if (isNaN(numValue)) return "0/-";
+    return numValue.toLocaleString('en-IN') + "/-";
+};
+
+// Helper function to format date
+const formatDate = (dateString) => {
+    if (!dateString) return "";
+    try {
+        const date = new Date(dateString);
+        const day = date.getDate();
+        const month = date.toLocaleString('default', { month: 'short' });
+        const year = date.getFullYear();
+        return `${day} ${month} ${year}`;
+    } catch (e) {
+        return dateString;
+    }
+};
+
+// Helper function to calculate progress percentage
+const calculateProgress = (deal) => {
+    // Simple progress calculation based on stage/status
+    const stageProgress = {
+        "New": 25,
+        "Prospect": 50,
+        "Proposal": 75,
+        "Won": 100
+    };
+    // Backend sends 'status', but we also check 'stage' for compatibility
+    const dealStage = deal.status || deal.stage || "";
+    return stageProgress[dealStage] || 0;
+};
+
+const makeInitials = (name) => {
+    if (!name) return "";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+};
+
+// Transform API deals data to Kanban structure
+const transformDealsToKanban = (dealsData) => {
+    if (!Array.isArray(dealsData)) return stageConfig.map(s => ({ ...s, leads: 0, amount: "0/-", deals: [] }));
+
+    const stages = stageConfig.map(stageConfigItem => {
+        const stageDeals = dealsData
+            .filter(deal => {
+                // Backend sends 'status', but we also check 'stage' for compatibility
+                const dealStage = deal.status || deal.stage || "";
+                return dealStage.trim() === stageConfigItem.apiStage;
+            })
+            .map(deal => ({
+                id: deal.id,
+                initials: makeInitials(deal.deal_name || deal.name || deal.owner || ""), // Backend sends 'deal_name'
+                title: deal.deal_name || deal.name || "Untitled Deal", // Backend sends 'deal_name'
+                amount: formatAmount(deal.deal_value || deal.amount || deal.value || 0), // Backend sends 'deal_value'
+                email: deal.contact || deal.email || "", // Backend sends 'contact'
+                phone: deal.phone || "",
+                location: deal.project || deal.location || "", // Backend sends 'project'
+                owner: deal.assignee || deal.owner || "", // Backend sends 'assignee'
+                ownerImg: deal.ownerImg || defaultAvatar,
+                progress: `${calculateProgress(deal)}%`,
+                date: formatDate(deal.expected_closing_date || deal.closingDate || deal.closed_date || deal.due_date || deal.created_at), // Backend sends 'expected_closing_date' and 'due_date'
+                stage: deal.status || deal.stage || stageConfigItem.apiStage, // Backend sends 'status'
+            }));
+
+        const totalAmount = stageDeals.reduce((sum, deal) => {
+            const amount = parseFloat((deal.amount || "0").replace(/,/g, '').replace("/-", "")) || 0;
+            return sum + amount;
+        }, 0);
+
+        return {
+            ...stageConfigItem,
+            leads: stageDeals.length,
+            amount: formatAmount(totalAmount),
+            deals: stageDeals,
+        };
+    });
+
+    return stages;
+};
 
 export default function Deals() {
     // states
@@ -35,7 +118,6 @@ export default function Deals() {
     const [selectedStageIndex, setSelectedStageIndex] = useState(null);
     const [selectedDealIndex, setSelectedDealIndex] = useState(null);
     const [sortBy, setSortBy] = useState("Last 7 Days");
-    const [exportType, setExportType] = useState("");
 
     const initialForm = {
         dealName: "",
@@ -44,16 +126,19 @@ export default function Deals() {
         status: "",
         dealValue: "",
         currency: "",
+        customCurrency: "",
         period: "",
         periodValue: "",
         contact: "",
         project: "",
+        customProject:"",
         dueDate: "",
         closingDate: "",
         assignee: "",
         tags: "",
         followupDate: "",
         source: "",
+        customSource:"",
         priority: "",
         description: "",
         initials: "",
@@ -69,91 +154,8 @@ export default function Deals() {
     };
     const [formData, setFormData] = useState(initialForm);
 
-    // Load deals from API on component mount
-    useEffect(() => {
-        loadDeals();
-    }, []);
-
-    // Helper function to format amount
-    const formatAmount = (value) => {
-        if (!value || value === 0) return "0/-";
-        const numValue = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value;
-        if (isNaN(numValue)) return "0/-";
-        return numValue.toLocaleString('en-IN') + "/-";
-    };
-
-    // Helper function to format date
-    const formatDate = (dateString) => {
-        if (!dateString) return "";
-        try {
-            const date = new Date(dateString);
-            const day = date.getDate();
-            const month = date.toLocaleString('default', { month: 'short' });
-            const year = date.getFullYear();
-            return `${day} ${month} ${year}`;
-        } catch (e) {
-            return dateString;
-        }
-    };
-
-    // Helper function to calculate progress percentage
-    const calculateProgress = (deal) => {
-        // Simple progress calculation based on stage/status
-        const stageProgress = {
-            "New": 25,
-            "Prospect": 50,
-            "Proposal": 75,
-            "Won": 100
-        };
-        // Backend sends 'status', but we also check 'stage' for compatibility
-        const dealStage = deal.status || deal.stage || "";
-        return stageProgress[dealStage] || 0;
-    };
-
-    // Transform API deals data to Kanban structure
-    const transformDealsToKanban = (dealsData) => {
-        if (!Array.isArray(dealsData)) return stageConfig.map(s => ({ ...s, leads: 0, amount: "0/-", deals: [] }));
-
-        const stages = stageConfig.map(stageConfigItem => {
-            const stageDeals = dealsData
-                .filter(deal => {
-                    // Backend sends 'status', but we also check 'stage' for compatibility
-                    const dealStage = deal.status || deal.stage || "";
-                    return dealStage.trim() === stageConfigItem.apiStage;
-                })
-                .map(deal => ({
-                    id: deal.id,
-                    initials: makeInitials(deal.deal_name || deal.name || deal.owner || ""), // Backend sends 'deal_name'
-                    title: deal.deal_name || deal.name || "Untitled Deal", // Backend sends 'deal_name'
-                    amount: formatAmount(deal.deal_value || deal.amount || deal.value || 0), // Backend sends 'deal_value'
-                    email: deal.contact || deal.email || "", // Backend sends 'contact'
-                    phone: deal.phone || "",
-                    location: deal.project || deal.location || "", // Backend sends 'project'
-                    owner: deal.assignee || deal.owner || "", // Backend sends 'assignee'
-                    ownerImg: deal.ownerImg || defaultAvatar,
-                    progress: `${calculateProgress(deal)}%`,
-                    date: formatDate(deal.expected_closing_date || deal.closingDate || deal.closed_date || deal.due_date || deal.created_at), // Backend sends 'expected_closing_date' and 'due_date'
-                    stage: deal.status || deal.stage || stageConfigItem.apiStage, // Backend sends 'status'
-                }));
-
-            const totalAmount = stageDeals.reduce((sum, deal) => {
-                const amount = parseFloat((deal.amount || "0").replace(/,/g, '').replace("/-", "")) || 0;
-                return sum + amount;
-            }, 0);
-
-            return {
-                ...stageConfigItem,
-                leads: stageDeals.length,
-                amount: formatAmount(totalAmount),
-                deals: stageDeals,
-            };
-        });
-
-        return stages;
-    };
-
     // Load deals from API
-    const loadDeals = async () => {
+    const loadDeals = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
@@ -173,7 +175,7 @@ export default function Deals() {
             // Check if it's a 404 (endpoint doesn't exist) or other error
             const status = err.status || (err.message && err.message.includes('404') ? 404 : null);
             let errorMessage = "Failed to load deals. ";
-            
+
             if (status === 404 || err.message?.includes('404') || err.message?.includes('Not Found')) {
                 errorMessage += "The deals API endpoint is not available. Please ensure the backend deals endpoint is implemented.";
             } else if (err.message) {
@@ -181,22 +183,19 @@ export default function Deals() {
             } else {
                 errorMessage += "Please check if the backend API is running.";
             }
-            
+
             setError(errorMessage);
             // Set empty state so UI still renders
             setDealsState(stageConfig.map(s => ({ ...s, leads: 0, amount: "0/-", deals: [] })));
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-
-    const makeInitials = (name) => {
-        if (!name) return "";
-        const parts = name.trim().split(/\s+/);
-        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-        return (parts[0][0] + parts[1][0]).toUpperCase();
-    };
+    // Load deals from API on component mount
+    useEffect(() => {
+        loadDeals();
+    }, [loadDeals]);
 
     // Open Add Modal
     const openAddModal = (stageIndex) => {
@@ -212,7 +211,22 @@ export default function Deals() {
     // Open Edit Modal
     const openEditModal = async (stageIndex, dealIndex) => {
         const deal = dealsState[stageIndex].deals[dealIndex];
+        const predefinedProjects = [
+  "Office Management App",
+  "Clinic Management",
+  "Educational Platform"
+];
+
+const predefinedCurrencies = ["Rupee", "Dollar", "Euro"];
+
         if (!deal) return;
+const predefinedSources = [
+  "Phone Calls",
+  "Social Media",
+  "Referral Sites",
+  "Web Analytics",
+  "Previous Purchase"
+];
 
         try {
             // Fetch full deal data from API if we have an ID
@@ -233,14 +247,17 @@ export default function Deals() {
                 dealValue: fullDealData.deal_value || fullDealData.amount || fullDealData.value || deal.amount || "", // Backend sends 'deal_value'
                 contact: fullDealData.contact || fullDealData.email || deal.email || "",
                 phone: fullDealData.phone || deal.phone || "",
-                project: fullDealData.project || fullDealData.location || deal.location || "", // Backend sends 'project'
+               project: predefinedProjects.includes(fullDealData.project) ? fullDealData.project : "Others",
+               customProject: predefinedProjects.includes(fullDealData.project) ? "" : fullDealData.project || "", // Backend sends 'project'
                 assignee: fullDealData.assignee || fullDealData.owner || deal.owner || "",
                 stage: fullDealData.status || fullDealData.stage || deal.stage || dealsState[stageIndex]?.stage || "New", // Backend sends 'status'
                 pipeline: fullDealData.pipeline || "",
                 status: fullDealData.status || fullDealData.stage || deal.stage || "", // Backend sends 'status', map to both stage and status
-                currency: fullDealData.currency || "",
+                currency: predefinedCurrencies.includes(fullDealData.currency) ? fullDealData.currency : fullDealData.currency ? "Other" : "",
+                customCurrency: predefinedCurrencies.includes(fullDealData.currency) ? "" : fullDealData.currency || "",
                 tags: fullDealData.tags || "",
-                source: fullDealData.source || "",
+                source: predefinedSources.includes(fullDealData.source) ? fullDealData.source : fullDealData.source ? "Other" : "",
+                customSource: predefinedSources.includes(fullDealData.source) ? "" : fullDealData.source || "",
                 priority: fullDealData.priority || "",
                 description: fullDealData.description || "",
                 dueDate: fullDealData.due_date ? (typeof fullDealData.due_date === 'string' ? fullDealData.due_date.split('T')[0] : fullDealData.due_date) : "", // Backend sends 'due_date'
@@ -294,7 +311,7 @@ export default function Deals() {
 
             // Determine stage from form data or selected stage index
             const selectedStage = formData.stage || dealsState[selectedStageIndex]?.stage || "New";
-            
+
             // Prepare deal data for API - map frontend fields to backend schema
             const dealData = {
                 deal_name: formData.dealName || "Untitled Deal", // Backend expects 'deal_name'
@@ -307,13 +324,13 @@ export default function Deals() {
                 period: formData.period || null,
                 period_value: formData.periodValue ? parseInt(formData.periodValue) : null,
                 contact: formData.contact || null, // Backend expects 'contact'
-                project: formData.project || null, // Backend expects 'project'
+                project: formData.project === "Others" ? formData.customProject || null : formData.project || null, // Backend expects 'project'
                 due_date: formData.dueDate || null, // Backend expects 'due_date'
                 expected_closing_date: formData.closingDate || null, // Backend expects 'expected_closing_date'
                 assignee: formData.assignee || null,
                 tags: formData.tags || null,
                 followup_date: formData.followupDate || null, // Backend expects 'followup_date'
-                source: formData.source || null,
+                source: formData.source === "Other" ? formData.customSource || null : formData.source || null,
                 priority: formData.priority || null,
                 description: formData.description || null,
             };
@@ -383,7 +400,7 @@ export default function Deals() {
                 await dealsAPI.delete(deal.id);
                 toast.success("Deal deleted successfully!");
             }
-            
+
             // Reload deals from API
             await loadDeals();
 
@@ -406,7 +423,7 @@ export default function Deals() {
     return (
         <div>
             <ToastContainer position="top-right" autoClose={3000} />
-            
+
             {error && (
                 <div className="alert alert-warning alert-dismissible fade show" role="alert">
                     <strong>Note:</strong> {error}
@@ -423,22 +440,38 @@ export default function Deals() {
             )}
 
             <div className="d-flex justify-content-between">
-                <div>
-                    <h1 className="mb-1 mt-2 fs-4"><b>Deals</b></h1>
+
+                <div className="gap-2">
+                    <h5 className="text-3xl fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                        <span className="icon-circle ">
+                            <Icon icon='heroicons:credit-card' className="primary" />
+                        </span>
+                        Deals
+                    </h5>
+
+                    <p className="text-muted mb-4">
+                         Monitor pipeline performance and move deals smoothly from prospect to closure.
+                    </p>
                 </div>
 
-                <div className="d-flex my-xl-auto right-content align-items-center flex-wrap">
-                    <div className="me-2 mb-2 dropdown">
-                        <button
-                            className="btn btn-white dropdown-toggle"
-                            data-bs-toggle="dropdown"
-                        >
+
+
+        {/* Right side: buttons */}
+<div className="d-flex gap-2 align-items-center">
+
+  {/* Export Dropdown */}
+  <div className="dropdown">
+    <button
+      type="button"
+      className="create-job-btn dropdown-toggle"
+      data-bs-toggle="dropdown"
+    >
                             <i className="ti ti-file-export me-1" /> Export
                         </button>
-                        <ul className="dropdown-menu">
+                        <ul className="dropdown-menu dropdown-menu-end p-2">
                             <li>
                                 <button
-                                    className="dropdown-item"
+                                    className="dropdown-item rounded-1"
                                     onClick={() => handleExports("PDF")}
                                 >
                                     PDF
@@ -446,7 +479,7 @@ export default function Deals() {
                             </li>
                             <li>
                                 <button
-                                    className="dropdown-item"
+                                    className="dropdown-item rounded-1"
                                     onClick={() => handleExport("Excel")}
                                 >
                                     Excel
@@ -455,17 +488,16 @@ export default function Deals() {
                         </ul>
                     </div>
 
-                    <div className="mb-2">
+                    <div className="mb-2 ">
 
-                        <Button
-                            variant="secondary"
+                        <button className="add-employee gap-2"
                             onClick={() => {
                                 openAddModal(0);
                             }}
                         >
-                            <i className="ti ti-circle-plus me-2" />
+                             <Icon icon="heroicons:plus-circle" width="18" />
                             Add Deal
-                        </Button>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -474,10 +506,10 @@ export default function Deals() {
             {/* Deals Grid Header */}
             <div className="card w-100 mb-3">
                 <div className="card-body p-3 d-flex justify-content-between">
-                    <h5 className="fs-6"><b>Deals Grid</b></h5>
+                    <h5 className="fs-6 text-dark"><b>Deals Grid</b></h5>
                     <div className="dropdown">
                         <button
-                            className="btn btn-sm btn-white dropdown-toggle"
+                            className="close-btn"
                             data-bs-toggle="dropdown"
                         >
                             Sort By : {sortBy}
@@ -540,6 +572,7 @@ export default function Deals() {
                                     <div className="action-icon d-inline-flex">
                                         <button
                                             type="button"
+
                                             className="btn btn-sm btn-link p-0"
                                             onClick={() => openAddModal(stageIndex)}
                                             onMouseEnter={(e) => {
@@ -550,9 +583,9 @@ export default function Deals() {
                                                 e.currentTarget.style.color = '#6c757d';
                                                 e.currentTarget.style.transform = 'scale(1)';
                                             }}
-                                            style={{ 
-                                                width: 'auto', 
-                                                height: 'auto', 
+                                            style={{
+                                                width: 'auto',
+                                                height: 'auto',
                                                 padding: '2px 4px',
                                                 minWidth: 'auto',
                                                 border: 'none',
@@ -563,15 +596,11 @@ export default function Deals() {
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
                                                 transition: 'all 0.2s ease'
-                                              }}
+                                            }}
                                             title="Add Deal"
                                         >
-                                            <span style={{ 
-                                                fontSize: '18px', 
-                                                lineHeight: '1',
-                                                letterSpacing: '2px',
-                                                fontWeight: 'bold'
-                                            }}>⋯</span>
+                                            <Icon icon="heroicons:ellipsis-vertical" width="18" />
+
                                         </button>
                                     </div>
                                 </div>
@@ -659,226 +688,509 @@ export default function Deals() {
             </div>
 
             {/* Add / Edit Modal (react-bootstrap) */}
-            <Modal show={showAddEditModal} onHide={() => setShowAddEditModal(false)} size="lg" centered>
-                <Form onSubmit={handleSave}>
-                    <Modal.Header closeButton>
-                        <Modal.Title>{isEditing ? "Edit Deal" : "Add New Deal"}</Modal.Title>
-                    </Modal.Header>
+{showAddEditModal && (
+  <div
+    className="hrms-modal-overlay"
+  >
+    <div
+      className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column"
+      onClick={(e) => e.stopPropagation()}
+    >
 
-                    <Modal.Body>
-                        <div className="row">
-                            {/* Deal Name */}
-                            <div className="col-md-12 mb-3">
-                                <Form.Label>Deal Name<span className="text-danger">*</span></Form.Label>
-                                <Form.Control
-                                    name="dealName"
-                                    value={formData.dealName}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </div>
+      {/* HEADER */}
+      <div className="hrms-modal-header">
+        <h5 className="hrms-modal-title d-flex align-items-center">
+          <Icon icon="heroicons:briefcase" className="me-2" />
+          {isEditing ? "Edit Deal" : "Add New Deal"}
+        </h5>
 
-                            {/* Pipeline */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Pipeline
-                                    <span className="text-danger">*</span></Form.Label>
+        <button
+          className="btn-close"
+          onClick={() => setShowAddEditModal(false)}
+        >
+         
+        </button>
+      </div>
 
-                                <Form.Select name="pipeline" value={formData.pipeline} onChange={handleChange} required>
-                                    <option value="">Select</option>
-                                    <option>Sales</option>
-                                    <option>Marketing</option>
-                                    <option>Calls</option>
-                                </Form.Select>
-                            </div>
+      {/* BODY */}
+      <div className="hrms-modal-body hrms-modal-body-scroll">
 
-                            {/* Stage */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Stage<span className="text-danger">*</span></Form.Label>
-                                <Form.Select 
-                                    name="stage" 
-                                    value={formData.stage} 
-                                    onChange={(e) => {
-                                        handleChange(e);
-                                        // Sync status with stage for backend (backend uses status field)
-                                        if (e.target.value) {
-                                            setFormData(prev => ({ ...prev, status: e.target.value }));
-                                        }
-                                    }} 
-                                    required
-                                >
-                                    <option value="">Select</option>
-                                    <option value="New">New</option>
-                                    <option value="Prospect">Prospect</option>
-                                    <option value="Proposal">Proposal</option>
-                                    <option value="Won">Won</option>
-                                </Form.Select>
-                            </div>
+        <form onSubmit={handleSave}>
+          <div className="row g-3">
 
-                            {/* Status - Hidden or shown for compatibility */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Status<span className="text-danger">*</span></Form.Label>
-                                <Form.Select 
-                                    name="status" 
-                                    value={formData.status || formData.stage} 
-                                    onChange={handleChange} 
-                                    required
-                                >
-                                    <option value="">Select</option>
-                                    <option value="New">New</option>
-                                    <option value="Prospect">Prospect</option>
-                                    <option value="Proposal">Proposal</option>
-                                    <option value="Won">Won</option>
-                                    <option value="Open">Open</option>
-                                    <option value="Lost">Lost</option>
-                                </Form.Select>
-                            </div>
+            {/* Deal Name */}
+            <div className="col-md-12">
+              <label className="form-label">
+                Deal Name <span className="text-danger">*</span>
+              </label>
+              <input
+                className="form-control"
+                name="dealName"
+                value={formData.dealName}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-                            {/* Deal Value */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Deal Value<span className="text-danger">*</span></Form.Label>
-                                <Form.Control name="dealValue" value={formData.dealValue} onChange={handleChange} />
-                            </div>
+            {/* Pipeline */}
+            <div className="col-md-6">
+              <label className="form-label">
+                Pipeline <span className="text-danger">*</span>
+              </label>
+              <select
+                className="form-select"
+                name="pipeline"
+                value={formData.pipeline}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select</option>
+                <option>Sales</option>
+                <option>Marketing</option>
+                <option>Calls</option>
+              </select>
+            </div>
 
-                            {/* Currency */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Currency<span className="text-danger">*</span></Form.Label>
-                                <Form.Select name="currency" value={formData.currency} onChange={handleChange}>
-                                    <option value="">Select</option>
-                                    <option>Rupee</option>
-                                    <option>Dollar</option>
-                                    <option>Euro</option>
-                                </Form.Select>
-                            </div>
+            {/* Stage */}
+            <div className="col-md-6">
+              <label className="form-label">
+                Stage <span className="text-danger">*</span>
+              </label>
+              <select
+                className="form-select"
+                name="stage"
+                value={formData.stage}
+                onChange={(e) => {
+                  handleChange(e);
+                  if (e.target.value) {
+                    setFormData((prev) => ({
+                      ...prev,
+                      status: e.target.value,
+                    }));
+                  }
+                }}
+                required
+              >
+                <option value="">Select</option>
+                <option value="New">New</option>
+                <option value="Prospect">Prospect</option>
+                <option value="Proposal">Proposal</option>
+                <option value="Won">Won</option>
+              </select>
+            </div>
 
-                            {/* Period */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Period<span className="text-danger">*</span></Form.Label>
-                                <Form.Control name="period" value={formData.period} onChange={handleChange} />
-                            </div>
+            {/* Status */}
+            <div className="col-md-6">
+              <label className="form-label">
+                Status <span className="text-danger">*</span>
+              </label>
+              <select
+                className="form-select"
+                name="status"
+                value={formData.status || formData.stage}
+                onChange={handleChange}
+              >
+                <option value="">Select</option>
+                <option>New</option>
+                <option>Prospect</option>
+                <option>Proposal</option>
+                <option>Won</option>
+                <option>Open</option>
+                <option>Lost</option>
+              </select>
+            </div>
 
-                            {/* Period Value */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Period Value<span className="text-danger">*</span></Form.Label>
-                                <Form.Control name="periodValue" value={formData.periodValue} onChange={handleChange} />
-                            </div>
+            {/* Deal Value */}
+            <div className="col-md-6">
+              <label className="form-label">
+                Deal Value <span className="text-danger">*</span>
+              </label>
+              <input
+                className="form-control"
+                name="dealValue"
+                value={formData.dealValue}
+                onChange={handleChange}
+              />
+            </div>
 
-                            {/* Contact */}
-                            <div className="col-md-12 mb-3">
-                                <Form.Label>Contact<span className="text-danger">*</span></Form.Label>
-                                <Form.Control name="contact" value={formData.contact} onChange={handleChange} />
-                            </div>
+            {/* Currency */}
+<div className="col-md-6">
+  <label className="form-label">
+    Currency <span className="text-danger">*</span>
+  </label>
 
-                            {/* Project */}
-                            <div className="col-md-12 mb-3">
-                                <Form.Label>Project<span className="text-danger">*</span></Form.Label>
-                                <Form.Select name="project" value={formData.project} onChange={handleChange}>
-                                    <option value="">Select</option>
-                                    <option>Office Management App</option>
-                                    <option>Clinic Management</option>
-                                    <option>Educational Platform</option>
-                                </Form.Select>
-                            </div>
+  {formData.currency === "Other" ? (
+    <input
+      type="text"
+      className="form-control"
+      placeholder="Enter Currency (e.g. INR, JPY)"
+      value={formData.customCurrency || ""}
+      onChange={(e) =>
+        setFormData((prev) => ({
+          ...prev,
+          customCurrency: e.target.value
+        }))
+      }
+      onBlur={() => {
+        if (formData.customCurrency?.trim()) {
+          setFormData((prev) => ({
+            ...prev,
+            currency: formData.customCurrency.trim()
+          }));
+        }
+      }}
+    />
+  ) : (
+    <select
+      className="form-select"
+      name="currency"
+      value={formData.currency}
+      onChange={(e) => {
+        const value = e.target.value;
 
-                            {/* Dates */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Due Date<span className="text-danger">*</span></Form.Label>
-                                <Form.Control type="date" name="dueDate" value={formData.dueDate} onChange={handleChange} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Expected Closing Date<span className="text-danger">*</span></Form.Label>
-                                <Form.Control type="date" name="closingDate" value={formData.closingDate} onChange={handleChange} />
-                            </div>
+        if (value === "Other") {
+          setFormData((prev) => ({
+            ...prev,
+            currency: "Other",
+            customCurrency: ""
+          }));
+        } else {
+          setFormData((prev) => ({
+            ...prev,
+            currency: value,
+            customCurrency: ""
+          }));
+        }
+      }}
+    >
+      <option value="">Select</option>
+      <option value="Rupee">Rupee</option>
+      <option value="Dollar">Dollar</option>
+      <option value="Euro">Euro</option>
+      <option value="Other">Other</option>
+    </select>
+  )}
+</div>
 
-                            {/* Assignee */}
-                            <div className="col-md-12 mb-3">
-                                <Form.Label>Assignee<span className="text-danger">*</span></Form.Label>
-                                <Form.Control name="assignee" value={formData.assignee} onChange={handleChange} />
-                            </div>
+            {/* Period */}
+            <div className="col-md-6">
+              <label className="form-label">
+                Period
+              </label>
+              <input
+                className="form-control"
+                name="period"
+                value={formData.period}
+                onChange={handleChange}
+              />
+            </div>
 
-                            {/* Tags */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Tags<span className="text-danger">*</span></Form.Label>
-                                <Form.Control name="tags" value={formData.tags} onChange={handleChange} />
-                            </div>
+            {/* Period Value */}
+            <div className="col-md-6">
+              <label className="form-label">
+                Period Value
+              </label>
+              <input
+                className="form-control"
+                name="periodValue"
+                value={formData.periodValue}
+                onChange={handleChange}
+              />
+            </div>
 
-                            {/* Followup Date */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Followup Date<span className="text-danger">*</span></Form.Label>
-                                <Form.Control type="date" name="followupDate" value={formData.followupDate} onChange={handleChange} />
-                            </div>
+            {/* Contact */}
+            <div className="col-md-12">
+              <label className="form-label">
+                Contact
+              </label>
+              <input
+                className="form-control"
+                name="contact"
+                value={formData.contact}
+                onChange={handleChange}
+              />
+            </div>
 
-                            {/* Source */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Source<span className="text-danger">*</span></Form.Label>
-                                <Form.Select name="source" value={formData.source} onChange={handleChange}>
-                                    <option value="">Select</option>
-                                    <option>Phone Calls</option>
-                                    <option>Social Media</option>
-                                    <option>Referral Sites</option>
-                                    <option>Web Analytics</option>
-                                    <option>Previous Purchase</option>
-                                </Form.Select>
-                            </div>
+            {/* Project */}
+<div className="col-md-12">
+  <label className="form-label">Project</label>
 
-                            {/* Priority */}
-                            <div className="col-md-6 mb-3">
-                                <Form.Label>Priority<span className="text-danger">*</span></Form.Label>
-                                <Form.Select name="priority" value={formData.priority} onChange={handleChange}>
-                                    <option value="">Select</option>
-                                    <option>High</option>
-                                    <option>Low</option>
-                                    <option>Medium</option>
-                                </Form.Select>
-                            </div>
+  {formData.project === "Others" ? (
+    <input
+      type="text"
+      className="form-control"
+      placeholder="Enter Project Name"
+      value={formData.customProject}
+      onChange={(e) =>
+        setFormData((prev) => ({
+          ...prev,
+          customProject: e.target.value
+        }))
+      }
+    />
+  ) : (
+    <select
+      className="form-select"
+      name="project"
+      value={formData.project}
+      onChange={(e) => {
+        const value = e.target.value;
 
-                            {/* Description */}
-                            <div className="col-md-12 mb-3">
-                                <Form.Label>Description<span className="text-danger">*</span></Form.Label>
-                                <Form.Control as="textarea" name="description" value={formData.description} onChange={handleChange} rows={3} />
-                            </div>
-                        </div>
-                    </Modal.Body>
+        if (value === "Others") {
+          setFormData((prev) => ({
+            ...prev,
+            project: "Others"
+          }));
+        } else {
+          handleChange(e);
+        }
+      }}
+    >
+      <option value="">Select</option>
+      <option value="Office Management App">Office Management App</option>
+      <option value="Clinic Management">Clinic Management</option>
+      <option value="Educational Platform">Educational Platform</option>
+      <option value="Others">Others</option>
+    </select>
+  )}
+</div>
 
-                    <Modal.Footer>
-                        <Button variant="light" onClick={() => setShowAddEditModal(false)}>
-                            Cancel
-                        </Button>
-                        <Button type="submit" variant="secondary">
-                            {isEditing ? "Save" : "Add Deal"}
-                        </Button>
-                    </Modal.Footer>
-                </Form>
-            </Modal>
+            {/* Dates */}
+            <div className="col-md-6">
+              <label className="form-label">Due Date</label>
+              <input
+                type="date"
+                className="form-control"
+                name="dueDate"
+                value={formData.dueDate}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Expected Closing Date</label>
+              <input
+                type="date"
+                className="form-control"
+                name="closingDate"
+                value={formData.closingDate}
+                onChange={handleChange}
+              />
+            </div>
+
+            {/* Assignee */}
+            <div className="col-md-12">
+              <label className="form-label">Assignee</label>
+              <input
+                className="form-control"
+                name="assignee"
+                value={formData.assignee}
+                onChange={handleChange}
+              />
+            </div>
+
+            {/* Tags */}
+            <div className="col-md-6">
+              <label className="form-label">Tags</label>
+              <input
+                className="form-control"
+                name="tags"
+                value={formData.tags}
+                onChange={handleChange}
+              />
+            </div>
+
+            {/* Followup */}
+            <div className="col-md-6">
+              <label className="form-label">Followup Date</label>
+              <input
+                type="date"
+                className="form-control"
+                name="followupDate"
+                value={formData.followupDate}
+                onChange={handleChange}
+              />
+            </div>
+
+            {/* Source */}
+{/* Source */}
+<div className="col-md-6">
+  <label className="form-label">Source</label>
+
+  {formData.source === "Other" ? (
+    <input
+      type="text"
+      className="form-control"
+      placeholder="Enter Source"
+      value={formData.customSource || ""}
+      onChange={(e) =>
+        setFormData((prev) => ({
+          ...prev,
+          customSource: e.target.value
+        }))
+      }
+      onBlur={() => {
+        if (formData.customSource?.trim()) {
+          setFormData((prev) => ({
+            ...prev,
+            source: formData.customSource.trim()
+          }));
+        }
+      }}
+    />
+  ) : (
+    <select
+      className="form-select"
+      name="source"
+      value={formData.source}
+      onChange={(e) => {
+        const value = e.target.value;
+
+        if (value === "Other") {
+          setFormData((prev) => ({
+            ...prev,
+            source: "Other",
+            customSource: ""
+          }));
+        } else {
+          setFormData((prev) => ({
+            ...prev,
+            source: value,
+            customSource: ""
+          }));
+        }
+      }}
+    >
+      <option value="">Select</option>
+      <option value="Phone Calls">Phone Calls</option>
+      <option value="Social Media">Social Media</option>
+      <option value="Referral Sites">Referral Sites</option>
+      <option value="Web Analytics">Web Analytics</option>
+      <option value="Previous Purchase">Previous Purchase</option>
+      <option value="Other">Other</option>
+    </select>
+  )}
+</div>
+
+            {/* Priority */}
+            <div className="col-md-6">
+              <label className="form-label">Priority</label>
+              <select
+                className="form-select"
+                name="priority"
+                value={formData.priority}
+                onChange={handleChange}
+              >
+                <option value="">Select</option>
+                <option>High</option>
+                <option>Medium</option>
+                <option>Low</option>
+              </select>
+            </div>
+
+            {/* Description */}
+            <div className="col-md-12">
+              <label className="form-label">Description</label>
+              <textarea
+                className="form-control"
+                rows="3"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+              />
+            </div>
+
+          </div>
+        </form>
+
+      </div>
+
+      {/* FOOTER */}
+      <div className="hrms-modal-footer d-flex justify-content-end gap-2">
+
+        <button
+          className="cancel-btn"
+          onClick={() => setShowAddEditModal(false)}
+        >
+          Cancel
+        </button>
+
+        <button
+          className="create-job-btn gap-2"
+          onClick={handleSave}
+        >
+          {isEditing ? "Save Deal" : "Add Deal"}
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+)}
 
 
             {/* Delete Modal */}
-            <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
-                <Modal.Body className="text-center">
-                    <span className="avatar avatar-xl bg-transparent-danger text-danger mb-3">
-                        <i className="ti ti-trash fs-36" />
-                    </span>
-                    <h4 className="mb-1">Confirm Delete</h4>
-                    <p className="mb-3">
-                        You want to delete{" "}
-                        <b>
-                            {selectedStageIndex !== null && selectedDealIndex !== null
-                                ? dealsState[selectedStageIndex].deals[selectedDealIndex]?.title
-                                : ""}
-                        </b>{" "}
-                        ? This can’t be undone.
-                    </p>
-                    <div className="d-flex justify-content-center">
-                        <Button variant="light" className="me-3" onClick={() => setShowDeleteModal(false)}>
-                            Cancel
-                        </Button>
-                        <Button variant="danger" onClick={handleDelete}>
-                            Yes, Delete
-                        </Button>
-                    </div>
-                </Modal.Body>
-            </Modal>
-            
+{showDeleteModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-content">
+
+        {/* Header */}
+        <div className="modal-header">
+          <h5 className="modal-title d-flex align-items-center">
+            Confirm Delete
+          </h5>
+
+          <button
+            type="button"
+            className="btn-close"
+            onClick={() => setShowDeleteModal(false)}
+          ></button>
+        </div>
+
+        {/* Body */}
+        <div className="modal-body text-center">
+
+          <h5 className="mb-2">Are you sure?</h5>
+
+          <p className="text-muted">
+            You want to delete{" "}
+            <strong>
+              {selectedStageIndex !== null && selectedDealIndex !== null
+                ? dealsState[selectedStageIndex].deals[selectedDealIndex]?.title
+                : ""}
+            </strong>
+            . This action cannot be undone.
+          </p>
+
+        </div>
+
+        {/* Footer */}
+        <div className="modal-footer">
+
+          <button
+            type="button"
+            className="delete-btn"
+            onClick={() => setShowDeleteModal(false)}
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            className="cancel-btn"
+            onClick={handleDelete}
+          >
+            Delete
+          </button>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+)}
+
         </div>
     );
 }
-

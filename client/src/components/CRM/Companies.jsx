@@ -1,11 +1,116 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { companiesAPI } from '../../utils/api';
 import { BASE_URL } from '../../config/api.config';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Icon } from '@iconify/react/dist/iconify.js';
 
+// Sample companies data for fallback/export
+const sampleCompanies = [
+  {
+    name: 'Brightwave Innovations',
+    email: 'clara@example.com',
+    phone: '(563) 245 3156',
+    location: 'Germany',
+    rating: 4.5,
+    logo: '🌊',
+  },
+  {
+    name: 'Stellar Dynamics',
+    email: 'sharon@example.com',
+    phone: '(148) 126 6495',
+    location: 'USA',
+    rating: 4.5,
+    logo: '🌟',
+  },
+  {
+    name: 'Quantum Nexus',
+    email: 'rayuhan@example.com',
+    phone: '(248) 136 6495',
+    location: 'India',
+    rating: 4.5,
+    logo: '⚛️',
+  },
+  {
+    name: 'EcoVision Enterprises',
+    email: 'jessica@example.com',
+    phone: '(563) 245 3156',
+    location: 'Canada',
+    rating: 4.5,
+    logo: '🌱',
+  },
+  {
+    name: 'Aurora Technologies',
+    email: 'clara@example.com',
+    phone: '(563) 245 3156',
+    location: 'Germany',
+    rating: 4.5,
+    logo: '🌌',
+  },
+  {
+    name: 'BluSky Ventures',
+    email: 'diana@example.com',
+    phone: '(563) 245 3156',
+    location: 'Japan',
+    rating: 4.5,
+    logo: '☁️',
+  },
+  {
+    name: 'TerraFusion Energy',
+    email: 'rakesh@example.com',
+    phone: '(563) 245 3156',
+    location: 'Indonesia',
+    rating: 4.5,
+    logo: '🔥',
+  },
+  {
+    name: 'UrbanPulse Design',
+    email: 'jonella@example.com',
+    phone: '(563) 245 3156',
+    location: 'USA',
+    rating: 4.5,
+    logo: '🏙️',
+  },
+
+  {
+    name: 'Nimbus Networks',
+    email: 'jonathan@example.com',
+    phone: '(763) 2946 125',
+    location: 'Israel',
+    rating: 4.1,
+    logo: '☁️',
+
+  },
+  {
+    name: 'Epicurean Delights',
+    email: 'patrick@example.com',
+    phone: '(123) 345 9776',
+    location: 'Colombia',
+    rating: 4.2,
+    logo: '🍽️'
+
+  },
+  {
+    name: 'Hermann Groups',
+    email: 'patrick@example.com',
+    phone: '(123) 345 9776',
+    location: 'Colombia',
+    rating: 4.1,
+    logo: '🏢'
+
+  },
+  {
+    name: 'Beacon Softwares',
+    email: 'gloria@example.com',
+    phone: '(153) 789 6248',
+    location: 'Brazil',
+    rating: 4.6,
+    logo: '💻'
+
+  },
+];
 
 function Companies() {
   const [loading, setLoading] = useState(true);
@@ -15,123 +120,8 @@ function Companies() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
-  // Sample companies data for fallback/export
-  const sampleCompanies = [
-    {
-      name: 'Brightwave Innovations',
-      email: 'clara@example.com',
-      phone: '(563) 245 3156',
-      location: 'Germany',
-      rating: 4.5,
-      logo: '🌊',
-    },
-    {
-      name: 'Stellar Dynamics',
-      email: 'sharon@example.com',
-      phone: '(148) 126 6495',
-      location: 'USA',
-      rating: 4.5,
-      logo: '🌟',
-    },
-    {
-      name: 'Quantum Nexus',
-      email: 'rayuhan@example.com',
-      phone: '(248) 136 6495',
-      location: 'India',
-      rating: 4.5,
-      logo: '⚛️',
-    },
-    {
-      name: 'EcoVision Enterprises',
-      email: 'jessica@example.com',
-      phone: '(563) 245 3156',
-      location: 'Canada',
-      rating: 4.5,
-      logo: '🌱',
-    },
-    {
-      name: 'Aurora Technologies',
-      email: 'clara@example.com',
-      phone: '(563) 245 3156',
-      location: 'Germany',
-      rating: 4.5,
-      logo: '🌌',
-    },
-    {
-      name: 'BluSky Ventures',
-      email: 'diana@example.com',
-      phone: '(563) 245 3156',
-      location: 'Japan',
-      rating: 4.5,
-      logo: '☁️',
-    },
-    {
-      name: 'TerraFusion Energy',
-      email: 'rakesh@example.com',
-      phone: '(563) 245 3156',
-      location: 'Indonesia',
-      rating: 4.5,
-      logo: '🔥',
-    },
-    {
-      name: 'UrbanPulse Design',
-      email: 'jonella@example.com',
-      phone: '(563) 245 3156',
-      location: 'USA',
-      rating: 4.5,
-      logo: '🏙️',
-    },
-
-    {
-      name: 'Nimbus Networks',
-      email: 'jonathan@example.com',
-      phone: '(763) 2946 125',
-      location: 'Israel',
-      rating: 4.1,
-      logo: '☁️',
-
-    },
-    {
-      name: 'Epicurean Delights',
-      email: 'patrick@example.com',
-      phone: '(123) 345 9776',
-      location: 'Colombia',
-      rating: 4.2,
-      logo: '🍽️'
-
-    },
-    {
-      name: 'Hermann Groups',
-      email: 'patrick@example.com',
-      phone: '(123) 345 9776',
-      location: 'Colombia',
-      rating: 4.1,
-      logo: '🏢'
-
-    },
-    {
-      name: 'Beacon Softwares',
-      email: 'gloria@example.com',
-      phone: '(153) 789 6248',
-      location: 'Brazil',
-      rating: 4.6,
-      logo: '💻'
-
-    },
-  ];
-
-  // Load companies from API on component mount
-  useEffect(() => {
-    loadCompanies();
-  }, []);
-
-  // Update displayed companies when Crmcompanies changes
-  useEffect(() => {
-    setDisplayedCompanies(Crmcompanies);
-  }, [Crmcompanies]);
-
   // Load companies from API
-  const loadCompanies = async () => {
+  const loadCompanies = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -148,7 +138,7 @@ function Companies() {
           location: company.location || company.country || '',
           rating: company.rating || 0,
           logo: company.logo || null, // Use logo path from backend
-          logoPath: company.logo 
+          logoPath: company.logo
             ? (company.logo.startsWith('http') ? company.logo : `${BASE_URL}${company.logo}`)
             : null,
           ...company // Keep all original fields
@@ -167,7 +157,7 @@ function Companies() {
       console.error('Error loading companies:', err);
       const status = err.status || (err.message && err.message.includes('404') ? 404 : null);
       let errorMessage = 'Failed to load companies. ';
-      
+
       if (status === 404 || err.message?.includes('404') || err.message?.includes('Not Found')) {
         errorMessage += 'The companies API endpoint is not available. Please ensure the backend companies endpoint is implemented.';
       } else if (err.message) {
@@ -175,7 +165,7 @@ function Companies() {
       } else {
         errorMessage += 'Please check if the backend API is running.';
       }
-      
+
       setError(errorMessage);
       // Fallback to sample data
       setCrmcompanies(sampleCompanies);
@@ -183,7 +173,17 @@ function Companies() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Load companies from API on component mount
+  useEffect(() => {
+    loadCompanies();
+  }, [loadCompanies]);
+
+  // Update displayed companies when Crmcompanies changes
+  useEffect(() => {
+    setDisplayedCompanies(Crmcompanies);
+  }, [Crmcompanies]);
 
 
   const styles = {
@@ -211,14 +211,6 @@ function Companies() {
       cursor: 'pointer',
     },
 
-    select: {
-      padding: '6px 12px',
-      backgroundColor: '#3B7080',
-      color: 'white',
-      border: 'none',
-      borderRadius: '6px',
-      cursor: 'pointer',
-    },
     grid: {
       display: 'grid',
       gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
@@ -252,15 +244,21 @@ function Companies() {
     fax: '',
     website: '',
     ratings: '',
-    owner: '',
-    tags: 'Collab',
+    owner: "",
+customOwner: "",
+    tags: '',
     deals: '',
     industry: '',
+customIndustry: '',
     source: '',
-    currency: '',
-    language: '',
+customSource: '',
+    currency: "",
+    customCurrency: "",
+    language: "",
+    customLanguage: "",
     about: '',
     contact: '',
+customContact: '',
     address: '',
     country: '',
     state: '',
@@ -273,7 +271,8 @@ function Companies() {
     whatsapp: '',
     instagram: '',
     visibility: 'private',
-    status: ''
+    status: '',
+     selectedUsers: []
   });
 
   const handleInputChange = (e) => {
@@ -324,15 +323,20 @@ function Companies() {
       fax: '',
       website: '',
       ratings: '',
-      owner: '',
-      tags: 'Collab',
+      owner: "",
+customOwner: "",
+      tags: '',
       deals: '',
       industry: '',
       source: '',
-      currency: '',
-      language: '',
+customSource: '',
+    currency: "",
+    customCurrency: "",
+    language: "",
+    customLanguage: "",
       about: '',
       contact: '',
+customContact: '',
       address: '',
       country: '',
       state: '',
@@ -345,7 +349,8 @@ function Companies() {
       whatsapp: '',
       instagram: '',
       visibility: 'private',
-      status: ''
+      status: '',
+      selectedUsers: []
     });
     setSelectedFile(null);
     setImagePreview(null);
@@ -360,6 +365,37 @@ function Companies() {
   };
 
   const handleEditCompany = (company) => {
+const predefinedCurrencies = ["Dollar", "Euro", "Rupee", "Pound"];
+const predefinedLanguages = ["English", "Spanish", "French", "German"];
+const predefinedOwners = [
+  "Hendry Milner",
+  "Guilory Berggren",
+  "Jami Carlile"
+];
+
+const predefinedIndustries = [
+  "Retail Industry",
+  "Banking",
+  "Hotels",
+  "Financial Services",
+  "Insurance"
+];
+
+const predefinedSources = [
+  "Phone Calls",
+  "Social Media",
+  "Referral Sites",
+  "Web Analytics",
+  "Previous Purchase"
+];
+
+const predefinedContacts = [
+  "Darlee Robertson",
+  "Sharon Roy",
+  "Vaughan",
+  "Jessica",
+  "Carol Thomas"
+];
     setModalType('edit');
     setSelectedCompany(company);
     setSelectedFile(null);
@@ -381,12 +417,57 @@ function Companies() {
       zipcode: company.zipcode || '',
       address: company.address || '',
       ratings: company.rating ? company.rating.toString() : '',
-      industry: company.industry || '',
-      source: company.source || '',
-      currency: company.currency || '',
-      language: company.language || '',
-      owner: company.owner || '',
-      contact: company.contact || '',
+      industry: predefinedIndustries.includes(company.industry)
+  ? company.industry
+  : "Others",
+
+customIndustry: predefinedIndustries.includes(company.industry)
+  ? ""
+  : company.industry || "",
+      source: predefinedSources.includes(company.source)
+  ? company.source
+  : company.source
+    ? "Others"
+    : "",
+
+customSource: predefinedSources.includes(company.source)
+  ? ""
+  : company.source || "",
+  currency: predefinedCurrencies.includes(company.currency)
+    ? company.currency
+    : company.currency
+      ? "Other"
+      : "",
+
+  customCurrency: predefinedCurrencies.includes(company.currency)
+    ? ""
+    : company.currency || "",
+
+  language: predefinedLanguages.includes(company.language)
+    ? company.language
+    : company.language
+      ? "Other"
+      : "",
+
+  customLanguage: predefinedLanguages.includes(company.language)
+    ? ""
+    : company.language || "",
+      owner: predefinedOwners.includes(company.owner)
+  ? company.owner
+  : "Others",
+
+customOwner: predefinedOwners.includes(company.owner)
+  ? ""
+  : company.owner || "",
+     contact: predefinedContacts.includes(company.contact)
+  ? company.contact
+  : company.contact
+    ? "Others"
+    : "",
+
+customContact: predefinedContacts.includes(company.contact)
+  ? ""
+  : company.contact || "",
       deals: company.deals || '',
       tags: company.tags || 'Collab',
       about: company.about || '',
@@ -397,7 +478,9 @@ function Companies() {
       skype: company.skype || '',
       whatsapp: company.whatsapp || '',
       visibility: company.visibility || 'private',
-      status: company.status || ''
+      status: company.status || '',
+       //  Add if using custom user selection
+    selectedUsers: company.selectedUsers ?? []
     });
     setActiveTab('basic-info');
     setShowModal(true);
@@ -428,11 +511,11 @@ function Companies() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       setError(null);
       setLoading(true);
-      
+
       // Prepare company data for API - map frontend fields to backend schema
       const companyData = {
         company_name: formData.companyName || 'Untitled Company', // Backend expects 'company_name', not 'name'
@@ -448,12 +531,25 @@ function Companies() {
         zipcode: formData.zipcode || null,
         address: formData.address || null,
         rating: formData.ratings ? parseFloat(formData.ratings) : null, // Backend expects float or null
-        industry: formData.industry || null,
-        source: formData.source || null,
-        currency: formData.currency || null,
-        language: formData.language || null,
-        owner: formData.owner || null,
-        contact: formData.contact || null,
+        industry: formData.industry === "Others"
+    ? formData.customIndustry || null
+    : formData.industry || null,
+    
+        source:formData.source === "Others"
+    ? formData.customSource || null
+    : formData.source || null,
+        currency: formData.currency === "Other"
+    ? formData.customCurrency || null
+    : formData.currency || null,
+        language: formData.language === "Other"
+    ? formData.customLanguage || null
+    : formData.language || null,
+        owner: formData.owner === "Others"
+    ? formData.customOwner || null
+    : formData.owner || null,
+        contact: formData.contact === "Others"
+    ? formData.customContact || null
+    : formData.contact || null,
         deals: formData.deals || null,
         tags: formData.tags || null, // Backend expects string, not array
         about: formData.about || null,
@@ -464,7 +560,9 @@ function Companies() {
         skype: formData.skype || null,
         whatsapp: formData.whatsapp || null,
         visibility: formData.visibility || 'private',
-        status: formData.status || null
+        status: formData.status || null,
+         //  Add if using custom user selection
+    selectedUsers: formData.selectedUsers ?? []
       };
 
       // Remove empty strings
@@ -481,10 +579,10 @@ function Companies() {
         await companiesAPI.update(selectedCompany.id, companyData, selectedFile);
         toast.success('Company updated successfully!');
       }
-      
+
       // Reload companies
       await loadCompanies();
-      
+
       // Close modal and reset form
       setShowModal(false);
       setActiveTab('basic-info');
@@ -507,11 +605,27 @@ function Companies() {
     setSelectedCompany(null);
   };
 
-  const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
-      setShowModal(false);
+
+
+  const handleUserSelect = (e) => {
+  const value = e.target.value;
+
+  setFormData((prev) => {
+    const selected = prev.selectedUsers || [];
+
+    if (selected.includes(value)) {
+      return {
+        ...prev,
+        selectedUsers: selected.filter((id) => id !== value),
+      };
+    } else {
+      return {
+        ...prev,
+        selectedUsers: [...selected, value],
+      };
     }
-  };
+  });
+};
 
   // Handle escape key press
   React.useEffect(() => {
@@ -562,7 +676,7 @@ function Companies() {
 
   const handleExportEXCEL = () => {
     const exportData = Crmcompanies.length > 0 ? Crmcompanies : sampleCompanies;
-    
+
     // Create CSV content
     const headers = ['Name', 'Email', 'Phone', 'Location', 'Rating'];
     const csvContent = [
@@ -587,24 +701,24 @@ function Companies() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    
+
     toast.success('Excel file downloaded successfully!');
   };
 
- const handleSortChange = (e) => {
-  const selectedLocation = e.target.value;
+  const handleSortChange = (e) => {
+    const selectedLocation = e.target.value;
 
-  if (selectedLocation === 'Sort by') {
-    // Reset to full list
-    setDisplayedCompanies(Crmcompanies);
-  } else {
-    const filtered = Crmcompanies.filter(c => 
-      (c.location && c.location.toLowerCase().includes(selectedLocation.toLowerCase())) ||
-      (c.country && c.country.toLowerCase().includes(selectedLocation.toLowerCase()))
-    );
-    setDisplayedCompanies(filtered);
-  }
-};
+    if (selectedLocation === 'Sort by') {
+      // Reset to full list
+      setDisplayedCompanies(Crmcompanies);
+    } else {
+      const filtered = Crmcompanies.filter(c =>
+        (c.location && c.location.toLowerCase().includes(selectedLocation.toLowerCase())) ||
+        (c.country && c.country.toLowerCase().includes(selectedLocation.toLowerCase()))
+      );
+      setDisplayedCompanies(filtered);
+    }
+  };
 
 
 
@@ -628,65 +742,84 @@ function Companies() {
 
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
-          <h3>Companies</h3>
+          <h5 className="text-3xl fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+            <span className="icon-circle text-primary">
+              <Icon icon="heroicons:link-20-solid" />
+            </span>
+            Companies
+          </h5>
+          <p className="text-muted mb-0">
+            Manage contacts, associated companies, and communication details from a single platform.
+          </p>
         </div>
-        
+
         {/* Right side: buttons */}
-        <div className="d-flex gap-2">
-          <div>
-            <div className="d-flex my-xl-auto right-content align-items-center flex-wrap">
-              {/* Export Dropdown */}
-              <div className="me-2 mb-2">
-                <div className="dropdown">
-                  <a
-                    href="#"
-                    className="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                    data-bs-toggle="dropdown"
-                  >
-                    <i className="ti ti-file-export me-1"></i>Export
-                  </a>
-                  <ul className="dropdown-menu dropdown-menu-end p-3">
-                    <li>
-                      <button
-                        onClick={handleExportPDF}
-                        className="dropdown-item rounded-1"
-                      >
-                        <i className="ti ti-file-type-pdf me-1"></i>Export as PDF
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        onClick={handleExportEXCEL}
-                        className="dropdown-item rounded-1"
-                      >
-                        <i className="ti ti-file-type-pdf me-1"></i>Export as Excel
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-          <button
-            style={styles.button}
-            onClick={handleAddCompany}
-          >
-            <i className='fe fe-plus-circle'></i>  Add Company
-          </button>
-        </div>
+<div className="d-flex gap-2 align-items-center">
+
+  {/* Export Dropdown */}
+  <div className="dropdown">
+    <button
+      type="button"
+      className="create-job-btn dropdown-toggle gap-2"
+      data-bs-toggle="dropdown"
+    >
+      <i className="ti ti-file-export"></i>
+      Export
+    </button>
+
+    <ul className="dropdown-menu dropdown-menu-end p-2">
+      <li>
+        <button
+          onClick={handleExportPDF}
+          className="dropdown-item rounded-1"
+        >
+          <i className="ti ti-file-type-pdf me-1"></i>
+          Export as PDF
+        </button>
+      </li>
+
+      <li>
+        <button
+          onClick={handleExportEXCEL}
+          className="dropdown-item rounded-1"
+        >
+          <i className="ti ti-file-type-xls me-1"></i>
+          Export as Excel
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  {/* Add Company Button */}
+  <button
+    className="add-employee gap-2"
+    onClick={handleAddCompany}
+  >
+    <Icon icon="heroicons:plus-circle" width="18" />
+
+    Add Company
+  </button>
+
+</div>
       </div>
 
       <div className="card w-100 p-2">
         <div className="d-flex justify-content-between align-items-center">
           <h6 className="fs-6"><b>Companies Grid</b></h6>
-          <select style={styles.select} onChange={handleSortChange}>
-            <option>Sort by</option>
-            {[...new Set(Crmcompanies.map((crm) => crm.location || crm.country).filter(Boolean))].map((location, index) => (
-              <option key={index} value={location}>
-                {location}
-              </option>
-            ))}
-          </select>
+<select className='close-btn' onChange={handleSortChange}>
+  <option value="" className='text-dark'>Sort by Location</option>
+
+  {[...new Set(
+    Crmcompanies
+      .map((crm) => crm.location?.trim() || crm.country?.trim())
+      .filter(Boolean)
+  )].map((location, index) => (
+    <option key={index} value={location} className='text-dark'>
+      {location}
+    </option>
+  ))}
+
+</select>
 
 
         </div>
@@ -696,157 +829,219 @@ function Companies() {
 
         <div style={styles.grid}>
           {displayedCompanies.map((company, index) => (
-            <div key={company.id || index} style={styles.card}>
-              <div className="d-flex justify-content-between align-items-start mb-2">
-                <div style={styles.logo}>
+            <div
+              key={company.id || index}
+              style={{
+                ...styles.card,
+                backgroundColor: "#f8fafc", // soft background
+                borderRadius: "14px",
+                padding: "18px",
+                boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+                display: "flex",
+                flexDirection: "column",
+                height: "100%"
+              }}
+            >
+              {/* Top: Logo */}
+              <div className="d-flex justify-content-start mb-3">
+                <div
+                  style={{
+                    ...styles.logo,
+                    width: "64px",
+                    height: "64px",
+                    borderRadius: "12px",
+                    backgroundColor: "#e2e8f0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                    
+                  }}
+                >
                   {company.logoPath ? (
-                    <img 
-                      src={company.logoPath} 
+                    <img
+                      src={company.logoPath}
                       alt={company.name}
-                      style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }}
+                      style={{
+                        width: "56px",
+                        height: "56px",
+                        objectFit: "contain",
+                        borderRadius: "8px"
+                      }}
                       onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'block';
+                        e.target.style.display = "none";
+                        e.target.nextSibling.style.display = "flex";
                       }}
                     />
                   ) : null}
-                  <span style={{ display: company.logoPath ? 'none' : 'block', fontSize: '40px' }}>🏢</span>
-                </div>
-                <div className="d-flex gap-1">
-                  <button
-                    className="btn btn-sm btn-primary"
-                    onClick={() => handleEditCompany(company)}
-                    title="Edit Company"
-                    type="button"
-                    style={{ fontSize: '12px', padding: '4px 10px', minWidth: '65px' }}
+
+                  {/* React Icon instead of 🏢 */}
+                  <span
+                    style={{
+                      display: company.logoPath ? "none" : "flex",
+                      fontSize: "28px",
+                      color: "#334155"
+                    }}
                   >
-                    <i className="ti ti-edit me-1"></i>Edit
-                  </button>
-                  <button
-                    className="btn btn-sm btn-danger"
-                    onClick={() => handleDeleteCompany(company)}
-                    title="Delete Company"
-                    type="button"
-                    style={{ fontSize: '12px', padding: '4px 10px', minWidth: '75px' }}
-                  >
-                    <i className="ti ti-trash me-1"></i>Delete
-                  </button>
+                    <Icon icon="heroicons:building-office-2" />
+                  </span>
                 </div>
               </div>
-              <h5><b>{company.name}</b></h5>
-              <p><strong>Email:</strong> {company.email || 'N/A'}</p>
-              <p><strong>Phone:</strong> {company.phone || 'N/A'}</p>
-              <p><strong>Location:</strong> {company.location || 'N/A'}</p>
-              <p><strong>Rating:</strong> ⭐ {company.rating || 0}</p>
 
+              {/* Company Name */}
+              <h5
+                style={{
+                  fontSize: "20px",
+                  fontWeight: 500,
+                  marginBottom: "12px",
+                  lineHeight: "1.3"
+                }}
+              >
+                {company.name}
+              </h5>
+
+              {/* Details */}
+              <div
+                style={{
+                  fontSize: "14px",
+                  color: "#475569",
+                  lineHeight: "1.8",
+                  flexGrow: 1
+                }}
+              >
+                <div>
+                  <strong style={{ color: "#000" }}>Email:</strong>{" "}
+                  {company.email || "N/A"}
+                </div>
+                <div>
+                  <strong style={{ color: "#000" }}>Phone:</strong>{" "}
+                  {company.phone || "N/A"}
+                </div>
+                <div>
+                  <strong style={{ color: "#000" }}>Location:</strong>{" "}
+                  {company.location || "N/A"}
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  <strong style={{ color: "#000" }}>Rating:</strong>
+                  <span style={{ color: "#f59e0b", fontWeight: 600 }}>
+                    ⭐ {company.rating || 0}
+                  </span>
+                </div>
+              </div>
+
+              {/* Bottom Actions */}
+              <div className="d-flex justify-content-around gap-2 mt-3">
+                <button
+                  className="btn btn-sm btn-primary d-flex align-items-center justify-content-center"
+                  onClick={() => handleEditCompany(company)}
+                  title="Edit Company"
+                  type="button"
+                  style={{ fontSize: "12px", padding: "6px 14px", minWidth: "70px" }}
+                >
+                  <Icon icon="heroicons:pencil-square" className="me-1" width="16" />
+                  Edit
+                </button>
+
+                <button
+                  className="btn btn-sm btn-danger d-flex align-items-center justify-content-center"
+                  onClick={() => handleDeleteCompany(company)}
+                  title="Delete Company"
+                  type="button"
+                  style={{ fontSize: "12px", padding: "6px 14px", minWidth: "80px" }}
+                >
+                  <Icon icon="heroicons:trash" className="me-1" width="16" />
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
 
         </div>
-        <div
+                <div
           className="d-flex justify-content-center align-items-center"
           style={{ height: "70px" }}
         >
-          <button className="btn btn-secondary btn-sm">Load More</button>
+          <button className="close-btn">Load More</button>
         </div>
-
       </div>
 
 
       {/* Add Company Modal */}
       {showModal && (
-        <div
-          className="modal fade show"
-          id="addCompanyModal"
-          tabIndex="-1"
-          aria-labelledby="addCompanyModalLabel"
-          aria-hidden="false"
-          style={{ display: 'block' }}
-          onClick={handleBackdropClick}
-        >
-          <div className="modal-dialog modal-xl">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h4 className="modal-title">
-                  {modalType === 'add' ? 'Add New Company' : 'Edit Company'}
-                </h4>
-                <button
-                  type="button"
-                  className="btn-close custom-btn-close"
-                  onClick={handleCloseModal}
-                  aria-label="Close"
-                >
-                  <i className="ti ti-x"></i>
-                </button>
-              </div>
-              <form onSubmit={handleSubmit}>
-                <div className="contact-grids-tab">
-                  <ul className="nav nav-underline" id="myTab" role="tablist">
-                    <li className="nav-item" role="presentation">
-                      <button
-                        className={`nav-link ${activeTab === 'basic-info' ? 'active' : ''}`}
-                        id="info-tab"
-                        type="button"
-                        role="tab"
-                        onClick={() => setActiveTab('basic-info')}
-                      >
-                        Basic Information
-                      </button>
-                    </li>
-                    <li className="nav-item" role="presentation">
-                      <button
-                        className={`nav-link ${activeTab === 'address' ? 'active' : ''}`}
-                        id="address-tab"
-                        type="button"
-                        role="tab"
-                        onClick={() => setActiveTab('address')}
-                      >
-                        Address
-                      </button>
-                    </li>
-                    <li className="nav-item" role="presentation">
-                      <button
-                        className={`nav-link ${activeTab === 'social-profile' ? 'active' : ''}`}
-                        id="social-profile-tab"
-                        type="button"
-                        role="tab"
-                        onClick={() => setActiveTab('social-profile')}
-                      >
-                        Social Profiles
-                      </button>
-                    </li>
-                    <li className="nav-item" role="presentation">
-                      <button
-                        className={`nav-link ${activeTab === 'access' ? 'active' : ''}`}
-                        id="access-tab"
-                        type="button"
-                        role="tab"
-                        onClick={() => setActiveTab('access')}
-                      >
-                        Access
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-                <div className="tab-content" id="myTabContent">
+<div className="hrms-modal-overlay">
+  <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+
+    {/* ================= HEADER ================= */}
+    <div className="hrms-modal-header">
+      <h5 className="hrms-modal-title">
+        {modalType === "add" ? "Add New Company" : "Edit Company"}
+      </h5>
+      <button
+        type="button"
+        className="btn-close"
+        onClick={handleCloseModal}
+      ></button>
+    </div>
+
+    {/* ================= BODY ================= */}
+    <div className="hrms-modal-body flex-grow-1 hrms-modal-body-scroll">
+
+      {/* ================= TABS ================= */}
+      <ul className="nav nav-tabs mb-3 px-3 pt-3">
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === "basic-info" ? "active" : ""}`}
+            onClick={() => setActiveTab("basic-info")}
+          >
+            Basic Information
+          </button>
+        </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === "address" ? "active" : ""}`}
+            onClick={() => setActiveTab("address")}
+          >
+            Address
+          </button>
+        </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === "social-profile" ? "active" : ""}`}
+            onClick={() => setActiveTab("social-profile")}
+          >
+            Social Profiles
+          </button>
+        </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === "access" ? "active" : ""}`}
+            onClick={() => setActiveTab("access")}
+          >
+            Access
+          </button>
+        </li>
+      </ul>
+
+      {/* ================= FORM ================= */}
+      <form id="companyForm" onSubmit={handleSubmit} className="px-3 pb-4">
+
                   {activeTab === 'basic-info' && (
                     <div className="tab-pane fade show active" id="basic-info" role="tabpanel" aria-labelledby="info-tab" tabIndex="0">
                       <div className="modal-body pb-0">
                         <div className="row">
                           <div className="col-md-12">
                             <div className="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
-                              <div className="d-flex align-items-center justify-content-center  border  me-2 text-dark frames" style={{ position: 'relative', overflow: 'hidden' }}>
+                              <div className="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames" style={{ position: 'relative', overflow: 'hidden' }}>
                                 {imagePreview ? (
-                                  <img 
-                                    src={imagePreview} 
-                                    alt="Logo preview" 
-                                    style={{ width: '50%', height: '30%', objectFit: 'cover' }}
+                                  <img
+                                    src={imagePreview}
+                                    alt="Logo preview"
+                                    style={{ width: '70px', height: '70px', objectFit: 'cover' }}
                                     onError={(e) => {
                                       e.target.style.display = 'none';
                                     }}
                                   />
                                 ) : (
-                                  <i className="ti ti-photo text-gray-2 fs-16"></i>
+                                  <Icon icon="heroicons:user-circle" className="text-secondary" width="48" height="48" />
                                 )}
                               </div>
                               <div className="profile-upload">
@@ -854,22 +1049,22 @@ function Companies() {
                                   <h6 className="mb-1">Upload Company Logo</h6>
                                   <p className="fs-12">Image should be below 4 mb</p>
                                 </div>
-                                <div className="profile-uploader d-flex align-items-center">
+                                <div className="profile-uploader d-flex align-items-center gap-2">
                                   <label className="drag-upload-btn btn btn-sm btn-primary me-2" style={{ cursor: 'pointer', position: 'relative' }}>
                                     Upload
-                                    <input 
-                                      type="file" 
-                                      className="form-control image-sign" 
+                                    <input
+                                      type="file"
+                                      className="create-job-btn"
                                       accept="image/*"
                                       onChange={handleFileChange}
                                       style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer', left: 0, top: 0 }}
                                     />
                                   </label>
                                   {(selectedFile || imagePreview) && (
-                                    <button 
+                                    <button
                                       type="button"
                                       onClick={handleRemoveImage}
-                                      className="btn btn-light btn-sm"
+                                      className="cancel-btn"
                                     >
                                       Remove
                                     </button>
@@ -878,6 +1073,7 @@ function Companies() {
                               </div>
                             </div>
                           </div>
+
                           <div className="col-md-6">
                             <div className="mb-3">
                               <label className="form-label">Company Name <span className="text-danger">*</span></label>
@@ -891,6 +1087,7 @@ function Companies() {
                               />
                             </div>
                           </div>
+
                           <div className="col-md-6">
                             <div className="mb-3">
                               <label className="form-label">Email</label>
@@ -903,6 +1100,7 @@ function Companies() {
                               />
                             </div>
                           </div>
+
                           <div className="col-md-6">
                             <div className="mb-3">
                               <label className="form-label">Phone Number <span className="text-danger">*</span></label>
@@ -916,6 +1114,7 @@ function Companies() {
                               />
                             </div>
                           </div>
+
                           <div className="col-md-6">
                             <div className="mb-3">
                               <label className="form-label">Phone Number 2</label>
@@ -928,6 +1127,7 @@ function Companies() {
                               />
                             </div>
                           </div>
+
                           <div className="col-md-6">
                             <div className="mb-3">
                               <label className="form-label">Fax</label>
@@ -940,6 +1140,7 @@ function Companies() {
                               />
                             </div>
                           </div>
+
                           <div className="col-md-6">
                             <div className="mb-3">
                               <label className="form-label">Website</label>
@@ -952,6 +1153,7 @@ function Companies() {
                               />
                             </div>
                           </div>
+
                           <div className="col-md-6">
                             <div className="mb-3">
                               <label className="form-label">Ratings <span className="text-danger">*</span></label>
@@ -973,23 +1175,56 @@ function Companies() {
                               </div>
                             </div>
                           </div>
-                          <div className="col-md-6">
-                            <div className="mb-3">
-                              <label className="form-label">Owner <span className="text-danger">*</span></label>
-                              <select
-                                className="form-select"
-                                name="owner"
-                                value={formData.owner}
-                                onChange={handleInputChange}
-                                required
-                              >
-                                <option value="">Select</option>
-                                <option value="Hendry Milner">Hendry Milner</option>
-                                <option value="Guilory Berggren">Guilory Berggren</option>
-                                <option value="Jami Carlile">Jami Carlile</option>
-                              </select>
-                            </div>
-                          </div>
+
+<div className="col-md-6">
+  <div className="mb-3">
+    <label className="form-label">
+      Owner <span className="text-danger">*</span>
+    </label>
+
+    {formData.owner === "Others" ? (
+      <input
+        type="text"
+        className="form-control"
+        placeholder="Enter Owner"
+        value={formData.customOwner}
+        onChange={(e) =>
+          setFormData((prev) => ({
+            ...prev,
+            customOwner: e.target.value
+          }))
+        }
+        required
+      />
+    ) : (
+      <select
+        className="form-select"
+        name="owner"
+        value={formData.owner}
+        onChange={(e) => {
+          const value = e.target.value;
+
+          if (value === "Others") {
+            setFormData((prev) => ({
+              ...prev,
+              owner: "Others"
+            }));
+          } else {
+            handleInputChange(e);
+          }
+        }}
+        required
+      >
+        <option value="">Select</option>
+        <option value="Hendry Milner">Hendry Milner</option>
+        <option value="Guilory Berggren">Guilory Berggren</option>
+        <option value="Jami Carlile">Jami Carlile</option>
+        <option value="Others">Others</option>
+      </select>
+    )}
+  </div>
+</div>
+
                           <div className="col-md-6">
                             <div className="mb-3">
                               <label className="form-label">Tags <span className="text-danger">*</span></label>
@@ -1004,8 +1239,11 @@ function Companies() {
                               />
                             </div>
                           </div>
+
                           <div className="col-md-6">
                             <div className="mb-3">
+                                    <label className="form-label">
+                                        Deals <span className="text-danger">*</span></label>
                               <select
                                 className="form-select"
                                 name="deals"
@@ -1020,76 +1258,208 @@ function Companies() {
                               </select>
                             </div>
                           </div>
-                          <div className="col-md-6">
-                            <div className="mb-3">
-                              <label className="form-label">Industry <span className="text-danger">*</span></label>
-                              <select
-                                className="form-select"
-                                name="industry"
-                                value={formData.industry}
-                                onChange={handleInputChange}
-                                required
-                              >
-                                <option value="">Select</option>
-                                <option value="Retail Industry">Retail Industry</option>
-                                <option value="Banking">Banking</option>
-                                <option value="Hotels">Hotels</option>
-                                <option value="Financial Services">Financial Services</option>
-                                <option value="Insurance">Insurance</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div className="col-md-6">
-                            <div className="mb-3">
-                              <label className="form-label">Source <span className="text-danger">*</span></label>
-                              <select
-                                className="form-select"
-                                name="source"
-                                value={formData.source}
-                                onChange={handleInputChange}
-                                required
-                              >
-                                <option value="">Select</option>
-                                <option value="Phone Calls">Phone Calls</option>
-                                <option value="Social Media">Social Media</option>
-                                <option value="Referral Sites">Referral Sites</option>
-                                <option value="Web Analytics">Web Analytics</option>
-                                <option value="Previous Purchase">Previous Purchase</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div className="col-md-6">
-                            <div className="mb-3">
-                              <label className="form-label">Currency <span className="text-danger">*</span></label>
-                              <select
-                                className="form-select"
-                                name="currency"
-                                value={formData.currency}
-                                onChange={handleInputChange}
-                                required
-                              >
-                                <option value="">Select</option>
-                                <option value="USD">USD</option>
-                                <option value="Euro">Euro</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div className="col-md-6">
-                            <div className="mb-3">
-                              <label className="form-label">Language <span className="text-danger">*</span></label>
-                              <select
-                                className="form-select"
-                                name="language"
-                                value={formData.language}
-                                onChange={handleInputChange}
-                                required
-                              >
-                                <option value="">Select</option>
-                                <option value="English">English</option>
-                                <option value="Arabic">Arabic</option>
-                              </select>
-                            </div>
-                          </div>
+
+<div className="col-md-6">
+  <div className="mb-3">
+    <label className="form-label">
+      Industry <span className="text-danger">*</span>
+    </label>
+
+    {formData.industry === "Others" ? (
+      <input
+        type="text"
+        className="form-control"
+        placeholder="Enter Industry"
+        value={formData.customIndustry}
+        onChange={(e) =>
+          setFormData((prev) => ({
+            ...prev,
+            customIndustry: e.target.value
+          }))
+        }
+        required
+      />
+    ) : (
+      <select
+        className="form-select"
+        name="industry"
+        value={formData.industry}
+        onChange={(e) => {
+          const value = e.target.value;
+
+          if (value === "Others") {
+            setFormData((prev) => ({
+              ...prev,
+              industry: "Others"
+            }));
+          } else {
+            handleInputChange(e);
+          }
+        }}
+        required
+      >
+        <option value="">Select</option>
+        <option value="Retail Industry">Retail Industry</option>
+        <option value="Banking">Banking</option>
+        <option value="Hotels">Hotels</option>
+        <option value="Financial Services">Financial Services</option>
+        <option value="Insurance">Insurance</option>
+        <option value="Others">Others</option>
+      </select>
+    )}
+  </div>
+</div>
+
+<div className="col-md-6">
+  <div className="mb-3">
+    <label className="form-label">
+      Source <span className="text-danger">*</span>
+    </label>
+
+    {formData.source === "Others" ? (
+      <input
+        type="text"
+        className="form-control"
+        placeholder="Enter Source"
+        value={formData.customSource}
+        onChange={(e) =>
+          setFormData((prev) => ({
+            ...prev,
+            customSource: e.target.value
+          }))
+        }
+        required
+      />
+    ) : (
+      <select
+        className="form-select"
+        name="source"
+        value={formData.source}
+        onChange={(e) => {
+          const value = e.target.value;
+
+          if (value === "Others") {
+            setFormData((prev) => ({
+              ...prev,
+              source: "Others"
+            }));
+          } else {
+            handleInputChange(e);
+          }
+        }}
+        required
+      >
+        <option value="">Select</option>
+        <option value="Phone Calls">Phone Calls</option>
+        <option value="Social Media">Social Media</option>
+        <option value="Referral Sites">Referral Sites</option>
+        <option value="Web Analytics">Web Analytics</option>
+        <option value="Previous Purchase">Previous Purchase</option>
+        <option value="Others">Others</option>
+      </select>
+    )}
+  </div>
+</div>
+
+<div className="col-md-6">
+  <div className="mb-3">
+    <label className="form-label">Currency</label>
+
+    {formData.currency === "Other" ? (
+      //  Show Input when "Other" selected
+      <input
+        type="text"
+        className="form-control"
+        placeholder="Enter Currency (e.g. INR, JPY, CNY)"
+        value={formData.customCurrency}
+        onChange={(e) =>
+          setFormData((prev) => ({
+            ...prev,
+            customCurrency: e.target.value
+          }))
+        }
+      />
+    ) : (
+      //  Normal Dropdown
+      <select
+        className="form-select"
+        value={formData.currency}
+        onChange={(e) => {
+          const value = e.target.value;
+
+          if (value === "Other") {
+            setFormData((prev) => ({
+              ...prev,
+              currency: "Other",
+              customCurrency: ""
+            }));
+          } else {
+            setFormData((prev) => ({
+              ...prev,
+              currency: value,
+              customCurrency: ""
+            }));
+          }
+        }}
+      >
+        <option value="Dollar">Dollar</option>
+        <option value="Euro">Euro</option>
+        <option value="Rupee">Rupee</option>
+        <option value="Pound">Pound</option>
+        <option value="Other">Other</option>
+      </select>
+    )}
+  </div>
+</div>
+<div className="col-md-6">
+  <div className="mb-3">
+    <label className="form-label">Language</label>
+
+    {formData.language === "Other" ? (
+      <input
+        type="text"
+        className="form-control"
+        placeholder="Enter Language"
+        value={formData.customLanguage}
+        onChange={(e) =>
+          setFormData((prev) => ({
+            ...prev,
+            customLanguage: e.target.value,
+          }))
+        }
+
+      />
+    ) : (
+      <select
+        className="form-select"
+        value={formData.language}
+        onChange={(e) => {
+          const value = e.target.value;
+
+          if (value === "Other") {
+            setFormData((prev) => ({
+              ...prev,
+              language: "Other",
+            }));
+          } else {
+            setFormData((prev) => ({
+              ...prev,
+              language: value,
+              customLanguage: "",
+            }));
+          }
+        }}
+      >
+        <option value="English">English</option>
+        <option value="Spanish">Spanish</option>
+        <option value="French">French</option>
+        <option value="German">German</option>
+        <option value="Other">Other</option>
+      </select>
+    )}
+  </div>
+</div>
+                          
                           <div className="col-md-12">
                             <div className="mb-3">
                               <label className="form-label">About <span className="text-danger">*</span></label>
@@ -1103,36 +1473,59 @@ function Companies() {
                               ></textarea>
                             </div>
                           </div>
-                          <div className="col-md-12">
-                            <div className="mb-3">
-                              <select
-                                className="form-select"
-                                name="contact"
-                                value={formData.contact}
-                                onChange={handleInputChange}
-                                required
-                              >
-                                <option value="">Select</option>
-                                <option value="Darlee Robertson">Darlee Robertson</option>
-                                <option value="Sharon Roy">Sharon Roy</option>
-                                <option value="Vaughan">Vaughan</option>
-                                <option value="Jessica">Jessica</option>
-                                <option value="Carol Thomas">Carol Thomas</option>
-                              </select>
-                            </div>
-                          </div>
+
+<div className="col-md-12">
+  <div className="mb-3">
+
+    {formData.contact === "Others" ? (
+      <input
+        type="text"
+        className="form-control"
+        placeholder="Enter Contact Name"
+        value={formData.customContact}
+        onChange={(e) =>
+          setFormData((prev) => ({
+            ...prev,
+            customContact: e.target.value
+          }))
+        }
+        required
+      />
+    ) : (
+      <select
+        className="form-select"
+        name="contact"
+        value={formData.contact}
+        onChange={(e) => {
+          const value = e.target.value;
+
+          if (value === "Others") {
+            setFormData((prev) => ({
+              ...prev,
+              contact: "Others"
+            }));
+          } else {
+            handleInputChange(e);
+          }
+        }}
+        required
+      >
+        <option value="">Select</option>
+        <option value="Darlee Robertson">Darlee Robertson</option>
+        <option value="Sharon Roy">Sharon Roy</option>
+        <option value="Vaughan">Vaughan</option>
+        <option value="Jessica">Jessica</option>
+        <option value="Carol Thomas">Carol Thomas</option>
+        <option value="Others">Others</option>
+      </select>
+    )}
+
+  </div>
+</div>
+
                         </div>
                       </div>
-                      <div className="modal-footer">
-                        <button
-                          type="button"
-                          className="btn btn-light me-2"
-                          onClick={handleCloseModal}
-                        >
-                          Cancel
-                        </button>
-                        <button type="submit" className="btn btn-primary">Save</button>
-                      </div>
+
                     </div>
                   )}
                   {activeTab === 'address' && (
@@ -1152,60 +1545,58 @@ function Companies() {
                               />
                             </div>
                           </div>
-                          <div className="col-md-6">
-                            <div className="mb-3">
-                              <label className="form-label">Country <span className="text-danger">*</span></label>
-                              <select
-                                className="form-select"
-                                name="country"
-                                value={formData.country}
-                                onChange={handleInputChange}
-                                required
-                              >
-                                <option value="">Select</option>
-                                <option value="USA">USA</option>
-                                <option value="Canada">Canada</option>
-                                <option value="Germany">Germany</option>
-                                <option value="France">France</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div className="col-md-6">
-                            <div className="mb-3">
-                              <label className="form-label">State <span className="text-danger">*</span></label>
-                              <select
-                                className="form-select"
-                                name="state"
-                                value={formData.state}
-                                onChange={handleInputChange}
-                                required
-                              >
-                                <option value="">Select</option>
-                                <option value="California">California</option>
-                                <option value="New York">New York</option>
-                                <option value="Texas">Texas</option>
-                                <option value="Florida">Florida</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div className="col-md-6">
-                            <div className="mb-3">
-                              <label className="form-label">City <span className="text-danger">*</span></label>
-                              <select
-                                className="form-select"
-                                name="city"
-                                value={formData.city}
-                                onChange={handleInputChange}
-                                required
-                              >
-                                <option value="">Select</option>
-                                <option value="Los Angeles">Los Angeles</option>
-                                <option value="San Diego">San Diego</option>
-                                <option value="Fresno">Fresno</option>
-                                <option value="San Francisco">San Francisco</option>
-                              </select>
-                            </div>
-                          </div>
+
+<div className="col-md-6">
+  <div className="mb-3">
+    <label className="form-label">
+      Country <span className="text-danger">*</span>
+    </label>
+    <input
+      type="text"
+      className="form-control"
+      name="country"
+      value={formData.country}
+      onChange={handleInputChange}
+      placeholder="Enter Country"
+      required
+    />
+  </div>
+</div>
+
+<div className="col-md-6">
+  <div className="mb-3">
+    <label className="form-label">
+      State <span className="text-danger">*</span>
+    </label>
+    <input
+      type="text"
+      className="form-control"
+      name="state"
+      value={formData.state}
+      onChange={handleInputChange}
+      placeholder="Enter State"
+      required
+    />
+  </div>
+</div>
+
+<div className="col-md-6">
+  <div className="mb-3">
+    <label className="form-label">
+      City <span className="text-danger">*</span>
+    </label>
+    <input
+      type="text"
+      className="form-control"
+      name="city"
+      value={formData.city}
+      onChange={handleInputChange}
+      placeholder="Enter City"
+      required
+    />
+  </div>
+</div>
+
                           <div className="col-md-6">
                             <div className="mb-3">
                               <label className="form-label">Zipcode <span className="text-danger">*</span></label>
@@ -1220,16 +1611,6 @@ function Companies() {
                             </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="modal-footer">
-                        <button
-                          type="button"
-                          className="btn btn-light me-2"
-                          onClick={handleCloseModal}
-                        >
-                          Cancel
-                        </button>
-                        <button type="submit" className="btn btn-primary">Save</button>
                       </div>
                     </div>
                   )}
@@ -1311,16 +1692,7 @@ function Companies() {
                           </div>
                         </div>
                       </div>
-                      <div className="modal-footer">
-                        <button
-                          type="button"
-                          className="btn btn-light me-2"
-                          onClick={handleCloseModal}
-                        >
-                          Cancel
-                        </button>
-                        <button type="submit" className="btn btn-primary">Save</button>
-                      </div>
+
                     </div>
                   )}
                   {activeTab === 'access' && (
@@ -1328,111 +1700,118 @@ function Companies() {
                       <div className="modal-body pb-0">
                         <div className="mb-4">
                           <h6 className="fs-14 fw-medium mb-1">Visibility</h6>
-                          <div className="d-flex align-items-center">
-                            <div className="form-check me-3">
-                              <input
-                                className="form-check-input"
-                                type="radio"
-                                name="visibility"
-                                id="flexRadioDefault01"
-                                value="public"
-                                checked={formData.visibility === 'public'}
-                                onChange={handleInputChange}
-                              />
-                              <label className="form-check-label text-dark" htmlFor="flexRadioDefault01">
-                                Public
-                              </label>
-                            </div>
-                            <div className="form-check me-3">
-                              <input
-                                className="form-check-input"
-                                type="radio"
-                                name="visibility"
-                                id="flexRadioDefault02"
-                                value="private"
-                                checked={formData.visibility === 'private'}
-                                onChange={handleInputChange}
-                              />
-                              <label className="form-check-label text-dark" htmlFor="flexRadioDefault02">
-                                Private
-                              </label>
-                            </div>
-                            <div className="form-check">
-                              <input
-                                className="form-check-input"
-                                type="radio"
-                                name="visibility"
-                                id="flexRadioDefault03"
-                                value="selectPeople"
-                                checked={formData.visibility === 'selectPeople'}
-                                onChange={handleInputChange}
-                              />
-                              <label className="form-check-label text-dark" htmlFor="flexRadioDefault03">
-                                Select People
-                              </label>
-                            </div>
-                          </div>
+<div className="d-flex align-items-center gap-4">
+
+  {[
+    { id: "public", label: "Public" },
+    { id: "private", label: "Private" },
+    { id: "selectPeople", label: "Select People" },
+  ].map((option) => {
+    const isChecked = formData.visibility === option.id;
+
+    return (
+      <label
+        key={option.id}
+        htmlFor={option.id}
+        className="d-flex align-items-center"
+        style={{ cursor: "pointer" }}
+      >
+        {/* Custom Radio Circle */}
+        <div
+          style={{
+            width: "20px",
+            height: "20px",
+            borderRadius: "50%",
+            border: `2px solid ${isChecked ? "#3B82F6" : "#9CA3AF"}`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginRight: "8px",
+            transition: "all 0.3s ease",
+          }}
+        >
+          {isChecked && (
+            <div
+              style={{
+                width: "10px",
+                height: "10px",
+                borderRadius: "50%",
+                background: "#3B82F6",
+              }}
+            />
+          )}
+        </div>
+
+        {/* Hidden Native Radio */}
+        <input
+          type="radio"
+          name="visibility"
+          id={option.id}
+          value={option.id}
+          checked={isChecked}
+          onChange={handleInputChange}
+          style={{ display: "none" }}
+        />
+
+        {/* Label Text */}
+        <span className="text-dark fw-semibold">{option.label}</span>
+      </label>
+    );
+  })}
+
+</div>
                         </div>
-                        <div className="p-3 bg-gray br-5 mb-4">
-                          <div className="d-flex align-items-center mb-3">
-                            <input className="form-check-input me-1" type="checkbox" value="" id="user-06" />
-                            <div className="d-flex align-items-center file-name-icon">
-                              <a href="#" className="avatar avatar-md border avatar-rounded">
-                                <img src="/assets/img/users/user-37.jpg" className="img-fluid" alt="img" />
-                              </a>
-                              <div className="ms-2">
-                                <h6 className="fw-normal"><a href="#">Michael Walker</a></h6>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="d-flex align-items-center mb-3">
-                            <input className="form-check-input me-1" type="checkbox" value="" id="user-07" />
-                            <div className="d-flex align-items-center file-name-icon">
-                              <a href="#" className="avatar avatar-md border avatar-rounded">
-                                <img src="/assets/img/users/user-09.jpg" className="img-fluid" alt="img" />
-                              </a>
-                              <div className="ms-2">
-                                <h6 className="fw-normal"><a href="#">Sophie Headrick</a></h6>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="d-flex align-items-center mb-3">
-                            <input className="form-check-input me-1" type="checkbox" value="" id="user-08" />
-                            <div className="d-flex align-items-center file-name-icon">
-                              <a href="#" className="avatar avatar-md border avatar-rounded">
-                                <img src="/assets/img/users/user-01.jpg" className="img-fluid" alt="img" />
-                              </a>
-                              <div className="ms-2">
-                                <h6 className="fw-normal"><a href="#">Cameron Drake</a></h6>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="d-flex align-items-center mb-3">
-                            <input className="form-check-input me-1" type="checkbox" value="" id="user-09" />
-                            <div className="d-flex align-items-center file-name-icon">
-                              <a href="#" className="avatar avatar-md border avatar-rounded">
-                                <img src="/assets/img/users/user-08.jpg" className="img-fluid" alt="img" />
-                              </a>
-                              <div className="ms-2">
-                                <h6 className="fw-normal"><a href="#">Doris Crowley</a></h6>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="d-flex align-items-center mb-3">
-                            <input className="form-check-input me-1" type="checkbox" value="" id="user-11" />
-                            <div className="d-flex align-items-center file-name-icon">
-                              <a href="#" className="avatar avatar-md border avatar-rounded">
-                                <img src="/assets/img/users/user-32.jpg" className="img-fluid" alt="img" />
-                              </a>
-                              <div className="ms-2">
-                                <h6 className="fw-normal"><a href="#">Thomas Bordelon</a></h6>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="d-flex align-items-center justify-content-center">
-                            <a href="#" className="btn btn-primary">Confirm</a>
-                          </div>
-                        </div>
+<div className="p-3 bg-gray br-5 mb-4">
+
+  {[
+    { id: "user-06", name: "Michael Walker", img: "user-37.jpg" },
+    { id: "user-07", name: "Sophie Headrick", img: "user-09.jpg" },
+    { id: "user-08", name: "Cameron Drake", img: "user-01.jpg" },
+    { id: "user-09", name: "Doris Crowley", img: "user-08.jpg" },
+    { id: "user-11", name: "Thomas Bordelon", img: "user-32.jpg" },
+  ].map((user) => (
+    <label
+      key={user.id}
+      className={`custom-checkbox mb-3 ${
+        formData.selectedUsers?.includes(user.id) ? "checked" : ""
+      }`}
+    >
+      <input
+        type="checkbox"
+        value={user.id}
+        checked={formData.selectedUsers?.includes(user.id)}
+        onChange={handleUserSelect}
+        hidden
+      />
+
+      <div className="checkbox-box">
+        {formData.selectedUsers?.includes(user.id) && (
+          <span className="checkmark">✓</span>
+        )}
+      </div>
+
+      <div className="d-flex align-items-center file-name-icon">
+        <span className="avatar avatar-md border avatar-rounded">
+          <img
+            src={`/assets/img/users/${user.img}`}
+            className="img-fluid"
+            alt="img"
+          />
+        </span>
+        <div className="ms-2">
+          <h6 className="fw-normal mb-0">{user.name}</h6>
+        </div>
+      </div>
+    </label>
+  ))}
+
+  <div className="d-flex align-items-center justify-content-center mt-3">
+    <button type="button" className="btn btn-primary">
+      Confirm
+    </button>
+  </div>
+
+</div>
                         <div className="mb-3">
                           <label className="form-label">Status</label>
                           <select
@@ -1447,25 +1826,35 @@ function Companies() {
                           </select>
                         </div>
                       </div>
-                      <div className="modal-footer">
-                        <button
-                          type="button"
-                          className="btn btn-light me-2"
-                          onClick={handleCloseModal}
-                        >
-                          Cancel
-                        </button>
-                        <button type="submit" className="btn btn-primary" disabled={loading}>
-                          {loading ? 'Saving...' : 'Save'}
-                        </button>
-                      </div>
+
                     </div>
                   )}
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
+
+      </form>
+    </div>
+
+    {/* ================= SINGLE FOOTER ================= */}
+    <div className="modal-footer border-top">
+      <button
+        type="button"
+        className="cancel-btn"
+        onClick={handleCloseModal}
+      >
+        Cancel
+      </button>
+
+      <button
+        type="submit"
+        form="companyForm"
+        className="create-job-btn"
+        disabled={loading}
+      >
+        {loading ? "Saving..." : "Save"}
+      </button>
+    </div>
+
+  </div>
+</div>
       )}
 
       {/* Delete Confirmation Modal */}
@@ -1493,14 +1882,14 @@ function Companies() {
               <div className="modal-footer">
                 <button
                   type="button"
-                  className="btn btn-secondary m-2"
+                  className="cancel-btn"
                   onClick={() => setShowDeleteModal(false)}
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
-                  className="btn btn-danger"
+                  className="delete-btn"
                   onClick={confirmDelete}
                 >
                   Delete Company

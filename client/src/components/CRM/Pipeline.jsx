@@ -1,18 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
-  FaHome,
-  FaBox,
-  FaHeartbeat,
-  FaPauseCircle,
-  FaMask,
-  FaList,
-  FaTh,
+  
   FaFilePdf,
   FaFileExcel,
-  FaPlusCircle,
-  FaChevronUp,
-  FaEdit,
-  FaTrash,
+ 
 } from "react-icons/fa";
 import "react-datepicker/dist/react-datepicker.css";
 import dayjs from "dayjs";
@@ -21,6 +12,8 @@ import "react-toastify/dist/ReactToastify.css";
 import { crmPipelinesAPI } from "../../utils/api";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import { Icon } from '@iconify/react/dist/iconify.js';
+
 
 const Pipeline = () => {
   const [pipelines, setPipelines] = useState([]);
@@ -45,12 +38,21 @@ const Pipeline = () => {
     status: "Active"
   });
 
-  // Load pipelines from API
-  useEffect(() => {
-    loadPipelines();
-  }, []);
+  // filters + pagination states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [sortOption, setSortOption] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [plansPerPage, setPlansPerPage] = useState(5);
 
-  const loadPipelines = async () => {
+  // date filter
+  const [dateFilter, setDateFilter] = useState(
+    `${dayjs().format("MM/DD/YYYY")} - ${dayjs().format("MM/DD/YYYY")}`
+  );
+
+  // Load pipelines from API
+  const loadPipelines = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -72,7 +74,11 @@ const Pipeline = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedStatus, selectedPlan]);
+
+  useEffect(() => {
+    loadPipelines();
+  }, [loadPipelines]);
 
   // Format value for display
   const formatValue = (value) => {
@@ -111,19 +117,6 @@ const Pipeline = () => {
   };
 
   const transformedPipelines = pipelines.map(transformPipeline);
-
-  // filters + pagination states
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedPlan, setSelectedPlan] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("");
-  const [sortOption, setSortOption] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [plansPerPage, setPlansPerPage] = useState(5);
-
-  // date filter
-  const [dateFilter, setDateFilter] = useState(
-    `${dayjs().format("MM/DD/YYYY")} - ${dayjs().format("MM/DD/YYYY")}`
-  );
 
   const handleDateSelect = (option) => {
     const today = dayjs();
@@ -409,11 +402,6 @@ const Pipeline = () => {
     }
   };
 
-  // Update filters when they change
-  useEffect(() => {
-    loadPipelines();
-  }, [selectedStatus, selectedPlan]);
-
   return (
     <div className=" ">
       {/* Toast Container */}
@@ -444,12 +432,13 @@ const Pipeline = () => {
           <div>
 
           {/* Right Actions */}
-          <div className="d-flex my-xl-auto right-content align-items-center flex-wrap">
+          <div className="d-flex align-items-center gap-2">
             {/* Export Dropdown */}
             <div className="me-2 mb-2">
               <div className="dropdown">
                 <button
-                  className="dropdown-toggle btn btn-white d-inline-flex align-items-center fs-7"
+                  type="button"
+                 className="create-job-btn dropdown-toggle gap-2"
                   data-bs-toggle="dropdown"
                 >
                   <i className="me-1">
@@ -463,11 +452,12 @@ const Pipeline = () => {
                     data-bs-original-title="fe fe-chevron-down"
                   ></i>
                 </button>
-                <ul className="dropdown-menu dropdown-menu-end p-3">
+                <ul className="dropdown-menu dropdown-menu-end shadow-sm">
+
                   <li>
                     <button
                       onClick={handleExportPDF}
-                      className="dropdown-item rounded-1"
+                      className="dropdown-item d-flex align-items-center"
                     >
                       <FaFilePdf className="me-1" /> Export as PDF
                     </button>
@@ -475,7 +465,7 @@ const Pipeline = () => {
                   <li>
                     <button
                       onClick={handleExportExcel}
-                      className="dropdown-item rounded-1"
+                      className="dropdown-item d-flex align-items-center"
                     >
                       <FaFileExcel className="me-1" /> Export as Excel
                     </button>
@@ -487,29 +477,18 @@ const Pipeline = () => {
             {/* Add New Pipeline */}
             <div className="mb-2">
                 <button
-                  className="btn btn-primary d-flex align-items-center fs-7"
+                  className="add-employee gap-2"
                   onClick={() => {
                     resetForm();
                     setShowAddModal(true);
                   }}
                 >
-                  <FaPlusCircle className="me-2" />
+                  <Icon icon="heroicons:plus-circle" width="18" />
                   <small>Add Pipeline</small>
                 </button>
             </div>
             </div>
 
-            {/* Collapse */}
-            <div className="ms-2 head-icons">
-              <a
-                href="#!"
-                data-bs-toggle="tooltip"
-                data-bs-placement="top"
-                title="Collapse"
-              >
-                <FaChevronUp />
-              </a>
-            </div>
           </div>
         </div>
 
@@ -523,7 +502,7 @@ const Pipeline = () => {
               {/* Date Range */}
               <div className="dropdown me-2">
                 <button
-                  className="dropdown-toggle btn btn-white"
+                  className="close-btn dropdown-toggle gap-2"
                   data-bs-toggle="dropdown"
                 >
                   {dateFilter}
@@ -553,7 +532,7 @@ const Pipeline = () => {
               {/* Plan Type */}
               <div className="dropdown me-2">
                 <button
-                  className="dropdown-toggle  btn btn-white"
+                  className="close-btn dropdown-toggle gap-2"
                   data-bs-toggle="dropdown"
                 >
                   {selectedPlan || "Stage"}
@@ -566,16 +545,19 @@ const Pipeline = () => {
                 </button>
                 <ul className="dropdown-menu p-2">
                   <li>
-                    <button className="dropdown-item">Won</button>
+                    <button className="dropdown-item" onClick={() => setSelectedPlan("Won")}>Won</button>
                   </li>
                   <li>
-                    <button className="dropdown-item">In Pipeline</button>
+                    <button className="dropdown-item" onClick={() => setSelectedPlan("In Pipeline")}>In Pipeline</button>
                   </li>
                   <li>
-                    <button className="dropdown-item">Conversation</button>
+                    <button className="dropdown-item" onClick={() => setSelectedPlan("Conversation")}>Conversation</button>
                   </li>
                   <li>
-                    <button className="dropdown-item">Follow up</button>
+                    <button className="dropdown-item" onClick={() => setSelectedPlan("Follow Up")}>Follow Up</button>
+                  </li>
+                  <li>
+                    <button className="dropdown-item" onClick={() => setSelectedPlan("")}>All</button>
                   </li>
                 </ul>
               </div>
@@ -583,7 +565,7 @@ const Pipeline = () => {
               {/* Plan Type */}
               <div className="dropdown me-2">
                 <button
-                  className="dropdown-toggle  btn btn-white"
+                  className="close-btn dropdown-toggle gap-2"
                   data-bs-toggle="dropdown"
                 >
                   {selectedPlan || "$0.0-$0.0"}
@@ -610,7 +592,7 @@ const Pipeline = () => {
               {/* Status */}
               <div className="dropdown me-2">
                 <button
-                  className="dropdown-toggle btn btn-white"
+                  className="close-btn dropdown-toggle gap-2"
                   data-bs-toggle="dropdown"
                 >
                   {selectedStatus || "Select Status"}
@@ -652,7 +634,7 @@ const Pipeline = () => {
               {/* Sort */}
               <div className="dropdown">
                 <button
-                  className="dropdown-toggle btn btn-white"
+                  className="close-btn dropdown-toggle gap-2"
                   data-bs-toggle="dropdown"
                 >
                   {sortOption === "asc"
@@ -889,24 +871,22 @@ const Pipeline = () => {
 
       {/* Add Pipeline Modal */}
       {showAddModal && (
-        <>
-          <div className="modal-backdrop fade show" style={{zIndex: 1040}}></div>
-          <div className="modal fade show d-block" tabIndex="-1" style={{zIndex: 1050}}>
-            <div className="modal-dialog modal-dialog-centered modal-md">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h4 className="modal-title">Add Pipeline</h4>
+        <div  className="hrms-modal-overlay">
+          <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+
+                <div  className="hrms-modal-header">
+                  <h5 className="hrms-modal-title d-flex align-items-center">Add Pipeline</h5>
                   <button
                     type="button"
-                    className="btn-close custom-btn-close"
+                    className="btn-close"
                     onClick={() => setShowAddModal(false)}
                     aria-label="Close"
                   >
-                    <i className="ti ti-x"></i>
                   </button>
                 </div>
+                  <div className="hrms-modal-body hrms-modal-body-scroll">
+
                 <form onSubmit={handleAddPipeline}>
-                  <div className="modal-body pb-0">
                     <div className="mb-3">
                       <label className="form-label">
                         Pipeline Name <span className="text-danger">*</span>
@@ -931,6 +911,7 @@ const Pipeline = () => {
                         step="0.01"
                       />
                     </div>
+
                     <div className="mb-3">
                       <label className="form-label">No of Deals</label>
                       <input 
@@ -941,6 +922,7 @@ const Pipeline = () => {
                         onChange={handleInputChange}
                       />
                     </div>
+                    
                     <div className="mb-3">
                       <label className="form-label">Stage</label>
                       <select 
@@ -957,6 +939,7 @@ const Pipeline = () => {
                         <option value="Schedule Service">Schedule Service</option>
                       </select>
                     </div>
+                    
                     <div className="mb-3">
                       <label className="form-label">Stage Color</label>
                       <select 
@@ -996,11 +979,14 @@ const Pipeline = () => {
                         <option value="Completed">Completed</option>
                       </select>
                     </div>
-                  </div>
-                  <div className="modal-footer">
+
+                </form>
+             </div>
+
+                   <div className="modal-footer bg-white border-top d-flex ">
                     <button
                       type="button"
-                      className="btn btn-light me-2"
+                      className="cancel-btn"
                       onClick={() => {
                         setShowAddModal(false);
                         resetForm();
@@ -1012,36 +998,36 @@ const Pipeline = () => {
                       Add Pipeline
                     </button>
                   </div>
-                </form>
-              </div>
-            </div>
+                
+
           </div>
-        </>
+        </div>
       )}
 
       {/* Edit Pipeline Modal */}
       {showEditModal && editingPipeline && (
-        <>
-          <div className="modal-backdrop fade show" style={{zIndex: 1040}}></div>
-          <div className="modal fade show d-block" tabIndex="-1" style={{zIndex: 1050}}>
-            <div className="modal-dialog modal-dialog-centered modal-md">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h4 className="modal-title">Edit Pipeline</h4>
+        <div  className="hrms-modal-overlay">
+          <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+
+
+                 {/* HEADER */}
+              <div className="hrms-modal-header">
+                <h5 className="hrms-modal-title d-flex align-items-center">Edit Pipeline</h5>
                   <button
                     type="button"
-                    className="btn-close custom-btn-close"
+                    className="btn-close"
                     onClick={() => {
                       setShowEditModal(false);
                       setEditingPipeline(null);
                     }}
-                    aria-label="Close"
                   >
-                    <i className="ti ti-x"></i>
                   </button>
                 </div>
+                
+              {/* BODY */}
+              <div className="hrms-modal-body hrms-modal-body-scroll">
                 <form onSubmit={handleEditPipeline}>
-                  <div className="modal-body pb-0">
+                 
                     <div className="mb-3">
                       <label className="form-label">
                         Pipeline Name <span className="text-danger">*</span>
@@ -1131,11 +1117,13 @@ const Pipeline = () => {
                         <option value="Completed">Completed</option>
                       </select>
                     </div>
-                  </div>
-                  <div className="modal-footer">
+
+                </form>
+                                  </div>
+                  <div className="modal-footer bg-white border-top d-flex">
                     <button
                       type="button"
-                      className="btn btn-light me-2"
+                      className="cancel-btn"
                       onClick={() => {
                         setShowEditModal(false);
                         setEditingPipeline(null);
@@ -1148,11 +1136,9 @@ const Pipeline = () => {
                       Save Changes
                     </button>
                   </div>
-                </form>
-              </div>
-            </div>
+
           </div>
-        </>
+        </div>
       )}
 
       {/* <!-- Pipeline Access --> */}
@@ -1407,43 +1393,67 @@ const Pipeline = () => {
       {/* <!-- /Edit Stage --> */}
 
       {/* Delete Modal */}
-      {showDeleteModal && (
-        <>
-          <div className="modal-backdrop fade show" style={{zIndex: 1040}}></div>
-          <div className="modal fade show d-block" tabIndex="-1" style={{zIndex: 1050}}>
-            <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content">
-                <div className="modal-body text-center">
-                  <span className="avatar avatar-xl bg-transparent-danger text-danger mb-3">
-                    <i className="ti ti-trash-x fs-36"></i>
-                  </span>
-                  <h4 className="mb-1">Confirm Delete</h4>
-                  <p className="mb-3">
-                    Are you sure you want to delete this pipeline? This action cannot be undone.
-                  </p>
-                  <div className="d-flex justify-content-center">
-                    <button
-                      className="btn btn-light me-3"
-                      onClick={() => {
-                        setShowDeleteModal(false);
-                        setDeletingPipelineId(null);
-                      }}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="btn btn-danger"
-                      onClick={handleDeletePipeline}
-                    >
-                      Yes, Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+{/* Delete Modal */}
+{showDeleteModal && (
+  <div
+    className="modal show d-block"
+    style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+  >
+    <div className="modal-dialog modal-sm modal-dialog-centered">
+      <div className="modal-content">
+
+        {/* Modal Header */}
+        <div className="modal-header">
+          <h5 className="modal-title">Confirm Delete</h5>
+          <button
+            type="button"
+            className="btn-close"
+            onClick={() => {
+              setShowDeleteModal(false);
+              setDeletingPipelineId(null);
+            }}
+          ></button>
+        </div>
+
+        {/* Modal Body */}
+        <div className="modal-body text-center">
+          <i className="ti ti-alert-triangle text-warning fs-1 mb-3"></i>
+
+          <h5>Are you sure?</h5>
+
+          <p className="text-muted">
+            Do you want to delete this pipeline?  
+            <br />
+            This action cannot be undone.
+          </p>
+        </div>
+
+        {/* Modal Footer */}
+        <div className="modal-footer">
+          <button
+            type="button"
+            className="cancel-btn"
+            onClick={() => {
+              setShowDeleteModal(false);
+              setDeletingPipelineId(null);
+            }}
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            className="delete-btn"
+            onClick={handleDeletePipeline}
+          >
+            Delete Pipeline
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };

@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { contactsAPI } from "../../utils/api";
+import jsPDF from "jspdf";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import { Icon } from '@iconify/react/dist/iconify.js';
 import { BASE_URL } from "../../config/api.config";
 
 const Contacts = () => {
@@ -47,12 +51,17 @@ const Contacts = () => {
     company: '',
     dateOfBirth: '',
     rating: '0',
-    owner: '',
+   owner: "",
+customOwner: "",
     deals: '',
     industry: '',
+    customIndustry:'',
     currency: 'Dollar',
+     customCurrency: '',
     language: 'English',
+customLanguage: '',
     source: '',
+    customSource: '',
     tags: [],
     img: '/assets/img/users/user-49.jpg',
     // Address Information
@@ -89,11 +98,15 @@ const Contacts = () => {
       company: '',
       dateOfBirth: '',
       rating: '0',
-      owner: '',
+      owner: "",
+customOwner: "",
       deals: '',
       industry: '',
-      currency: 'Dollar',
+      customIndustry:'',
+     currency: 'Dollar',
+     customCurrency: '',
       language: 'English',
+customLanguage: '',
       source: '',
       tags: [],
       img: '/assets/images/users/user1.png',
@@ -151,8 +164,266 @@ const Contacts = () => {
     });
   };
 
+const exportPDF = () => {
+  const doc = new jsPDF();
+  
+  // Constants for card layout
+  const CARD_WIDTH = 190;
+  const CARD_HEIGHT = 75;
+  const LEFT_COL_X = 14;
+  const RIGHT_COL_X = 105;
+  const LABEL_OFFSET = 25;
+  const LINE_HEIGHT = 5;
+  
+  let y = 20;
+  
+  // Helper function to add text with label
+const addField = (label, value, x, y, maxLength = 30) => {
+  doc.setFont("helvetica", "bold");
+  doc.text(label + ":", x, y);
+  doc.setFont("helvetica", "normal");
+
+  const displayValue = value || "N/A";
+
+  // If maxLength is null → wrap text (for location etc.)
+  if (maxLength === null) {
+    const lines = doc.splitTextToSize(displayValue, 65);
+    doc.text(lines, x + LABEL_OFFSET, y);
+    return lines.length; // return number of lines used
+  }
+
+  // Default truncation logic
+  if (maxLength && displayValue.length > maxLength) {
+    doc.text(displayValue.substring(0, maxLength - 3) + "...", x + LABEL_OFFSET, y);
+  } else {
+    doc.text(displayValue, x + LABEL_OFFSET, y);
+  }
+
+  return 1;
+};
+  
+  // Helper for combined fields
+  const combineFields = (fields, separator = ", ") => {
+    return fields.filter(Boolean).join(separator) || "N/A";
+  };
+  
+  // Title
+  doc.setFontSize(18);
+  doc.setTextColor(40, 40, 40);
+  doc.text("Contacts Report", 14, 10);
+  
+  // Define field groups for better organization
+  const fieldGroups = (contact) => ({
+    left: [
+      { label: "Job Title", value: contact.job_title },
+      { label: "Company", value: contact.company_name },
+      { label: "Email", value: contact.email },
+      { label: "Phone", value: contact.phone_number },
+      { label: "Phone 2", value: contact.phone_number_2 },
+      { label: "Fax", value: contact.fax },
+
+    ],
+    right: [
+      { label: "DOB", value: contact.date_of_birth },
+      { label: "Rating", value: contact.ratings || "-" },
+      { label: "Owner", value: contact.owner },
+      { label: "Industry", value: contact.industry },
+      { label: "Currency", value: contact.currency },
+      { label: "Language", value: contact.language },
+
+    ],
+    bottomLeft: [
+       { label: "Deals", value: contact.deals, maxLength: 20 },
+      { label: "Source", value: contact.source },
+      { label: "Postal", value: contact.postal_code },
+      { label: "Social 2", value: combineFields([contact.linkedin, contact.instagram]) },
+      { label: "Skype", value: contact.skype },
+      { label: "Dept", value: contact.department }
+    ],
+    bottomRight: [
+        { label: "Tags", value: Array.isArray(contact.tags) ? contact.tags.join(", ") : contact.tags, maxLength: 20 },
+      { 
+        label: "Location", 
+        value: combineFields([contact.location, contact.city, contact.state, contact.country]),
+        maxLength: null // No truncation for location
+      },
+      { 
+        label: "Social", 
+        value: combineFields([contact.facebook, contact.twitter]) 
+      },
+      { 
+        label: "Website", 
+        value: contact.website 
+      },
+      { 
+        label: "Access", 
+        value: contact.access_level 
+      },
+      { 
+        label: "Permissions", 
+        value: contact.permissions 
+      }
+    ]
+  });
+
+  // Generic function to render a column of fields
+const renderColumn = (fields, startX, startY, maxLength = 30) => {
+  let currentY = startY;
+
+  fields.forEach(field => {
+    const lines = addField(
+      field.label,
+      field.value,
+      startX,
+      currentY,
+      field.maxLength !== undefined ? field.maxLength : maxLength
+    );
+
+    currentY += lines * LINE_HEIGHT;
+  });
+
+  return currentY;
+};
+  
+  contacts.forEach((contact) => {
+    // Add new page if space is insufficient
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
+    
+    // Card border
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(10, y, CARD_WIDTH, CARD_HEIGHT, 3, 3, 'FD');
+    
+    // Header separator line
+    doc.setDrawColor(220, 220, 220);
+    doc.line(10, y + 10, 200, y + 10);
+    
+    // Name
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 102, 204);
+    const fullName = combineFields([contact.name, contact.last_name], " ");
+    doc.text(fullName, LEFT_COL_X, y + 7);
+    
+    // Reset font
+    doc.setFontSize(9);
+    doc.setTextColor(60, 60, 60);
+    
+    const groups = fieldGroups(contact);
+    
+    // Render main columns
+    renderColumn(groups.left, LEFT_COL_X, y + 17);
+    renderColumn(groups.right, RIGHT_COL_X, y + 17);
+    
+    // Render bottom columns
+    const secondRowY = y + 47;
+    renderColumn(groups.bottomLeft, LEFT_COL_X, secondRowY, 25);
+    renderColumn(groups.bottomRight, RIGHT_COL_X, secondRowY, 25);
+    
+    y += CARD_HEIGHT + 8;
+  });
+  
+  doc.save("contacts_cards.pdf");
+};
+
+const exportExcel = () => {
+  const excelData = contacts.map((c) => ({
+    "Name": `${c.name || ""} ${c.last_name || "N/A"}`.trim() || "N/A",
+    "Last Name": c.last_name || "N/A",
+    "Job Title": c.job_title || "N/A",
+    "Company Name": c.company_name || "N/A",
+    "Email": c.email || "N/A",
+    "Phone Number": c.phone_number || "N/A",
+    "Phone Number 2": c.phone_number_2 || "N/A",
+    "Fax": c.fax || "N/A",
+    "Deals": c.deals || "N/A",
+    "Date of Birth": c.date_of_birth || "N/A",
+    "Ratings": c.ratings || "N/A",
+    "Owner": c.owner || "N/A",
+    "Industry": c.industry || "N/A",
+    "Currency": c.currency || "N/A",
+    "Language": c.language || "N/A",
+    "Tags": c.tags || "N/A",
+    "Source": c.source || "N/A",
+    "Location": [c.location, c.city, c.state, c.country].filter(Boolean).join(", ") || "N/A",
+    "City": c.city || "N/A",
+    "State": c.state || "N/A",
+    "Country": c.country || "N/A",
+    "Postal Code": c.postal_code || "N/A",
+    "Facebook": c.facebook || "N/A",
+    "Twitter": c.twitter || "N/A",
+    "LinkedIn": c.linkedin || "N/A",
+    "Instagram": c.instagram || "N/A",
+    "Skype": c.skype || "N/A",
+    "Website": c.website || "N/A",
+    "Access Level": c.access_level || "N/A",
+    "Department": c.department || "N/A",
+
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+  // Auto-size columns for better alignment
+  const maxWidth = 50;
+  const minWidth = 10;
+  
+  // Get the range of the worksheet
+  const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
+  
+  // Initialize column widths if not present
+  if (!worksheet['!cols']) worksheet['!cols'] = [];
+  
+  // Calculate optimal column widths
+  for (let col = range.s.c; col <= range.e.c; col++) {
+    let maxLength = 0;
+    
+    // Check header
+    const headerCell = worksheet[XLSX.utils.encode_cell({ r: 0, c: col })];
+    if (headerCell && headerCell.v) {
+      maxLength = Math.max(maxLength, String(headerCell.v).length);
+    }
+    
+    // Check data rows (up to first 100 rows for performance)
+    const maxRows = Math.min(range.e.r + 1, 100);
+    for (let row = 1; row < maxRows; row++) {
+      const cell = worksheet[XLSX.utils.encode_cell({ r: row, c: col })];
+      if (cell && cell.v) {
+        maxLength = Math.max(maxLength, String(cell.v).length);
+      }
+    }
+    
+    // Set column width with min/max constraints
+    worksheet['!cols'][col] = { 
+      wch: Math.min(Math.max(maxLength + 2, minWidth), maxWidth) 
+    };
+  }
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Contacts");
+
+  const excelBuffer = XLSX.write(workbook, {
+    bookType: "xlsx",
+    type: "array",
+  });
+
+  const data = new Blob([excelBuffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  // Generate filename with current date
+  const date = new Date();
+  const dateStr = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+  
+  saveAs(data, `contacts_${dateStr}.xlsx`);
+};
+
   const isAllSelected = contacts.length > 0 && selectedContacts.size === contacts.length;
   const isIndeterminate = selectedContacts.size > 0 && selectedContacts.size < contacts.length;
+
 
   const handleAddContact = () => {
     setModalType('add');
@@ -165,6 +436,35 @@ const Contacts = () => {
   };
 
   const handleEditContact = (contact) => {
+
+        const predefinedCurrencies = ["Dollar", "Euro", "Rupee", "Pound"];
+    const predefinedLanguages = ["English", "Spanish", "French", "German"];
+      const predefinedSources = [
+    "Social Media",
+    "Website",
+    "Referral",
+    "LinkedIn",
+    "Email Campaign",
+    "Conference",
+    "GitHub"
+  ];
+
+  const predefinedOwners = [
+  "Hendry Milner",
+  "John Doe",
+  "Sarah Wilson",
+  "Mike Johnson"
+];
+
+const predefinedIndustries = [
+  "Retail Industry",
+  "Technology",
+  "Design",
+  "Human Resources",
+  "Marketing",
+  "Consulting"
+];
+  
     setModalType('edit');
     setSelectedContact(contact);
     setSelectedFile(null);
@@ -193,12 +493,52 @@ const Contacts = () => {
       company: contact.company_name || '',
       dateOfBirth: contact.dob ? (typeof contact.dob === 'string' ? contact.dob.split('T')[0] : contact.dob) : '',
       rating: contact.ratings?.toString() || '0',
-      owner: contact.owner || '',
+      owner: predefinedOwners.includes(contact.owner)
+  ? contact.owner
+  : "Others",
+
+customOwner: predefinedOwners.includes(contact.owner)
+  ? ""
+  : contact.owner || "",
       deals: contact.deals || '',
-      industry: contact.industry || '',
-      currency: contact.currency || 'Dollar',
-      language: contact.language || 'English',
-      source: contact.source || '',
+
+      industry: predefinedIndustries.includes(contact.industry)
+  ? contact.industry
+  : "Others",
+
+customIndustry: predefinedIndustries.includes(contact.industry)
+  ? ""
+  : contact.industry || "",
+currency: predefinedCurrencies.includes(contact.currency)
+  ? contact.currency
+  : contact.currency
+    ? "Other"
+    : "Dollar",
+
+customCurrency: predefinedCurrencies.includes(contact.currency)
+  ? ""
+  : contact.currency || "",
+language: predefinedLanguages.includes(contact.language)
+  ? contact.language
+  : contact.language
+    ? "Other"
+    : "English",
+
+customLanguage: predefinedLanguages.includes(contact.language)
+  ? ""
+  : contact.language || "",
+      
+    // Source
+    source: predefinedSources.includes(contact.source)
+      ? contact.source
+      : contact.source
+        ? "Others"
+        : "",
+
+    customSource: predefinedSources.includes(contact.source)
+      ? ""
+      : contact.source || "",
+
       tags: Array.isArray(contact.tags) ? contact.tags : (contact.tags ? contact.tags.split(',') : []),
       img: contact.profile_photo || '/assets/images/users/user1.png',
       // Address Information
@@ -295,12 +635,29 @@ const Contacts = () => {
         company_name: formData.company || '',
         dob: formData.dateOfBirth || null,
         ratings: formData.rating || null,
-        owner: formData.owner || null,
+        owner:
+  formData.owner === "Others"
+    ? formData.customOwner || null
+    : formData.owner || null,
         deals: formData.deals || null,
-        industry: formData.industry || null,
-        currency: formData.currency || null,
-        language: formData.language || null,
-        source: formData.source || null,
+        
+        industry:
+  formData.industry === "Others"
+    ? formData.customIndustry || null
+    : formData.industry || null,
+
+        currency:
+  formData.currency === "Other"
+    ? formData.customCurrency || null
+    : formData.currency || null,
+        language:
+  formData.language === "Other"
+    ? formData.customLanguage || null
+    : formData.language || null,
+        source:
+  formData.source === "Others"
+    ? formData.customSource || null
+    : formData.source || null,
         tags: Array.isArray(formData.tags) ? formData.tags : (formData.tags ? [formData.tags] : []),
         profile_photo: profilePhotoPath,
         // Address Information
@@ -353,7 +710,6 @@ const Contacts = () => {
       setError(errorMessage);
     }
   };
-
   const handleCancel = () => {
     setShowModal(false);
     resetForm();
@@ -415,79 +771,127 @@ const Contacts = () => {
     <div>
 
 
-      
 
-      <div className="d-flex my-xl-auto justify-content-between flex-wrap">
-        {/* Export Dropdown */}
+      <div className="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3">
+        {/* Left Section: Title + Description */}
         <div>
-          <h3>Contacts</h3>
+          <h5 className="text-3xl fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+            <span className="icon-circle text-primary">
+              <Icon icon="heroicons:building-office" />
+            </span>
+            Contacts
+          </h5>
+          <p className="text-muted mb-0">
+            Manage all contact information, profiles, and communication details in one place.
+          </p>
         </div>
-        <div className="d-flex gap-2">
-          <div className="dropdown">
-            <a
-              href="#"
-              className="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-              data-bs-toggle="dropdown"
-            >
-              <i className="ti ti-file-export me-1"></i>Export
-            </a>
-            <ul className="dropdown-menu dropdown-menu-end p-3">
-              <li>
-                <a href="#" className="dropdown-item rounded-1">
-                  <i className="ti ti-file-type-pdf me-1"></i>Export as PDF
-                </a>
-              </li>
-              <li>
-                <a href="#" className="dropdown-item rounded-1">
-                  <i className="ti ti-file-type-xls me-1"></i>Export as Excel
-                </a>
-              </li>
-            </ul>
-          </div>
 
-          {/* Add Contact */}
-          <div className="mb-2">
-            <button
-              onClick={handleAddContact}
-              className="btn btn-secondary d-flex align-items-center"
-            >
-              <i className="ti ti-circle-plus me-2"></i>Add Contact
-            </button>
-          </div>
-        </div>
+        {/* Right Section: Actions */}
+<div className="d-flex align-items-center gap-2">
+
+  {/* Export Dropdown */}
+  <div className="dropdown ">
+    <button
+      type="button"
+      className="create-job-btn dropdown-toggle gap-2"
+      data-bs-toggle="dropdown"
+    >
+      <i className="ti ti-file-export me-1"></i>
+      Export CSV
+    </button>
+
+<ul className="dropdown-menu dropdown-menu-end shadow-sm">
+
+  <li>
+    <button
+      className="dropdown-item d-flex align-items-center"
+      onClick={exportPDF}
+    >
+      <i className="ti ti-file-type-pdf me-2"></i>
+      Export as PDF
+    </button>
+  </li>
+
+  <li>
+    <button
+      className="dropdown-item d-flex align-items-center"
+      onClick={exportExcel}
+    >
+      <i className="ti ti-file-type-xls me-2"></i>
+      Export as Excel
+    </button>
+  </li>
+
+</ul>
+  </div>
+
+  {/* Add Contact */}
+  <button
+    onClick={handleAddContact}
+    className="add-employee gap-2"
+  >
+     <Icon icon="heroicons:plus-circle" width="18" />
+
+    Add Contact
+  </button>
+
+</div>
       </div>
+
       {/* Contact Table Header */}
-      <div className="card w-100">
-        <div className="card-body p-3">
-          <div className="d-flex align-items-center justify-content-between">
+      <div className="card w-100 border-0 shadow-sm">
+        <div className="card-body px-4 py-3 bg-white rounded-3">
+          <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+
+            {/* Left: Title + Selection Info */}
             <div className="d-flex align-items-center gap-3">
-              <h5 className="mb-0">Contact Table</h5>
+              <h5 className="mb-0 fw-bold text-dark fs-6">
+                Contact Table
+              </h5>
+
               {selectedContacts.size > 0 && (
-                <span className="badge bg-primary d-flex align-items-center gap-2">
+                <span className="badge bg-primary bg-opacity-10 text-primary d-flex align-items-center gap-2 px-3 py-2 rounded-pill fw-medium">
                   <i className="ti ti-check"></i>
-                  {selectedContacts.size} {selectedContacts.size === 1 ? 'contact' : 'contacts'} selected
+                  {selectedContacts.size}{" "}
+                  {selectedContacts.size === 1 ? "contact" : "contacts"} selected
                 </span>
               )}
             </div>
+
+            {/* Right: Sort Dropdown */}
             <div className="dropdown">
-              <a
-                href="#"
-                className="dropdown-toggle btn btn-sm btn-white d-inline-flex align-items-center"
+              <button
+                type="button"
+                className="close-btn"
                 data-bs-toggle="dropdown"
               >
-                Sort By : Last 7 Days
-              </a>
-              <ul className="dropdown-menu dropdown-menu-end p-3">
-                <li><a href="#" className="dropdown-item rounded-1">Recently Added</a></li>
-                <li><a href="#" className="dropdown-item rounded-1">Ascending</a></li>
-                <li><a href="#" className="dropdown-item rounded-1">Descending</a></li>
-                <li><a href="#" className="dropdown-item rounded-1">Last Month</a></li>
-                <li><a href="#" className="dropdown-item rounded-1">Last 7 Days</a></li>
+                Sort By:
+                <span className="text-dark">Last 7 Days</span>
+              </button>
+
+              <ul className="dropdown-menu dropdown-menu-end shadow-sm">
+                <li>
+                  <button className="dropdown-item">Recently Added</button>
+                </li>
+                <li>
+                  <button className="dropdown-item">Ascending</button>
+                </li>
+                <li>
+                  <button className="dropdown-item">Descending</button>
+                </li>
+                <li>
+                  <button className="dropdown-item">Last Month</button>
+                </li>
+                <li>
+                  <button className="dropdown-item active">Last 7 Days</button>
+                </li>
               </ul>
             </div>
+
           </div>
         </div>
       </div>
+
 
       {/* Contacts Table */}
       {loading && (
@@ -505,301 +909,371 @@ const Contacts = () => {
           <p className="text-muted">No contacts found. Add your first contact!</p>
         </div>
       )}
-      
-      {!loading && contacts.length > 0 && (
-        <div className="card w-100">
-          <style>{`
-            .contact-table-checkbox {
-              appearance: none;
-              -webkit-appearance: none;
-              -moz-appearance: none;
-              width: 18px;
-              height: 18px;
-              border: 2px solid #d1d5db;
-              border-radius: 4px;
-              background-color: #fff;
-              cursor: pointer;
-              position: relative;
-              transition: all 0.2s ease;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              flex-shrink: 0;
-            }
-            .contact-table-checkbox:checked {
-              background-color: #0d6efd;
-              border-color: #0d6efd;
-            }
-            .contact-table-checkbox:checked::after {
-              content: '✓';
-              color: #fff;
-              font-size: 14px;
-              font-weight: bold;
-              line-height: 1;
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-            }
-            .contact-table-checkbox:indeterminate {
-              background-color: #0d6efd;
-              border-color: #0d6efd;
-            }
-            .contact-table-checkbox:indeterminate::after {
-              content: '−';
-              color: #fff;
-              font-size: 16px;
-              font-weight: bold;
-              line-height: 1;
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-            }
-            .contact-table-checkbox:hover {
-              border-color: #0d6efd;
-              box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1);
-            }
-            .contact-table-checkbox:focus {
-              outline: none;
-              border-color: #0d6efd;
-              box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
-            }
-            .contact-avatar-container {
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              flex-shrink: 0;
-            }
-            .contact-avatar-container img {
-              max-width: 100%;
-              max-height: 100%;
-              object-fit: cover;
-              object-position: center;
-            }
-          `}</style>
-          <div className="card-body p-0">
-            <div className="table-responsive">
-              <table className="table table-hover">
-                <thead>
-                  <tr>
-                    <th style={{ width: '50px', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>
-                      <div className="d-flex justify-content-center align-items-center" style={{ width: '100%', height: '100%' }}>
-                        <input 
-                          className="contact-table-checkbox" 
-                          type="checkbox" 
-                          checked={isAllSelected}
-                          ref={(input) => {
-                            if (input) input.indeterminate = isIndeterminate;
-                          }}
-                          onChange={handleSelectAll}
-                          title={isAllSelected ? 'Unselect all' : 'Select all'}
-                        />
+
+{!loading && contacts.length > 0 && (
+  <div className="card w-100">
+    <style>{`
+      .contact-table-checkbox {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        width: 18px;
+        height: 18px;
+        border: 2px solid #d1d5db;
+        border-radius: 4px;
+        background-color: #fff;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .contact-table-checkbox:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+      }
+      .contact-table-checkbox:checked::after {
+        content: '✓';
+        color: #fff;
+        font-size: 14px;
+        font-weight: bold;
+        line-height: 1;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .contact-table-checkbox:indeterminate {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+      }
+      .contact-table-checkbox:indeterminate::after {
+        content: '−';
+        color: #fff;
+        font-size: 16px;
+        font-weight: bold;
+        line-height: 1;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .contact-table-checkbox:hover {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1);
+      }
+      .contact-table-checkbox:focus {
+        outline: none;
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+      }
+      .contact-avatar-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .contact-avatar-container img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: cover;
+        object-position: center;
+      }
+      /* Table column width distribution */
+      .contacts-table th,
+      .contacts-table td {
+        vertical-align: middle;
+        padding: 1rem 0.75rem;
+      }
+      .contacts-table th {
+        font-weight: 600;
+        color: #4b5563;
+        background-color: #f9fafb;
+        border-bottom: 2px solid #e5e7eb;
+      }
+      .contacts-table td {
+        border-bottom: 1px solid #e5e7eb;
+      }
+    `}</style>
+    <div className="card-body p-0">
+      <div className="table-responsive">
+        <table className="table contacts-table" style={{ 
+          width: '100%',
+          borderCollapse: 'separate',
+          borderSpacing: 0
+        }}>
+          <thead>
+            <tr>
+              <th style={{ 
+                width: '3%', 
+                minWidth: '40px',
+                textAlign: 'center',
+                padding: '1rem 0.5rem'
+              }}>
+                <div className="d-flex justify-content-center align-items-center">
+                  <input
+                    className="contact-table-checkbox"
+                    type="checkbox"
+                    checked={isAllSelected}
+                    ref={(input) => {
+                      if (input) input.indeterminate = isIndeterminate;
+                    }}
+                    onChange={handleSelectAll}
+                    title={isAllSelected ? 'Unselect all' : 'Select all'}
+                  />
+                </div>
+              </th>
+
+              <th style={{ width: '18%', minWidth: '200px' }}>Contact</th>
+              <th style={{ width: '12%', minWidth: '150px' }}>Email</th>
+              <th style={{ width: '12%', minWidth: '140px' }}>Phone</th>
+              <th style={{ width: '12%', minWidth: '150px' }}>Company</th>
+              <th style={{ width: '10%', minWidth: '120px' }}>Job Title</th>
+              <th style={{ width: '12%', minWidth: '150px' }}>Location</th>
+              <th style={{ width: '10%', minWidth: '120px' }}>Industry</th>
+              <th style={{ width: '5%', minWidth: '70px', textAlign: 'center' }}>Rating</th>
+              <th style={{ 
+                width: '8%', 
+                minWidth: '160px',
+                textAlign: 'center'
+              }}>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {contacts.map((c) => (
+              <tr key={c.id} style={{ transition: 'background-color 0.2s' }}>
+                <td style={{ 
+                  textAlign: 'center',
+                  padding: '1rem 0.5rem'
+                }}>
+                  <div className="d-flex justify-content-center align-items-center">
+                    <input
+                      className="contact-table-checkbox"
+                      type="checkbox"
+                      checked={selectedContacts.has(c.id)}
+                      onChange={() => handleSelectContact(c.id)}
+                      title={selectedContacts.has(c.id) ? 'Unselect contact' : 'Select contact'}
+                    />
+                  </div>
+                </td>
+                
+                <td>
+                  <div className="d-flex align-items-center gap-2">
+                    <div
+                      className="avatar avatar-sm avatar-rounded flex-shrink-0"
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        overflow: 'hidden',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: '#f0f0f0',
+                        border: '2px solid #fff',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                      }}
+                    >
+                      <img
+                        src={(() => {
+                          if (!c.profile_photo) return '/assets/images/users/user1.png';
+                          if (c.profile_photo.startsWith('http://') || c.profile_photo.startsWith('https://')) {
+                            return c.profile_photo;
+                          }
+                          if (c.profile_photo.startsWith('/')) {
+                            return `${BASE_URL}${c.profile_photo}`;
+                          }
+                          return `${BASE_URL}/${c.profile_photo}`;
+                        })()}
+                        alt={`${c.name || 'Contact'}`}
+                        className="img-fluid"
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          objectPosition: 'center',
+                          display: 'block'
+                        }}
+                        onError={(e) => {
+                          if (e.target.src !== '/assets/images/users/user1.png') {
+                            e.target.onerror = null;
+                            e.target.src = '/assets/images/users/user1.png';
+                          }
+                        }}
+                      />
+                    </div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div className="fw-medium text-truncate" style={{ fontWeight: 600, color: '#1f2937' }}>
+                        {c.name} {c.last_name || ''}
                       </div>
-                    </th>
-                    <th>Contact</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Company</th>
-                    <th>Job Title</th>
-                    <th>Location</th>
-                    <th>Industry</th>
-                    <th>Rating</th>
-                    <th style={{ width: '180px', minWidth: '180px' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {contacts.map((c) => (
-                    <tr key={c.id}>
-                      <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>
-                        <div className="d-flex justify-content-center align-items-center" style={{ width: '100%', height: '100%' }}>
-                          <input 
-                            className="contact-table-checkbox" 
-                            type="checkbox" 
-                            checked={selectedContacts.has(c.id)}
-                            onChange={() => handleSelectContact(c.id)}
-                            title={selectedContacts.has(c.id) ? 'Unselect contact' : 'Select contact'}
-                          />
-                        </div>
-                      </td>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          <div 
-                            className="avatar avatar-sm avatar-rounded me-2 flex-shrink-0" 
-                            style={{ 
-                              width: '40px', 
-                              height: '40px', 
-                              overflow: 'hidden',
-                              borderRadius: '50%',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              backgroundColor: '#f0f0f0'
-                            }}
-                          >
-                            <img 
-                              src={(() => {
-                                if (!c.profile_photo) return '/assets/images/users/user1.png';
-                                if (c.profile_photo.startsWith('http://') || c.profile_photo.startsWith('https://')) {
-                                  return c.profile_photo;
-                                }
-                                if (c.profile_photo.startsWith('/')) {
-                                  return `${BASE_URL}${c.profile_photo}`;
-                                }
-                                return `${BASE_URL}/${c.profile_photo}`;
-                              })()}
-                              alt={`${c.name || 'Contact'}`}
-                              className="img-fluid"
-                              style={{ 
-                                width: '100%', 
-                                height: '100%', 
-                                objectFit: 'cover',
-                                objectPosition: 'center',
-                                display: 'block'
-                              }}
-                              onError={(e) => {
-                                if (e.target.src !== '/assets/images/users/user1.png') {
-                                  e.target.onerror = null;
-                                  e.target.src = '/assets/images/users/user1.png';
-                                }
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <div className="fw-medium">
-                              {c.name} {c.last_name || ''}
-                            </div>
-                            {c.owner && (
-                              <small className="text-muted">
-                                <i className="ti ti-user me-1"></i>{c.owner}
-                              </small>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        {c.email ? (
-                          <div className="d-flex align-items-center">
-                            <i className="ti ti-mail text-gray-5 me-2"></i>
-                            <span>{c.email}</span>
-                          </div>
-                        ) : (
-                          <span className="text-muted">N/A</span>
-                        )}
-                      </td>
-                      <td>
-                        <div className="d-flex flex-column">
-                          {c.phone_number && (
-                            <div className="d-flex align-items-center mb-1">
-                              <i className="ti ti-phone text-gray-5 me-2"></i>
-                              <span>{c.phone_number}</span>
-                            </div>
-                          )}
-                          {c.phone_number2 && (
-                            <div className="d-flex align-items-center">
-                              <i className="ti ti-phone text-gray-5 me-2"></i>
-                              <span className="text-muted small">{c.phone_number2}</span>
-                            </div>
-                          )}
-                          {!c.phone_number && <span className="text-muted">N/A</span>}
-                        </div>
-                      </td>
-                      <td>
-                        {c.company_name ? (
-                          <div className="d-flex align-items-center">
-                            <i className="ti ti-building text-gray-5 me-2"></i>
-                            <span>{c.company_name}</span>
-                          </div>
-                        ) : (
-                          <span className="text-muted">N/A</span>
-                        )}
-                      </td>
-                      <td>
-                        {c.job_title ? (
-                          <div className="d-flex align-items-center">
-                          <i className="ti ti-building text-gray-5 me-2"></i>
-                          <span>{c.job_title}</span>
-                        </div>
-                          
-                        ) : (
-                          <span className="text-muted">N/A</span>
-                        )}
-                      </td>
-                      <td>
-                        {c.location || c.city || c.state || c.country ? (
-                          <div className="d-flex align-items-center">
-                            <i className="ti ti-map-pin text-gray-5 me-2"></i>
-                            <span>
-                              {[c.location, c.city, c.state, c.country].filter(Boolean).join(', ') || 'N/A'}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-muted">N/A</span>
-                        )}
-                      </td>
-                      <td>
-                        {c.industry ? (
-                          <div className="d-flex align-items-center">
-                            <i className="ti ti-briefcase text-gray-5 me-2"></i>
-                            <span>{c.industry}</span>
-                          </div>
-                        ) : (
-                          <span className="text-muted">N/A</span>
-                        )}
-                      </td>
-                      <td>
-                        {c.ratings ? (
-                          <div className="d-flex align-items-center">
-                            <i className="ti ti-star-filled text-warning me-1"></i>
-                            <span>{c.ratings}</span>
-                          </div>
-                        ) : (
-                          <span className="text-muted">-</span>
-                        )}
-                      </td>
-                      <td style={{ whiteSpace: 'nowrap', width: '180px' }}>
-                        <div className="d-flex align-items-center gap-2">
-                          <button
-                            className="btn btn-sm btn-primary"
-                            onClick={() => handleEditContact(c)}
-                            title="Edit Contact"
-                            type="button"
-                            style={{ fontSize: '13px', padding: '6px 12px', minWidth: '70px' }}
-                          >
-                            <i className="ti ti-edit me-1"></i>Edit
-                          </button>
-                          <button
-                            className="btn btn-sm btn-danger"
-                            onClick={() => handleDeleteContact(c)}
-                            title="Delete Contact"
-                            type="button"
-                            style={{ fontSize: '13px', padding: '6px 12px', minWidth: '70px' }}
-                          >
-                            <i className="ti ti-trash me-1"></i>Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
+                      {c.owner && (
+                        <small className="text-muted d-flex align-items-center gap-1" style={{ fontSize: '0.75rem' }}>
+                          <i className="ti ti-user" style={{ fontSize: '0.75rem' }}></i>
+                          <span className="text-truncate">{c.owner}</span>
+                        </small>
+                      )}
+                    </div>
+                  </div>
+                </td>
+                
+                <td>
+                  {c.email ? (
+                    <div className="d-flex align-items-center gap-1">
+                      <i className="ti ti-mail text-gray-5 flex-shrink-0" style={{ color: '#6b7280', fontSize: '1rem' }}></i>
+                      <span className="text-truncate" style={{ color: '#4b5563' }} title={c.email}>
+                        {c.email}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-muted fst-italic">N/A</span>
+                  )}
+                </td>
+                
+                <td>
+                  <div className="d-flex flex-column" style={{ gap: '2px' }}>
+                    {c.phone_number ? (
+                      <div className="d-flex align-items-center gap-1">
+                        <i className="ti ti-phone text-gray-5 flex-shrink-0" style={{ color: '#6b7280', fontSize: '0.875rem' }}></i>
+                        <span className="text-truncate" style={{ color: '#4b5563' }}>{c.phone_number}</span>
+                      </div>
+                    ) : null}
+                    {c.phone_number2 ? (
+                      <div className="d-flex align-items-center gap-1">
+                        <i className="ti ti-phone text-gray-5 flex-shrink-0" style={{ color: '#9ca3af', fontSize: '0.75rem' }}></i>
+                        <span className="text-muted small text-truncate">{c.phone_number2}</span>
+                      </div>
+                    ) : null}
+                    {!c.phone_number && !c.phone_number2 && (
+                      <span className="text-muted fst-italic">N/A</span>
+                    )}
+                  </div>
+                </td>
+                
+                <td>
+                  {c.company_name ? (
+                    <div className="d-flex align-items-center gap-1">
+                      <i className="ti ti-building text-gray-5 flex-shrink-0" style={{ color: '#6b7280', fontSize: '1rem' }}></i>
+                      <span className="text-truncate" style={{ color: '#4b5563' }} title={c.company_name}>
+                        {c.company_name}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-muted fst-italic">N/A</span>
+                  )}
+                </td>
+                
+                <td>
+                  {c.job_title ? (
+                    <div className="d-flex align-items-center gap-1">
+                      <i className="ti ti-briefcase text-gray-5 flex-shrink-0" style={{ color: '#6b7280', fontSize: '1rem' }}></i>
+                      <span className="text-truncate" style={{ color: '#4b5563' }} title={c.job_title}>
+                        {c.job_title}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-muted fst-italic">N/A</span>
+                  )}
+                </td>
+                
+                <td>
+                  {c.location || c.city || c.state || c.country ? (
+                    <div className="d-flex align-items-center gap-1">
+                      <i className="ti ti-map-pin text-gray-5 flex-shrink-0" style={{ color: '#6b7280', fontSize: '1rem' }}></i>
+                      <span className="text-truncate" style={{ color: '#4b5563' }} title={[c.location, c.city, c.state, c.country].filter(Boolean).join(', ')}>
+                        {[c.location, c.city, c.state, c.country].filter(Boolean).join(', ') || 'N/A'}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-muted fst-italic">N/A</span>
+                  )}
+                </td>
+                
+                <td>
+                  {c.industry ? (
+                    <div className="d-flex align-items-center gap-1">
+                      <i className="ti ti-category text-gray-5 flex-shrink-0" style={{ color: '#6b7280', fontSize: '1rem' }}></i>
+                      <span className="text-truncate" style={{ color: '#4b5563' }} title={c.industry}>
+                        {c.industry}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-muted fst-italic">N/A</span>
+                  )}
+                </td>
+                
+                <td style={{ textAlign: 'center' }}>
+                  {c.ratings ? (
+                    <div className="d-flex align-items-center justify-content-center gap-1">
+                      <i className="ti ti-star-filled text-warning" style={{ fontSize: '1rem' }}></i>
+                      <span style={{ color: '#4b5563', fontWeight: 500 }}>{c.ratings}</span>
+                    </div>
+                  ) : (
+                    <span className="text-muted">-</span>
+                  )}
+                </td>
+                
+                <td style={{ textAlign: 'center' }}>
+                  <div className="d-flex align-items-center justify-content-center gap-2">
+                    <button
+                      className="btn btn-sm btn-primary d-inline-flex align-items-center gap-1"
+                      onClick={() => handleEditContact(c)}
+                      title="Edit Contact"
+                      type="button"
+                      style={{
+                        padding: '0.375rem 0.75rem',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        borderRadius: '6px',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <i className="ti ti-edit" style={{ fontSize: '1rem' }}></i>
+                      <span className="d-none d-sm-inline">Edit</span>
+                    </button>
+                    <button
+                      className="btn btn-sm btn-danger d-inline-flex align-items-center gap-1"
+                      onClick={() => handleDeleteContact(c)}
+                      title="Delete Contact"
+                      type="button"
+                      style={{
+                        padding: '0.375rem 0.75rem',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        borderRadius: '6px',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <i className="ti ti-trash" style={{ fontSize: '1rem' }}></i>
+                      <span className="d-none d-sm-inline">Delete</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Add/Edit Contact Modal */}
       {showModal && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
+        <div  className="hrms-modal-overlay">
+          <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+
+              {/* HEADER */}
+              <div className="hrms-modal-header">
+                 <h5 className="hrms-modal-title d-flex align-items-center">
                   {modalType === 'add' ? 'Add Contact' : 'Edit Contact'}
                 </h5>
                 <button type="button" className="btn-close" onClick={handleCancel}></button>
               </div>
-              <div className="modal-body">
+
+              <div className="hrms-modal-body hrms-modal-body-scroll">
                 {error && (
                   <div className="alert alert-danger" role="alert">
                     {error}
@@ -844,75 +1318,77 @@ const Contacts = () => {
                 {/* Tab Content */}
                 {activeTab === 'basic' && (
                   <form onSubmit={handleSave}>
-                   
+
                     <div className="col-md-12">
-                            <div className="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
-                              <div 
-                                className="d-flex align-items-center justify-content-center border border-dashed me-2 flex-shrink-0 text-dark frames" 
-                                style={{ 
-                                  position: 'relative', 
-                                  overflow: 'hidden',
-                                  width: '120px',
-                                  height: '120px',
-                                  borderRadius: '50%',
-                                  backgroundColor: '#f8f9fa',
-                                  minWidth: '120px',
-                                  minHeight: '120px'
-                                }}
-                              >
-                                {imagePreview ? (
-                                  <img 
-                                    src={imagePreview} 
-                                    alt="Profile preview"
-                                    className="img-fluid"
-                                    style={{ 
-                                      width: '100%', 
-                                      height: '100%', 
-                                      objectFit: 'cover',
-                                      objectPosition: 'center',
-                                      display: 'block',
-                                      borderRadius: '50%'
-                                    }}
-                                    onError={(e) => {
-                                      if (e.target.src !== '/assets/images/users/user1.png') {
-                                        e.target.onerror = null;
-                                        e.target.src = '/assets/images/users/user1.png';
-                                      }
-                                    }}
-                                  />
-                                ) : (
-                                  <i className="ti ti-photo text-gray-2 fs-16" style={{ fontSize: '48px' }}></i>
-                                )}
-                              </div>
-                              <div className="profile-upload">
-                                <div className="mb-2">
-                                  <h6 className="mb-1">Upload Profile Image</h6>
-                                  <p className="fs-12">Image should be below 4 mb</p>
-                                </div>
-                                <div className="profile-uploader d-flex align-items-center">
-                                  <label className="drag-upload-btn btn btn-sm btn-primary me-2" style={{ cursor: 'pointer', position: 'relative' }}>
-                                    Upload
-                                    <input 
-                                      type="file" 
-                                      className="form-control image-sign" 
-                                      accept="image/*"
-                                      onChange={handleFileChange}
-                                      style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer', left: 0, top: 0 }}
-                                    />
-                                  </label>
-                                  {(selectedFile || imagePreview) && (
-                                    <button 
-                                      type="button"
-                                      onClick={handleRemoveImage}
-                                      className="btn btn-light btn-sm"
-                                    >
-                                      Remove
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
+                      <div className="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
+                        <div
+                          className="d-flex align-items-center justify-content-center border border-dashed me-2 flex-shrink-0 text-dark frames"
+                          style={{
+                            position: 'relative',
+                            overflow: 'hidden',
+                            width: '120px',
+                            height: '120px',
+                            borderRadius: '50%',
+                            backgroundColor: '#f8f9fa',
+                            minWidth: '120px',
+                            minHeight: '120px'
+                          }}
+                        >
+                          {imagePreview ? (
+                            <img
+                              src={imagePreview}
+                              alt="Profile preview"
+                              className="img-fluid"
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                objectPosition: 'center',
+                                display: 'block',
+                                borderRadius: '50%'
+                              }}
+                              onError={(e) => {
+                                if (e.target.src !== '/assets/images/users/user1.png') {
+                                  e.target.onerror = null;
+                                  e.target.src = '/assets/images/users/user1.png';
+                                }
+                              }}
+                            />
+                          ) : (
+                            <i className="ti ti-photo text-gray-2 fs-16" style={{ fontSize: '48px' }}></i>
+                          )}
+                        </div>
+                        <div className="profile-upload">
+                          <div className="mb-2">
+                            <h6 className="mb-1">Upload Profile Image</h6>
+                            <p className="fs-12">Image should be below 4 mb</p>
                           </div>
+
+                          <div className="profile-uploader d-flex align-items-center gap-3">
+                            <label className="create-job-btn " style={{ cursor: 'pointer', position: 'relative' }}>
+                              Upload
+                              <input
+                                type="file"
+                                className="form-control image-sign"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer', left: 0, top: 0 }}
+                              />
+                            </label>
+                            {(selectedFile || imagePreview) && (
+                              <button
+                                type="button"
+                                onClick={handleRemoveImage}
+                                className="delete-btn"
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+                          
+                        </div>
+                      </div>
+                    </div>
                     <div className="row">
                       <div className="col-md-4">
                         <div className="mb-3">
@@ -953,23 +1429,21 @@ const Contacts = () => {
                     </div>
 
                     <div className="row">
-                      <div className="col-md-4">
-                        <div className="mb-3">
-                          <label className="form-label">Company Name <span className="text-danger">*</span></label>
-                          <select
-                            className="form-select"
-                            name="company"
-                            value={formData.company}
-                            onChange={handleInputChange}
-                          >
-                            <option value="">Select Company</option>
-                            <option value="BrightWave Innovations">BrightWave Innovations</option>
-                            <option value="Design Studio">Design Studio</option>
-                            <option value="Tech Solutions">Tech Solutions</option>
-                            <option value="HR Solutions">HR Solutions</option>
-                          </select>
-                        </div>
-                      </div>
+<div className="col-md-4">
+  <div className="mb-3">
+    <label className="form-label">
+      Company Name <span className="text-danger">*</span>
+    </label>
+    <input
+      type="text"
+      className="form-control"
+      name="company"
+      value={formData.company}
+      onChange={handleInputChange}
+      placeholder="Enter Company Name"
+    />
+  </div>
+</div>
                       <div className="col-md-4">
                         <div className="mb-3">
                           <label className="form-label">Email</label>
@@ -1071,77 +1545,201 @@ const Contacts = () => {
                           </select>
                         </div>
                       </div>
-                      <div className="col-md-4">
-                        <div className="mb-3">
-                          <label className="form-label">Owner</label>
-                          <select
-                            className="form-select"
-                            name="owner"
-                            value={formData.owner}
-                            onChange={handleInputChange}
-                          >
-                            <option value="">Select Owner</option>
-                            <option value="Hendry Milner">Hendry Milner</option>
-                            <option value="John Doe">John Doe</option>
-                            <option value="Sarah Wilson">Sarah Wilson</option>
-                            <option value="Mike Johnson">Mike Johnson</option>
-                          </select>
-                        </div>
-                      </div>
+                      
+<div className="col-md-4">
+  <div className="mb-3">
+    <label className="form-label">Owner</label>
+
+    {formData.owner === "Others" ? (
+      <input
+        type="text"
+        className="form-control"
+        placeholder="Enter Owner Name"
+        value={formData.customOwner}
+        onChange={(e) =>
+          setFormData((prev) => ({
+            ...prev,
+            customOwner: e.target.value
+          }))
+        }
+      />
+    ) : (
+      <select
+        className="form-select"
+        name="owner"
+        value={formData.owner}
+        onChange={(e) => {
+          const value = e.target.value;
+
+          if (value === "Others") {
+            setFormData((prev) => ({
+              ...prev,
+              owner: "Others"
+            }));
+          } else {
+            handleInputChange(e);
+          }
+        }}
+      >
+        <option value="">Select Owner</option>
+        <option value="Hendry Milner">Hendry Milner</option>
+        <option value="John Doe">John Doe</option>
+        <option value="Sarah Wilson">Sarah Wilson</option>
+        <option value="Mike Johnson">Mike Johnson</option>
+        <option value="Others">Others</option>
+      </select>
+    )}
+  </div>
+</div>
+
                     </div>
 
                     <div className="row">
-                      <div className="col-md-4">
-                        <div className="mb-3">
-                          <label className="form-label">Industry</label>
-                          <select
-                            className="form-select"
-                            name="industry"
-                            value={formData.industry}
-                            onChange={handleInputChange}
-                          >
-                            <option value="">Select Industry</option>
-                            <option value="Retail Industry">Retail Industry</option>
-                            <option value="Technology">Technology</option>
-                            <option value="Design">Design</option>
-                            <option value="Human Resources">Human Resources</option>
-                            <option value="Marketing">Marketing</option>
-                            <option value="Consulting">Consulting</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="mb-3">
-                          <label className="form-label">Currency</label>
-                          <select
-                            className="form-select"
-                            name="currency"
-                            value={formData.currency}
-                            onChange={handleInputChange}
-                          >
-                            <option value="Dollar">Dollar</option>
-                            <option value="Euro">Euro</option>
-                            <option value="Rupee">Rupee</option>
-                            <option value="Pound">Pound</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="mb-3">
-                          <label className="form-label">Language</label>
-                          <select
-                            className="form-select"
-                            name="language"
-                            value={formData.language}
-                            onChange={handleInputChange}
-                          >
-                            <option value="English">English</option>
-                            <option value="Spanish">Spanish</option>
-                            <option value="French">French</option>
-                            <option value="German">German</option>
-                          </select>
-                        </div>
-                      </div>
+<div className="col-md-4">
+  <div className="mb-3">
+    <label className="form-label">Industry</label>
+
+    {formData.industry === "Others" ? (
+      <input
+        type="text"
+        className="form-control"
+        placeholder="Enter Industry"
+        value={formData.customIndustry}
+        onChange={(e) =>
+          setFormData((prev) => ({
+            ...prev,
+            customIndustry: e.target.value
+          }))
+        }
+      />
+    ) : (
+      <select
+        className="form-select"
+        name="industry"
+        value={formData.industry}
+        onChange={(e) => {
+          const value = e.target.value;
+
+          if (value === "Others") {
+            setFormData((prev) => ({
+              ...prev,
+              industry: "Others"
+            }));
+          } else {
+            handleInputChange(e);
+          }
+        }}
+      >
+        <option value="">Select Industry</option>
+        <option value="Retail Industry">Retail Industry</option>
+        <option value="Technology">Technology</option>
+        <option value="Design">Design</option>
+        <option value="Human Resources">Human Resources</option>
+        <option value="Marketing">Marketing</option>
+        <option value="Consulting">Consulting</option>
+        <option value="Others">Others</option>
+      </select>
+    )}
+  </div>
+</div>
+<div className="col-md-4">
+  <div className="mb-3">
+    <label className="form-label">Currency</label>
+
+    {formData.currency === "Other" ? (
+      // 🔹 Show Input when "Other" selected
+      <input
+        type="text"
+        className="form-control"
+        placeholder="Enter Currency (e.g. INR, JPY, CNY)"
+        value={formData.customCurrency}
+        onChange={(e) =>
+          setFormData((prev) => ({
+            ...prev,
+            customCurrency: e.target.value
+          }))
+        }
+      />
+    ) : (
+      // 🔹 Normal Dropdown
+      <select
+        className="form-select"
+        value={formData.currency}
+        onChange={(e) => {
+          const value = e.target.value;
+
+          if (value === "Other") {
+            setFormData((prev) => ({
+              ...prev,
+              currency: "Other",
+              customCurrency: ""
+            }));
+          } else {
+            setFormData((prev) => ({
+              ...prev,
+              currency: value,
+              customCurrency: ""
+            }));
+          }
+        }}
+      >
+        <option value="Dollar">Dollar</option>
+        <option value="Euro">Euro</option>
+        <option value="Rupee">Rupee</option>
+        <option value="Pound">Pound</option>
+        <option value="Other">Other</option>
+      </select>
+    )}
+  </div>
+</div>
+
+<div className="col-md-4">
+  <div className="mb-3">
+    <label className="form-label">Language</label>
+
+    {formData.language === "Other" ? (
+      <input
+        type="text"
+        className="form-control"
+        placeholder="Enter Language"
+        value={formData.customLanguage}
+        onChange={(e) =>
+          setFormData((prev) => ({
+            ...prev,
+            customLanguage: e.target.value,
+          }))
+        }
+      />
+    ) : (
+      <select
+        className="form-select"
+        value={formData.language}
+        onChange={(e) => {
+          const value = e.target.value;
+
+          if (value === "Other") {
+            setFormData((prev) => ({
+              ...prev,
+              language: "Other",
+            }));
+          } else {
+            setFormData((prev) => ({
+              ...prev,
+              language: value,
+              customLanguage: "",
+            }));
+          }
+        }}
+      >
+        <option value="English">English</option>
+        <option value="Spanish">Spanish</option>
+        <option value="French">French</option>
+        <option value="German">German</option>
+        <option value="Other">Other</option>
+      </select>
+    )}
+  </div>
+</div>
                     </div>
 
                     <div className="row">
@@ -1173,40 +1771,68 @@ const Contacts = () => {
                           />
                         </div>
                       </div>
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="form-label">Source</label>
-                          <select
-                            className="form-select"
-                            name="source"
-                            value={formData.source}
-                            onChange={handleInputChange}
-                          >
-                            <option value="">Select Source</option>
-                            <option value="Social Media">Social Media</option>
-                            <option value="Website">Website</option>
-                            <option value="Referral">Referral</option>
-                            <option value="LinkedIn">LinkedIn</option>
-                            <option value="Email Campaign">Email Campaign</option>
-                            <option value="Conference">Conference</option>
-                            <option value="GitHub">GitHub</option>
-                          </select>
-                        </div>
-                      </div>
+<div className="col-md-6">
+  <div className="mb-3">
+    <label className="form-label">Source</label>
+
+    {formData.source === "Others" ? (
+      <input
+        type="text"
+        className="form-control"
+        placeholder="Enter Source"
+        value={formData.customSource}
+        onChange={(e) =>
+          setFormData((prev) => ({
+            ...prev,
+            customSource: e.target.value
+          }))
+        }
+      />
+    ) : (
+      <select
+        className="form-select"
+        name="source"
+        value={formData.source}
+        onChange={(e) => {
+          const value = e.target.value;
+
+          if (value === "Others") {
+            setFormData((prev) => ({
+              ...prev,
+              source: "Others"
+            }));
+          } else {
+            handleInputChange(e);
+          }
+        }}
+      >
+        <option value="">Select Source</option>
+        <option value="Social Media">Social Media</option>
+        <option value="Website">Website</option>
+        <option value="Referral">Referral</option>
+        <option value="LinkedIn">LinkedIn</option>
+        <option value="Email Campaign">Email Campaign</option>
+        <option value="Conference">Conference</option>
+        <option value="GitHub">GitHub</option>
+        <option value="Others">Others</option>
+      </select>
+    )}
+  </div>
+</div>
                     </div>
-                    <div className="modal-footer">
-                        <button
-                          type="button"
-                          className="btn btn-light me-2"
-                          onClick={handleCloseModal}
-                        >
-                          Cancel
-                        </button>
-                        <button type="submit" className="btn btn-primary">Save</button>
-                      </div>
+                    {/* <div className="modal-footer">
+                      <button
+                        type="button"
+                        className="cancel-btn"
+                        onClick={handleCloseModal}
+                      >
+                        Cancel
+                      </button>
+                      <button type="submit" className="create-job-btn">Save</button>
+                    </div> */}
                   </form>
                 )}
- 
+
                 {activeTab === 'address' && (
                   <div>
                     <div className="row">
@@ -1280,19 +1906,19 @@ const Contacts = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="modal-footer">
-                        <button
-                          type="button"
-                          className="btn btn-light me-2"
-                          onClick={handleCloseModal}
-                        >
-                          Cancel
-                        </button>
-                        <button type="button" onClick={handleSave} className="btn btn-primary">Save</button>
-                      </div>
+                    {/* <div className="modal-footer">
+                      <button
+                        type="button"
+                        className="cancel-btn"
+                        onClick={handleCloseModal}
+                      >
+                        Cancel
+                      </button>
+                      <button type="button" onClick={handleSave} className="create-job-btn">Save</button>
+                    </div> */}
                   </div>
                 )}
-                 
+
 
                 {activeTab === 'social' && (
                   <div>
@@ -1380,126 +2006,176 @@ const Contacts = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="modal-footer">
-                        <button
-                          type="button"
-                          className="btn btn-light me-2"
-                          onClick={handleCloseModal}
-                        >
-                          Cancel
-                        </button>
-                        <button type="button" onClick={handleSave} className="btn btn-primary">Save</button>
-                      </div>
+                    {/* <div className="modal-footer">
+                      <button
+                        type="button"
+                        className="cancel-btn"
+                        onClick={handleCloseModal}
+                      >
+                        Cancel
+                      </button>
+                      <button type="button" onClick={handleSave} className="create-job-btn">Save</button>
+                    </div> */}
                   </div>
                 )}
-                
-                      
 
-               
-                 {activeTab === 'access' && (
-                    <div>
-                      <div className="row">
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">Access Level</label>
-                            <select
-                              className="form-select"
-                              name="accessLevel"
-                              value={formData.accessLevel}
-                              onChange={handleInputChange}
-                            >
-                              <option value="">Select Access Level</option>
-                              <option value="Public">Public</option>
-                              <option value="Private">Private</option>
-                              <option value="Restricted">Restricted</option>
-                              <option value="Internal">Internal</option>
-                            </select>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">Department</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="department"
-                              value={formData.department}
-                              onChange={handleInputChange}
-                              placeholder="Department"
-                            />
-                          </div>
+
+
+
+                {activeTab === 'access' && (
+                  <div>
+                    <div className="row">
+                      <div className="col-md-6">
+                        <div className="mb-3">
+                          <label className="form-label">Access Level</label>
+                          <select
+                            className="form-select"
+                            name="accessLevel"
+                            value={formData.accessLevel}
+                            onChange={handleInputChange}
+                          >
+                            <option value="">Select Access Level</option>
+                            <option value="Public">Public</option>
+                            <option value="Private">Private</option>
+                            <option value="Restricted">Restricted</option>
+                            <option value="Internal">Internal</option>
+                          </select>
                         </div>
                       </div>
-                      <div className="row">
-                        <div className="col-md-12">
-                          <div className="mb-3">
-                            <h6 className="fs-14 fw-medium mb-3">Permissions</h6>
-                            <div className="form-check mb-2">
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                                name="allowEmailAccess"
-                                id="allowEmailAccess"
-                                checked={formData.allowEmailAccess}
-                                onChange={handleInputChange}
-                              />
-                              <label className="form-check-label" htmlFor="allowEmailAccess">
-                                Allow Email Access
-                              </label>
-                            </div>
-                            <div className="form-check mb-2">
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                                name="allowPhoneAccess"
-                                id="allowPhoneAccess"
-                                checked={formData.allowPhoneAccess}
-                                onChange={handleInputChange}
-                              />
-                              <label className="form-check-label" htmlFor="allowPhoneAccess">
-                                Allow Phone Access
-                              </label>
-                            </div>
-                            <div className="form-check mb-2">
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                                name="allowDataExport"
-                                id="allowDataExport"
-                                checked={formData.allowDataExport}
-                                onChange={handleInputChange}
-                              />
-                              <label className="form-check-label" htmlFor="allowDataExport">
-                                Allow Data Export
-                              </label>
-                            </div>
-                          </div>
+                      <div className="col-md-6">
+                        <div className="mb-3">
+                          <label className="form-label">Department</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="department"
+                            value={formData.department}
+                            onChange={handleInputChange}
+                            placeholder="Department"
+                          />
                         </div>
-                      </div>
-                      <div className="modal-footer">
-                        <button
-                          type="button"
-                          className="btn btn-light me-2"
-                          onClick={handleCloseModal}
-                        >
-                          Cancel
-                        </button>
-                        <button type="button" onClick={handleSave} className="btn btn-primary">Save</button>
                       </div>
                     </div>
-                  )}
+<div className="row">
+  <div className="col-md-12">
+    <div className="mb-3">
+      <h6 className="fs-14 fw-medium mb-3">Permissions</h6>
+
+      {/* Allow Email Access */}
+      <label
+        className={`custom-checkbox ${formData.allowEmailAccess ? "checked" : ""}`}
+      >
+        <input
+          type="checkbox"
+          name="allowEmailAccess"
+          checked={formData.allowEmailAccess}
+          onChange={handleInputChange}
+          hidden
+        />
+        <div className="checkbox-box">
+          {formData.allowEmailAccess && (
+            <span className="checkmark">✓</span>
+          )}
+        </div>
+        <span className="checkbox-label">
+          Allow Email Access
+        </span>
+      </label>
+
+      {/* Allow Phone Access */}
+      <label
+        className={`custom-checkbox ${formData.allowPhoneAccess ? "checked" : ""}`}
+      >
+        <input
+          type="checkbox"
+          name="allowPhoneAccess"
+          checked={formData.allowPhoneAccess}
+          onChange={handleInputChange}
+          hidden
+        />
+        <div className="checkbox-box">
+          {formData.allowPhoneAccess && (
+            <span className="checkmark">✓</span>
+          )}
+        </div>
+        <span className="checkbox-label">
+          Allow Phone Access
+        </span>
+      </label>
+
+      {/* Allow Data Export */}
+      <label
+        className={`custom-checkbox ${formData.allowDataExport ? "checked" : ""}`}
+      >
+        <input
+          type="checkbox"
+          name="allowDataExport"
+          checked={formData.allowDataExport}
+          onChange={handleInputChange}
+          hidden
+        />
+        <div className="checkbox-box">
+          {formData.allowDataExport && (
+            <span className="checkmark">✓</span>
+          )}
+        </div>
+        <span className="checkbox-label">
+          Allow Data Export
+        </span>
+      </label>
+
+    </div>
+  </div>
+</div>
+                    {/* <div className="modal-footer">
+                      <button
+                        type="button"
+                        className="cancel-btn"
+                        onClick={handleCloseModal}
+                      >
+                        Cancel
+                      </button>
+                      <button type="button" onClick={handleSave} className="create-job-btn">Save</button>
+                    </div> */}
+                  </div>
+                )}
               </div>
-             
-            </div>
+                  {/* FOOTER (Single Controlled Footer) */}
+    <div className="modal-footer border-top">
+      <button
+        type="button"
+        className="cancel-btn"
+        onClick={handleCloseModal}
+      >
+        Cancel
+      </button>
+
+      {activeTab === "basic" ? (
+                <button type="submit" form="basicForm" className="create-job-btn" onClick={handleSave}>
+          Save
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={handleSave}
+          className="create-job-btn"
+        >
+          Save
+        </button>
+      )}
+    </div>
           </div>
         </div>
+
+        
       )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-sm">
+          <div className="modal-dialog modal-dialog-centered modal-lg">
             <div className="modal-content">
+              {/*Header */}
               <div className="modal-header">
                 <h5 className="modal-title">Confirm Delete</h5>
                 <button
@@ -1508,6 +2184,7 @@ const Contacts = () => {
                   onClick={() => setShowDeleteModal(false)}
                 ></button>
               </div>
+              {/*Body */}
               <div className="modal-body">
                 <div className="text-center">
                   <i className="ti ti-alert-triangle text-warning fs-1 mb-3"></i>
@@ -1517,17 +2194,19 @@ const Contacts = () => {
                   </p>
                 </div>
               </div>
+              {/*Footer */}
               <div className="modal-footer">
                 <button
                   type="button"
-                  className="btn btn-secondary m-2"
+                  className="cancel-btn"
                   onClick={() => setShowDeleteModal(false)}
                 >
                   Cancel
                 </button>
+
                 <button
                   type="button"
-                  className="btn btn-danger"
+                  className="delete-btn"
                   onClick={confirmDelete}
                 >
                   Delete Contact
@@ -1537,7 +2216,7 @@ const Contacts = () => {
           </div>
         </div>
       )}
-      
+
     </div>
 
   );
