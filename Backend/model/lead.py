@@ -1,4 +1,3 @@
-# models/lead.py
 from sqlalchemy import (
     Column,
     Integer,
@@ -9,22 +8,23 @@ from sqlalchemy import (
     func,
     JSON
 )
+
 from core.database import Base
 import enum
 
 
 # =========================
-# ENUMS (DB SAFE)
+# ENUMS
 # =========================
 
-class LeadStatus(enum.Enum):
+class LeadStatus(str, enum.Enum):
     Contacted = "Contacted"
-    Not_Contacted = "Not_Contacted"
+    NotContacted = "Not Contacted"
     Closed = "Closed"
     Lost = "Lost"
 
 
-class Visibility(enum.Enum):
+class Visibility(str, enum.Enum):
     Private = "Private"
     Team = "Team"
     Public = "Public"
@@ -52,7 +52,7 @@ class Lead(Base):
     status = Column(
         Enum(LeadStatus, name="lead_status_enum"),
         nullable=False,
-        server_default="Not_Contacted"
+        server_default="Not Contacted"
     )
 
     visibility = Column(
@@ -63,12 +63,23 @@ class Lead(Base):
 
     source = Column(String)
     industry = Column(String)
-    owner = Column(String)
 
-    tags = Column(JSON, nullable=False, server_default="[]")
+    owner = Column(String, index=True)
+
+    tags = Column(
+        JSON,
+        nullable=False,
+        server_default="[]"
+    )
+
     description = Column(Text)
 
-    created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+    created_at = Column(
+        TIMESTAMP,
+        server_default=func.now(),
+        nullable=False
+    )
+
     updated_at = Column(
         TIMESTAMP,
         server_default=func.now(),

@@ -1,36 +1,43 @@
 from datetime import datetime
 from sqlalchemy.orm import Session
-from fastapi import HTTPException
+from sqlalchemy import select
 
 import model
 from model.models import LeaveRequest
 
 
 # =========================
+# COMMON HELPER
+# =========================
+
+def save(db: Session, obj):
+    db.add(obj)
+    db.commit()
+    db.refresh(obj)
+    return obj
+
+
+# =========================
 # CONTACT CRUD
 # =========================
 
+def email_exists(db: Session, email: str, exclude_id: int | None = None):
+    query = db.query(model.Contact).filter(model.Contact.email == email)
+
+    if exclude_id:
+        query = query.filter(model.Contact.id != exclude_id)
+
+    return query.first()
+
+
 def create_contact(db: Session, contact: dict):
 
-    email = contact.get("email")
-
-    if email:
-        existing = (
-            db.query(model.Contact)
-            .filter(model.Contact.email == email)
-            .first()
-        )
-
-        if existing:
-            raise HTTPException(status_code=400, detail="Email already exists")
+    if contact.get("email") and email_exists(db, contact["email"]):
+        raise ValueError("Email already exists")
 
     db_contact = model.Contact(**contact)
 
-    db.add(db_contact)
-    db.commit()
-    db.refresh(db_contact)
-
-    return db_contact
+    return save(db, db_contact)
 
 
 def get_contacts(db: Session, skip: int = 0, limit: int = 50):
@@ -45,11 +52,7 @@ def get_contacts(db: Session, skip: int = 0, limit: int = 50):
 
 def get_contact(db: Session, contact_id: int):
 
-    return (
-        db.query(model.Contact)
-        .filter(model.Contact.id == contact_id)
-        .first()
-    )
+    return db.get(model.Contact, contact_id)
 
 
 def update_contact(db: Session, contact_id: int, updated: dict):
@@ -59,27 +62,17 @@ def update_contact(db: Session, contact_id: int, updated: dict):
     if not db_contact:
         return None
 
-    if "email" in updated:
-
-        existing = (
-            db.query(model.Contact)
-            .filter(
-                model.Contact.email == updated["email"],
-                model.Contact.id != contact_id
-            )
-            .first()
-        )
-
-        if existing:
-            raise HTTPException(status_code=400, detail="Email already exists")
+    if updated.get("email") and email_exists(db, updated["email"], contact_id):
+        raise ValueError("Email already exists")
 
     for key, value in updated.items():
-        setattr(db_contact, key, value)
+        if hasattr(db_contact, key):
+            setattr(db_contact, key, value)
 
-    db.commit()
-    db.refresh(db_contact)
+    if hasattr(db_contact, "updated_at"):
+        db_contact.updated_at = datetime.utcnow()
 
-    return db_contact
+    return save(db, db_contact)
 
 
 def delete_contact(db: Session, contact_id: int):
@@ -99,9 +92,8 @@ def delete_contact(db: Session, contact_id: int):
 # LEAD CRUD
 # =========================
 
-def create_lead(db: Session, lead: dict):
-
-    db_lead = model.Lead(**lead)
+def create_lead(db: Session, lead):
+    db_lead = model.Lead(**lead.model_dump())
 
     db.add(db_lead)
     db.commit()
@@ -122,11 +114,7 @@ def get_leads(db: Session, skip: int = 0, limit: int = 100):
 
 def get_lead(db: Session, lead_id: int):
 
-    return (
-        db.query(model.Lead)
-        .filter(model.Lead.id == lead_id)
-        .first()
-    )
+    return db.get(model.Lead, lead_id)
 
 
 def update_lead(db: Session, lead_id: int, updated: dict):
@@ -137,15 +125,13 @@ def update_lead(db: Session, lead_id: int, updated: dict):
         return None
 
     for key, value in updated.items():
-        setattr(db_lead, key, value)
+        if hasattr(db_lead, key):
+            setattr(db_lead, key, value)
 
     if hasattr(db_lead, "updated_at"):
         db_lead.updated_at = datetime.utcnow()
 
-    db.commit()
-    db.refresh(db_lead)
-
-    return db_lead
+    return save(db, db_lead)
 
 
 def delete_lead(db: Session, lead_id: int):
@@ -169,11 +155,7 @@ def create_pipeline(db: Session, pipeline: dict):
 
     db_pipeline = model.Pipeline(**pipeline)
 
-    db.add(db_pipeline)
-    db.commit()
-    db.refresh(db_pipeline)
-
-    return db_pipeline
+    return save(db, db_pipeline)
 
 
 def get_pipelines(db: Session):
@@ -183,11 +165,7 @@ def get_pipelines(db: Session):
 
 def get_pipeline(db: Session, pipeline_id: int):
 
-    return (
-        db.query(model.Pipeline)
-        .filter(model.Pipeline.id == pipeline_id)
-        .first()
-    )
+    return db.get(model.Pipeline, pipeline_id)
 
 
 def update_pipeline(db: Session, pipeline_id: int, updated: dict):
@@ -198,12 +176,10 @@ def update_pipeline(db: Session, pipeline_id: int, updated: dict):
         return None
 
     for key, value in updated.items():
-        setattr(db_pipeline, key, value)
+        if hasattr(db_pipeline, key):
+            setattr(db_pipeline, key, value)
 
-    db.commit()
-    db.refresh(db_pipeline)
-
-    return db_pipeline
+    return save(db, db_pipeline)
 
 
 def delete_pipeline(db: Session, pipeline_id: int):
@@ -227,11 +203,7 @@ def create_activity(db: Session, activity: dict):
 
     db_activity = model.Activity(**activity)
 
-    db.add(db_activity)
-    db.commit()
-    db.refresh(db_activity)
-
-    return db_activity
+    return save(db, db_activity)
 
 
 def get_activities(db: Session, skip: int = 0, limit: int = 100):
@@ -246,11 +218,7 @@ def get_activities(db: Session, skip: int = 0, limit: int = 100):
 
 def get_activity(db: Session, activity_id: int):
 
-    return (
-        db.query(model.Activity)
-        .filter(model.Activity.id == activity_id)
-        .first()
-    )
+    return db.get(model.Activity, activity_id)
 
 
 def update_activity(db: Session, activity_id: int, updated: dict):
@@ -261,15 +229,13 @@ def update_activity(db: Session, activity_id: int, updated: dict):
         return None
 
     for key, value in updated.items():
-        setattr(db_activity, key, value)
+        if hasattr(db_activity, key):
+            setattr(db_activity, key, value)
 
     if hasattr(db_activity, "updated_at"):
         db_activity.updated_at = datetime.utcnow()
 
-    db.commit()
-    db.refresh(db_activity)
-
-    return db_activity
+    return save(db, db_activity)
 
 
 def delete_activity(db: Session, activity_id: int):
@@ -293,11 +259,7 @@ def create_leave(db: Session, leave: dict):
 
     db_leave = LeaveRequest(**leave)
 
-    db.add(db_leave)
-    db.commit()
-    db.refresh(db_leave)
-
-    return db_leave
+    return save(db, db_leave)
 
 
 def get_leaves(db: Session):
@@ -307,8 +269,4 @@ def get_leaves(db: Session):
 
 def get_leave_by_id(db: Session, leave_id: int):
 
-    return (
-        db.query(LeaveRequest)
-        .filter(LeaveRequest.id == leave_id)
-        .first()
-    )
+    return db.get(LeaveRequest, leave_id)

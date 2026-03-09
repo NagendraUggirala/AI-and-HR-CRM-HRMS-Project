@@ -7,7 +7,7 @@ from enum import Enum
 
 class LeadStatus(str, Enum):
     Contacted = "Contacted"
-    Not_Contacted = "Not_Contacted"
+    NotContacted = "Not Contacted"
     Closed = "Closed"
     Lost = "Lost"
 
@@ -28,7 +28,7 @@ class LeadBase(BaseModel):
     value: Optional[int] = Field(default=None, ge=0)
     currency: Optional[str] = None
 
-    status: LeadStatus = LeadStatus.Not_Contacted
+    status: LeadStatus = LeadStatus.NotContacted
     visibility: Visibility = Visibility.Private
 
     source: Optional[str] = None
