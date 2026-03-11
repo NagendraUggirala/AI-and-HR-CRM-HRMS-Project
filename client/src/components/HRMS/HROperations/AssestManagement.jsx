@@ -115,14 +115,7 @@ const AssestManagement = () => {
   ];
 
   // Asset Statuses
-  const assetStatuses = [
-    { value: "Available", label: "Available", color: "success" },
-    { value: "Allocated", label: "Allocated", color: "primary" },
-    { value: "Under Repair", label: "Under Repair", color: "warning" },
-    { value: "Lost", label: "Lost", color: "danger" },
-    { value: "Retired", label: "Retired", color: "secondary" },
-    { value: "Disposed", label: "Disposed", color: "dark" },
-  ];
+
 
   // Asset Allocations (fetched from API)
   const [assetAllocations, setAssetAllocations] = useState([]);

@@ -5,26 +5,87 @@ import jsPDF from "jspdf";
 import { dealsAPI } from "../../utils/api";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Icon } from '@iconify/react/dist/iconify.js';
+import { Icon } from '@iconify/react';
 
-
-const defaultAvatar =
-    "/assets/img/users/user-09.jpg";
+// Default avatar - using a data URI for a fallback avatar
+const defaultAvatar = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23e9ecef'/%3E%3Ctext x='20' y='25' font-size='18' text-anchor='middle' fill='%236c757d' font-family='Arial, sans-serif'%3E👤%3C/text%3E%3C/svg%3E";
 
 // Stage configuration
 const stageConfig = [
-    { stage: "New", color: "purple", apiStage: "New" },
+    { stage: "New", color: "primary", apiStage: "New" },
     { stage: "Prospect", color: "info", apiStage: "Prospect" },
     { stage: "Proposal", color: "warning", apiStage: "Proposal" },
     { stage: "Won", color: "success", apiStage: "Won" },
 ];
 
-// Helper function to format amount
+// Helper function to format amount in Indian Rupees
 const formatAmount = (value) => {
-    if (!value || value === 0) return "0/-";
-    const numValue = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value;
-    if (isNaN(numValue)) return "0/-";
-    return numValue.toLocaleString('en-IN') + "/-";
+    if (!value || value === 0) return "₹0/-";
+    
+    // Handle different input types
+    let numValue;
+    if (typeof value === 'string') {
+        // Remove any existing formatting
+        numValue = parseFloat(value.replace(/[₹,/-]/g, ''));
+    } else {
+        numValue = value;
+    }
+    
+    if (isNaN(numValue) || numValue === 0) return "₹0/-";
+    
+    // Format in Indian numbering system (lakhs, crores)
+    const formatter = new Intl.NumberFormat('en-IN', {
+        maximumFractionDigits: 0,
+        minimumFractionDigits: 0
+    });
+    
+    return `₹${formatter.format(numValue)}/-`;
+};
+
+// Helper function to format phone number with +91
+const formatPhoneNumber = (phone) => {
+    if (!phone) return "Not available";
+    
+    // Convert to string and clean
+    const phoneStr = phone.toString().trim();
+    if (!phoneStr) return "Not available";
+    
+    // If it's already formatted with +91, return as is
+    if (phoneStr.includes('+91')) {
+        return phoneStr;
+    }
+    
+    // Remove all non-numeric characters
+    const cleaned = phoneStr.replace(/\D/g, '');
+    
+    if (!cleaned) return "Not available";
+    
+    // Check if it's a 10-digit Indian mobile number
+    if (cleaned.length === 10) {
+        return `+91 ${cleaned.slice(0, 5)} ${cleaned.slice(5)}`;
+    }
+    // Check if it's an 11-digit number (with leading 0)
+    else if (cleaned.length === 11 && cleaned.startsWith('0')) {
+        return `+91 ${cleaned.slice(1, 6)} ${cleaned.slice(6)}`;
+    }
+    // Check if it's a 12-digit number (with 91 country code)
+    else if (cleaned.length === 12 && cleaned.startsWith('91')) {
+        return `+91 ${cleaned.slice(2, 7)} ${cleaned.slice(7)}`;
+    }
+    // For other lengths, try to format as international number
+    else if (cleaned.length > 10) {
+        // Try to format as international number
+        const countryCode = cleaned.slice(0, cleaned.length - 10);
+        const number = cleaned.slice(-10);
+        return `+${countryCode} ${number.slice(0, 5)} ${number.slice(5)}`;
+    }
+    
+    // Return cleaned number with +91 if it looks like Indian number
+    if (cleaned.length === 10) {
+        return `+91 ${cleaned.slice(0, 5)} ${cleaned.slice(5)}`;
+    }
+    
+    return cleaned;
 };
 
 // Helper function to format date
@@ -43,14 +104,12 @@ const formatDate = (dateString) => {
 
 // Helper function to calculate progress percentage
 const calculateProgress = (deal) => {
-    // Simple progress calculation based on stage/status
     const stageProgress = {
         "New": 25,
         "Prospect": 50,
         "Proposal": 75,
         "Won": 100
     };
-    // Backend sends 'status', but we also check 'stage' for compatibility
     const dealStage = deal.status || deal.stage || "";
     return stageProgress[dealStage] || 0;
 };
@@ -62,34 +121,178 @@ const makeInitials = (name) => {
     return (parts[0][0] + parts[1][0]).toUpperCase();
 };
 
+// Get first letter of name
+const getFirstLetter = (name) => {
+    if (!name || name === "Unassigned") return "?";
+    return name.charAt(0).toUpperCase();
+};
+
+// Comprehensive phone number extraction function
+const extractPhoneNumber = (deal) => {
+    // Array of all possible phone field names to check
+    const possiblePhoneFields = [
+        // Common field names
+        'phone', 'mobile', 'Phone', 'Mobile',
+        'contact_number', 'mobile_number', 'phone_number',
+        'contactNo', 'mobileNo', 'phoneNo',
+        'contact_phone', 'contact_mobile',
+        'primary_phone', 'primary_mobile',
+        'customer_phone', 'customer_mobile',
+        'alternate_phone', 'alternate_mobile',
+        'work_phone', 'work_mobile',
+        'home_phone', 'home_mobile',
+        'cell', 'cellphone', 'cell_phone',
+        'telephone', 'tel', 'contact_tel',
+        'phone1', 'phone2', 'mobile1', 'mobile2',
+        'contact_phone_number', 'contact_mobile_number',
+        'customer_phone_number', 'customer_mobile_number',
+        'phone_no', 'mobile_no', 'contact_no',
+        'whatsapp', 'whatsapp_number',
+        
+        // Field names with underscores
+        'phone_1', 'phone_2', 'mobile_1', 'mobile_2',
+        'primary_phone_number', 'secondary_phone',
+        
+        // Field names without underscores
+        'phonenumber', 'mobilenumber', 'contactnumber',
+        'primaryphone', 'secondaryphone',
+        
+        // Variations with 'num' instead of 'number'
+        'phonenum', 'mobilenum', 'contactnum',
+        
+        // Common API response fields
+        'contactPhone', 'contactMobile',
+        'customerPhone', 'customerMobile',
+        'assigneePhone', 'ownerPhone',
+        'dealPhone', 'dealMobile',
+        
+        // Field names from your specific API
+        'phoneNumber', 'mobileNumber', 'contactNumber',
+        'phoneNum', 'mobileNum', 'contactNum',
+        'contact_phone_num', 'contact_mobile_num',
+        'customer_phone_num', 'customer_mobile_num',
+        
+        // Indian specific
+        'mobile_no_india', 'phone_no_india',
+        
+        // Additional variations
+        'phone_number_primary', 'phone_number_secondary',
+        'mobile_number_primary', 'mobile_number_secondary',
+        'contact_phone_primary', 'contact_phone_secondary',
+        'contact_mobile_primary', 'contact_mobile_secondary'
+    ];
+
+    // Check direct fields first
+    for (const field of possiblePhoneFields) {
+        if (deal[field] && deal[field].toString().trim()) {
+            return deal[field];
+        }
+    }
+
+    // Check if phone is in a nested contact object
+    if (deal.contact && typeof deal.contact === 'object') {
+        for (const field of possiblePhoneFields) {
+            if (deal.contact[field] && deal.contact[field].toString().trim()) {
+                return deal.contact[field];
+            }
+        }
+    }
+
+    // Check if phone is in a nested customer object
+    if (deal.customer && typeof deal.customer === 'object') {
+        for (const field of possiblePhoneFields) {
+            if (deal.customer[field] && deal.customer[field].toString().trim()) {
+                return deal.customer[field];
+            }
+        }
+    }
+
+    // Check if phone is in a nested assignee object
+    if (deal.assignee && typeof deal.assignee === 'object') {
+        for (const field of possiblePhoneFields) {
+            if (deal.assignee[field] && deal.assignee[field].toString().trim()) {
+                return deal.assignee[field];
+            }
+        }
+    }
+
+    // Check if phone is in a nested owner object
+    if (deal.owner && typeof deal.owner === 'object') {
+        for (const field of possiblePhoneFields) {
+            if (deal.owner[field] && deal.owner[field].toString().trim()) {
+                return deal.owner[field];
+            }
+        }
+    }
+
+    // Check for phone in metadata or custom fields
+    if (deal.metadata && typeof deal.metadata === 'object') {
+        for (const field of possiblePhoneFields) {
+            if (deal.metadata[field] && deal.metadata[field].toString().trim()) {
+                return deal.metadata[field];
+            }
+        }
+    }
+
+    // Check for phone in customFields
+    if (deal.customFields && typeof deal.customFields === 'object') {
+        for (const field of possiblePhoneFields) {
+            if (deal.customFields[field] && deal.customFields[field].toString().trim()) {
+                return deal.customFields[field];
+            }
+        }
+    }
+
+    // If still not found, try to find any field that contains 'phone' or 'mobile' in its name
+    for (const key in deal) {
+        if (typeof deal[key] !== 'object' && 
+            (key.toLowerCase().includes('phone') || 
+             key.toLowerCase().includes('mobile') || 
+             key.toLowerCase().includes('contact') || 
+             key.toLowerCase().includes('cell'))) {
+            if (deal[key] && deal[key].toString().trim()) {
+                return deal[key];
+            }
+        }
+    }
+
+    return "";
+};
+
 // Transform API deals data to Kanban structure
 const transformDealsToKanban = (dealsData) => {
-    if (!Array.isArray(dealsData)) return stageConfig.map(s => ({ ...s, leads: 0, amount: "0/-", deals: [] }));
+    if (!Array.isArray(dealsData)) return stageConfig.map(s => ({ ...s, leads: 0, amount: "₹0/-", deals: [] }));
 
     const stages = stageConfig.map(stageConfigItem => {
         const stageDeals = dealsData
             .filter(deal => {
-                // Backend sends 'status', but we also check 'stage' for compatibility
                 const dealStage = deal.status || deal.stage || "";
                 return dealStage.trim() === stageConfigItem.apiStage;
             })
-            .map(deal => ({
-                id: deal.id,
-                initials: makeInitials(deal.deal_name || deal.name || deal.owner || ""), // Backend sends 'deal_name'
-                title: deal.deal_name || deal.name || "Untitled Deal", // Backend sends 'deal_name'
-                amount: formatAmount(deal.deal_value || deal.amount || deal.value || 0), // Backend sends 'deal_value'
-                email: deal.contact || deal.email || "", // Backend sends 'contact'
-                phone: deal.phone || "",
-                location: deal.project || deal.location || "", // Backend sends 'project'
-                owner: deal.assignee || deal.owner || "", // Backend sends 'assignee'
-                ownerImg: deal.ownerImg || defaultAvatar,
-                progress: `${calculateProgress(deal)}%`,
-                date: formatDate(deal.expected_closing_date || deal.closingDate || deal.closed_date || deal.due_date || deal.created_at), // Backend sends 'expected_closing_date' and 'due_date'
-                stage: deal.status || deal.stage || stageConfigItem.apiStage, // Backend sends 'status'
-            }));
+            .map(deal => {
+                // Extract phone number using comprehensive function
+                const rawPhone = extractPhoneNumber(deal);
+                
+                return {
+                    id: deal.id,
+                    initials: makeInitials(deal.assignee || deal.owner || deal.deal_name || deal.name || ""),
+                    title: deal.deal_name || deal.name || "Untitled Deal",
+                    amount: formatAmount(deal.deal_value || deal.amount || 0),
+                    email: deal.contact || deal.email || deal.contact_email || "",
+                    phone: formatPhoneNumber(rawPhone),
+                    rawPhoneForEdit: rawPhone, // Store raw phone for editing
+                    location: deal.project || deal.location || "India",
+                    owner: deal.assignee || deal.owner || "",
+                    ownerName: deal.assignee || deal.owner || "Unassigned",
+                    ownerImg: defaultAvatar,
+                    progress: calculateProgress(deal),
+                    date: formatDate(deal.expected_closing_date || deal.closingDate || deal.due_date || new Date()),
+                    stage: deal.status || deal.stage || stageConfigItem.apiStage,
+                };
+            });
 
         const totalAmount = stageDeals.reduce((sum, deal) => {
-            const amount = parseFloat((deal.amount || "0").replace(/,/g, '').replace("/-", "")) || 0;
+            const amount = parseFloat((deal.amount || "₹0").replace(/[₹,/-]/g, '')) || 0;
             return sum + amount;
         }, 0);
 
@@ -107,7 +310,7 @@ const transformDealsToKanban = (dealsData) => {
 export default function Deals() {
     // states
     const [dealsState, setDealsState] = useState(
-        stageConfig.map(s => ({ ...s, leads: 0, amount: "0/-", deals: [] }))
+        stageConfig.map(s => ({ ...s, leads: 0, amount: "₹0/-", deals: [] }))
     );
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -118,6 +321,8 @@ export default function Deals() {
     const [selectedStageIndex, setSelectedStageIndex] = useState(null);
     const [selectedDealIndex, setSelectedDealIndex] = useState(null);
     const [sortBy, setSortBy] = useState("Last 7 Days");
+    const [imageErrors, setImageErrors] = useState({}); // Track image load errors
+    const [uploadedImages, setUploadedImages] = useState({}); // Store uploaded images
 
     const initialForm = {
         dealName: "",
@@ -131,71 +336,69 @@ export default function Deals() {
         periodValue: "",
         contact: "",
         project: "",
-        customProject:"",
+        customProject: "",
         dueDate: "",
         closingDate: "",
         assignee: "",
         tags: "",
         followupDate: "",
         source: "",
-        customSource:"",
+        customSource: "",
         priority: "",
         description: "",
-        initials: "",
-        title: "",
-        amount: "",
-        email: "",
         phone: "",
-        location: "",
-        owner: "",
-        ownerImg: "",
-        progress: "",
-        date: "",
+        profileImage: null,
     };
     const [formData, setFormData] = useState(initialForm);
 
-    // Load deals from API
+    // Load deals from API only
     const loadDeals = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
             const data = await dealsAPI.list();
-            // Handle case where API returns empty array or null
-            if (Array.isArray(data)) {
+            
+            if (Array.isArray(data) && data.length > 0) {
                 setDealsState(transformDealsToKanban(data));
-            } else if (data === null || data === undefined) {
-                // API returned null/undefined, treat as empty
-                setDealsState(stageConfig.map(s => ({ ...s, leads: 0, amount: "0/-", deals: [] })));
             } else {
-                console.warn("API returned non-array data:", data);
-                setDealsState(stageConfig.map(s => ({ ...s, leads: 0, amount: "0/-", deals: [] })));
+                // If no data from API, show empty state
+                setDealsState(stageConfig.map(s => ({ ...s, leads: 0, amount: "₹0/-", deals: [] })));
+                setError("No deals found");
             }
         } catch (err) {
             console.error("Error loading deals:", err);
-            // Check if it's a 404 (endpoint doesn't exist) or other error
-            const status = err.status || (err.message && err.message.includes('404') ? 404 : null);
-            let errorMessage = "Failed to load deals. ";
-
-            if (status === 404 || err.message?.includes('404') || err.message?.includes('Not Found')) {
-                errorMessage += "The deals API endpoint is not available. Please ensure the backend deals endpoint is implemented.";
-            } else if (err.message) {
-                errorMessage += err.message;
-            } else {
-                errorMessage += "Please check if the backend API is running.";
-            }
-
-            setError(errorMessage);
-            // Set empty state so UI still renders
-            setDealsState(stageConfig.map(s => ({ ...s, leads: 0, amount: "0/-", deals: [] })));
+            setError("Failed to load deals from API. Please try again later.");
+            // Keep empty state on error
+            setDealsState(stageConfig.map(s => ({ ...s, leads: 0, amount: "₹0/-", deals: [] })));
         } finally {
             setLoading(false);
         }
     }, []);
 
-    // Load deals from API on component mount
+    // Load deals on component mount
     useEffect(() => {
         loadDeals();
     }, [loadDeals]);
+
+    // Handle image error
+    const handleImageError = (dealId) => {
+        setImageErrors(prev => ({ ...prev, [dealId]: true }));
+    };
+
+    // Handle image upload
+    const handleImageUpload = (e, dealId) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setUploadedImages(prev => ({
+                    ...prev,
+                    [dealId]: reader.result
+                }));
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     // Open Add Modal
     const openAddModal = (stageIndex) => {
@@ -204,77 +407,64 @@ export default function Deals() {
         setIsEditing(false);
         setEditingDealId(null);
         const selectedStage = dealsState[stageIndex]?.stage || "New";
-        setFormData({ ...initialForm, stage: selectedStage });
+        setFormData({ 
+            ...initialForm, 
+            stage: selectedStage,
+            currency: "Rupee",
+            priority: "Medium"
+        });
         setShowAddEditModal(true);
     };
 
-    // Open Edit Modal
-    const openEditModal = async (stageIndex, dealIndex) => {
+    // Open Edit Modal - Fixed phone number handling
+    const openEditModal = (stageIndex, dealIndex) => {
         const deal = dealsState[stageIndex].deals[dealIndex];
-        const predefinedProjects = [
-  "Office Management App",
-  "Clinic Management",
-  "Educational Platform"
-];
-
-const predefinedCurrencies = ["Rupee", "Dollar", "Euro"];
-
         if (!deal) return;
-const predefinedSources = [
-  "Phone Calls",
-  "Social Media",
-  "Referral Sites",
-  "Web Analytics",
-  "Previous Purchase"
-];
 
-        try {
-            // Fetch full deal data from API if we have an ID
-            let fullDealData = deal;
-            if (deal.id) {
-                try {
-                    fullDealData = await dealsAPI.getById(deal.id);
-                } catch (err) {
-                    console.error("Error fetching deal details:", err);
-                    // Use existing deal data if API call fails
-                }
+        // Get raw phone number directly from the deal object
+        let rawPhone = "";
+        
+        // Try to get the raw phone from the stored rawPhoneForEdit first
+        if (deal.rawPhoneForEdit) {
+            rawPhone = deal.rawPhoneForEdit.toString().replace(/\D/g, '');
+        } 
+        // If not available, extract from formatted phone
+        else if (deal.phone && deal.phone !== "Not available") {
+            // Remove formatting and extract numbers
+            rawPhone = deal.phone.toString().replace(/[^\d]/g, '');
+            // Remove +91 if present at the beginning
+            if (rawPhone.startsWith('91') && rawPhone.length > 10) {
+                rawPhone = rawPhone.substring(2);
             }
-
-            // Map backend field names to frontend form field names
-            setFormData({
-                ...initialForm,
-                dealName: fullDealData.deal_name || fullDealData.name || deal.title || "", // Backend sends 'deal_name'
-                dealValue: fullDealData.deal_value || fullDealData.amount || fullDealData.value || deal.amount || "", // Backend sends 'deal_value'
-                contact: fullDealData.contact || fullDealData.email || deal.email || "",
-                phone: fullDealData.phone || deal.phone || "",
-               project: predefinedProjects.includes(fullDealData.project) ? fullDealData.project : "Others",
-               customProject: predefinedProjects.includes(fullDealData.project) ? "" : fullDealData.project || "", // Backend sends 'project'
-                assignee: fullDealData.assignee || fullDealData.owner || deal.owner || "",
-                stage: fullDealData.status || fullDealData.stage || deal.stage || dealsState[stageIndex]?.stage || "New", // Backend sends 'status'
-                pipeline: fullDealData.pipeline || "",
-                status: fullDealData.status || fullDealData.stage || deal.stage || "", // Backend sends 'status', map to both stage and status
-                currency: predefinedCurrencies.includes(fullDealData.currency) ? fullDealData.currency : fullDealData.currency ? "Other" : "",
-                customCurrency: predefinedCurrencies.includes(fullDealData.currency) ? "" : fullDealData.currency || "",
-                tags: fullDealData.tags || "",
-                source: predefinedSources.includes(fullDealData.source) ? fullDealData.source : fullDealData.source ? "Other" : "",
-                customSource: predefinedSources.includes(fullDealData.source) ? "" : fullDealData.source || "",
-                priority: fullDealData.priority || "",
-                description: fullDealData.description || "",
-                dueDate: fullDealData.due_date ? (typeof fullDealData.due_date === 'string' ? fullDealData.due_date.split('T')[0] : fullDealData.due_date) : "", // Backend sends 'due_date'
-                closingDate: fullDealData.expected_closing_date ? (typeof fullDealData.expected_closing_date === 'string' ? fullDealData.expected_closing_date.split('T')[0] : fullDealData.expected_closing_date) : "", // Backend sends 'expected_closing_date'
-                followupDate: fullDealData.followup_date ? (typeof fullDealData.followup_date === 'string' ? fullDealData.followup_date.split('T')[0] : fullDealData.followup_date) : "", // Backend sends 'followup_date'
-                ownerImg: deal.ownerImg || defaultAvatar,
-                initials: deal.initials || makeInitials(fullDealData.assignee || fullDealData.owner || deal.owner || deal.title || ""),
-            });
-            setSelectedStageIndex(stageIndex);
-            setSelectedDealIndex(dealIndex);
-            setEditingDealId(deal.id);
-            setIsEditing(true);
-            setShowAddEditModal(true);
-        } catch (err) {
-            console.error("Error opening edit modal:", err);
-            toast.error("Failed to load deal details.");
         }
+
+        // Ensure we have a valid phone number (max 10 digits for editing)
+        if (rawPhone && rawPhone.length > 10) {
+            rawPhone = rawPhone.slice(-10); // Take last 10 digits
+        }
+
+        console.log("Editing deal - phone:", deal.phone, "raw:", rawPhone); // Debug log
+
+        setFormData({
+            ...initialForm,
+            dealName: deal.title || "",
+            stage: deal.stage || "",
+            dealValue: deal.amount ? deal.amount.replace(/[₹,/-]/g, "").trim() : "",
+            currency: "Rupee",
+            contact: deal.email || "",
+            phone: rawPhone, // Use cleaned phone number
+            project: deal.location || "India",
+            assignee: deal.owner || "",
+            closingDate: deal.date ? new Date(deal.date).toISOString().split('T')[0] : "",
+            priority: "Medium",
+            profileImage: uploadedImages[deal.id] || null,
+        });
+        
+        setSelectedStageIndex(stageIndex);
+        setSelectedDealIndex(dealIndex);
+        setEditingDealId(deal.id);
+        setIsEditing(true);
+        setShowAddEditModal(true);
     };
 
     const handleExport = (type) => {
@@ -284,98 +474,78 @@ const predefinedSources = [
             XLSX.utils.book_append_sheet(workbook, worksheet, "Deals");
             const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
             const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-            saveAs(blob, "deals.xlsx");   // 👈 file downloaded in user’s browser
+            saveAs(blob, "deals.xlsx");
+            toast.success("Excel exported successfully!");
         } else if (type === "PDF") {
-            alert("PDF export not yet implemented!");
-        }
-    };
-
-    const handleExports = (type) => {
-        if (type === "PDF") {
             const doc = new jsPDF();
             doc.text("Deals Report", 10, 10);
             dealsState.forEach((stage, i) => {
-                doc.text(`${stage.stage} (${stage.deals.length} deals)`, 10, 20 + i * 10);
+                doc.text(`${stage.stage} (${stage.deals.length} deals) - ${stage.amount}`, 10, 20 + i * 10);
             });
-            doc.save("deals.pdf");   // 👈 file downloaded in user’s browser
+            doc.save("deals.pdf");
+            toast.success("PDF exported successfully!");
         }
     };
-
 
     // Save (Add or Edit)
     const handleSave = async (e) => {
         e.preventDefault();
-
+        
         try {
             setError(null);
 
-            // Determine stage from form data or selected stage index
-            const selectedStage = formData.stage || dealsState[selectedStageIndex]?.stage || "New";
+            const selectedStage = formData.stage || "New";
 
-            // Prepare deal data for API - map frontend fields to backend schema
+            // Clean phone number - remove any spaces or special characters
+            const cleanPhone = formData.phone ? formData.phone.toString().replace(/\D/g, '') : "";
+
             const dealData = {
-                deal_name: formData.dealName || "Untitled Deal", // Backend expects 'deal_name'
-                pipeline: formData.pipeline || null,
-                // Map stage to status: backend uses 'status' field to store stage value (New, Prospect, Proposal, Won)
-                // Use stage value if available, otherwise use status, fallback to selectedStage or "New"
-                status: formData.stage || formData.status || selectedStage || "New", // Backend expects 'status' (stores stage value)
-                deal_value: formData.dealValue ? parseFloat(formData.dealValue) : null, // Backend expects 'deal_value'
-                currency: formData.currency || null,
-                period: formData.period || null,
-                period_value: formData.periodValue ? parseInt(formData.periodValue) : null,
-                contact: formData.contact || null, // Backend expects 'contact'
-                project: formData.project === "Others" ? formData.customProject || null : formData.project || null, // Backend expects 'project'
-                due_date: formData.dueDate || null, // Backend expects 'due_date'
-                expected_closing_date: formData.closingDate || null, // Backend expects 'expected_closing_date'
-                assignee: formData.assignee || null,
-                tags: formData.tags || null,
-                followup_date: formData.followupDate || null, // Backend expects 'followup_date'
-                source: formData.source === "Other" ? formData.customSource || null : formData.source || null,
-                priority: formData.priority || null,
-                description: formData.description || null,
+                deal_name: formData.dealName || "Untitled Deal",
+                deal_value: formData.dealValue ? parseFloat(formData.dealValue.toString().replace(/,/g, '')) : 0,
+                status: selectedStage,
+                contact: formData.contact || "",
+                // Send phone in multiple formats to ensure it's saved
+                phone: cleanPhone,
+                mobile: cleanPhone,
+                contact_number: cleanPhone,
+                mobile_number: cleanPhone,
+                contact_phone: cleanPhone,
+                customer_phone: cleanPhone,
+                phone_number: cleanPhone,
+                project: formData.project || "India",
+                assignee: formData.assignee || "",
+                expected_closing_date: formData.closingDate || new Date().toISOString().split('T')[0],
+                currency: formData.currency || "Rupee",
+                priority: formData.priority || "Medium",
+                pipeline: formData.pipeline || "Sales",
+                profileImage: formData.profileImage,
             };
 
-            // Remove empty strings and convert to null
-            // Also handle NaN values for numeric fields
-            Object.keys(dealData).forEach(key => {
-                if (dealData[key] === "" || dealData[key] === undefined) {
-                    dealData[key] = null;
-                }
-                // Handle NaN for numeric fields
-                if ((key === 'deal_value' || key === 'period_value') && (isNaN(dealData[key]) || dealData[key] === null)) {
-                    dealData[key] = null;
-                }
-            });
+            console.log("Saving deal with phone:", cleanPhone); // Debug log
 
             if (isEditing && editingDealId) {
-                // Update existing deal
                 await dealsAPI.update(editingDealId, dealData);
                 toast.success("Deal updated successfully!");
             } else {
-                // Create new deal
                 await dealsAPI.create(dealData);
                 toast.success("Deal created successfully!");
             }
 
-            // Reload deals from API
             await loadDeals();
-
-            // Close modal & reset
             setShowAddEditModal(false);
             setIsEditing(false);
             setEditingDealId(null);
             setSelectedDealIndex(null);
             setSelectedStageIndex(null);
             setFormData(initialForm);
+            
         } catch (err) {
             console.error("Error saving deal:", err);
-            const errorMessage = err.message || err.detail || "Failed to save deal. Please try again.";
-            setError(errorMessage);
-            toast.error(errorMessage);
+            toast.error("Failed to save deal. Please try again.");
         }
     };
 
-    // Prepare delete modal
+    // Open delete modal
     const openDeleteModal = (stageIndex, dealIndex) => {
         setSelectedStageIndex(stageIndex);
         setSelectedDealIndex(dealIndex);
@@ -396,36 +566,31 @@ const predefinedSources = [
         }
 
         try {
-            if (deal.id) {
-                await dealsAPI.delete(deal.id);
-                toast.success("Deal deleted successfully!");
-            }
-
-            // Reload deals from API
+            await dealsAPI.delete(deal.id);
+            toast.success("Deal deleted successfully!");
             await loadDeals();
-
             setShowDeleteModal(false);
             setSelectedStageIndex(null);
             setSelectedDealIndex(null);
         } catch (err) {
             console.error("Error deleting deal:", err);
-            const errorMessage = err.message || err.detail || "Failed to delete deal. Please try again.";
-            toast.error(errorMessage);
+            toast.error("Failed to delete deal. Please try again.");
         }
     };
 
-    // input change handler
+    // Input change handler
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
     return (
-        <div>
+        <div className="container-fluid px-2 py-3" style={{ maxWidth: '100%', overflowX: 'hidden' }}>
             <ToastContainer position="top-right" autoClose={3000} />
 
             {error && (
-                <div className="alert alert-warning alert-dismissible fade show" role="alert">
+                <div className="alert alert-info alert-dismissible fade show mb-3" role="alert">
+                    <Icon icon="heroicons:information-circle" className="me-2" />
                     <strong>Note:</strong> {error}
                     <button type="button" className="btn-close" onClick={() => setError(null)}></button>
                 </div>
@@ -439,255 +604,288 @@ const predefinedSources = [
                 </div>
             )}
 
-            <div className="d-flex justify-content-between">
-
-                <div className="gap-2">
-                    <h5 className="text-3xl fw-bold text-dark mb-1 d-flex align-items-center gap-2">
-                        <span className="icon-circle ">
-                            <Icon icon='heroicons:credit-card' className="primary" />
-                        </span>
+            {/* Header Section */}
+            <div className="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h4 className="fw-bold d-flex align-items-center mb-1" style={{ fontSize: '1.5rem' }}>
                         Deals
-                    </h5>
-
-                    <p className="text-muted mb-4">
-                         Monitor pipeline performance and move deals smoothly from prospect to closure.
+                    </h4>
+                    <p className="text-muted d-flex align-items-center mb-0" style={{ fontSize: '0.85rem' }}>
+                        Monitor pipeline performance and move deals smoothly from prospect to closure.
                     </p>
                 </div>
 
-
-
-        {/* Right side: buttons */}
-<div className="d-flex gap-2 align-items-center">
-
-  {/* Export Dropdown */}
-  <div className="dropdown">
-    <button
-      type="button"
-      className="create-job-btn dropdown-toggle"
-      data-bs-toggle="dropdown"
-    >
-                            <i className="ti ti-file-export me-1" /> Export
+                <div className="d-flex gap-2">
+                    {/* Export Dropdown */}
+                    <div className="dropdown">
+                        <button className="btn btn-outline-secondary btn-sm dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown">
+                            <Icon icon="heroicons:arrow-down-tray" className="me-1" width="16" />
+                            Export
                         </button>
                         <ul className="dropdown-menu dropdown-menu-end p-2">
                             <li>
-                                <button
-                                    className="dropdown-item rounded-1"
-                                    onClick={() => handleExports("PDF")}
-                                >
+                                <button className="dropdown-item rounded-1 d-flex align-items-center" onClick={() => handleExport("PDF")}>
+                                    <Icon icon="heroicons:document-text" className="me-2 text-danger" width="16" />
                                     PDF
                                 </button>
                             </li>
                             <li>
-                                <button
-                                    className="dropdown-item rounded-1"
-                                    onClick={() => handleExport("Excel")}
-                                >
+                                <button className="dropdown-item rounded-1 d-flex align-items-center" onClick={() => handleExport("Excel")}>
+                                    <Icon icon="heroicons:table-cells" className="me-2 text-success" width="16" />
                                     Excel
                                 </button>
                             </li>
                         </ul>
                     </div>
 
-                    <div className="mb-2 ">
-
-                        <button className="add-employee gap-2"
-                            onClick={() => {
-                                openAddModal(0);
-                            }}
-                        >
-                             <Icon icon="heroicons:plus-circle" width="18" />
-                            Add Deal
-                        </button>
-                    </div>
+                    <button className="btn btn-primary btn-sm d-flex align-items-center" onClick={() => openAddModal(0)}>
+                        <Icon icon="heroicons:plus-circle" className="me-1" width="16" />
+                        Add Deal
+                    </button>
                 </div>
             </div>
 
-
             {/* Deals Grid Header */}
-            <div className="card w-100 mb-3">
-                <div className="card-body p-3 d-flex justify-content-between">
-                    <h5 className="fs-6 text-dark"><b>Deals Grid</b></h5>
+            <div className="card mb-3">
+                <div className="card-body py-2 px-3 d-flex justify-content-between align-items-center">
+                    <h6 className="fw-semibold d-flex align-items-center mb-0">            
+                        Deals Grid
+                    </h6>
                     <div className="dropdown">
-                        <button
-                            className="close-btn"
-                            data-bs-toggle="dropdown"
-                        >
+                        <button className="btn btn-light btn-sm dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown">
+                            <Icon icon="heroicons:funnel" className="me-1" width="14" />
                             Sort By : {sortBy}
                         </button>
                         <ul className="dropdown-menu">
-                            <li>
-                                <button
-                                    className="dropdown-item"
-                                    onClick={() => setSortBy("Last 7 Days")}
-                                >
-                                    Last 7 Days
-                                </button>
-                            </li>
-                            <li>
-                                <button
-                                    className="dropdown-item"
-                                    onClick={() => setSortBy("Monthly")}
-                                >
-                                    Monthly
-                                </button>
-                            </li>
-                            <li>
-                                <button
-                                    className="dropdown-item"
-                                    onClick={() => setSortBy("Weekly")}
-                                >
-                                    Weekly
-                                </button>
-                            </li>
-                            <li>
-                                <button
-                                    className="dropdown-item"
-                                    onClick={() => setSortBy("Yearly")}
-                                >
-                                    Yearly
-                                </button>
-                            </li>
+                            <li><button className="dropdown-item d-flex align-items-center" onClick={() => setSortBy("Last 7 Days")}>
+                                <Icon icon="heroicons:calendar" className="me-2" width="14" />Last 7 Days
+                            </button></li>
+                            <li><button className="dropdown-item d-flex align-items-center" onClick={() => setSortBy("Monthly")}>
+                                <Icon icon="heroicons:calendar-days" className="me-2" width="14" />Monthly
+                            </button></li>
+                            <li><button className="dropdown-item d-flex align-items-center" onClick={() => setSortBy("Weekly")}>
+                                <Icon icon="heroicons:calendar" className="me-2" width="14" />Weekly
+                            </button></li>
+                            <li><button className="dropdown-item d-flex align-items-center" onClick={() => setSortBy("Yearly")}>
+                                <Icon icon="heroicons:calendar" className="me-2" width="14" />Yearly
+                            </button></li>
                         </ul>
                     </div>
                 </div>
             </div>
 
-
-            <div className="d-flex overflow-x-auto align-items-start mb-4">
-                <div className="d-flex">
-                    {dealsState.map((stage, stageIndex) => (
-                        <div key={stage.stage} className="me-3" style={{ minWidth: 320 }}>
-                            <div className="card w-100 mb-0">
-                                <div className="card-body d-flex justify-content-between align-items-center">
+            {/* Kanban Board - 4 columns side by side */}
+            <div className="row g-2">
+                {dealsState.map((stage, stageIndex) => (
+                    <div key={stage.stage} className="col-12 col-md-6 col-lg-3">
+                        {/* Stage Header */}
+                        <div className="card mb-2">
+                            <div className="card-body py-2 px-3">
+                                <div className="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h4 className="fw-medium d-flex align-items-center mb-1 fs-6">
-                                            <i className={`ti ti-circle-filled fs-8 text-${stage.color} me-2`} />
-                                            <b>{stage.stage}</b>
-                                        </h4>
-                                        <span className="fw-normal text-default">
+                                        <h6 className="fw-semibold d-flex align-items-center mb-0" style={{ fontSize: '0.9rem' }}>
+                                            <span className={`badge bg-${stage.color} p-1 me-1`} style={{ width: '6px', height: '6px', borderRadius: '50%' }} />
+                                            <Icon icon={stage.stage === "Won" ? "heroicons:trophy" : 
+                                                       stage.stage === "Proposal" ? "heroicons:document-text" :
+                                                       stage.stage === "Prospect" ? "heroicons:user-group" :
+                                                       "heroicons:star"} 
+                                                   className={`me-1 text-${stage.color}`} width="14" />
+                                            {stage.stage}
+                                        </h6>
+                                        <span className="text-muted d-flex align-items-center" style={{ fontSize: '0.75rem' }}>
+                                            <Icon icon="heroicons:currency-rupee" className="me-1" width="12" />
                                             {stage.leads} Deals - {stage.amount}
                                         </span>
                                     </div>
-
-                                    <div className="action-icon d-inline-flex">
-                                        <button
-                                            type="button"
-
-                                            className="btn btn-sm btn-link p-0"
-                                            onClick={() => openAddModal(stageIndex)}
-                                            onMouseEnter={(e) => {
-                                                e.currentTarget.style.color = '#0d6efd';
-                                                e.currentTarget.style.transform = 'scale(1.1)';
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.color = '#6c757d';
-                                                e.currentTarget.style.transform = 'scale(1)';
-                                            }}
-                                            style={{
-                                                width: 'auto',
-                                                height: 'auto',
-                                                padding: '2px 4px',
-                                                minWidth: 'auto',
-                                                border: 'none',
-                                                background: 'transparent',
-                                                cursor: 'pointer',
-                                                color: '#6c757d',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                transition: 'all 0.2s ease'
-                                            }}
-                                            title="Add Deal"
-                                        >
-                                            <Icon icon="heroicons:ellipsis-vertical" width="18" />
-
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="kanban-drag-wrap pt-3">
-                                    {stage.deals.map((deal, dealIndex) => (
-                                        <div key={`${stageIndex}-${dealIndex}`} className="card w-100 kanban-card mb-3">
-                                            <div className="card-body">
-                                                <div className={`border-${stage.color}  mb-3`} />
-
-                                                <div className="d-flex align-items-center mb-3">
-                                                    <div className="avatar avatar-lg bg-gray flex-shrink-0 me-2">
-                                                        <span className="avatar-title text-dark">{deal.initials}</span>
-                                                    </div>
-                                                    <h6 className="fw-medium"><b>{deal.title}</b></h6>
-                                                </div>
-
-                                                <div className="mb-3 d-flex flex-column">
-                                                    <p>
-                                                        <i className="ti ti-cash text-dark me-2" />
-                                                        {deal.amount}
-                                                    </p>
-                                                    <p>
-                                                        <i className="ti ti-mail text-dark me-2" />
-                                                        {deal.email}
-                                                    </p>
-                                                    <p>
-                                                        <i className="ti ti-phone text-dark me-2" />
-                                                        {deal.phone}
-                                                    </p>
-                                                    <p>
-                                                        <i className="ti ti-map-pin-2 text-dark me-2" />
-                                                        {deal.location}
-                                                    </p>
-                                                </div>
-
-                                                <div className="d-flex justify-content-between align-items-center">
-                                                    <div className="d-flex align-items-center">
-                                                        <img src={deal.ownerImg || defaultAvatar} alt="owner" className="avatar avatar-md avatar-rounded me-2" />
-                                                        <span>{deal.owner}</span>
-                                                    </div>
-                                                    <span className="badge badge-sm badge-info-transparent">
-                                                        <i className="ti ti-progress me-1" />
-                                                        {deal.progress}
-                                                    </span>
-                                                </div>
-
-                                                <div className="d-flex align-items-center justify-content-between border-top pt-3 mt-3">
-                                                    <span>
-                                                        <i className="ti ti-calendar-due text-gray-5" /> {deal.date}
-                                                    </span>
-
-                                                    <div className="d-flex gap-1">
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-sm btn-primary"
-                                                            onClick={() => openEditModal(stageIndex, dealIndex)}
-                                                            title="Edit Deal"
-                                                            style={{ fontSize: '12px', padding: '4px 10px', minWidth: '65px' }}
-                                                        >
-                                                            <i className="ti ti-edit me-1"></i>Edit
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-sm btn-danger"
-                                                            onClick={() => openDeleteModal(stageIndex, dealIndex)}
-                                                            title="Delete Deal"
-                                                            style={{ fontSize: '12px', padding: '4px 10px', minWidth: '75px' }}
-                                                        >
-                                                            <i className="ti ti-trash me-1"></i>Delete
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {stage.deals.length === 0 && (
-                                        <div className="text-center text-muted small p-3">No deals</div>
-                                    )}
+                                    <button className="btn btn-link text-muted p-0" onClick={() => openAddModal(stageIndex)}>
+                                        <Icon icon="heroicons:ellipsis-vertical" width="16" />
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                    ))}
+
+                  {/* Deals Cards */}
+<div className="d-flex flex-column gap-2">
+    {stage.deals.map((deal, dealIndex) => (
+        <div key={deal.id || dealIndex} className="card" style={{ minHeight: '300px' }}>
+            <div className="card-body p-3 d-flex flex-column">
+                {/* Colored top border */}
+                <div className={`bg-${stage.color} mb-3`} style={{ height: '3px', width: '100%' }} />
+
+           {/* Title with Deal Name Icon - Now on left side with single line */}
+<div className="d-flex align-items-center mb-3" style={{ maxWidth: '100%' }}>
+    <div 
+        className="rounded-circle d-flex align-items-center justify-content-center bg-light me-2 flex-shrink-0"
+        style={{ 
+            width: '22px', 
+            height: '22px',
+            backgroundColor: '#e9ecef',
+            border: '1px solid #dee2e6'
+        }}
+    >
+        <span className="fw-bold" style={{ fontSize: '14px', color: '#495057' }}>
+            {deal.title ? deal.title.charAt(0).toUpperCase() : 'D'}
+        </span>
+    </div>
+    <div style={{ flex: 1, minWidth: 0 }}> {/* This ensures the text container can shrink */}
+        <h6 
+            className="fw-semibold mb-0 text-truncate" 
+            style={{ 
+                fontSize: '1rem', 
+                color: '#333',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+            }}
+            title={deal.title} // Shows full name on hover
+        >
+            {deal.title}
+        </h6>
+    </div>
+</div>
+
+                {/* Deal details - 4 lines */}
+                <div className="mb-3" style={{ fontSize: '0.85rem' }}>
+                    <div className="d-flex align-items-center mb-2">
+                        <Icon icon="heroicons:currency-rupee" className="text-dark me-2" width="14" />
+                        <span className="text-truncate">{deal.amount}</span>
+                    </div>
+                    <div className="d-flex align-items-center mb-2">
+                        <Icon icon="heroicons:envelope" className="text-dark me-2" width="14" />
+                        <span className="text-truncate">{deal.email || "No email"}</span>
+                    </div>
+                    <div className="d-flex align-items-center mb-2">
+                        <Icon icon="heroicons:phone" className="text-dark me-2" width="14" />
+                        <span className={`text-truncate ${deal.phone === "Not available" ? "text-muted" : ""}`}>
+                            {deal.phone}
+                        </span>
+                    </div>
+                    <div className="d-flex align-items-center">
+                        <Icon icon="heroicons:map-pin" className="text-dark me-2" width="14" />
+                        <span className="text-truncate">{deal.location}</span>
+                    </div>
+                </div>
+
+                {/* Photo and Name with First Letter - Side by Side */}
+                <div className="d-flex align-items-center mb-3" style={{ gap: '8px' }}>
+                    {/* Photo with upload */}
+                    <div className="position-relative" style={{ flexShrink: 0 }}>
+                        <div 
+                            className="rounded-circle d-flex align-items-center justify-content-center overflow-hidden" 
+                            style={{ 
+                                width: '40px', 
+                                height: '40px', 
+                                backgroundColor: '#e9ecef',
+                                border: '2px solid #fff',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                cursor: 'pointer'
+                            }}
+                            onClick={() => document.getElementById(`file-input-${deal.id}`).click()}
+                        >
+                            {uploadedImages[deal.id] ? (
+                                <img 
+                                    src={uploadedImages[deal.id]} 
+                                    alt={deal.ownerName}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                            ) : imageErrors[deal.id] ? (
+                                <span className="fw-bold" style={{ fontSize: '16px', color: '#495057' }}>
+                                    {deal.ownerName === "Unassigned" ? "?" : getFirstLetter(deal.ownerName)}
+                                </span>
+                            ) : (
+                                <img 
+                                    src={deal.ownerImg} 
+                                    alt={deal.ownerName}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    onError={() => handleImageError(deal.id)}
+                                />
+                            )}
+                        </div>
+                        <input
+                            type="file"
+                            id={`file-input-${deal.id}`}
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            onChange={(e) => handleImageUpload(e, deal.id)}
+                        />
+                        <div 
+                            className="position-absolute bottom-0 end-0 bg-primary rounded-circle d-flex align-items-center justify-content-center"
+                            style={{ 
+                                width: '16px', 
+                                height: '16px',
+                                cursor: 'pointer',
+                                border: '2px solid #fff'
+                            }}
+                            onClick={() => document.getElementById(`file-input-${deal.id}`).click()}
+                        >
+                            <Icon icon="heroicons:camera" width="10" color="white" />
+                        </div>
+                    </div>
+
+                    {/* Name with First Letter Highlighted - Fixed for Unassigned */}
+                    <div className="d-flex align-items-center" style={{ gap: '2px' }}>
+                        {deal.ownerName === "Unassigned" ? (
+                            <span className="fw-semibold" style={{ fontSize: '0.9rem', color: '#555' }}>
+                                {deal.ownerName}
+                            </span>
+                        ) : (
+                            <>
+                                <span className="fw-bold text-primary" style={{ fontSize: '1rem' }}>
+                                    {getFirstLetter(deal.ownerName)}
+                                </span>
+                                <span className="fw-semibold" style={{ fontSize: '0.9rem', color: '#555' }}>
+                                    {deal.ownerName.substring(1)}
+                                </span>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Progress Badge - aligned to right */}
+                    <div className="ms-auto">
+                        <span className="badge" style={{ backgroundColor: '#e6f3ff', color: '#0066cc', fontSize: '0.75rem', padding: '4px 8px' }}>
+                            {deal.progress}%
+                        </span>
+                    </div>
+                </div>
+
+                {/* Footer with date and actions side by side */}
+                <div className="d-flex align-items-center justify-content-between pt-2 border-top" style={{ borderTopColor: '#dee2e6', marginTop: 'auto' }}>
+                    <span className="text-muted" style={{ fontSize: '0.7rem' }}>
+                        {deal.date}
+                    </span>
+                    <div className="d-flex align-items-center gap-2">
+                        <button 
+                            className="btn btn-link p-0 text-primary d-flex align-items-center" 
+                            style={{ fontSize: '0.7rem', gap: '2px', textDecoration: 'none' }} 
+                            onClick={() => openEditModal(stageIndex, dealIndex)}
+                        >
+                            <Icon icon="heroicons:pencil-square" width="12" />
+                            <span>Edit</span>
+                        </button>
+                        <span className="text-muted" style={{ fontSize: '0.7rem' }}>|</span>
+                        <button 
+                            className="btn btn-link p-0 text-danger d-flex align-items-center" 
+                            style={{ fontSize: '0.7rem', gap: '2px', textDecoration: 'none' }} 
+                            onClick={() => openDeleteModal(stageIndex, dealIndex)}
+                        >
+                            <Icon icon="heroicons:trash" width="12" />
+                            <span>Delete</span>
+                        </button>
+                    </div>
                 </div>
             </div>
-
-            {/* Add / Edit Modal (react-bootstrap) */}
+        </div>
+    ))}
+    {stage.deals.length === 0 && (
+        <div className="text-center text-muted p-4 border rounded bg-light d-flex flex-column align-items-center" style={{ fontSize: '0.85rem', minHeight: '120px' }}>
+            <Icon icon="heroicons:document" width="20" className="text-muted mb-2" />
+            No deals
+        </div>
+    )}
+</div>
+                    </div>
+                ))}
+            </div>
 {showAddEditModal && (
   <div
     className="hrms-modal-overlay"
@@ -1130,67 +1328,35 @@ const predefinedSources = [
 
 
             {/* Delete Modal */}
-{showDeleteModal && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered modal-lg">
-            <div className="modal-content">
-
-        {/* Header */}
-        <div className="modal-header">
-          <h5 className="modal-title d-flex align-items-center">
-            Confirm Delete
-          </h5>
-
-          <button
-            type="button"
-            className="btn-close"
-            onClick={() => setShowDeleteModal(false)}
-          ></button>
-        </div>
-
-        {/* Body */}
-        <div className="modal-body text-center">
-
-          <h5 className="mb-2">Are you sure?</h5>
-
-          <p className="text-muted">
-            You want to delete{" "}
-            <strong>
-              {selectedStageIndex !== null && selectedDealIndex !== null
-                ? dealsState[selectedStageIndex].deals[selectedDealIndex]?.title
-                : ""}
-            </strong>
-            . This action cannot be undone.
-          </p>
-
-        </div>
-
-        {/* Footer */}
-        <div className="modal-footer">
-
-          <button
-            type="button"
-            className="delete-btn"
-            onClick={() => setShowDeleteModal(false)}
-          >
-            Cancel
-          </button>
-
-          <button
-            type="button"
-            className="cancel-btn"
-            onClick={handleDelete}
-          >
-            Delete
-          </button>
-
-        </div>
-
-      </div>
-    </div>
-  </div>
-)}
-
+            {showDeleteModal && (
+                <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+                    <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '400px' }}>
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title d-flex align-items-center">
+                                    <Icon icon="heroicons:exclamation-triangle" className="me-2 text-warning" width="20" />
+                                    Confirm Delete
+                                </h5>
+                                <button type="button" className="btn-close" onClick={() => setShowDeleteModal(false)}></button>
+                            </div>
+                            <div className="modal-body text-center">
+                                <Icon icon="heroicons:trash" className="text-danger mb-3" width="40" />
+                                <p className="mb-0">Are you sure you want to delete this deal? This action cannot be undone.</p>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary d-flex align-items-center" onClick={() => setShowDeleteModal(false)}>
+                                    <Icon icon="heroicons:x-mark" className="me-1" width="16" />
+                                    Cancel
+                                </button>
+                                <button type="button" className="btn btn-danger d-flex align-items-center" onClick={handleDelete}>
+                                    <Icon icon="heroicons:trash" className="me-1" width="16" />
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

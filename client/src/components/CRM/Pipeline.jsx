@@ -51,6 +51,16 @@ const Pipeline = () => {
     `${dayjs().format("MM/DD/YYYY")} - ${dayjs().format("MM/DD/YYYY")}`
   );
 
+  // Stage color mapping
+  const stageColorMap = {
+    "Won": "success",
+    "In Pipeline": "primary",
+    "Conversation": "info",
+    "Follow Up": "warning",
+    "Lost": "danger",
+    "Schedule Service": "secondary"
+  };
+
   // Load pipelines from API
   const loadPipelines = useCallback(async () => {
     try {
@@ -103,14 +113,17 @@ const Pipeline = () => {
                          pipeline.status === "inactive" ? "Inactive" : 
                          pipeline.status?.charAt(0).toUpperCase() + pipeline.status?.slice(1).toLowerCase() || "Active";
     
+    // Get stage with fallback
+    const stage = pipeline.stages || pipeline.stage || "In Pipeline";
+    
     return {
       id: pipeline.id,
-      name: pipeline.pipeline_Name || pipeline.name || "Untitled Pipeline", // Backend sends 'pipeline_Name'
-      value: formatValue(pipeline.total_deal_value || pipeline.value), // Backend sends 'total_deal_value'
+      name: pipeline.pipeline_Name || pipeline.name || "Untitled Pipeline",
+      value: formatValue(pipeline.total_deal_value || pipeline.value),
       valueRaw: pipeline.total_deal_value || pipeline.value,
       deals: pipeline.deals || 0,
-      stage: pipeline.stages || pipeline.stage || "In Pipeline", // Backend sends 'stages'
-      stageColor: pipeline.stage_color || "primary",
+      stage: stage,
+      stageColor: stageColorMap[stage] || "primary", // automatic color
       date: formatDate(pipeline.created_date || pipeline.created_at),
       status: statusDisplay // Convert to capitalized for display
     };
@@ -220,6 +233,7 @@ const Pipeline = () => {
         total_deal_value: formData.value ? parseFloat(formData.value) : 0, // Backend expects 'total_deal_value'
         deals: formData.deals ? parseInt(formData.deals) : 0,
         stages: formData.stage || "In Pipeline", // Backend expects 'stages'
+        stage_color: formData.stage_color,
         created_date: formData.created_date || new Date().toISOString().split('T')[0], // Backend expects date string (YYYY-MM-DD)
         status: statusValue // Backend expects lowercase enum: "active" or "inactive"
       };
@@ -259,6 +273,7 @@ const Pipeline = () => {
         total_deal_value: formData.value ? parseFloat(formData.value) : 0, // Backend expects 'total_deal_value'
         deals: formData.deals ? parseInt(formData.deals) : 0,
         stages: formData.stage || "In Pipeline", // Backend expects 'stages'
+        stage_color: formData.stage_color,
         created_date: formData.created_date || new Date().toISOString().split('T')[0], // Backend expects date string (YYYY-MM-DD)
         status: statusValue // Backend expects lowercase enum: "active" or "inactive"
       };
@@ -886,7 +901,7 @@ const Pipeline = () => {
                 </div>
                   <div className="hrms-modal-body hrms-modal-body-scroll">
 
-                <form onSubmit={handleAddPipeline}>
+                <form id="add-pipeline-form" onSubmit={handleAddPipeline}>
                     <div className="mb-3">
                       <label className="form-label">
                         Pipeline Name <span className="text-danger">*</span>
@@ -994,7 +1009,7 @@ const Pipeline = () => {
                     >
                       Cancel
                     </button>
-                    <button type="submit" className="btn btn-primary">
+                    <button type="submit" form="add-pipeline-form" className="btn btn-primary">
                       Add Pipeline
                     </button>
                   </div>
@@ -1026,7 +1041,7 @@ const Pipeline = () => {
                 
               {/* BODY */}
               <div className="hrms-modal-body hrms-modal-body-scroll">
-                <form onSubmit={handleEditPipeline}>
+                <form id="edit-pipeline-form" onSubmit={handleEditPipeline}>
                  
                     <div className="mb-3">
                       <label className="form-label">
@@ -1132,7 +1147,7 @@ const Pipeline = () => {
                     >
                       Cancel
                     </button>
-                    <button type="submit" className="btn btn-primary">
+                    <button type="submit" form="edit-pipeline-form" className="btn btn-primary">
                       Save Changes
                     </button>
                   </div>
@@ -1141,259 +1156,7 @@ const Pipeline = () => {
         </div>
       )}
 
-      {/* <!-- Pipeline Access --> */}
-      {/* <div className="modal fade" id="pipeline-access">
-        <div className="modal-dialog modal-dialog-centered modal-md">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h4 className="modal-title">Pipeline Access</h4>
-              <button
-                type="button"
-                className="btn-close custom-btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              >
-                <i className="ti ti-x"></i>
-              </button>
-            </div>
-            <form action="https://smarthr.co.in/demo/html/template/pipeline.html">
-              <div className="modal-body pb-0">
-                <div className="row">
-                  <div className="col-md-12">
-                    <div className="mb-3">
-                      <div className="input-icon-end position-relative">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search"
-                        />
-                        <span className="input-icon-addon">
-                          <i className="ti ti-search text-gray-7"></i>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-md-12">
-                    <div className="mb-3">
-                      <div className="p-2 border br-5">
-                        <div className="pipeline-access-items">
-                          <div className="d-flex  align-items-center p-2">
-                            <div className="form-check  form-check-md me-2">
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                              />
-                            </div>
-                            <div className="d-flex align-items-center file-name-icon">
-                              <a
-                                href="#"
-                                className="avatar avatar-md border avatar-rounded"
-                              >
-                                <img
-                                  src="https://smarthr.co.in/demo/html/template/assets/img/profiles/avatar-19.jpg"
-                                  className="img-fluid"
-                                  alt="img"
-                                />
-                              </a>
-                              <div className="ms-2">
-                                <h6 className="fw-medium fs-12">
-                                  <a href="#">Darlee Robertson</a>
-                                </h6>
-                                <span className="fs-10 fw-normal">
-                                  Darlee Robertson
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="d-flex align-items-center p-2">
-                            <div className="form-check form-check-md me-2">
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                              />
-                            </div>
-                            <div className="d-flex align-items-center file-name-icon">
-                              <a
-                                href="#"
-                                className="avatar avatar-md border avatar-rounded"
-                              >
-                                <img
-                                  src="https://smarthr.co.in/demo/html/template/assets/img/profiles/avatar-20.jpg"
-                                  className="img-fluid"
-                                  alt="img"
-                                />
-                              </a>
-                              <div className="ms-2">
-                                <h6 className="fw-medium fs-12">
-                                  <a href="#">Sharon Roy</a>
-                                </h6>
-                                <span className="fs-10 fw-normal">
-                                  Installer
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="d-flex align-items-center p-2">
-                            <div className="form-check form-check-md me-2">
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                              />
-                            </div>
-                            <div className="d-flex align-items-center file-name-icon">
-                              <a
-                                href="#"
-                                className="avatar avatar-md border avatar-rounded"
-                              >
-                                <img
-                                  src="https://smarthr.co.in/demo/html/template/assets/img/profiles/avatar-21.jpg"
-                                  className="img-fluid"
-                                  alt="img"
-                                />
-                              </a>
-                              <div className="ms-2">
-                                <h6 className="fw-medium fs-12">
-                                  <a href="#">Vaughan Lewis</a>
-                                </h6>
-                                <span className="fs-10 fw-normal">
-                                  Senior Manager
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="d-flex align-items-center p-2">
-                            <div className="form-check form-check-md me-2">
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                              />
-                            </div>
-                            <div className="d-flex align-items-center file-name-icon">
-                              <a
-                                href="#"
-                                className="avatar avatar-md border avatar-rounded"
-                              >
-                                <img
-                                  src="https://smarthr.co.in/demo/html/template/assets/img/users/user-33.jpg"
-                                  className="img-fluid"
-                                  alt="img"
-                                />
-                              </a>
-                              <div className="ms-2">
-                                <h6 className="fw-medium fs-12">
-                                  <a href="#">Jessica Louise</a>
-                                </h6>
-                                <span className="fs-10 fw-normal">
-                                  Test Engineer
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="d-flex align-items-center p-2">
-                            <div className="form-check form-check-md me-2">
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                              />
-                            </div>
-                            <div className="d-flex align-items-center file-name-icon">
-                              <a
-                                href="#"
-                                className="avatar avatar-md border avatar-rounded"
-                              >
-                                <img
-                                  src="https://smarthr.co.in/demo/html/template/assets/img/users/user-34.jpg"
-                                  className="img-fluid"
-                                  alt="img"
-                                />
-                              </a>
-                              <div className="ms-2">
-                                <h6 className="fw-medium fs-12">
-                                  <a href="#">Test Engineer</a>
-                                </h6>
-                                <span className="fs-10 fw-normal">
-                                  UI /UX Designer
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-light me-2"
-                  data-bs-dismiss="modal"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Confirm
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div> */}
-      {/* <!-- /Pipeline Access --> */}
-
-
-      {/* <!-- Edit Stage --> */}
-      <div className="modal fade" id="edit_stage">
-        <div className="modal-dialog modal-dialog-centered modal-md">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h4 className="modal-title">Edit Stage</h4>
-              <button
-                type="button"
-                className="btn-close custom-btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              >
-                <i className="ti ti-x"></i>
-              </button>
-            </div>
-            <form action="https://smarthr.co.in/demo/html/template/pipeline.html">
-              <div className="modal-body pb-0">
-                <div className="row">
-                  <div className="col-md-12">
-                    <div className="mb-3">
-                      <label className="form-label">
-                        Edit Name <span className="text-danger"> *</span>
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value="Inpipeline"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-light me-2"
-                  data-bs-dismiss="modal"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Save Changes
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-      {/* <!-- /Edit Stage --> */}
-
       {/* Delete Modal */}
-{/* Delete Modal */}
 {showDeleteModal && (
   <div
     className="modal show d-block"
