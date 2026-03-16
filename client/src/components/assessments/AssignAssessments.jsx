@@ -14,6 +14,8 @@ import {
   Users,
   ClipboardList
 } from 'lucide-react';
+import { Icon } from '@iconify/react/dist/iconify.js';
+import '../../App.css';
 import { assessmentAPI } from '../../utils/api';
 import { BASE_URL } from '../../config/api.config';
 
@@ -273,31 +275,38 @@ Recruitment Team
 
   return (
     <div className="container-fluid py-4">
-      {/* Page Header */}
-      <div className="mb-4 d-flex justify-content-between align-items-center">
+      {/* Page Header - align with JobList/CreateJob */}
+      <div className="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
-          <h4 className="mb-2">Assign Assessment</h4>
-          <p className="text-secondary-light mb-0">Select candidates and assign them an assessment test</p>
+          <h4 className="fw-bold h4 d-flex align-items-center gap-2 mb-0">
+            <Icon icon="heroicons:clipboard-document-check" className="text-black" style={{ fontSize: 28 }} />
+            Assign Assessment
+          </h4>
+          <p className="text-secondary mb-0 mt-1">
+            Select candidates and assign them an assessment test.
+          </p>
         </div>
-        <div className="d-flex flex-wrap align-items-center gap-2">
-          <div className="d-flex align-items-center gap-2 px-3 py-2 bg-primary-subtle text-primary rounded">
-            <ClipboardList size={18} />
-            <span className="fw-medium">{selectedCandidates.length} Selected</span>
+        <div className="d-flex flex-column align-items-end gap-2">
+          <span className="text-muted small">
+            Selected candidates:{' '}
+            <span className="fw-medium text-body">{selectedCandidates.length}</span>
+          </span>
+          <div className="d-flex flex-wrap align-items-center justify-content-end gap-2">
+            <div className="d-flex align-items-center gap-2 px-3 py-2 bg-primary-subtle text-primary rounded-3">
+              <ClipboardList size={18} />
+              <span className="fw-medium">
+                {selectedCandidates.length} selected
+              </span>
+            </div>
+            <button
+              className="btn refresh-btn d-inline-flex align-items-center gap-2"
+              onClick={fetchData}
+              disabled={loading}
+            >
+              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </button>
           </div>
-          <button
-            className="btn btn-primary d-flex align-items-center"
-            onClick={fetchData}
-            disabled={loading}
-          >
-            {loading ? (
-              <RefreshCw size={18} className="spinner me-2" />
-            ) : (
-              <>
-                <RefreshCw size={18} className="me-2" />
-                Refresh
-              </>
-            )}
-          </button>
         </div>
       </div>
 
@@ -342,29 +351,29 @@ Recruitment Team
                   </button>
                   <button
                     onClick={clearSelection}
-                    className="btn btn-sm btn-secondary"
+                    className="btn btn-sm btn-outline-secondary"
                   >
                     Clear
                   </button>
                 </div>
               </div>
               {/* Search and Filter */}
-              <div className="row g-2">
+              <div className="row g-3 align-items-end">
                 <div className="col-md-8">
-                  <div className="input-group">
-                    <span className="input-group-text">
-                      <Search size={16} />
-                    </span>
+                  <label className="form-label small text-muted mb-1">Search candidates</label>
+                  <div className="position-relative">
+                    <Search size={16} className="position-absolute top-50 translate-middle-y ms-3 text-muted" />
                     <input
                       type="text"
-                      className="form-control"
-                      placeholder="Search candidates..."
+                      className="form-control ps-5"
+                      placeholder="Name, email or role..."
                       value={searchCandidate}
                       onChange={(e) => setSearchCandidate(e.target.value)}
                     />
                   </div>
                 </div>
                 <div className="col-md-4">
+                  <label className="form-label small text-muted mb-1">Status</label>
                   <div className="input-group">
                     <span className="input-group-text">
                       <Filter size={16} />
@@ -390,36 +399,64 @@ Recruitment Team
                 <div
                   key={candidate.id}
                   onClick={() => toggleCandidate(candidate.id)}
-                  className={`p-3 border-bottom cursor-pointer ${
+                  className={`p-3 border-bottom ${
                     selectedCandidates.includes(candidate.id)
                       ? 'bg-primary-subtle'
                       : 'hover-bg-light'
                   }`}
-                  style={{cursor: 'pointer'}}
+                  style={{ cursor: 'pointer' }}
                 >
                   <div className="d-flex align-items-center gap-3">
-                    <div>
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        checked={selectedCandidates.includes(candidate.id)}
-                        onChange={() => {}}
-                      />
+                    <div className="d-flex align-items-center justify-content-center">
+                      <label
+                        className={`custom-checkbox mb-0 d-inline-flex align-items-center justify-content-center ${
+                          selectedCandidates.includes(candidate.id) ? 'checked' : ''
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleCandidate(candidate.id);
+                        }}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <input
+                          type="checkbox"
+                          className="d-none"
+                          checked={selectedCandidates.includes(candidate.id)}
+                          readOnly
+                        />
+                        <span className="checkbox-box">
+                          {selectedCandidates.includes(candidate.id) && (
+                            <span className="checkmark">✓</span>
+                          )}
+                        </span>
+                      </label>
                     </div>
                     <div className="flex-grow-1">
                       <h6 className="mb-1">{candidate.candidate_name}</h6>
                       <p className="text-muted small mb-1">{candidate.role || 'N/A'}</p>
                       <p className="text-muted small mb-0">{candidate.candidate_email}</p>
                     </div>
-                    <span className={`badge ${getStatusColor(candidate.score >= 70 ? 'Interview Stage' : candidate.score >= 50 ? 'Screening' : 'Applied')}`}>
-                      {candidate.score >= 70 ? 'Interview Stage' : candidate.score >= 50 ? 'Screening' : 'Applied'}
+                    <span
+                      className={`badge ${getStatusColor(
+                        candidate.score >= 70
+                          ? 'Interview Stage'
+                          : candidate.score >= 50
+                          ? 'Screening'
+                          : 'Applied'
+                      )}`}
+                    >
+                      {candidate.score >= 70
+                        ? 'Interview Stage'
+                        : candidate.score >= 50
+                        ? 'Screening'
+                        : 'Applied'}
                     </span>
                   </div>
                 </div>
               ))}
               {filteredCandidates.length === 0 && (
                 <div className="text-center py-5 mb-4">
-                  <p className="text-muted">No candidates found</p>
+                  <p className="text-muted mb-0">No candidates found</p>
                 </div>
               )}
             </div>

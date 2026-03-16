@@ -422,55 +422,7 @@ const activeStyles = `
                 </ul>
               </li>
 
-              {/* Settings Dropdown */}
-              <li className='dropdown'>
-                <Link to='#'>
-                  <Icon icon='icon-park-outline:setting-two' className='menu-icon' />
-                  <span>Settings</span>
-                </Link>
-                <ul className='sidebar-submenu'>
-                  <li>
-                    <NavLink
-                      to='/settings/org-info'
-                      className={(navData) =>
-                        navData.isActive ? "active-page" : ""
-                      }
-                    >
-                      <Icon icon='heroicons:building-office' className='icon text-sm me-2 fs-5' />
-                      Org Info
-                    </NavLink>
-                  </li>
-                  <li>
-                    <NavLink
-                      to='/settings/integrations'
-                      className={(navData) =>
-                        navData.isActive ? "active-page" : ""
-                      }
-                    >
-                      <Icon icon='heroicons:link' className='icon text-sm me-2 fs-5' />
-                      Integrations
-                    </NavLink>
-                  </li>
-                  <li>
-                    <NavLink
-                      to='/settings/billing'
-                      className={(navData) =>
-                        navData.isActive ? "active-page" : ""
-                      }
-                    >
-                      <Icon icon='heroicons:credit-card' className='icon text-sm me-2 fs-5' />
-                      Billing
-                    </NavLink>
-                  </li>
-                </ul>
-              </li>
-
-
-
-
-
-
-
+              
 
               {/* CRM Section */}
               <li className='sidebar-menu-group-title'>CRM</li>

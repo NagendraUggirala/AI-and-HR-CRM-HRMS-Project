@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
-import { Icon } from "@iconify/react/dist/iconify.js";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { Icon } from '@iconify/react/dist/iconify.js';
+import { Link, useNavigate } from 'react-router-dom';
 import { BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 
 const Signup = () => {
@@ -103,7 +103,8 @@ const Signup = () => {
       setLoading(false);
     }
   };
-  return(
+
+  return (
     <section className='auth bg-base d-flex flex-wrap min-vh-100' style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
       <div className='auth-left d-lg-block d-none flex-grow-1 position-relative' style={{ 
         background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%)',
@@ -452,43 +453,25 @@ const Signup = () => {
               </div>
             </div>
 
-            <div className='mb-4 mb-md-5'>
-              <div className='form-check d-flex align-items-start'>
-                <input
-                  className='form-check-input mt-1'
-                  type='checkbox'
-                  checked={agreed}
-                  onChange={(e) => setAgreed(e.target.checked)}
-                  id='condition'
-                  style={{ 
-                    cursor: 'pointer',
-                    width: '18px',
-                    height: '18px',
-                    marginTop: '4px'
-                  }}
-                />
-                <label
-                  className='form-check-label ms-2'
-                  htmlFor='condition'
-                  style={{ 
-                    cursor: 'pointer',
-                    fontSize: '0.9rem',
-                    color: '#495057',
-                    lineHeight: '1.5'
-                  }}
-                >
-                  By creating an account means you agree to the{" "}
-                  <Link to='#' className='text-primary fw-semibold text-decoration-none' style={{ transition: 'color 0.3s ease' }} onMouseEnter={(e) => e.target.style.color = '#2563eb'} onMouseLeave={(e) => e.target.style.color = '#3b82f6'}>
-                    Terms &amp; Conditions
-                  </Link>
-                  {" "}and our{" "}
-                  <Link to='#' className='text-primary fw-semibold text-decoration-none' style={{ transition: 'color 0.3s ease' }} onMouseEnter={(e) => e.target.style.color = '#2563eb'} onMouseLeave={(e) => e.target.style.color = '#3b82f6'}>
-                    Privacy Policy
-                  </Link>
-                </label>
-              </div>
-            </div>
-
+ {/* Terms and Conditions - Custom Checkbox */}
+<div className='mb-4 mb-md-5'>
+  <div className='d-flex align-items-start'>
+    <div 
+      className={`custom-checkbox ${agreed ? 'checked' : ''}`}
+      onClick={() => setAgreed(!agreed)}
+    >
+      <div className='checkbox-box'>
+        {agreed && <span className='checkmark'>✓</span>}
+      </div>
+      <span className='checkbox-label'>
+        By creating an account means you agree to the{" "}
+        <Link to='#' className='text-primary fw-semibold text-decoration-none'>Terms &amp; Conditions</Link>
+        {" "}and our{" "}
+        <Link to='#' className='text-primary fw-semibold text-decoration-none'>Privacy Policy</Link>
+      </span>
+    </div>
+  </div>
+</div>
             <button
               type='submit'
               className='btn btn-primary w-100 py-3 mb-4'
@@ -551,7 +534,7 @@ const Signup = () => {
         </div>
       </div>
     </section>
-  ) ; 
-}
+  );
+};
 
-export default Signup
+export default Signup;

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
+import {
+  Plus,
+  Edit,
+  Trash2,
   Search,
   Filter,
   RefreshCw,
@@ -10,10 +10,11 @@ import {
   Code,
   MessageSquare,
   Brain,
-  X,
   Save,
-  Eye
+  X
 } from 'lucide-react';
+import { Icon } from '@iconify/react/dist/iconify.js';
+import '../../App.css';
 import { assessmentAPI } from '../../utils/api';
 
 const AssessmentLibrary = () => {
@@ -25,6 +26,7 @@ const AssessmentLibrary = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterDifficulty, setFilterDifficulty] = useState('all');
+  const [selectedAssessments, setSelectedAssessments] = useState([]);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -149,6 +151,36 @@ const AssessmentLibrary = () => {
     }
   };
 
+  const handleToggleSelect = (id) => {
+    setSelectedAssessments(prev =>
+      prev.includes(id) ? prev.filter(selectedId => selectedId !== id) : [...prev, id]
+    );
+  };
+
+  const handleClearSelection = () => {
+    setSelectedAssessments([]);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedAssessments.length === 0) return;
+    const names = assessments
+      .filter(a => selectedAssessments.includes(a.id))
+      .map(a => `• ${a.name}`)
+      .join('\n');
+    if (!window.confirm(`Are you sure you want to delete these assessments?\n\n${names}`)) {
+      return;
+    }
+    try {
+      await Promise.all(selectedAssessments.map(id => assessmentAPI.delete(id)));
+      await fetchAssessments();
+      setSelectedAssessments([]);
+      alert('✅ Selected assessments deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting selected assessments:', error);
+      alert('❌ Failed to delete some assessments');
+    }
+  };
+
   // Edit assessment
   const handleEdit = (assessment) => {
     setSelectedAssessment(assessment);
@@ -225,62 +257,122 @@ const AssessmentLibrary = () => {
 
   return (
     <div className="container-fluid py-4">
-      {/* Page Header */}
-      <div className="mb-4 d-flex justify-content-between align-items-center">
+      {/* Page Header - aligned with JobList/CreateJob */}
+      <div className="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
-          <h4 className="mb-2">Assessment Library</h4>
-          <p className="text-secondary-light mb-0">Create and manage assessment templates for candidate evaluation.</p>
+          <h4 className="fw-bold h4 d-flex align-items-center gap-2 mb-0">
+            <Icon icon="heroicons:clipboard-document-list" className="text-black" style={{ fontSize: 28 }} />
+            Assessment Library
+          </h4>
+          <p className="text-secondary mb-0 mt-1">
+            Create and manage assessment templates for candidate evaluation.
+          </p>
         </div>
-        <div className="d-flex flex-wrap align-items-center gap-2">
-          <button
-            className="btn btn-primary d-flex align-items-center"
-            onClick={fetchAssessments}
-            disabled={loading}
-          >
-            <RefreshCw size={18} className={`me-2 ${loading ? 'spinner' : ''}`} />
-            Refresh
-          </button>
-          <button
-            className="btn btn-success d-flex align-items-center"
-            onClick={() => setShowModal(true)}
-          >
-            <Plus size={18} className="me-2" />
-            Create Assessment
-          </button>
+        <div className="d-flex flex-column align-items-end gap-2">
+          <span className="text-muted small">
+            Last updated:{' '}
+            <span className="fw-medium text-body">
+              {new Date().toLocaleDateString()}
+            </span>
+          </span>
+          <div className="d-flex flex-wrap justify-content-end gap-2">
+            <button
+              className="btn refresh-btn d-inline-flex align-items-center gap-2"
+              onClick={fetchAssessments}
+              disabled={loading}
+            >
+              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </button>
+            <button
+              className="create-assessment-btn"
+              onClick={() => setShowModal(true)}
+            >
+              <Plus />
+              <span>Create Assessment</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* KPI Summary */}
-      <div className="card border shadow-none mb-4">
-        <div className="card-body d-flex">
-          <div className="text-center w-25">
-            <div className="text-secondary-light small">Total Templates</div>
-            <div className="h4 mb-0">{assessments.filter(a => a.type === 'aptitude').length}</div>
+      {/* KPI Summary - kpi-row like JobList/Candidates */}
+      <div className="kpi-row mb-4">
+        {[
+          {
+            title: 'Total Templates',
+            value: assessments.filter(a => a.type === 'aptitude').length,
+            sub: 'Aptitude only',
+            icon: 'heroicons:rectangle-group',
+            bg: 'kpi-primary',
+            color: 'kpi-primary-text'
+          },
+          {
+            title: 'Easy',
+            value: assessments.filter(a => a.type === 'aptitude' && (a.difficulty || '').toLowerCase() === 'easy').length,
+            sub: 'Aptitude',
+            icon: 'heroicons:face-smile',
+            bg: 'kpi-success',
+            color: 'kpi-success-text'
+          },
+          {
+            title: 'Medium',
+            value: assessments.filter(a => a.type === 'aptitude' && (a.difficulty || '').toLowerCase() === 'medium').length,
+            sub: 'Aptitude',
+            icon: 'heroicons:adjustments-horizontal',
+            bg: 'kpi-info',
+            color: 'kpi-info-text'
+          },
+          {
+            title: 'Hard',
+            value: assessments.filter(a => a.type === 'aptitude' && (a.difficulty || '').toLowerCase() === 'hard').length,
+            sub: 'Aptitude',
+            icon: 'heroicons:bolt',
+            bg: 'kpi-warning',
+            color: 'kpi-warning-text'
+          }
+        ].map((item, index) => (
+          <div className="kpi-col" key={index}>
+            <div className="kpi-card">
+              <div className="kpi-card-body">
+                <div className={`kpi-icon ${item.bg}`}>
+                  <Icon icon={item.icon} className={`kpi-icon-style ${item.color}`} />
+                </div>
+                <div className="kpi-content">
+                  <div className="kpi-title">{item.title}</div>
+                  <div className="kpi-value">{item.value}</div>
+                  {item.sub && <div className="kpi-sub text-muted">{item.sub}</div>}
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="text-center w-25 border-start ps-4">
-            <div className="text-secondary-light small">Aptitude Tests</div>
-            <div className="h4 mb-0 text-primary">{assessments.filter(a => a.type === 'aptitude').length}</div>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Filters and Actions */}
+      {/* Filters and Actions - structured like JobList filters */}
       <div className="card shadow-none border mb-4">
+        <div className="card-header bg-transparent border-bottom py-3">
+          <h6 className="fw-semibold mb-0 d-flex align-items-center gap-2">
+            <Filter size={16} className="text-secondary-light" />
+            Filter & search
+          </h6>
+        </div>
         <div className="card-body">
-          <div className="row g-3 align-items-center">
-            <div className="col-md-6">
+          <div className="row g-3 align-items-end">
+            <div className="col-12 col-md-6 col-lg-5">
+              <label className="form-label small text-muted mb-1">Search</label>
               <div className="position-relative">
+                <Search className="position-absolute top-50 translate-middle-y ms-3 text-muted" size={18} />
                 <input
                   type="text"
                   className="form-control ps-5"
-                  placeholder="Search assessments..."
+                  placeholder="Search by name or role..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <Search className="position-absolute top-50 translate-middle-y ms-3" size={18} />
               </div>
             </div>
-            <div className="col-md-3">
+            <div className="col-6 col-md-3 col-lg-2">
+              <label className="form-label small text-muted mb-1">Type</label>
               <select
                 className="form-select"
                 value={filterType}
@@ -290,21 +382,62 @@ const AssessmentLibrary = () => {
                 <option value="aptitude">Aptitude Only</option>
               </select>
             </div>
-            <div className="col-md-3">
+            <div className="col-6 col-md-3 col-lg-2">
+              <label className="form-label small text-muted mb-1">Difficulty</label>
               <select
                 className="form-select"
                 value={filterDifficulty}
                 onChange={(e) => setFilterDifficulty(e.target.value)}
               >
-                <option value="all">All Difficulties</option>
+                <option value="all">All</option>
                 <option value="easy">Easy</option>
                 <option value="medium">Medium</option>
                 <option value="hard">Hard</option>
               </select>
             </div>
+            <div className="col-12 col-lg-3 d-flex justify-content-lg-end">
+              <button
+                type="button"
+                className="sync-btn d-inline-flex align-items-center gap-2 w-100 w-lg-auto justify-content-center"
+                onClick={fetchAssessments}
+                disabled={loading}
+              >
+                <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                <span>Reload Library</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Bulk Actions Bar - similar to JobList/Candidates */}
+      {selectedAssessments.length > 0 && (
+        <div className="alert alert-info d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4 rounded-3 py-3">
+          <div className="d-flex align-items-center gap-3 flex-wrap">
+            <span className="fw-semibold">
+              {selectedAssessments.length} assessment{selectedAssessments.length > 1 ? 's' : ''} selected
+            </span>
+            <div className="vr d-none d-sm-block" style={{ height: '1.25rem' }} />
+            <div className="d-flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="delete-btn d-inline-flex align-items-center gap-2"
+                onClick={handleBulkDelete}
+              >
+                <Trash2 size={16} />
+                Delete Selected
+              </button>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleClearSelection}
+            className="btn btn-link p-0 text-decoration-none fw-medium"
+          >
+            Clear selection
+          </button>
+        </div>
+      )}
 
       {/* Assessments Grid */}
       <div className="row g-3">
@@ -334,10 +467,26 @@ const AssessmentLibrary = () => {
             <div key={assessment.id} className="col-md-6 col-lg-4">
               <div className="card shadow-none border h-100 hover-shadow transition">
                 <div className="card-body">
-                  {/* Header */}
+                  {/* Header with checkbox and type icon */}
                   <div className="d-flex justify-content-between align-items-start mb-3">
-                    <div className={`p-2 rounded ${getTypeColor(assessment.type)}`}>
-                      {getTypeIcon(assessment.type)}
+                    <div className="d-flex align-items-center gap-2">
+                      <label
+                        className={`custom-checkbox mb-0 d-inline-flex align-items-center justify-content-center ${selectedAssessments.includes(assessment.id) ? 'checked' : ''}`}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <input
+                          type="checkbox"
+                          className="d-none"
+                          checked={selectedAssessments.includes(assessment.id)}
+                          onChange={() => handleToggleSelect(assessment.id)}
+                        />
+                        <span className="checkbox-box">
+                          {selectedAssessments.includes(assessment.id) && <span className="checkmark">✓</span>}
+                        </span>
+                      </label>
+                      <div className={`p-2 rounded ${getTypeColor(assessment.type)}`}>
+                        {getTypeIcon(assessment.type)}
+                      </div>
                     </div>
                     <div className="d-flex gap-2">
                       <button

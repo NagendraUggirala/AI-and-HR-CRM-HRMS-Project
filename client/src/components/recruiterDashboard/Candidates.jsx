@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Download, X, ChevronLeft, ChevronRight, UserPlus, ArrowRight, Eye, Copy, Trash2, Printer, RefreshCw, AlertCircle, Upload, CheckCircle, XCircle, FileText } from 'lucide-react';
+import { Icon } from '@iconify/react/dist/iconify.js';
+import { AlertCircle, Upload, CheckCircle, XCircle, FileText } from 'lucide-react';
 import CandidateProfilePage from './CandidateProfilePage';
 import { BASE_URL } from '../../config/api.config';
+import '../../App.css';
 
 const CandidatesPage = () => {
   const navigate = useNavigate();
@@ -461,15 +463,19 @@ const CandidatesPage = () => {
 
   return (
     <div className="container-fluid py-4">
-      {/* Page Header */}
-      <div className="mb-4 d-flex justify-content-between align-items-center">
+      {/* Page Header: title left, actions right */}
+      <div className="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
-          <h4 className="fw-bold h4 h2-md">Candidates</h4>
-          <p className="text-secondary-light mb-0">View, filter, and manage all job applicants.</p>
+          <h4 className="fw-bold h4 d-flex align-items-center gap-2 mb-0">
+            <Icon icon="heroicons:user-group" className="text-black" style={{ fontSize: 28 }} />
+            Candidates
+          </h4>
+          <p className="text-secondary mb-0 mt-1">View, filter, and manage all job applicants.</p>
         </div>
         <div className="d-flex flex-wrap align-items-center gap-2">
-          <button 
-            className="btn btn-primary d-inline-flex align-items-center gap-2"
+          <button
+            type="button"
+            className="btn refresh-btn d-inline-flex align-items-center gap-2"
             onClick={async () => {
               setRefreshing(true);
               await fetchCandidates();
@@ -478,11 +484,12 @@ const CandidatesPage = () => {
             }}
             disabled={refreshing}
           >
-            <RefreshCw size={16} className={refreshing ? 'spin' : ''} />
+            <Icon icon="heroicons:arrow-path" style={{ width: 16, height: 16 }} className={refreshing ? 'spin' : ''} />
             {refreshing ? 'Refreshing...' : 'Refresh'}
           </button>
-          <button 
-            className="btn btn-success d-inline-flex align-items-center gap-2"
+          <button
+            type="button"
+            className="sync-btn d-inline-flex align-items-center gap-2"
             onClick={async () => {
               try {
                 const response = await fetch(`${BASE_URL}/api/resume/sync-stages`, {
@@ -507,7 +514,7 @@ const CandidatesPage = () => {
             }}
             title="Sync candidate stages based on scores"
           >
-            <RefreshCw size={16} />
+            <Icon icon="heroicons:arrow-path" style={{ width: 16, height: 16 }} />
             Sync Stages
           </button>
         </div>
@@ -515,9 +522,9 @@ const CandidatesPage = () => {
 
       {/* Error Alert */}
       {error && (
-        <div className="alert alert-danger d-flex align-items-center mb-4" role="alert">
-          <AlertCircle size={20} className="me-2" />
-          <div>{error}</div>
+        <div className="alert alert-danger d-flex align-items-center rounded-3 mb-4 py-3" role="alert">
+          <AlertCircle size={20} className="me-2 flex-shrink-0" />
+          <div className="flex-grow-1">{error}</div>
         </div>
       )}
 
@@ -536,10 +543,12 @@ const CandidatesPage = () => {
             <p className="text-secondary-light mb-3">
               No candidates have applied to your jobs yet. Make sure your jobs are published!
             </p>
-            <button 
-              className="btn btn-primary d-inline-flex align-items-center gap-2"
+            <button
+              type="button"
+              className="create-job-btn d-inline-flex align-items-center gap-2"
               onClick={() => navigate('/jobslist')}
             >
+              <Icon icon="heroicons:briefcase" style={{ width: 16, height: 16 }} />
               View Jobs
             </button>
           </div>
@@ -550,253 +559,269 @@ const CandidatesPage = () => {
       {!loading && candidates.length > 0 && (
         <>
 
-      {/* KPI Summary */}
-      <div className="card border shadow-none mb-4">
-        <div className="card-body d-flex">
-          <div className="text-center w-25">
-            <div className="text-secondary-light small">Total Candidates</div>
-            <div className="h4 mb-0">{insights.total}</div>
-          </div>
-          <div className="text-center w-25 border-start ps-4">
-            <div className="text-secondary-light small">In Interview</div>
-            <div className="h4 mb-0 text-primary">{insights.inInterview}</div>
-          </div>
-          <div className="text-center w-25 border-start ps-4">
-            <div className="text-secondary-light small">Offers Sent</div>
-            <div className="h4 mb-0 text-success">{insights.offersSent}</div>
-          </div>
-          <div className="text-center w-25 border-start ps-4">
-            <div className="text-secondary-light small">Hired</div>
-            <div className="h4 mb-0 text-danger">{insights.hired}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="card border shadow-none mb-4">
-        <div className="card-body d-flex gap-3 align-items-center">
-          <div className="flex-grow-1">
-            <div className="input-group" style={{maxWidth: '400px'}}>
-              <span className="input-group-text bg-white border-end-0" style={{
-                borderTopLeftRadius: '0.375rem', 
-                borderBottomLeftRadius: '0.375rem',
-                borderRight: 'none'
-              }}>
-                <Search size={16} className="text-muted" />
-              </span>
-              <input 
-                className="form-control border-start-0" 
-                placeholder="Search candid" 
-                value={searchTerm} 
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  borderTopRightRadius: '0.375rem', 
-                  borderBottomRightRadius: '0.375rem',
-                  borderLeft: 'none',
-                  fontSize: '14px',
-                  padding: '8px 12px'
-                }}
-              />
+      {/* KPI Summary - App.css kpi-row/kpi-card (ref JobList) */}
+      <div className="kpi-row mb-4">
+        {[
+          { title: 'Total Candidates', value: insights.total, icon: 'heroicons:user-group', bg: 'kpi-primary', color: 'kpi-primary-text' },
+          { title: 'In Interview', value: insights.inInterview, icon: 'heroicons:chat-bubble-left-right', bg: 'kpi-info', color: 'kpi-info-text' },
+          { title: 'Offers Sent', value: insights.offersSent, icon: 'heroicons:envelope', bg: 'kpi-success', color: 'kpi-success-text' },
+          { title: 'Hired', value: insights.hired, icon: 'heroicons:check-badge', bg: 'kpi-warning', color: 'kpi-warning-text' }
+        ].map((item, index) => (
+          <div className="kpi-col" key={index}>
+            <div className="kpi-card">
+              <div className="kpi-card-body">
+                <div className={`kpi-icon ${item.bg}`}>
+                  <Icon icon={item.icon} className={`kpi-icon-style ${item.color}`} />
+                </div>
+                <div className="kpi-content">
+                  <div className="kpi-title">{item.title}</div>
+                  <div className="kpi-value">{item.value}</div>
+                </div>
+              </div>
             </div>
           </div>
+        ))}
+      </div>
 
-          <select 
-            className="form-select w-auto" 
-            value={filters.skills}
-            onChange={(e) => setFilters(prev => ({ ...prev, skills: e.target.value }))}
-          >
-            <option value="">All Skills</option>
-            <option value="react">React.js</option>
-            <option value="python">Python</option>
-            <option value="sql">SQL</option>
-            <option value="figma">Figma</option>
-            <option value="js">JavaScript</option>
-            <option value="css">CSS</option>
-            <option value="html">HTML</option>
-            <option value="typescript">TypeScript</option>
-            <option value="node">Node.js</option>
-            <option value="mongodb">MongoDB</option>
-            <option value="selenium">Selenium</option>
-            <option value="tableau">Tableau</option>
-            <option value="aws">AWS</option>
-            <option value="docker">Docker</option>
-          </select>
-
-          <select 
-            className="form-select w-auto"
-            value={filters.job}
-            onChange={(e) => setFilters(prev => ({ ...prev, job: e.target.value }))}
-          >
-            <option value="">All Jobs</option>
-            <option value="frontend">Frontend Developer</option>
-            <option value="backend">Backend Engineer</option>
-            <option value="qa">QA Engineer</option>
-            <option value="designer">UI Designer</option>
-            <option value="data">Data Analyst</option>
-            <option value="devops">DevOps Engineer</option>
-          </select>
-
-          <select 
-            className="form-select w-auto"
-            value={filters.stage}
-            onChange={(e) => setFilters(prev => ({ ...prev, stage: e.target.value }))}
-          >
-            <option value="">All Stages</option>
-            <option value="applied">Applied</option>
-            <option value="screening">Screening</option>
-            <option value="interview">Interview</option>
-            <option value="offer">Offer</option>
-            <option value="hired">Hired</option>
-          </select>
-
-          <select 
-            className="form-select w-auto"
-            value={filters.recruiter}
-            onChange={(e) => setFilters(prev => ({ ...prev, recruiter: e.target.value }))}
-          >
-            <option value="">All Recruiters</option>
-            <option value="AI">AI</option>
-          </select>
-
-          <div className="d-flex gap-2">
-            <button className="btn btn-success d-inline-flex align-items-center gap-2" onClick={handleExport}>
-              <Download size={16} />
-              <span>Export</span>
-            </button>
+      {/* Filters & Search */}
+      <div className="card border shadow-none mb-4">
+        <div className="card-header bg-transparent border-bottom py-3">
+          <h6 className="fw-semibold mb-0 d-flex align-items-center gap-2">
+            <Icon icon="heroicons:funnel" style={{ width: 18, height: 18 }} />
+            Filter & search
+          </h6>
+        </div>
+        <div className="card-body">
+          <div className="row g-3 align-items-end">
+            <div className="col-12 col-md-6 col-lg-4">
+              <label className="form-label small text-muted mb-1">Search</label>
+              <div className="position-relative">
+                <Icon icon="heroicons:magnifying-glass" className="position-absolute top-50 translate-middle-y text-muted ms-3" style={{ pointerEvents: 'none', fontSize: 18 }} />
+                <input
+                  className="form-control ps-5"
+                  placeholder="Name, role, or skills..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="col-6 col-md-4 col-lg-2">
+              <label className="form-label small text-muted mb-1">Skills</label>
+              <select
+                className="form-select"
+                value={filters.skills}
+                onChange={(e) => setFilters(prev => ({ ...prev, skills: e.target.value }))}
+              >
+                <option value="">All Skills</option>
+                <option value="react">React.js</option>
+                <option value="python">Python</option>
+                <option value="sql">SQL</option>
+                <option value="figma">Figma</option>
+                <option value="js">JavaScript</option>
+                <option value="css">CSS</option>
+                <option value="html">HTML</option>
+                <option value="typescript">TypeScript</option>
+                <option value="node">Node.js</option>
+                <option value="mongodb">MongoDB</option>
+                <option value="selenium">Selenium</option>
+                <option value="tableau">Tableau</option>
+                <option value="aws">AWS</option>
+                <option value="docker">Docker</option>
+              </select>
+            </div>
+            <div className="col-6 col-md-4 col-lg-2">
+              <label className="form-label small text-muted mb-1">Job</label>
+              <select
+                className="form-select"
+                value={filters.job}
+                onChange={(e) => setFilters(prev => ({ ...prev, job: e.target.value }))}
+              >
+                <option value="">All Jobs</option>
+                <option value="frontend">Frontend Developer</option>
+                <option value="backend">Backend Engineer</option>
+                <option value="qa">QA Engineer</option>
+                <option value="designer">UI Designer</option>
+                <option value="data">Data Analyst</option>
+                <option value="devops">DevOps Engineer</option>
+              </select>
+            </div>
+            <div className="col-6 col-md-4 col-lg-2">
+              <label className="form-label small text-muted mb-1">Stage</label>
+              <select
+                className="form-select"
+                value={filters.stage}
+                onChange={(e) => setFilters(prev => ({ ...prev, stage: e.target.value }))}
+              >
+                <option value="">All Stages</option>
+                <option value="applied">Applied</option>
+                <option value="screening">Screening</option>
+                <option value="interview">Interview</option>
+                <option value="offer">Offer</option>
+                <option value="hired">Hired</option>
+              </select>
+            </div>
+            <div className="col-6 col-md-4 col-lg-2">
+              <label className="form-label small text-muted mb-1">Recruiter</label>
+              <select
+                className="form-select"
+                value={filters.recruiter}
+                onChange={(e) => setFilters(prev => ({ ...prev, recruiter: e.target.value }))}
+              >
+                <option value="">All</option>
+                <option value="AI">AI</option>
+              </select>
+            </div>
+            <div className="col-12 col-md-6 col-lg-2 d-flex justify-content-md-end">
+              <button type="button" className="sync-btn d-inline-flex align-items-center gap-2 w-100 w-md-auto justify-content-center" onClick={handleExport}>
+                <Icon icon="heroicons:document-arrow-down" style={{ width: 16, height: 16 }} />
+                Export
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Bulk Actions Bar */}
       {selectedCandidates.length > 0 && (
-        <div className="alert alert-info d-flex align-items-center justify-content-between mb-4">
-          <div className="d-flex align-items-center gap-3">
-            <span className="fw-medium">
+        <div className="alert alert-info d-flex align-items-center justify-content-between flex-wrap gap-3 rounded-3 py-3 mb-4">
+          <div className="d-flex align-items-center gap-3 flex-wrap">
+            <span className="fw-semibold">
               {selectedCandidates.length} candidate{selectedCandidates.length > 1 ? 's' : ''} selected
             </span>
-            <div className="vr"></div>
-            <button 
-              className="btn btn-primary btn-sm d-inline-flex align-items-center gap-2"
-              onClick={handleAIScreening}
-              title="Process selected candidates with AI Resume Screening"
-              disabled={selectedCandidates.some(id => {
-                const candidate = candidates.find(c => c.id === id);
-                return candidate && (candidate.resume_screened === "yes" || candidate.resume_screened === "Yes");
-              })}
-            >
-              <Upload size={16} />
-              AI Resume Screening
-            </button>
-            <button className="btn btn-danger btn-sm d-inline-flex align-items-center gap-2">
-              <Trash2 size={16} />
-              Delete
-            </button>
+            <div className="vr d-none d-sm-block" style={{ height: '1.25rem' }} />
+            <div className="d-flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="create-assessment-btn d-inline-flex align-items-center gap-2"
+                onClick={handleAIScreening}
+                title="Process selected candidates with AI Resume Screening"
+                disabled={selectedCandidates.some(id => {
+                  const candidate = candidates.find(c => c.id === id);
+                  return candidate && (candidate.resume_screened === "yes" || candidate.resume_screened === "Yes");
+                })}
+              >
+                <Icon icon="heroicons:arrow-up-tray" style={{ width: 18, height: 18 }} />
+                AI Resume Screening
+              </button>
+              <button type="button" className="delete-btn d-inline-flex align-items-center gap-2">
+                <Icon icon="heroicons:trash" style={{ width: 16, height: 16 }} />
+                Delete
+              </button>
+            </div>
           </div>
-          <button
-            onClick={() => setSelectedCandidates([])}
-            className="btn btn-link p-0 text-decoration-none"
-          >
-            Clear Selection
+          <button type="button" onClick={() => setSelectedCandidates([])} className="btn btn-link p-0 text-decoration-none fw-medium">
+            Clear selection
           </button>
         </div>
       )}
 
       {/* Candidates Table */}
-      <div className="card border shadow-none mb-4">
+      <div className="card border shadow-none mb-4 overflow-hidden">
+        <div className="card-header bg-transparent border-bottom py-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <h6 className="fw-semibold mb-0">Candidates list</h6>
+          <span className="badge bg-primary-subtle text-primary">{filteredCandidates.length} candidate{filteredCandidates.length !== 1 ? 's' : ''}</span>
+        </div>
         <div className="table-responsive">
           <table className="table table-hover align-middle mb-0">
             <thead className="table-light">
               <tr>
-                <th style={{width: 40}} className="text-center">
-                  <input 
-                    type="checkbox" 
-                    className="form-check-input"
-                    checked={selectedCandidates.length === currentCandidates.length && currentCandidates.length > 0} 
-                    onChange={handleSelectAll} 
-                  />
+                <th style={{ width: 44 }} className="text-center py-3">
+                  <label className={`custom-checkbox mb-0 d-inline-flex align-items-center justify-content-center ${selectedCandidates.length === currentCandidates.length && currentCandidates.length > 0 ? 'checked' : ''}`} style={{ cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      className="d-none"
+                      checked={selectedCandidates.length === currentCandidates.length && currentCandidates.length > 0}
+                      onChange={handleSelectAll}
+                    />
+                    <span className="checkbox-box">
+                      {selectedCandidates.length === currentCandidates.length && currentCandidates.length > 0 && <span className="checkmark">✓</span>}
+                    </span>
+                  </label>
                 </th>
-                <th className="text-start">CANDIDATE NAME</th>
-                <th className="text-start">JOB ROLE</th>
-                <th className="text-start">SKILLS</th>
-                <th className="text-center">RESUME</th>
-                <th className="text-center">AI SCREENED</th>
-                <th className="text-center">STAGE</th>
-                <th className="text-center">ACTIONS</th>
+                <th className="text-start py-3 small text-uppercase text-muted fw-semibold">Candidate</th>
+                <th className="text-start py-3 small text-uppercase text-muted fw-semibold">Job role</th>
+                <th className="text-start py-3 small text-uppercase text-muted fw-semibold">Skills</th>
+                <th className="text-center py-3 small text-uppercase text-muted fw-semibold">Resume</th>
+                <th className="text-center py-3 small text-uppercase text-muted fw-semibold">AI screened</th>
+                <th className="text-center py-3 small text-uppercase text-muted fw-semibold">Stage</th>
+                <th className="text-center py-3 small text-uppercase text-muted fw-semibold" style={{ width: 90 }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {currentCandidates.map(candidate => (
                 <tr key={candidate.id}>
-                  <td className="text-center">
-                    <input 
-                      type="checkbox" 
-                      className="form-check-input"
-                      checked={selectedCandidates.includes(candidate.id)} 
-                      onChange={() => handleSelectCandidate(candidate.id)}
-                      disabled={candidate.resume_screened === "yes" || candidate.resume_screened === "Yes"}
-                      title={candidate.resume_screened === "yes" || candidate.resume_screened === "Yes" ? "This candidate's resume has already been screened" : ""}
-                    />
+                  <td className="text-center align-middle">
+                    <label className={`custom-checkbox mb-0 d-inline-flex align-items-center justify-content-center ${selectedCandidates.includes(candidate.id) ? 'checked' : ''}`} style={{ cursor: (candidate.resume_screened === "yes" || candidate.resume_screened === "Yes") ? 'not-allowed' : 'pointer' }} title={candidate.resume_screened === "yes" || candidate.resume_screened === "Yes" ? "This candidate's resume has already been screened" : ''}>
+                      <input
+                        type="checkbox"
+                        className="d-none"
+                        checked={selectedCandidates.includes(candidate.id)}
+                        onChange={() => handleSelectCandidate(candidate.id)}
+                        disabled={candidate.resume_screened === "yes" || candidate.resume_screened === "Yes"}
+                      />
+                      <span className="checkbox-box">
+                        {selectedCandidates.includes(candidate.id) && <span className="checkmark">✓</span>}
+                      </span>
+                    </label>
                   </td>
-                  <td className="text-start">
-                    <div className="d-flex align-items-center">
-                     
-                      <span className="fw-medium">{candidate.name}</span>
-                    </div>
+                  <td className="text-start align-middle">
+                    <span className="fw-medium">{candidate.name}</span>
                   </td>
-                  <td className="text-start text-muted">{candidate.role}</td>
-                  <td className="text-start">
+                  <td className="text-start align-middle text-muted">{candidate.role}</td>
+                  <td className="text-start align-middle">
                     <div className="d-flex flex-wrap gap-1">
                       {candidate.skills.slice(0, 4).map((skill, idx) => (
-                        <span key={idx} className="badge bg-light text-dark">
+                        <span key={idx} className="badge bg-light text-dark border">
                           {skill}
                         </span>
                       ))}
                       {candidate.skills.length > 4 && (
                         <span className="badge bg-primary-subtle text-primary">
-                          +{candidate.skills.length - 4} more
+                          +{candidate.skills.length - 4}
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="text-center">
+                  <td className="text-center align-middle">
                     {candidate.resume_url && candidate.resume_url.trim() !== '' ? (
                       <span className="badge bg-success-subtle text-success d-inline-flex align-items-center gap-1" title={candidate.resume_url}>
                         <FileText size={12} />
-                        <span>Available</span>
+                        Available
                       </span>
                     ) : (
                       <span className="badge bg-danger-subtle text-danger d-inline-flex align-items-center gap-1">
                         <XCircle size={12} />
-                        <span>Missing</span>
+                        Missing
                       </span>
                     )}
                   </td>
-                  <td className="text-center">
+                  <td className="text-center align-middle">
                     {candidate.resume_screened === "yes" || candidate.resume_screened === "Yes" ? (
                       <span className="badge bg-success-subtle text-success d-inline-flex align-items-center gap-1" title="Resume has been screened with AI">
                         <CheckCircle size={12} />
-                        <span>Yes</span>
+                        Yes
                       </span>
                     ) : (
                       <span className="badge bg-warning-subtle text-warning d-inline-flex align-items-center gap-1" title="Resume not yet screened">
                         <XCircle size={12} />
-                        <span>No</span>
+                        No
                       </span>
                     )}
                   </td>
-                  <td className="text-center">
+                  <td className="text-center align-middle">
                     <span className={`badge ${getStageColor(candidate.stage)}`}>
                       {candidate.stage}
                     </span>
                   </td>
-                  <td className="text-center">
-                    <button 
-                      type='button'
-                      className='w-32-px h-32-px d-inline-flex justify-content-center align-items-center bg-primary-100 text-primary-600 bg-hover-primary-600 text-hover-white text-md rounded-circle border-0'
-                      title="View"
+                  <td className="text-center align-middle">
+                    <button
+                      type="button"
+                      className="btn btn-sm job-listings-btn d-inline-flex align-items-center justify-content-center"
+                      style={{ width: 36, height: 36 }}
+                      title="View profile"
                       onClick={() => handleViewCandidate(candidate.id)}
                     >
-                      <i className='ri-eye-line' />
+                      <Icon icon="heroicons:eye" style={{ width: 18, height: 18 }} />
                     </button>
                   </td>
                 </tr>
@@ -807,105 +832,91 @@ const CandidatesPage = () => {
       </div>
 
       {/* Pagination */}
-      <div className="d-flex align-items-center justify-content-between mb-4">
-        <div>
-          <small className="text-secondary-light">
-            Showing <strong>{startIndex+1}</strong> to <strong>{Math.min(endIndex, filteredCandidates.length)}</strong> of <strong>{filteredCandidates.length}</strong> candidates
-          </small>
-        </div>
-
-        <div className="d-flex align-items-center gap-3">
-          <div className="btn-group" role="group">
-            <button 
-              className="btn btn-outline-secondary" 
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} 
-              disabled={currentPage === 1}
-            >
-              Previous
-            </button>
-            {[...Array(totalPages)].map((_, idx) => {
-              const pageNum = idx + 1;
-              return (
-                <button 
-                  key={pageNum}
-                  className={pageNum === currentPage ? 'btn btn-primary' : 'btn btn-outline-secondary'} 
-                  onClick={() => setCurrentPage(pageNum)}
+      <div className="card border shadow-none mb-4">
+        <div className="card-body py-3">
+          <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div className="small text-muted">
+              Showing <strong className="text-body">{startIndex + 1}</strong>–<strong className="text-body">{Math.min(endIndex, filteredCandidates.length)}</strong> of <strong className="text-body">{filteredCandidates.length}</strong> candidates
+            </div>
+            <div className="d-flex align-items-center gap-2 flex-wrap">
+              <div className="btn-group btn-group-sm" role="group">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
                 >
-                  {pageNum}
+                  Previous
                 </button>
-              );
-            })}
-            <button 
-              className="btn btn-outline-secondary" 
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} 
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </button>
+                {[...Array(Math.min(5, totalPages))].map((_, idx) => {
+                  const pageNum = idx + 1;
+                  return (
+                    <button
+                      key={pageNum}
+                      type="button"
+                      className={pageNum === currentPage ? 'btn btn-primary' : 'btn btn-outline-secondary'}
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </button>
+              </div>
+              <select
+                className="form-select form-select-sm w-auto"
+                value={itemsPerPage}
+                onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                style={{ minWidth: '70px' }}
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+              <span className="small text-muted ms-1">per page</span>
+            </div>
           </div>
-
-       
         </div>
       </div>
 
-      {/* Candidate Profile Modal */}
+      {/* Candidate Profile Modal - ref JobList: centered overlay (App.css) */}
       {showCandidateModal && selectedCandidate && (
-        <div 
-          className="modal fade show d-block" 
-          style={{ 
-            backgroundColor: 'rgba(0, 0, 0, 0.5)', 
-            zIndex: 1050,
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            overflow: 'auto',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px'
-          }} 
+        <div
+          className="job-modal-overlay"
           tabIndex="-1"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              handleCloseCandidateModal();
-            }
-          }}
+          onClick={(e) => { if (e.target === e.currentTarget) handleCloseCandidateModal(); }}
         >
-          <CandidateProfilePage 
-            candidate={selectedCandidate} 
-            onClose={handleCloseCandidateModal} 
-          />
+          <div className="job-modal-dialog" style={{ maxWidth: '900px' }} onClick={e => e.stopPropagation()}>
+            <CandidateProfilePage
+              candidate={selectedCandidate}
+              onClose={handleCloseCandidateModal}
+            />
+          </div>
         </div>
       )}
 
-      {/* AI Screening Progress Modal */}
+      {/* AI Screening Progress Modal - ref JobList: hrms-modal (App.css) */}
       {aiScreening.showModal && (
-        <div 
-          className="modal show d-block" 
-          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-          tabIndex="-1"
-        >
-          <div
-            className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
-            style={{ maxWidth: '1200px', width: '95%' }}
-          >
-            <div className="modal-content">
-              <div className="modal-header border-0">
-                <h5 className="modal-title">
-                  <Upload className="me-2" size={20} />
-                  AI Resume Screening Progress
-                </h5>
-                {!aiScreening.isProcessing && (
-                  <button 
-                    type="button" 
-                    className="btn-close" 
-                    onClick={closeAIScreeningModal}
-                  ></button>
-                )}
-              </div>
-              <div className="modal-body">
+        <div className="hrms-modal-overlay">
+          <div className="hrms-modal hrms-modal-xl" style={{ maxWidth: '900px', width: '95%' }}>
+            <div className="hrms-modal-header">
+              <h5 className="d-flex align-items-center gap-2 mb-0">
+                <Icon icon="heroicons:arrow-up-tray" style={{ width: 20, height: 20 }} />
+                AI Resume Screening Progress
+              </h5>
+              {!aiScreening.isProcessing && (
+                <button type="button" className="hrms-modal-close" onClick={closeAIScreeningModal} aria-label="Close">&times;</button>
+              )}
+            </div>
+            <div className="hrms-modal-body">
                 {aiScreening.isProcessing ? (
                   <>
                     {/* Processing State */}
@@ -1058,26 +1069,18 @@ const CandidatesPage = () => {
                     </div>
                   </>
                 )}
-              </div>
-              {!aiScreening.isProcessing && (
-                <div className="modal-footer border-0">
-                  <button 
-                    type="button" 
-                    className="btn btn-secondary" 
-                    onClick={closeAIScreeningModal}
-                  >
-                    Close
-                  </button>
-                  <button 
-                    type="button" 
-                    className="btn btn-primary" 
-                    onClick={viewAIScreeningResults}
-                  >
-                    View All Results
-                  </button>
-                </div>
-              )}
             </div>
+            {!aiScreening.isProcessing && (
+              <div className="hrms-modal-footer">
+                <button type="button" className="close-btn" onClick={closeAIScreeningModal}>
+                  Close
+                </button>
+                <button type="button" className="save-template-btn d-inline-flex align-items-center gap-2" onClick={viewAIScreeningResults}>
+                  <Icon icon="heroicons:eye" style={{ width: 16, height: 16 }} />
+                  View All Results
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

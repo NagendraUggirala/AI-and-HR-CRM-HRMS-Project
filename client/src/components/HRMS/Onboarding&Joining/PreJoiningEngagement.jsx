@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
 import { Icon } from "@iconify/react";
 
 // Initial/static sample forms
@@ -70,6 +71,98 @@ const [formData, setFormData] = useState({
   const [formToDelete, setFormToDelete] = useState(null);
   const [deleteCandidateName, setDeleteCandidateName] = useState("");
   
+    // Newhire form state
+    const [showNewhireForm, setShowNewhireForm] = useState(false);
+    const [currentFormId, setCurrentFormId] = useState(null);
+    const [currentCandidateName, setCurrentCandidateName] = useState("");
+    const [currentStep, setCurrentStep] = useState(0);
+    
+    // Newhire form data
+    const [profilePic, setProfilePic] = useState(null);
+    const [basicData, setBasicData] = useState({
+      firstName: "",
+      middleName: "",
+      lastName: "",
+      gender: "",
+      dob: "",
+    });
+    const [basicErrors, setBasicErrors] = useState({});
+  
+    const [contactData, setContactData] = useState({
+      mobile: "",
+      email: "",
+      homePhone: "",
+      emergencyContact: "",
+    });
+    const [otpSent, setOtpSent] = useState(false);
+    const [otpVerified, setOtpVerified] = useState(false);
+  
+    const [personalData, setPersonalData] = useState({
+      bloodGroup: "",
+      passport: "",
+      drivingLicense: "",
+    });
+  
+    const [statutoryData, setStatutoryData] = useState({
+      aadhar: "",
+      pan: "",
+      uan: "",
+      esi: "",
+    });
+    const [statutoryErrors, setStatutoryErrors] = useState({
+      aadhar: "",
+      pan: "",
+    });
+  
+    const [maritalStatus, setMaritalStatus] = useState("");
+    const [familyData, setFamilyData] = useState({
+      fatherName: "",
+      fatherPhone: "",
+      fatherDOB: "",
+      motherName: "",
+      motherPhone: "",
+      motherDOB: "",
+    });
+  
+    const [presentAddress, setPresentAddress] = useState({
+      address1: "",
+      address2: "",
+      city: "",
+      pincode: "",
+      state: "",
+      country: "India",
+    });
+  
+    const [permanentAddress, setPermanentAddress] = useState({
+      address1: "2-21/A BC WADA",
+      address2: "Sardhapor",
+      city: "Sircilla",
+      pincode: "505301",
+      state: "Telangana",
+      country: "India",
+    });
+  
+    const [bankData, setBankData] = useState({
+      bankName: "",
+      ifscCode: "",
+      accountNumber: "",
+      accountHolder: "",
+    });
+  
+    const [documents, setDocuments] = useState({
+      pan: null,
+      aadhar: null,
+      photo: null,
+      uan: null,
+      bank: null,
+      esi: null,
+      dl: null,
+      passport: null,
+    });
+  
+
+  const { formId } = useParams();
+  const candidate = location.state?.candidate;
   const processedFormsRef = useRef(new Set()); // Track processed form IDs
 
   // Load forms from localStorage on component mount
@@ -641,7 +734,7 @@ const handleEdit = (formId) => {
           <div className="mb-4">
             {/* Title */}
             <h5 className="text-3xl fw-bold text-dark mb-2 mt-3 d-flex align-items-center gap-2">
-              <Icon icon="heroicons:document-text" />
+             <Icon icon='heroicons:chat-bubble-left-right'/>
               Forms
             </h5>
 
@@ -653,7 +746,7 @@ const handleEdit = (formId) => {
 
           <div className="d-flex gap-2">
             <button
-              className="btn btn-primary d-flex align-items-center gap-2"
+              className="create-job-btn"
               onClick={() => {
                 resetForm();
                 setShowFormModal(true);
@@ -669,7 +762,7 @@ const handleEdit = (formId) => {
             </button>
 
             <button
-              className="btn btn-warning"
+              className="help-btn"
               style={{
                 borderRadius: 8,
                 padding: "10px 20px",
@@ -680,6 +773,7 @@ const handleEdit = (formId) => {
             >
               Help
             </button>
+
           </div>
         </div>
 
@@ -756,16 +850,7 @@ const handleEdit = (formId) => {
             </div>
 
             <button
-              className="btn btn-primary"
-              style={{
-                borderRadius: 8,
-                padding: "8px 20px",
-                fontWeight: 500,
-                height: 40,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              className="create-job-btn"
               onClick={() => {}}
             >
               <Icon
@@ -1322,33 +1407,16 @@ const handleEdit = (formId) => {
       {/* Form Creation/Edit Modal */}
 {showFormModal && (
   <div
-    className="modal fade show d-block"
-    tabIndex="-1"
-    style={{
-      backgroundColor: "rgba(0,0,0,0.5)",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1055,
-    }}
+     className="job-modal-overlay"
     onClick={(e) => {
       if (e.target === e.currentTarget) handleCancelForm();
     }}
   >
-    <div className="modal-dialog modal-dialog-centered modal-lg">
-      <div 
-        className="modal-content border-0 shadow-lg rounded-3"
-        style={{
-          maxWidth: "800px",
-          margin: "0 auto",
-          maxHeight: "85vh",
-          overflowY: "auto"
-        }}
-      >
-        <div className="modal-header border-0 p-4 pb-3">
-          <div className="d-flex align-items-center justify-content-between w-100">
+  <div className="job-modal-dialog">
+    <div className="job-modal-content">
+
+      {/* Header */}
+      <div className="job-modal-header">
             <div>
               <h5 className="fw-bold mb-1 d-flex align-items-center gap-2">
                 <Icon icon={editMode ? "heroicons:pencil-square" : "heroicons:document-plus"} style={{ fontSize: 24 }} />
@@ -1377,7 +1445,7 @@ const handleEdit = (formId) => {
                 style={{ fontSize: "18px" }}
               />
             </button>
-          </div>
+
         </div>
 
         {/* Modal Body - Form Content */}
@@ -1463,45 +1531,16 @@ const handleEdit = (formId) => {
                   </h6>
 
 <div className="mb-3">
+  
   {/* Mobile Verification */}
   <div className="form-check mb-3">
     <label
       htmlFor="mobileVerification"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        cursor: "pointer",
-        color: formData.mobileVerification ? "#3B82F6" : "#4B5563",
-        transition: "color 0.3s ease",
-      }}
+      className={`custom-checkbox ${formData.mobileVerification ? 'checked' : ''}`}
     >
-      <div
-        style={{
-          width: "20px",
-          height: "20px",
-          borderRadius: "4px",
-          border: `2px solid ${formData.mobileVerification ? "#3B82F6" : "#9CA3AF"}`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          marginRight: "10px",
-          transition: "all 0.3s ease",
-          background: formData.mobileVerification
-            ? "#3B82F6"
-            : "transparent",
-        }}
-      >
+      <div className="checkbox-box">
         {formData.mobileVerification && (
-          <span
-            style={{
-              color: "white",
-              fontSize: "12px",
-              fontWeight: "bold",
-              lineHeight: 1,
-            }}
-          >
-            ✓
-          </span>
+          <span className="checkmark">✓</span>
         )}
       </div>
       <input
@@ -1513,7 +1552,9 @@ const handleEdit = (formId) => {
         onChange={handleChange}
         style={{ display: "none" }}
       />
-      <span className="fw-semibold">Mobile Verification</span> - <span className="text-success">FREE</span>
+      <span className="checkbox-label">
+        <span className="fw-semibold">Mobile Verification</span> - <span className="text-success">FREE</span>
+      </span>
     </label>
   </div>
 
@@ -1521,41 +1562,11 @@ const handleEdit = (formId) => {
   <div className="form-check mb-3">
     <label
       htmlFor="panVerification"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        cursor: "pointer",
-        color: formData.panVerification ? "#3B82F6" : "#4B5563",
-        transition: "color 0.3s ease",
-      }}
+      className={`custom-checkbox ${formData.panVerification ? 'checked' : ''}`}
     >
-      <div
-        style={{
-          width: "20px",
-          height: "20px",
-          borderRadius: "4px",
-          border: `2px solid ${formData.panVerification ? "#3B82F6" : "#9CA3AF"}`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          marginRight: "10px",
-          transition: "all 0.3s ease",
-          background: formData.panVerification
-            ? "#3B82F6"
-            : "transparent",
-        }}
-      >
+      <div className="checkbox-box">
         {formData.panVerification && (
-          <span
-            style={{
-              color: "white",
-              fontSize: "12px",
-              fontWeight: "bold",
-              lineHeight: 1,
-            }}
-          >
-            ✓
-          </span>
+          <span className="checkmark">✓</span>
         )}
       </div>
       <input
@@ -1567,7 +1578,9 @@ const handleEdit = (formId) => {
         onChange={handleChange}
         style={{ display: "none" }}
       />
-      <span className="fw-semibold">PAN Verification</span> - <span className="text-warning">5 Credits</span>
+      <span className="checkbox-label">
+        <span className="fw-semibold">PAN Verification</span> - <span className="text-warning">5 Credits</span>
+      </span>
     </label>
   </div>
 
@@ -1575,41 +1588,11 @@ const handleEdit = (formId) => {
   <div className="form-check mb-3">
     <label
       htmlFor="bankVerification"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        cursor: "pointer",
-        color: formData.bankVerification ? "#3B82F6" : "#4B5563",
-        transition: "color 0.3s ease",
-      }}
+      className={`custom-checkbox ${formData.bankVerification ? 'checked' : ''}`}
     >
-      <div
-        style={{
-          width: "20px",
-          height: "20px",
-          borderRadius: "4px",
-          border: `2px solid ${formData.bankVerification ? "#3B82F6" : "#9CA3AF"}`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          marginRight: "10px",
-          transition: "all 0.3s ease",
-          background: formData.bankVerification
-            ? "#3B82F6"
-            : "transparent",
-        }}
-      >
+      <div className="checkbox-box">
         {formData.bankVerification && (
-          <span
-            style={{
-              color: "white",
-              fontSize: "12px",
-              fontWeight: "bold",
-              lineHeight: 1,
-            }}
-          >
-            ✓
-          </span>
+          <span className="checkmark">✓</span>
         )}
       </div>
       <input
@@ -1621,7 +1604,9 @@ const handleEdit = (formId) => {
         onChange={handleChange}
         style={{ display: "none" }}
       />
-      <span className="fw-semibold">Bank Verification</span> - <span className="text-warning">5 Credits</span>
+      <span className="checkbox-label">
+        <span className="fw-semibold">Bank Verification</span> - <span className="text-warning">5 Credits</span>
+      </span>
     </label>
   </div>
 
@@ -1629,41 +1614,11 @@ const handleEdit = (formId) => {
   <div className="form-check mb-3">
     <label
       htmlFor="aadhaarVerification"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        cursor: "pointer",
-        color: formData.aadhaarVerification ? "#3B82F6" : "#4B5563",
-        transition: "color 0.3s ease",
-      }}
+      className={`custom-checkbox ${formData.aadhaarVerification ? 'checked' : ''}`}
     >
-      <div
-        style={{
-          width: "20px",
-          height: "20px",
-          borderRadius: "4px",
-          border: `2px solid ${formData.aadhaarVerification ? "#3B82F6" : "#9CA3AF"}`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          marginRight: "10px",
-          transition: "all 0.3s ease",
-          background: formData.aadhaarVerification
-            ? "#3B82F6"
-            : "transparent",
-        }}
-      >
+      <div className="checkbox-box">
         {formData.aadhaarVerification && (
-          <span
-            style={{
-              color: "white",
-              fontSize: "12px",
-              fontWeight: "bold",
-              lineHeight: 1,
-            }}
-          >
-            ✓
-          </span>
+          <span className="checkmark">✓</span>
         )}
       </div>
       <input
@@ -1675,11 +1630,13 @@ const handleEdit = (formId) => {
         onChange={handleChange}
         style={{ display: "none" }}
       />
-      <span className="fw-semibold">Aadhaar Verification</span> - <span className="text-warning">10 Credits</span>
+      <span className="checkbox-label">
+        <span className="fw-semibold">Aadhaar Verification</span> - <span className="text-warning">10 Credits</span>
+      </span>
     </label>
   </div>
-</div>
 
+</div>
                   {/* Credit Balance Summary */}
                   <div className="mt-4 p-3" style={{ background: "#F9FAFB", borderRadius: 8 }}>
                     <div className="d-flex align-items-center justify-content-between">
@@ -1703,13 +1660,13 @@ const handleEdit = (formId) => {
                       </div>
                     </div>
                     
-                    <button
-                      type="button"
-                      className="btn btn-link text-primary text-decoration-none p-0 mt-2 d-inline-block border-0 align-baseline"
+                    <a 
+                      href="#" 
+                      className="text-primary text-decoration-none mt-2 d-inline-block"
                       style={{ fontSize: "0.75rem" }}
                     >
                       Buy Credits
-                    </button>
+                    </a>
                   </div>
                 </div>
               </div>
@@ -1721,31 +1678,20 @@ const handleEdit = (formId) => {
               <div className="d-flex justify-content-end gap-3">
                 <button
                   type="button"
-                  className="btn btn-danger text-light"
+                  className="cancel-btn"
                   onClick={handleCancelForm}
-                  style={{
-                    borderRadius: 8,
-                    padding: "10px 24px",
-                    fontWeight: 500,
-                    fontSize: "0.875rem"
-                  }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-primary"
-                  style={{
-                    borderRadius: 8,
-                    padding: "10px 30px",
-                    fontWeight: 500,
-                    fontSize: "0.875rem"
-                  }}
+                  className="create-job-btn"
                 >
                   Continue
                 </button>
               </div>
             </div>
+            
           </form>
         </div>
       </div>
@@ -1828,87 +1774,55 @@ const handleEdit = (formId) => {
       {/* Help Modal */}
 {showHelp && (
   <div
-    className="modal fade show d-block"
-    tabIndex="-1"
-    style={{
-      backgroundColor: "rgba(0,0,0,0.5)",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1055,
-    }}
+    className="hrms-modal-overlay"
     onClick={(e) => {
       if (e.target === e.currentTarget) setShowHelp(false);
     }}
   >
-    <div className="modal-dialog modal-dialog-centered modal-lg">
-      <div 
-        className="modal-content border-0 shadow-lg rounded-3"
-        style={{
-          maxWidth: "800px", // Increased width to match form modal
-          margin: "0 auto",
-          maxHeight: "90vh",
-          overflowY: "auto"
-        }}
-      >
-        <div className="modal-body p-4">
-          {/* Header */}
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <div className="d-flex align-items-center gap-3">
-              <div
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 12,
-                  background:
-                    "linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Icon
-                  icon="heroicons:question-mark-circle"
-                  style={{
-                    fontSize: 24,
-                    color: "#fff",
-                  }}
-                />
-              </div>
-              <div>
-                <h6
-                  className="fw-bold mb-1"
-                  style={{ color: "#1F2937", fontSize: "1.5rem" }}
-                >
-                  Onboarding Forms Guide
-                </h6>
-                <p
-                  className="text-muted mb-0"
-                  style={{ fontSize: "0.9rem" }}
-                >
-                  Everything you need to know about managing onboarding
-                  forms
-                </p>
-              </div>
-            </div>
+    <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
 
-            <button
-              className="btn btn-light rounded-circle"
-              onClick={() => setShowHelp(false)}
-              style={{
-                width: 40,
-                height: 40,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                border: "1px solid #E5E7EB",
-              }}
-            >
-              <Icon icon="heroicons:x-mark" />
-            </button>
+      {/* HEADER */}
+      <div className="hrms-modal-header">
+        <h5 className="hrms-modal-title d-flex align-items-center">
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 12,
+              background:
+                "linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 12,
+            }}
+          >
+            <Icon
+              icon="heroicons:question-mark-circle"
+              style={{ fontSize: 24, color: "#fff" }}
+            />
           </div>
+
+          <div>
+            <div style={{ fontSize: "1.5rem", fontWeight: 700 }}>
+              Onboarding Forms Guide
+            </div>
+            <div style={{ fontSize: "0.9rem", color: "#6B7280" }}>
+              Everything you need to know about managing onboarding forms
+            </div>
+          </div>
+        </h5>
+
+        <button
+          className="hrms-modal-close"
+          onClick={() => setShowHelp(false)}
+        >
+          ✖
+        </button>
+      </div>
+
+      {/* BODY */}
+      <div className="hrms-modal-body hrms-modal-body-scroll">
 
           {/* Content */}
           <div className="row g-4">
@@ -2281,26 +2195,29 @@ const handleEdit = (formId) => {
               </div>
             </div>
           </div>
-
-          {/* Close Button */}
-          <div className="mt-4 text-center">
-            <button
-              className="btn btn-warning px-4 py-2"
-              onClick={() => setShowHelp(false)}
-              style={{
-                borderRadius: 8,
-                fontWeight: 500,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              <Icon icon="heroicons:check" />
-              Got it, thanks!
-            </button>
-          </div>
-        </div>
+        
       </div>
+
+      {/* FOOTER */}
+      <div className="modal-footer bg-white border-top d-flex justify-content-between">
+        <div></div>
+
+        <button
+          className="btn btn-warning px-4 py-2"
+          onClick={() => setShowHelp(false)}
+          style={{
+            borderRadius: 8,
+            fontWeight: 500,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <Icon icon="heroicons:check" />
+          Got it, thanks!
+        </button>
+      </div>
+
     </div>
   </div>
 )}

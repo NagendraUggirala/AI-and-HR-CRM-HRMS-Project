@@ -1,17 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Users, 
-  Clock, 
-  CheckCircle, 
-  AlertCircle,
-  Eye,
-  ChevronRight,
-  Filter,
-  Search,
-  RefreshCw
-} from 'lucide-react';
+import { Icon } from '@iconify/react/dist/iconify.js';
+import { CheckCircle, AlertCircle, Eye } from 'lucide-react';
 import { BASE_URL } from '../../config/api.config';
+import '../../App.css';
 
 const PipelineOverview = () => {
   const navigate = useNavigate();
@@ -102,225 +94,250 @@ const PipelineOverview = () => {
   const stages = groupCandidatesByStage();
   const filteredCandidates = getFilteredCandidates();
 
-  const StageCard = ({ stage, candidates, color, icon: Icon }) => (
-    <div className="pipeline-stage">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-2">
-          <div className={`p-2 rounded-lg ${color}`}>
-            <Icon className="h-4 w-4 text-white" />
-          </div>
-          <h6 className="font-semibold text-gray-900">{stage}</h6>
-        </div>
-        <span className="text-sm font-medium text-gray-600">{candidates.length}</span>
-      </div>
-      
-      <div className="space-y-2">
-        {candidates.slice(0, 3).map((candidate) => (
-          <div key={candidate.id} className="p-2 bg-gray-50 rounded-lg">
-            <div>
-              <p className="text-sm font-medium text-gray-900">{candidate.name}</p>
-              <p className="text-xs text-gray-500">{candidate.role}</p>
+  const stageIconMap = {
+    Applied: 'heroicons:user-group',
+    Screening: 'heroicons:clock',
+    Interview: 'heroicons:chat-bubble-left-right',
+    Offer: 'heroicons:envelope',
+    Hired: 'heroicons:check-badge',
+    Rejected: 'heroicons:x-circle'
+  };
+
+  const stageBgMap = {
+    Applied: 'kpi-primary',
+    Screening: 'kpi-warning',
+    Interview: 'kpi-info',
+    Offer: 'bg-primary',
+    Hired: 'kpi-success',
+    Rejected: 'bg-danger'
+  };
+
+  const stageColorMap = {
+    Applied: 'kpi-primary-text',
+    Screening: 'kpi-warning-text',
+    Interview: 'kpi-info-text',
+    Offer: 'text-white',
+    Hired: 'kpi-success-text',
+    Rejected: 'text-white'
+  };
+
+  const StageCard = ({ stage, candidates, bgClass }) => (
+    <div className="card border shadow-none h-100">
+      <div className="card-body">
+        <div className="d-flex align-items-center justify-content-between mb-3">
+          <div className="d-flex align-items-center gap-2">
+            <div className={`kpi-icon ${bgClass} rounded-2`} style={{ width: 40, height: 40 }}>
+              <Icon icon={stageIconMap[stage] || 'heroicons:user'} className={`kpi-icon-style ${stageColorMap[stage] || 'kpi-primary-text'}`} style={{ fontSize: 20 }} />
             </div>
+            <h6 className="fw-semibold mb-0 text-dark">{stage}</h6>
           </div>
-        ))}
-        
-        {candidates.length > 3 && (
-          <button
-            onClick={() => {
-              setSelectedStage(stage);
-              navigate('/candidates');
-            }}
-            className="w-full text-xs text-blue-600 hover:text-blue-800 font-medium"
-          >
-            View {candidates.length - 3} more
-          </button>
-        )}
+          <span className="badge bg-secondary">{candidates.length}</span>
+        </div>
+        <div className="d-grid gap-2">
+          {candidates.slice(0, 3).map((candidate) => (
+            <div key={candidate.id} className="p-2 bg-light rounded-2">
+              <p className="small fw-medium mb-0 text-dark">{candidate.name}</p>
+              <p className="small text-muted mb-0">{candidate.role}</p>
+            </div>
+          ))}
+          {candidates.length > 3 && (
+            <button
+              type="button"
+              className="btn btn-link btn-sm p-0 text-primary text-start"
+              onClick={() => { setSelectedStage(stage); navigate('/candidates'); }}
+            >
+              View {candidates.length - 3} more
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="loading-spinner h-8 w-8"></div>
-        <span className="ml-2 text-gray-600">Loading pipeline...</span>
+      <div className="container-fluid py-4">
+        <div className="card border shadow-none">
+          <div className="card-body text-center py-5">
+            <div className="spinner-border text-primary mb-3" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <p className="text-secondary-light mb-0">Loading pipeline...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="alert alert-error">
-        <div className="flex items-center">
-          <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
-          <p className="text-red-800">{error}</p>
+      <div className="container-fluid py-4">
+        <div className="alert alert-danger d-flex align-items-center mb-4" role="alert">
+          <AlertCircle size={20} className="me-2" />
+          <div className="flex-grow-1">{error}</div>
+          <button type="button" className="btn refresh-btn d-inline-flex align-items-center gap-2" onClick={fetchCandidates}>
+            <Icon icon="heroicons:arrow-path" style={{ width: 16, height: 16 }} />
+            Retry
+          </button>
         </div>
-        <button
-          onClick={fetchCandidates}
-          className="btn-primary mt-4"
-        >
-          Retry
-        </button>
       </div>
     );
   }
 
   return (
     <div className="container-fluid py-4">
-      <div className="space-y-6">
-        {/* Page Header */}
-        <div className="mb-4 d-flex justify-content-between align-items-center">
+      {/* Page Header - ref JobList */}
+      <div className="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
-          <h4 className="mb-2 border-gray-300 rounded-lg">Recruitment Pipeline</h4>
-          <p className="text-secondary-light mb-0">Track candidates through each stage</p>
+          <h4 className="fw-bold h4 d-flex align-items-center gap-2 mb-0">
+            <Icon icon="heroicons:view-columns" className="text-black" style={{ fontSize: 28 }} />
+            Recruitment Pipeline
+          </h4>
+          <p className="text-secondary-light mb-0 mt-1">Track candidates through each stage</p>
         </div>
         <button
+          type="button"
+          className="btn refresh-btn d-flex align-items-center gap-2"
           onClick={fetchCandidates}
-          className="btn btn-primary d-flex align-items-center"
         >
-          <RefreshCw className="h-4 w-4 me-2" />
+          <Icon icon="heroicons:arrow-path" style={{ width: 16, height: 16 }} />
           Refresh
         </button>
       </div>
 
-      {/* Search and Filter */}
-      <div className="flex items-center space-x-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search candidates..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-        <select
-          value={selectedStage}
-          onChange={(e) => setSelectedStage(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          <option value="all">All Stages</option>
-          <option value="Applied">Applied</option>
-          <option value="Screening">Screening</option>
-          <option value="Interview">Interview</option>
-          <option value="Offer">Offer</option>
-          <option value="Hired">Hired</option>
-          <option value="Rejected">Rejected</option>
-        </select>
-      </div>
-
-      {/* Pipeline Stages */}
-      <div className="dashboard-grid-3">
-        <StageCard
-          stage="Applied"
-          candidates={stages.Applied}
-          color="bg-blue-500"
-          icon={Users}
-        />
-        <StageCard
-          stage="Screening"
-          candidates={stages.Screening}
-          color="bg-yellow-500"
-          icon={Clock}
-        />
-        <StageCard
-          stage="Interview"
-          candidates={stages.Interview}
-          color="bg-orange-500"
-          icon={Eye}
-        />
-        <StageCard
-          stage="Offer"
-          candidates={stages.Offer}
-          color="bg-purple-500"
-          icon={AlertCircle}
-        />
-        <StageCard
-          stage="Hired"
-          candidates={stages.Hired}
-          color="bg-green-500"
-          icon={CheckCircle}
-        />
-        <StageCard
-          stage="Rejected"
-          candidates={stages.Rejected}
-          color="bg-red-500"
-          icon={AlertCircle}
-        />
-      </div>
-
-      {/* Pipeline Flow */}
-      <div className="dashboard-card">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Pipeline Flow</h2>
-        <div className="flex items-center justify-between">
-          {Object.entries(stages).map(([stage, stageCandidates], index) => (
-            <React.Fragment key={stage}>
-              <div className="text-center">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold mx-auto mb-2 ${
-                  stage === 'Applied' ? 'bg-blue-500' :
-                  stage === 'Screening' ? 'bg-yellow-500' :
-                  stage === 'Interview' ? 'bg-orange-500' :
-                  stage === 'Offer' ? 'bg-purple-500' :
-                  stage === 'Hired' ? 'bg-green-500' : 'bg-red-500'
-                }`}>
-                  {stageCandidates.length}
+      {/* KPI row - ref JobList */}
+      <div className="kpi-row mb-4">
+        {[
+          { title: 'Total Candidates', value: candidates.length, icon: 'heroicons:user-group', bg: 'kpi-primary', color: 'kpi-primary-text' },
+          { title: 'Applied', value: stages.Applied.length, icon: 'heroicons:user-plus', bg: 'kpi-info', color: 'kpi-info-text' },
+          { title: 'In Interview', value: stages.Interview.length, icon: 'heroicons:chat-bubble-left-right', bg: 'kpi-warning', color: 'kpi-warning-text' },
+          { title: 'Hired', value: stages.Hired.length, icon: 'heroicons:check-badge', bg: 'kpi-success', color: 'kpi-success-text' }
+        ].map((item, index) => (
+          <div className="kpi-col" key={index}>
+            <div className="kpi-card">
+              <div className="kpi-card-body">
+                <div className={`kpi-icon ${item.bg}`}>
+                  <Icon icon={item.icon} className={`kpi-icon-style ${item.color}`} />
                 </div>
-                <p className="text-sm font-medium text-gray-900">{stage}</p>
-                <p className="text-xs text-gray-500">{stageCandidates.length} candidates</p>
+                <div className="kpi-content">
+                  <div className="kpi-title">{item.title}</div>
+                  <div className="kpi-value">{item.value}</div>
+                </div>
               </div>
-              {index < Object.keys(stages).length - 1 && (
-                <ChevronRight className="h-5 w-5 text-gray-400 mx-2" />
-              )}
-            </React.Fragment>
-          ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Search and Filter - ref JobList: card */}
+      <div className="card border shadow-none mb-4">
+        <div className="card-body d-flex flex-wrap gap-3 align-items-center">
+          <div className="position-relative flex-fill" style={{ minWidth: '260px' }}>
+            <Icon icon="heroicons:magnifying-glass" className="position-absolute top-50 translate-middle-y text-muted ms-3" style={{ pointerEvents: 'none', fontSize: 18 }} />
+            <input
+              type="text"
+              className="form-control ps-5"
+              placeholder="Search candidates..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <select
+            className="form-select w-auto"
+            value={selectedStage}
+            onChange={(e) => setSelectedStage(e.target.value)}
+          >
+            <option value="all">All Stages</option>
+            <option value="Applied">Applied</option>
+            <option value="Screening">Screening</option>
+            <option value="Interview">Interview</option>
+            <option value="Offer">Offer</option>
+            <option value="Hired">Hired</option>
+            <option value="Rejected">Rejected</option>
+          </select>
         </div>
       </div>
 
-      {/* Candidate List */}
-      {selectedStage !== 'all' && (
-        <div className="dashboard-card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            {selectedStage} Candidates ({filteredCandidates.length})
-          </h2>
-          <div className="space-y-3">
-            {filteredCandidates.map((candidate) => (
-              <div key={candidate.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-blue-600">
-                      {candidate.name.charAt(0)}
-                    </span>
+      {/* Pipeline Stages - cards in grid */}
+      <div className="row g-3 mb-4">
+        {['Applied', 'Screening', 'Interview', 'Offer', 'Hired', 'Rejected'].map((stage) => (
+          <div key={stage} className="col-12 col-sm-6 col-lg-4">
+            <StageCard stage={stage} candidates={stages[stage]} bgClass={stageBgMap[stage] || 'kpi-primary'} />
+          </div>
+        ))}
+      </div>
+
+      {/* Pipeline Flow - card */}
+      <div className="card border shadow-none mb-4">
+        <div className="card-body">
+          <h5 className="fw-semibold mb-4 text-dark">Pipeline Flow</h5>
+          <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            {Object.entries(stages).map(([stage, stageCandidates], index) => (
+              <React.Fragment key={stage}>
+                <div className="text-center">
+                  <div className={`rounded-circle d-inline-flex align-items-center justify-content-center text-white fw-bold mb-2 ${
+                    stage === 'Applied' ? 'bg-primary' : stage === 'Screening' ? 'bg-warning' : stage === 'Interview' ? 'bg-info' :
+                    stage === 'Offer' ? 'bg-primary' : stage === 'Hired' ? 'bg-success' : 'bg-danger'
+                  }`} style={{ width: 48, height: 48 }}>
+                    {stageCandidates.length}
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{candidate.name}</p>
-                    <p className="text-xs text-gray-500">{candidate.role}</p>
-                    <p className="text-xs text-gray-400">{candidate.email}</p>
-                  </div>
+                  <p className="small fw-medium mb-0 text-dark">{stage}</p>
+                  <p className="small text-muted mb-0">{stageCandidates.length} candidates</p>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    candidate.stage === 'Applied' ? 'bg-blue-100 text-blue-800' :
-                    candidate.stage === 'Screening' ? 'bg-yellow-100 text-yellow-800' :
-                    candidate.stage === 'Interview' ? 'bg-orange-100 text-orange-800' :
-                    candidate.stage === 'Offer' ? 'bg-purple-100 text-purple-800' :
-                    candidate.stage === 'Hired' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {candidate.stage}
-                  </span>
-                  <button
-                    onClick={() => navigate(`/candidates/${candidate.id}`)}
-                    className="p-1 text-gray-400 hover:text-gray-600"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
+                {index < Object.keys(stages).length - 1 && (
+                  <Icon icon="heroicons:chevron-right" className="text-muted" style={{ fontSize: 20 }} />
+                )}
+              </React.Fragment>
             ))}
           </div>
         </div>
-      )}
       </div>
+
+      {/* Candidate List - card */}
+      {selectedStage !== 'all' && (
+        <div className="card border shadow-none">
+          <div className="card-body">
+            <h5 className="fw-semibold mb-4 text-dark">
+              {selectedStage} Candidates ({filteredCandidates.length})
+            </h5>
+            <div className="d-grid gap-2">
+              {filteredCandidates.map((candidate) => (
+                <div key={candidate.id} className="d-flex align-items-center justify-content-between p-3 bg-light rounded-3">
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="rounded-circle bg-primary-subtle d-flex align-items-center justify-content-center" style={{ width: 36, height: 36 }}>
+                      <span className="small fw-medium text-primary">{candidate.name?.charAt(0) || '?'}</span>
+                    </div>
+                    <div>
+                      <p className="small fw-medium mb-0 text-dark">{candidate.name}</p>
+                      <p className="small text-muted mb-0">{candidate.role}</p>
+                      <p className="small text-secondary mb-0">{candidate.email}</p>
+                    </div>
+                  </div>
+                  <div className="d-flex align-items-center gap-2">
+                    <span className={`badge ${
+                      candidate.stage === 'Applied' ? 'bg-primary-subtle text-primary' :
+                      candidate.stage === 'Screening' ? 'bg-warning-subtle text-warning' :
+                      candidate.stage === 'Interview' ? 'bg-info-subtle text-info' :
+                      candidate.stage === 'Offer' ? 'bg-primary-subtle text-primary' :
+                      candidate.stage === 'Hired' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'
+                    }`}>
+                      {candidate.stage}
+                    </span>
+                    <button
+                      type="button"
+                      className="job-listings-btn"
+                      title="View"
+                      onClick={() => navigate('/candidates')}
+                    >
+                      <Icon icon="heroicons:eye" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

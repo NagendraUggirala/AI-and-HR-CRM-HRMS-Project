@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { X, Eye, Save, Send, ArrowLeft, MapPin, DollarSign, Building2, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Icon } from '@iconify/react/dist/iconify.js';
+import { X, MapPin, DollarSign, Building2, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { BASE_URL, API_ENDPOINTS } from '../config/api.config';
+import '../App.css';
 
 const CreateJob = () => {
   const navigate = useNavigate();
@@ -367,10 +369,16 @@ const CreateJob = () => {
       <div className='card-body p-24'>
         <div className='mb-12'>
           <h5 className='mb-4'>{formData.title || 'Job Title'}</h5>
-          <div className='d-flex flex-wrap align-items-center gap-3 text-secondary-light text-sm'>
-            <span className='d-inline-flex align-items-center'><Building2 size={16} className='me-1' /> {formData.department || 'Department'}</span>
-            <span className='d-inline-flex align-items-center'><MapPin size={16} className='me-1' /> {formData.isRemote ? 'Remote' : formData.location || 'Location'}</span>
-            <span className='d-inline-flex align-items-center'><Clock size={16} className='me-1' /> {formData.employmentType || 'Employment Type'}</span>
+          <div className='job-preview-meta-cards'>
+            <span className='job-preview-meta-card'>
+              <Building2 size={16} className='icon' /> {formData.department || 'Department'}
+            </span>
+            <span className='job-preview-meta-card'>
+              <MapPin size={16} className='icon' /> {formData.isRemote ? 'Remote' : formData.location || 'Location'}
+            </span>
+            <span className='job-preview-meta-card'>
+              <Clock size={16} className='icon' /> {formData.employmentType || 'Employment Type'}
+            </span>
           </div>
         </div>
 
@@ -435,24 +443,29 @@ const CreateJob = () => {
 
   return (
     <div className='container-fluid py-4'>
-      <div className='mb-12'>
-        <h4 className="fw-bold mb-1 d-flex align-items-center">{isEditMode ? 'Edit Job' : 'Post a New Job'}</h4>
-        <p className='text-secondary-light mb-0'>
-          {isEditMode
-            ? 'Update the job details below and save your changes.'
-            : 'Fill in the details below to publish your job listing.'}
-        </p>
+      {/* Top left: icon + page title (Create Job / Edit Job) */}
+      <div className='mb-2'>
+        <h4 className='fw-bold d-flex align-items-center gap-2 mb-0'>
+          <Icon icon='solar:clipboard-list-outline' className='text-black' style={{ fontSize: 28 }} />
+          {isEditMode ? 'Edit Job' : 'Post a New Job'}
+        </h4>
       </div>
+     
+      <p className='text-secondary-light mb-4'>
+        {isEditMode
+          ? 'Update the job details below and save your changes.'
+          : 'Fill in the details below to publish your job listing.'}
+      </p>
 
       <div className='row g-3'>
         <div className='col-12'>
-          <form className='d-grid gap-3'>
+          <form className='create-job-form d-grid gap-3'>
             <div className='card border shadow-none'>
               <div className='card-body p-24'>
                 <h4 className="fw-semibold fs-3 mb-0 text-dark">Basic Information</h4>
-                <div className='row g-3'>
-                  <div className='col-12'>
-                    <label className='form-label'>Job Title *</label>
+                <div className='row g-3 flex-wrap'>
+                  <div className='col-12 col-lg-8'>
+                    <label className='form-label'>Job Title <span className='text-danger'>*</span></label>
                     <input
                       type='text'
                       value={formData.title}
@@ -465,8 +478,8 @@ const CreateJob = () => {
                     )}
                   </div>
 
-                  <div className="col-12 col-md-6">
-                    <label className="form-label">Department *</label>
+                  <div className='col-12 col-md-6 col-lg-4'>
+                    <label className="form-label">Department <span className='text-danger'>*</span></label>
 
                     {formData.department === 'Other' ? (
                       // 👉 Input field when "Other" is selected
@@ -506,8 +519,8 @@ const CreateJob = () => {
                   </div>
 
 
-                  <div className='col-12 col-md-6'>
-                    <label className='form-label'>Employment Type *</label>
+                  <div className='col-12 col-md-6 col-lg-4'>
+                    <label className='form-label'>Employment Type <span className='text-danger'>*</span></label>
                     <select
                       value={formData.employmentType}
                       onChange={(e) => handleInputChange('employmentType', e.target.value)}
@@ -523,13 +536,14 @@ const CreateJob = () => {
                     )}
                   </div>
 
-                  <div className='col-12'>
-                    <div className='d-flex align-items-center justify-content-between'>
-                      <label className='form-label mb-0'>Location {!formData.isRemote && '*'}</label>
-                      <div className='form-check form-switch'>
-                        <input className='form-check-input' type='checkbox' id='remote' checked={formData.isRemote} onChange={(e) => handleInputChange('isRemote', e.target.checked)} />
-                        <label className='form-check-label' htmlFor='remote'>Remote</label>
-                      </div>
+                  <div className='col-12 col-lg-8'>
+                    <div className='d-flex align-items-center justify-content-between flex-wrap gap-2'>
+                      <label className='form-label mb-0'>Location {!formData.isRemote && <span className='text-danger'>*</span>}</label>
+                      <label className={`custom-checkbox mb-0 ${formData.isRemote ? 'checked' : ''}`} style={{ cursor: 'pointer' }}>
+                        <input type='checkbox' className='d-none' id='remote' checked={formData.isRemote} onChange={(e) => handleInputChange('isRemote', e.target.checked)} />
+                        <span className='checkbox-box'>{formData.isRemote && <span className='checkmark'>✓</span>}</span>
+                        <span className='checkbox-label'>Remote</span>
+                      </label>
                     </div>
                     <input
                       type='text'
@@ -551,18 +565,20 @@ const CreateJob = () => {
               <div className='card-body p-24'>
                 <h4 className="fw-semibold fs-3 mb-0 text-dark">Job Details</h4>
                 <div className='d-grid gap-3'>
-                  <div>
-                    <label className='form-label'>Job Description *</label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) => handleInputChange('description', e.target.value)}
-                      rows={6}
-                      className={`form-control ${errors.description ? 'is-invalid' : ''}`}
-                      placeholder='Describe the role, what the candidate will be doing, and what makes this opportunity exciting...'
-                    />
-                    {errors.description && (
-                      <div className='invalid-feedback d-inline-flex align-items-center'><AlertCircle size={14} className='me-1' /> {errors.description}</div>
-                    )}
+                  <div className='row'>
+                    <div className='col-12 col-lg-10'>
+                      <label className='form-label'>Job Description <span className='text-danger'>*</span></label>
+                      <textarea
+                        value={formData.description}
+                        onChange={(e) => handleInputChange('description', e.target.value)}
+                        rows={6}
+                        className={`form-control ${errors.description ? 'is-invalid' : ''}`}
+                        placeholder='Describe the role, what the candidate will be doing, and what makes this opportunity exciting...'
+                      />
+                      {errors.description && (
+                        <div className='invalid-feedback d-inline-flex align-items-center'><AlertCircle size={14} className='me-1' /> {errors.description}</div>
+                      )}
+                    </div>
                   </div>
 
                   <div>
@@ -594,7 +610,7 @@ const CreateJob = () => {
               <div className='card-body p-24'>
                 <h4 className="fw-semibold fs-3 mb-0 text-dark">Compensation & Benefits</h4>
                 <div className='d-grid gap-3'>
-                  <div className='row g-3'>
+                  <div className='row g-3 flex-wrap'>
                     <div className='col-12 col-md-4'>
                       <label className='form-label'>Currency</label>
                       <select
@@ -631,13 +647,25 @@ const CreateJob = () => {
 
                   <div>
                     <label className='form-label'>Benefits</label>
-                    <div className='row g-2'>
+                    <div className='row g-2 flex-wrap'>
                       {benefitOptions.map((benefit) => (
-                        <div key={benefit} className='col-12 col-md-4'>
-                          <div className='form-check'>
-                            <input className='form-check-input' type='checkbox' checked={formData.benefits.includes(benefit)} onChange={() => handleBenefitToggle(benefit)} id={`benefit-${benefit}`} />
-                            <label className='form-check-label' htmlFor={`benefit-${benefit}`}>{benefit}</label>
-                          </div>
+                        <div key={benefit} className='col-12 col-sm-6 col-md-4'>
+                          <label
+                            className={`custom-checkbox mb-0 py-1 ${formData.benefits.includes(benefit) ? 'checked' : ''}`}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <input
+                              type='checkbox'
+                              className='d-none'
+                              checked={formData.benefits.includes(benefit)}
+                              onChange={() => handleBenefitToggle(benefit)}
+                              id={`benefit-${benefit}`}
+                            />
+                            <span className='checkbox-box'>
+                              {formData.benefits.includes(benefit) && <span className='checkmark'>✓</span>}
+                            </span>
+                            <span className='checkbox-label'>{benefit}</span>
+                          </label>
                         </div>
                       ))}
                     </div>
@@ -675,7 +703,7 @@ const CreateJob = () => {
             <div className='card border shadow-none'>
               <div className='card-body p-24'>
                 <h6 className='mb-16'>Additional Information</h6>
-                <div className='row g-3'>
+                <div className='row g-3 flex-wrap'>
                   <div className='col-12 col-md-6'>
                     <label className='form-label'>Job Expiry Date</label>
                     <input
@@ -717,49 +745,63 @@ const CreateJob = () => {
               </div>
             </div>
 
-            <div className='d-flex flex-column flex-sm-row gap-2 justify-content-between pt-2'>
-              <Link to='/jobslist' className='btn btn-link d-inline-flex align-items-center p-0'>
-                <ArrowLeft size={14} className='me-2' /> Back to Jobs
+            {/* Action row: Back to Jobs (left) + Save as Draft, Preview, Publish Job (right) - below Attachments */}
+            <div className='d-flex flex-wrap align-items-center justify-content-between gap-3 pt-2'>
+              <Link to='/jobslist' className='back-to-jobs-link'>
+                <Icon icon='heroicons:arrow-left' style={{ width: 18, height: 18 }} />
+                Back to Jobs
               </Link>
-              <div className='d-flex gap-2'>
+              <div className='d-flex flex-wrap gap-2'>
                 <button
                   type='button'
                   onClick={() => handleSubmit(true)}
-                  className='btn btn-outline-secondary d-inline-flex align-items-center'
+                  className='create-job-draft-btn'
                   disabled={isSubmitting}
                 >
-                  <Save size={14} className='me-2' /> {isSubmitting ? 'Saving...' : (isEditMode ? 'Save as Draft' : 'Save as Draft')}
+                  <Icon icon='heroicons:document' style={{ width: 16, height: 16 }} />
+                  {isSubmitting ? 'Saving...' : (isEditMode ? 'Save as Draft' : 'Save as Draft')}
                 </button>
-                <button type='button' onClick={() => setShowPreview(true)} className='btn btn-outline-primary d-inline-flex align-items-center' disabled={isSubmitting}>
-                  <Eye size={14} className='me-2' /> Preview
+                <button
+                  type='button'
+                  onClick={() => setShowPreview(true)}
+                  className='create-job-preview-btn'
+                  disabled={isSubmitting}
+                >
+                  <Icon icon='heroicons:eye' style={{ width: 16, height: 16 }} />
+                  Preview
                 </button>
                 <button
                   type='button'
                   onClick={() => handleSubmit(false)}
-                  className='btn btn-primary d-inline-flex align-items-center'
+                  className='create-job-submit-btn'
                   disabled={isSubmitting}
                 >
-                  <Send size={14} className='me-2' /> {isSubmitting ? (isEditMode ? 'Updating...' : 'Publishing...') : (isEditMode ? 'Update Job' : 'Publish Job')}
+                  <Icon icon='heroicons:paper-airplane' style={{ width: 16, height: 16 }} />
+                  {isSubmitting ? (isEditMode ? 'Updating...' : 'Publishing...') : (isEditMode ? 'Update Job' : 'Publish Job')}
                 </button>
               </div>
-              {serverError && (
-                <div className='mt-3'>
-                  <div className='alert alert-danger d-inline-flex align-items-center' role='alert'>{serverError}</div>
-                </div>
-              )}
             </div>
+
+            {serverError && (
+              <div className='pt-2'>
+                <div className='alert alert-danger d-flex align-items-center' role='alert'>
+                  <AlertCircle size={18} className='me-2' /> {serverError}
+                </div>
+              </div>
+            )}
           </form>
         </div>
       </div>
 
       {showPreview && (
         <>
-          <div className='modal d-block' tabIndex='-1' role='dialog'>
-            <div className='modal-dialog modal-xl modal-dialog-centered' role='document'>
-              <div className='modal-content '>
+          <div className='modal-backdrop fade show' style={{ zIndex: 1045 }} />
+          <div className='create-job-preview-modal-overlay' tabIndex='-1' role='dialog' onClick={() => setShowPreview(false)}>
+            <div className='modal-dialog modal-xl' role='document' onClick={e => e.stopPropagation()}>
+              <div className='modal-content'>
                 <div className='modal-header'>
                   <h6 className='modal-title mb-0'>Job Preview</h6>
-                  <button type='button' className='btn-close' aria-label='Close' onClick={() => setShowPreview(false)}></button>
+                  <button type='button' className='btn-close' aria-label='Close' onClick={() => setShowPreview(false)} />
                 </div>
                 <div className='modal-body'>
                   <JobPreview />
@@ -767,7 +809,6 @@ const CreateJob = () => {
               </div>
             </div>
           </div>
-          <div className='modal-backdrop fade show'></div>
         </>
       )}
 

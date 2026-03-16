@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Download, Printer, Plus, Edit, Eye, Calendar, Trash2, RefreshCw, AlertCircle } from 'lucide-react';
+import { Icon } from '@iconify/react/dist/iconify.js';
+import { Filter, Download, AlertCircle } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { BASE_URL, API_ENDPOINTS } from '../config/api.config';
+import '../App.css';
 
 const formatDisplayDate = (value) => {
   if (!value) return 'Not specified';
@@ -554,18 +556,21 @@ const JobsListPage = () => {
 
   return (
     <div className="container-fluid py-4">
-      {/* Page Header */}
+      {/* Page Header - same icon as sidebar Jobs (RecruiterDashboardLayout) */}
       <div className="mb-4 d-flex justify-content-between align-items-center">
         <div>
-          <h4 className="fw-bold h4 h2-md">Jobs List</h4>
-          <p className="text-secondary-light mb-0">View, edit, and manage all active and archived job postings.</p>
+          <h4 className="fw-bold h4 h2-md d-flex align-items-center gap-2 mb-0">
+            <Icon icon="solar:clipboard-list-outline" className="text-black" style={{ fontSize: 28 }} />
+            Jobs List
+          </h4>
+          <p className="text-secondary-light mb-0 mt-1">View, edit, and manage all active and archived job postings.</p>
         </div>
         <button
-          className="btn btn-primary d-flex align-items-center gap-2"
+          className="btn refresh-btn d-flex align-items-center gap-2"
           onClick={fetchJobs}
           disabled={refreshing}
         >
-          <RefreshCw size={16} className={refreshing ? 'spin' : ''} />
+          <Icon icon="heroicons:arrow-path" className={refreshing ? 'spin' : ''} style={{ width: 16, height: 16 }} />
           {refreshing ? 'Refreshing...' : 'Refresh'}
         </button>
       </div>
@@ -592,10 +597,10 @@ const JobsListPage = () => {
             <h5 className="mb-2">No Jobs Found</h5>
             <p className="text-secondary-light mb-3">You haven't created any jobs yet. Start by posting your first job!</p>
             <button
-              className="btn btn-primary d-inline-flex align-items-center gap-2"
+              className="create-job-btn d-inline-flex align-items-center gap-2"
               onClick={() => navigate('/jobs/new')}
             >
-              <Plus size={16} />
+              <Icon icon="heroicons:plus" style={{ width: 16, height: 16 }} />
               Create New Job
             </button>
           </div>
@@ -607,36 +612,36 @@ const JobsListPage = () => {
       {/* Jobs Content - Only show if not loading and has jobs */}
       {!loading && jobsData.length > 0 && (
         <>
-          {/* KPI Summary */}
-          <div className="card border shadow-none mb-4">
-            <div className="card-body d-flex">
-              <div className="text-center w-25">
-                <div className="text-secondary-light small">Total Jobs Posted</div>
-                <div className="h4 mb-0">{kpis.totalJobs}</div>
+          {/* KPI Summary - App.css kpi-card style (ref: AllEmployees) */}
+          <div className="kpi-row mb-4">
+            {[
+              { title: 'Total Jobs Posted', value: kpis.totalJobs, icon: 'heroicons:briefcase', bg: 'kpi-primary', color: 'kpi-primary-text' },
+              { title: 'Active Jobs', value: kpis.openJobs, icon: 'heroicons:check-circle', bg: 'kpi-success', color: 'kpi-success-text' },
+              { title: 'Draft Jobs', value: kpis.draftJobs, icon: 'heroicons:document-text', bg: 'kpi-warning', color: 'kpi-warning-text' },
+              { title: 'Closed Jobs', value: kpis.closedJobs, icon: 'heroicons:x-circle', bg: 'kpi-info', color: 'kpi-info-text' }
+            ].map((item, index) => (
+              <div className="kpi-col" key={index}>
+                <div className="kpi-card">
+                  <div className="kpi-card-body">
+                    <div className={`kpi-icon ${item.bg}`}>
+                      <Icon icon={item.icon} className={`kpi-icon-style ${item.color}`} />
+                    </div>
+                    <div className="kpi-content">
+                      <div className="kpi-title">{item.title}</div>
+                      <div className="kpi-value">{item.value}</div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="text-center w-25 border-start ps-4">
-                <div className="text-secondary-light small">Active Jobs</div>
-                <div className="h4 mb-0 text-success">{kpis.openJobs}</div>
-              </div>
-              <div className="text-center w-25 border-start ps-4">
-                <div className="text-secondary-light small">Draft Jobs</div>
-                <div className="h4 mb-0 text-warning">{kpis.draftJobs}</div>
-              </div>
-              <div className="text-center w-25 border-start ps-4">
-                <div className="text-secondary-light small">Closed Jobs</div>
-                <div className="h4 mb-0 text-danger">{kpis.closedJobs}</div>
-              </div>
-            </div>
+            ))}
           </div>
 
-          {/* Filters */}
+          {/* Filters - card from App.css */}
           <div className="card border shadow-none mb-4">
-            <div className="card-body d-flex gap-3 align-items-center">
-              <div className="flex-grow-1">
-                <div className="input-group">
-                  <span className="input-group-text bg-white border-end-0"><Search size={16} /></span>
-                  <input className="form-control border-start-0" placeholder="Search jobs..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-                </div>
+            <div className="card-body d-flex flex-wrap gap-3 align-items-center">
+              <div className="position-relative flex-fill" style={{ minWidth: '260px' }}>
+                <Icon icon="heroicons:magnifying-glass" className="position-absolute top-50 translate-middle-y text-muted ms-3" style={{ pointerEvents: 'none', fontSize: 18 }} />
+                <input className="form-control ps-5" placeholder="Search jobs..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
               </div>
 
               <select className="form-select w-auto" value={departmentFilter} onChange={e => setDepartmentFilter(e.target.value)}>
@@ -669,8 +674,8 @@ const JobsListPage = () => {
               </select>
 
               <div className="d-flex gap-2">
-                <button className="btn btn-success d-inline-flex align-items-center gap-2" onClick={handleExport}>
-                  <Download size={16} />
+                <button className="sync-btn d-inline-flex align-items-center gap-2" onClick={handleExport}>
+                  <Icon icon="heroicons:document-arrow-down" style={{ width: 16, height: 16 }} />
                   <span>Export</span>
                 </button>
               </div>
@@ -716,12 +721,17 @@ const JobsListPage = () => {
                 <thead className="table-light">
                   <tr>
                     <th style={{ width: 40 }} className="text-center">
-                      <input
-                        type="checkbox"
-                        className="form-check-input"
-                        checked={selectedJobs.length === currentJobs.length && currentJobs.length > 0}
-                        onChange={handleSelectAll}
-                      />
+                      <label className={`custom-checkbox mb-0 d-inline-flex align-items-center justify-content-center ${selectedJobs.length === currentJobs.length && currentJobs.length > 0 ? 'checked' : ''}`} style={{ cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          className="d-none"
+                          checked={selectedJobs.length === currentJobs.length && currentJobs.length > 0}
+                          onChange={handleSelectAll}
+                        />
+                        <span className="checkbox-box">
+                          {selectedJobs.length === currentJobs.length && currentJobs.length > 0 && <span className="checkmark">✓</span>}
+                        </span>
+                      </label>
                     </th>
                     <th className="text-start">JOB TITLE</th>
                     <th className="text-start">DEPARTMENT</th>
@@ -736,12 +746,17 @@ const JobsListPage = () => {
                   {currentJobs.map(job => (
                     <tr key={job.id}>
                       <td className="text-center">
-                        <input
-                          type="checkbox"
-                          className="form-check-input"
-                          checked={selectedJobs.includes(job.id)}
-                          onChange={(e) => handleSelectJob(job.id, e)}
-                        />
+                        <label className={`custom-checkbox mb-0 d-inline-flex align-items-center justify-content-center ${selectedJobs.includes(job.id) ? 'checked' : ''}`} style={{ cursor: 'pointer' }} onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            className="d-none"
+                            checked={selectedJobs.includes(job.id)}
+                            onChange={(e) => handleSelectJob(job.id, e)}
+                          />
+                          <span className="checkbox-box">
+                            {selectedJobs.includes(job.id) && <span className="checkmark">✓</span>}
+                          </span>
+                        </label>
                       </td>
                       <td className="fw-medium">{job.title}</td>
                       <td className="text-muted">{job.department}</td>
@@ -763,28 +778,28 @@ const JobsListPage = () => {
                       <td className="text-center">
                         <div className="d-flex gap-2 justify-content-center">
                           <button
-                            type='button'
-                            className='w-32-px h-32-px d-inline-flex justify-content-center align-items-center bg-primary-100 text-primary-600 bg-hover-primary-600 text-hover-white text-md rounded-circle border-0'
+                            type="button"
+                            className="job-listings-btn"
                             onClick={() => handleView(job.id)}
-                            title='View'
+                            title="View"
                           >
-                            <i className='ri-eye-line' />
+                            <Icon icon="heroicons:eye" />
                           </button>
                           <button
-                            type='button'
-                            className='w-32-px h-32-px d-inline-flex justify-content-center align-items-center bg-warning-100 text-warning-600 bg-hover-warning-600 text-hover-white text-md rounded-circle border-0'
+                            type="button"
+                            className="btn btn-sm btn-outline-warning d-flex align-items-center gap-1"
                             onClick={() => handleEdit(job.id)}
-                            title='Edit'
+                            title="Edit"
                           >
-                            <i className='ri-edit-line' />
+                            <Icon icon="heroicons:pencil-square" />
                           </button>
                           <button
-                            type='button'
-                            className='w-32-px h-32-px d-inline-flex justify-content-center align-items-center bg-danger-100 text-danger-600 bg-hover-danger-600 text-hover-white text-md rounded-circle border-0'
+                            type="button"
+                            className="delete-btn d-inline-flex align-items-center justify-content-center"
                             onClick={() => handleDelete(job.id)}
-                            title='Delete'
+                            title="Delete"
                           >
-                            <i className='ri-delete-bin-5-line' />
+                            <Icon icon="heroicons:trash" className="icon" style={{ fontSize: 16 }} />
                           </button>
                         </div>
                       </td>
@@ -847,73 +862,62 @@ const JobsListPage = () => {
             </div>
           </div>
 
-          {/* Custom Delete Confirmation Modal */}
+          {/* Delete Confirmation Modal - App.css hrms-modal (ref: AllEmployees) */}
           {showDeleteModal && (
-            <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
-              <div className="modal-dialog modal-dialog-centered">
-                <div className="modal-content">
-                  <div className="modal-header align-items-center">
-                    <h5 className="modal-title">Confirm Delete</h5>
-                    <button type="button" className="btn-close" onClick={cancelDelete}></button>
-                  </div>
-                  <div className="modal-body">
-                    <p>Are you sure you want to delete this job posting?</p>
-                    <p className="text-muted small">This action cannot be undone and the job will be permanently removed from the list.</p>
-                  </div>
-                  <div className="modal-footer">
-                    <button type="button" className="btn btn-secondary" onClick={cancelDelete}>
-                      Cancel
-                    </button>
-                    <button type="button" className="btn btn-danger" onClick={confirmDelete}>
-                      Delete Job
-                    </button>
-                  </div>
+            <div className="hrms-modal-overlay">
+              <div className="hrms-modal hrms-modal-sm">
+                <div className="hrms-modal-header">
+                  <h5 className="d-flex align-items-center gap-2">
+                    <Icon icon="heroicons:trash" />
+                    Confirm Delete
+                  </h5>
+                  <button type="button" className="hrms-modal-close" onClick={cancelDelete} aria-label="Close">&times;</button>
+                </div>
+                <div className="hrms-modal-body">
+                  <p className="mb-0">Are you sure you want to delete this job posting?</p>
+                  <p className="text-muted small mt-2 mb-0">This action cannot be undone and the job will be permanently removed from the list.</p>
+                </div>
+                <div className="hrms-modal-footer">
+                  <button type="button" className="close-btn" onClick={cancelDelete}>Cancel</button>
+                  <button type="button" className="cancel-btn" onClick={confirmDelete}>Delete Job</button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Job Detail Modal */}
+          {/* Job Detail Modal - App.css job-modal-* (ref: AllEmployees) */}
           {showJobDetailModal && selectedJob && (
-            <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }} tabIndex="-1">
-              <div
-                className="modal-dialog modal-dialog-centered"
-               
-              >
-
-                <div className="modal-content" >
-                  <div className="modal-header align-items-center" style={{backgroundColor:"white", width:"35vw"}}>
+            <div className="job-modal-overlay" onClick={() => setShowJobDetailModal(false)}>
+              <div className="job-modal-dialog" onClick={e => e.stopPropagation()}>
+                <div className="job-modal-content" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+                  <div className="job-modal-header">
                     <div>
-                      <p className="text-uppercase text-muted small mb-1">Job Details</p>
-                      <h5 className="modal-title mb-0">{selectedJob.fullData?.title || selectedJob.title}</h5>
+                      <p className="job-modal-subtitle">Job Details</p>
+                      <h5 className="job-modal-title">{selectedJob.fullData?.title || selectedJob.title}</h5>
                     </div>
-                    <button type="button" className="btn-close" onClick={() => setShowJobDetailModal(false)}></button>
+                    <button type="button" className="job-modal-close" onClick={() => setShowJobDetailModal(false)} aria-label="Close">&times;</button>
                   </div>
-                  <div className="modal-body" style={{backgroundColor:"white", width:"35vw"}}>
-                    <div className="mb-4 pb-3 border-bottom">
-                      <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
+                  <div className="job-modal-body job-preview-modal-wrapper">
+                    <div className="job-section">
+                      <div className="job-badges mb-2">
                         <span className={`badge ${modalStatusClass}`}>{selectedJob.status || 'Status not set'}</span>
-                        <span className="badge bg-primary-subtle text-primary">
-                          {selectedJob.fullData?.department || selectedJob.department || 'Department not specified'}
-                        </span>
+                        <span className="job-badge primary">{selectedJob.fullData?.department || selectedJob.department || 'Department not specified'}</span>
                         {selectedJob.fullData?.employment_type && (
-                          <span className="badge bg-secondary-subtle text-secondary">
-                            {selectedJob.fullData.employment_type}
-                          </span>
+                          <span className="job-badge secondary">{selectedJob.fullData.employment_type}</span>
                         )}
                       </div>
-                      <div className="text-muted small d-flex flex-wrap gap-3">
-                        <span>
-                          <i className="bi bi-geo-alt me-1"></i>
+                      <div className="job-meta">
+                        <span className="d-flex align-items-center gap-1">
+                          <Icon icon="heroicons:map-pin" style={{ fontSize: 14 }} />
                           {selectedJob.fullData?.location || 'Location not specified'}
                         </span>
-                        <span>
-                          <i className="bi bi-calendar me-1"></i>
+                        <span className="d-flex align-items-center gap-1">
+                          <Icon icon="heroicons:calendar" style={{ fontSize: 14 }} />
                           {formatDisplayDate(selectedJob.fullData?.posting_date || selectedJob.postedOn)}
                         </span>
                         {selectedJob.fullData?.experience_level && (
-                          <span>
-                            <i className="bi bi-briefcase me-1"></i>
+                          <span className="d-flex align-items-center gap-1">
+                            <Icon icon="heroicons:briefcase" style={{ fontSize: 14 }} />
                             {selectedJob.fullData.experience_level}
                           </span>
                         )}
@@ -921,64 +925,56 @@ const JobsListPage = () => {
                     </div>
 
                     {jobInfoCards.length > 0 && (
-                      <div className="row g-3 mb-4">
+                      <div className="job-info-grid">
                         {jobInfoCards.map(({ label, value }) => (
-                          <div className="col-md-4" key={label}>
-                            <div className="border rounded-3 p-3 h-100">
-                              <p className="text-muted text-uppercase small mb-1">{label}</p>
-                              <p className="fw-semibold mb-0">{value}</p>
-                            </div>
+                          <div className="job-info-card" key={label}>
+                            <p className="job-info-label">{label}</p>
+                            <p className="job-info-value mb-0">{value}</p>
                           </div>
                         ))}
                       </div>
                     )}
 
-                    <div className="mb-4">
-                      <h6 className="text-uppercase text-muted small mb-2">Job Summary</h6>
+                    <div className="job-section">
+                      <h6 className="job-section-title">Job Summary</h6>
                       <p className="mb-0 text-secondary">{jobDescription}</p>
                     </div>
 
                     {responsibilityList.length > 0 && (
-                      <div className="mb-4">
-                        <h6 className="text-uppercase text-muted small mb-2">Key Responsibilities</h6>
+                      <div className="job-section">
+                        <h6 className="job-section-title">Key Responsibilities</h6>
                         <ul className="ps-3 mb-0">
                           {responsibilityList.map((item, idx) => (
-                            <li key={`resp-${idx}`} className="mb-1">
-                              {item}
-                            </li>
+                            <li key={`resp-${idx}`} className="mb-1">{item}</li>
                           ))}
                         </ul>
                       </div>
                     )}
 
                     {requirementList.length > 0 && (
-                      <div className="mb-4">
-                        <h6 className="text-uppercase text-muted small mb-2">Requirements</h6>
+                      <div className="job-section">
+                        <h6 className="job-section-title">Requirements</h6>
                         <ul className="ps-3 mb-0">
                           {requirementList.map((item, idx) => (
-                            <li key={`req-${idx}`} className="mb-1">
-                              {item}
-                            </li>
+                            <li key={`req-${idx}`} className="mb-1">{item}</li>
                           ))}
                         </ul>
                       </div>
                     )}
 
                     {skillsList.length > 0 && (
-                      <div className="mb-2">
-                        <h6 className="text-uppercase text-muted small mb-2">Skills</h6>
-                        <div className="d-flex flex-wrap gap-2">
+                      <div className="job-section">
+                        <h6 className="job-section-title">Skills</h6>
+                        <div className="job-skills">
                           {skillsList.map((skill, idx) => (
-                            <span key={`skill-${idx}`} className="badge bg-light text-dark px-3 py-2">
-                              {skill}
-                            </span>
+                            <span key={`skill-${idx}`} className="job-skill">{skill}</span>
                           ))}
                         </div>
                       </div>
                     )}
                   </div>
-                  <div className="modal-footer" style={{backgroundColor:"white", width:"35vw"}}>
-                    <button type="button" className="btn btn-secondary" onClick={() => setShowJobDetailModal(false)}>
+                  <div className="job-modal-footer">
+                    <button type="button" className="job-btn-secondary" onClick={() => setShowJobDetailModal(false)}>
                       Close
                     </button>
                   </div>
@@ -987,29 +983,19 @@ const JobsListPage = () => {
             </div>
           )}
 
-          {/* Test Modal - Remove this later */}
-          {showEditModal && (
-            <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px' }}>
-                <h3>Test Modal - Edit Job</h3>
-                <p>This is a test modal to see if modals work</p>
-                <button onClick={() => setShowEditModal(false)}>Close</button>
-              </div>
-            </div>
-          )}
-
-          {/* Edit Job Modal */}
-          {console.log('Modal state:', { showEditModal, editingJob })}
+          {/* Edit Job Modal - App.css hrms-modal (ref: AllEmployees) */}
           {showEditModal && editingJob && (
-            <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }} tabIndex="-1">
-              <div className="modal-dialog modal-lg modal-dialog-centered">
-                <div className="modal-content">
-                  <div className="modal-header">
-                    <h5 className="modal-title">Edit Job Details</h5>
-                    <button type="button" className="btn-close" onClick={handleCancelEdit}></button>
-                  </div>
-                  <div className="modal-body">
-                    <form>
+            <div className="hrms-modal-overlay">
+              <div className="hrms-modal hrms-modal-lg">
+                <div className="hrms-modal-header">
+                  <h5 className="d-flex align-items-center gap-2">
+                    <Icon icon="heroicons:pencil-square" />
+                    Edit Job Details
+                  </h5>
+                  <button type="button" className="hrms-modal-close" onClick={handleCancelEdit} aria-label="Close">&times;</button>
+                </div>
+                <div className="hrms-modal-body">
+                  <form>
                       <div className="row mb-3">
                         <div className="col-md-6">
                           <label className="form-label">Job Title</label>
@@ -1131,16 +1117,16 @@ const JobsListPage = () => {
                           />
                         </div>
                       </div>
-                    </form>
-                  </div>
-                  <div className="modal-footer">
-                    <button type="button" className="btn btn-secondary" onClick={handleCancelEdit}>
-                      Cancel
-                    </button>
-                    <button type="button" className="btn btn-primary" onClick={handleSaveEdit}>
-                      Save Changes
-                    </button>
-                  </div>
+                  </form>
+                </div>
+                <div className="hrms-modal-footer">
+                  <button type="button" className="close-btn" onClick={handleCancelEdit}>
+                    Cancel
+                  </button>
+                  <button type="button" className="save-template-btn d-inline-flex align-items-center gap-2" onClick={handleSaveEdit}>
+                    <Icon icon="heroicons:check" style={{ width: 16, height: 16 }} />
+                    Save Changes
+                  </button>
                 </div>
               </div>
             </div>

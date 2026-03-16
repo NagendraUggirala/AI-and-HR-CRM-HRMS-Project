@@ -469,84 +469,149 @@ export default function RecruiterPerformance() {
 
   return (
     <div className="container-fluid py-4">
-      {/* Page Header */}
-      <div className="mb-4 d-flex justify-content-between align-items-center">
+      {/* Page Header - aligned like JobList/CreateJob */}
+      <div className="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
-          <h4 className="mb-2">Recruiter Performance</h4>
-          <p className="text-secondary-light mb-0">Track performance and efficiency of recruiters.</p>
+          <h4 className="fw-bold h4 d-flex align-items-center gap-2 mb-0">
+            <Users className="text-black" size={24} />
+            Recruiter Performance
+          </h4>
+          <p className="text-secondary mb-0 mt-1">
+            Track performance and efficiency of recruiters.
+          </p>
         </div>
-        <button
-          onClick={fetchData}
-          className="btn btn-primary d-flex align-items-center"
-          disabled={refreshing}
-        >
-          {refreshing ? (
-            <RefreshCw className="h-4 w-4 animate-spin" />
-          ) : (
-            <>
-              <RefreshCw className="h-4 w-4 me-2" />
-              Refresh
-            </>
-          )}
-        </button>
-      </div>
-
-      {/* KPI Summary */}
-      <div className="card border shadow-none mb-4">
-        <div className="card-body d-flex">
-          <div className="text-center w-25">
-            <div className="text-secondary-light small">Active Jobs</div>
-            <div className="h4 mb-0">{totalMetrics.activeJobs}</div>
-          </div>
-          <div className="text-center w-25 border-start ps-4">
-            <div className="text-secondary-light small">Avg. Time-to-Hire</div>
-            <div className="h4 mb-0 text-primary">{totalMetrics.avgTimeToHire} days</div>
-          </div>
-          <div className="text-center w-25 border-start ps-4">
-            <div className="text-secondary-light small">Applications This Week</div>
-            <div className="h4 mb-0 text-success">{totalMetrics.applicationsThisWeek}</div>
-          </div>
-          <div className="text-center w-25 border-start ps-4">
-            <div className="text-secondary-light small">Total Hires</div>
-            <div className="h4 mb-0 text-danger">{totalMetrics.totalHires}</div>
-          </div>
+        <div className="d-flex flex-column align-items-end gap-2">
+          <span className="text-muted small">
+            Last updated:{' '}
+            <span className="fw-medium text-body">
+              {new Date().toLocaleDateString()}
+            </span>
+          </span>
+          <button
+            onClick={fetchData}
+            className="btn refresh-btn d-inline-flex align-items-center gap-2"
+            disabled={refreshing}
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
         </div>
       </div>
 
-      {/* Filters */}
+      {/* KPI Summary - kpi-row layout like JobList */}
+      <div className="kpi-row mb-4">
+        {[
+          {
+            title: 'Active Jobs',
+            value: totalMetrics.activeJobs,
+            sub: 'Open or active',
+            icon: Target,
+            bg: 'kpi-primary',
+            color: 'kpi-primary-text'
+          },
+          {
+            title: 'Avg. Time-to-Hire',
+            value: `${totalMetrics.avgTimeToHire} days`,
+            sub: 'Across selected range',
+            icon: Timer,
+            bg: 'kpi-info',
+            color: 'kpi-info-text'
+          },
+          {
+            title: 'Applications This Week',
+            value: totalMetrics.applicationsThisWeek,
+            sub: 'Last 7 days',
+            icon: CalendarCheck,
+            bg: 'kpi-success',
+            color: 'kpi-success-text'
+          },
+          {
+            title: 'Total Hires',
+            value: totalMetrics.totalHires,
+            sub: 'In current view',
+            icon: Trophy,
+            bg: 'kpi-warning',
+            color: 'kpi-warning-text'
+          }
+        ].map((item, index) => {
+          const IconComp = item.icon;
+          return (
+            <div className="kpi-col" key={index}>
+              <div className="kpi-card">
+                <div className="kpi-card-body">
+                  <div className={`kpi-icon ${item.bg}`}>
+                    <IconComp className={`kpi-icon-style ${item.color}`} size={18} />
+                  </div>
+                  <div className="kpi-content">
+                    <div className="kpi-title">{item.title}</div>
+                    <div className="kpi-value">{item.value}</div>
+                    {item.sub && <div className="kpi-sub text-muted">{item.sub}</div>}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Filters - structured like JobList filters */}
       <div className="card border shadow-none mb-4">
-        <div className="card-body p-24">
-          <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
-            <Filter className="text-secondary-light" />
-            <span className="fw-medium">Filters:</span>
-          </div>
-          <div className="row g-2 align-items-center">
-            <div className="col-12 col-md-3">
-              <select value={dateRange} onChange={(e) => setDateRange(e.target.value)} className="form-select">
+        <div className="card-header bg-transparent border-bottom py-3">
+          <h6 className="fw-semibold mb-0 d-flex align-items-center gap-2">
+            <Filter className="text-secondary-light" size={16} />
+            Filters
+          </h6>
+        </div>
+        <div className="card-body">
+          <div className="row g-3 align-items-end">
+            <div className="col-12 col-md-4 col-lg-3">
+              <label className="form-label small text-muted mb-1">Date range</label>
+              <select
+                value={dateRange}
+                onChange={(e) => setDateRange(e.target.value)}
+                className="form-select"
+              >
                 <option value="7">Last 7 days</option>
                 <option value="30">Last 30 days</option>
                 <option value="90">Last 90 days</option>
                 <option value="180">Last 6 months</option>
               </select>
             </div>
-            <div className="col-12 col-md-3">
-              <select value={selectedRecruiter} onChange={(e) => setSelectedRecruiter(e.target.value)} className="form-select">
+            <div className="col-12 col-md-4 col-lg-3">
+              <label className="form-label small text-muted mb-1">Recruiter</label>
+              <select
+                value={selectedRecruiter}
+                onChange={(e) => setSelectedRecruiter(e.target.value)}
+                className="form-select"
+              >
                 <option value="all">All Recruiters</option>
-                {recruiterPerformanceData.map(recruiter => (
-                  <option key={recruiter.id} value={recruiter.id}>{recruiter.name}</option>
+                {recruiterPerformanceData.map((recruiter) => (
+                  <option key={recruiter.id} value={recruiter.id}>
+                    {recruiter.name}
+                  </option>
                 ))}
               </select>
             </div>
-            <div className="col-12 col-md-3">
-              <select value={jobRole} onChange={(e) => setJobRole(e.target.value)} className="form-select">
+            <div className="col-12 col-md-4 col-lg-3">
+              <label className="form-label small text-muted mb-1">Job role</label>
+              <select
+                value={jobRole}
+                onChange={(e) => setJobRole(e.target.value)}
+                className="form-select"
+              >
                 <option value="all">All Job Roles</option>
-                {uniqueJobRoles.map(role => (
-                  <option key={role} value={role}>{role}</option>
+                {uniqueJobRoles.map((role) => (
+                  <option key={role} value={role}>
+                    {role}
+                  </option>
                 ))}
               </select>
             </div>
-            <div className="col-12 col-md-3 d-flex justify-content-md-end">
-              <button className="btn btn-primary d-inline-flex align-items-center gap-2" onClick={exportReport}>
+            <div className="col-12 col-lg-3 d-flex justify-content-lg-end">
+              <button
+                className="sync-btn d-inline-flex align-items-center gap-2 w-100 w-lg-auto justify-content-center"
+                onClick={exportReport}
+              >
                 <Download size={16} />
                 <span>Export Report</span>
               </button>

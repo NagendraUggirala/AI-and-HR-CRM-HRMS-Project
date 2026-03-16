@@ -2065,130 +2065,72 @@ const loadDocumentRequests = () => {
           </div>
         </div>
       </div>
-      {/* Statistics Cards */}
-      <div className="row g-3 mb-4">
-        <div className="col-6 col-md-3">
-          <div
-            className="card border-0 shadow-sm h-100"
-            style={{
-              borderRadius: 12,
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            }}
-          >
-            <div
-              className="card-body text-center text-white"
-              style={{ padding: "20px" }}
-            >
-              <div
-                style={{
-                  fontSize: 13,
-                  fontWeight: 500,
-                  marginBottom: 8,
-                  opacity: 0.9,
-                }}
-              >
-                Total Employees
-              </div>
-              <div style={{ fontSize: 32, fontWeight: 700, lineHeight: "1.2" }}>
-                {employees.length}
-              </div>
+
+{/* Statistics KPI Cards */}
+<div className="kpi-row">
+  {[
+    {
+      title: "Total Employees",
+      value: employees.length,
+      icon: "heroicons:users",
+      bg: "kpi-primary",
+      color: "kpi-primary-text",
+    },
+    {
+      title: "Pending",
+      value: employees.filter(
+        (e) => e.status === "Pending" || e.status === "Not Started"
+      ).length,
+      icon: "heroicons:clock",
+      bg: "kpi-warning",
+      color: "kpi-warning-text",
+    },
+    {
+      title: "In Progress",
+      value: employees.filter(
+        (e) => e.status === "In Progress" || e.status === "Request Sent"
+      ).length,
+      icon: "heroicons:arrow-path",
+      bg: "kpi-info",
+      color: "kpi-info-text",
+    },
+    {
+      title: "Completed",
+      value: employees.filter((e) => e.status === "Completed").length,
+      icon: "heroicons:check-badge",
+      bg: "kpi-success",
+      color: "kpi-success-text",
+    },
+  ].map((item, index) => (
+    <div className="kpi-col" key={index}>
+      <div className="kpi-card">
+        <div className="kpi-card-body">
+
+          {/* Icon */}
+          <div className={`kpi-icon ${item.bg}`}>
+            <Icon
+              icon={item.icon}
+              className={`kpi-icon-style ${item.color}`}
+            />
+          </div>
+
+          {/* Content */}
+          <div className="kpi-content">
+            <div className="kpi-title">
+              {item.title}
+            </div>
+
+            <div className="kpi-value">
+              {item.value}
             </div>
           </div>
-        </div>
-        <div className="col-6 col-md-3">
-          <div
-            className="card border-0 shadow-sm h-100"
-            style={{
-              borderRadius: 12,
-              background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-            }}
-          >
-            <div
-              className="card-body text-center text-white"
-              style={{ padding: "20px" }}
-            >
-              <div
-                style={{
-                  fontSize: 13,
-                  fontWeight: 500,
-                  marginBottom: 8,
-                  opacity: 0.9,
-                }}
-              >
-                Pending
-              </div>
-              <div style={{ fontSize: 32, fontWeight: 700, lineHeight: "1.2" }}>
-                {
-                  employees.filter(
-                    (e) => e.status === "Pending" || e.status === "Not Started",
-                  ).length
-                }
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-6 col-md-3">
-          <div
-            className="card border-0 shadow-sm h-100"
-            style={{
-              borderRadius: 12,
-              background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-            }}
-          >
-            <div
-              className="card-body text-center text-white"
-              style={{ padding: "20px" }}
-            >
-              <div
-                style={{
-                  fontSize: 13,
-                  fontWeight: 500,
-                  marginBottom: 8,
-                  opacity: 0.9,
-                }}
-              >
-                In Progress
-              </div>
-              <div style={{ fontSize: 32, fontWeight: 700, lineHeight: "1.2" }}>
-                {
-                  employees.filter(
-                    (e) =>
-                      e.status === "In Progress" || e.status === "Request Sent",
-                  ).length
-                }
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-6 col-md-3">
-          <div
-            className="card border-0 shadow-sm h-100"
-            style={{
-              borderRadius: 12,
-              background: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-            }}
-          >
-            <div
-              className="card-body text-center text-white"
-              style={{ padding: "20px" }}
-            >
-              <div
-                style={{
-                  fontSize: 13,
-                  fontWeight: 500,
-                  marginBottom: 8,
-                  opacity: 0.9,
-                }}
-              >
-                Completed
-              </div>
-              <div style={{ fontSize: 32, fontWeight: 700, lineHeight: "1.2" }}>
-                {employees.filter((e) => e.status === "Completed").length}
-              </div>
-            </div>
-          </div>
+
         </div>
       </div>
+    </div>
+  ))}
+</div>
+      
       {/* Document Requests Cards */}
       {documentRequests.length > 0 && (
         <div className="mb-4">
@@ -4232,7 +4174,7 @@ const loadDocumentRequests = () => {
       <div className="modal-footer border-top-0">
         <button
           type="button"
-          className="btn btn-outline-secondary"
+          className="close-btn"
           onClick={() => setShowRequestDetails(false)}
         >
           Close
@@ -4262,46 +4204,26 @@ const loadDocumentRequests = () => {
       {/* Email Modal */}
       {showEmailModal && (
         <div
-          className="modal show d-block"
-          style={{
-            backgroundColor: "rgba(0,0,0,0.5)",
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 1050,
-          }}
+            className="hrms-modal-overlay"
         >
           <div
-            className="modal-content bg-white"
-            style={{
-              width: "70%",
-              maxWidth: "800px",
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              maxHeight: "90vh",
-              overflowY: "auto",
-              borderRadius: "8px",
-              boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-            }}
+              className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column"
+
           >
             {/* Header */}
-            <div className="modal-header bg-primary text-white rounded-top-3 border-0 px-4 py-3">
-              <h6 className="modal-title d-flex align-items-center fw-semibold mb-0">
+              <div className="hrms-modal-header">
+                <h5 className="hrms-modal-title d-flex align-items-center">
                 Send Document Request Email
-              </h6>
+              </h5>
               <button
                 type="button"
-                className="btn-close btn-close-white"
+                className="btn-close"
                 onClick={() => setShowEmailModal(false)}
               />
             </div>
 
             {/* Body */}
-            <div className="modal-body p-4">
+              <div className="hrms-modal-body hrms-modal-body-scroll">
               {/* Email Status */}
               {emailStatus.message && (
                 <div
@@ -4509,7 +4431,7 @@ const loadDocumentRequests = () => {
                       <div className="d-flex justify-content-end gap-2 mt-3">
                         <button
                           type="button"
-                          className="btn btn-secondary"
+                          className="btn btn-danger"
                           onClick={() => setEditingEmployeeId(null)}
                           disabled={sendingEmail}
                         >
@@ -5888,7 +5810,7 @@ const loadDocumentRequests = () => {
                             Upload Status
                           </th>
                           <th
-                            className="fw-semibold text-muted"
+                            className="fw-semibold text-muted text-center justify-items-center"
                             style={{ width: "20%" }}
                           >
                             Action
@@ -6232,7 +6154,6 @@ const loadDocumentRequests = () => {
                                   {isUploaded ? (
                                     <>
                                       {/* View Button - FIXED to handle ALL document sources */}
-                                      {/* View Button - FIXED to handle ALL document sources */}
                                       <button
                                         type="button"
                                         className="btn btn-sm btn-outline-primary d-flex align-items-center"
@@ -6292,7 +6213,7 @@ const loadDocumentRequests = () => {
                                       />
                                       <label
                                         htmlFor={`email-upload-${doc.id}`}
-                                        className={`btn btn-sm w-100 ${doc.required ? "btn-outline-success" : "btn-outline-secondary"} d-flex flex-column align-items-center justify-content-center`}
+                                        className={`btn btn-sm w-100 ${doc.required ? "btn-outline-success" : "btn-outline-secondary"} upload-btn`}
                                         style={{
                                           cursor: "pointer",
                                           height: "60px",
@@ -6420,7 +6341,7 @@ const loadDocumentRequests = () => {
               <div className="d-flex flex-column flex-md-row w-100 gap-2">
                 <button
                   type="button"
-                  className="btn btn-secondary order-2 order-md-1 flex-fill"
+                  className="btn btn-danger order-2 order-md-1 flex-fill"
                   onClick={() => {
                     setShowEmailModal(false);
                     setEmailStatus({ type: "", message: "" });
@@ -6497,40 +6418,19 @@ const loadDocumentRequests = () => {
       {/* New Request Modal */}
       {showNewRequestModal && (
         <div
-          className="modal show d-block"
-          style={{
-            backgroundColor: "rgba(0,0,0,0.5)",
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 1050,
-          }}
+           className="hrms-modal-overlay"
         >
           <div
-            className="modal-content bg-white"
-            style={{
-              width: "70%",
-              maxWidth: "800px",
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              maxHeight: "90vh",
-              overflowY: "auto",
-              borderRadius: "8px",
-              boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-            }}
+              className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column"
           >
             {/* Header */}
-            <div className="modal-header bg-success text-white rounded-top-3 border-0 px-4 py-3">
-              <h5 className="modal-title d-flex align-items-center fw-semibold mb-0">
+              <div className="hrms-modal-header">
+                <h5 className="hrms-modal-title d-flex align-items-center">
                 New Document Request
               </h5>
               <button
                 type="button"
-                className="btn-close btn-close-white"
+                className="btn-close"
                 onClick={() => {
                   setShowNewRequestModal(false);
                   setEmailStatus({ type: "", message: "" });
@@ -6541,7 +6441,7 @@ const loadDocumentRequests = () => {
             </div>
 
             {/* Body */}
-            <div className="modal-body p-4">
+              <div className="hrms-modal-body hrms-modal-body-scroll">
               {/* Email Status */}
               {emailStatus.message && (
                 <div
@@ -8632,14 +8532,28 @@ const loadDocumentRequests = () => {
                     <table className="table table-borderless table-sm mb-0">
                       <thead>
                         <tr>
-                          <th className="fw-semibold text-muted">
+                          <th
+                            className="fw-semibold text-muted"
+                            style={{ width: "40%" }}
+                          >
                             Document Name
                           </th>
-                          <th className="fw-semibold text-muted">Type</th>
-                          <th className="fw-semibold text-muted">
+                          <th
+                            className="fw-semibold text-muted"
+                            style={{ width: "20%" }}
+                          >
+                            Type
+                          </th>
+                          <th
+                            className="fw-semibold text-muted"
+                            style={{ width: "20%" }}
+                          >
                             Upload Status
                           </th>
-                          <th className="fw-semibold text-muted text-center justify-items-center">
+                          <th
+                            className="fw-semibold text-muted text-center justify-items-center"
+                            style={{ width: "20%" }}
+                          >
                             Action
                           </th>
                         </tr>
@@ -8790,7 +8704,7 @@ const loadDocumentRequests = () => {
                                       />
                                       <label
                                         htmlFor={`upload-${doc.id}`}
-                                        className={`btn btn-sm w-100 ${doc.required ? "btn-outline-success" : "btn-outline-secondary"} d-flex flex-column align-items-center justify-content-center`}
+                                        className={`btn btn-sm w-100 ${doc.required ? "btn-outline-success" : "btn-outline-secondary"} upload-btn`}
                                         style={{
                                           cursor: "pointer",
                                           height: "60px",
@@ -8977,7 +8891,7 @@ const loadDocumentRequests = () => {
               <div className="d-flex flex-column flex-sm-row w-100 gap-2">
                 <button
                   type="button"
-                  className="btn btn-secondary flex-fill"
+                  className="btn btn-danger flex-fill"
                   onClick={() => {
                     setShowNewRequestModal(false);
                     setEmailStatus({ type: "", message: "" });

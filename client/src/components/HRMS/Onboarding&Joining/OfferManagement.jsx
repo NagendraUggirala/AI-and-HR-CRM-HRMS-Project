@@ -29,17 +29,26 @@ const OfferManagement = () => {
   const [showReferenceCheckModal, setShowReferenceCheckModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const [withdrawReason, setWithdrawReason] = useState("");
-
+const [withdrawReason, setWithdrawReason] = useState("");
+  const [approvalWorkflowStatus, setApprovalWorkflowStatus] = useState([]);
   const [declineReason, setDeclineReason] = useState("");
-
+  const [showExpiredAlert, setShowExpiredAlert] = useState(true);
+  const [showExpiringSoonAlert, setShowExpiringSoonAlert] = useState(true);
   const [emailSettings, setEmailSettings] = useState({
     sendEmail: true,
     sendSMS: false,
     ccRecipients: [],
     emailTemplate: "standard",
   });
- 
+  const [eSignatureData, setESignatureData] = useState({
+    candidateSignature: null,
+    signatureDate: null,
+    ipAddress: null,
+    deviceInfo: null,
+  });
+  
+
+
   // Offer status types
   const OFFER_STATUS = {
     DRAFT: "draft",
@@ -74,15 +83,15 @@ const OfferManagement = () => {
 
 
   const withdrawReasonsList = [
-    "Candidate not responding",
-    "Position on hold",
-    "Position cancelled",
-    "Budget constraints",
-    "Hiring freeze",
-    "Duplicate offer created",
-    "Candidate requested withdrawal",
-    "Other",
-  ];
+  "Candidate not responding",
+  "Position on hold",
+  "Position cancelled",
+  "Budget constraints",
+  "Hiring freeze",
+  "Duplicate offer created",
+  "Candidate requested withdrawal",
+  "Other",
+];
   // Offer types
   const OFFER_TYPES = ["Full-time", "Contract", "Internship", "Consultant"];
   // Enhanced Templates with role/level configuration
@@ -231,74 +240,74 @@ const OfferManagement = () => {
   ];
 
   // Form data
-  const [formData, setFormData] = useState({
-    candidateName: "",
-    email: "",
-    phone: "",
-    position: "",
-    department: "Engineering",
-    grade: "L1",
-    experience: "",
-    noticePeriod: "30 days",
-    candidateSource: "",
-    customSource: "",
-    referralDetails: {
-      employeeId: "",
-      role: "",
-      designation: "",
-      experience: ""
-    },
-    ctc: "",
-    gender: "male",
-    // New fields for personal details
-    relation: "select",
-    fatherName: "",
-    customRelation: "",
-    guardianGender: "",
-    guardianPhone: "",
-    isLegalGuardian: false,
-    // ✅ FIX: Make sure address is properly defined here
-    address: {
-      street: "",
-      city: "",
-      district: "",
-      state: "",
-      customState: "",
-      pincode: ""
-    },
-    ctcBreakup: {
-      basic: "",
-      hra: "",
-      specialAllowance: "",
-      conveyance: "",
-      telephoneAllowance: "",
-      medicalAllowance: "",
-      employeePF: "",
-      professionalTax: "",
-      gratuityEmployee: "",
-      employerPF: "",
-      groupInsurance: "",
-    },
-    joiningDate: "",
-    offerType: "Full-time",
-    template: "standard",
-    terms: `1. This offer is subject to background verification.
+const [formData, setFormData] = useState({
+  candidateName: "",
+  email: "",
+  phone: "",
+  position: "",
+  department: "Engineering",
+  grade: "L1",
+  experience: "",
+  noticePeriod: "30 days",
+  candidateSource: "",
+  customSource: "",
+  referralDetails: {
+    employeeId: "",
+    role: "",
+    designation: "",
+    experience: ""
+  },
+  ctc: "",
+  gender: "male",
+  // New fields for personal details
+  relation: "select",
+  fatherName: "",
+  customRelation: "",
+  guardianGender: "",
+  guardianPhone: "",
+  isLegalGuardian: false,
+  // ✅ FIX: Make sure address is properly defined here
+  address: {
+    street: "",
+    city: "",
+    district: "",
+    state: "",
+    customState: "",
+    pincode: ""
+  },
+  ctcBreakup: {
+    basic: "",
+    hra: "",
+    specialAllowance: "",
+    conveyance: "",
+    telephoneAllowance: "",
+    medicalAllowance: "",
+    employeePF: "",
+    professionalTax: "",
+    gratuityEmployee: "",
+    employerPF: "",
+    groupInsurance: "",
+  },
+  joiningDate: "",
+  offerType: "Full-time",
+  template: "standard",
+  terms: `1. This offer is subject to background verification.
 2. You will be on probation for 3 months.
 3. Standard company policies apply.
 4. Please acknowledge acceptance by the expiry date.`,
-    approvalWorkflow: "direct",
-    expiryDate: "",
-    notes: "",
-    interviewSummary: "",
-    salaryNegotiationHistory: "",
-    enableBGV: true,
-    requireDigitalSignature: false,
-    businessUnit: "",
-    location: "",
-    costCenter: "",
-    shiftPolicy: "",
-    weekOffPolicy: "",
-  });
+  approvalWorkflow: "direct",
+  expiryDate: "",
+  notes: "",
+  interviewSummary: "",
+  salaryNegotiationHistory: "",
+  enableBGV: true,
+  requireDigitalSignature: false,
+  businessUnit: "",
+  location: "",
+  costCenter: "",
+  shiftPolicy: "",
+  weekOffPolicy: "",
+});
   // Initialize sample data
   useEffect(() => {
     const sampleOffers = [
@@ -596,74 +605,74 @@ const OfferManagement = () => {
 
 
   // Handle form input changes
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
+const handleInputChange = (e) => {
+  const { name, value, type, checked } = e.target;
 
-    if (name.includes(".")) {
-      const [parent, child] = name.split(".");
-      setFormData((prev) => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: value,
-        }
-      }));
+  if (name.includes(".")) {
+    const [parent, child] = name.split(".");
+    setFormData((prev) => ({
+      ...prev,
+      [parent]: {
+        ...prev[parent],
+        [child]: value,
+      }
+    }));
 
-      // Auto-calculate related fields if needed
-      if (parent === "ctcBreakup") {
-        // You can add auto-calculation logic here
-        // For example, auto-calculate PF based on basic salary
-        if (child === "basic") {
-          const basicValue = parseAmount(value);
-          if (basicValue > 0) {
-            const pfAmount = Math.min(basicValue * 0.12, 1800); // 12% of basic capped at 1800
-            setTimeout(() => {
-              setFormData((prev) => ({
-                ...prev,
-                [name]: type === "checkbox" ? checked : value,
-                ctcBreakup: {
-                  ...prev.ctcBreakup,
-                  employeePF: pfAmount.toFixed(0),
-                  employerPF: pfAmount.toFixed(0)
-                }
-              }));
-            }, 100);
-          }
+    // Auto-calculate related fields if needed
+    if (parent === "ctcBreakup") {
+      // You can add auto-calculation logic here
+      // For example, auto-calculate PF based on basic salary
+      if (child === "basic") {
+        const basicValue = parseAmount(value);
+        if (basicValue > 0) {
+          const pfAmount = Math.min(basicValue * 0.12, 1800); // 12% of basic capped at 1800
+          setTimeout(() => {
+            setFormData((prev) => ({
+              ...prev,
+                  [name]: type === "checkbox" ? checked : value,
+              ctcBreakup: {
+                ...prev.ctcBreakup,
+                employeePF: pfAmount.toFixed(0),
+                employerPF: pfAmount.toFixed(0)
+              }
+            }));
+          }, 100);
         }
       }
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: type === "checkbox" ? checked : value,
-      }));
     }
-  };
+  } else {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  }
+};
 
-  // Function to handle sending email from preview
-  const handleSendEmailFromPreview = (offer) => {
-    if (!offer) {
-      alert("No offer selected to send");
-      return;
-    }
+// Function to handle sending email from preview
+const handleSendEmailFromPreview = (offer) => {
+  if (!offer) {
+    alert("No offer selected to send");
+    return;
+  }
 
-    if (!offer.email) {
-      alert("Candidate email address is missing!");
-      return;
-    }
+  if (!offer.email) {
+    alert("Candidate email address is missing!");
+    return;
+  }
 
-    const sendingButton = document.querySelector('.btn-success');
-    const originalText = sendingButton.innerHTML;
-    sendingButton.disabled = true;
+  const sendingButton = document.querySelector('.btn-success');
+  const originalText = sendingButton.innerHTML;
+  sendingButton.disabled = true;
 
-    setTimeout(() => {
-      try {
-        //  Generate subject & body from your function
-        const { subject, body } = generateEmailContent(offer);
+  setTimeout(() => {
+    try {
+      //  Generate subject & body from your function
+      const { subject, body } = generateEmailContent(offer);
 
-        //  Update offer status
-        const updatedOffers = offers.map((o) =>
-          o.id === offer.id
-            ? {
+      //  Update offer status
+      const updatedOffers = offers.map((o) =>
+        o.id === offer.id
+          ? {
               ...o,
               offerStatus: OFFER_STATUS.SENT,
               emailSent: true,
@@ -683,77 +692,77 @@ const OfferManagement = () => {
                 },
               ],
             }
-            : o
-        );
+          : o
+      );
 
-        setOffers(updatedOffers);
+      setOffers(updatedOffers);
 
-        alert(
-          ` Offer letter sent successfully to ${offer.candidateName} (${offer.email})`
-        );
+      alert(
+        ` Offer letter sent successfully to ${offer.candidateName} (${offer.email})`
+      );
 
-        setShowPreview(false);
+      setShowPreview(false);
 
-        //  Open email client using generated content
-        window.location.href = `mailto:${offer.email}?subject=${encodeURIComponent(
-          subject
-        )}&body=${encodeURIComponent(body)}`;
+      //  Open email client using generated content
+      window.location.href = `mailto:${offer.email}?subject=${encodeURIComponent(
+        subject
+      )}&body=${encodeURIComponent(body)}`;
 
-      } catch (error) {
-        console.error("Error sending email:", error);
-        alert("❌ Failed to send email. Please try again.");
-      } finally {
-        sendingButton.innerHTML = originalText;
-        sendingButton.disabled = false;
-      }
-    }, 1500);
-  };
+    } catch (error) {
+      console.error("Error sending email:", error);
+      alert("❌ Failed to send email. Please try again.");
+    } finally {
+      sendingButton.innerHTML = originalText;
+      sendingButton.disabled = false;
+    }
+  }, 1500);
+};
 
-  const generateOfferLetterPDF = (offer) => {
-    if (!offer) return;
+const generateOfferLetterPDF = (offer) => {
+  if (!offer) return;
 
-    // ==================== COMPANY DETAILS ====================
-    const companyName = "Levitica Technologies Private Limited";
-    const companyAddress = "Office #409, 4th Floor, Jain Sadguru Image's, Capital Pk Rd, Ayyappa Society, Madhapur, Hyderabad, Telangana 500081";
-    const companyPhone = "+91 63056 75199";
-    const companyEmail = "hr@leviticatechnologies.com";
-    const companyWebsite = "www.leviticatechnologies.com";
-    const companyCIN = "U72200TG2013PTC091836";
+  // ==================== COMPANY DETAILS ====================
+  const companyName = "Levitica Technologies Private Limited";
+  const companyAddress = "Office #409, 4th Floor, Jain Sadguru Image's, Capital Pk Rd, Ayyappa Society, Madhapur, Hyderabad, Telangana 500081";
+  const companyPhone = "+91 63056 75199";
+  const companyEmail = "hr@leviticatechnologies.com";
+  const companyWebsite = "www.leviticatechnologies.com";
+  const companyCIN = "U72200TG2013PTC091836";
+  
+  // ==================== CANDIDATE DETAILS ====================
+  const candidateName = offer?.candidateName || "Abcd";
+  const position = offer?.position || "Associate Software Engineer";
+  const joiningDate = offer?.joiningDate || "16th June 2025";
+  const ctc = offer?.ctc || "3,00,000";
 
-    // ==================== CANDIDATE DETAILS ====================
-    const candidateName = offer?.candidateName || "Abcd";
-    const position = offer?.position || "Associate Software Engineer";
-    const joiningDate = offer?.joiningDate || "16th June 2025";
-    const ctc = offer?.ctc || "3,00,000";
 
+ const gender = offer?.gender || "male";
+const fatherName = offer?.fatherName || "XYZ";
+const relation = offer?.relation || "S/O";
+const address = offer?.address || {
+  street: "2-63. xyz, avx",
+  city: "xyz",
+  district: "xyz",
+  state: "Andhra Pradesh",
+  pincode: "533233"
+};
 
-    const gender = offer?.gender || "male";
-    const fatherName = offer?.fatherName || "XYZ";
-    const relation = offer?.relation || "S/O";
-    const address = offer?.address || {
-      street: "2-63. xyz, avx",
-      city: "xyz",
-      district: "xyz",
-      state: "Andhra Pradesh",
-      pincode: "533233"
-    };
+// Determine salutation based on gender
+const getSalutation = (gender) => {
+  switch(gender) {
+    case 'female':
+      return 'Ms.';
+    case 'male':
+      return 'Mr.';
+    default:
+      return 'Mr./Ms.';
+  }
+};
 
-    // Determine salutation based on gender
-    const getSalutation = (gender) => {
-      switch (gender) {
-        case 'female':
-          return 'Ms.';
-        case 'male':
-          return 'Mr.';
-        default:
-          return 'Mr./Ms.';
-      }
-    };
+const salutation = getSalutation(gender);
 
-    const salutation = getSalutation(gender);
-
-    // Format the address block
-    const addressBlock = `
+// Format the address block
+const addressBlock = `
   ${salutation} ${candidateName},<br>
   ${relation} ${fatherName},
   ${address.street},${address.city},<br>
@@ -762,167 +771,171 @@ const OfferManagement = () => {
   PIN Code: ${address.pincode}.
 `;
 
-    // ==================== CURRENT DATE ====================
-    // Format the current date in multiple formats for different uses
+// ==================== CURRENT DATE ====================
+// Format the current date in multiple formats for different uses
 
-    // Format 1: "June 10, 2025" (for the main date display)
-    const formatDateLong = (date) => {
-      return date.toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
-      });
-    };
-
-
-
-    // Get current date
-    const currentDate = new Date();
-
-    // Use these in your email/PDF generation
-    const currentDateLong = formatDateLong(currentDate); // "February 16, 2026"
-
-    // ==================== OFFER SPECIFIC DATES ====================
-    // You can also use the offer creation date if available
-    const offerDate = offer?.createdDate
-      ? new Date(offer.createdDate)
-      : currentDate;
-
-    const offerDateFormatted = formatDateLong(offerDate);
-
-
-    // ==================== CTC BREAKUP CALCULATIONS ====================
-    const ctcBreakup = offer?.ctcBreakup || {
-      basic: "1,50,000",
-      hra: "60,000",
-      specialAllowance: "60,400",
-      conveyance: "9,600",
-      telephone: "12,000",
-      medical: "15,000",
-      grossSalary: "3,07,000",
-      employeePF: "18,000",
-      professionalTax: "2,400",
-      gratuity: "7,200",
-      netTakeHome: "2,80,000",
-      employerPF: "18,000",
-      groupInsurance: "5,000",
-      totalCTCMonthly: "25,000",
-      performanceBonus: "20,000"
-    };
-
-
-    // Parse numeric values for calculations (remove commas and convert to number)
-    const parseAmount = (amount) => {
-      if (!amount) return 0;
-      return parseFloat(amount.toString().replace(/,/g, '')) || 0;
-    };
-
-    // Calculate percentages based on total CTC
-    const totalCTC = parseAmount(ctc);
-
-    const breakupItems = [
-      {
-        label: "Basic Salary",
-        key: "basic",
-        amount: parseAmount(ctcBreakup.basic)
-      },
-      {
-        label: "House Rent Allowance (HRA)",
-        key: "hra",
-        amount: parseAmount(ctcBreakup.hra)
-      },
-      {
-        label: "Special Allowance",
-        key: "specialAllowance",
-        amount: parseAmount(ctcBreakup.specialAllowance)
-      },
-      {
-        label: "Conveyance Allowance",
-        key: "conveyance",
-        amount: parseAmount(ctcBreakup.conveyance)
-      },
-      {
-        label: "Telephone Allowance",
-        key: "telephone",
-        amount: parseAmount(ctcBreakup.telephone)
-      },
-      {
-        label: "Medical Allowance",
-        key: "medical",
-        amount: parseAmount(ctcBreakup.medical)
-      },
-      {
-        label: "Gross Salary",
-        key: "grossSalary",
-        amount: parseAmount(ctcBreakup.grossSalary)
-      },
-      {
-        label: "Employee PF",
-        key: "employeePF",
-        amount: parseAmount(ctcBreakup.employeePF)
-      },
-      {
-        label: "Professional Tax",
-        key: "professionalTax",
-        amount: parseAmount(ctcBreakup.professionalTax)
-      },
-      {
-        label: "Gratuity",
-        key: "gratuity",
-        amount: parseAmount(ctcBreakup.gratuity)
-      },
-      {
-        label: "Net Take Home",
-        key: "netTakeHome",
-        amount: parseAmount(ctcBreakup.netTakeHome)
-      },
-      {
-        label: "Employer PF",
-        key: "employerPF",
-        amount: parseAmount(ctcBreakup.employerPF)
-      },
-      {
-        label: "Group Insurance",
-        key: "groupInsurance",
-        amount: parseAmount(ctcBreakup.groupInsurance)
-      },
-      {
-        label: "Performance Bonus",
-        key: "performanceBonus",
-        amount: parseAmount(ctcBreakup.performanceBonus)
-      },
-      {
-        label: "Total CTC (Monthly)",
-        key: "totalCTCMonthly",
-        amount: parseAmount(ctcBreakup.totalCTCMonthly)
-      }
-    ];
+// Format 1: "June 10, 2025" (for the main date display)
+const formatDateLong = (date) => {
+  return date.toLocaleDateString('en-US', { 
+    month: 'long', 
+    day: 'numeric', 
+    year: 'numeric' 
+  });
+};
 
 
 
-    // Filter out items with zero amount and calculate total
-    const validBreakupItems = breakupItems.filter(item => item.amount > 0);
+// Get current date
+const currentDate = new Date();
 
-    const calculatedTotal = validBreakupItems.reduce(
-      (sum, item) => sum + item.amount, 0);
+// Use these in your email/PDF generation
+const currentDateLong = formatDateLong(currentDate); // "February 16, 2026"
 
-    // Format amount with commas
-    const formatAmount = (amount) => {
-      return amount.toLocaleString('en-IN');
-    };
+// ==================== OFFER SPECIFIC DATES ====================
+// You can also use the offer creation date if available
+const offerDate = offer?.createdDate 
+  ? new Date(offer.createdDate) 
+  : currentDate;
 
-    // Calculate percentage
+const offerDateFormatted = formatDateLong(offerDate);
 
-    // Create a container element for the PDF content
-    const element = document.createElement('div');
-    element.style.width = '210mm';
-    element.style.padding = '0';
-    element.style.margin = '0';
-    element.style.fontFamily = 'Arial, sans-serif';
-    element.style.backgroundColor = 'white';
 
-    // HTML Template for the offer letter with exact PDF formatting
-    element.innerHTML = `
+// ==================== CTC BREAKUP CALCULATIONS ====================
+const ctcBreakup = offer?.ctcBreakup || {
+  basic: "1,50,000",
+  hra: "60,000",
+  specialAllowance: "60,400",
+  conveyance: "9,600",
+  telephone: "12,000",
+  medical: "15,000",
+  grossSalary: "3,07,000",
+  employeePF: "18,000",
+  professionalTax: "2,400",
+  gratuity: "7,200",
+  netTakeHome: "2,80,000",
+  employerPF: "18,000",
+  groupInsurance: "5,000",
+  totalCTCMonthly: "25,000",
+  performanceBonus: "20,000"
+};
+
+
+// Parse numeric values for calculations (remove commas and convert to number)
+const parseAmount = (amount) => {
+  if (!amount) return 0;
+  return parseFloat(amount.toString().replace(/,/g, '')) || 0;
+};
+
+// Calculate percentages based on total CTC
+const totalCTC = parseAmount(ctc);
+
+const breakupItems = [
+  {
+    label: "Basic Salary",
+    key: "basic",
+    amount: parseAmount(ctcBreakup.basic)
+  },
+  {
+    label: "House Rent Allowance (HRA)",
+    key: "hra",
+    amount: parseAmount(ctcBreakup.hra)
+  },
+  {
+    label: "Special Allowance",
+    key: "specialAllowance",
+    amount: parseAmount(ctcBreakup.specialAllowance)
+  },
+  {
+    label: "Conveyance Allowance",
+    key: "conveyance",
+    amount: parseAmount(ctcBreakup.conveyance)
+  },
+  {
+    label: "Telephone Allowance",
+    key: "telephone",
+    amount: parseAmount(ctcBreakup.telephone)
+  },
+  {
+    label: "Medical Allowance",
+    key: "medical",
+    amount: parseAmount(ctcBreakup.medical)
+  },
+  {
+    label: "Gross Salary",
+    key: "grossSalary",
+    amount: parseAmount(ctcBreakup.grossSalary)
+  },
+  {
+    label: "Employee PF",
+    key: "employeePF",
+    amount: parseAmount(ctcBreakup.employeePF)
+  },
+  {
+    label: "Professional Tax",
+    key: "professionalTax",
+    amount: parseAmount(ctcBreakup.professionalTax)
+  },
+  {
+    label: "Gratuity",
+    key: "gratuity",
+    amount: parseAmount(ctcBreakup.gratuity)
+  },
+  {
+    label: "Net Take Home",
+    key: "netTakeHome",
+    amount: parseAmount(ctcBreakup.netTakeHome)
+  },
+  {
+    label: "Employer PF",
+    key: "employerPF",
+    amount: parseAmount(ctcBreakup.employerPF)
+  },
+  {
+    label: "Group Insurance",
+    key: "groupInsurance",
+    amount: parseAmount(ctcBreakup.groupInsurance)
+  },
+  {
+    label: "Performance Bonus",
+    key: "performanceBonus",
+    amount: parseAmount(ctcBreakup.performanceBonus)
+  },
+  {
+    label: "Total CTC (Monthly)",
+    key: "totalCTCMonthly",
+    amount: parseAmount(ctcBreakup.totalCTCMonthly)
+  }
+];
+
+
+  
+// Filter out items with zero amount and calculate total
+const validBreakupItems = breakupItems.filter(item => item.amount > 0);
+
+const calculatedTotal = validBreakupItems.reduce(
+  (sum, item) => sum + item.amount, 0);
+
+// Format amount with commas
+const formatAmount = (amount) => {
+  return amount.toLocaleString('en-IN');
+};
+
+// Calculate percentage
+const calculatePercentage = (amount) => {
+  if (totalCTC === 0) return "0";
+  return ((amount / totalCTC) * 100).toFixed(2);
+};
+
+  // Create a container element for the PDF content
+  const element = document.createElement('div');
+  element.style.width = '210mm';
+  element.style.padding = '0';
+  element.style.margin = '0';
+  element.style.fontFamily = 'Arial, sans-serif';
+  element.style.backgroundColor = 'white';
+  
+  // HTML Template for the offer letter with exact PDF formatting
+  element.innerHTML = `
     <!DOCTYPE html>
     <html>
     <head>
@@ -1793,40 +1806,40 @@ ${validBreakupItems.map(item => `
     </html>
   `;
 
-    // Configure html2pdf options - REMOVED pagebreak config to avoid double pages
-    const opt = {
-      margin: [0, 0, 0, 0],
-      filename: `Offer_Letter_${candidateName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        letterRendering: true,
-        useCORS: true,
-        logging: false,
-        dpi: 300
-      },
-      jsPDF: {
-        unit: 'mm',
-        format: 'a4',
-        orientation: 'portrait',
-        compress: true
-      }
-    };
-
-    // Generate and download PDF
-    html2pdf().set(opt).from(element).save();
+  // Configure html2pdf options - REMOVED pagebreak config to avoid double pages
+  const opt = {
+    margin: [0, 0, 0, 0],
+    filename: `Offer_Letter_${candidateName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { 
+      scale: 2,
+      letterRendering: true,
+      useCORS: true,
+      logging: false,
+      dpi: 300
+    },
+    jsPDF: { 
+      unit: 'mm', 
+      format: 'a4', 
+      orientation: 'portrait',
+      compress: true
+    }
   };
 
-  const generateEmailContent = (offer) => {
-    const joiningDate = new Date(offer.joiningDate).toLocaleDateString(
-      "en-GB",
-      { day: "numeric", month: "long", year: "numeric" }
-    );
+  // Generate and download PDF
+  html2pdf().set(opt).from(element).save();
+};
 
-    return {
-      subject: `Offer Letter - ${offer.position} | Levitica Technologies Pvt. Ltd.`,
+const generateEmailContent = (offer) => {
+  const joiningDate = new Date(offer.joiningDate).toLocaleDateString(
+    "en-GB",
+    { day: "numeric", month: "long", year: "numeric" }
+  );
 
-      body: `
+  return {
+    subject: `Offer Letter - ${offer.position} | Levitica Technologies Pvt. Ltd.`,
+
+    body: `
 Dear Mr. ${offer.candidateName},
 
 We are pleased to offer you the position of ${offer.position} at Levitica Technologies Pvt. Ltd. Please find your offer letter attached to this email.
@@ -1857,79 +1870,79 @@ HR Team
 Levitica Technologies Pvt. Ltd.
 hr@leviticatechnologies.com
     `,
-    };
   };
+};
 
-  // Helper functions for CTC calculations
-  const parseAmount = (value) => {
-    if (!value) return 0;
-    return parseFloat(value.toString().replace(/,/g, '')) || 0;
-  };
+// Helper functions for CTC calculations
+const parseAmount = (value) => {
+  if (!value) return 0;
+  return parseFloat(value.toString().replace(/,/g, '')) || 0;
+};
 
-  const formatAmount = (amount) => {
-    return amount.toLocaleString('en-IN');
-  };
+const formatAmount = (amount) => {
+  return amount.toLocaleString('en-IN');
+};
 
-  const calculateGrossSalary = (breakup) => {
-    const gross =
-      parseAmount(breakup.basic) +
-      parseAmount(breakup.hra) +
-      parseAmount(breakup.specialAllowance) +
-      parseAmount(breakup.conveyance) +
-      parseAmount(breakup.telephoneAllowance) +
-      parseAmount(breakup.medicalAllowance);
+const calculateGrossSalary = (breakup) => {
+  const gross = 
+    parseAmount(breakup.basic) +
+    parseAmount(breakup.hra) +
+    parseAmount(breakup.specialAllowance) +
+    parseAmount(breakup.conveyance) +
+    parseAmount(breakup.telephoneAllowance) +
+    parseAmount(breakup.medicalAllowance);
+  
+  return formatAmount(gross);
+};
 
-    return formatAmount(gross);
-  };
+const calculateTotalDeductions = (breakup) => {
+  const deductions = 
+    parseAmount(breakup.employeePF) +
+    parseAmount(breakup.professionalTax) +
+    parseAmount(breakup.gratuityEmployee);
+  
+  return deductions;
+};
 
-  const calculateTotalDeductions = (breakup) => {
-    const deductions =
-      parseAmount(breakup.employeePF) +
-      parseAmount(breakup.professionalTax) +
-      parseAmount(breakup.gratuityEmployee);
+const calculateNetTakeHome = (breakup) => {
+  const gross = 
+    parseAmount(breakup.basic) +
+    parseAmount(breakup.hra) +
+    parseAmount(breakup.specialAllowance) +
+    parseAmount(breakup.conveyance) +
+    parseAmount(breakup.telephoneAllowance) +
+    parseAmount(breakup.medicalAllowance);
+  
+  const deductions = calculateTotalDeductions(breakup);
+  const netTakeHome = gross - deductions;
+  
+  return formatAmount(netTakeHome);
+};
 
-    return deductions;
-  };
+const calculateTotalMonthlyCTC = (breakup) => {
+  const gross = 
+    parseAmount(breakup.basic) +
+    parseAmount(breakup.hra) +
+    parseAmount(breakup.specialAllowance) +
+    parseAmount(breakup.conveyance) +
+    parseAmount(breakup.telephoneAllowance) +
+    parseAmount(breakup.medicalAllowance);
+  
+  const employerContributions = 
+    parseAmount(breakup.employerPF) +
+    parseAmount(breakup.groupInsurance) +
+    parseAmount(breakup.gratuityEmployer);
+  
+  const totalMonthlyCTC = gross + employerContributions;
+  
+  return formatAmount(totalMonthlyCTC);
+};
 
-  const calculateNetTakeHome = (breakup) => {
-    const gross =
-      parseAmount(breakup.basic) +
-      parseAmount(breakup.hra) +
-      parseAmount(breakup.specialAllowance) +
-      parseAmount(breakup.conveyance) +
-      parseAmount(breakup.telephoneAllowance) +
-      parseAmount(breakup.medicalAllowance);
-
-    const deductions = calculateTotalDeductions(breakup);
-    const netTakeHome = gross - deductions;
-
-    return formatAmount(netTakeHome);
-  };
-
-  const calculateTotalMonthlyCTC = (breakup) => {
-    const gross =
-      parseAmount(breakup.basic) +
-      parseAmount(breakup.hra) +
-      parseAmount(breakup.specialAllowance) +
-      parseAmount(breakup.conveyance) +
-      parseAmount(breakup.telephoneAllowance) +
-      parseAmount(breakup.medicalAllowance);
-
-    const employerContributions =
-      parseAmount(breakup.employerPF) +
-      parseAmount(breakup.groupInsurance) +
-      parseAmount(breakup.gratuityEmployer);
-
-    const totalMonthlyCTC = gross + employerContributions;
-
-    return formatAmount(totalMonthlyCTC);
-  };
-
-  const calculateAnnualCTC = (breakup) => {
-    const monthlyCTC = parseAmount(calculateTotalMonthlyCTC(breakup).replace(/,/g, ''));
-    const annualCTC = monthlyCTC * 12;
-    return formatAmount(annualCTC);
-  };
+const calculateAnnualCTC = (breakup) => {
+  const monthlyCTC = parseAmount(calculateTotalMonthlyCTC(breakup).replace(/,/g, ''));
+  const annualCTC = monthlyCTC * 12;
+  return formatAmount(annualCTC);
+};
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -1949,13 +1962,13 @@ hr@leviticatechnologies.com
       history: selectedOffer
         ? selectedOffer.history
         : [
-          {
-            action: "Offer Created",
-            by: "HR Admin",
-            date: new Date().toISOString(),
-            status: OFFER_STATUS.DRAFT,
-          },
-        ],
+            {
+              action: "Offer Created",
+              by: "HR Admin",
+              date: new Date().toISOString(),
+              status: OFFER_STATUS.DRAFT,
+            },
+          ],
     };
 
     if (selectedOffer) {
@@ -1971,186 +1984,186 @@ hr@leviticatechnologies.com
   };
 
   // Reset form
-  const resetForm = () => {
-    setFormData({
-      candidateName: "",
-      email: "",
-      phone: "",
-      position: "",
-      fatherName: "",
-      relation: "select", // Make sure this matches the initial value
-      department: "Engineering",
-      grade: "L1",
-      experience: "",
-      noticePeriod: "30 days",
-      candidateSource: "",
-      customSource: "",
-      referralDetails: {
-        employeeId: "",
-        role: "",
-        designation: "",
-        experience: ""
-      },
-      gender: "male",
-      // Address Information
-      address: {
-        street: "",
-        city: "",
-        district: "",
-        state: "",
-        customState: "",
-        pincode: ""
-      },
-      // Guardian Information
-      customRelation: "",
-      guardianGender: "",
-      guardianPhone: "",
-      isLegalGuardian: false,
-      ctc: "",
-      ctcBreakup: {
-        basic: "",
-        hra: "",
-        specialAllowance: "",
-        conveyance: "",
-        telephoneAllowance: "",
-        medicalAllowance: "",
-        employeePF: "",
-        professionalTax: "",
-        gratuityEmployee: "",
-        employerPF: "",
-        groupInsurance: "",
-      },
-      joiningDate: "",
-      offerType: "Full-time",
-      template: "standard",
-      terms: `1. This offer is subject to background verification.
+const resetForm = () => {
+  setFormData({
+    candidateName: "",
+    email: "",
+    phone: "",
+    position: "",
+    fatherName: "",
+    relation: "select", // Make sure this matches the initial value
+    department: "Engineering",
+    grade: "L1",
+    experience: "",
+    noticePeriod: "30 days",
+    candidateSource: "",
+    customSource: "",
+    referralDetails: {
+      employeeId: "",
+      role: "",
+      designation: "",
+      experience: ""
+    },
+    gender: "male",
+    // Address Information
+    address: {
+      street: "",
+      city: "",
+      district: "",
+      state: "",
+      customState: "",
+      pincode: ""
+    },
+    // Guardian Information
+    customRelation: "",
+    guardianGender: "",
+    guardianPhone: "",
+    isLegalGuardian: false,
+    ctc: "",
+    ctcBreakup: {
+      basic: "",
+      hra: "",
+      specialAllowance: "",
+      conveyance: "",
+      telephoneAllowance: "",
+      medicalAllowance: "",
+      employeePF: "",
+      professionalTax: "",
+      gratuityEmployee: "",
+      employerPF: "",
+      groupInsurance: "",
+    },
+    joiningDate: "",
+    offerType: "Full-time",
+    template: "standard",
+    terms: `1. This offer is subject to background verification.
 2. You will be on probation for 3 months.
 3. Standard company policies apply.
 4. Please acknowledge acceptance by the expiry date.`,
-      approvalWorkflow: "direct",
-      expiryDate: "",
-      notes: "",
-      interviewSummary: "",
-      salaryNegotiationHistory: "",
-      enableBGV: true,
-      requireDigitalSignature: false,
-      businessUnit: "",
-      location: "",
-      costCenter: "",
-      shiftPolicy: "",
-      weekOffPolicy: "",
-    });
-    setSelectedOffer(null);
-  };
+    approvalWorkflow: "direct",
+    expiryDate: "",
+    notes: "",
+    interviewSummary: "",
+    salaryNegotiationHistory: "",
+    enableBGV: true,
+    requireDigitalSignature: false,
+    businessUnit: "",
+    location: "",
+    costCenter: "",
+    shiftPolicy: "",
+    weekOffPolicy: "",
+  });
+  setSelectedOffer(null);
+};
 
   // CRUD Operations
-  const handleEdit = (offer) => {
-    setSelectedOffer(offer);
-
-    // Merge the offer data with default structure to ensure all nested objects exist
-    setFormData({
-      // Start with default values
-      candidateName: "",
-      email: "",
-      phone: "",
-      position: "",
-      department: "Engineering",
-      grade: "L1",
-      experience: "",
-      noticePeriod: "30 days",
-      candidateSource: "",
-      customSource: "",
-      referralDetails: {
-        employeeId: "",
-        role: "",
-        designation: "",
-        experience: ""
-      },
-      ctc: "",
-      gender: "male",
-      relation: "select",
-      fatherName: "",
-      customRelation: "",
-      guardianGender: "",
-      guardianPhone: "",
-      isLegalGuardian: false,
-      address: {
-        street: "",
-        city: "",
-        district: "",
-        state: "",
-        customState: "",
-        pincode: ""
-      },
-      ctcBreakup: {
-        basic: "",
-        hra: "",
-        specialAllowance: "",
-        conveyance: "",
-        telephoneAllowance: "",
-        medicalAllowance: "",
-        employeePF: "",
-        professionalTax: "",
-        gratuityEmployee: "",
-        employerPF: "",
-        groupInsurance: "",
-      },
-      joiningDate: "",
-      offerType: "Full-time",
-      template: "standard",
-      terms: `1. This offer is subject to background verification.
+const handleEdit = (offer) => {
+  setSelectedOffer(offer);
+  
+  // Merge the offer data with default structure to ensure all nested objects exist
+  setFormData({
+    // Start with default values
+    candidateName: "",
+    email: "",
+    phone: "",
+    position: "",
+    department: "Engineering",
+    grade: "L1",
+    experience: "",
+    noticePeriod: "30 days",
+    candidateSource: "",
+    customSource: "",
+    referralDetails: {
+      employeeId: "",
+      role: "",
+      designation: "",
+      experience: ""
+    },
+    ctc: "",
+    gender: "male",
+    relation: "select",
+    fatherName: "",
+    customRelation: "",
+    guardianGender: "",
+    guardianPhone: "",
+    isLegalGuardian: false,
+    address: {
+      street: "",
+      city: "",
+      district: "",
+      state: "",
+      customState: "",
+      pincode: ""
+    },
+    ctcBreakup: {
+      basic: "",
+      hra: "",
+      specialAllowance: "",
+      conveyance: "",
+      telephoneAllowance: "",
+      medicalAllowance: "",
+      employeePF: "",
+      professionalTax: "",
+      gratuityEmployee: "",
+      employerPF: "",
+      groupInsurance: "",
+    },
+    joiningDate: "",
+    offerType: "Full-time",
+    template: "standard",
+    terms: `1. This offer is subject to background verification.
 2. You will be on probation for 3 months.
 3. Standard company policies apply.
 4. Please acknowledge acceptance by the expiry date.`,
-      approvalWorkflow: "direct",
-      expiryDate: "",
-      notes: "",
-      interviewSummary: "",
-      salaryNegotiationHistory: "",
-      enableBGV: true,
-      requireDigitalSignature: false,
-      businessUnit: "",
-      location: "",
-      costCenter: "",
-      shiftPolicy: "",
-      weekOffPolicy: "",
-      // Then override with the offer data, ensuring nested objects are merged properly
-      ...offer,
-      // Handle nested objects separately to ensure they exist
-      address: {
-        street: "",
-        city: "",
-        district: "",
-        state: "",
-        customState: "",
-        pincode: "",
-        ...(offer.address || {})
-      },
-      referralDetails: {
-        employeeId: "",
-        role: "",
-        designation: "",
-        experience: "",
-        ...(offer.referralDetails || {})
-      },
-      ctcBreakup: {
-        basic: "",
-        hra: "",
-        specialAllowance: "",
-        conveyance: "",
-        telephoneAllowance: "",
-        medicalAllowance: "",
-        employeePF: "",
-        professionalTax: "",
-        gratuityEmployee: "",
-        employerPF: "",
-        groupInsurance: "",
-        ...(offer.ctcBreakup || {})
-      }
-    });
-
-    setShowForm(true);
-  };
+    approvalWorkflow: "direct",
+    expiryDate: "",
+    notes: "",
+    interviewSummary: "",
+    salaryNegotiationHistory: "",
+    enableBGV: true,
+    requireDigitalSignature: false,
+    businessUnit: "",
+    location: "",
+    costCenter: "",
+    shiftPolicy: "",
+    weekOffPolicy: "",
+    // Then override with the offer data, ensuring nested objects are merged properly
+    ...offer,
+    // Handle nested objects separately to ensure they exist
+    address: {
+      street: "",
+      city: "",
+      district: "",
+      state: "",
+      customState: "",
+      pincode: "",
+      ...(offer.address || {})
+    },
+    referralDetails: {
+      employeeId: "",
+      role: "",
+      designation: "",
+      experience: "",
+      ...(offer.referralDetails || {})
+    },
+    ctcBreakup: {
+      basic: "",
+      hra: "",
+      specialAllowance: "",
+      conveyance: "",
+      telephoneAllowance: "",
+      medicalAllowance: "",
+      employeePF: "",
+      professionalTax: "",
+      gratuityEmployee: "",
+      employerPF: "",
+      groupInsurance: "",
+      ...(offer.ctcBreakup || {})
+    }
+  });
+  
+  setShowForm(true);
+};
 
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this offer?")) {
@@ -2169,30 +2182,30 @@ hr@leviticatechnologies.com
     const updatedOffers = offers.map((o) =>
       o.id === selectedOffer.id
         ? {
-          ...o,
-          offerStatus: OFFER_STATUS.SENT,
-          emailSent: emailSettings.sendEmail,
-          emailSentDate: emailSettings.sendEmail
-            ? new Date().toISOString()
-            : null,
-          smsSent: emailSettings.sendSMS,
-          smsSentDate: emailSettings.sendSMS
-            ? new Date().toISOString()
-            : null,
-          history: [
-            ...o.history,
-            {
-              action: "Sent to Candidate",
-              by: "System",
-              date: new Date().toISOString(),
-              status: OFFER_STATUS.SENT,
-              details: {
-                emailSent: emailSettings.sendEmail,
-                smsSent: emailSettings.sendSMS,
+            ...o,
+            offerStatus: OFFER_STATUS.SENT,
+            emailSent: emailSettings.sendEmail,
+            emailSentDate: emailSettings.sendEmail
+              ? new Date().toISOString()
+              : null,
+            smsSent: emailSettings.sendSMS,
+            smsSentDate: emailSettings.sendSMS
+              ? new Date().toISOString()
+              : null,
+            history: [
+              ...o.history,
+              {
+                action: "Sent to Candidate",
+                by: "System",
+                date: new Date().toISOString(),
+                status: OFFER_STATUS.SENT,
+                details: {
+                  emailSent: emailSettings.sendEmail,
+                  smsSent: emailSettings.sendSMS,
+                },
               },
-            },
-          ],
-        }
+            ],
+          }
         : o,
     );
     setOffers(updatedOffers);
@@ -2235,19 +2248,19 @@ hr@leviticatechnologies.com
       const updatedOffers = offers.map((o) =>
         o.id === offer.id
           ? {
-            ...o,
-            offerStatus: OFFER_STATUS.ACCEPTED,
-            acceptanceDate: new Date().toISOString(),
-            history: [
-              ...o.history,
-              {
-                action: "Accepted by Candidate",
-                by: "Candidate",
-                date: new Date().toISOString(),
-                status: OFFER_STATUS.ACCEPTED,
-              },
-            ],
-          }
+              ...o,
+              offerStatus: OFFER_STATUS.ACCEPTED,
+              acceptanceDate: new Date().toISOString(),
+              history: [
+                ...o.history,
+                {
+                  action: "Accepted by Candidate",
+                  by: "Candidate",
+                  date: new Date().toISOString(),
+                  status: OFFER_STATUS.ACCEPTED,
+                },
+              ],
+            }
           : o,
       );
       setOffers(updatedOffers);
@@ -2269,29 +2282,34 @@ hr@leviticatechnologies.com
     const updatedOffers = offers.map((o) =>
       o.id === selectedOffer.id
         ? {
-          ...o,
-          offerStatus: OFFER_STATUS.ACCEPTED,
-          acceptanceDate: new Date().toISOString(),
-          eSignature: signatureData,
-          history: [
-            ...o.history,
-            {
-              action: "Accepted by Candidate (E-Signed)",
-              by: "Candidate",
-              date: new Date().toISOString(),
-              status: OFFER_STATUS.ACCEPTED,
-              details: {
-                signatureDate: signatureData.signatureDate,
-                ipAddress: signatureData.ipAddress,
+            ...o,
+            offerStatus: OFFER_STATUS.ACCEPTED,
+            acceptanceDate: new Date().toISOString(),
+            eSignature: signatureData,
+            history: [
+              ...o.history,
+              {
+                action: "Accepted by Candidate (E-Signed)",
+                by: "Candidate",
+                date: new Date().toISOString(),
+                status: OFFER_STATUS.ACCEPTED,
+                details: {
+                  signatureDate: signatureData.signatureDate,
+                  ipAddress: signatureData.ipAddress,
+                },
               },
-            },
-          ],
-        }
+            ],
+          }
         : o,
     );
     setOffers(updatedOffers);
     setShowESignatureModal(false);
-   
+    setESignatureData({
+      candidateSignature: null,
+      signatureDate: null,
+      ipAddress: null,
+      deviceInfo: null,
+    });
     alert(
       `Offer accepted and digitally signed by ${selectedOffer.candidateName}`,
     );
@@ -2311,22 +2329,22 @@ hr@leviticatechnologies.com
     const updatedOffers = offers.map((o) =>
       o.id === selectedOffer.id
         ? {
-          ...o,
-          offerStatus: OFFER_STATUS.DECLINED,
-          declineReason: declineReason,
-          history: [
-            ...o.history,
-            {
-              action: "Declined by Candidate",
-              by: "Candidate",
-              date: new Date().toISOString(),
-              status: OFFER_STATUS.DECLINED,
-              details: {
-                reason: declineReason,
+            ...o,
+            offerStatus: OFFER_STATUS.DECLINED,
+            declineReason: declineReason,
+            history: [
+              ...o.history,
+              {
+                action: "Declined by Candidate",
+                by: "Candidate",
+                date: new Date().toISOString(),
+                status: OFFER_STATUS.DECLINED,
+                details: {
+                  reason: declineReason,
+                },
               },
-            },
-          ],
-        }
+            ],
+          }
         : o,
     );
     setOffers(updatedOffers);
@@ -2338,7 +2356,10 @@ hr@leviticatechnologies.com
   };
 
 
-
+const handleWithdrawOffer = (offer) => {
+  setSelectedOffer(offer);
+  setShowWithdrawModal(true);
+};
 
   const handleCreateRevisedOffer = (offer) => {
     const newVersion = offer.version + 1;
@@ -2425,23 +2446,23 @@ hr@leviticatechnologies.com
     const updatedOffers = offers.map((o) =>
       o.id === offer.id
         ? {
-          ...o,
-          offerStatus: newStatus,
-          approvalWorkflow: {
-            ...workflow,
-            currentStep: level + 1,
-            steps: updatedSteps,
-          },
-          history: [
-            ...o.history,
-            {
-              action: `Approved by ${workflow.steps.find((s) => s.level === level)?.role}`,
-              by: "Current User",
-              date: new Date().toISOString(),
-              status: newStatus,
+            ...o,
+            offerStatus: newStatus,
+            approvalWorkflow: {
+              ...workflow,
+              currentStep: level + 1,
+              steps: updatedSteps,
             },
-          ],
-        }
+            history: [
+              ...o.history,
+              {
+                action: `Approved by ${workflow.steps.find((s) => s.level === level)?.role}`,
+                by: "Current User",
+                date: new Date().toISOString(),
+                status: newStatus,
+              },
+            ],
+          }
         : o,
     );
     setOffers(updatedOffers);
@@ -2618,91 +2639,79 @@ hr@leviticatechnologies.com
             Create New Offer
           </button>
         </div>
+
+        
         {/* Statistics Dashboard */}
-        <div className="row g-3 mb-4">
-          <div className="col-xl-2 col-md-4 col-sm-6">
-            <div
-              className="card border shadow-sm"
-              style={{
-                background: "linear-gradient(135deg, #e3f2fd, #bbdefb)",
-              }}
-            >
-              <div className="card-body text-center">
-                <div className="fw-bold text-secondary small">Total Offers</div>
-                <div className="fw-bold fs-4 text-primary">{stats.total}</div>
-              </div>
+        <div className="kpi-row">
+  {[
+    {
+      title: "Total Offers",
+      value: stats.total,
+      icon: "heroicons:document-text",
+      bg: "kpi-primary",
+      color: "kpi-primary-text",
+    },
+    {
+      title: "Draft",
+      value: stats.draft,
+      icon: "heroicons:pencil-square",
+      bg: "kpi-info",
+      color: "kpi-info-text",
+    },
+    {
+      title: "Pending Approval",
+      value: stats.pending,
+      icon: "heroicons:clock",
+      bg: "kpi-warning",
+      color: "kpi-warning-text",
+    },
+    {
+      title: "Sent",
+      value: stats.sent,
+      icon: "heroicons:paper-airplane",
+      bg: "kpi-info",
+      color: "kpi-info-text",
+    },
+    {
+      title: "Accepted",
+      value: stats.accepted,
+      icon: "heroicons:check-circle",
+      bg: "kpi-success",
+      color: "kpi-success-text",
+    },
+    {
+      title: "Declined",
+      value: stats.declined,
+      icon: "heroicons:x-circle",
+      bg: "kpi-warning",
+      color: "kpi-warning-text",
+    },
+  ].map((item, index) => (
+    <div className="kpi-col" key={index}>
+      <div className="kpi-card">
+        <div className="kpi-card-body">
+
+          {/* Icon */}
+          <div className={`kpi-icon ${item.bg}`}>
+            <Icon icon={item.icon} className={`kpi-icon-style ${item.color}`} />
+          </div>
+
+          {/* Content */}
+          <div className="kpi-content">
+            <div className="kpi-title">
+              {item.title}
+            </div>
+
+            <div className="kpi-value">
+              {item.value}
             </div>
           </div>
-          <div className="col-xl-2 col-md-4 col-sm-6">
-            <div
-              className="card border shadow-sm"
-              style={{
-                background: "linear-gradient(135deg, #f3e5f5, #e1bee7)",
-              }}
-            >
-              <div className="card-body text-center">
-                <div className="fw-bold text-secondary small">Draft</div>
-                <div className="fw-bold fs-4 text-primary">{stats.draft}</div>
-              </div>
-            </div>
-          </div>
-          <div className="col-xl-2 col-md-4 col-sm-6">
-            <div
-              className="card border shadow-sm"
-              style={{
-                background: "linear-gradient(135deg, #fff8e1, #ffecb3)",
-              }}
-            >
-              <div className="card-body text-center">
-                <div className="fw-bold text-secondary small">
-                  Pending Approval
-                </div>
-                <div className="fw-bold fs-4 text-warning">{stats.pending}</div>
-              </div>
-            </div>
-          </div>
-          <div className="col-xl-2 col-md-4 col-sm-6">
-            <div
-              className="card border shadow-sm"
-              style={{
-                background: "linear-gradient(135deg, #eceff1, #cfd8dc)",
-              }}
-            >
-              <div className="card-body text-center">
-                <div className="fw-bold text-secondary small">Sent</div>
-                <div className="fw-bold fs-4 text-secondary">{stats.sent}</div>
-              </div>
-            </div>
-          </div>
-          <div className="col-xl-2 col-md-4 col-sm-6">
-            <div className="card border shadow-sm">
-              <div
-                className="card-body text-center"
-                style={{
-                  background: "linear-gradient(135deg, #e8f5e9, #c8e6c9)",
-                }}
-              >
-                <div className="fw-bold text-secondary small">Accepted</div>
-                <div className="fw-bold fs-4 text-success">
-                  {stats.accepted}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="col-xl-2 col-md-4 col-sm-6">
-            <div
-              className="card border shadow-sm"
-              style={{
-                background: "linear-gradient(135deg, #ffebee, #ffcdd2)",
-              }}
-            >
-              <div className="card-body text-center">
-                <div className="fw-bold text-secondary small">Declined</div>
-                <div className="fw-bold fs-4 text-danger">{stats.declined}</div>
-              </div>
-            </div>
-          </div>
+
         </div>
+      </div>
+    </div>
+  ))}
+</div>
 
         {/* Filters and Tabs */}
         <div className="card border shadow-sm mb-4">
@@ -2712,10 +2721,10 @@ hr@leviticatechnologies.com
                 const statusConfig =
                   status === "all"
                     ? {
-                      color: "primary",
-                      text: "All Offers",
-                      icon: "heroicons:queue-list",
-                    }
+                        color: "primary",
+                        text: "All Offers",
+                        icon: "heroicons:queue-list",
+                      }
                     : getStatusConfig(status);
                 return (
                   <button
@@ -2811,17 +2820,17 @@ hr@leviticatechnologies.com
                 <p className="mt-2">Loading offers...</p>
               </div>
             ) : getOffersByStatus(activeTab).length === 0 ? (
-              <div className="text-center py-5">
-                <div className="d-flex justify-content-center mb-3">
-                  <Icon
-                    icon="heroicons:document-magnifying-glass"
-                    width="40"
-                    height="40"
-                    className="text-secondary"
-                  />
-                </div>
-                <p className="text-muted mb-0">No offers found</p>
-              </div>
+  <div className="text-center py-5">
+    <div className="d-flex justify-content-center mb-3">
+      <Icon
+        icon="heroicons:document-magnifying-glass"
+        width="40"
+        height="40"
+        className="text-secondary"
+      />
+    </div>
+    <p className="text-muted mb-0">No offers found</p>
+  </div>
             ) : (
               <div className="table-responsive">
                 <table className="table table-hover">
@@ -2839,71 +2848,71 @@ hr@leviticatechnologies.com
                       const statusConfig = getStatusConfig(offer.offerStatus);
                       return (
                         <tr key={offer.id}>
+                          
+<td>
+  <div className="d-flex align-items-start gap-3">
+    
+    {/* Avatar */}
+    <div
+      className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+      style={{
+        width: "42px",
+        height: "42px",
+        backgroundColor: "#e6f4ff",
+        color: "#1677ff",
+        fontWeight: "600",
+        fontSize: "16px",
+      }}
+    >
+      {offer?.candidateName?.charAt(0)?.toUpperCase() || "?"}
+    </div>
 
-                          <td>
-                            <div className="d-flex align-items-start gap-3">
+    {/* Candidate Details */}
+    <div className="flex-grow-1">
+      <div className="fw-semibold mb-1">
+        {offer.candidateName}
+      </div>
 
-                              {/* Avatar */}
-                              <div
-                                className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                                style={{
-                                  width: "42px",
-                                  height: "42px",
-                                  backgroundColor: "#e6f4ff",
-                                  color: "#1677ff",
-                                  fontWeight: "600",
-                                  fontSize: "16px",
-                                }}
-                              >
-                                {offer?.candidateName?.charAt(0)?.toUpperCase() || "?"}
-                              </div>
+      <div className="small text-muted d-flex flex-column gap-1">
 
-                              {/* Candidate Details */}
-                              <div className="flex-grow-1">
-                                <div className="fw-semibold mb-1">
-                                  {offer.candidateName}
-                                </div>
+        <div className="d-flex align-items-center">
+          <Icon icon="heroicons:envelope" width="14" className="me-2" />
+          {offer.email}
+        </div>
 
-                                <div className="small text-muted d-flex flex-column gap-1">
+        <div className="d-flex align-items-center">
+          <Icon icon="heroicons:device-phone-mobile" width="14" className="me-2" />
+          {offer.phone}
+        </div>
 
-                                  <div className="d-flex align-items-center">
-                                    <Icon icon="heroicons:envelope" width="14" className="me-2" />
-                                    {offer.email}
-                                  </div>
+        <div className="d-flex align-items-center">
+          <Icon icon="heroicons:user-circle" width="14" className="me-2" />
+          Source: {offer.candidateSource}
+        </div>
 
-                                  <div className="d-flex align-items-center">
-                                    <Icon icon="heroicons:device-phone-mobile" width="14" className="me-2" />
-                                    {offer.phone}
-                                  </div>
+        {offer.emailSent && (
+          <div className="d-flex align-items-center text-success">
+            <Icon icon="heroicons:check-circle" width="14" className="me-2" />
+            Email sent{" "}
+            {offer.emailSentDate &&
+              new Date(offer.emailSentDate).toLocaleDateString()}
+          </div>
+        )}
 
-                                  <div className="d-flex align-items-center">
-                                    <Icon icon="heroicons:user-circle" width="14" className="me-2" />
-                                    Source: {offer.candidateSource}
-                                  </div>
+        {offer.smsSent && (
+          <div className="d-flex align-items-center text-info">
+            <Icon icon="heroicons:device-phone-mobile" width="14" className="me-2" />
+            SMS sent{" "}
+            {offer.smsSentDate &&
+              new Date(offer.smsSentDate).toLocaleDateString()}
+          </div>
+        )}
 
-                                  {offer.emailSent && (
-                                    <div className="d-flex align-items-center text-success">
-                                      <Icon icon="heroicons:check-circle" width="14" className="me-2" />
-                                      Email sent{" "}
-                                      {offer.emailSentDate &&
-                                        new Date(offer.emailSentDate).toLocaleDateString()}
-                                    </div>
-                                  )}
+      </div>
+    </div>
 
-                                  {offer.smsSent && (
-                                    <div className="d-flex align-items-center text-info">
-                                      <Icon icon="heroicons:device-phone-mobile" width="14" className="me-2" />
-                                      SMS sent{" "}
-                                      {offer.smsSentDate &&
-                                        new Date(offer.smsSentDate).toLocaleDateString()}
-                                    </div>
-                                  )}
-
-                                </div>
-                              </div>
-
-                            </div>
-                          </td>
+  </div>
+</td>
 
                           <td>
                             <div>
@@ -2937,51 +2946,51 @@ hr@leviticatechnologies.com
                                 <Icon icon={statusConfig.icon} />
                                 {statusConfig.text}
                               </span>
-                              <div className="d-flex flex-column gap-1 small">
+<div className="d-flex flex-column gap-1 small">
 
-                                {/* Accepted */}
-                                {offer.acceptanceDate && (
-                                  <div className="text-success d-flex align-items-center">
-                                    <Icon icon="heroicons:calendar" width="14" className="me-1" />
-                                    Accepted:{" "}
-                                    {new Date(offer.acceptanceDate).toLocaleDateString()}
-                                  </div>
-                                )}
+  {/* Accepted */}
+  {offer.acceptanceDate && (
+    <div className="text-success d-flex align-items-center">
+      <Icon icon="heroicons:calendar" width="14" className="me-1" />
+      Accepted:{" "}
+      {new Date(offer.acceptanceDate).toLocaleDateString()}
+    </div>
+  )}
 
-                                {/* Declined */}
-                                {offer.declineReason && (
-                                  <div className="text-danger d-flex align-items-center">
-                                    <Icon icon="heroicons:information-circle" width="14" className="me-1" />
-                                    Reason: {offer.declineReason}
-                                  </div>
-                                )}
+  {/* Declined */}
+  {offer.declineReason && (
+    <div className="text-danger d-flex align-items-center">
+      <Icon icon="heroicons:information-circle" width="14" className="me-1" />
+      Reason: {offer.declineReason}
+    </div>
+  )}
 
-                                {/* Expired */}
-                                {offer.expiryDate &&
-                                  new Date(offer.expiryDate).getTime() < Date.now() &&
-                                  offer.offerStatus === OFFER_STATUS.SENT && (
-                                    <div className="text-danger d-flex align-items-center">
-                                      <Icon icon="heroicons:exclamation-triangle" width="14" className="me-1" />
-                                      Expired
-                                    </div>
-                                  )}
+  {/* Expired */}
+  {offer.expiryDate &&
+    new Date(offer.expiryDate).getTime() < Date.now() &&
+    offer.offerStatus === OFFER_STATUS.SENT && (
+      <div className="text-danger d-flex align-items-center">
+        <Icon icon="heroicons:exclamation-triangle" width="14" className="me-1" />
+        Expired
+      </div>
+  )}
 
-                                {/* Version */}
-                                {offer.version > 1 && (
-                                  <div className="text-info d-flex align-items-center">
-                                    <Icon icon="heroicons:document-duplicate" width="14" className="me-1" />
-                                    Version {offer.version}
-                                  </div>
-                                )}
+  {/* Version */}
+  {offer.version > 1 && (
+    <div className="text-info d-flex align-items-center">
+      <Icon icon="heroicons:document-duplicate" width="14" className="me-1" />
+      Version {offer.version}
+    </div>
+  )}
 
-                              </div>
+</div>
 
                               {renderHistory(offer.history)}
                             </div>
                           </td>
-
+                          
                           <td className="align-middle">
-                            <div className="my-container">
+                           <div className="my-container">
                               <button
                                 className="btn btn-sm btn-outline-info d-flex align-items-center justify-content-center"
                                 onClick={() => {
@@ -3029,7 +3038,7 @@ hr@leviticatechnologies.com
                                 <Icon icon="heroicons:pencil-square" />
                               </button>
                               {offer.offerStatus === OFFER_STATUS.DRAFT ||
-                                offer.offerStatus === OFFER_STATUS.APPROVED ? (
+                              offer.offerStatus === OFFER_STATUS.APPROVED ? (
                                 <button
                                   className="btn btn-sm btn-secondary d-flex align-items-center justify-content-center"
                                   onClick={() => handleSendOffer(offer)}
@@ -3058,17 +3067,17 @@ hr@leviticatechnologies.com
                               ) : null}
                               {offer.offerStatus ===
                                 OFFER_STATUS.PENDING_APPROVAL && (
-                                  <button
-                                    className="btn btn-sm btn-info d-flex align-items-center justify-content-center"
-                                    onClick={() => {
-                                      setSelectedOffer(offer);
-                                      setShowApprovalModal(true);
-                                    }}
-                                    title="View Approval Status"
-                                  >
-                                    <Icon icon="heroicons:clipboard-document-check" />
-                                  </button>
-                                )}
+                                <button
+                                  className="btn btn-sm btn-info d-flex align-items-center justify-content-center"
+                                  onClick={() => {
+                                    setSelectedOffer(offer);
+                                    setShowApprovalModal(true);
+                                  }}
+                                  title="View Approval Status"
+                                >
+                                  <Icon icon="heroicons:clipboard-document-check" />
+                                </button>
+                              )}
                               {offer.offerStatus === OFFER_STATUS.APPROVED &&
                                 offer.version > 1 && (
                                   <button
@@ -3097,17 +3106,17 @@ hr@leviticatechnologies.com
                                 OFFER_STATUS.ACCEPTED,
                                 OFFER_STATUS.WITHDRAWN,
                               ].includes(offer.offerStatus) && (
-                                  <button
-                                    className="btn btn-sm btn-warning d-flex align-items-center justify-content-center"
-                                    onClick={() => {
-                                      setSelectedOffer(offer);
-                                      setShowWithdrawModal(true);
-                                    }}
-                                    title="Withdraw Offer"
-                                  >
-                                    <Icon icon="heroicons:arrow-uturn-left" />
-                                  </button>
-                                )}
+<button
+  className="btn btn-sm btn-warning d-flex align-items-center justify-content-center"
+  onClick={() => {
+    setSelectedOffer(offer);
+    setShowWithdrawModal(true);
+  }}
+  title="Withdraw Offer"
+>
+  <Icon icon="heroicons:arrow-uturn-left" />
+</button>
+                              )}
                               <button
                                 className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
                                 onClick={() => handleDelete(offer.id)}
@@ -3217,9 +3226,9 @@ hr@leviticatechnologies.com
                 ></button>
               </div>
               <div
-                className="hrms-modal-body hrms-modal-body-scroll"
+                 className="hrms-modal-body hrms-modal-body-scroll"
               >
-                <form onSubmit={handleSubmit} id="offerForm" className="bg-primary">
+                <form onSubmit={handleSubmit} id="offerForm">
                   {/* Step 1: Candidate Information */}
                   <div className="mb-4">
                     <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center">
@@ -3241,20 +3250,20 @@ hr@leviticatechnologies.com
                           required
                         />
                       </div>
-                      {/* New Gender field */}
-                      <div className="col-md-6">
-                        <label className="form-label">Gender</label>
-                        <select
-                          className="form-select"
-                          name="gender"
-                          value={formData.gender}
-                          onChange={handleInputChange}
-                        >
-                          <option value="male">Male</option>
-                          <option value="female">Female</option>
-                          <option value="other">Other</option>
-                        </select>
-                      </div>
+                          {/* New Gender field */}
+    <div className="col-md-6">
+      <label className="form-label">Gender</label>
+      <select
+        className="form-select"
+        name="gender"
+        value={formData.gender}
+        onChange={handleInputChange}
+      >
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
                       <div className="col-md-6">
                         <label className="form-label">
                           Email <span className="text-danger">*</span>
@@ -3281,106 +3290,106 @@ hr@leviticatechnologies.com
                           required
                         />
                       </div>
+                      
+<div className="col-md-6">
+  <label className="form-label">Candidate Source</label>
 
-                      <div className="col-md-6">
-                        <label className="form-label">Candidate Source</label>
+  {formData.candidateSource === "Other" ? (
+    <input
+      type="text"
+      className="form-control"
+      placeholder="Enter Candidate Source"
+      name="customSource"
+      value={formData.customSource}
+      onChange={handleInputChange}
+    />
+  ) : (
+    <select
+      className="form-select"
+      name="candidateSource"
+      value={formData.candidateSource}
+      onChange={(e) => {
+        handleInputChange(e);
 
-                        {formData.candidateSource === "Other" ? (
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Enter Candidate Source"
-                            name="customSource"
-                            value={formData.customSource}
-                            onChange={handleInputChange}
-                          />
-                        ) : (
-                          <select
-                            className="form-select"
-                            name="candidateSource"
-                            value={formData.candidateSource}
-                            onChange={(e) => {
-                              handleInputChange(e);
+        // Reset extra fields when switching
+        if (e.target.value !== "Referral") {
+          setFormData(prev => ({
+            ...prev,
+            referralDetails: {
+              employeeId: "",
+              role: "",
+              designation: "",
+              experience: ""
+            }
+          }));
+        }
 
-                              // Reset extra fields when switching
-                              if (e.target.value !== "Referral") {
-                                setFormData(prev => ({
-                                  ...prev,
-                                  referralDetails: {
-                                    employeeId: "",
-                                    role: "",
-                                    designation: "",
-                                    experience: ""
-                                  }
-                                }));
-                              }
+        if (e.target.value !== "Other") {
+          setFormData(prev => ({
+            ...prev,
+            customSource: ""
+          }));
+        }
+      }}
+    >
+      <option value="">Select Source</option>
+      <option value="LinkedIn">LinkedIn</option>
+      <option value="Referral">Referral</option>
+      <option value="Naukri">Naukri</option>
+      <option value="Campus">Campus</option>
+      <option value="AngelList">AngelList</option>
+      <option value="Other">Other</option>
+    </select>
+  )}
+</div>
 
-                              if (e.target.value !== "Other") {
-                                setFormData(prev => ({
-                                  ...prev,
-                                  customSource: ""
-                                }));
-                              }
-                            }}
-                          >
-                            <option value="">Select Source</option>
-                            <option value="LinkedIn">LinkedIn</option>
-                            <option value="Referral">Referral</option>
-                            <option value="Naukri">Naukri</option>
-                            <option value="Campus">Campus</option>
-                            <option value="AngelList">AngelList</option>
-                            <option value="Other">Other</option>
-                          </select>
-                        )}
-                      </div>
+{formData.candidateSource === "Referral" && (
+  <>
+    <div className="col-md-6">
+      <label className="form-label">Employee ID</label>
+      <input
+        type="text"
+        className="form-control"
+        name="referralDetails.employeeId"
+        value={formData.referralDetails?.employeeId || ''}
+        onChange={handleInputChange}
+      />
+    </div>
 
-                      {formData.candidateSource === "Referral" && (
-                        <>
-                          <div className="col-md-6">
-                            <label className="form-label">Employee ID</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="referralDetails.employeeId"
-                              value={formData.referralDetails?.employeeId || ''}
-                              onChange={handleInputChange}
-                            />
-                          </div>
+    <div className="col-md-6">
+      <label className="form-label">Role</label>
+      <input
+        type="text"
+        className="form-control"
+        name="referralDetails.role"
+        value={formData.referralDetails?.role || ''}
+        onChange={handleInputChange}
+      />
+    </div>
 
-                          <div className="col-md-6">
-                            <label className="form-label">Role</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="referralDetails.role"
-                              value={formData.referralDetails?.role || ''}
-                              onChange={handleInputChange}
-                            />
-                          </div>
+    <div className="col-md-6">
+      <label className="form-label">Designation</label>
+      <input
+        type="text"
+        className="form-control"
+        name="referralDetails.designation"
+        value={formData.referralDetails?.designation || ''}
+        onChange={handleInputChange}
+      />
+    </div>
 
-                          <div className="col-md-6">
-                            <label className="form-label">Designation</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="referralDetails.designation"
-                              value={formData.referralDetails?.designation || ''}
-                              onChange={handleInputChange}
-                            />
-                          </div>
-
-                          <div className="col-md-6">
-                            <label className="form-label">Experience</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="referralDetails.experience"
-                              value={formData.referralDetails?.experience || ''}
-                              onChange={handleInputChange}
-                            />
-                          </div>
-                        </>
-                      )}
+    <div className="col-md-6">
+      <label className="form-label">Experience</label>
+      <input
+        type="text"
+        className="form-control"
+        name="referralDetails.experience"
+        value={formData.referralDetails?.experience || ''}
+        onChange={handleInputChange}
+      />
+    </div>
+  </>
+)}
 
                       <div className="col-md-6">
                         <label className="form-label">
@@ -3460,228 +3469,229 @@ hr@leviticatechnologies.com
                   </div>
 
 
-                  {/* Step 2: Candidate Information */}
-                  <div className="mb-4">
-                    <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center">
-                      <Icon icon="heroicons:user" className="me-2" />
-                      Personal Information
-                    </h6>
-                    <div className="row g-3">
+{/* Step 2: Candidate Information */}
+<div className="mb-4">
+  <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center">
+    <Icon icon="heroicons:user" className="me-2" />
+    Personal Information
+  </h6>
+  <div className="row g-3">
 
-                      {/* Relation field */}
-                      <div className="col-md-6">
-                        <label className="form-label">Relation</label>
-                        <select
-                          className="form-select"
-                          name="relation"
-                          value={formData.relation}
-                          onChange={handleInputChange}
-                        >
-                          <option value="select">Select</option>
-                          <option value="S/O">S/O (Son of)</option>
-                          <option value="D/O">D/O (Daughter of)</option>
-                          <option value="C/O">C/O (Care of)</option>
-                          <option value="Others">Others</option>
-                        </select>
-                      </div>
+    {/* Relation field */}
+    <div className="col-md-6">
+      <label className="form-label">Relation</label>
+      <select
+        className="form-select"
+        name="relation"
+        value={formData.relation}
+        onChange={handleInputChange}
+      >
+        <option value="select">Select</option>
+        <option value="S/O">S/O (Son of)</option>
+        <option value="D/O">D/O (Daughter of)</option>
+        <option value="C/O">C/O (Care of)</option>
+        <option value="Others">Others</option>
+      </select>
+    </div>
 
-                      {/* Father's/Guardian's Name field */}
-                      <div className="col-md-6">
-                        <label className="form-label">Father's/Guardian's Name</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="fatherName"
-                          value={formData.fatherName}
-                          onChange={handleInputChange}
-                          placeholder="Enter father's or guardian's name"
-                        />
-                      </div>
+    {/* Father's/Guardian's Name field */}
+    <div className="col-md-6">
+      <label className="form-label">Father's/Guardian's Name</label>
+      <input
+        type="text"
+        className="form-control"
+        name="fatherName"
+        value={formData.fatherName}
+        onChange={handleInputChange}
+        placeholder="Enter father's or guardian's name"
+      />
+    </div>
+    
+    {/* Conditional fields when "Others" is selected */}
+    {formData.relation === "Others" && (
+      <>
+        {/* Custom Relation Type */}
+        <div className="col-md-6">
+          <label className="form-label">
+            Specify Relationship <span className="text-danger">*</span>
+          </label>
+          <input
+            type="text"
+            className="form-control"
+            name="customRelation"
+            value={formData.customRelation || ''}
+            onChange={handleInputChange}
+            placeholder="e.g., Uncle, Aunt, Grandfather, etc."
+            required
+          />
+        </div>
 
-                      {/* Conditional fields when "Others" is selected */}
-                      {formData.relation === "Others" && (
-                        <>
-                          {/* Custom Relation Type */}
-                          <div className="col-md-6">
-                            <label className="form-label">
-                              Specify Relationship <span className="text-danger">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="customRelation"
-                              value={formData.customRelation || ''}
-                              onChange={handleInputChange}
-                              placeholder="e.g., Uncle, Aunt, Grandfather, etc."
-                              required
-                            />
-                          </div>
+        {/* Guardian's Gender */}
+        <div className="col-md-6">
+          <label className="form-label">Guardian's Gender</label>
+          <select
+            className="form-select"
+            name="guardianGender"
+            value={formData.guardianGender || ''}
+            onChange={handleInputChange}
+          >
+            <option value="">Select Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
 
-                          {/* Guardian's Gender */}
-                          <div className="col-md-6">
-                            <label className="form-label">Guardian's Gender</label>
-                            <select
-                              className="form-select"
-                              name="guardianGender"
-                              value={formData.guardianGender || ''}
-                              onChange={handleInputChange}
-                            >
-                              <option value="">Select Gender</option>
-                              <option value="male">Male</option>
-                              <option value="female">Female</option>
-                              <option value="other">Other</option>
-                            </select>
-                          </div>
+        {/* Guardian's Contact (Optional) */}
+        <div className="col-md-6">
+          <label className="form-label">Guardian's Contact (Optional)</label>
+          <input
+            type="tel"
+            className="form-control"
+            name="guardianPhone"
+            value={formData.guardianPhone || ''}
+            onChange={handleInputChange}
+            placeholder="Guardian's phone number"
+          />
+        </div>
 
-                          {/* Guardian's Contact (Optional) */}
-                          <div className="col-md-6">
-                            <label className="form-label">Guardian's Contact (Optional)</label>
-                            <input
-                              type="tel"
-                              className="form-control"
-                              name="guardianPhone"
-                              value={formData.guardianPhone || ''}
-                              onChange={handleInputChange}
-                              placeholder="Guardian's phone number"
-                            />
-                          </div>
+        {/* Legal Guardian Confirmation */}
+<div className="col-md-6">
+  <div className="mt-4">
+    <label
+      htmlFor="isLegalGuardian"
+      className={`custom-checkbox ${
+        formData.isLegalGuardian ? "checked" : ""
+      }`}
+    >
+      <span className="checkbox-box">
+        {formData.isLegalGuardian && (
+          <span className="checkmark">✓</span>
+        )}
+      </span>
 
-                          {/* Legal Guardian Confirmation */}
-                          <div className="col-md-6">
-                            <div className="mt-4">
-                              <label
-                                htmlFor="isLegalGuardian"
-                                className={`custom-checkbox ${formData.isLegalGuardian ? "checked" : ""
-                                  }`}
-                              >
-                                <span className="checkbox-box">
-                                  {formData.isLegalGuardian && (
-                                    <span className="checkmark">✓</span>
-                                  )}
-                                </span>
+      <input
+        type="checkbox"
+        id="isLegalGuardian"
+        name="isLegalGuardian"
+        checked={formData.isLegalGuardian || false}
+        onChange={handleInputChange}
+        hidden
+      />
 
-                                <input
-                                  type="checkbox"
-                                  id="isLegalGuardian"
-                                  name="isLegalGuardian"
-                                  checked={formData.isLegalGuardian || false}
-                                  onChange={handleInputChange}
-                                  hidden
-                                />
+      <span className="checkbox-label">
+        This person is my legal guardian
+      </span>
+    </label>
+  </div>
+</div>
 
-                                <span className="checkbox-label">
-                                  This person is my legal guardian
-                                </span>
-                              </label>
-                            </div>
-                          </div>
+      </>
+    )}
+    
+    {/* Address Section - Always visible */}
+    <div className="col-12 mt-3">
+      <h6 className="fw-semibold mb-3">Address Details</h6>
+    </div>
+    
+    <div className="col-md-6">
+      <label className="form-label">Address</label>
+      <input
+        type="text"
+        className="form-control"
+        name="address.street"
+        value={formData.address.street}
+        onChange={handleInputChange}
+        placeholder="House no., building, street"
+      />
+    </div>
+    
+    <div className="col-md-6">
+      <label className="form-label">City/Village</label>
+      <input
+        type="text"
+        className="form-control"
+        name="address.city"
+        value={formData.address.city}
+        onChange={handleInputChange}
+        placeholder="City or village name"
+      />
+    </div>
+    
+    <div className="col-md-4">
+      <label className="form-label">District</label>
+      <input
+        type="text"
+        className="form-control"
+        name="address.district"
+        value={formData.address.district}
+        onChange={handleInputChange}
+        placeholder="District"
+      />
+    </div>
+    
+<div className="col-md-4">
+  <label className="form-label">State</label>
 
-                        </>
-                      )}
+  {formData.address.state === "Others" ? (
+    <input
+      type="text"
+      className="form-control"
+      placeholder="Enter State Name"
+      value={formData.address.customState || ""}
+      name="address.customState"
+      onChange={handleInputChange}
+    />
+  ) : (
+    <select
+      className="form-select"
+      name="address.state"
+      value={formData.address.state}
+      onChange={(e) => {
+        handleInputChange(e);
 
-                      {/* Address Section - Always visible */}
-                      <div className="col-12 mt-3">
-                        <h6 className="fw-semibold mb-3">Address Details</h6>
-                      </div>
-
-                      <div className="col-md-6">
-                        <label className="form-label">Address</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="address.street"
-                          value={formData.address.street}
-                          onChange={handleInputChange}
-                          placeholder="House no., building, street"
-                        />
-                      </div>
-
-                      <div className="col-md-6">
-                        <label className="form-label">City/Village</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="address.city"
-                          value={formData.address.city}
-                          onChange={handleInputChange}
-                          placeholder="City or village name"
-                        />
-                      </div>
-
-                      <div className="col-md-4">
-                        <label className="form-label">District</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="address.district"
-                          value={formData.address.district}
-                          onChange={handleInputChange}
-                          placeholder="District"
-                        />
-                      </div>
-
-                      <div className="col-md-4">
-                        <label className="form-label">State</label>
-
-                        {formData.address.state === "Others" ? (
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Enter State Name"
-                            value={formData.address.customState || ""}
-                            name="address.customState"
-                            onChange={handleInputChange}
-                          />
-                        ) : (
-                          <select
-                            className="form-select"
-                            name="address.state"
-                            value={formData.address.state}
-                            onChange={(e) => {
-                              handleInputChange(e);
-
-                              if (e.target.value !== "Others") {
-                                handleInputChange({
-                                  target: {
-                                    name: "address.customState",
-                                    value: "",
-                                  },
-                                });
-                              }
-                            }}
-                          >
-                            <option value="">Select State</option>
-                            <option value="Andhra Pradesh">Andhra Pradesh</option>
-                            <option value="Telangana">Telangana</option>
-                            <option value="Tamil Nadu">Tamil Nadu</option>
-                            <option value="Karnataka">Karnataka</option>
-                            <option value="Maharashtra">Maharashtra</option>
-                            <option value="Delhi">Delhi</option>
-                            <option value="Uttar Pradesh">Uttar Pradesh</option>
-                            <option value="Gujarat">Gujarat</option>
-                            <option value="Rajasthan">Rajasthan</option>
-                            <option value="West Bengal">West Bengal</option>
-                            <option value="Others">Others</option>
-                          </select>
-                        )}
-                      </div>
-
-                      <div className="col-md-4">
-                        <label className="form-label">PIN Code</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="address.pincode"
-                          value={formData.address.pincode}
-                          onChange={handleInputChange}
-                          placeholder="6-digit PIN code"
-                          maxLength="6"
-                        />
-                      </div>
-
-                    </div>
-                  </div>
-
+        if (e.target.value !== "Others") {
+          handleInputChange({
+            target: {
+              name: "address.customState",
+              value: "",
+            },
+          });
+        }
+      }}
+    >
+      <option value="">Select State</option>
+      <option value="Andhra Pradesh">Andhra Pradesh</option>
+      <option value="Telangana">Telangana</option>
+      <option value="Tamil Nadu">Tamil Nadu</option>
+      <option value="Karnataka">Karnataka</option>
+      <option value="Maharashtra">Maharashtra</option>
+      <option value="Delhi">Delhi</option>
+      <option value="Uttar Pradesh">Uttar Pradesh</option>
+      <option value="Gujarat">Gujarat</option>
+      <option value="Rajasthan">Rajasthan</option>
+      <option value="West Bengal">West Bengal</option>
+      <option value="Others">Others</option>
+    </select>
+  )}
+</div>
+    
+    <div className="col-md-4">
+      <label className="form-label">PIN Code</label>
+      <input
+        type="text"
+        className="form-control"
+        name="address.pincode"
+        value={formData.address.pincode}
+        onChange={handleInputChange}
+        placeholder="6-digit PIN code"
+        maxLength="6"
+      />
+    </div>
+    
+  </div>
+</div>
+                  
                   {/* Step 3: Offer Details */}
                   <div className="mb-4">
                     <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center">
@@ -3805,223 +3815,223 @@ hr@leviticatechnologies.com
                       </div>
                     </div>
                     {/* CTC Breakup */}
-                    <div className="mb-4">
-                      <h6 className="fw-bold mb-3">CTC Breakup</h6>
+<div className="mb-4">
+  <h6 className="fw-bold mb-3">CTC Breakup</h6>
+  
+  {/* Earnings Section */}
+  <div className="mb-3">
+    <h6 className="mb-2">Earnings</h6>
+    <div className="row g-3">
+      <div className="col-md-4">
+        <label className="form-label">Basic Salary</label>
+        <input
+          type="text"
+          className="form-control"
+          name="ctcBreakup.basic"
+          value={formData.ctcBreakup.basic}
+          onChange={handleInputChange}
+          placeholder="25,000"
+        />
+      </div>
+      <div className="col-md-4">
+        <label className="form-label">HRA</label>
+        <input
+          type="text"
+          className="form-control"
+          name="ctcBreakup.hra"
+          value={formData.ctcBreakup.hra}
+          onChange={handleInputChange}
+          placeholder="10,000"
+        />
+      </div>
+      <div className="col-md-4">
+        <label className="form-label">Special Allowance</label>
+        <input
+          type="text"
+          className="form-control"
+          name="ctcBreakup.specialAllowance"
+          value={formData.ctcBreakup.specialAllowance}
+          onChange={handleInputChange}
+          placeholder="5,000"
+        />
+      </div>
+      <div className="col-md-4">
+        <label className="form-label">Conveyance Allowance</label>
+        <input
+          type="text"
+          className="form-control"
+          name="ctcBreakup.conveyance"
+          value={formData.ctcBreakup.conveyance}
+          onChange={handleInputChange}
+          placeholder="1,600"
+        />
+      </div>
+      <div className="col-md-4">
+        <label className="form-label">Telephone Allowance</label>
+        <input
+          type="text"
+          className="form-control"
+          name="ctcBreakup.telephoneAllowance"
+          value={formData.ctcBreakup.telephoneAllowance || ''}
+          onChange={handleInputChange}
+          placeholder="1,000"
+        />
+      </div>
+      <div className="col-md-4">
+        <label className="form-label">Medical Allowance</label>
+        <input
+          type="text"
+          className="form-control"
+          name="ctcBreakup.medicalAllowance"
+          value={formData.ctcBreakup.medicalAllowance || ''}
+          onChange={handleInputChange}
+          placeholder="1,250"
+        />
+      </div>
+    </div>
+  </div>
 
-                      {/* Earnings Section */}
-                      <div className="mb-3">
-                        <h6 className="mb-2">Earnings</h6>
-                        <div className="row g-3">
-                          <div className="col-md-4">
-                            <label className="form-label">Basic Salary</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="ctcBreakup.basic"
-                              value={formData.ctcBreakup.basic}
-                              onChange={handleInputChange}
-                              placeholder="25,000"
-                            />
-                          </div>
-                          <div className="col-md-4">
-                            <label className="form-label">HRA</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="ctcBreakup.hra"
-                              value={formData.ctcBreakup.hra}
-                              onChange={handleInputChange}
-                              placeholder="10,000"
-                            />
-                          </div>
-                          <div className="col-md-4">
-                            <label className="form-label">Special Allowance</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="ctcBreakup.specialAllowance"
-                              value={formData.ctcBreakup.specialAllowance}
-                              onChange={handleInputChange}
-                              placeholder="5,000"
-                            />
-                          </div>
-                          <div className="col-md-4">
-                            <label className="form-label">Conveyance Allowance</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="ctcBreakup.conveyance"
-                              value={formData.ctcBreakup.conveyance}
-                              onChange={handleInputChange}
-                              placeholder="1,600"
-                            />
-                          </div>
-                          <div className="col-md-4">
-                            <label className="form-label">Telephone Allowance</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="ctcBreakup.telephoneAllowance"
-                              value={formData.ctcBreakup.telephoneAllowance || ''}
-                              onChange={handleInputChange}
-                              placeholder="1,000"
-                            />
-                          </div>
-                          <div className="col-md-4">
-                            <label className="form-label">Medical Allowance</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="ctcBreakup.medicalAllowance"
-                              value={formData.ctcBreakup.medicalAllowance || ''}
-                              onChange={handleInputChange}
-                              placeholder="1,250"
-                            />
-                          </div>
-                        </div>
-                      </div>
+  {/* Gross Salary Calculation */}
+  <div className="mb-3 p-3 bg-light rounded">
+    <div className="row">
+      <div className="col-md-6 offset-md-6">
+        <div className="d-flex justify-content-between align-items-center">
+          <strong>Gross Salary (Monthly):</strong>
+          <span className="fw-bold text-primary fs-5">
+            ₹{calculateGrossSalary(formData.ctcBreakup)}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
 
-                      {/* Gross Salary Calculation */}
-                      <div className="mb-3 p-3 bg-light rounded">
-                        <div className="row">
-                          <div className="col-md-6 offset-md-6">
-                            <div className="d-flex justify-content-between align-items-center">
-                              <strong>Gross Salary (Monthly):</strong>
-                              <span className="fw-bold text-primary fs-5">
-                                ₹{calculateGrossSalary(formData.ctcBreakup)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+  {/* Deductions Section */}
+  <div className="mb-3">
+    <h6 className="mb-2">Deductions</h6>
+    <div className="row g-3">
+      <div className="col-md-4">
+        <label className="form-label">Employee PF</label>
+        <input
+          type="text"
+          className="form-control"
+          name="ctcBreakup.employeePF"
+          value={formData.ctcBreakup.employeePF || ''}
+          onChange={handleInputChange}
+          placeholder="1,800"
+        />
+      </div>
+      <div className="col-md-4">
+        <label className="form-label">Professional Tax</label>
+        <input
+          type="text"
+          className="form-control"
+          name="ctcBreakup.professionalTax"
+          value={formData.ctcBreakup.professionalTax || ''}
+          onChange={handleInputChange}
+          placeholder="200"
+        />
+      </div>
+      <div className="col-md-4">
+        <label className="form-label">Gratuity (Employee)</label>
+        <input
+          type="text"
+          className="form-control"
+          name="ctcBreakup.gratuityEmployee"
+          value={formData.ctcBreakup.gratuityEmployee || ''}
+          onChange={handleInputChange}
+          placeholder="1,200"
+        />
+      </div>
+    </div>
+  </div>
 
-                      {/* Deductions Section */}
-                      <div className="mb-3">
-                        <h6 className="mb-2">Deductions</h6>
-                        <div className="row g-3">
-                          <div className="col-md-4">
-                            <label className="form-label">Employee PF</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="ctcBreakup.employeePF"
-                              value={formData.ctcBreakup.employeePF || ''}
-                              onChange={handleInputChange}
-                              placeholder="1,800"
-                            />
-                          </div>
-                          <div className="col-md-4">
-                            <label className="form-label">Professional Tax</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="ctcBreakup.professionalTax"
-                              value={formData.ctcBreakup.professionalTax || ''}
-                              onChange={handleInputChange}
-                              placeholder="200"
-                            />
-                          </div>
-                          <div className="col-md-4">
-                            <label className="form-label">Gratuity (Employee)</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="ctcBreakup.gratuityEmployee"
-                              value={formData.ctcBreakup.gratuityEmployee || ''}
-                              onChange={handleInputChange}
-                              placeholder="1,200"
-                            />
-                          </div>
-                        </div>
-                      </div>
+  {/* Net Take Home */}
+  <div className="mb-3 p-3 bg-success bg-opacity-10 rounded">
+    <div className="row">
+      <div className="col-md-6 offset-md-6">
+        <div className="d-flex justify-content-between align-items-center">
+          <strong className="text-success">Net Take Home (Monthly):</strong>
+          <span className="fw-bold text-success fs-4">
+            ₹{calculateNetTakeHome(formData.ctcBreakup)}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
 
-                      {/* Net Take Home */}
-                      <div className="mb-3 p-3 bg-success bg-opacity-10 rounded">
-                        <div className="row">
-                          <div className="col-md-6 offset-md-6">
-                            <div className="d-flex justify-content-between align-items-center">
-                              <strong className="text-success">Net Take Home (Monthly):</strong>
-                              <span className="fw-bold text-success fs-4">
-                                ₹{calculateNetTakeHome(formData.ctcBreakup)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+  {/* Employer Contributions Section */}
+  <div className="mb-3">
+    <h6 className="mb-2">Employer Contributions</h6>
+    <div className="row g-3">
+      <div className="col-md-4">
+        <label className="form-label">Employer PF</label>
+        <input
+          type="text"
+          className="form-control"
+          name="ctcBreakup.employerPF"
+          value={formData.ctcBreakup.employerPF || ''}
+          onChange={handleInputChange}
+          placeholder="1,800"
+        />
+      </div>
+      <div className="col-md-4">
+        <label className="form-label">Group Insurance</label>
+        <input
+          type="text"
+          className="form-control"
+          name="ctcBreakup.groupInsurance"
+          value={formData.ctcBreakup.groupInsurance || ''}
+          onChange={handleInputChange}
+          placeholder="500"
+        />
+      </div>
+      
 
-                      {/* Employer Contributions Section */}
-                      <div className="mb-3">
-                        <h6 className="mb-2">Employer Contributions</h6>
-                        <div className="row g-3">
-                          <div className="col-md-4">
-                            <label className="form-label">Employer PF</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="ctcBreakup.employerPF"
-                              value={formData.ctcBreakup.employerPF || ''}
-                              onChange={handleInputChange}
-                              placeholder="1,800"
-                            />
-                          </div>
-                          <div className="col-md-4">
-                            <label className="form-label">Group Insurance</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="ctcBreakup.groupInsurance"
-                              value={formData.ctcBreakup.groupInsurance || ''}
-                              onChange={handleInputChange}
-                              placeholder="500"
-                            />
-                          </div>
+    </div>
+  </div>
 
-
-                        </div>
-                      </div>
-
-                      {/* Total Monthly CTC */}
-                      <div className="mt-4 p-3 bg-primary bg-opacity-10 rounded">
-                        <div className="row">
-                          <div className="col-md-6">
-                            <h6 className="fw-bold mb-2">CTC Summary (Monthly)</h6>
-                            <table className="table table-sm table-borderless">
-                              <tbody>
-                                <tr>
-                                  <td>Gross Salary:</td>
-                                  <td className="text-end">₹{calculateGrossSalary(formData.ctcBreakup)}</td>
-                                </tr>
-                                <tr>
-                                  <td>Employer PF:</td>
-                                  <td className="text-end">₹{formData.ctcBreakup.employerPF || '0'}</td>
-                                </tr>
-                                <tr>
-                                  <td>Group Insurance:</td>
-                                  <td className="text-end">₹{formData.ctcBreakup.groupInsurance || '0'}</td>
-                                </tr>
-                                <tr>
-                                  <td>Employer Gratuity:</td>
-                                  <td className="text-end">₹{formData.ctcBreakup.gratuityEmployer || '0'}</td>
-                                </tr>
-                                <tr className="border-top">
-                                  <td><strong>Total Monthly CTC:</strong></td>
-                                  <td className="text-end"><strong className="text-primary fs-5">₹{calculateTotalMonthlyCTC(formData.ctcBreakup)}</strong></td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-                          <div className="col-md-6">
-                            <h6 className="fw-bold mb-2">Annual CTC</h6>
-                            <div className="d-flex justify-content-between align-items-center p-2 bg-white rounded">
-                              <span>Total Annual CTC:</span>
-                              <span className="fw-bold text-primary fs-4">
-                                ₹{calculateAnnualCTC(formData.ctcBreakup)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+  {/* Total Monthly CTC */}
+  <div className="mt-4 p-3 bg-primary bg-opacity-10 rounded">
+    <div className="row">
+      <div className="col-md-6">
+        <h6 className="fw-bold mb-2">CTC Summary (Monthly)</h6>
+        <table className="table table-sm table-borderless">
+          <tbody>
+            <tr>
+              <td>Gross Salary:</td>
+              <td className="text-end">₹{calculateGrossSalary(formData.ctcBreakup)}</td>
+            </tr>
+            <tr>
+              <td>Employer PF:</td>
+              <td className="text-end">₹{formData.ctcBreakup.employerPF || '0'}</td>
+            </tr>
+            <tr>
+              <td>Group Insurance:</td>
+              <td className="text-end">₹{formData.ctcBreakup.groupInsurance || '0'}</td>
+            </tr>
+            <tr>
+              <td>Employer Gratuity:</td>
+              <td className="text-end">₹{formData.ctcBreakup.gratuityEmployer || '0'}</td>
+            </tr>
+            <tr className="border-top">
+              <td><strong>Total Monthly CTC:</strong></td>
+              <td className="text-end"><strong className="text-primary fs-5">₹{calculateTotalMonthlyCTC(formData.ctcBreakup)}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div className="col-md-6">
+        <h6 className="fw-bold mb-2">Annual CTC</h6>
+        <div className="d-flex justify-content-between align-items-center p-2 bg-white rounded">
+          <span>Total Annual CTC:</span>
+          <span className="fw-bold text-primary fs-4">
+            ₹{calculateAnnualCTC(formData.ctcBreakup)}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
                     {/* Work Profile (Optional) */}
                     <div className="mb-4">
                       <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center">
@@ -4257,115 +4267,117 @@ hr@leviticatechnologies.com
                     </div>
 
                     <div className="row g-3">
-                      <div className="col-md-6">
-                        <div className="form-check d-flex align-items-center">
-                          <label
-                            className="d-flex align-items-center"
-                            style={{ cursor: "pointer" }}
-                          >
-                            {/* Custom Checkbox UI */}
-                            <div
-                              style={{
-                                width: "20px",
-                                height: "20px",
-                                borderRadius: "4px",
-                                border: `2px solid ${formData.enableBGV ? "#3B82F6" : "#9CA3AF"
-                                  }`,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                marginRight: "10px",
-                                transition: "all 0.3s ease",
-                                background: formData.enableBGV
-                                  ? "#3B82F6"
-                                  : "transparent",
-                              }}
-                            >
-                              {formData.enableBGV && (
-                                <span
-                                  style={{
-                                    color: "white",
-                                    fontSize: "12px",
-                                    fontWeight: "bold",
-                                    lineHeight: 1,
-                                  }}
-                                >
-                                  ✓
-                                </span>
-                              )}
-                            </div>
+  <div className="col-md-6">
+    <div className="form-check d-flex align-items-center">
+      <label
+        className="d-flex align-items-center"
+        style={{ cursor: "pointer" }}
+      >
+        {/* Custom Checkbox UI */}
+        <div
+          style={{
+            width: "20px",
+            height: "20px",
+            borderRadius: "4px",
+            border: `2px solid ${
+              formData.enableBGV ? "#3B82F6" : "#9CA3AF"
+            }`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginRight: "10px",
+            transition: "all 0.3s ease",
+            background: formData.enableBGV
+              ? "#3B82F6"
+              : "transparent",
+          }}
+        >
+          {formData.enableBGV && (
+            <span
+              style={{
+                color: "white",
+                fontSize: "12px",
+                fontWeight: "bold",
+                lineHeight: 1,
+              }}
+            >
+              ✓
+            </span>
+          )}
+        </div>
 
-                            {/* Hidden Actual Input */}
-                            <input
-                              type="checkbox"
-                              name="enableBGV"
-                              checked={formData.enableBGV}
-                              onChange={handleInputChange}
-                              style={{ display: "none" }}
-                            />
+        {/* Hidden Actual Input */}
+        <input
+          type="checkbox"
+          name="enableBGV"
+          checked={formData.enableBGV}
+          onChange={handleInputChange}
+          style={{ display: "none" }}
+        />
 
-                            <span className="fw-semibold">
-                              Enable Background Verification
-                            </span>
-                          </label>
-                        </div>
-                      </div>
+        <span className="fw-semibold">
+          Enable Background Verification
+        </span>
+      </label>
+    </div>
+  </div>
 
-                      <div className="col-md-6">
-                        <div className="form-check d-flex align-items-center">
-                          <label
-                            className="d-flex align-items-center"
-                            style={{ cursor: "pointer" }}
-                          >
-                            {/* Custom Checkbox UI */}
-                            <div
-                              style={{
-                                width: "20px",
-                                height: "20px",
-                                borderRadius: "4px",
-                                border: `2px solid ${formData.requireDigitalSignature ? "#3B82F6" : "#9CA3AF"
-                                  }`,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                marginRight: "10px",
-                                transition: "all 0.3s ease",
-                                background: formData.requireDigitalSignature
-                                  ? "#3B82F6"
-                                  : "transparent",
-                              }}
-                            >
-                              {formData.requireDigitalSignature && (
-                                <span
-                                  style={{
-                                    color: "white",
-                                    fontSize: "12px",
-                                    fontWeight: "bold",
-                                    lineHeight: 1,
-                                  }}
-                                >
-                                  ✓
-                                </span>
-                              )}
-                            </div>
+<div className="col-md-6">
+  <div className="form-check d-flex align-items-center">
+    <label
+      className="d-flex align-items-center"
+      style={{ cursor: "pointer" }}
+    >
+      {/* Custom Checkbox UI */}
+      <div
+        style={{
+          width: "20px",
+          height: "20px",
+          borderRadius: "4px",
+          border: `2px solid ${
+            formData.requireDigitalSignature ? "#3B82F6" : "#9CA3AF"
+          }`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          marginRight: "10px",
+          transition: "all 0.3s ease",
+          background: formData.requireDigitalSignature
+            ? "#3B82F6"
+            : "transparent",
+        }}
+      >
+        {formData.requireDigitalSignature && (
+          <span
+            style={{
+              color: "white",
+              fontSize: "12px",
+              fontWeight: "bold",
+              lineHeight: 1,
+            }}
+          >
+            ✓
+          </span>
+        )}
+      </div>
 
-                            {/* Hidden Actual Input */}
-                            <input
-                              type="checkbox"
-                              name="requireDigitalSignature"
-                              checked={formData.requireDigitalSignature}
-                              onChange={handleInputChange}
-                              style={{ display: "none" }}
-                            />
+      {/* Hidden Actual Input */}
+      <input
+        type="checkbox"
+        name="requireDigitalSignature"
+        checked={formData.requireDigitalSignature}
+        onChange={handleInputChange}
+        style={{ display: "none" }}
+      />
 
-                            <span className="fw-semibold">
-                              Require Digital Signature
-                            </span>
-                          </label>
-                        </div>
-                      </div>
+      <span className="fw-semibold">
+        Require Digital Signature
+      </span>
+    </label>
+  </div>
+</div>
 
-
+                      
                     </div>
                   </div>
                 </form>
@@ -4395,7 +4407,7 @@ hr@leviticatechnologies.com
         )}
         {/* Preview Modal */}
         {showPreview && selectedOffer && (
-          <div
+         <div
             className="hrms-modal-overlay"
             onClick={(e) => {
               if (e.target === e.currentTarget) setShowPreview(false);
@@ -4405,14 +4417,14 @@ hr@leviticatechnologies.com
               className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column"
               onClick={(e) => e.stopPropagation()}
             >
-
+ 
               {/* HEADER */}
               <div className="hrms-modal-header">
                 <h5 className="hrms-modal-title d-flex align-items-center">
                   <Icon icon="heroicons:eye" className="me-2" />
                   Offer Letter Preview
                 </h5>
-
+ 
                 <button
                   className="hrms-modal-close"
                   onClick={() => setShowPreview(false)}
@@ -4420,7 +4432,7 @@ hr@leviticatechnologies.com
                   ×
                 </button>
               </div>
-
+ 
               {/* BODY */}
               <div className="hrms-modal-body hrms-modal-body-scroll">
                 <div className="bg-white p-4 rounded shadow-sm">
@@ -4432,24 +4444,24 @@ hr@leviticatechnologies.com
                     <p className="mb-1">
                       Office #409, 4th Floor, Jain sadguru image's capital park, Ayyappa Society, VIP Hills, Silicon Valley, Madhapur, Hyderabad, Telangana 500081
                     </p>
-                    <p className="mb-1 d-flex justify-content-center align-items-center gap-4 flex-wrap text-center">
+<p className="mb-1 d-flex justify-content-center align-items-center gap-4 flex-wrap text-center">
 
-                      <span className="d-flex align-items-center gap-1">
-                        <Icon icon="heroicons:envelope" width="16" />
-                        hr@leviticatechnologies.com
-                      </span>
-                      |
-                      <span className="d-flex align-items-center gap-1">
-                        <Icon icon="heroicons:phone" width="16" />
-                        +91 6305675199
-                      </span>
-                      |
-                      <span className="d-flex align-items-center gap-1">
-                        <Icon icon="heroicons:globe-alt" width="16" />
-                        www.leviticatechnologies.com
-                      </span>
+  <span className="d-flex align-items-center gap-1">
+    <Icon icon="heroicons:envelope" width="16" />
+    hr@leviticatechnologies.com
+  </span>
+  |
+  <span className="d-flex align-items-center gap-1">
+    <Icon icon="heroicons:phone" width="16" />
+    +91 6305675199
+  </span>
+  |
+  <span className="d-flex align-items-center gap-1">
+    <Icon icon="heroicons:globe-alt" width="16" />
+    www.leviticatechnologies.com
+  </span>
 
-                    </p>
+</p>
 
 
                     <hr />
@@ -4609,226 +4621,226 @@ hr@leviticatechnologies.com
                   </div>
                 </div>
               </div>
-              <div className="modal-footer bg-white border-top d-flex justify-content-between">
-                <button
-                  className="close-btn"
-                  onClick={() => setShowPreview(false)}
-                >
-                  Close
-                </button>
-
-                <div className="d-flex gap-2">
-                  <button
-                    className="create-job-btn"
-                    onClick={() => {
-                      if (selectedOffer) {
-                        generateOfferLetterPDF(selectedOffer);
-                      } else {
-                        alert("No offer selected to download");
-                      }
-                    }}
-                  >
-                    <Icon icon="heroicons:arrow-down-tray" width="18" />
-                    Download PDF
-                  </button>
-
-                  <button
-                    className="add-employee"
-                    onClick={() => handleSendEmailFromPreview(selectedOffer)}
-                  >
-                    <Icon icon="heroicons:envelope" width="18" />
-                    Send via Email
-                  </button>
-                </div>
-              </div>
+                            <div className="modal-footer bg-white border-top d-flex justify-content-between">
+                              <button
+                                className="close-btn"
+                                onClick={() => setShowPreview(false)}
+                              >
+                                Close
+                              </button>
+              
+                              <div className="d-flex gap-2">
+              <button
+                className="create-job-btn"
+                onClick={() => {
+                  if (selectedOffer) {
+                    generateOfferLetterPDF(selectedOffer);
+                  } else {
+                    alert("No offer selected to download");
+                  }
+                }}
+              >
+                <Icon icon="heroicons:arrow-down-tray" width="18" />
+                Download PDF
+              </button>
+              
+                       <button
+                          className="add-employee"
+                          onClick={() => handleSendEmailFromPreview(selectedOffer)}
+                        >
+                          <Icon icon="heroicons:envelope" width="18" />
+                          Send via Email
+                        </button>
+                              </div>
+                            </div>
             </div>
           </div>
         )}
 
         {/* Withdraw Offer Modal */}
-        {showWithdrawModal && selectedOffer && (
-          <div
-            className="modal show d-block"
-            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-            onClick={(e) => {
-              if (e.target === e.currentTarget) {
-                setShowWithdrawModal(false);
-                setWithdrawReason("");
-              }
+{showWithdrawModal && selectedOffer && (
+  <div
+    className="modal show d-block"
+    style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+    onClick={(e) => {
+      if (e.target === e.currentTarget) {
+        setShowWithdrawModal(false);
+        setWithdrawReason("");
+      }
+    }}
+  >
+    <div className="modal-dialog">
+      <div className="modal-content">
+      {/* Header */}
+        <div
+          className="modal-header"
+          style={{ backgroundColor: "#ffc107", color: "#000" }}
+        >
+          <h5 className="modal-title d-flex align-items-center gap-2">
+            <Icon icon="heroicons:arrow-uturn-left" width="20" />
+            Withdraw Offer
+          </h5>
+
+          <button
+            type="button"
+            className="btn-close"
+            onClick={() => {
+              setShowWithdrawModal(false);
+              setWithdrawReason("");
+            }}
+          />
+        </div>
+
+      {/* Body */}
+       <div className="modal-body">
+        <p style={{ fontSize: "14px", marginBottom: "15px" }}>
+          Are you sure you want to withdraw the offer for{" "}
+          <strong>{selectedOffer.candidateName}</strong>?
+        </p>
+
+        {/* Reason Dropdown */}
+        <div style={{ marginBottom: "15px" }}>
+          <label
+            style={{
+              fontWeight: "500",
+              marginBottom: "5px",
+              display: "block",
             }}
           >
-            <div className="modal-dialog">
-              <div className="modal-content">
-                {/* Header */}
-                <div
-                  className="modal-header"
-                  style={{ backgroundColor: "#ffc107", color: "#000" }}
-                >
-                  <h5 className="modal-title d-flex align-items-center gap-2">
-                    <Icon icon="heroicons:arrow-uturn-left" width="20" />
-                    Withdraw Offer
-                  </h5>
+            Select Reason <span style={{ color: "#dc3545" }}>*</span>
+          </label>
 
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={() => {
-                      setShowWithdrawModal(false);
-                      setWithdrawReason("");
-                    }}
-                  />
-                </div>
+          <select
+            value={withdrawReason}
+            onChange={(e) => setWithdrawReason(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "8px",
+              borderRadius: "6px",
+              border: "1px solid #ccc",
+              fontSize: "14px",
+            }}
+            required
+          >
+            <option value="">-- Select Reason --</option>
+            {withdrawReasonsList.map((reason, index) => (
+              <option key={index} value={reason}>
+                {reason}
+              </option>
+            ))}
+          </select>
+        </div>
 
-                {/* Body */}
-                <div className="modal-body">
-                  <p style={{ fontSize: "14px", marginBottom: "15px" }}>
-                    Are you sure you want to withdraw the offer for{" "}
-                    <strong>{selectedOffer.candidateName}</strong>?
-                  </p>
-
-                  {/* Reason Dropdown */}
-                  <div style={{ marginBottom: "15px" }}>
-                    <label
-                      style={{
-                        fontWeight: "500",
-                        marginBottom: "5px",
-                        display: "block",
-                      }}
-                    >
-                      Select Reason <span style={{ color: "#dc3545" }}>*</span>
-                    </label>
-
-                    <select
-                      value={withdrawReason}
-                      onChange={(e) => setWithdrawReason(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "8px",
-                        borderRadius: "6px",
-                        border: "1px solid #ccc",
-                        fontSize: "14px",
-                      }}
-                      required
-                    >
-                      <option value="">-- Select Reason --</option>
-                      {withdrawReasonsList.map((reason, index) => (
-                        <option key={index} value={reason}>
-                          {reason}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Custom Reason Textarea */}
-                  {withdrawReason === "Other" && (
-                    <div>
-                      <label
-                        style={{
-                          fontWeight: "500",
-                          marginBottom: "5px",
-                          display: "block",
-                        }}
-                      >
-                        Enter Custom Reason <span style={{ color: "#dc3545" }}>*</span>
-                      </label>
-                      <textarea
-                        rows="3"
-                        value={withdrawReason}
-                        onChange={(e) => setWithdrawReason(e.target.value)}
-                        placeholder="Enter detailed reason for withdrawal..."
-                        style={{
-                          width: "100%",
-                          padding: "8px",
-                          borderRadius: "6px",
-                          border: "1px solid #ccc",
-                          fontSize: "14px",
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Warning Message */}
-                  <div
-                    style={{
-                      marginTop: "15px",
-                      padding: "10px",
-                      backgroundColor: "#fff3cd",
-                      border: "1px solid #ffe69c",
-                      borderRadius: "6px",
-                      color: "#997404",
-                      fontSize: "13px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                    }}
-                  >
-                    <Icon icon="heroicons:exclamation-triangle" width="18" />
-                    <span>
-                      This action cannot be undone. The candidate will be notified and the offer will be marked as withdrawn.
-                    </span>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="modal-footer">
-                  <button
-                    onClick={() => {
-                      setShowWithdrawModal(false);
-                      setWithdrawReason("");
-                    }}
-                    className="cancel-btn"
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      if (!withdrawReason.trim()) {
-                        alert("Please provide a reason for withdrawing the offer");
-                        return;
-                      }
-
-                      // Update offer status
-                      const updatedOffers = offers.map((o) =>
-                        o.id === selectedOffer.id
-                          ? {
-                            ...o,
-                            offerStatus: OFFER_STATUS.WITHDRAWN,
-                            withdrawReason: withdrawReason,
-                            history: [
-                              ...o.history,
-                              {
-                                action: "Offer Withdrawn",
-                                by: "HR Admin",
-                                date: new Date().toISOString(),
-                                status: OFFER_STATUS.WITHDRAWN,
-                                details: {
-                                  reason: withdrawReason,
-                                },
-                              },
-                            ],
-                          }
-                          : o,
-                      );
-                      setOffers(updatedOffers);
-
-                      setShowWithdrawModal(false);
-                      setWithdrawReason("");
-
-                      alert(`Offer withdrawn for ${selectedOffer.candidateName}. Reason: ${withdrawReason}`);
-                    }}
-                    className="help-btn"
-
-                    disabled={!withdrawReason.trim()}
-                  >
-                    <Icon icon="heroicons:arrow-uturn-left" width="18" height="18" />
-                    Confirm Withdrawal
-                  </button>
-                </div>
-              </div>
-            </div>
+        {/* Custom Reason Textarea */}
+        {withdrawReason === "Other" && (
+          <div>
+            <label
+              style={{
+                fontWeight: "500",
+                marginBottom: "5px",
+                display: "block",
+              }}
+            >
+              Enter Custom Reason <span style={{ color: "#dc3545" }}>*</span>
+            </label>
+            <textarea
+              rows="3"
+              value={withdrawReason}
+              onChange={(e) => setWithdrawReason(e.target.value)}
+              placeholder="Enter detailed reason for withdrawal..."
+              style={{
+                width: "100%",
+                padding: "8px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+                fontSize: "14px",
+              }}
+            />
           </div>
         )}
+
+        {/* Warning Message */}
+        <div
+          style={{
+            marginTop: "15px",
+            padding: "10px",
+            backgroundColor: "#fff3cd",
+            border: "1px solid #ffe69c",
+            borderRadius: "6px",
+            color: "#997404",
+            fontSize: "13px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          <Icon icon="heroicons:exclamation-triangle" width="18" />
+          <span>
+            This action cannot be undone. The candidate will be notified and the offer will be marked as withdrawn.
+          </span>
+        </div>
+      </div>
+
+      {/* Footer */}
+<div className="modal-footer">
+        <button
+          onClick={() => {
+            setShowWithdrawModal(false);
+            setWithdrawReason("");
+          }}
+          className="cancel-btn"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={() => {
+            if (!withdrawReason.trim()) {
+              alert("Please provide a reason for withdrawing the offer");
+              return;
+            }
+
+            // Update offer status
+            const updatedOffers = offers.map((o) =>
+              o.id === selectedOffer.id
+                ? {
+                    ...o,
+                    offerStatus: OFFER_STATUS.WITHDRAWN,
+                    withdrawReason: withdrawReason,
+                    history: [
+                      ...o.history,
+                      {
+                        action: "Offer Withdrawn",
+                        by: "HR Admin",
+                        date: new Date().toISOString(),
+                        status: OFFER_STATUS.WITHDRAWN,
+                        details: {
+                          reason: withdrawReason,
+                        },
+                      },
+                    ],
+                  }
+                : o,
+            );
+            setOffers(updatedOffers);
+            
+            setShowWithdrawModal(false);
+            setWithdrawReason("");
+            
+            alert(`Offer withdrawn for ${selectedOffer.candidateName}. Reason: ${withdrawReason}`);
+          }}
+          className="help-btn"
+
+          disabled={!withdrawReason.trim()}
+        >
+          <Icon icon="heroicons:arrow-uturn-left" width="18" height="18" />
+          Confirm Withdrawal
+        </button>
+      </div>
+    </div>
+  </div>
+  </div>
+)}
 
 
         {/* Send Offer Modal */}
@@ -4853,7 +4865,7 @@ hr@leviticatechnologies.com
               </div>
 
               {/* Body */}
-              <div className="hrms-modal-body hrms-modal-body-scroll">
+               <div className="hrms-modal-body hrms-modal-body-scroll">
                 {/* Candidate Info */}
                 <div className="mb-4 p-3 border rounded bg-light">
                   <h6 className="fw-bold mb-3 text-primary d-flex align-items-center">
@@ -5147,14 +5159,14 @@ hr@leviticatechnologies.com
                   Decline Offer
                 </h5>
 
-                <button
-                  type="button"
-                  onClick={() => {
+                  <button
+                    type="button"
+                    onClick={() => {
                     setShowDeclineModal(false);
                     setDeclineReason("");
                   }}
                   className="btn btn-close"
-                ></button>
+                  ></button>
               </div>
 
               {/* Body */}
@@ -5247,17 +5259,17 @@ hr@leviticatechnologies.com
                   Close
                 </button>
 
-                <button
-                  onClick={handleConfirmDecline}
-                  className="delete-btn"
-                >
-                  <Icon
-                    icon="heroicons:x-circle"
-                    width="18"
-                    height="18"
-                  />
-                  Confirm Decline
-                </button>
+<button
+  onClick={handleConfirmDecline}
+  className="delete-btn"
+>
+  <Icon
+    icon="heroicons:x-circle"
+    width="18"
+    height="18"
+  />
+  Confirm Decline
+</button>
 
 
               </div>
@@ -5304,7 +5316,7 @@ hr@leviticatechnologies.com
                   </h5>
                   <button
                     type="button"
-                    className="btn-close"
+                  className="btn-close"
                     onClick={() => setShowApprovalModal(false)}
                   ></button>
                 </div>
@@ -5333,8 +5345,8 @@ hr@leviticatechnologies.com
                                     Approved by: {step.approvedBy} on{" "}
                                     {step.approvedDate
                                       ? new Date(
-                                        step.approvedDate,
-                                      ).toLocaleDateString()
+                                          step.approvedDate,
+                                        ).toLocaleDateString()
                                       : "N/A"}
                                   </div>
                                 )}
@@ -5380,7 +5392,7 @@ hr@leviticatechnologies.com
         {/* Background Verification Modal */}
         {showBGVModal && selectedOffer && (
           <div
-            className="hrms-modal-overlay"
+           className="hrms-modal-overlay"
           >
             <div
               className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column"
@@ -5444,14 +5456,15 @@ hr@leviticatechnologies.com
                       <strong>Status:</strong>
                       <div>
                         <span
-                          className={`badge ${selectedOffer.bgvStatus === "Completed"
+                          className={`badge ${
+                            selectedOffer.bgvStatus === "Completed"
                               ? "bg-success"
                               : selectedOffer.bgvStatus === "Rejected"
                                 ? "bg-danger"
                                 : selectedOffer.bgvStatus === "In Progress"
                                   ? "bg-info"
                                   : "bg-warning text-dark"
-                            }`}
+                          }`}
                         >
                           {selectedOffer.bgvStatus || "Pending"}
                         </span>
@@ -5543,7 +5556,7 @@ hr@leviticatechnologies.com
         {/* Reference Check Modal */}
         {showReferenceCheckModal && selectedOffer && (
           <div className="hrms-modal-overlay">
-            <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column" >
+            <div  className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column" >
               {/* Header */}
               <div className="hrms-modal-header">
                 <h5 className="hrms-modal-title d-flex align-items-center">
@@ -5562,7 +5575,7 @@ hr@leviticatechnologies.com
 
               {/* Body */}
               <div className="hrms-modal-body hrms-modal-body-scroll">
-
+                
                 {/* Candidate Info */}
                 <div className="mb-4 p-3 border rounded bg-light">
                   <h6 className="fw-bold mb-3 text-primary">
@@ -5591,7 +5604,7 @@ hr@leviticatechnologies.com
 
                 {/* Reference Check Info */}
                 {selectedOffer.referenceCheck &&
-                  typeof selectedOffer.referenceCheck === "object" ? (
+                typeof selectedOffer.referenceCheck === "object" ? (
                   <>
                     <div className="mb-4">
                       <h6 className="fw-bold text-success mb-3">
@@ -5607,14 +5620,15 @@ hr@leviticatechnologies.com
                           <strong>Status:</strong>
                           <div>
                             <span
-                              className={`badge ${selectedOffer.referenceCheck.status ===
-                                  "Approved"
+                              className={`badge ${
+                                selectedOffer.referenceCheck.status ===
+                                "Approved"
                                   ? "bg-success"
                                   : selectedOffer.referenceCheck.status ===
-                                    "Rejected"
+                                      "Rejected"
                                     ? "bg-danger"
                                     : "bg-warning text-dark"
-                                }`}
+                              }`}
                             >
                               {selectedOffer.referenceCheck.status}
                             </span>
@@ -5755,7 +5769,7 @@ hr@leviticatechnologies.com
                     {selectedOffer.version || 1}
                   </p>
                   {selectedOffer.versionHistory &&
-                    selectedOffer.versionHistory.length > 0 ? (
+                  selectedOffer.versionHistory.length > 0 ? (
                     <div className="mt-3">
                       <h6>Previous Versions:</h6>
                       {selectedOffer.versionHistory.map((version, idx) => (
@@ -5830,73 +5844,73 @@ hr@leviticatechnologies.com
             >
               {/* Header */}
               <div className="modal-header bg-white border-bottom">
-                <h5 className="modal-title d-flex align-items-center">
-                  <Icon icon="heroicons:document-text" className="me-2" />
-                  Customize Template: {selectedTemplate.name}
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => {
-                    setShowTemplateModal(false);
-                    setSelectedTemplate(null);
-                  }}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <div className="mb-3">
-                  <h6>Template Sections:</h6>
-                  <ul>
-                    {selectedTemplate.sections.map((section, idx) => (
-                      <li key={idx}>{section.replace(/_/g, " ")}</li>
-                    ))}
-                  </ul>
+                  <h5 className="modal-title d-flex align-items-center">
+                    <Icon icon="heroicons:document-text" className="me-2" />
+                    Customize Template: {selectedTemplate.name}
+                  </h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => {
+                      setShowTemplateModal(false);
+                      setSelectedTemplate(null);
+                    }}
+                  ></button>
                 </div>
-                <div className="mb-3">
-                  <h6>Customizable Fields:</h6>
-                  <ul>
-                    {selectedTemplate.customizableFields.map((field, idx) => (
-                      <li key={idx}>{field.replace(/_/g, " ")}</li>
-                    ))}
-                  </ul>
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <h6>Template Sections:</h6>
+                    <ul>
+                      {selectedTemplate.sections.map((section, idx) => (
+                        <li key={idx}>{section.replace(/_/g, " ")}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="mb-3">
+                    <h6>Customizable Fields:</h6>
+                    <ul>
+                      {selectedTemplate.customizableFields.map((field, idx) => (
+                        <li key={idx}>{field.replace(/_/g, " ")}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="mb-3">
+                    <h6>Default Terms:</h6>
+                    <textarea
+                      className="form-control"
+                      rows="6"
+                      value={formData.terms}
+                      onChange={(e) =>
+                        setFormData({ ...formData, terms: e.target.value })
+                      }
+                    />
+                  </div>
                 </div>
-                <div className="mb-3">
-                  <h6>Default Terms:</h6>
-                  <textarea
-                    className="form-control"
-                    rows="6"
-                    value={formData.terms}
-                    onChange={(e) =>
-                      setFormData({ ...formData, terms: e.target.value })
-                    }
-                  />
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="cancel-btn"
+                    onClick={() => {
+                      setShowTemplateModal(false);
+                      setSelectedTemplate(null);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary d-inline-flex align-items-center gap-2"
+                    onClick={() => {
+                      setShowTemplateModal(false);
+                      setSelectedTemplate(null);
+                    }}
+                  >
+                    <Icon icon="heroicons:check" className="me-2" />
+                    Apply Template
+                  </button>
                 </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="cancel-btn"
-                  onClick={() => {
-                    setShowTemplateModal(false);
-                    setSelectedTemplate(null);
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary d-inline-flex align-items-center gap-2"
-                  onClick={() => {
-                    setShowTemplateModal(false);
-                    setSelectedTemplate(null);
-                  }}
-                >
-                  <Icon icon="heroicons:check" className="me-2" />
-                  Apply Template
-                </button>
               </div>
             </div>
-          </div>
         )}
 
         {/* E-Signature Modal */}
@@ -5961,14 +5975,14 @@ hr@leviticatechnologies.com
                   >
                     Cancel
                   </button>
-                  <button
-                    type="button"
-                    className="btn btn-success d-flex align-items-center"
-                    onClick={handleConfirmESignature}
-                  >
-                    <Icon icon="heroicons:check-badge" className="me-2" />
-                    <span>Confirm Signature</span>
-                  </button>
+<button
+  type="button"
+  className="btn btn-success d-flex align-items-center"
+  onClick={handleConfirmESignature}
+>
+  <Icon icon="heroicons:check-badge" className="me-2" />
+  <span>Confirm Signature</span>
+</button>
 
                 </div>
               </div>
@@ -5976,7 +5990,7 @@ hr@leviticatechnologies.com
           </div>
         )}
 
-
+        
       </div>
     </>
   );

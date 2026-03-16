@@ -2542,30 +2542,30 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
         {/* HEADER */}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
-          <h5 className="mb-2 d-flex align-items-center">
-            <Icon icon="heroicons-solid:document-text" className="me-2" width={24} height={24} />
+<h5 className="text-3xl fw-bold text-dark mb-2 d-flex align-items-center gap-1">
+  <Icon icon='heroicons:clock'/>
+  Probation Management
+</h5>
 
-            Probation Management
-            </h5>
             <p className="text-muted">Track, review, and manage employee probation periods</p>
           </div>
           
           <div className="d-flex gap-2">
             <button
-              className="btn btn-outline-primary"
+              className="create-job-btn"
               onClick={() => setShowReportModal(true)}
             >
               Reports
             </button>
             <button
-              className="btn btn-outline-primary"
+              className="record-communication-btn"
               onClick={() => setShowBulkActionModal(true)}
               disabled={selectedEmployees.length === 0}
             >
               Bulk Actions ({selectedEmployees.length})
             </button>
             <button
-              className="btn btn-primary"
+              className="create-job-btn"
               onClick={() => setShowAddModal(true)}
             >
               Add Employee
@@ -2573,62 +2573,74 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
           </div>
         </div>
 
-        {/* STATISTICS */}
-        <div className="row g-3 mb-4">
-          <div className="col-md-2 col-6">
-            <div className="card border shadow-sm h-100">
-              <div className="card-body text-center">
-                <div className="fw-bold text-secondary-light small">Total Employees</div>
-                <div className="fw-bold fs-5 text-primary">{stats.total}</div>
-              </div>
-            </div>
+{/* Statistics */}
+<div className="kpi-row">
+  {[
+    {
+      title: "Total Employees",
+      value: stats.total,
+      icon: "heroicons:users",
+      bg: "kpi-primary",
+      color: "kpi-primary-text",
+    },
+    {
+      title: "In Progress",
+      value: stats.inProgress,
+      icon: "heroicons:arrow-path",
+      bg: "kpi-info",
+      color: "kpi-info-text",
+    },
+    {
+      title: "At Risk",
+      value: stats.atRisk,
+      icon: "heroicons:exclamation-triangle",
+      bg: "kpi-warning",
+      color: "kpi-warning-text",
+    },
+    {
+      title: "Ending This Week",
+      value: stats.endingThisWeek,
+      icon: "heroicons:calendar-days",
+      bg: "kpi-info",
+      color: "kpi-info-text",
+    },
+    {
+      title: "Completed",
+      value: stats.completed,
+      icon: "heroicons:check-circle",
+      bg: "kpi-success",
+      color: "kpi-success-text",
+    },
+    {
+      title: "High Risk",
+      value: stats.highRisk,
+      icon: "heroicons:x-circle",
+      bg: "kpi-warning",
+      color: "kpi-warning-text",
+    },
+  ].map((item, index) => (
+    <div className="kpi-col" key={index}>
+      <div className="kpi-card">
+        <div className="kpi-card-body">
+          {/* Icon */}
+          <div className={`kpi-icon ${item.bg}`}>
+            <Icon
+              icon={item.icon}
+              className={`kpi-icon-style ${item.color}`}
+            />
           </div>
 
-          <div className="col-md-2 col-6">
-            <div className="card border shadow-sm h-100">
-              <div className="card-body text-center">
-                <div className="fw-bold text-secondary-light small">In Progress</div>
-                <div className="fw-bold fs-5 text-info">{stats.inProgress}</div>
-              </div>
-            </div>
+          {/* Content */}
+          <div className="kpi-content">
+            <div className="kpi-title">{item.title}</div>
+            <div className="kpi-value">{item.value}</div>
           </div>
 
-          <div className="col-md-2 col-6">
-            <div className="card border shadow-sm h-100">
-              <div className="card-body text-center">
-                <div className="fw-bold text-secondary-light small">At Risk</div>
-                <div className="fw-bold fs-5 text-danger">{stats.atRisk}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-md-2 col-6">
-            <div className="card border shadow-sm h-100">
-              <div className="card-body text-center">
-                <div className="fw-bold text-secondary-light small">Ending This Week</div>
-                <div className="fw-bold fs-5 text-warning">{stats.endingThisWeek}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-md-2 col-6">
-            <div className="card border shadow-sm h-100">
-              <div className="card-body text-center">
-                <div className="fw-bold text-secondary-light small">Completed</div>
-                <div className="fw-bold fs-5 text-success">{stats.completed}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-md-2 col-6">
-            <div className="card border shadow-sm h-100">
-              <div className="card-body text-center">
-                <div className="fw-bold text-secondary-light small">High Risk</div>
-                <div className="fw-bold fs-5 text-danger">{stats.highRisk}</div>
-              </div>
-            </div>
-          </div>
         </div>
+      </div>
+    </div>
+  ))}
+</div>
 
 
         {/* FILTERS */}
@@ -2698,13 +2710,6 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                 <option value="progress">Sort by Progress</option>
                 <option value="joiningDate">Sort by Joining Date</option>
               </select>
-              
-              <button
-                className="btn btn-outline-secondary"
-                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-              >
-                {sortOrder === 'asc' ? '↑' : '↓'}
-              </button>
             </div>
           </div>
         </div>
@@ -2718,7 +2723,7 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
     </div>
     <div className="d-flex gap-2">
          <button 
-        className="btn btn-sm btn-outline-danger"
+        className="delete-btn"
         onClick={() => {
           // Filter out selected employees without confirmation
           const updatedEmployees = probationEmployees.filter(
@@ -2747,563 +2752,664 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
 )}
 
         {/* MAIN TABLE */}
-        <div className="card">
-          <div className="table-responsive">
-            <table className="table table-hover align-middle">
-              <thead className="table-light">
-                <tr>
-                  <th style={{ width: '50px' }}>
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      checked={selectedEmployees.length === paginatedEmployees.length && paginatedEmployees.length > 0}
-                      onChange={handleSelectAll}
-                    />
-                  </th>
-                  <th style={{ minWidth: '250px' }}>Employee Details</th>
-                  <th className="text-center" style={{ minWidth: '100px' }}>Probation Status</th>
-                  <th className="text-center" style={{ minWidth: '120px' }}>Progress</th>
-                  <th className="text-center" style={{ minWidth: '100px' }}>Risk Level</th>
-                  <th className="text-center" style={{ minWidth: '120px' }}>Review Milestones</th>
-                  <th className="text-center" style={{ minWidth: '100px' }}>Time Remaining</th>
-                  <th className="text-center" style={{ minWidth: '100px' }}>Current Rating</th>
-                  <th className="text-center" style={{ minWidth: '200px' }}>Actions</th>
-                </tr>
-              </thead>
+<div className="card">
+  <div className="table-responsive">
+    <table className="table table-hover align-middle" style={{ minWidth: '1600px' }}>
+      <thead className="table-light">
+        <tr>
+          <th style={{ width: '90px' }}>
+            <div className="d-flex flex-column align-items-center">
+              <label 
+                htmlFor="selectAllCheckbox" 
+                className="form-check-label small text-muted"
+                style={{ cursor: 'pointer', fontSize: '1rem' }}
+              >
+                Select All
+              </label>
+              <input
+                type="checkbox"
+                className="form-check-input mb-1"
+                checked={selectedEmployees.length === paginatedEmployees.length && paginatedEmployees.length > 0}
+                onChange={handleSelectAll}
+                id="selectAllCheckbox"
+              />
+
               
-              <tbody>
-                {paginatedEmployees.map((emp) => (
-                  <tr key={emp.id} className={selectedEmployees.includes(emp.id) ? 'table-active' : ''}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        className="form-check-input"
-                        checked={selectedEmployees.includes(emp.id)}
-                        onChange={() => handleSelectEmployee(emp.id)}
-                      />
-                    </td>
-                    
-                    <td>
-                      <div>
-                        <div className="d-flex align-items-center gap-2">
-                          <strong className="d-block">{emp.name}</strong>
-                          <small className="badge bg-secondary">{emp.employeeId}</small>
-                        </div>
-                        <small className="text-muted d-block">{emp.designation}</small>
-                        <div className="d-flex gap-2">
-                          <small className="text-muted">{emp.department}</small>
-                          <small className="text-muted">•</small>
-                          <small className="text-muted">{emp.workLocation}</small>
-                        </div>
-                      </div>
-                    </td>
-                    
-                    <td className="text-center">
-                      {getStatusBadge(emp.status)}
-                      {emp.extensionCount > 0 && (
-                        <div className="small text-muted mt-1">
-                          Extended {emp.extensionCount} time{emp.extensionCount > 1 ? 's' : ''}
-                        </div>
-                      )}
-                    </td>
-                    
-                    <td className="text-center">
-                      <ProgressBar percentage={emp.progress} showLabel={false} />
-                      <div className="small text-muted mt-1">{emp.progress}% complete</div>
-                    </td>
-                    
-                    <td className="text-center">
-                      {getRiskBadge(emp.riskLevel)}
-                    </td>
-                    
-                    <td className="text-center">
-                      <ReviewMilestones employee={emp} />
-                      <div className="small text-muted mt-1">
-                        Next: {emp.nextReviewDate ? formatDate(emp.nextReviewDate) : 'N/A'}
-                      </div>
-                    </td>
-                    
-                    <td className="text-center">
-                      <div className={`fw-bold ${
-                        emp.daysRemaining <= 0 ? 'text-danger' :
-                        emp.daysRemaining <= 7 ? 'text-danger' :
-                        emp.daysRemaining <= 30 ? 'text-warning' : 'text-success'
-                      }`}>
-                        {emp.daysRemaining <= 0 ? Math.abs(emp.daysRemaining) + ' days overdue' : emp.daysRemaining + ' days'}
-                      </div>
-                      <div className="small text-muted">
-                        Ends: {formatDate(emp.probationEndDate)}
-                      </div>
-                    </td>
-                    
-                    <td className="text-center">
-                      {getRatingBadge(emp.currentRating)}
-                    </td>
-                    
-                    <td className="text-center">
-                      <div className="btn-group btn-group-sm">
-                        <button
-                          className="btn btn-outline-primary"
-                          onClick={() => handleViewDetails(emp)}
-                          title="View Details"
-                        >
-                          <i className="bi bi-eye"></i>
-                        </button>
-                        
-                        <div className="dropdown">
-                          <button
-                            className="btn btn-outline-success dropdown-toggle"
-                            type="button"
-                            data-bs-toggle="dropdown"
-                            title="Conduct Review"
-                          >
-                            <i className="bi bi-clipboard-check"></i>
-                          </button>
-                          <ul className="dropdown-menu">
-                            {!emp.review30.completed && (
-                              <li>
-                                <button 
-                                  className="dropdown-item"
-                                  onClick={() => handleStartReview(emp, '30_day')}
-                                >
-                                  30 Day Review
-                                </button>
-                              </li>
-                            )}
-                            {emp.review30.completed && !emp.review60.completed && (
-                              <li>
-                                <button 
-                                  className="dropdown-item"
-                                  onClick={() => handleStartReview(emp, '60_day')}
-                                >
-                                  60 Day Review
-                                </button>
-                              </li>
-                            )}
-                            {emp.review60.completed && !emp.review90.completed && (
-                              <li>
-                                <button 
-                                  className="dropdown-item"
-                                  onClick={() => handleStartReview(emp, '90_day')}
-                                >
-                                  90 Day Review
-                                </button>
-                              </li>
-                            )}
-                            {emp.review90.completed && emp.status !== 'completed' && (
-                              <li>
-                                <button 
-                                  className="dropdown-item"
-                                  onClick={() => handleStartReview(emp, 'final')}
-                                >
-                                  Final Review
-                                </button>
-                              </li>
-                            )}
-                          </ul>
-                        </div>
-                        
-                        {emp.status !== 'completed' && emp.status !== 'terminated' && (
-                          <>
-                            <button
-                              className="btn btn-outline-warning"
-                              onClick={() => handleExtendProbation(emp)}
-                              title="Extend Probation"
-                            >
-                               <i className="bi bi-calendar-plus"></i>
-                            </button>
-                            
-                            <button
-                              className="btn btn-outline-info"
-                              onClick={() => {
-                                if (emp.progress >= 80 && emp.daysRemaining > 30) {
-                                  handleEarlyConfirmation(emp);
-                                } else {
-                                  setSelectedEmployee(emp);
-                                  setShowConfirmModal(true);
-                                }
-                              }}
-                              title={emp.progress >= 80 && emp.daysRemaining > 30 ? "Early Confirmation" : "Confirm Employee"}
-                              disabled={emp.progress < 80}
-                            >
- <i className={emp.progress >= 80 && emp.daysRemaining > 30 ? "bi bi-award" : "bi bi-check-circle"}></i>                            </button>
-                            
-                            <button
-                              className="btn btn-outline-danger"
-                              onClick={() => handleTerminateProbation(emp)}
-                              title="Terminate Probation"
-                            >
-                              <i className="bi bi-x-circle"></i>
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                
-                {paginatedEmployees.length === 0 && (
-                  <tr>
-                    <td colSpan="9" className="text-center py-5 text-muted">
-                      <h5 className="mb-2">No probation employees found</h5>
-                      <p className="mb-0">Try adjusting your search or filters</p>
-                    </td>
-                  </tr>
+            </div>
+          </th>
+          <th style={{ minWidth: '70px' }}>Employee Details</th>
+          <th className="text-center" style={{ minWidth: '150px' }}>Probation Status</th>
+          <th className="text-center" style={{ minWidth: '150px' }}>Progress</th>
+          <th className="text-center" style={{ minWidth: '130px' }}>Risk Level</th>
+          <th className="text-center" style={{ minWidth: '180px' }}>Review Milestones</th>
+          <th className="text-center" style={{ minWidth: '160px' }}>Time Remaining</th>
+          <th className="text-center" style={{ minWidth: '150px' }}>Current Rating</th>
+          <th className="text-center" style={{ minWidth: '150px' }}>Actions</th>
+        </tr>
+      </thead>
+      
+      <tbody>
+        {paginatedEmployees.map((emp) => (
+          <tr key={emp.id} className={selectedEmployees.includes(emp.id) ? 'table-active' : ''}>
+            <td className="align-middle">
+              <div className="d-flex justify-content-center">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  checked={selectedEmployees.includes(emp.id)}
+                  onChange={() => handleSelectEmployee(emp.id)}
+                />
+              </div>
+            </td>
+            
+            <td className="align-middle">
+              <div>
+                <div className="d-flex align-items-center gap-2 mb-1">
+                  <strong className="d-block fs-6">{emp.name}</strong>
+                  <small className="badge bg-primary">{emp.employeeId}</small>
+                </div>
+                <small className="text-muted d-block mb-2">{emp.designation}</small>
+                <div className="d-flex align-items-center gap-2">
+                  <small className="text-muted">{emp.department}</small>
+                  <i className="bi bi-geo-alt text-muted"></i>
+                  <small className="text-muted">{emp.workLocation}</small>
+                </div>
+              </div>
+            </td>
+            
+            <td className="text-center align-middle">
+              <div className="d-flex flex-column align-items-center">
+                <div className="mb-1">{getStatusBadge(emp.status)}</div>
+                {emp.extensionCount > 0 && (
+                  <div className="small text-muted">
+                    Extended {emp.extensionCount} time{emp.extensionCount > 1 ? 's' : ''}
+                  </div>
                 )}
-              </tbody>
-            </table>
+              </div>
+            </td>
+            
+            <td className="text-center align-middle">
+              <div className="d-flex flex-column align-items-center">
+                <div className="mb-2" style={{ width: '120px' }}>
+                  <ProgressBar percentage={emp.progress} showLabel={false} />
+                </div>
+                <div className="small fw-medium">
+                  <span className={`${
+                    emp.progress >= 90 ? 'text-success' :
+                    emp.progress >= 70 ? 'text-primary' :
+                    emp.progress >= 50 ? 'text-warning' : 'text-danger'
+                  }`}>
+                    {emp.progress}% complete
+                  </span>
+                </div>
+              </div>
+            </td>
+            
+            <td className="text-center align-middle">
+              <div className="d-flex justify-content-center">
+                {getRiskBadge(emp.riskLevel)}
+              </div>
+            </td>
+            
+            <td className="text-center align-middle">
+              <div className="d-flex flex-column align-items-center">
+                <div className="mb-2">
+                  <ReviewMilestones employee={emp} />
+                </div>
+                <div className="small text-muted">
+                  Next: {emp.nextReviewDate ? formatDate(emp.nextReviewDate) : 'N/A'}
+                </div>
+              </div>
+            </td>
+            
+            <td className="text-center align-middle">
+              <div className="d-flex flex-column align-items-center">
+                <div className={`fw-bold fs-6 mb-1 ${
+                  emp.daysRemaining <= 0 ? 'text-danger' :
+                  emp.daysRemaining <= 7 ? 'text-danger' :
+                  emp.daysRemaining <= 30 ? 'text-warning' : 'text-success'
+                }`}>
+                  {emp.daysRemaining <= 0 ? 
+                    <span className="d-flex align-items-center">
+                      <i className="bi bi-exclamation-triangle-fill me-1"></i>
+                      {Math.abs(emp.daysRemaining)} days overdue
+                    </span> : 
+                    <span className="d-flex align-items-center">
+                      <i className="bi bi-clock me-1"></i>
+                      {emp.daysRemaining} days
+                    </span>
+                  }
+                </div>
+                <div className="small text-muted">
+                  Ends: {formatDate(emp.probationEndDate)}
+                </div>
+              </div>
+            </td>
+            
+            <td className="text-center align-middle">
+              <div className="d-flex justify-content-center">
+                {getRatingBadge(emp.currentRating)}
+              </div>
+            </td>
+            
+            <td className="text-center align-middle">
+              <div className="d-flex flex-wrap gap-2 justify-content-center">
+                {/* View Details Button - Always visible */}
+                <button
+                  className="btn btn-outline-primary btn-sm"
+                  onClick={() => handleViewDetails(emp)}
+                  title="View Details"
+                  style={{ 
+                    width: '40px', 
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <i className="bi bi-eye"></i>
+                </button>
+                
+                {/* Action Buttons for Active Probations */}
+                {emp.status !== 'completed' && emp.status !== 'terminated' && (
+                  <>
+                    {/* Extend Button */}
+                    <button
+                      className="btn btn-outline-warning btn-sm"
+                      onClick={() => handleExtendProbation(emp)}
+                      title="Extend Probation"
+                      style={{ 
+                        width: '40px', 
+                        height: '32px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <i className="bi bi-calendar-plus"></i>
+                    </button>
+                    
+                    {/* Confirm Button */}
+                    <button
+                      className="btn btn-outline-info btn-sm"
+                      onClick={() => {
+                        if (emp.progress >= 80 && emp.daysRemaining > 30) {
+                          handleEarlyConfirmation(emp);
+                        } else {
+                          setSelectedEmployee(emp);
+                          setShowConfirmModal(true);
+                        }
+                      }}
+                      title={emp.progress >= 80 && emp.daysRemaining > 30 ? "Early Confirmation" : "Confirm Employee"}
+                      disabled={emp.progress < 80}
+                      style={{ 
+                        width: '40px', 
+                        height: '32px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <i className={emp.progress >= 80 && emp.daysRemaining > 30 ? "bi bi-award" : "bi bi-check-circle"}></i>
+                    </button>
+
+                    
+                    {/* Review Dropdown - Separated with margin */}
+                    <div className="dropdown ms-1">
+                      <button
+                        className="btn btn-outline-success btn-sm dropdown-toggle"
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        title="Conduct Review"
+                        style={{ 
+                          width: '40px', 
+                          height: '32px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <i className="bi bi-clipboard-check"></i>
+                      </button>
+                      <ul className="dropdown-menu dropdown-menu-end">
+                        {!emp.review30.completed && (
+                          <li>
+                            <button 
+                              className="dropdown-item d-flex align-items-center"
+                              onClick={() => handleStartReview(emp, '30_day')}
+                            >
+                              30 Day Review
+                            </button>
+                          </li>
+                        )}
+                        {emp.review30.completed && !emp.review60.completed && (
+                          <li>
+                            <button 
+                              className="dropdown-item d-flex align-items-center"
+                              onClick={() => handleStartReview(emp, '60_day')}
+                            >
+                              60 Day Review
+                            </button>
+                          </li>
+                        )}
+                        {emp.review60.completed && !emp.review90.completed && (
+                          <li>
+                            <button 
+                              className="dropdown-item d-flex align-items-center"
+                              onClick={() => handleStartReview(emp, '90_day')}
+                            >
+                              90 Day Review
+                            </button>
+                          </li>
+                        )}
+                        {emp.review90.completed && emp.status !== 'completed' && (
+                          <li>
+                            <button 
+                              className="dropdown-item d-flex align-items-center"
+                              onClick={() => handleStartReview(emp, 'final')}
+                            >
+                              Final Review
+                            </button>
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  </>
+                )}
+                                    {/* Terminate Button */}
+                    <button
+                      className="btn btn-outline-danger btn-sm"
+                      onClick={() => handleTerminateProbation(emp)}
+                      title="Terminate Probation"
+                      style={{ 
+                        width: '40px', 
+                        height: '32px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <i className="bi bi-x-circle"></i>
+                    </button>
+              </div>
+            </td>
+          </tr>
+        ))}
+        
+        {paginatedEmployees.length === 0 && (
+          <tr>
+            <td colSpan="9" className="text-center py-5">
+              <div className="d-flex flex-column align-items-center justify-content-center">
+                <i className="bi bi-people fs-1 text-muted mb-3"></i>
+                <h5 className="text-muted mb-2">No probation employees found</h5>
+                <p className="text-muted mb-0">Try adjusting your search or filters</p>
+              </div>
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+  
+  {/* PAGINATION WITH SELECT ALL AT BOTTOM */}
+  {(totalPages > 1 || selectedEmployees.length > 0) && (
+    <div className="card-footer">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+        <div className="d-flex align-items-center gap-3">
+          
+          <div className="text-muted small">
+            Showing <strong>{(currentPage - 1) * itemsPerPage + 1}</strong> to <strong>{Math.min(currentPage * itemsPerPage, filteredEmployees.length)}</strong> of <strong>{filteredEmployees.length}</strong> employees
           </div>
           
-          {/* PAGINATION */}
-          {totalPages > 1 && (
-            <div className="card-footer d-flex justify-content-between align-items-center">
-              <div className="text-muted small">
-                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredEmployees.length)} of {filteredEmployees.length} employees
-              </div>
-              
-              <nav>
-                <ul className="pagination pagination-sm mb-0">
-                  <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                    <button 
-                      className="page-link"
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    >
-                      Previous
-                    </button>
-                  </li>
-                  
-                  {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                    const pageNum = i + 1;
-                    return (
-                      <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
-                        <button 
-                          className="page-link"
-                          onClick={() => setCurrentPage(pageNum)}
-                        >
-                          {pageNum}
-                        </button>
-                      </li>
-                    );
-                  })}
-                  
-                  {totalPages > 5 && (
-                    <>
-                      <li className="page-item disabled">
-                        <span className="page-link">...</span>
-                      </li>
-                      <li className={`page-item ${currentPage === totalPages ? 'active' : ''}`}>
-                        <button 
-                          className="page-link"
-                          onClick={() => setCurrentPage(totalPages)}
-                        >
-                          {totalPages}
-                        </button>
-                      </li>
-                    </>
-                  )}
-                  
-                  <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                    <button 
-                      className="page-link"
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    >
-                      Next
-                    </button>
-                  </li>
-                </ul>
-              </nav>
+          {selectedEmployees.length > 0 && (
+            <div className="badge bg-info text-dark">
+              <i className="bi bi-check-circle me-1"></i>
+              {selectedEmployees.length} selected
             </div>
           )}
         </div>
+        
+        {totalPages > 1 && (
+          <nav>
+            <ul className="pagination pagination-sm mb-0">
+              <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                <button 
+                  className="page-link d-flex align-items-center"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <i className="bi bi-chevron-left me-1"></i>
+                  Previous
+                </button>
+              </li>
+              
+              {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                const pageNum = i + 1;
+                return (
+                  <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
+                    <button 
+                      className="page-link"
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  </li>
+                );
+              })}
+              
+              {totalPages > 5 && (
+                <>
+                  <li className="page-item disabled">
+                    <span className="page-link">...</span>
+                  </li>
+                  <li className={`page-item ${currentPage === totalPages ? 'active' : ''}`}>
+                    <button 
+                      className="page-link"
+                      onClick={() => setCurrentPage(totalPages)}
+                    >
+                      {totalPages}
+                    </button>
+                  </li>
+                </>
+              )}
+              
+              <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                <button 
+                  className="page-link d-flex align-items-center"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                  <i className="bi bi-chevron-right ms-1"></i>
+                </button>
+              </li>
+            </ul>
+          </nav>
+        )}
+      </div>
+    </div>
+  )}
+</div>
 
         {/* ----------------- MODALS ----------------- */}
 
         {/* ADD EMPLOYEE MODAL */}
 {showAddModal && (
   <div
-    className="modal fade show d-block"
-    tabIndex="-1"
-    aria-modal="true"
-    style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+       className="hrms-modal-overlay"
   >
-          <div className="modal-dialog modal-dialog-centered modal-md">
-            <div className="modal-content border-0 shadow-lg rounded-3">
+          <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
        
         {/* Header */}
-        <div className="modal-header">
-<h6 className="modal-title fw-semibold fs-5">
+    <div className="hrms-modal-header">
+       <h5 className="hrms-modal-title d-flex align-items-center">
   Add Employee to Probation Tracking
-</h6>
+</h5>
 
           <button
             className="btn-close"
             onClick={() => setShowAddModal(false)}
           />
         </div>
-
+<div className="hrms-modal-body hrms-modal-body-scroll">
         {/* Form */}
-        <form onSubmit={handleAddEmployee}>
-          <div className="modal-body px-4 py-3">
-            <div className="row g-3">
+<form onSubmit={handleAddEmployee}>
 
-              <div className="col-md-6">
-                <label className="form-label">Full Name *</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  required
-                  value={newEmployee.name}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, name: e.target.value })
-                  }
-                  placeholder="Enter full name"
-                />
-              </div>
+    <div className="row g-3">
+      {/* Required Fields with Dark Label and Red Asterisk */}
+      <div className="col-md-6">
+        <label className="form-label text-dark">
+          Full Name <span className="text-danger">*</span>
+        </label>
+        <input
+          type="text"
+          className="form-control"
+          required
+          value={newEmployee.name}
+          onChange={(e) =>
+            setNewEmployee({ ...newEmployee, name: e.target.value })
+          }
+          placeholder="Enter full name"
+        />
+      </div>
 
-              <div className="col-md-6">
-                <label className="form-label">Employee ID *</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  required
-                  value={newEmployee.employeeId}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, employeeId: e.target.value })
-                  }
-                  placeholder="EMP001"
-                />
-              </div>
+      <div className="col-md-6">
+        <label className="form-label text-dark">
+          Employee ID <span className="text-danger">*</span>
+        </label>
+        <input
+          type="text"
+          className="form-control"
+          required
+          value={newEmployee.employeeId}
+          onChange={(e) =>
+            setNewEmployee({ ...newEmployee, employeeId: e.target.value })
+          }
+          placeholder="EMP001"
+        />
+      </div>
 
-              {/* Contact Information */}
-              <div className="col-md-6">
-                <label className="form-label">Email Address *</label>
-                <input
-                  type="email"
-                  className="form-control"
-                  required
-                  value={newEmployee.email || ''}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, email: e.target.value })
-                  }
-                  placeholder="employee@company.com"
-                />
-              </div>
+      {/* Contact Information */}
+      <div className="col-md-6">
+        <label className="form-label text-dark">
+          Email Address <span className="text-danger">*</span>
+        </label>
+        <input
+          type="email"
+          className="form-control"
+          required
+          value={newEmployee.email || ''}
+          onChange={(e) =>
+            setNewEmployee({ ...newEmployee, email: e.target.value })
+          }
+          placeholder="employee@company.com"
+        />
+      </div>
 
-              <div className="col-md-6">
-                <label className="form-label">Phone Number *</label>
-                <input
-                  type="tel"
-                  className="form-control"
-                  required
-                  value={newEmployee.phone || ''}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, phone: e.target.value })
-                  }
-                  placeholder="+91-9876543210"
-                />
-              </div>
+      <div className="col-md-6">
+        <label className="form-label text-dark">
+          Phone Number <span className="text-danger">*</span>
+        </label>
+        <input
+          type="tel"
+          className="form-control"
+          required
+          value={newEmployee.phone || ''}
+          onChange={(e) =>
+            setNewEmployee({ ...newEmployee, phone: e.target.value })
+          }
+          placeholder="+91-9876543210"
+        />
+      </div>
 
+      <div className="col-md-6">
+        <label className="form-label text-dark">
+          Designation <span className="text-danger">*</span>
+        </label>
+        <input
+          type="text"
+          className="form-control"
+          required
+          value={newEmployee.designation}
+          onChange={(e) =>
+            setNewEmployee({ ...newEmployee, designation: e.target.value })
+          }
+          placeholder="Software Engineer"
+        />
+      </div>
 
-              <div className="col-md-6">
-                <label className="form-label">Designation *</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  required
-                  value={newEmployee.designation}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, designation: e.target.value })
-                  }
-                  placeholder="Software Engineer"
-                />
-              </div>
+      <div className="col-md-6">
+        <label className="form-label text-dark">
+          Department <span className="text-danger">*</span>
+        </label>
+        <select
+          className="form-select"
+          required
+          value={newEmployee.department}
+          onChange={(e) =>
+            setNewEmployee({ ...newEmployee, department: e.target.value })
+          }
+        >
+          <option value="">Select Department</option>
+          <option value="Engineering">Engineering</option>
+          <option value="Human Resources">Human Resources</option>
+          <option value="Sales">Sales</option>
+          <option value="Marketing">Marketing</option>
+          <option value="Quality Assurance">Quality Assurance</option>
+          <option value="Finance">Finance</option>
+          <option value="Operations">Operations</option>
+        </select>
+      </div>
 
-              <div className="col-md-6">
-                <label className="form-label">Department *</label>
-                <select
-                  className="form-select"
-                  required
-                  value={newEmployee.department}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, department: e.target.value })
-                  }
-                >
-                  <option value="">Select Department</option>
-                  <option value="Engineering">Engineering</option>
-                  <option value="Human Resources">Human Resources</option>
-                  <option value="Sales">Sales</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Quality Assurance">Quality Assurance</option>
-                  <option value="Finance">Finance</option>
-                  <option value="Operations">Operations</option>
-                </select>
-              </div>
+      <div className="col-md-6">
+        <label className="form-label text-dark">
+          Reporting Manager <span className="text-danger">*</span>
+        </label>
+        <input
+          type="text"
+          className="form-control"
+          required
+          value={newEmployee.manager}
+          onChange={(e) =>
+            setNewEmployee({ ...newEmployee, manager: e.target.value })
+          }
+          placeholder="Manager's full name"
+        />
+      </div>
 
+      {/* Optional Fields with Normal Label */}
+      <div className="col-md-6">
+        <label className="form-label">HR Business Partner</label>
+        <input
+          type="text"
+          className="form-control"
+          value={newEmployee.hrBusinessPartner || ''}
+          onChange={(e) =>
+            setNewEmployee({ ...newEmployee, hrBusinessPartner: e.target.value })
+          }
+          placeholder="HR representative name"
+        />
+      </div>
 
-              <div className="col-md-6">
-                <label className="form-label">Reporting Manager *</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  required
-                  value={newEmployee.manager}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, manager: e.target.value })
-                  }
-                  placeholder="Manager's full name"
-                />
-              </div>
+      <div className="col-md-6">
+        <label className="form-label">Employment Type</label>
+        <select
+          className="form-select"
+          value={newEmployee.employmentType}
+          onChange={(e) =>
+            setNewEmployee({ ...newEmployee, employmentType: e.target.value })
+          }
+        >
+          <option value="Permanent">Permanent</option>
+          <option value="Contract">Contract</option>
+          <option value="Intern">Intern</option>
+          <option value="Temporary">Temporary</option>
+        </select>
+      </div>
 
-              <div className="col-md-6">
-                <label className="form-label">HR Business Partner</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={newEmployee.hrBusinessPartner || ''}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, hrBusinessPartner: e.target.value })
-                  }
-                  placeholder="HR representative name"
-                />
-              </div>
+      <div className="col-md-6">
+        <label className="form-label">Work Location</label>
+        <select
+          className="form-select"
+          value={newEmployee.workLocation}
+          onChange={(e) =>
+            setNewEmployee({ ...newEmployee, workLocation: e.target.value })
+          }
+        >
+          <option value="Bangalore">Bangalore</option>
+          <option value="Mumbai">Mumbai</option>
+          <option value="Delhi">Delhi</option>
+          <option value="Chennai">Chennai</option>
+          <option value="Hyderabad">Hyderabad</option>
+          <option value="Pune">Pune</option>
+          <option value="Kolkata">Kolkata</option>
+        </select>
+      </div>
 
-              <div className="col-md-6">
-                <label className="form-label">Employment Type</label>
-                <select
-                  className="form-select"
-                  value={newEmployee.employmentType}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, employmentType: e.target.value })
-                  }
-                >
-                  <option value="Permanent">Permanent</option>
-                  <option value="Contract">Contract</option>
-                  <option value="Intern">Intern</option>
-                  <option value="Temporary">Temporary</option>
-                </select>
-              </div>
+      {/* Required Fields */}
+      <div className="col-md-6">
+        <label className="form-label text-dark">
+          Joining Date <span className="text-danger">*</span>
+        </label>
+        <input
+          type="date"
+          className="form-control"
+          required
+          value={newEmployee.joiningDate}
+          onChange={(e) =>
+            setNewEmployee({ ...newEmployee, joiningDate: e.target.value })
+          }
+        />
+      </div>
 
-              <div className="col-md-6">
-                <label className="form-label">Work Location</label>
-                <select
-                  className="form-select"
-                  value={newEmployee.workLocation}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, workLocation: e.target.value })
-                  }
-                >
-                  <option value="Bangalore">Bangalore</option>
-                  <option value="Mumbai">Mumbai</option>
-                  <option value="Delhi">Delhi</option>
-                  <option value="Chennai">Chennai</option>
-                  <option value="Hyderabad">Hyderabad</option>
-                  <option value="Pune">Pune</option>
-                  <option value="Kolkata">Kolkata</option>
-                </select>
-              </div>
+      <div className="col-md-6">
+        <label className="form-label text-dark">
+          Probation Period (Days) <span className="text-danger">*</span>
+        </label>
+        <select
+          className="form-select"
+          required
+          value={newEmployee.probationPeriod}
+          onChange={(e) => setNewEmployee({...newEmployee, probationPeriod: e.target.value})}
+        >
+          <option value="30">30 Days</option>
+          <option value="60">60 Days</option>
+          <option value="90">90 Days</option>
+          <option value="180">180 Days</option>
+        </select>
+      </div>
 
-              <div className="col-md-6">
-                <label className="form-label">Joining Date *</label>
-                <input
-                  type="date"
-                  className="form-control"
-                  required
-                  value={newEmployee.joiningDate}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, joiningDate: e.target.value })
-                  }
-                />
-              </div>
-
-
-                      <div className="col-md-4">
-                        <label className="form-label">Probation Period (Days) *</label>
-                        <select
-                          className="form-select"
-                          required
-                          value={newEmployee.probationPeriod}
-                          onChange={(e) => setNewEmployee({...newEmployee, probationPeriod: e.target.value})}
-                        >
-                          <option value="30">30 Days</option>
-                          <option value="60">60 Days</option>
-                          <option value="90">90 Days</option>
-                          <option value="180">180 Days</option>
-                        </select>
-                      </div>
-                      
-
-              <div className="col-md-6">
-                <label className="form-label">Probation Type</label>
-                <select
-                  className="form-select"
-                  value={newEmployee.probationType || 'regular'}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, probationType: e.target.value })
-                  }
-                >
-                  <option value="regular">Regular</option>
-                  <option value="extended">Extended</option>
-                  <option value="probation_waived">Probation Waived</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="modal-footer px-4">
-            <button
-              type="button"
-              className="btn btn-outline-secondary"
-              onClick={() => setShowAddModal(false)}
-            >
-              Cancel
-            </button>
-            <button type="submit" className="btn btn-primary">
-              <i className="bi bi-person-plus me-2"></i>
-              Add Employee
-            </button>
-          </div>
-        </form>
+      <div className="col-md-6">
+        <label className="form-label">Probation Type</label>
+        <select
+          className="form-select"
+          value={newEmployee.probationType || 'regular'}
+          onChange={(e) =>
+            setNewEmployee({ ...newEmployee, probationType: e.target.value })
+          }
+        >
+          <option value="regular">Regular</option>
+          <option value="extended">Extended</option>
+          <option value="probation_waived">Probation Waived</option>
+        </select>
       </div>
     </div>
+
+</form>
+</div>
+
+  {/* Footer */}
+    <div className="modal-footer bg-white border-top d-flex">
+    <button
+      type="button"
+      className="cancel-btn"
+      onClick={() => setShowAddModal(false)}
+    >
+      Cancel
+    </button>
+    <button type="submit" className="create-job-btn">
+      <i className="bi bi-person-plus me-2"></i>
+      Add Employee
+    </button>
   </div>
+        
+      </div>
+    </div>
+
 )}
 
         {/* REVIEW MODAL */}
 {showReviewModal && selectedEmployee && (
   <div
-    className="modal fade show d-block"
-    tabIndex="-1"
-    style={{
-      backgroundColor: "rgba(0,0,0,0.5)",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1055,
-    }}
-    onClick={(e) => {
-      if (e.target === e.currentTarget) {
-        setShowReviewModal(false);
-        setReviewStep('self');
-      }
-    }}
+className="hrms-modal-overlay"
   >
-    <div className="modal-dialog modal-dialog-centered modal-xl">
-      <div 
-        className="modal-content border-0 shadow-lg rounded-3"
-        style={{
-          maxWidth: "1000px",
-          margin: "0 auto",
-          maxHeight: "90vh",
-          overflowY: "auto"
-        }}
-      >
-        <div className="modal-header border-0 p-4 pb-3">
+    <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+
+              {/* HEADER */}
+              <div className="hrms-modal-header">
           <div className="d-flex align-items-center justify-content-between w-100">
             <div>
-              <h5 className="fw-bold mb-1 d-flex align-items-center gap-2">
+               <h5 className="hrms-modal-title d-flex align-items-center gap-2">
                 <Icon 
                   icon={reviewStep === 'self' ? "heroicons:user" : 
                          reviewStep === 'manager' ? "heroicons:briefcase" :
@@ -3340,33 +3446,34 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
         </div>
 
         {/* Review Steps Indicator */}
-        <div className="modal-body border-top border-bottom py-3">
-          <div className="d-flex justify-content-between align-items-center">
-            <div className="d-flex gap-2">
-              <span 
-                className={`badge p-2 d-flex align-items-center gap-1 ${reviewStep === 'self' ? 'bg-primary' : 'bg-secondary'}`}
-                style={{ fontSize: "0.75rem" }}
-              >
-                <Icon icon="heroicons:user" style={{ fontSize: 14 }} />
+      <div className="hrms-modal-body hrms-modal-body-scroll">
+
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <div className="d-flex gap-2 flex-wrap">
+            <span 
+              className={`badge p-2 d-flex align-items-center gap-1 ${reviewStep === 'self' ? 'bg-primary' : 'bg-success'}`}
+              style={{ fontSize: "0.875rem" }}
+            >
+              <Icon icon="heroicons:user" style={{ fontSize: 14 }} />
                 1. Self-Assessment
               </span>
               <span 
                 className={`badge p-2 d-flex align-items-center gap-1 ${reviewStep === 'manager' ? 'bg-primary' : reviewStep === 'skip_level' || reviewStep === 'hr' ? 'bg-success' : 'bg-secondary'}`}
-                style={{ fontSize: "0.75rem" }}
+                style={{ fontSize: "0.9rem" }}
               >
                 <Icon icon="heroicons:briefcase" style={{ fontSize: 14 }} />
                 2. Manager Review
               </span>
               <span 
                 className={`badge p-2 d-flex align-items-center gap-1 ${reviewStep === 'skip_level' ? 'bg-primary' : reviewStep === 'hr' ? 'bg-success' : 'bg-secondary'}`}
-                style={{ fontSize: "0.75rem" }}
+                style={{ fontSize: "0.9rem" }}
               >
                 <Icon icon="heroicons:users" style={{ fontSize: 14 }} />
                 3. Skip-Level
               </span>
               <span 
                 className={`badge p-2 d-flex align-items-center gap-1 ${reviewStep === 'hr' ? 'bg-primary' : 'bg-secondary'}`}
-                style={{ fontSize: "0.75rem" }}
+                style={{ fontSize: "0.9rem" }}
               >
                 <Icon icon="heroicons:building-office" style={{ fontSize: 14 }} />
                 4. HR Review
@@ -3386,9 +3493,7 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
               Schedule Meeting
             </button>
           </div>
-        </div>
-
-        <form onSubmit={handleSubmitReview}>
+           <form onSubmit={handleSubmitReview}>
           <div className="modal-body p-4">
             {/* Step 1: Self-Assessment */}
             {reviewStep === 'self' && (
@@ -3401,31 +3506,25 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                 <div className="row g-4">
                   <div className="col-md-6">
                     <div className="mb-3">
-                      <label className="form-label fw-semibold" style={{ fontSize: "0.875rem" }}>
-                        Self Rating <span className="text-danger">*</span>
-                      </label>
-                      <select
-                        className="form-control"
-                        value={reviewForm.selfRating}
-                        onChange={(e) => setReviewForm({...reviewForm, selfRating: e.target.value})}
-                        required
-                        style={{
-                          borderRadius: 8,
-                          border: "1px solid #D1D5DB",
-                          padding: "10px 12px",
-                          fontSize: "0.875rem"
-                        }}
-                      >
-                        <option value="">Select rating...</option>
-                        <option value="exceeds_expectations">Exceeds Expectations</option>
-                        <option value="meets_expectations">Meets Expectations</option>
-                        <option value="needs_improvement">Needs Improvement</option>
-                        <option value="unsatisfactory">Unsatisfactory</option>
-                      </select>
+ <label className="form-label text-dark">
+  Self Rating <span className="text-danger">*</span>
+</label>
+  <select
+    className="form-select"
+    required
+    value={reviewForm.selfRating}
+    onChange={(e) => setReviewForm({...reviewForm, selfRating: e.target.value})}
+  >
+    <option value="">Select rating...</option>
+    <option value="exceeds_expectations">Exceeds Expectations</option>
+    <option value="meets_expectations">Meets Expectations</option>
+    <option value="needs_improvement">Needs Improvement</option>
+    <option value="unsatisfactory">Unsatisfactory</option>
+  </select>
                     </div>
                     
                     <div className="mb-3">
-                      <label className="form-label fw-semibold" style={{ fontSize: "0.875rem" }}>
+                      <label className="form-label fw-semibold text-dark" style={{ fontSize: "0.875rem" }}>
                         Key Achievements
                       </label>
                       <textarea
@@ -3444,7 +3543,7 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                     </div>
                     
                     <div className="mb-3">
-                      <label className="form-label fw-semibold" style={{ fontSize: "0.875rem" }}>
+                      <label className="form-label fw-semibold text-dark" style={{ fontSize: "0.875rem" }}>
                         Challenges Faced
                       </label>
                       <textarea
@@ -3465,9 +3564,9 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                   
                   <div className="col-md-6">
                     <div className="mb-3">
-                      <label className="form-label fw-semibold" style={{ fontSize: "0.875rem" }}>
-                        Self Assessment <span className="text-danger">*</span>
-                      </label>
+<label className="form-label fw-semibold text-dark" style={{ fontSize: "0.875rem" }}>
+  Self Assessment <span className="text-danger">*</span>
+</label>
                       <textarea
                         className="form-control"
                         rows="8"
@@ -3485,7 +3584,7 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                     </div>
                     
                     <div className="mb-3">
-                      <label className="form-label fw-semibold" style={{ fontSize: "0.875rem" }}>
+                      <label className="form-label fw-semibold text-dark" style={{ fontSize: "0.875rem" }}>
                         Goals for Next Period
                       </label>
                       <textarea
@@ -3539,7 +3638,7 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                 <div className="row g-4">
                   <div className="col-md-4">
                     <div className="mb-3">
-                      <label className="form-label fw-semibold" style={{ fontSize: "0.875rem" }}>
+                      <label className="form-label fw-semibold text-dark" style={{ fontSize: "0.875rem" }}>
                         Review Date <span className="text-danger">*</span>
                       </label>
                       <input
@@ -3560,56 +3659,44 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                   
                   <div className="col-md-4">
                     <div className="mb-3">
-                      <label className="form-label fw-semibold" style={{ fontSize: "0.875rem" }}>
-                        Performance Rating <span className="text-danger">*</span>
-                      </label>
-                      <select
-                        className="form-control"
-                        value={reviewForm.rating}
-                        onChange={(e) => setReviewForm({...reviewForm, rating: e.target.value})}
-                        required
-                        style={{
-                          borderRadius: 8,
-                          border: "1px solid #D1D5DB",
-                          padding: "10px 12px",
-                          fontSize: "0.875rem"
-                        }}
-                      >
-                        <option value="exceeds_expectations">Exceeds Expectations</option>
-                        <option value="meets_expectations">Meets Expectations</option>
-                        <option value="needs_improvement">Needs Improvement</option>
-                        <option value="unsatisfactory">Unsatisfactory</option>
-                      </select>
+  <label className="form-label fw-semibold text-dark">
+    Performance Rating <span className="text-danger">*</span>
+  </label>
+  <select
+    className="form-select form-select-sm"
+    required
+    value={reviewForm.rating}
+    onChange={(e) => setReviewForm({...reviewForm, rating: e.target.value})}
+  >
+    <option value="exceeds_expectations">Exceeds Expectations</option>
+    <option value="meets_expectations">Meets Expectations</option>
+    <option value="needs_improvement">Needs Improvement</option>
+    <option value="unsatisfactory">Unsatisfactory</option>
+  </select>
                     </div>
                   </div>
                   
                   <div className="col-md-4">
                     <div className="mb-3">
-                      <label className="form-label fw-semibold" style={{ fontSize: "0.875rem" }}>
+                      <label className="form-label fw-semibold text-dark" style={{ fontSize: "0.875rem" }}>
                         Review Type
                       </label>
-                      <select
-                        className="form-control"
-                        value={reviewForm.reviewType}
-                        onChange={(e) => setReviewForm({...reviewForm, reviewType: e.target.value})}
-                        style={{
-                          borderRadius: 8,
-                          border: "1px solid #D1D5DB",
-                          padding: "10px 12px",
-                          fontSize: "0.875rem"
-                        }}
-                      >
-                        <option value="30_day">30 Day Review</option>
-                        <option value="60_day">60 Day Review</option>
-                        <option value="90_day">90 Day Review</option>
-                        <option value="final">Final Review</option>
-                      </select>
+  <select
+    className="form-select form-select-sm"
+    value={reviewForm.reviewType}
+    onChange={(e) => setReviewForm({...reviewForm, reviewType: e.target.value})}
+  >
+    <option value="30_day">30 Day Review</option>
+    <option value="60_day">60 Day Review</option>
+    <option value="90_day">90 Day Review</option>
+    <option value="final">Final Review</option>
+  </select>
                     </div>
                   </div>
                   
                   <div className="col-12">
                     <div className="mb-3">
-                      <label className="form-label fw-semibold" style={{ fontSize: "0.875rem" }}>
+                      <label className="form-label fw-semibold text-dark" style={{ fontSize: "0.875rem" }}>
                         Manager Assessment <span className="text-danger">*</span>
                       </label>
                       <textarea
@@ -3643,7 +3730,7 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                 <div className="row g-4">
                   <div className="col-md-6">
                     <div className="mb-3">
-                      <label className="form-label fw-semibold" style={{ fontSize: "0.875rem" }}>
+                      <label className="form-label fw-semibold text-dark" style={{ fontSize: "0.875rem" }}>
                         Skip-Level Manager Name
                       </label>
                       <input
@@ -3664,7 +3751,7 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                   
                   <div className="col-12">
                     <div className="mb-3">
-                      <label className="form-label fw-semibold" style={{ fontSize: "0.875rem" }}>
+                      <label className="form-label fw-semibold text-dark" style={{ fontSize: "0.875rem" }}>
                         Skip-Level Manager Comments
                       </label>
                       <textarea
@@ -3768,32 +3855,27 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                   
                   <div className="col-md-6">
                     <div className="mb-3">
-                      <label className="form-label fw-semibold" style={{ fontSize: "0.875rem" }}>
+                      <label className="form-label fw-semibold text-dark" style={{ fontSize: "0.875rem" }}>
                         HR Recommendation <span className="text-danger">*</span>
                       </label>
-                      <select
-                        className="form-control"
-                        value={reviewForm.recommendation}
-                        onChange={(e) => setReviewForm({...reviewForm, recommendation: e.target.value})}
-                        required
-                        style={{
-                          borderRadius: 8,
-                          border: "1px solid #D1D5DB",
-                          padding: "10px 12px",
-                          fontSize: "0.875rem"
-                        }}
-                      >
-                        <option value="continue">Continue Probation</option>
-                        <option value="confirm">Confirm Employment</option>
-                        <option value="extend">Extend Probation</option>
-                        <option value="terminate">Terminate Probation</option>
-                      </select>
+  <select
+    className="form-select"
+    required
+    value={reviewForm.recommendation}
+    onChange={(e) => setReviewForm({...reviewForm, recommendation: e.target.value})}
+  >
+    <option value="">Select recommendation...</option>
+    <option value="continue">Continue Probation</option>
+    <option value="confirm">Confirm Employment</option>
+    <option value="extend">Extend Probation</option>
+    <option value="terminate">Terminate Probation</option>
+  </select>
                     </div>
                   </div>
                   
                   <div className="col-md-6">
                     <div className="mb-3">
-                      <label className="form-label fw-semibold" style={{ fontSize: "0.875rem" }}>
+                      <label className="form-label fw-semibold text-dark" style={{ fontSize: "0.875rem" }}>
                         Attachments (Optional)
                       </label>
                       <input
@@ -3813,7 +3895,7 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                   
                   <div className="col-12">
                     <div className="mb-3">
-                      <label className="form-label fw-semibold" style={{ fontSize: "0.875rem" }}>
+                      <label className="form-label fw-semibold text-dark" style={{ fontSize: "0.875rem" }}>
                         Additional Recommendations
                       </label>
                       <textarea
@@ -3854,45 +3936,43 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
               </>
             )}
           </div>
-          
-          {/* Modal Footer */}
-<div className="modal-footer border-0 p-4 pt-3">
+        </form>
+        </div>
+
+                  {/* Modal Footer */}
+  <div className="modal-footer bg-white border-top d-flex justify-content-between">
   <div className="d-flex justify-content-end w-100">
     <div className="d-flex gap-3">
 
-      <button 
-        type="button" 
-        className="btn btn-secondary d-flex align-items-center gap-2"
-        onClick={() => {
-          if (reviewStep === 'self') {
-            setShowReviewModal(false);
-            setReviewStep('self');
-          } else if (reviewStep === 'manager') {
-            setReviewStep('self');
-          } else if (reviewStep === 'skip_level') {
-            setReviewStep('manager');
-          } else {
-            setReviewStep('skip_level');
-          }
-        }}
-        style={{
-          borderRadius: 8,
-          padding: "10px 24px",
-          fontWeight: 500,
-          fontSize: "0.875rem"
-        }}
-      >
-        <Icon
-          icon={reviewStep === 'self' ? "heroicons:x-mark" : "heroicons:arrow-left"}
-          style={{ fontSize: 18 }}
-        />
-        {reviewStep === 'self' ? 'Cancel' : 'Previous'}
-      </button>
+<button 
+  type="button" 
+  className={`d-flex align-items-center gap-2 ${reviewStep === 'self' ? 'cancel-btn' : 'close-btn'}`}
+  onClick={() => {
+    if (reviewStep === 'self') {
+      setShowReviewModal(false);
+      setReviewStep('self');
+    } else if (reviewStep === 'manager') {
+      setReviewStep('self');
+    } else if (reviewStep === 'skip_level') {
+      setReviewStep('manager');
+    } else {
+      setReviewStep('skip_level');
+    }
+  }}
+  style={{
+    borderRadius: 8,
+    padding: "10px 24px",
+    fontWeight: 500,
+    fontSize: "0.875rem"
+  }}
+>
 
+  {reviewStep === 'self' ? 'Cancel' : 'Previous'}
+</button>
       {reviewStep === 'self' && (
         <button 
           type="button" 
-          className="btn btn-primary d-flex align-items-center gap-2"
+          className="create-job-btn"
           onClick={handleSubmitSelfAssessment}
           disabled={!reviewForm.selfAssessment || !reviewForm.selfRating}
           style={{
@@ -3962,12 +4042,9 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
     </div>
   </div>
 </div>
-
-
-        </form>
       </div>
     </div>
-  </div>
+
 )}
         {/* EXTENSION MODAL */}
         {showExtendModal && selectedEmployee && (
@@ -3978,9 +4055,9 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                   <h5 className="modal-title">Extend Probation Period</h5>
                   <button className="btn-close" onClick={() => setShowExtendModal(false)}></button>
                 </div>
-                
-                <form onSubmit={handleSubmitExtension}>
-                  <div className="modal-body">
+
+                  <div className="modal-body">           
+                 <form onSubmit={handleSubmitExtension}>
                     <div className="alert alert-warning mb-3">
                       Extending probation for <strong>{selectedEmployee.name}</strong>
                     </div>
@@ -4043,21 +4120,22 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                         />
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="modal-footer">
+
+                </form>
+                </div>
+
+                   <div className="modal-footer">
                     <button 
                       type="button" 
-                      className="btn btn-secondary"
+                      className="cancel-btn"
                       onClick={() => setShowExtendModal(false)}
                     >
                       Cancel
                     </button>
-                    <button type="submit" className="btn btn-warning">
+                    <button type="submit" className="help-btn">
                       Extend Probation
                     </button>
                   </div>
-                </form>
               </div>
             </div>
           </div>
@@ -4065,11 +4143,11 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
 
         {/* CONFIRM EMPLOYEE MODAL */}
         {showConfirmModal && selectedEmployee && (
-          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered modal-md">
-            <div className="modal-content border-0 shadow-lg rounded-3">
-                <div className="modal-header">
-                  <h5 className="modal-title">Confirm Employee</h5>
+             <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Confirm Employee</h5>
                   <button className="btn-close" onClick={() => setShowConfirmModal(false)}></button>
                 </div>
                 
@@ -4092,14 +4170,14 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                 <div className="modal-footer">
                   <button 
                     type="button" 
-                    className="btn btn-secondary"
+                    className="cancel-btn"
                     onClick={() => setShowConfirmModal(false)}
                   >
                     Cancel
                   </button>
                   <button 
                     type="button" 
-                    className="btn btn-success"
+                    className="add-employee"
                     onClick={handleConfirmEmployee}
                   >
                     Confirm Employee
@@ -4110,63 +4188,65 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
           </div>
         )}
 
-        {/* TERMINATE MODAL */}
-        {showTerminateModal && selectedEmployee && (
-          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered modal-md">
-            <div className="modal-content border-0 shadow-lg rounded-3">
-                <div className="modal-header">
-                  <h5 className="modal-title">Terminate Probation</h5>
-                  <button className="btn-close" onClick={() => setShowTerminateModal(false)}></button>
-                </div>
-                
-                <form onSubmit={handleSubmitTermination}>
-                  <div className="modal-body">
-                    <div className="alert alert-danger mb-3">
-                      Terminating probation for <strong>{selectedEmployee.name}</strong> ({selectedEmployee.employeeId})
-                    </div>
-                    
-                    <div className="mb-3">
-                      <label className="form-label">Reason for Termination *</label>
-                      <textarea
-                        className="form-control"
-                        rows="3"
-                        placeholder="Provide detailed reason for probation termination..."
-                        value={terminationForm.reason}
-                        onChange={(e) => setTerminationForm({...terminationForm, reason: e.target.value})}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="mb-3">
-                      <label className="form-label">Effective Date *</label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        value={terminationForm.effectiveDate}
-                        onChange={(e) => setTerminationForm({...terminationForm, effectiveDate: e.target.value})}
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="modal-footer">
-                    <button 
-                      type="button" 
-                      className="btn btn-secondary"
-                      onClick={() => setShowTerminateModal(false)}
-                    >
-                      Cancel
-                    </button>
-                    <button type="submit" className="btn btn-danger">
-                      Terminate Probation
-                    </button>
-                  </div>
-                </form>
-              </div>
+{showTerminateModal && selectedEmployee && (
+  <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+    <div className="modal-dialog modal-dialog-centered modal-md">
+      <div className="modal-content border-0 shadow-lg rounded-3">
+        <div className="modal-header">
+          <h5 className="modal-title">Terminate Probation</h5>
+          <button className="btn-close" onClick={() => setShowTerminateModal(false)}></button>
+        </div>
+        
+        {/* MOVED: Form now wraps the entire modal body AND footer */}
+        <form onSubmit={handleSubmitTermination}>
+          <div className="modal-body">
+            <div className="alert alert-danger mb-3">
+              Terminating probation for <strong>{selectedEmployee.name}</strong> ({selectedEmployee.employeeId})
+            </div>
+            
+            <div className="mb-3">
+              <label className="form-label">Reason for Termination <span className='text-danger'>*</span></label>
+              <textarea
+                className="form-control"
+                rows="3"
+                placeholder="Provide detailed reason for probation termination..."
+                value={terminationForm.reason}
+                onChange={(e) => setTerminationForm({...terminationForm, reason: e.target.value})}
+                required
+              />
+            </div>
+            
+            <div className="mb-3">
+              <label className="form-label">Effective Date <span className='text-danger'>*</span></label>
+              <input
+                type="date"
+                className="form-control"
+                value={terminationForm.effectiveDate}
+                onChange={(e) => setTerminationForm({...terminationForm, effectiveDate: e.target.value})}
+                required
+              />
             </div>
           </div>
-        )}
+          
+          <div className="modal-footer">
+            <button 
+              type="button" 
+              className="cancel-btn"
+              onClick={() => setShowTerminateModal(false)}
+            >
+              Cancel
+            </button>
+            {/* FIXED: Button is now inside the form with type="submit" */}
+            <button type="submit" className="delete-btn">
+              Terminate Probation
+            </button>
+          </div>
+        </form>
+        {/* Form closes here - now wrapping everything */}
+      </div>
+    </div>
+  </div>
+)}
 
         {/* BULK ACTION MODAL */}
         {showBulkActionModal && (
@@ -4177,9 +4257,8 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                   <h5 className="modal-title">Bulk Actions ({selectedEmployees.length} employees)</h5>
                   <button className="btn-close" onClick={() => setShowBulkActionModal(false)}></button>
                 </div>
-                
+            <div className="modal-body">    
                 <form onSubmit={handleBulkActionSubmit}>
-                  <div className="modal-body">
                     <div className="alert alert-info mb-3">
                       Apply action to all selected employees
                     </div>
@@ -4241,21 +4320,21 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                         onChange={(e) => setBulkAction({...bulkAction, message: e.target.value})}
                       />
                     </div>
-                  </div>
-                  
-                  <div className="modal-footer">
+
+                </form>
+                </div>
+                                  <div className="modal-footer">
                     <button 
                       type="button" 
-                      className="btn btn-secondary"
+                      className="cancel-btn"
                       onClick={() => setShowBulkActionModal(false)}
                     >
                       Cancel
                     </button>
-                    <button type="submit" className="btn btn-primary">
+                    <button type="submit" className="create-job-btn">
                       Apply Action
                     </button>
                   </div>
-                </form>
               </div>
             </div>
           </div>
@@ -4475,9 +4554,9 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
           <h5 className="modal-title">Generate PDF Report</h5>
           <button className="btn-close" onClick={() => setShowReportModal(false)}></button>
         </div>
-        
+        <div className="modal-body">
         <form onSubmit={(e) => { e.preventDefault(); handleGenerateReport(); }}>
-          <div className="modal-body">
+          
             <div className="row g-3">
               <div className="col-md-12">
                 <div className="alert alert-info">
@@ -4559,26 +4638,27 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                 </select>
               </div>
             </div>
-          </div>
+
+        </form>
+         </div>
           
           <div className="modal-footer">
             <button 
               type="button" 
-              className="btn btn-secondary"
+              className="cancel-btn"
               onClick={() => setShowReportModal(false)}
             >
               Cancel
             </button>
             <button 
               type="submit" 
-              className="btn btn-primary"
+              className="create-job-btn"
               disabled={filteredEmployees.length === 0}
             >
               <i className="bi bi-file-earmark-pdf me-2"></i>
               Generate PDF Report
             </button>
           </div>
-        </form>
       </div>
     </div>
   </div>
@@ -4664,14 +4744,14 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                 <div className="modal-footer">
                   <button 
                     type="button" 
-                    className="btn btn-secondary"
+                    className="cancel-btn"
                     onClick={() => setShowSelfAssessmentModal(false)}
                   >
                     Cancel
                   </button>
                   <button 
                     type="button" 
-                    className="btn btn-primary"
+                    className="create-job-btn"
                     onClick={handleSubmitSelfAssessment}
                     disabled={!reviewForm.selfAssessment || !reviewForm.selfRating}
                   >
@@ -4685,22 +4765,18 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
 
         {/* REVIEW MEETING SCHEDULE MODAL */}
 {showMeetingScheduleModal && selectedEmployee && (
-  <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-    <div className="modal-dialog modal-dialog-centered modal-lg">
-      <div 
-        className="modal-content border-0 shadow-lg rounded-3"
-        style={{
-          maxWidth: "850px",  // modal width
-          margin: "0 auto",
-        }}
-      >
-        <div className="modal-header">
-          <h5 className="modal-title">Schedule Review Meeting - {selectedEmployee.name}</h5>
+  <div className="hrms-modal-overlay">
+    <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+
+ 
+              {/* HEADER */}
+              <div className="hrms-modal-header">
+                <h5 className="hrms-modal-title d-flex align-items-center">Schedule Review Meeting - {selectedEmployee.name}</h5>
           <button className="btn-close" onClick={() => setShowMeetingScheduleModal(false)}></button>
         </div>
+                 <div className="hrms-modal-body hrms-modal-body-scroll">
 
                 <form onSubmit={handleSubmitMeeting}>
-                  <div className="modal-body">
                     <div className="row g-3">
                       <div className="col-md-6">
                         <label className="form-label">Meeting Date *</label>
@@ -4854,28 +4930,25 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
   </div>
 </div>
                     </div>
-                  </div>
-                  
-                  <div className="modal-footer">
+                </form>
+
+                </div>
+                <div className="modal-footer bg-white border-top d-flex">
                     <button 
                       type="button" 
-                      className="btn btn-secondary"
+                      className="cancel-btn"
                       onClick={() => setShowMeetingScheduleModal(false)}
                     >
                       Cancel
                     </button>
-                    <button type="submit" className="btn btn-primary">
+                    <button type="submit" className="create-job-btn">
                       Schedule Meeting
                     </button>
                   </div>
-                </form>
-                
       </div>
     </div>
-  </div>
+
 )}
-
-
 
         {/* CONFIRMATION LETTER MODAL */}
         {showConfirmationLetterModal && selectedEmployee && (
@@ -5092,12 +5165,12 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                   <div className="modal-footer">
                     <button 
                       type="button" 
-                      className="btn btn-secondary"
+                      className="cancel-btn"
                       onClick={() => setShowConfirmationLetterModal(false)}
                     >
                       Cancel
                     </button>
-                    <button type="submit" className="btn btn-success">
+                    <button type="submit" className="add-employee">
                       Generate & Send Letter
                     </button>
                   </div>
@@ -5111,43 +5184,24 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
         {/* DETAILS MODAL */}
         {showDetailModal && selectedEmployee && (
    <div
-    className="modal fade show d-block"
-    tabIndex="-1"
-    style={{
-      backgroundColor: "rgba(0,0,0,0.5)",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1055,
-    }}
-    onClick={(e) => {
-      if (e.target === e.currentTarget) setShowDetailModal(false);
-    }}
+  className="hrms-modal-overlay"
   >
-    <div className="modal-dialog modal-dialog-centered modal-lg">
-      <div 
-        className="modal-content border-0 shadow-lg rounded-3"
-        style={{
-          maxWidth: "800px",
-          margin: "0 auto",
-        }}
-      >
-                <div className="modal-header">
-
-                  <h5 className="modal-title">Employee Details - {selectedEmployee.name}</h5>
+    <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+             {/* HEADER */}
+              <div className="hrms-modal-header">
+                <h5 className="hrms-modal-title d-flex align-items-center">Employee Details - {selectedEmployee.name}</h5>
                   <button className="btn-close" onClick={() => setShowDetailModal(false)}></button>
                 </div>
                 
-                <div className="modal-body">
+              {/* BODY */}
+              <div className="hrms-modal-body hrms-modal-body-scroll">
                   <div className="row mb-4">
                     <div className="col-md-8">
                       <div>
-                        <h4 className="mb-1">{selectedEmployee.name}</h4>
+                        <h6 className="mb-1">{selectedEmployee.name}</h6>
                         <p className="text-muted mb-1">{selectedEmployee.designation} • {selectedEmployee.department}</p>
                         <div className="d-flex gap-2">
-                          <span className="badge bg-secondary">{selectedEmployee.employeeId}</span>
+                          <span className="badge bg-primary">{selectedEmployee.employeeId}</span>
                           {getStatusBadge(selectedEmployee.status)}
                           {getRiskBadge(selectedEmployee.riskLevel)}
                         </div>
@@ -5158,7 +5212,7 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                       <div className="d-flex flex-column gap-2">
                         <div className="d-flex gap-2">
                           <button 
-                            className="btn btn-primary btn-sm"
+                            className="create-job-btn"
                             onClick={() => {
                               setShowDetailModal(false);
                               handleStartReview(selectedEmployee);
@@ -5168,7 +5222,7 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                             Conduct Review
                           </button>
                           <button
-                            className="btn btn-outline-primary btn-sm"
+                            className="job-listings-btn"
                             onClick={() => {
                               setShowDetailModal(false);
                               handleScheduleMeeting(selectedEmployee, '30_day');
@@ -5297,10 +5351,10 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                   </div>
                 </div>
                 
-                <div className="modal-footer">
+                <div className="modal-footer bg-white border-top d-flex">
                   <button 
                     type="button" 
-                    className="btn btn-secondary"
+                    className="close-btn"
                     onClick={() => setShowDetailModal(false)}
                   >
                     Close
@@ -5308,7 +5362,7 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
                 </div>
               </div>
             </div>
-          </div>
+
         )}
         
 {/* CONFIRMATION LETTER VIEW MODAL */}
@@ -5467,7 +5521,7 @@ const ProgressBar = ({ percentage, showLabel = true }) => {
 
               <button 
                 type="button" 
-                className="btn btn-secondary me-2"
+                className="close-btn"
                 onClick={() => setShowConfirmationLetterViewModal(false)}
               >
                 Close

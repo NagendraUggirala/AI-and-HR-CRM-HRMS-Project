@@ -14,6 +14,8 @@ import {
   Link,
   Copy
 } from 'lucide-react';
+import { Icon } from '@iconify/react/dist/iconify.js';
+import '../../App.css';
 import { BASE_URL } from '../../config/api.config';
 
 const ConfigureAIInterview = () => {
@@ -234,19 +236,32 @@ const ConfigureAIInterview = () => {
 
   return (
     <div className="container-fluid py-4">
-      {/* Page Header */}
-      <div className="mb-4 d-flex justify-content-between align-items-center">
+      {/* Page Header - align with JobList/CreateJob */}
+      <div className="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
-          <h4 className="mb-2">Configure AI Interview</h4>
-          <p className="text-secondary-light mb-0">Create and manage AI interview templates</p>
+          <h4 className="fw-bold h4 d-flex align-items-center gap-2 mb-0">
+            <Icon icon="heroicons:cog-8-tooth" className="text-black" style={{ fontSize: 28 }} />
+            Configure AI Interview
+          </h4>
+          <p className="text-secondary mb-0 mt-1">
+            Create and manage AI interview templates.
+          </p>
         </div>
-        <button 
-          onClick={openCreateModal} 
-          className="btn btn-primary d-flex align-items-center"
-        >
-          <Plus size={18} className="me-2" />
-          Create Template
-        </button>
+        <div className="d-flex flex-column align-items-end gap-2">
+          <span className="text-muted small">
+            Last updated:{' '}
+            <span className="fw-medium text-body">
+              {new Date().toLocaleDateString()}
+            </span>
+          </span>
+          <button
+            onClick={openCreateModal}
+            className="btn create-job-btn d-inline-flex align-items-center gap-2"
+          >
+            <Icon icon="heroicons:plus" style={{ width: 16, height: 16 }} />
+            Create Template
+          </button>
+        </div>
       </div>
 
       {/* Alert */}
@@ -276,7 +291,7 @@ const ConfigureAIInterview = () => {
               <div>
                 <h6 className="text-secondary-light mb-1">No Templates Yet</h6>
                 <p className="text-secondary-light text-sm mb-0">
-                  Create your first AI interview template to get started
+                  Create your first AI interview template to get started.
                 </p>
               </div>
             </div>
@@ -290,12 +305,18 @@ const ConfigureAIInterview = () => {
                 <div className="card-body">
                   <div className="d-flex justify-content-between align-items-start mb-3">
                     <div className="flex-grow-1">
-                      <h6 className="mb-2">{template.name}</h6>
+                      <h6 className="mb-2 text-truncate" title={template.name}>
+                        {template.name}
+                      </h6>
                       <div className="d-flex flex-wrap gap-2">
                         <span className="badge bg-primary-subtle text-primary text-capitalize">
                           {template.interview_type}
                         </span>
-                        <span className={`badge ${getDifficultyColor(template.difficulty)} text-capitalize`}>
+                        <span
+                          className={`badge ${getDifficultyColor(
+                            template.difficulty
+                          )} text-capitalize`}
+                        >
                           {template.difficulty}
                         </span>
                       </div>
@@ -346,14 +367,14 @@ const ConfigureAIInterview = () => {
                   <div className="d-flex gap-2">
                     <button
                       onClick={() => openEditModal(template)}
-                      className="btn btn-sm btn-outline-primary flex-fill d-flex align-items-center justify-content-center"
+                      className="btn btn-sm btn-outline-primary flex-fill d-inline-flex align-items-center justify-content-center"
                     >
                       <Edit size={14} className="me-1" />
                       Edit
                     </button>
                     <button
                       onClick={() => deleteTemplate(template.id)}
-                      className="btn btn-sm btn-outline-danger flex-fill d-flex align-items-center justify-content-center"
+                      className="btn btn-sm btn-outline-danger flex-fill d-inline-flex align-items-center justify-content-center"
                     >
                       <Trash2 size={14} className="me-1" />
                       Delete

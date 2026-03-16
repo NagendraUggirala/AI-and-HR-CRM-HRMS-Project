@@ -13,6 +13,8 @@ import {
   XCircle,
   RefreshCw
 } from 'lucide-react';
+import { Icon } from '@iconify/react/dist/iconify.js';
+import '../../App.css';
 import { assessmentAPI } from '../../utils/api';
 import { BASE_URL } from '../../config/api.config';
 
@@ -219,62 +221,110 @@ const TestResultsViewer = () => {
 
   return (
     <div className="container-fluid py-4">
-      {/* Page Header */}
-      <div className="mb-4 d-flex justify-content-between align-items-center">
+      {/* Page Header - aligned with JobList/CreateJob */}
+      <div className="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
-          <h4 className="mb-2">Test Results</h4>
-          <p className="text-secondary-light mb-0">Review candidate scores, performance, and detailed breakdowns.</p>
+          <h4 className="fw-bold h4 d-flex align-items-center gap-2 mb-0">
+            <Icon icon="heroicons:chart-pie" className="text-black" style={{ fontSize: 28 }} />
+            Test Results
+          </h4>
+          <p className="text-secondary mb-0 mt-1">
+            Review candidate scores, performance, and detailed breakdowns.
+          </p>
         </div>
-        <div className="d-flex flex-wrap align-items-center gap-2">
-          <button
-            className="btn btn-primary d-flex align-items-center"
-            onClick={fetchResults}
-            disabled={loading}
-          >
-            {loading ? (
-              <RefreshCw size={18} className="me-2 spinner" />
-            ) : (
-              <>
-                <RefreshCw size={18} className="me-2" />
-                Refresh
-              </>
-            )}
-          </button>
-          <button className="btn btn-success d-flex align-items-center" onClick={exportToCSV}>
-            <Download size={18} className="me-2" />
-            Export CSV
-          </button>
-        </div>
-      </div>
-
-      {/* KPI Summary */}
-      <div className="card border shadow-none mb-4">
-        <div className="card-body d-flex">
-          <div className="text-center w-25">
-            <div className="text-secondary-light small">Average Score</div>
-            <div className="h4 mb-0">{stats.avgScore}%</div>
-          </div>
-          <div className="text-center w-25 border-start ps-4">
-            <div className="text-secondary-light small">Total Candidates</div>
-            <div className="h4 mb-0 text-primary">{stats.totalCandidates}</div>
-          </div>
-          <div className="text-center w-25 border-start ps-4">
-            <div className="text-secondary-light small">Passed</div>
-            <div className="h4 mb-0 text-success">{stats.passed}</div>
-          </div>
-          <div className="text-center w-25 border-start ps-4">
-            <div className="text-secondary-light small">Failed</div>
-            <div className="h4 mb-0 text-danger">{stats.failed}</div>
+        <div className="d-flex flex-column align-items-end gap-2">
+          <span className="text-muted small">
+            Last updated:{' '}
+            <span className="fw-medium text-body">
+              {new Date().toLocaleDateString()}
+            </span>
+          </span>
+          <div className="d-flex flex-wrap align-items-center gap-2 justify-content-end">
+            <button
+              className="btn refresh-btn d-inline-flex align-items-center gap-2"
+              onClick={fetchResults}
+              disabled={loading}
+            >
+              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </button>
+            <button
+              type="button"
+              className="sync-btn d-inline-flex align-items-center gap-2"
+              onClick={exportToCSV}
+            >
+              <Download size={16} />
+              <span>Export CSV</span>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Filters */}
+      {/* KPI Summary - kpi-row layout */}
+      <div className="kpi-row mb-4">
+        {[
+          {
+            title: 'Average Score',
+            value: `${stats.avgScore}%`,
+            sub: 'Across all tests',
+            icon: 'heroicons:sparkles',
+            bg: 'kpi-primary',
+            color: 'kpi-primary-text'
+          },
+          {
+            title: 'Total Candidates',
+            value: stats.totalCandidates,
+            sub: 'With any test result',
+            icon: 'heroicons:user-group',
+            bg: 'kpi-info',
+            color: 'kpi-info-text'
+          },
+          {
+            title: 'Passed',
+            value: stats.passed,
+            sub: 'Qualified status',
+            icon: 'heroicons:check-badge',
+            bg: 'kpi-success',
+            color: 'kpi-success-text'
+          },
+          {
+            title: 'Failed',
+            value: stats.failed,
+            sub: 'Regret status',
+            icon: 'heroicons:x-circle',
+            bg: 'kpi-warning',
+            color: 'kpi-warning-text'
+          }
+        ].map((item, index) => (
+          <div className="kpi-col" key={index}>
+            <div className="kpi-card">
+              <div className="kpi-card-body">
+                <div className={`kpi-icon ${item.bg}`}>
+                  <Icon icon={item.icon} className={`kpi-icon-style ${item.color}`} />
+                </div>
+                <div className="kpi-content">
+                  <div className="kpi-title">{item.title}</div>
+                  <div className="kpi-value">{item.value}</div>
+                  {item.sub && <div className="kpi-sub text-muted">{item.sub}</div>}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filters - structured like JobList filters */}
       <div className="card border shadow-none mb-4">
+        <div className="card-header bg-transparent border-bottom py-3">
+          <h6 className="fw-semibold mb-0 d-flex align-items-center gap-2">
+            <Icon icon="heroicons:funnel" style={{ fontSize: 18 }} />
+            Filter & search
+          </h6>
+        </div>
         <div className="card-body">
-          <h5 className="mb-3">Filter by:</h5>
-          <div className="row g-3">
-            <div className="col-md-3">
+          <div className="row g-3 align-items-end">
+            <div className="col-12 col-md-3">
+              <label className="form-label small text-muted mb-1">Assessment</label>
               <select
                 className="form-select"
                 value={filters.assessment}
@@ -286,43 +336,45 @@ const TestResultsViewer = () => {
                 <option value="coding">Coding</option>
               </select>
             </div>
-            <div className="col-md-3">
-              <div className="input-group">
-                <span className="input-group-text">
-                  <Search size={16} />
-                </span>
+            <div className="col-12 col-md-3">
+              <label className="form-label small text-muted mb-1">Candidate</label>
+              <div className="position-relative">
+                <Search size={16} className="position-absolute top-50 translate-middle-y ms-3 text-muted" />
                 <input
                   type="text"
-                  className="form-control"
-                  placeholder="Search candidate..."
+                  className="form-control ps-5"
+                  placeholder="Search by name or email..."
                   value={filters.candidate}
                   onChange={(e) => setFilters({ ...filters, candidate: e.target.value })}
                 />
               </div>
             </div>
-            <div className="col-md-2">
+            <div className="col-6 col-md-2">
+              <label className="form-label small text-muted mb-1">Min score (%)</label>
               <input
                 type="number"
                 className="form-control"
-                placeholder="Min Score"
+                placeholder="0"
                 value={filters.minScore}
                 onChange={(e) =>
-                  setFilters({ ...filters, minScore: parseInt(e.target.value) || 0 })
+                  setFilters({ ...filters, minScore: parseInt(e.target.value, 10) || 0 })
                 }
               />
             </div>
-            <div className="col-md-2">
+            <div className="col-6 col-md-2">
+              <label className="form-label small text-muted mb-1">Max score (%)</label>
               <input
                 type="number"
                 className="form-control"
-                placeholder="Max Score"
+                placeholder="100"
                 value={filters.maxScore}
                 onChange={(e) =>
-                  setFilters({ ...filters, maxScore: parseInt(e.target.value) || 100 })
+                  setFilters({ ...filters, maxScore: parseInt(e.target.value, 10) || 100 })
                 }
               />
             </div>
-            <div className="col-md-2">
+            <div className="col-12 col-md-2">
+              <label className="form-label small text-muted mb-1">Status</label>
               <select
                 className="form-select"
                 value={filters.status}

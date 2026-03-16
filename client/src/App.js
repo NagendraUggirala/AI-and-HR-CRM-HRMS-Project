@@ -1,7 +1,6 @@
 import React from 'react';
-import "./App.css"
 import { Routes, Route, Navigate } from 'react-router-dom';
-import Landing from './components/Landing';
+
 import Signup from './components/auth/Signup';
 import Login from './components/auth/Login';
 import ForgotPassword from './components/auth/ForgotPassword';
@@ -144,17 +143,40 @@ import RequestManagement from './components/HRMS/Forms&Workflows/RequestManageme
 import SurveysPulseChecks from './components/HRMS/Forms&Workflows/SurveysPulseChecks';
 import WorkflowEngine from './components/HRMS/Forms&Workflows/WorkflowEngine';
 
+import HRAutomation from './components/Landing/HRAutomation'
+import CrmLanding from './components/Landing/Crmlanding'
+import Navbar from './components/Landing/Navbar'
+import Bookademo from './components/Landing/Bookademo'
+import Footer from './components/Landing/Footer'
+import ContactPage from './components/Landing/ContactPage';
+import Human from './components/Landing/Human'
+import HomePage from './components/Landing/HomePage';
+
+
 
 
 const App = () => {
   return (
     <div>
       <Routes>
-      <Route path='/' element={<Landing />} />
+     <Route path='/' element={<HomePage />}/>
       <Route path='/signup' element={<Signup />} />
       <Route path='/login' element={<Login />} />
       <Route path='/ForgotPassword' element={<ForgotPassword />} />
       <Route path='/pricing' element={<PricingPage />} />
+<Route path='/hrAutomation' element={<HRAutomation />}/>
+<Route path='/crmlanding' element={<CrmLanding />}/>
+<Route path='/navbar' element={<Navbar/>}/>
+<Route path='/bookademo' element={<Bookademo />}/>
+<Route path='/footer' element={<Footer />}/>
+<Route path='/contactpage'element={<ContactPage/>}/>
+<Route path='/human'element={<Human/>}/>
+
+
+
+
+
+
 
       <Route
         path='/dashboard'

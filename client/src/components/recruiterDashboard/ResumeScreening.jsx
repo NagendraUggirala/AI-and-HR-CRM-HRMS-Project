@@ -1,20 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import {
-  Upload,
-  FileText,
-  CheckCircle,
-  XCircle,
-  Mail,
-  User,
-  Briefcase,
-  TrendingUp,
-  AlertCircle,
-  Eye,
-  RefreshCw
-} from 'lucide-react';
 import { Icon } from '@iconify/react/dist/iconify.js';
+import { Upload, FileText, CheckCircle, XCircle, Mail, Briefcase, AlertCircle, Eye } from 'lucide-react';
 import { BASE_URL } from '../../config/api.config';
+import '../../App.css';
 
 const ResumeScreening = () => {
   const location = useLocation();
@@ -174,214 +163,175 @@ const ResumeScreening = () => {
 
   const renderUploadTab = () => {
     return (
-      <div className="space-y-6">
-        {/* Upload Form */}
-        <div className="card">
-          <div className="card-header">
-            <h6 className="mb-0">AI Resume Screening</h6>
-            <p className="text-secondary-light text-sm mt-1">
-              Upload a resume to automatically extract information, generate job description, and calculate match score
-            </p>
-          </div>
-          <div className="card-body">
-            <div className="space-y-4">
-              {/* File Upload */}
-              <div>
-                <label className="form-label">Resume File *</label>
-                <div className="file-upload-wrapper">
-                  <input
-                    id="resume-file-input"
-                    type="file"
-                    accept=".pdf,.docx"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  <label
-                    htmlFor="resume-file-input"
-                    className="file-upload-label cursor-pointer"
-                  >
-                    <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                    <span className="text-sm font-medium text-gray-700">
-                      {selectedFile ? selectedFile.name : 'Click to upload PDF or DOCX'}
-                    </span>
-                    <span className="text-xs text-gray-500 mt-1">
-                      Maximum file size: 10MB
-                    </span>
-                  </label>
+      <div className="d-grid gap-4">
+        {/* Upload Form - ref JobList/CreateJob: card border shadow-none */}
+        <div className="card border shadow-none">
+          <div className="card-body p-24">
+            <div className="row justify-content-center">
+              <div className="col-12 col-lg-8 col-xl-6">
+                <h4 className="fw-semibold mb-1 text-dark">Screen a Resume</h4>
+                <p className="text-secondary-light small mb-4">
+                  Upload a resume to automatically extract information, generate job description, and calculate match score.
+                </p>
+                <div className="row g-3">
+                  {/* File Upload */}
+                  <div className="col-12">
+                    <label className="form-label">Resume File <span className="text-danger">*</span></label>
+                    <div className="upload-btn  rounded-3 border-2 border-secondary bg-light" style={{ minHeight: '160px' }}>
+                      <input
+                        id="resume-file-input"
+                        type="file"
+                        accept=".pdf,.docx"
+                        onChange={handleFileChange}
+                        className="d-none"
+                      />
+                      <label htmlFor="resume-file-input" className="mb-0 d-flex flex-column align-items-center justify-content-center gap-2 py-5 px-4 w-100" style={{ cursor: 'pointer', minHeight: '160px' }}>
+                        <Icon icon="heroicons:arrow-up-tray" className="upload-icon text-muted" style={{ fontSize: 28 }} />
+                        <span className="small fw-medium text-dark">
+                          {selectedFile ? selectedFile.name : 'Click to upload PDF or DOCX'}
+                        </span>
+                        <span className="text-muted" style={{ fontSize: 12 }}>Maximum file size: 10MB</span>
+                      </label>
+                    </div>
+                    {errors.file && <p className="text-danger small mt-1 mb-0">{errors.file}</p>}
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <label className="form-label">Role / Position <span className="text-danger">*</span></label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="e.g., Software Engineer, Data Analyst"
+                      value={formData.role}
+                      onChange={(e) => handleInputChange('role', e.target.value)}
+                    />
+                    {errors.role && <p className="text-danger small mt-1 mb-0">{errors.role}</p>}
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <label className="form-label">Experience Level <span className="text-danger">*</span></label>
+                    <select
+                      className="form-select"
+                      value={formData.experienceLevel}
+                      onChange={(e) => handleInputChange('experienceLevel', e.target.value)}
+                    >
+                      <option value="fresher">Fresher / Entry Level</option>
+                      <option value="junior">Junior (1-3 years)</option>
+                      <option value="mid">Mid-Level (3-5 years)</option>
+                      <option value="senior">Senior (5-10 years)</option>
+                      <option value="lead">Lead / Principal (10+ years)</option>
+                    </select>
+                    {errors.experienceLevel && <p className="text-danger small mt-1 mb-0">{errors.experienceLevel}</p>}
+                  </div>
+                  <div className="col-12 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleUpload}
+                      disabled={isUploading}
+                      className="resume-submit-btn d-inline-flex align-items-center justify-content-center gap-2"
+                      style={{ width: 'auto', minWidth: '220px' }}
+                    >
+                      {isUploading ? (
+                        <>
+                          <Icon icon="heroicons:arrow-path" className="spin" style={{ width: 18, height: 18 }} />
+                          Processing Resume...
+                        </>
+                      ) : (
+                        <>
+                          <Icon icon="heroicons:arrow-up-tray" style={{ width: 18, height: 18 }} />
+                          Screen Resume with AI
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
-                {errors.file && (
-                  <p className="text-danger-600 text-sm mt-1">{errors.file}</p>
-                )}
               </div>
-
-              {/* Role Input */}
-              <div>
-                <label className="form-label">Role / Position *</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="e.g., Software Engineer, Data Analyst"
-                  value={formData.role}
-                  onChange={(e) => handleInputChange('role', e.target.value)}
-                />
-                {errors.role && (
-                  <p className="text-danger-600 text-sm mt-1">{errors.role}</p>
-                )}
-              </div>
-
-              {/* Experience Level */}
-              <div>
-                <label className="form-label">Experience Level *</label>
-                <select
-                  className="form-select"
-                  value={formData.experienceLevel}
-                  onChange={(e) => handleInputChange('experienceLevel', e.target.value)}
-                >
-                  <option value="fresher">Fresher / Entry Level</option>
-                  <option value="junior">Junior (1-3 years)</option>
-                  <option value="mid">Mid-Level (3-5 years)</option>
-                  <option value="senior">Senior (5-10 years)</option>
-                  <option value="lead">Lead / Principal (10+ years)</option>
-                </select>
-                {errors.experienceLevel && (
-                  <p className="text-danger-600 text-sm mt-1">{errors.experienceLevel}</p>
-                )}
-              </div>
-
-              {/* Submit Button */}
-              <button
-                onClick={handleUpload}
-                disabled={isUploading}
-                className="btn btn-primary w-full"
-              >
-                {isUploading ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Processing Resume...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Screen Resume with AI
-                  </>
-                )}
-              </button>
             </div>
           </div>
         </div>
 
-        {/* Upload Result */}
+        {/* Upload Result - card ref JobList */}
         {uploadResult && (
-          <div className={`card ${uploadResult.status === 'error' ? 'border-danger-600' : uploadResult.status === 'shortlisted' ? 'border-success-600' : 'border-warning-600'}`}>
+          <div className={`card border shadow-none ${uploadResult.status === 'error' ? 'border-danger' : uploadResult.status === 'shortlisted' ? 'border-success' : 'border-warning'}`}>
             <div className="card-body">
-              <div className="flex items-start space-x-4">
+              <div className="d-flex gap-3 align-items-start">
                 {uploadResult.status === 'error' ? (
-                  <XCircle className="h-8 w-8 text-danger-600 flex-shrink-0" />
+                  <XCircle className="flex-shrink-0 text-danger" size={28} />
                 ) : uploadResult.status === 'shortlisted' ? (
-                  <CheckCircle className="h-8 w-8 text-success-600 flex-shrink-0" />
+                  <CheckCircle className="flex-shrink-0 text-success" size={28} />
                 ) : (
-                  <AlertCircle className="h-8 w-8 text-warning-600 flex-shrink-0" />
+                  <AlertCircle className="flex-shrink-0 text-warning" size={28} />
                 )}
-                <div className="flex-1">
-                  <h5 className="font-semibold mb-2">
+                <div className="flex-grow-1">
+                  <h5 className="fw-semibold mb-2">
                     {uploadResult.status === 'error'
                       ? 'Processing Failed'
                       : uploadResult.status === 'shortlisted'
                         ? 'Candidate Shortlisted!'
                         : 'Candidate Rejected'}
                   </h5>
-
                   {uploadResult.status === 'error' ? (
-                    <p className="text-secondary-light">{uploadResult.message}</p>
+                    <p className="text-secondary-light mb-0">{uploadResult.message}</p>
                   ) : (
-                    <div className="space-y-3">
-                      {/* Candidate Info */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <p className="text-xs text-secondary-light">Name</p>
-                          <p className="font-medium">{uploadResult.candidate?.name || 'N/A'}</p>
+                    <div className="d-grid gap-3">
+                      <div className="row g-3">
+                        <div className="col-6 col-md-3">
+                          <p className="text-muted small mb-0">Name</p>
+                          <p className="fw-medium mb-0">{uploadResult.candidate?.name || 'N/A'}</p>
                         </div>
-                        <div>
-                          <p className="text-xs text-secondary-light">Email</p>
-                          <p className="font-medium">{uploadResult.candidate?.email || 'N/A'}</p>
+                        <div className="col-6 col-md-3">
+                          <p className="text-muted small mb-0">Email</p>
+                          <p className="fw-medium mb-0">{uploadResult.candidate?.email || 'N/A'}</p>
                         </div>
-                        <div>
-                          <p className="text-xs text-secondary-light">Role</p>
-                          <p className="font-medium">{uploadResult.role}</p>
+                        <div className="col-6 col-md-3">
+                          <p className="text-muted small mb-0">Role</p>
+                          <p className="fw-medium mb-0">{uploadResult.role}</p>
                         </div>
-                        <div>
-                          <p className="text-xs text-secondary-light">Experience</p>
-                          <p className="font-medium capitalize">{uploadResult.experience_level}</p>
+                        <div className="col-6 col-md-3">
+                          <p className="text-muted small mb-0">Experience</p>
+                          <p className="fw-medium mb-0 text-capitalize">{uploadResult.experience_level}</p>
                         </div>
                       </div>
-
-                      {/* Skills */}
                       {uploadResult.candidate?.skills && (
                         <div>
-                          <p className="text-xs text-secondary-light mb-2">Skills</p>
-                          <div className="flex flex-wrap gap-2">
+                          <p className="text-muted small mb-1">Skills</p>
+                          <div className="d-flex flex-wrap gap-1">
                             {(Array.isArray(uploadResult.candidate.skills)
                               ? uploadResult.candidate.skills
                               : uploadResult.candidate.skills.split(',')
                             ).map((skill, idx) => (
-                              <span key={idx} className="badge bg-primary-50 text-primary-600">
+                              <span key={idx} className="badge bg-primary-subtle text-primary">
                                 {skill.trim()}
                               </span>
                             ))}
                           </div>
                         </div>
                       )}
-
-                      {/* Score */}
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm font-medium">Match Score</span>
-                          <span className={`text-lg font-bold ${uploadResult.score >= uploadResult.threshold
-                            ? 'text-success-600'
-                            : 'text-danger-600'
-                            }`}>
+                      <div className="bg-light rounded-3 p-3">
+                        <div className="d-flex justify-content-between align-items-center mb-2">
+                          <span className="small fw-medium">Match Score</span>
+                          <span className={`fw-bold ${uploadResult.score >= uploadResult.threshold ? 'text-success' : 'text-danger'}`}>
                             {uploadResult.score.toFixed(1)}%
                           </span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="progress" style={{ height: 8 }}>
                           <div
-                            className={`h-2 rounded-full ${uploadResult.score >= uploadResult.threshold
-                              ? 'bg-success-600'
-                              : 'bg-danger-600'
-                              }`}
+                            className={`progress-bar ${uploadResult.score >= uploadResult.threshold ? 'bg-success' : 'bg-danger'}`}
                             style={{ width: `${uploadResult.score}%` }}
                           />
                         </div>
-                        <p className="text-xs text-secondary-light mt-2">
-                          Threshold: {uploadResult.threshold}%
-                        </p>
+                        <p className="text-muted small mt-2 mb-0">Threshold: {uploadResult.threshold}%</p>
                       </div>
-
-                      {/* Email Status */}
-                      <div className="flex items-center space-x-2 text-sm">
-                        <Mail className="h-4 w-4" />
+                      <div className="d-flex align-items-center gap-2 small">
+                        <Mail size={16} />
                         <span>
-                          Email Status:
-                          <span className={`ml-1 font-medium ${uploadResult.email_status === 'yes'
-                            ? 'text-success-600'
-                            : uploadResult.email_status === 'skipped'
-                              ? 'text-secondary-light'
-                              : 'text-danger-600'
-                            }`}>
-                            {uploadResult.email_status === 'yes'
-                              ? 'Sent Successfully'
-                              : uploadResult.email_status === 'skipped'
-                                ? 'Skipped (Not Shortlisted)'
-                                : 'Failed'}
+                          Email Status: <span className={`fw-medium ${uploadResult.email_status === 'yes' ? 'text-success' : uploadResult.email_status === 'skipped' ? 'text-muted' : 'text-danger'}`}>
+                            {uploadResult.email_status === 'yes' ? 'Sent Successfully' : uploadResult.email_status === 'skipped' ? 'Skipped (Not Shortlisted)' : 'Failed'}
                           </span>
                         </span>
                       </div>
-
-                      {/* JD Preview */}
                       {uploadResult.jd_preview && (
                         <div>
-                          <p className="text-xs text-secondary-light mb-2">Generated Job Description (Preview)</p>
-                          <div className="bg-gray-50 p-3 rounded text-sm text-secondary-light">
+                          <p className="text-muted small mb-1">Generated Job Description (Preview)</p>
+                          <div className="bg-light p-3 rounded text-secondary small">
                             {uploadResult.jd_preview}...
                           </div>
                         </div>
@@ -399,114 +349,97 @@ const ResumeScreening = () => {
 
   const renderCandidatesTab = () => {
     return (
-      <div className="space-y-4">
-        {/* Candidates List */}
+      <div className="card border shadow-none mb-4">
         {loadingCandidates ? (
-          <div className="flex justify-center items-center py-12">
-            <RefreshCw className="h-8 w-8 animate-spin text-primary-600" />
+          <div className="card-body text-center py-5">
+            <Icon icon="heroicons:arrow-path" className="spin text-primary" style={{ fontSize: 32 }} />
+            <p className="text-secondary-light mt-2 mb-0">Loading candidates...</p>
           </div>
         ) : candidates.length === 0 ? (
-          <div className="card">
-            <div className="card-body text-center py-12">
-              <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h6 className="mb-2">No Candidates Yet</h6>
-              <p className="text-secondary-light">
-                Start screening resumes to see candidates here
-              </p>
-            </div>
+          <div className="card-body text-center py-5">
+            <FileText className="text-muted mb-3" size={48} />
+            <h6 className="mb-2">No Candidates Yet</h6>
+            <p className="text-secondary-light mb-0">
+              Start screening resumes to see candidates here
+            </p>
           </div>
         ) : (
-          <div className="card">
-            <div className="card-body p-0">
-              <div className="table-responsive">
-                <table className="table bordered-table mb-0">
-                  <thead>
-                    <tr>
-                      <th>Candidate</th>
-                      <th>Role</th>
-                      <th>Experience</th>
-                      <th>Skills</th>
-                      <th>Score</th>
-                      <th>Email Status</th>
-                      <th>Screened On</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {candidates.map((candidate) => (
-                      <tr key={candidate.id}>
-                        <td>
-                          <div className="flex items-center space-x-3">
-                           
-                            <div>
-                              <p className="font-medium">{candidate.candidate_name || 'N/A'}</p>
-                              <p className="text-sm text-secondary-light">{candidate.candidate_email || 'N/A'}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <div className="flex items-center">
-                            <Briefcase className="h-4 w-4 text-secondary-light mr-2" />
-                            {candidate.role}
-                          </div>
-                        </td>
-                        <td>
-                          <span className="badge bg-info-50 text-info-600 capitalize">
-                            {candidate.experience_level}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="flex flex-wrap gap-1">
-                            {candidate.candidate_skills?.split(',').slice(0, 3).map((skill, idx) => (
-                              <span key={idx} className="badge bg-gray-100 text-gray-700 text-xs">
-                                {skill.trim()}
-                              </span>
-                            ))}
-                            {candidate.candidate_skills?.split(',').length > 3 && (
-                              <span className="badge bg-gray-100 text-gray-700 text-xs">
-                                +{candidate.candidate_skills.split(',').length - 3}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="flex items-center space-x-2">
-                            <span className={`font-semibold ${candidate.score >= 40 ? 'text-success-600' : 'text-danger-600'
-                              }`}>
-                              {candidate.score.toFixed(1)}%
+          <div className="card-body p-0">
+            <div className="table-responsive">
+              <table className="table table-hover align-middle mb-0">
+                <thead className="table-light">
+                  <tr>
+                    <th className="text-start">CANDIDATE</th>
+                    <th className="text-start">ROLE</th>
+                    <th className="text-start">EXPERIENCE</th>
+                    <th className="text-start">SKILLS</th>
+                    <th className="text-center">SCORE</th>
+                    <th className="text-center">EMAIL STATUS</th>
+                    <th className="text-start">SCREENED ON</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {candidates.map((candidate) => (
+                    <tr key={candidate.id}>
+                      <td>
+                        <div className="d-flex flex-column">
+                          <span className="fw-medium">{candidate.candidate_name || 'N/A'}</span>
+                          <span className="small text-secondary-light">{candidate.candidate_email || 'N/A'}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="d-flex align-items-center gap-2">
+                          <Briefcase size={16} className="text-muted" />
+                          {candidate.role}
+                        </div>
+                      </td>
+                      <td>
+                        <span className="badge bg-info-subtle text-info text-capitalize">
+                          {candidate.experience_level}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="d-flex flex-wrap gap-1">
+                          {candidate.candidate_skills?.split(',').slice(0, 3).map((skill, idx) => (
+                            <span key={idx} className="badge bg-light text-dark">
+                              {skill.trim()}
                             </span>
-                            {candidate.score >= 40 ? (
-                              <CheckCircle className="h-4 w-4 text-success-600" />
-                            ) : (
-                              <XCircle className="h-4 w-4 text-danger-600" />
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          <span className={`badge ${candidate.email_sent === 'yes'
-                            ? 'bg-success-50 text-success-600'
-                            : candidate.email_sent === 'no'
-                              ? 'bg-gray-100 text-gray-700'
-                              : 'bg-danger-50 text-danger-600'
-                            }`}>
-                            {candidate.email_sent === 'yes'
-                              ? 'Sent'
-                              : candidate.email_sent === 'no'
-                                ? 'Not Sent'
-                                : 'Failed'}
+                          ))}
+                          {candidate.candidate_skills?.split(',').length > 3 && (
+                            <span className="badge bg-primary-subtle text-primary">
+                              +{candidate.candidate_skills.split(',').length - 3}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="text-center">
+                        <div className="d-flex align-items-center justify-content-center gap-1">
+                          <span className={`fw-semibold ${candidate.score >= 40 ? 'text-success' : 'text-danger'}`}>
+                            {candidate.score.toFixed(1)}%
                           </span>
-                        </td>
-                        <td className="text-sm text-secondary-light">
-                          {new Date(candidate.created_at).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric'
-                          })}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                          {candidate.score >= 40 ? (
+                            <CheckCircle size={16} className="text-success" />
+                          ) : (
+                            <XCircle size={16} className="text-danger" />
+                          )}
+                        </div>
+                      </td>
+                      <td className="text-center">
+                        <span className={`badge ${candidate.email_sent === 'yes' ? 'bg-success-subtle text-success' : candidate.email_sent === 'no' ? 'bg-secondary-subtle text-secondary' : 'bg-danger-subtle text-danger'}`}>
+                          {candidate.email_sent === 'yes' ? 'Sent' : candidate.email_sent === 'no' ? 'Not Sent' : 'Failed'}
+                        </span>
+                      </td>
+                      <td className="text-secondary-light small">
+                        {new Date(candidate.created_at).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
@@ -522,78 +455,81 @@ const ResumeScreening = () => {
     '0';
 
   return (
-    <div className="dashboard-main-body">
-      {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <div className="container-fluid py-4">
+      {/* Page Header - ref JobList / CreateJob: icon + title left, Refresh right */}
+      <div className="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
-          <h5 className="mb-1">AI-Screened Candidates</h5>
-          <p className="text-sm text-secondary-light mb-0">
+          <h4 className="fw-bold h4 d-flex align-items-center gap-2 mb-0">
+            <Icon icon="heroicons:document-magnifying-glass" className="text-black" style={{ fontSize: 28 }} />
+            AI Resume Screening
+          </h4>
+          <p className="text-secondary-light mb-0 mt-1">
             View all candidates processed through AI resume screening
           </p>
         </div>
         <button
+          type="button"
           onClick={fetchCandidates}
-          className="btn btn-primary d-flex align-items-center"
+          className="btn refresh-btn d-flex align-items-center gap-2"
           disabled={loadingCandidates}
         >
-          {loadingCandidates ? (
-            <RefreshCw className="h-4 w-4 animate-spin" />
-          ) : (
-            <>
-              <RefreshCw className="h-4 w-4 me-2" />
-              Refresh
-            </>
-          )}
+          <Icon icon="heroicons:arrow-path" style={{ width: 16, height: 16 }} className={loadingCandidates ? 'spin' : ''} />
+          {loadingCandidates ? 'Refreshing...' : 'Refresh'}
         </button>
       </div>
 
-      {/* Stats Row */}
+      {/* KPI Stats - ref JobList: kpi-row / kpi-card (App.css) */}
+      <div className="kpi-row mb-4">
+        {[
+          { title: 'Total Screened', value: totalScreened, icon: 'heroicons:user-group', bg: 'kpi-primary', color: 'kpi-primary-text' },
+          { title: 'Shortlisted', value: shortlisted, icon: 'heroicons:check-badge', bg: 'kpi-success', color: 'kpi-success-text' },
+          { title: 'Avg Score', value: `${avgScore}%`, icon: 'heroicons:chart-bar', bg: 'kpi-info', color: 'kpi-info-text' }
+        ].map((item, index) => (
+          <div className="kpi-col" key={index}>
+            <div className="kpi-card">
+              <div className="kpi-card-body">
+                <div className={`kpi-icon ${item.bg}`}>
+                  <Icon icon={item.icon} className={`kpi-icon-style ${item.color}`} />
+                </div>
+                <div className="kpi-content">
+                  <div className="kpi-title">{item.title}</div>
+                  <div className="kpi-value">{item.value}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Tab Navigation - inside card ref JobList */}
       <div className="card border shadow-none mb-4">
-        <div className="card-body d-flex">
-          <div className="text-center w-25">
-            <div className="text-secondary-light small">Total Screened</div>
-            <div className="h4 mb-0">{totalScreened}</div>
-          </div>
-          <div className="text-center w-25 border-start ps-4">
-            <div className="text-secondary-light small">Shortlisted</div>
-            <div className="h4 mb-0 text-success">{shortlisted}</div>
-          </div>
-          <div className="text-center w-25 border-start ps-4">
-            <div className="text-secondary-light small">Avg Score</div>
-            <div className="h4 mb-0 text-primary">{avgScore}%</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="card mb-24">
         <div className="card-body p-0">
-          <div className="flex border-b">
-            <button
-              onClick={() => setActiveTab('candidates')}
-              className={`px-6 py-3 font-medium transition-colors ${activeTab === 'candidates'
-                ? 'text-primary-600 border-b-2 border-primary-600'
-                : 'text-secondary-light hover:text-primary-600'
-                }`}
-            >
-              <Eye className="h-4 w-4 inline mr-2" />
-              View Candidates ({candidates.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('upload')}
-              className={`px-6 py-3 font-medium transition-colors ${activeTab === 'upload'
-                ? 'text-primary-600 border-b-2 border-primary-600'
-                : 'text-secondary-light hover:text-primary-600'
-                }`}
-            >
-              <Upload className="h-4 w-4 inline mr-2" />
-              Screen Resume
-            </button>
-          </div>
+          <ul className="nav nav-tabs border-bottom mb-0 px-3">
+            <li className="nav-item">
+              <button
+                type="button"
+                className={`nav-link d-flex align-items-center gap-2 ${activeTab === 'candidates' ? 'active' : ''}`}
+                onClick={() => setActiveTab('candidates')}
+              >
+                <Icon icon="heroicons:eye" style={{ width: 18, height: 18 }} />
+                View Candidates ({candidates.length})
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                type="button"
+                className={`nav-link d-flex align-items-center gap-2 ${activeTab === 'upload' ? 'active' : ''}`}
+                onClick={() => setActiveTab('upload')}
+              >
+                <Icon icon="heroicons:arrow-up-tray" style={{ width: 18, height: 18 }} />
+                Screen Resume
+              </button>
+            </li>
+          </ul>
         </div>
       </div>
 
-      {/* Tab Content */}
+      {/* Tab Content - everything in cards */}
       {activeTab === 'candidates' ? renderCandidatesTab() : renderUploadTab()}
     </div>
   );

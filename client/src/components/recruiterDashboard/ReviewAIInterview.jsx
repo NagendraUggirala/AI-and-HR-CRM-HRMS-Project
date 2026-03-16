@@ -22,6 +22,8 @@ import {
   Phone,
   MapPin
 } from 'lucide-react';
+import { Icon } from '@iconify/react/dist/iconify.js';
+import '../../App.css';
 import { BASE_URL } from '../../config/api.config';
 
 const ReviewAIInterview = () => {
@@ -541,26 +543,31 @@ const ReviewAIInterview = () => {
 
   return (
     <div className="container-fluid py-4">
-      {/* Header */}
-      <div className="mb-4 d-flex justify-content-between align-items-center">
+      {/* Header - aligned with JobList/CreateJob */}
+      <div className="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
-          <h4 className="mb-2">AI Interview Review</h4>
-          <p className="text-secondary-light mb-0">Review candidate interview responses with AI feedback, sentiment, and notes</p>
+          <h4 className="fw-bold h4 d-flex align-items-center gap-2 mb-0">
+            <Icon icon="heroicons:video-camera" className="text-black" style={{ fontSize: 28 }} />
+            AI Interview Review
+          </h4>
+          <p className="text-secondary mb-0 mt-1">
+            Review candidate interview responses with AI feedback, sentiment, and notes.
+          </p>
         </div>
-        <div className="d-flex flex-wrap align-items-center gap-2">
-          <button 
-            className="btn btn-primary d-flex align-items-center"
+        <div className="d-flex flex-column align-items-end gap-2">
+          <span className="text-muted small">
+            Last updated:{' '}
+            <span className="fw-medium text-body">
+              {new Date().toLocaleDateString()}
+            </span>
+          </span>
+          <button
+            className="btn refresh-btn d-inline-flex align-items-center gap-2"
             onClick={fetchCandidates}
             disabled={loading}
           >
-            {loading ? (
-              <RefreshCw size={16} className="me-2 spinner" />
-            ) : (
-              <>
-                <RefreshCw size={16} className="me-2" />
-                Refresh
-              </>
-            )}
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+            {loading ? 'Refreshing...' : 'Refresh'}
           </button>
         </div>
       </div>

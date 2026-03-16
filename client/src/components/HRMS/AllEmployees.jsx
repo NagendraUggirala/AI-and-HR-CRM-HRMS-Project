@@ -927,1199 +927,8 @@ const [employees, setEmployees] = useState([
       }
     }
   }),
-  // Employee 4: Emily Davis
-  createEmployeeObject({
-    id: 4,
-    employeeId: 'EMP004',
-    name: 'Emily Davis',
-    email: 'emily.davis@company.com',
-    phone: '+1 (555) 456-7890',
-    department: 'Finance',
-    designation: 'Financial Analyst',
-    location: 'Boston',
-    employmentType: 'Full-time',
-    status: 'Active',
-    joinDate: '2020-11-05',
-    salary: 65000,
-    personalInfo: {
-      dateOfBirth: '1991-04-18',
-      gender: 'Female',
-      bloodGroup: 'AB+',
-      maritalStatus: 'Single',
-      nationality: 'US',
-      languages: ['English', 'French'],
-      personalEmail: 'emily.davis.personal@email.com',
-      phonePrimary: '+1 (555) 456-7890',
-      phoneSecondary: '+1 (555) 456-7891',
-      phoneEmergency: '+1 (555) 456-7892',
-      currentAddress: {
-        line1: '101 Boylston St',
-        line2: 'Apt 3D',
-        city: 'Boston',
-        state: 'MA',
-        pincode: '02116',
-        country: 'USA'
-      },
-      permanentAddress: {
-        line1: '101 Boylston St',
-        line2: 'Apt 3D',
-        city: 'Boston',
-        state: 'MA',
-        pincode: '02116',
-        country: 'USA'
-      },
-      emergencyContacts: [
-        { 
-          name: 'Robert Davis', 
-          relation: 'Father', 
-          phone: '+1 (555) 456-7892', 
-          priority: 'Primary' 
-        }
-      ],
-      familyMembers: [
-        { 
-          name: 'Robert Davis', 
-          relation: 'Father', 
-          dob: '1965-09-12' 
-        },
-        { 
-          name: 'Sarah Davis', 
-          relation: 'Mother', 
-          dob: '1968-02-28' 
-        }
-      ],
-      nominees: [
-        { 
-          name: 'Robert Davis', 
-          phone: '+1 (555) 456-7892',
-          relation: 'Father', 
-          percentage: 100 
-        }
-      ],
-      profilePhoto: '',
-      identification: {
-        aadhaar: { 
-          number: '4567 8901 2345', 
-          verified: true,
-          document: ''
-        },
-        pan: { 
-          number: 'DEFGH4567I', 
-          verified: true,
-          document: ''
-        },
-        passport: { 
-          number: 'P45678901', 
-          expiryDate: '2027-11-30', 
-          verified: true,
-          document: ''
-        },
-        voterId: { 
-          number: 'VOT45678901', 
-          verified: true,
-          document: ''
-        }
-      }
-    },
-    employmentInfo: {
-      employeeId: 'EMP004',
-      dateOfJoining: '2020-11-05',
-      confirmationDate: '2021-05-05',
-      probationPeriod: 6,
-      employmentType: 'Permanent',
-      employmentStatus: 'Active',
-      department: 'Finance',
-      subDepartment: 'Financial Planning',
-      costCenter: 'FIN-001',
-      designation: 'Financial Analyst',
-      grade: 'G5',
-      level: 'L3',
-      location: 'Boston',
-      workplaceType: 'Hybrid',
-      workEmail: 'emily.davis@company.com',
-      extensionNumber: '4567',
-      deskLocation: 'Floor 4, Desk 9',
-      employeeCategory: 'Staff',
-      noticePeriod: 30,
-      reportingManager: {
-        direct: 'Emily Davis',
-        functional: 'Emily Davis'
-      },
-      hrBusinessPartner: 'Lisa Anderson'
-    },
-    jobHistory: [
-      {
-        id: 1,
-        type: 'Previous Experience',
-        date: '2018-07-01',
-        organisation: 'Global Finance Corp',
-        department: 'Financial Planning',
-        designation: 'Junior Analyst',
-        location: 'New York',
-        manager: 'Richard Thompson',
-        notes: 'First role after MBA, focused on financial modeling',
-        salaryChange: 52000,
-        endDate: '2020-10-31',
-        reasonForLeaving: 'Better work-life balance',
-        achievements: 'Developed new forecasting model adopted company-wide'
-      },
-      {
-        id: 2,
-        type: 'Joining',
-        date: '2020-11-05',
-        organisation: 'TechCorp Inc.',
-        department: 'Finance',
-        designation: 'Financial Analyst',
-        location: 'Boston',
-        manager: 'Emily Davis',
-        notes: 'Joined to lead financial analysis for engineering department',
-        salaryChange: 65000,
-        endDate: 'Present',
-        reasonForLeaving: 'N/A',
-        achievements: 'Reduced departmental costs by 18%'
-      }
-    ],
-    salaryInfo: {
-      currentCTC: 65000,
-      ctcBreakdown: {
-        basic: 39000,
-        hra: 19500,
-        specialAllowance: 4200,
-        transportAllowance: 750,
-        medicalAllowance: 1100,
-        otherAllowances: 450,
-        providentFund: 4680,
-        gratuity: 812,
-        otherDeductions: 400
-      },
-      salaryStructure: 'Standard',
-      bankAccounts: {
-        primary: {
-          accountNumber: '4567890123',
-          ifscCode: 'BANK0004567',
-          bankName: 'Citibank',
-          branch: 'Boston Financial District',
-          accountType: 'Savings'
-        }
-      },
-      paymentMode: 'Bank Transfer',
-      pfAccountNumber: 'PF456789',
-      uan: 'UAN456789012',
-      esiNumber: 'ESI456789',
-      esiMedicalNominee: 'Robert Davis',
-      taxDeclaration: {
-        regime: 'New',
-        declared: true
-      },
-      variablePay: {
-        eligible: true,
-        percentage: 10
-      },
-      bonusEligibility: {
-        eligible: true,
-        amount: 3500
-      }
-    },
-    statutoryInfo: {
-      pan: {
-        number: 'DEFGH4567I',
-        verified: true,
-        verifiedDate: '2020-11-05'
-      },
-      aadhaar: {
-        number: '4567 8901 2345',
-        verified: true,
-        verifiedDate: '2020-11-05'
-      },
-      pfMembership: {
-        enrolled: true,
-        accountNumber: 'PF456789',
-        uan: 'UAN456789012',
-        enrollmentDate: '2020-11-05'
-      },
-      esiRegistration: {
-        enrolled: true,
-        number: 'ESI456789',
-        enrollmentDate: '2020-11-05'
-      }
-    }
-  }),
-  // Employee 5: David Wilson
-  createEmployeeObject({
-    id: 5,
-    employeeId: 'EMP005',
-    name: 'David Wilson',
-    email: 'david.wilson@company.com',
-    phone: '+1 (555) 567-8901',
-    department: 'Sales',
-    designation: 'Sales Manager',
-    location: 'Austin',
-    employmentType: 'Full-time',
-    status: 'Active',
-    joinDate: '2018-03-12',
-    salary: 82000,
-    personalInfo: {
-      dateOfBirth: '1985-12-03',
-      gender: 'Male',
-      bloodGroup: 'O-',
-      maritalStatus: 'Married',
-      nationality: 'US',
-      languages: ['English'],
-      personalEmail: 'david.wilson.personal@email.com',
-      phonePrimary: '+1 (555) 567-8901',
-      phoneSecondary: '+1 (555) 567-8902',
-      phoneEmergency: '+1 (555) 567-8903',
-      currentAddress: {
-        line1: '222 Congress Ave',
-        line2: 'Suite 1500',
-        city: 'Austin',
-        state: 'TX',
-        pincode: '78701',
-        country: 'USA'
-      },
-      permanentAddress: {
-        line1: '333 Lake Dr',
-        line2: '',
-        city: 'Houston',
-        state: 'TX',
-        pincode: '77002',
-        country: 'USA'
-      },
-      emergencyContacts: [
-        { 
-          name: 'Jessica Wilson', 
-          relation: 'Spouse', 
-          phone: '+1 (555) 567-8903', 
-          priority: 'Primary' 
-        }
-      ],
-      familyMembers: [
-        { 
-          name: 'Jessica Wilson', 
-          relation: 'Spouse', 
-          dob: '1987-06-20' 
-        },
-        { 
-          name: 'Michael Wilson',
-          phoneNo: '+1 (555) 567-8904',
-          relation: 'Son', 
-          dob: '2015-09-10' 
-        },
-        { 
-          name: 'Sophia Wilson', 
-          relation: 'Daughter', 
-          dob: '2018-11-25' 
-        }
-      ],
-      nominees: [
-        { 
-          name: 'Jessica Wilson', 
-          phone: '+1 (555) 567-8903',
-          relation: 'Spouse', 
-          percentage: 60 
-        },
-        { 
-          name: 'Michael Wilson', 
-          phone: '+1 (555) 567-8904',
-          relation: 'Son', 
-          percentage: 20 
-        },
-        { 
-          name: 'Sophia Wilson', 
-          phone: '+1 (555) 567-8905',
-          relation: 'Daughter', 
-          percentage: 20 
-        }
-      ],
-      profilePhoto: '',
-      identification: {
-        aadhaar: { 
-          number: '5678 9012 3456', 
-          verified: true,
-          document: ''
-        },
-        pan: { 
-          number: 'EFGHI5678J', 
-          verified: true,
-          document: ''
-        },
-        passport: { 
-          number: 'P56789012', 
-          expiryDate: '2026-08-15', 
-          verified: true,
-          document: ''
-        },
-        voterId: { 
-          number: 'VOT56789012', 
-          verified: true,
-          document: ''
-        }
-      }
-    },
-    employmentInfo: {
-      employeeId: 'EMP005',
-      dateOfJoining: '2018-03-12',
-      confirmationDate: '2018-09-12',
-      probationPeriod: 6,
-      employmentType: 'Permanent',
-      employmentStatus: 'Active',
-      department: 'Sales',
-      subDepartment: 'Enterprise Sales',
-      costCenter: 'SAL-001',
-      designation: 'Sales Manager',
-      grade: 'G7',
-      level: 'L5',
-      location: 'Austin',
-      workplaceType: 'Remote',
-      workEmail: 'david.wilson@company.com',
-      extensionNumber: '5678',
-      deskLocation: 'Home Office',
-      employeeCategory: 'Management',
-      noticePeriod: 90,
-      reportingManager: {
-        direct: 'CEO Office',
-        functional: 'CEO Office'
-      },
-      hrBusinessPartner: 'Lisa Anderson'
-    },
-    jobHistory: [
-      {
-        id: 1,
-        type: 'Previous Experience',
-        date: '2015-01-15',
-        organisation: 'SalesPro Solutions',
-        department: 'Enterprise Sales',
-        designation: 'Sales Representative',
-        location: 'Dallas',
-        manager: 'Mark Johnson',
-        notes: 'B2B sales for enterprise software solutions',
-        salaryChange: 45000,
-        endDate: '2018-02-28',
-        reasonForLeaving: 'Joining tech startup for growth',
-        achievements: 'Consistently exceeded sales targets by 25%'
-      },
-      {
-        id: 2,
-        type: 'Joining',
-        date: '2018-03-12',
-        organisation: 'TechCorp Inc.',
-        department: 'Sales',
-        designation: 'Sales Executive',
-        location: 'Austin',
-        manager: 'John CEO',
-        notes: 'Pioneering sales role for new tech startup',
-        salaryChange: 50000,
-        endDate: '2019-08-14',
-        reasonForLeaving: 'N/A',
-        achievements: 'Closed first 10 enterprise deals'
-      },
-      {
-        id: 3,
-        type: 'Promotion',
-        date: '2019-08-15',
-        organisation: 'TechCorp Inc.',
-        department: 'Sales',
-        designation: 'Senior Sales Executive',
-        location: 'Austin',
-        manager: 'John CEO',
-        notes: 'Promoted for exceeding sales targets by 150%',
-        salaryChange: 65000,
-        endDate: '2021-01-19',
-        reasonForLeaving: 'N/A',
-        achievements: 'Generated $5M in annual revenue'
-      },
-      {
-        id: 4,
-        type: 'Promotion',
-        date: '2021-01-20',
-        organisation: 'TechCorp Inc.',
-        department: 'Sales',
-        designation: 'Sales Manager',
-        location: 'Austin',
-        manager: 'John CEO',
-        notes: 'Promoted to lead sales team of 8 representatives',
-        salaryChange: 82000,
-        endDate: 'Present',
-        reasonForLeaving: 'N/A',
-        achievements: 'Built sales team from 2 to 8 members'
-      }
-    ],
-    salaryInfo: {
-      currentCTC: 82000,
-      ctcBreakdown: {
-        basic: 49200,
-        hra: 24600,
-        specialAllowance: 5300,
-        transportAllowance: 900,
-        medicalAllowance: 1400,
-        otherAllowances: 600,
-        providentFund: 5904,
-        gratuity: 1025,
-        otherDeductions: 500
-      },
-      salaryStructure: 'Executive',
-      bankAccounts: {
-        primary: {
-          accountNumber: '5678901234',
-          ifscCode: 'BANK0005678',
-          bankName: 'JPMorgan Chase',
-          branch: 'Austin Downtown',
-          accountType: 'Savings'
-        },
-        secondary: {
-          accountNumber: '6789012345',
-          ifscCode: 'BANK0006789',
-          bankName: 'Bank of Texas',
-          branch: 'Austin West',
-          accountType: 'Savings'
-        }
-      },
-      paymentMode: 'Bank Transfer',
-      pfAccountNumber: 'PF567890',
-      uan: 'UAN567890123',
-      esiNumber: 'ESI567890',
-      esiMedicalNominee: 'Jessica Wilson',
-      taxDeclaration: {
-        regime: 'Old',
-        declared: true
-      },
-      variablePay: {
-        eligible: true,
-        percentage: 25
-      },
-      bonusEligibility: {
-        eligible: true,
-        amount: 10000
-      },
-      salaryRevisionHistory: [
-        {
-          effectiveDate: '2019-08-15',
-          previousCTC: 50000,
-          newCTC: 65000,
-          percentageIncrease: 30,
-          approvedBy: 'John CEO',
-          status: 'Approved'
-        },
-        {
-          effectiveDate: '2021-01-20',
-          previousCTC: 65000,
-          newCTC: 82000,
-          percentageIncrease: 26,
-          approvedBy: 'John CEO',
-          status: 'Approved'
-        }
-      ]
-    },
-    statutoryInfo: {
-      pan: {
-        number: 'EFGHI5678J',
-        verified: true,
-        verifiedDate: '2018-03-12'
-      },
-      aadhaar: {
-        number: '5678 9012 3456',
-        verified: true,
-        verifiedDate: '2018-03-12'
-      },
-      pfMembership: {
-        enrolled: true,
-        accountNumber: 'PF567890',
-        uan: 'UAN567890123',
-        enrollmentDate: '2018-03-12'
-      },
-      esiRegistration: {
-        enrolled: true,
-        number: 'ESI567890',
-        enrollmentDate: '2018-03-12'
-      },
-      professionalTax: {
-        applicable: true,
-        state: 'Texas',
-        ptNumber: 'PTTX567890'
-      },
-      gratuity: {
-        eligible: true,
-        eligibilityDate: '2019-03-12'
-      }
-    }
-  }),
-  // Employee 6: Lisa Anderson
-  createEmployeeObject({
-    id: 6,
-    employeeId: 'EMP006',
-    name: 'Lisa Anderson',
-    email: 'lisa.anderson@company.com',
-    phone: '+1 (555) 678-9012',
-    department: 'Operations',
-    designation: 'Operations Manager',
-    location: 'Seattle',
-    employmentType: 'Contract',
-    status: 'Active',
-    joinDate: '2022-02-28',
-    salary: 78000,
-    personalInfo: {
-      dateOfBirth: '1989-09-30',
-      gender: 'Female',
-      bloodGroup: 'A-',
-      maritalStatus: 'Single',
-      nationality: 'US',
-      languages: ['English', 'German'],
-      personalEmail: 'lisa.anderson.personal@email.com',
-      phonePrimary: '+1 (555) 678-9012',
-      phoneSecondary: '+1 (555) 678-9013',
-      phoneEmergency: '+1 (555) 678-9014',
-      currentAddress: {
-        line1: '505 5th Ave',
-        line2: 'Apt 22B',
-        city: 'Seattle',
-        state: 'WA',
-        pincode: '98104',
-        country: 'USA'
-      },
-      permanentAddress: {
-        line1: '101 Pine St',
-        line2: '',
-        city: 'Portland',
-        state: 'OR',
-        pincode: '97204',
-        country: 'USA'
-      },
-      emergencyContacts: [
-        { 
-          name: 'Tom Anderson', 
-          relation: 'Brother', 
-          phone: '+1 (555) 678-9014', 
-          priority: 'Primary' 
-        }
-      ],
-      familyMembers: [],
-      nominees: [
-        { 
-          name: 'Tom Anderson',
-          phone: '+1 (555) 678-9014', 
-          relation: 'Brother', 
-          percentage: 100 
-        }
-      ],
-      profilePhoto: '',
-      identification: {
-        aadhaar: { 
-          number: '6789 0123 4567', 
-          verified: true,
-          document: ''
-        },
-        pan: { 
-          number: 'FGHIJ6789K', 
-          verified: true,
-          document: ''
-        },
-        passport: { 
-          number: 'P67890123', 
-          expiryDate: '2031-04-30', 
-          verified: true,
-          document: ''
-        },
-        voterId: { 
-          number: 'VOT67890123', 
-          verified: false,
-          document: ''
-        }
-      }
-    },
-    employmentInfo: {
-      employeeId: 'EMP006',
-      dateOfJoining: '2022-02-28',
-      confirmationDate: '2022-08-28',
-      probationPeriod: 6,
-      employmentType: 'Contract',
-      employmentStatus: 'Active',
-      department: 'Operations',
-      subDepartment: 'Logistics',
-      costCenter: 'OPS-001',
-      designation: 'Operations Manager',
-      grade: 'G6',
-      level: 'L4',
-      location: 'Seattle',
-      workplaceType: 'Office',
-      workEmail: 'lisa.anderson@company.com',
-      extensionNumber: '6789',
-      deskLocation: 'Floor 6, Desk 3',
-      employeeCategory: 'Management',
-      noticePeriod: 15,
-      reportingManager: {
-        direct: 'David Wilson',
-        functional: 'David Wilson'
-      },
-      hrBusinessPartner: 'Lisa Anderson'
-    },
-    jobHistory: [
-      {
-        id: 1,
-        type: 'Previous Experience',
-        date: '2019-04-01',
-        organisation: 'Logistics Global Inc.',
-        department: 'Supply Chain',
-        designation: 'Operations Supervisor',
-        location: 'Portland',
-        manager: 'Kevin Adams',
-        notes: 'Managed warehouse operations and logistics',
-        salaryChange: 60000,
-        endDate: '2022-01-31',
-        reasonForLeaving: 'Contract opportunity at tech company',
-        achievements: 'Improved delivery efficiency by 35%'
-      },
-      {
-        id: 2,
-        type: 'Joining',
-        date: '2022-02-28',
-        organisation: 'TechCorp Inc.',
-        department: 'Operations',
-        designation: 'Operations Manager',
-        location: 'Seattle',
-        manager: 'David Wilson',
-        notes: 'Contract position to establish operations framework',
-        salaryChange: 78000,
-        endDate: 'Present',
-        reasonForLeaving: 'N/A',
-        achievements: 'Set up new warehouse management system'
-      }
-    ],
-    salaryInfo: {
-      currentCTC: 78000,
-      ctcBreakdown: {
-        basic: 46800,
-        hra: 23400,
-        specialAllowance: 5100,
-        transportAllowance: 850,
-        medicalAllowance: 1300,
-        otherAllowances: 550,
-        providentFund: 0,
-        gratuity: 0,
-        otherDeductions: 300
-      },
-      salaryStructure: 'Contract',
-      bankAccounts: {
-        primary: {
-          accountNumber: '6789012345',
-          ifscCode: 'BANK0006789',
-          bankName: 'Washington Federal',
-          branch: 'Seattle Downtown',
-          accountType: 'Savings'
-        }
-      },
-      paymentMode: 'Bank Transfer',
-      pfAccountNumber: '',
-      uan: '',
-      esiNumber: '',
-      esiMedicalNominee: 'Tom Anderson',
-      taxDeclaration: {
-        regime: 'New',
-        declared: true
-      },
-      variablePay: {
-        eligible: false,
-        percentage: 0
-      },
-      bonusEligibility: {
-        eligible: false,
-        amount: 0
-      }
-    },
-    statutoryInfo: {
-      pan: {
-        number: 'FGHIJ6789K',
-        verified: true,
-        verifiedDate: '2022-02-28'
-      },
-      aadhaar: {
-        number: '6789 0123 4567',
-        verified: true,
-        verifiedDate: '2022-02-28'
-      },
-      pfMembership: {
-        enrolled: false,
-        accountNumber: '',
-        uan: '',
-        enrollmentDate: ''
-      },
-      esiRegistration: {
-        enrolled: false,
-        number: '',
-        enrollmentDate: ''
-      }
-    }
-  }),
-  // Employee 7: Robert Brown
-  createEmployeeObject({
-    id: 7,
-    employeeId: 'EMP007',
-    name: 'Robert Brown',
-    email: 'robert.brown@company.com',
-    phone: '+1 (555) 789-0123',
-    department: 'IT',
-    designation: 'System Administrator',
-    location: 'Remote',
-    employmentType: 'Full-time',
-    status: 'Inactive',
-    joinDate: '2019-07-15',
-    salary: 72000,
-    personalInfo: {
-      dateOfBirth: '1987-02-14',
-      gender: 'Male',
-      bloodGroup: 'B-',
-      maritalStatus: 'Divorced',
-      nationality: 'US',
-      languages: ['English', 'Japanese'],
-      personalEmail: 'robert.brown.personal@email.com',
-      phonePrimary: '+1 (555) 789-0123',
-      phoneSecondary: '+1 (555) 789-0124',
-      phoneEmergency: '+1 (555) 789-0125',
-      currentAddress: {
-        line1: '303 Tech Park Dr',
-        line2: 'Unit 15',
-        city: 'Denver',
-        state: 'CO',
-        pincode: '80202',
-        country: 'USA'
-      },
-      permanentAddress: {
-        line1: '404 Mountain View',
-        line2: '',
-        city: 'Boulder',
-        state: 'CO',
-        pincode: '80301',
-        country: 'USA'
-      },
-      emergencyContacts: [
-        { 
-          name: 'Susan Miller', 
-          relation: 'Sister', 
-          phone: '+1 (555) 789-0125', 
-          priority: 'Primary' 
-        }
-      ],
-      familyMembers: [
-        { 
-          name: 'Susan Miller', 
-          relation: 'Sister', 
-          dob: '1989-05-10' 
-        }
-      ],
-      nominees: [
-        { 
-          name: 'Susan Miller', 
-          phone: '+1 (555) 789-0125',
-          relation: 'Sister', 
-          percentage: 100 
-        }
-      ],
-      profilePhoto: '',
-      identification: {
-        aadhaar: { 
-          number: '7890 1234 5678', 
-          verified: true,
-          document: ''
-        },
-        pan: { 
-          number: 'GHIJK7890L', 
-          verified: true,
-          document: ''
-        },
-        passport: { 
-          number: 'P78901234', 
-          expiryDate: '2028-10-15', 
-          verified: true,
-          document: ''
-        },
-        voterId: { 
-          number: 'VOT78901234', 
-          verified: true,
-          document: ''
-        }
-      }
-    },
-    employmentInfo: {
-      employeeId: 'EMP007',
-      dateOfJoining: '2019-07-15',
-      confirmationDate: '2020-01-15',
-      probationPeriod: 6,
-      employmentType: 'Permanent',
-      employmentStatus: 'Inactive',
-      department: 'IT',
-      subDepartment: 'Infrastructure',
-      costCenter: 'IT-001',
-      designation: 'System Administrator',
-      grade: 'G5',
-      level: 'L3',
-      location: 'Remote',
-      workplaceType: 'Remote',
-      workEmail: 'robert.brown@company.com',
-      extensionNumber: '7890',
-      deskLocation: 'Home Office',
-      employeeCategory: 'Staff',
-      noticePeriod: 30,
-      reportingManager: {
-        direct: 'Mike Chen',
-        functional: 'Mike Chen'
-      },
-      hrBusinessPartner: 'Lisa Anderson'
-    },
-    jobHistory: [
-      {
-        id: 1,
-        type: 'Previous Experience',
-        date: '2016-09-01',
-        organisation: 'DataSecure Systems',
-        department: 'IT Infrastructure',
-        designation: 'Network Administrator',
-        location: 'Denver',
-        manager: 'Paul Walker',
-        notes: 'Managed corporate network and security systems',
-        salaryChange: 52000,
-        endDate: '2019-06-30',
-        reasonForLeaving: 'Better career prospects in tech',
-        achievements: 'Achieved 99.9% network uptime'
-      },
-      {
-        id: 2,
-        type: 'Joining',
-        date: '2019-07-15',
-        organisation: 'TechCorp Inc.',
-        department: 'IT',
-        designation: 'System Administrator',
-        location: 'New York',
-        manager: 'Mike Chen',
-        notes: 'Joined to build scalable infrastructure for growing company',
-        salaryChange: 65000,
-        endDate: '2022-12-31',
-        reasonForLeaving: 'N/A',
-        achievements: 'Migrated all systems to cloud infrastructure'
-      },
-      {
-        id: 3,
-        type: 'Salary Revision',
-        date: '2021-04-01',
-        organisation: 'TechCorp Inc.',
-        department: 'IT',
-        designation: 'System Administrator',
-        location: 'Remote',
-        manager: 'Mike Chen',
-        notes: 'Annual performance-based salary increment',
-        salaryChange: 72000,
-        endDate: '2022-12-31',
-        reasonForLeaving: 'N/A',
-        achievements: 'Reduced system downtime by 60%'
-      }
-    ],
-    salaryInfo: {
-      currentCTC: 72000,
-      ctcBreakdown: {
-        basic: 43200,
-        hra: 21600,
-        specialAllowance: 4700,
-        transportAllowance: 800,
-        medicalAllowance: 1200,
-        otherAllowances: 500,
-        providentFund: 5184,
-        gratuity: 900,
-        otherDeductions: 400
-      },
-      salaryStructure: 'Standard',
-      bankAccounts: {
-        primary: {
-          accountNumber: '7890123456',
-          ifscCode: 'BANK0007890',
-          bankName: 'US Bank',
-          branch: 'Denver Downtown',
-          accountType: 'Savings'
-        }
-      },
-      paymentMode: 'Bank Transfer',
-      pfAccountNumber: 'PF789012',
-      uan: 'UAN789012345',
-      esiNumber: 'ESI789012',
-      esiMedicalNominee: 'Susan Miller',
-      taxDeclaration: {
-        regime: 'New',
-        declared: true
-      },
-      variablePay: {
-        eligible: true,
-        percentage: 8
-      },
-      bonusEligibility: {
-        eligible: true,
-        amount: 4000
-      },
-      salaryRevisionHistory: [
-        {
-          effectiveDate: '2021-04-01',
-          previousCTC: 65000,
-          newCTC: 72000,
-          percentageIncrease: 10.8,
-          approvedBy: 'Mike Chen',
-          status: 'Approved'
-        }
-      ]
-    },
-    statutoryInfo: {
-      pan: {
-        number: 'GHIJK7890L',
-        verified: true,
-        verifiedDate: '2019-07-15'
-      },
-      aadhaar: {
-        number: '7890 1234 5678',
-        verified: true,
-        verifiedDate: '2019-07-15'
-      },
-      pfMembership: {
-        enrolled: true,
-        accountNumber: 'PF789012',
-        uan: 'UAN789012345',
-        enrollmentDate: '2019-07-15'
-      },
-      esiRegistration: {
-        enrolled: true,
-        number: 'ESI789012',
-        enrollmentDate: '2019-07-15'
-      }
-    }
-  }),
-  // Employee 8: Jennifer Lee
-  createEmployeeObject({
-    id: 8,
-    employeeId: 'EMP008',
-    name: 'Jennifer Lee',
-    email: 'jennifer.lee@company.com',
-    phone: '+1 (555) 890-1234',
-    department: 'Engineering',
-    designation: 'Frontend Developer',
-    location: 'New York',
-    employmentType: 'Full-time',
-    status: 'Active',
-    joinDate: '2021-09-22',
-    salary: 68000,
-    personalInfo: {
-      dateOfBirth: '1993-08-08',
-      gender: 'Female',
-      bloodGroup: 'O+',
-      maritalStatus: 'Single',
-      nationality: 'US',
-      languages: ['English', 'Korean', 'Japanese'],
-      personalEmail: 'jennifer.lee.personal@email.com',
-      phonePrimary: '+1 (555) 890-1234',
-      phoneSecondary: '+1 (555) 890-1235',
-      phoneEmergency: '+1 (555) 890-1236',
-      currentAddress: {
-        line1: '707 Broadway',
-        line2: 'Apt 9F',
-        city: 'New York',
-        state: 'NY',
-        pincode: '10003',
-        country: 'USA'
-      },
-      permanentAddress: {
-        line1: '808 Park Ave',
-        line2: '',
-        city: 'Los Angeles',
-        state: 'CA',
-        pincode: '90001',
-        country: 'USA'
-      },
-      emergencyContacts: [
-        { 
-          name: 'James Lee', 
-          relation: 'Father', 
-          phone: '+1 (555) 890-1236', 
-          priority: 'Primary' 
-        }
-      ],
-      familyMembers: [
-        { 
-          name: 'James Lee', 
-          relation: 'Father', 
-          dob: '1960-11-30' 
-        },
-        { 
-          name: 'Soo Lee', 
-          relation: 'Mother', 
-          dob: '1963-04-15' 
-        }
-      ],
-      nominees: [
-        { 
-          name: 'James Lee',
-          phone: '+1 (555) 890-1236', 
-          relation: 'Father', 
-          percentage: 100 
-        }
-      ],
-      profilePhoto: '',
-      identification: {
-        aadhaar: { 
-          number: '8901 2345 6789', 
-          verified: true,
-          document: ''
-        },
-        pan: { 
-          number: 'HIJKL8901M', 
-          verified: true,
-          document: ''
-        },
-        passport: { 
-          number: 'P89012345', 
-          expiryDate: '2032-03-20', 
-          verified: true,
-          document: ''
-        },
-        voterId: { 
-          number: 'VOT89012345', 
-          verified: false,
-          document: ''
-        }
-      }
-    },
-    employmentInfo: {
-      employeeId: 'EMP008',
-      dateOfJoining: '2021-09-22',
-      confirmationDate: '2022-03-22',
-      probationPeriod: 6,
-      employmentType: 'Permanent',
-      employmentStatus: 'Active',
-      department: 'Engineering',
-      subDepartment: 'Frontend Development',
-      costCenter: 'ENG-002',
-      designation: 'Frontend Developer',
-      grade: 'G4',
-      level: 'L2',
-      location: 'New York',
-      workplaceType: 'Hybrid',
-      workEmail: 'jennifer.lee@company.com',
-      extensionNumber: '8901',
-      deskLocation: 'Floor 5, Desk 7',
-      employeeCategory: 'Staff',
-      noticePeriod: 30,
-      reportingManager: {
-        direct: 'Sarah Johnson',
-        functional: 'Sarah Johnson'
-      },
-      hrBusinessPartner: 'Lisa Anderson'
-    },
-
-    jobHistory: [
-      {
-        id: 1,
-        type: 'Previous Experience',
-        date: '2019-06-01',
-        organisation: 'WebCraft Studios',
-        department: 'Web Development',
-        designation: 'Frontend Developer Intern',
-        location: 'Los Angeles',
-        manager: 'Anna Kim',
-        notes: 'Internship during final year of computer science degree',
-        salaryChange: 0,
-        endDate: '2020-05-31',
-        reasonForLeaving: 'Completed internship',
-        achievements: 'Built responsive e-commerce website'
-      },
-      {
-        id: 2,
-        type: 'Previous Experience',
-        date: '2020-07-01',
-        organisation: 'Digital Innovations',
-        department: 'Product Development',
-        designation: 'Junior Frontend Developer',
-        location: 'Los Angeles',
-        manager: 'Chris Wong',
-        notes: 'First full-time role after graduation',
-        salaryChange: 55000,
-        endDate: '2021-08-31',
-        reasonForLeaving: 'Relocated to New York',
-        achievements: 'Led frontend development for mobile app'
-      },
-      {
-        id: 3,
-        type: 'Joining',
-        date: '2021-09-22',
-        organisation: 'TechCorp Inc.',
-        department: 'Engineering',
-        designation: 'Frontend Developer',
-        location: 'New York',
-        manager: 'Sarah Johnson',
-        notes: 'Joined to work on cutting-edge React applications',
-        salaryChange: 68000,
-        endDate: 'Present',
-        reasonForLeaving: 'N/A',
-        achievements: 'Improved page load speed by 50%'
-      }
-    ],
-    
-    salaryInfo: {
-      currentCTC: 68000,
-      ctcBreakdown: {
-        basic: 40800,
-        hra: 20400,
-        specialAllowance: 4500,
-        transportAllowance: 800,
-        medicalAllowance: 1200,
-        otherAllowances: 300,
-        providentFund: 4896,
-        gratuity: 850,
-        otherDeductions: 400
-      },
-      salaryStructure: 'Standard',
-      bankAccounts: {
-        primary: {
-          accountNumber: '8901234567',
-          ifscCode: 'BANK0008901',
-          bankName: 'HSBC',
-          branch: 'New York Wall Street',
-          accountType: 'Savings'
-        }
-      },
-      paymentMode: 'Bank Transfer',
-      pfAccountNumber: 'PF890123',
-      uan: 'UAN890123456',
-      esiNumber: 'ESI890123',
-      esiMedicalNominee: 'James Lee',
-      taxDeclaration: {
-        regime: 'New',
-        declared: true
-      },
-      variablePay: {
-        eligible: true,
-        percentage: 10
-      },
-      bonusEligibility: {
-        eligible: true,
-        amount: 3500
-      }
-    },
-    statutoryInfo: {
-      pan: {
-        number: 'HIJKL8901M',
-        verified: true,
-        verifiedDate: '2021-09-22'
-      },
-      aadhaar: {
-        number: '8901 2345 6789',
-        verified: true,
-        verifiedDate: '2021-09-22'
-      },
-      pfMembership: {
-        enrolled: true,
-        accountNumber: 'PF890123',
-        uan: 'UAN890123456',
-        enrollmentDate: '2021-09-22'
-      },
-      esiRegistration: {
-        enrolled: true,
-        number: 'ESI890123',
-        enrollmentDate: '2021-09-22'
-      }
-    }
-  })
+  
+ 
 ]);
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('All');
@@ -3197,57 +2006,14 @@ const handleEditEmployee = (employee) => {
 };
 
 
-  // Sidebar content
-  const sidebarContent = (
-    <nav className="space-y-1 p-3">
-      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-        Employee Master
-      </div>
-
-      <button className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md">
-        <Icon icon="heroicons:users" className="mr-3 h-5 w-5" />
-        All Employees
-      </button>
-      <button className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md">
-        <Icon icon="heroicons:user-plus" className="mr-3 h-5 w-5" />
-        Add Employee
-      </button>
-      <button className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md">
-        <Icon icon="heroicons:document-chart-bar" className="mr-3 h-5 w-5" />
-        Reports
-      </button>
-
-      <div className="pt-4 border-t border-gray-200 mt-4">
-        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-          Quick Stats
-        </div>
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-dark-900 ">Total Employees:</span>
-            <span className="font-semibold">{kpis.totalEmployees}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Active:</span>
-            <span className="font-semibold text-green-600">{kpis.activeEmployees}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Departments:</span>
-            <span className="font-semibold">{kpis.departments}</span>
-          </div>
-        </div>
-      </div>
-    </nav>
-  );
 
   return (
 
     <div className="container-fluid">
       {/* Header */}
       <div className="mb-4">
-        <h5 className="text-3xl fw-bold text-dark mb-2 mt-3 d-flex align-items-center gap-2">
-          <span className="icon-circle text-primary">
+         <h5 className="text-3xl fw-bold text-dark mb-2 mt-3 d-flex align-items-center gap-2"> 
             <Icon icon="heroicons:user-group" />
-          </span>
           Employee Master Data
         </h5>
         <p className="text-muted">
@@ -3256,64 +2022,62 @@ const handleEditEmployee = (employee) => {
       </div>
 
       {/* KPI Cards */}
-      <div className="row g-4 mb-4">
-        {[
-          {
-            title: "Total Employees",
-            value: kpis.totalEmployees,
-            icon: "heroicons:users",
-            bg: "bg-primary-subtle",
-            color: "text-primary",
-          },
-          {
-            title: "Active Employees",
-            value: kpis.activeEmployees,
-            icon: "heroicons:check-circle",
-            bg: "bg-success-subtle",
-            color: "text-success",
-          },
-          {
-            title: "Departments",
-            value: kpis.departments,
-            icon: "heroicons:building-office",
-            bg: "bg-info-subtle",
-            color: "text-info",
-          },
-          {
-            title: "Avg. Salary",
-            value: formatCurrency(kpis.avgSalary),
-            icon: "heroicons:currency-dollar",
-            bg: "bg-warning-subtle",
-            color: "text-warning",
-          },
-        ].map((item, index) => (
-          <div className="col-xl-3 col-md-6" key={index}>
-            <div className="card border-0 shadow-sm h-100 kpi-card">
-              <div className="card-body d-flex align-items-center gap-3">
+      <div className="kpi-row">
+  {[
+    {
+      title: "Total Employees",
+      value: kpis.totalEmployees,
+      icon: "heroicons:users",
+      bg: "kpi-primary",
+      color: "kpi-primary-text",
+    },
+    {
+      title: "Active Employees",
+      value: kpis.activeEmployees,
+      icon: "heroicons:check-circle",
+      bg: "kpi-success",
+      color: "kpi-success-text",
+    },
+    {
+      title: "Departments",
+      value: kpis.departments,
+      icon: "heroicons:building-office",
+      bg: "kpi-info",
+      color: "kpi-info-text",
+    },
+    {
+      title: "Avg. Salary",
+      value: formatCurrency(kpis.avgSalary),
+      icon: "heroicons:currency-dollar",
+      bg: "kpi-warning",
+      color: "kpi-warning-text",
+    },
+  ].map((item, index) => (
+    <div className="kpi-col" key={index}>
+      <div className="kpi-card">
+        <div className="kpi-card-body">
 
-                {/* Icon */}
-                <div
-                  className={`d-flex align-items-center justify-content-center rounded-circle ${item.bg}`}
-                  style={{ width: 56, height: 56 }}
-                >
-                  <Icon icon={item.icon} className={`${item.color}`} style={{ fontSize: 28 }} />
-                </div>
+          {/* Icon */}
+          <div className={`kpi-icon ${item.bg}`}>
+            <Icon icon={item.icon} className={`kpi-icon-style ${item.color}`} />
+          </div>
 
-                {/* Content */}
-                <div>
-                  <div className="text-dark small fw-semibold">
-                    {item.title}
-                  </div>
-                  <div className="fs-4 fw-bold text-muted">
-                    {item.value}
-                  </div>
-                </div>
+          {/* Content */}
+          <div className="kpi-content">
+            <div className="kpi-title">
+              {item.title}
+            </div>
 
-              </div>
+            <div className="kpi-value">
+              {item.value}
             </div>
           </div>
-        ))}
+
+        </div>
       </div>
+    </div>
+  ))}
+</div>
 
 
       {/* Filters and Search */}
@@ -3476,7 +2240,7 @@ const handleEditEmployee = (employee) => {
 </button>
                 <button
                   onClick={exportToCSV}
-                  className="allButtonsExport"
+                  className="btn btn-primary d-flex align-items-center"
                 >
                   <Icon icon="heroicons:document-arrow-down" className="me-2" />
                   Export CSV
@@ -3602,7 +2366,7 @@ const handleEditEmployee = (employee) => {
                   <div className="d-flex gap-2 justify-content-center">
                     <button
                       onClick={() => handleViewDetails(employee)}
-                      className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+                      className="job-listings-btn"
                       title="View Details"
                     >
                       <Icon icon="heroicons:eye" />
@@ -3809,7 +2573,7 @@ const handleEditEmployee = (employee) => {
           <div className="card-footer bg-transparent border-top d-flex justify-content-end gap-2">
             <button
               type="button"
-              className="btn btn-secondary d-flex align-items-center gap-2"
+              className="back-to-list"
               onClick={handleBackToList}
             >
               <Icon icon="heroicons:arrow-left" />
@@ -3831,7 +2595,7 @@ const handleEditEmployee = (employee) => {
 
             <button
               type="button"
-              className="btn btn-danger d-flex align-items-center gap-2"
+              className="delete-btn"
               onClick={() => {
                 handleDeleteEmployee(selectedEmployee.id);
                 handleBackToList();
@@ -3847,35 +2611,12 @@ const handleEditEmployee = (employee) => {
 
 
    {showEditModal && editEmployeeData && (
-  <div
-    className="modal show d-block"
-    style={{
-      backgroundColor: "rgba(0,0,0,0.5)",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1050,
-    }}
-  >
-    <div
-      className="modal-content bg-white"
-      style={{
-        width: "70%",
-        maxWidth: "1200px",
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        maxHeight: "90vh",
-        overflowY: "auto",
-        borderRadius: "8px",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-      }}
-    >
-      <div className="modal-header text-dark">
-        <h5 className="modal-title d-flex align-items-center gap-2 ">
+  <div className="hrms-modal-overlay">
+    <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+
+              {/* HEADER */}
+              <div className="hrms-modal-header">
+                <h5 className="hrms-modal-title d-flex align-items-center">
           <Icon icon="heroicons:pencil-square" />
           Edit Employee: {editEmployeeData.name}
         </h5>
@@ -3885,8 +2626,8 @@ const handleEditEmployee = (employee) => {
           onClick={handleCancelEdit}
         ></button>
       </div>
-      
-      <div className="modal-body p-0" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', flex: 1 }}>
+      {/* BODY */}
+      <div className="hrms-modal-body hrms-modal-body-scroll">
         {/* Tab Navigation */}
         <ul className="nav nav-tabs border-bottom px-3 pt-3" style={{ flexShrink: 0 }}>
           <li className="nav-item">
@@ -3987,9 +2728,9 @@ const handleEditEmployee = (employee) => {
 
     {/* === Basic Information === */}
     <div className="col-12">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
-        <Icon icon="heroicons:identification" />
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
+          <Icon icon="heroicons:identification" /> 
         </span>
         Basic Information
       </h6>
@@ -4100,7 +2841,7 @@ const handleEditEmployee = (employee) => {
         />
         <button
           type="button"
-          className="btn btn-outline-primary"
+          className="job-listings-btn"
           onClick={() => {
             const input = document.getElementById('editLanguageInput');
             const newLanguage = input.value.trim();
@@ -4137,12 +2878,16 @@ const handleEditEmployee = (employee) => {
 
     {/* === Contact Information === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
-          <Icon icon="heroicons:phone" />
-        </span>
-        Contact Information
-      </h6>
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
+
+    <Icon icon="heroicons:phone" /> 
+
+  </span> 
+
+  Contact Information 
+
+</h6> 
     </div>
 
     <div className="col-md-6">
@@ -4218,8 +2963,8 @@ const handleEditEmployee = (employee) => {
 
     {/* === Current Address === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:map-pin" />
         </span>
         Current Address
@@ -4300,8 +3045,8 @@ const handleEditEmployee = (employee) => {
 
     {/* Permanent Address Section */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:home" />
         </span>
         Permanent Address
@@ -4503,8 +3248,8 @@ const handleEditEmployee = (employee) => {
     {/* === Emergency Contacts === */}
     <div className="col-12 mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
-          <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
             <Icon icon="heroicons:user-group" />
           </span>
           Emergency Contacts
@@ -4512,7 +3257,7 @@ const handleEditEmployee = (employee) => {
 
         <button
           type="button"
-          className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+          className="job-listings-btn"
           onClick={() => {
             const currentContacts = editEmployeeData.personalInfo?.emergencyContacts || [];
             if (currentContacts.length >= 5) {
@@ -4624,9 +3369,8 @@ const handleEditEmployee = (employee) => {
     {/* === Family Members (Optional) === */}
     <div className="col-12 mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
-         
-          <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
             <Icon icon="heroicons:home" />
           </span>
           Family Members (Optional)
@@ -4634,7 +3378,7 @@ const handleEditEmployee = (employee) => {
 
         <button
           type="button"
-          className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+          className="job-listings-btn"
           onClick={() => {
             const currentMembers = editEmployeeData.personalInfo?.familyMembers || [];
             if (currentMembers.length >= 5) {
@@ -4734,8 +3478,8 @@ const handleEditEmployee = (employee) => {
     {/* === Nominee Information === */}
     <div className="col-12 mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
-          <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:gift" />
           </span>
           Nominee Information
@@ -4743,7 +3487,7 @@ const handleEditEmployee = (employee) => {
 
         <button
           type="button"
-          className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+          className="job-listings-btn"
           onClick={() => {
             const currentNominees = editEmployeeData.personalInfo?.nominees || [];
             if (currentNominees.length >= 3) {
@@ -4894,9 +3638,8 @@ const handleEditEmployee = (employee) => {
 
     {/* === Identification Documents === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-       
-        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:document-text" />
           </span>
         Identification Documents
@@ -4978,8 +3721,8 @@ const handleEditEmployee = (employee) => {
 {activeEditTab === 'employment' && (
   <div className="row g-3">
      <div className="col-12">
-        <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 text-muted d-flex align-items-center gap-2">
-        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:briefcase" />
           </span>
             <span>Employment Details</span>
@@ -5324,8 +4067,8 @@ const handleEditEmployee = (employee) => {
 {activeEditTab === 'jobHistory' && (
   <div className="row g-3">
     <div className="col-12 d-flex justify-content-between align-items-center">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
         <Icon icon="heroicons:clock" />
         </span>
         Complete Job History
@@ -5333,7 +4076,7 @@ const handleEditEmployee = (employee) => {
 
       <button
         type="button"
-        className="btn btn-sm btn-primary d-flex align-items-center gap-2"
+        className="create-job-btn"
         onClick={() => {
           const currentHistory = editEmployeeData.jobHistory || [];
           const newHistory = {
@@ -5640,8 +4383,8 @@ const handleEditEmployee = (employee) => {
     {(editEmployeeData.jobHistory || []).length > 0 && (
       <div className="col-12 mt-4">
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
-            <span className="text-primary">
+       <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
             <Icon icon="heroicons:table-cells" className="me-2" />
             </span>
             Job History Summary Table
@@ -5794,8 +4537,8 @@ const handleEditEmployee = (employee) => {
   <div className="row g-3">
     {/* === Current Compensation === */}
     <div className="col-12">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
         <Icon icon="heroicons:currency-dollar" />
         </span>
         Current Compensation
@@ -6357,15 +5100,15 @@ const handleEditEmployee = (employee) => {
     {/* Secondary Bank Account (Optional) */}
     <div className="col-12 mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
-          <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:plus-circle" />
           </span>
           Secondary Bank Account 
         </h6>
         <button
           type="button"
-          className="btn btn-sm btn-outline-primary d-flex align-items-center gap-2"
+          className="job-listings-btn"
           onClick={() => {
             const currentAccounts = editEmployeeData.salaryInfo?.bankAccounts || {};
             if (currentAccounts.secondary) {
@@ -6532,8 +5275,8 @@ const handleEditEmployee = (employee) => {
 
     {/* === Provident Fund & ESI === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:shield-check" />
         </span>
         Provident Fund & ESI
@@ -6606,8 +5349,8 @@ const handleEditEmployee = (employee) => {
 
     {/* === Tax & Benefits === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:document-check" />
         </span>
         Tax & Benefits
@@ -6720,15 +5463,15 @@ const handleEditEmployee = (employee) => {
     {/* === Salary Revision History === */}
     <div className="col-12 mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
-          <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
             <Icon icon="heroicons:chart-bar" />
           </span>
           Salary Revision History
         </h6>
         <button
           type="button"
-          className="btn btn-sm btn-primary d-flex align-items-center gap-2"
+          className="create-job-btn"
           onClick={() => {
             const currentRevisions = editEmployeeData.salaryInfo?.salaryRevisionHistory || [];
             const newRevision = {
@@ -6910,8 +5653,8 @@ const handleEditEmployee = (employee) => {
   <div className="row g-3">
     {/* Note Section */}
     <div className="col-12 mb-3">
-       <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+       <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:shield-check" />
         </span>
             Statutory & Compliance Information
@@ -6920,8 +5663,8 @@ const handleEditEmployee = (employee) => {
 
     {/* === PAN Card Details === */}
     <div className="col-12">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:credit-card" />
         </span>
         PAN Card Details
@@ -6970,8 +5713,8 @@ const handleEditEmployee = (employee) => {
 
     {/* === Aadhaar Card Details === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:identification" />
         </span>
         Aadhaar Card Details
@@ -7020,8 +5763,8 @@ const handleEditEmployee = (employee) => {
 
     {/* === Provident Fund Membership === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:banknotes" />
         </span>
         Provident Fund Membership
@@ -7118,8 +5861,8 @@ const handleEditEmployee = (employee) => {
 
     {/* === ESI Registration === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:heart" />
         </span>
         ESI Registration
@@ -7181,8 +5924,8 @@ const handleEditEmployee = (employee) => {
 
     {/* === Professional Tax === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:document-text" />
         </span>
         Professional Tax
@@ -7255,8 +5998,8 @@ const handleEditEmployee = (employee) => {
 
     {/* === Labour Welfare Fund === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:users" />
         </span>
         Labour Welfare Fund
@@ -7297,8 +6040,8 @@ const handleEditEmployee = (employee) => {
 
     {/* === Gratuity === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:gift" />
         </span>
         Gratuity
@@ -7339,8 +6082,8 @@ const handleEditEmployee = (employee) => {
 
     {/* === Bonus Act === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:currency-rupee" />
         </span>
         Bonus Act
@@ -7361,8 +6104,8 @@ const handleEditEmployee = (employee) => {
 
     {/* === Shops and Establishment Act === */}
     <div className="col-12 mt-4">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:building-office" />
         </span>
         Shops and Establishment Act
@@ -7440,20 +6183,25 @@ const handleEditEmployee = (employee) => {
       <div className="modal-footer d-flex justify-content-end gap-2" style={{ flexShrink: 0 }}>
         <button
           type="button"
-          className="btn btn-secondary"
+          className="cancel-btn"
           onClick={handleCancelEdit}
         >
           Cancel
         </button>
-        <button 
-          type="button" 
-          className="btn btn-warning d-flex align-items-center"
-          onClick={handleSaveEditedEmployee}
-          disabled={!editEmployeeData.name || !editEmployeeData.email || !editEmployeeData.employmentInfo?.designation || !editEmployeeData.salary}
-        >
-          <Icon icon="heroicons:check-circle" className="me-2" />
-          Save Changes
-        </button>
+<button 
+  type="button" 
+  className="take-quiz-btn d-flex align-items-center justify-content-center"
+  onClick={handleSaveEditedEmployee}
+  disabled={
+    !editEmployeeData.name ||
+    !editEmployeeData.email ||
+    !editEmployeeData.employmentInfo?.designation ||
+    !editEmployeeData.salary
+  }
+>
+  <Icon icon="heroicons:check-circle" className="me-2" />
+  <span>Save Changes</span>
+</button>
       </div>
     </div>
   </div>
@@ -7461,35 +6209,15 @@ const handleEditEmployee = (employee) => {
 
        {showAddModal && (
       <div
-        className="modal show d-block"
-        style={{
-          backgroundColor: "rgba(0,0,0,0.5)",
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 1050,
-        }}
+        className="hrms-modal-overlay"
 
       >
         <div
-          className="modal-content bg-white"
-          style={{
-            width: "70%",
-            maxWidth: "1200px",
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            maxHeight: "90vh",
-            overflowY: "auto",
-            borderRadius: "8px",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-          }}
+              className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column"
         >
-                    <div className="modal-header text-dark">
-                      <h5 className="modal-title d-flex align-items-center gap-2">
+              {/* HEADER */}
+              <div className="hrms-modal-header">
+                <h5 className="hrms-modal-title d-flex align-items-center">
                         <Icon icon="heroicons:user-plus" />
                         Add New Employee
                       </h5>
@@ -7502,7 +6230,7 @@ const handleEditEmployee = (employee) => {
                         }}
                       ></button>
                     </div>
-                    <div className="modal-body p-0" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', flex: 1 }}>
+              <div className="hrms-modal-body hrms-modal-body-scroll">
                       {/* Tab Navigation */}
     <ul className="nav nav-tabs border-bottom px-3 pt-3" style={{ flexShrink: 0 }}>
       <li className="nav-item">
@@ -7610,8 +6338,8 @@ const handleEditEmployee = (employee) => {
 
         {/* === Basic Information === */}
         <div className="col-12">
-          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
             <Icon icon="heroicons:identification" />
             </span>
             Basic Information
@@ -7754,7 +6482,7 @@ const handleEditEmployee = (employee) => {
             />
             <button
               type="button"
-              className="btn btn-outline-primary"
+              className="job-listings-btn"
               onClick={(e) => {
                 const input = document.getElementById('languageInput');
                 const newLanguage = input.value.trim();
@@ -7800,8 +6528,8 @@ const handleEditEmployee = (employee) => {
     
         {/* === Contact Information === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-           <span className="text-primary">
+        <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
             <Icon icon="heroicons:phone" />
             </span>
             Contact Information
@@ -7918,8 +6646,8 @@ const handleEditEmployee = (employee) => {
     
         {/* === Current Address === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
             <Icon icon="heroicons:map-pin" />
             </span>
             Current Address
@@ -8037,8 +6765,8 @@ const handleEditEmployee = (employee) => {
     
         {/* Permanent Address Section */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
             <Icon icon="heroicons:home" />
             </span>
             Permanent Address
@@ -8289,8 +7017,8 @@ const handleEditEmployee = (employee) => {
         {/* === Emergency Contacts === */}
         <div className="col-12 mt-4">
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
-              <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:user-group" />
               </span>
               Emergency Contacts
@@ -8298,7 +7026,7 @@ const handleEditEmployee = (employee) => {
     
     <button
       type="button"
-      className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+      className="job-listings-btn"
       onClick={() => {
         if (newEmployee.personalInfo.emergencyContacts.length >= 5) {
           alert("Maximum 5 emergency contacts allowed");
@@ -8474,8 +7202,8 @@ const handleEditEmployee = (employee) => {
         {/* === Family Members (Optional) === */}
         <div className="col-12 mt-4">
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
-              <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:home" />
               </span>
               Family Members (Optional) 
@@ -8483,7 +7211,7 @@ const handleEditEmployee = (employee) => {
     
     <button
       type="button"
-      className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+      className="job-listings-btn"
       onClick={() => {
         if (newEmployee.personalInfo.familyMembers.length >= 5) {
           alert("Maximum 5 family members allowed");
@@ -8636,7 +7364,7 @@ const handleEditEmployee = (employee) => {
     
     <button
       type="button"
-      className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+      className="job-listings-btn"
       onClick={() => {
         if (newEmployee.personalInfo.nominees.length >= 3) {
           alert("Maximum 3 nominees allowed");
@@ -8851,8 +7579,10 @@ const handleEditEmployee = (employee) => {
     
         {/* === Identification Documents === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <Icon icon="heroicons:document-text" />
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
+                <Icon icon="heroicons:document-text" />
+                </span>
             Identification Documents
           </h6>
         </div>
@@ -9001,8 +7731,8 @@ const handleEditEmployee = (employee) => {
 
       <div className="row g-3">
         <div className="col-12">
-            <h6 className="fw-bold fs-5 mb-3 border-bottom text-muted pb-2 d-flex align-items-center gap-2">
-               <span className="icon-circle text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
                   <Icon icon="heroicons:briefcase" />
                    </span>
                       <span>Employment Details</span>
@@ -9423,8 +8153,8 @@ const handleEditEmployee = (employee) => {
 {activeAddTab === 'jobHistory' && (
   <div className="row g-3">
     <div className="col-12 d-flex justify-content-between align-items-center">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-       <span className="icon-circle  text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
         <Icon icon="heroicons:clock" />
         </span>
         Complete Job History
@@ -9432,7 +8162,7 @@ const handleEditEmployee = (employee) => {
 
       <button
         type="button"
-        className="btn btn-sm btn-primary d-flex align-items-center gap-2"
+        className="create-job-btn"
         onClick={() => {
           // Ensure jobHistory exists as array
           const currentHistory = Array.isArray(newEmployee.jobHistory) 
@@ -10026,8 +8756,8 @@ const handleEditEmployee = (employee) => {
     {Array.isArray(newEmployee.jobHistory) && newEmployee.jobHistory.length > 0 && (
       <div className="col-12 mt-4">
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
-            <span className="text-primary">
+       <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
             <Icon icon="heroicons:table-cells" className="me-2" />
             </span>
             Job History Summary Table
@@ -10177,8 +8907,8 @@ const handleEditEmployee = (employee) => {
       <div className="row g-3">
         {/* === Current Compensation === */}
         <div className="col-12">
-          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
             <Icon icon="heroicons:currency-dollar" />
             </span>
             Current Compensation
@@ -10243,8 +8973,8 @@ const handleEditEmployee = (employee) => {
     
         {/* === CTC Breakdown === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
             <Icon icon="heroicons:chart-bar" />
             </span>
             CTC Breakdown
@@ -10452,8 +9182,8 @@ const handleEditEmployee = (employee) => {
     
         {/* === Bank Account Details === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
             <Icon icon="heroicons:building-library" />
             </span>
             Bank Account Details
@@ -10640,7 +9370,7 @@ const handleEditEmployee = (employee) => {
             </h6>
     <button
       type="button"
-      className="btn btn-sm btn-outline-primary d-flex align-items-center gap-2"
+      className="job-listings-btn"
       onClick={() => {
         if (newEmployee.salaryInfo.bankAccounts.secondary) {
           // Remove secondary account
@@ -10943,8 +9673,8 @@ const handleEditEmployee = (employee) => {
     
         {/* === Tax & Benefits === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
             <Icon icon="heroicons:document-check" />
             </span>
             Tax & Benefits
@@ -11102,7 +9832,7 @@ const handleEditEmployee = (employee) => {
             </h6>
             <button
               type="button"
-              className="btn btn-sm btn-primary d-flex align-items-center gap-2"
+              className="create-job-btn"
               onClick={() => {
                 // Get current salary from job history
                 const jobHistoryEntries = newEmployee.jobHistory || [];
@@ -11531,8 +10261,8 @@ const handleEditEmployee = (employee) => {
       <div className="row g-3">
         {/* Note Section */}
         <div className="col-12 mb-3">
-                      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-                        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
                         <Icon icon="heroicons:shield-check" />
                         </span>
                         Statutory & Compliance Information
@@ -11541,8 +10271,8 @@ const handleEditEmployee = (employee) => {
     
         {/* === PAN Card Details === */}
         <div className="col-12">
-          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:credit-card" />
             </span>
             PAN Card Details
@@ -11613,8 +10343,8 @@ const handleEditEmployee = (employee) => {
     
         {/* === Aadhaar Card Details === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:identification" />
             </span>
             Aadhaar Card Details
@@ -11684,8 +10414,8 @@ const handleEditEmployee = (employee) => {
     
         {/* === Provident Fund Membership === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:banknotes" />
             </span>
             Provident Fund Membership
@@ -11811,8 +10541,8 @@ const handleEditEmployee = (employee) => {
     
         {/* === ESI Registration === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
             <Icon icon="heroicons:heart" />
             </span>
             ESI Registration
@@ -11889,8 +10619,8 @@ const handleEditEmployee = (employee) => {
     
         {/* === Professional Tax === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-           <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
             <Icon icon="heroicons:document-text" />
             </span>
             Professional Tax
@@ -11984,9 +10714,8 @@ const handleEditEmployee = (employee) => {
     
         {/* === Labour Welfare Fund === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-           
-            <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:users" />
               </span>
             Labour Welfare Fund
@@ -12035,9 +10764,8 @@ const handleEditEmployee = (employee) => {
     
         {/* === Gratuity === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            
-            <span className="text-primary">
+         <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:gift" />
             </span>
             Gratuity
@@ -12086,8 +10814,8 @@ const handleEditEmployee = (employee) => {
     
         {/* === Bonus Act === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:currency-rupee" />
             </span>
             Bonus Act
@@ -12114,8 +10842,8 @@ const handleEditEmployee = (employee) => {
     
         {/* === Shops and Establishment Act === */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:building-office" />
             </span>
             Shops and Establishment Act
@@ -12210,7 +10938,7 @@ const handleEditEmployee = (employee) => {
                     <div className="modal-footer d-flex justify-content-end gap-2" style={{ flexShrink: 0 }}>
                       <button
                         type="button"
-                        className="btn btn-secondary"
+                        className=" cancel-btn"
                         onClick={() => {
                           setShowAddModal(false);
                           setActiveAddTab('personal');
@@ -12262,8 +10990,8 @@ const PersonalInfoTab = ({ employee, formatDate }) => {
       <div className="row g-4">
         {/* Basic Information */}
         <div className="col-12">
-          <h6 className="d-flex align-items-center gap-2 fw-bold fs-5 mb-3 border-bottom pb-2" >
-            <span className="icon-circle  text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:identification" />
             </span>
             <span>Basic Information</span>
@@ -12311,8 +11039,8 @@ const PersonalInfoTab = ({ employee, formatDate }) => {
 
         {/* Contact Information */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="icon-circle text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:phone" />
             </span>
             <span>Contact Information</span>
@@ -12341,8 +11069,8 @@ const PersonalInfoTab = ({ employee, formatDate }) => {
 
         {/* Address Information */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="icon-circle text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:map-pin" />
             </span>
             <span>Address Information</span>
@@ -12387,8 +11115,8 @@ const PersonalInfoTab = ({ employee, formatDate }) => {
 
         {/* Emergency Contacts */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="icon-circle text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:user-group" />
             </span>
             <span>Emergency Contacts</span>
@@ -12424,8 +11152,8 @@ const PersonalInfoTab = ({ employee, formatDate }) => {
 
         {/* Family Members */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="icon-circle text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:home" />
             </span>
             <span>Family Members</span>
@@ -12463,8 +11191,8 @@ const PersonalInfoTab = ({ employee, formatDate }) => {
 
         {/* Nominees */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="icon-circle text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:gift" />
             </span>
             <span>Nominee Information</span>
@@ -12507,8 +11235,8 @@ const PersonalInfoTab = ({ employee, formatDate }) => {
 
         {/* Identification Documents */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="icon-circle text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:document-text" />
             </span>
             <span>Identification Documents</span>
@@ -12679,8 +11407,8 @@ const JobHistoryTab = ({ employee, formatDate, formatCurrency }) => {
     <div>
       <div className="row g-4">
         <div className="col-12">
-          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="icon-circle text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:clock" />
             </span>
             Complete Job History
@@ -12832,8 +11560,8 @@ const SalaryInfoTab = ({ employee, formatCurrency, formatDate }) => {
       <div className="row g-4">
         {/* Current CTC */}
         <div className="col-12">
-          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="icon-circle text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:currency-dollar" />
             </span>
             Current Compensation
@@ -12964,8 +11692,8 @@ const SalaryInfoTab = ({ employee, formatCurrency, formatDate }) => {
         </div>
         {bankAccounts.secondary && (
           <div className="col-md-6">
-          <h6 className="fw-bold fs-5 text-muted d-flex align-items-center gap-2 mb-0">
-          <span className="text-primary">
+        <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:plus-circle" />
           </span>Secondary Bank Account</h6>
             <div className="card border">
@@ -12997,8 +11725,8 @@ const SalaryInfoTab = ({ employee, formatCurrency, formatDate }) => {
 
         {/* PF & ESI */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="icon-circle text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:shield-check" />
             </span>
             Provident Fund & ESI
@@ -13023,8 +11751,8 @@ const SalaryInfoTab = ({ employee, formatCurrency, formatDate }) => {
 
         {/* Tax & Variable Pay */}
         <div className="col-12 mt-4">
-          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="icon-circle text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:document-check" />
             </span>
             Tax & Benefits
@@ -13115,8 +11843,8 @@ const StatutoryInfoTab = ({ employee, formatDate }) => {
     <div>
       <div className="row g-4">
         <div className="col-12">
-          <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
-            <span className="icon-circle text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
               <Icon icon="heroicons:shield-check" />
             </span>
             Statutory & Compliance Information
@@ -13125,8 +11853,8 @@ const StatutoryInfoTab = ({ employee, formatDate }) => {
 
         {/* PAN Details */}
         <div className="col-12">
-         <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+         <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:credit-card" />
         </span>PAN Card Details</h6>
         </div>
@@ -13147,8 +11875,8 @@ const StatutoryInfoTab = ({ employee, formatDate }) => {
 
         {/* Aadhaar Details */}
         <div className="col-12 mt-4">
-        <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+        <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:identification" />
         </span>Aadhaar Card Details</h6>
         </div>
@@ -13168,8 +11896,8 @@ const StatutoryInfoTab = ({ employee, formatDate }) => {
 
         {/* PF Membership */}
         <div className="col-12 mt-4">
-         <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+         <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:banknotes" />
         </span>Provident Fund Membership</h6>
         </div>
@@ -13198,8 +11926,8 @@ const StatutoryInfoTab = ({ employee, formatDate }) => {
 
         {/* ESI Registration */}
         <div className="col-12 mt-4">
-       <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+       <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:heart" />
         </span>ESI Registration</h6>
         </div>
@@ -13224,8 +11952,8 @@ const StatutoryInfoTab = ({ employee, formatDate }) => {
 
         {/* Professional Tax */}
         <div className="col-12 mt-4">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:document-text" />
         </span>Professional Tax</h6>
         </div>
@@ -13250,8 +11978,8 @@ const StatutoryInfoTab = ({ employee, formatDate }) => {
 
         {/* Labour Welfare Fund */}
         <div className="col-12 mt-4">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:users" />
         </span>Labour Welfare Fund</h6>
         </div>
@@ -13272,8 +12000,8 @@ const StatutoryInfoTab = ({ employee, formatDate }) => {
 
         {/* Gratuity */}
         <div className="col-12 mt-4">
-      <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+      <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:gift" />
         </span>Gratuity</h6>
         </div>
@@ -13294,8 +12022,8 @@ const StatutoryInfoTab = ({ employee, formatDate }) => {
 
         {/* Bonus Act */}
         <div className="col-12 mt-4">
-       <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+       <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:currency-rupee" />
         </span>Bonus Act</h6>
         </div>
@@ -13312,8 +12040,8 @@ const StatutoryInfoTab = ({ employee, formatDate }) => {
 
         {/* Shops and Establishment */}
         <div className="col-12 mt-4">
-        <h6 className="fw-bold fs-5 mb-3 text-muted border-bottom pb-2 d-flex align-items-center gap-2">
-        <span className="text-primary">
+        <h6 className="fw-bold fs-5 mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+        <span className="text-primary"> 
           <Icon icon="heroicons:building-office" />
         </span>Shops and Establishment Act</h6>
         </div>

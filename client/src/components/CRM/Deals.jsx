@@ -607,7 +607,8 @@ export default function Deals() {
             {/* Header Section */}
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                    <h4 className="fw-bold d-flex align-items-center mb-1" style={{ fontSize: '1.5rem' }}>
+                    <h4 className="fw-bold h4 d-flex align-items-center gap-2 mb-1" style={{ fontSize: '1.5rem' }}>
+                        <Icon icon="heroicons:queue-list" className="text-black" width={24} height={24} />
                         Deals
                     </h4>
                     <p className="text-muted d-flex align-items-center mb-0" style={{ fontSize: '0.85rem' }}>
@@ -850,25 +851,24 @@ export default function Deals() {
 
                 {/* Footer with date and actions side by side */}
                 <div className="d-flex align-items-center justify-content-between pt-2 border-top" style={{ borderTopColor: '#dee2e6', marginTop: 'auto' }}>
-                    <span className="text-muted" style={{ fontSize: '0.7rem' }}>
+                    <span className="text-muted" style={{ fontSize: '0.78rem' }}>
                         {deal.date}
                     </span>
                     <div className="d-flex align-items-center gap-2">
                         <button 
-                            className="btn btn-link p-0 text-primary d-flex align-items-center" 
-                            style={{ fontSize: '0.7rem', gap: '2px', textDecoration: 'none' }} 
+                            className="job-listings-btn d-inline-flex align-items-center"
+                            style={{ fontSize: '0.8rem', padding: '4px 10px' }}
                             onClick={() => openEditModal(stageIndex, dealIndex)}
                         >
-                            <Icon icon="heroicons:pencil-square" width="12" />
+                            <Icon icon="heroicons:pencil-square" width="14" height="14" />
                             <span>Edit</span>
                         </button>
-                        <span className="text-muted" style={{ fontSize: '0.7rem' }}>|</span>
                         <button 
-                            className="btn btn-link p-0 text-danger d-flex align-items-center" 
-                            style={{ fontSize: '0.7rem', gap: '2px', textDecoration: 'none' }} 
+                            className="delete-btn d-inline-flex align-items-center"
+                            style={{ fontSize: '0.8rem', padding: '4px 10px' }}
                             onClick={() => openDeleteModal(stageIndex, dealIndex)}
                         >
-                            <Icon icon="heroicons:trash" width="12" />
+                            <Icon icon="heroicons:trash" width="14" height="14" className="me-1" />
                             <span>Delete</span>
                         </button>
                     </div>

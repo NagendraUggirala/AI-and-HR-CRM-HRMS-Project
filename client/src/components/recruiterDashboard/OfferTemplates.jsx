@@ -12,6 +12,8 @@ import {
   CheckCircle,
   RefreshCw
 } from 'lucide-react';
+import { Icon } from '@iconify/react/dist/iconify.js';
+import '../../App.css';
 import { BASE_URL } from '../../config/api.config';
 
 const OfferTemplates = () => {
@@ -318,64 +320,90 @@ const OfferTemplates = () => {
     <div className="container-fluid py-4">
       {/* Alert */}
       {alert && (
-        <div className={`alert alert-${alert.type === 'success' ? 'success' : 'danger'} alert-dismissible fade show mb-4`} role="alert">
+        <div
+          className={`alert alert-${alert.type === 'success' ? 'success' : 'danger'} alert-dismissible fade show mb-4`}
+          role="alert"
+        >
           <div className="d-flex align-items-center">
-            {alert.type === 'success' ? <CheckCircle size={20} className="me-2" /> : <AlertCircle size={20} className="me-2" />}
+            {alert.type === 'success' ? (
+              <CheckCircle size={20} className="me-2" />
+            ) : (
+              <AlertCircle size={20} className="me-2" />
+            )}
             {alert.message}
           </div>
         </div>
       )}
 
-      {/* Header */}
-      <div className="mb-4 d-flex justify-content-between align-items-center">
+      {/* Header - aligned with JobList/CreateJob */}
+      <div className="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
-          <h4 className="mb-2">Offer Templates</h4>
-          <p className="text-secondary-light mb-0">Create and manage offer letter templates</p>
+          <h4 className="fw-bold h4 d-flex align-items-center gap-2 mb-0">
+            <Icon icon="heroicons:document-text" className="text-black" style={{ fontSize: 28 }} />
+            Offer Templates
+          </h4>
+          <p className="text-secondary mb-0 mt-1">
+            Create and manage offer letter templates.
+          </p>
         </div>
-        <div className="d-flex flex-wrap align-items-center gap-2">
-          <button 
-            className="btn btn-primary d-flex align-items-center"
-            onClick={fetchTemplates}
-            disabled={loading}
-          >
-            {loading ? (
-              <RefreshCw size={16} className="me-2 spinner" />
-            ) : (
-              <>
-                <RefreshCw size={16} className="me-2" />
-                Refresh
-              </>
-            )}
-          </button>
-          <button 
-            className="btn btn-success d-flex align-items-center"
-            onClick={openCreateModal}
-          >
-            <Plus size={18} className="me-2" />
-            Create Template
-          </button>
+        <div className="d-flex flex-column align-items-end gap-2">
+          <span className="text-muted small">
+            Last updated:{' '}
+            <span className="fw-medium text-body">
+              {new Date().toLocaleDateString()}
+            </span>
+          </span>
+          <div className="d-flex flex-wrap align-items-center gap-2 justify-content-end">
+            <button
+              className="btn refresh-btn d-inline-flex align-items-center gap-2"
+              onClick={fetchTemplates}
+              disabled={loading}
+            >
+              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </button>
+            <button
+              className="create-job-btn d-inline-flex align-items-center gap-2"
+              onClick={openCreateModal}
+            >
+              <Icon icon="heroicons:plus" style={{ width: 16, height: 16 }} />
+              Create Template
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="row mb-4">
-        <div className="col-md-6">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Filter by position..."
-            value={filters.position}
-            onChange={(e) => setFilters(prev => ({ ...prev, position: e.target.value }))}
-          />
+      {/* Filters - structured like JobList filters */}
+      <div className="card border shadow-none mb-4">
+        <div className="card-header bg-transparent border-bottom py-3">
+          <h6 className="fw-semibold mb-0 d-flex align-items-center gap-2">
+            <Icon icon="heroicons:funnel" style={{ fontSize: 18 }} />
+            Filter templates
+          </h6>
         </div>
-        <div className="col-md-6">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Filter by department..."
-            value={filters.department}
-            onChange={(e) => setFilters(prev => ({ ...prev, department: e.target.value }))}
-          />
+        <div className="card-body">
+          <div className="row g-3 align-items-end">
+            <div className="col-12 col-md-6">
+              <label className="form-label small text-muted mb-1">Position</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Filter by position..."
+                value={filters.position}
+                onChange={(e) => setFilters((prev) => ({ ...prev, position: e.target.value }))}
+              />
+            </div>
+            <div className="col-12 col-md-6">
+              <label className="form-label small text-muted mb-1">Department</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Filter by department..."
+                value={filters.department}
+                onChange={(e) => setFilters((prev) => ({ ...prev, department: e.target.value }))}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -387,7 +415,7 @@ const OfferTemplates = () => {
           </div>
         </div>
       ) : templates.length === 0 ? (
-        <div className="card">
+        <div className="card border shadow-none">
           <div className="card-body text-center py-5">
             <div className="d-flex justify-content-center align-items-center gap-2 mb-3">
               <FileText size={48} className="text-muted" />
@@ -400,12 +428,14 @@ const OfferTemplates = () => {
         </div>
       ) : (
         <div className="row">
-          {templates.map(template => (
+          {templates.map((template) => (
             <div key={template.id} className="col-md-6 col-lg-4 mb-4">
-              <div className="card h-100">
+              <div className="card border shadow-none h-100">
                 <div className="card-body">
                   <div className="d-flex justify-content-between align-items-start mb-3">
-                    <h5 className="card-title mb-0">{template.name}</h5>
+                    <h6 className="card-title mb-0 text-truncate" title={template.name}>
+                      {template.name}
+                    </h6>
                     <div className="d-flex gap-2">
                       <button
                         type="button"
@@ -425,20 +455,21 @@ const OfferTemplates = () => {
                       </button>
                     </div>
                   </div>
-                  
-                  <div className="mb-2">
+
+                  <div className="mb-2 d-flex align-items-center">
                     <Briefcase size={16} className="me-2 text-muted" />
-                    <span className="text-muted small">
-                      {template.position || 'Not specified'} 
-                      {template.department && ` - ${template.department}`}
+                    <span className="text-muted small text-truncate">
+                      {template.position || 'Not specified'}
+                      {template.department && ` • ${template.department}`}
                     </span>
                   </div>
 
                   {template.salary_range_min && template.salary_range_max && (
-                    <div className="mb-2">
+                    <div className="mb-2 d-flex align-items-center">
                       <DollarSign size={16} className="me-2 text-muted" />
                       <span className="text-muted small">
-                        ${template.salary_range_min.toLocaleString()} - ${template.salary_range_max.toLocaleString()}
+                        ${template.salary_range_min.toLocaleString()} - $
+                        {template.salary_range_max.toLocaleString()}
                       </span>
                     </div>
                   )}
@@ -448,16 +479,20 @@ const OfferTemplates = () => {
                       <small className="text-muted">Benefits:</small>
                       <div className="d-flex flex-wrap gap-1 mt-1">
                         {template.benefits.slice(0, 3).map((benefit, idx) => (
-                          <span key={idx} className="badge bg-secondary">{benefit}</span>
+                          <span key={idx} className="badge bg-secondary">
+                            {benefit}
+                          </span>
                         ))}
                         {template.benefits.length > 3 && (
-                          <span className="badge bg-secondary">+{template.benefits.length - 3} more</span>
+                          <span className="badge bg-secondary">
+                            +{template.benefits.length - 3} more
+                          </span>
                         )}
                       </div>
                     </div>
                   )}
 
-                  <div className="mt-3 pt-3 border-top">
+                  <div className="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
                     <small className="text-muted">
                       Validity: {template.validity_days} days
                     </small>

@@ -13,6 +13,8 @@ import {
   Video,
   RefreshCw
 } from 'lucide-react';
+import { Icon } from '@iconify/react/dist/iconify.js';
+import '../../App.css';
 import { BASE_URL } from '../../config/api.config';
 
 const AIPrescreening = () => {
@@ -334,29 +336,41 @@ Recruitment Team
 
   return (
     <div className="container-fluid py-4">
-      <div className="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+      {/* Page Header - aligned with JobList/CreateJob */}
+      <div className="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
-          <h4 className="mb-1">AI Prescreening</h4>
-          <p className="text-secondary-light mb-0">
+          <h4 className="fw-bold h4 d-flex align-items-center gap-2 mb-0">
+            <Icon icon="heroicons:sparkles" className="text-black" style={{ fontSize: 28 }} />
+            AI Prescreening
+          </h4>
+          <p className="text-secondary mb-0 mt-1">
             Review candidates who passed resume screening and are ready for interviews.
           </p>
         </div>
-        <div className="d-flex flex-wrap gap-2">
-          <button
-            className="btn btn-primary d-inline-flex align-items-center gap-2"
-            onClick={fetchCandidates}
-            disabled={loading}
-          >
-            <RefreshCw size={16} className={loading ? 'spin' : ''} />
-            {loading ? 'Refreshing...' : 'Refresh'}
-          </button>
-          <button
-            className="btn btn-success d-inline-flex align-items-center gap-2"
-            onClick={exportToCSV}
-          >
-            <Download size={16} />
-            Export CSV
-          </button>
+        <div className="d-flex flex-column align-items-end gap-2">
+          <span className="text-muted small">
+            Last updated:{' '}
+            <span className="fw-medium text-body">
+              {new Date().toLocaleDateString()}
+            </span>
+          </span>
+          <div className="d-flex flex-wrap gap-2 justify-content-end">
+            <button
+              className="btn refresh-btn d-inline-flex align-items-center gap-2"
+              onClick={fetchCandidates}
+              disabled={loading}
+            >
+              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </button>
+            <button
+              className="sync-btn d-inline-flex align-items-center gap-2"
+              onClick={exportToCSV}
+            >
+              <Download size={16} />
+              <span>Export CSV</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -379,103 +393,140 @@ Recruitment Team
         </div>
       ) : (
         <>
-          <div className="row g-3 mb-4">
-            <div className="col-sm-6 col-lg-3">
-              <div className="card border-0 shadow-sm">
-                <div className="card-body">
-                  <p className="text-secondary-light small mb-1">Total Candidates</p>
-                  <h4 className="mb-0">{totalCandidates}</h4>
+          {/* KPI Summary - kpi-row layout */}
+          <div className="kpi-row mb-4">
+            {[
+              {
+                title: 'Total Candidates',
+                value: totalCandidates,
+                sub: 'In Interview stage',
+                icon: 'heroicons:user-group',
+                bg: 'kpi-primary',
+                color: 'kpi-primary-text'
+              },
+              {
+                title: 'Average AI Score',
+                value: `${avgScore}%`,
+                sub: 'Across filtered list',
+                icon: 'heroicons:chart-bar',
+                bg: 'kpi-info',
+                color: 'kpi-info-text'
+              },
+              {
+                title: 'Interview Stage',
+                value: interviewStageCount,
+                sub: 'Currently interviewing',
+                icon: 'heroicons:briefcase',
+                bg: 'kpi-success',
+                color: 'kpi-success-text'
+              },
+              {
+                title: 'High Potential (≥80%)',
+                value: highScoreCount,
+                sub: 'Strong AI matches',
+                icon: 'heroicons:sparkles',
+                bg: 'kpi-warning',
+                color: 'kpi-warning-text'
+              }
+            ].map((item, index) => (
+              <div className="kpi-col" key={index}>
+                <div className="kpi-card">
+                  <div className="kpi-card-body">
+                    <div className={`kpi-icon ${item.bg}`}>
+                      <Icon icon={item.icon} className={`kpi-icon-style ${item.color}`} />
+                    </div>
+                    <div className="kpi-content">
+                      <div className="kpi-title">{item.title}</div>
+                      <div className="kpi-value">{item.value}</div>
+                      {item.sub && <div className="kpi-sub text-muted">{item.sub}</div>}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="col-sm-6 col-lg-3">
-              <div className="card border-0 shadow-sm">
-                <div className="card-body">
-                  <p className="text-secondary-light small mb-1">Average AI Score</p>
-                  <h4 className="mb-0 text-primary">{avgScore}%</h4>
-                </div>
-              </div>
-            </div>
-            <div className="col-sm-6 col-lg-3">
-              <div className="card border-0 shadow-sm">
-                <div className="card-body">
-                  <p className="text-secondary-light small mb-1">Interview Stage</p>
-                  <h4 className="mb-0 text-success">{interviewStageCount}</h4>
-                </div>
-              </div>
-            </div>
-            <div className="col-sm-6 col-lg-3">
-              <div className="card border-0 shadow-sm">
-                <div className="card-body">
-                  <p className="text-secondary-light small mb-1">High Potential (≥80%)</p>
-                  <h4 className="mb-0 text-warning">{highScoreCount}</h4>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
 
+          {/* Filters - structured like JobList */}
           <div className="card border shadow-none mb-4">
-            <div className="card-body d-flex flex-wrap align-items-center gap-3">
-              <div className="input-group" style={{ maxWidth: '320px' }}>
-                <span className="input-group-text bg-white border-end-0">
-                  <Search size={16} className="text-muted" />
-                </span>
-                <input
-                  type="text"
-                  className="form-control border-start-0"
-                  placeholder="Search candidates..."
-                  value={filters.search}
-                  onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                />
+            <div className="card-header bg-transparent border-bottom py-3">
+              <h6 className="fw-semibold mb-0 d-flex align-items-center gap-2">
+                <Icon icon="heroicons:funnel" style={{ fontSize: 18 }} />
+                Filter & search
+              </h6>
+            </div>
+            <div className="card-body">
+              <div className="row g-3 align-items-end">
+                <div className="col-12 col-md-4 col-lg-3">
+                  <label className="form-label small text-muted mb-1">Search candidate</label>
+                  <div className="position-relative">
+                    <Search
+                      size={16}
+                      className="position-absolute top-50 translate-middle-y ms-3 text-muted"
+                    />
+                    <input
+                      type="text"
+                      className="form-control ps-5"
+                      placeholder="Name or email..."
+                      value={filters.search}
+                      onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="col-6 col-md-3 col-lg-3">
+                  <label className="form-label small text-muted mb-1">Job</label>
+                  <select
+                    className="form-select"
+                    value={filters.job}
+                    onChange={(e) => setFilters({ ...filters, job: e.target.value })}
+                  >
+                    {jobs.map((job) => (
+                      <option key={job} value={job}>
+                        {job === 'all' ? 'All Jobs' : job}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-6 col-md-3 col-lg-3">
+                  <label className="form-label small text-muted mb-1">Stage</label>
+                  <select
+                    className="form-select"
+                    value={filters.stage || 'all'}
+                    onChange={(e) => setFilters({ ...filters, stage: e.target.value })}
+                  >
+                    <option value="all">All Stages</option>
+                    <option value="applied">Applied</option>
+                    <option value="interview">Interview</option>
+                    <option value="offer">Offer</option>
+                    <option value="hired">Hired</option>
+                  </select>
+                </div>
+                <div className="col-6 col-md-2 col-lg-2">
+                  <label className="form-label small text-muted mb-1">Score ≥ (%)</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={filters.scoreThreshold}
+                    onChange={(e) =>
+                      setFilters({
+                        ...filters,
+                        scoreThreshold: parseInt(e.target.value, 10) || 0
+                      })
+                    }
+                    min="0"
+                    max="100"
+                  />
+                </div>
+                <div className="col-12 col-md-2 col-lg-1 d-flex justify-content-md-end">
+                  <button
+                    className="sync-btn d-inline-flex align-items-center gap-2 w-100 justify-content-center"
+                    onClick={fetchCandidates}
+                    disabled={loading}
+                  >
+                    <Filter size={16} />
+                    Apply
+                  </button>
+                </div>
               </div>
-
-              <select
-                className="form-select w-auto"
-                value={filters.job}
-                onChange={(e) => setFilters({ ...filters, job: e.target.value })}
-              >
-                {jobs.map((job) => (
-                  <option key={job} value={job}>
-                    {job === 'all' ? 'All Jobs' : job}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                className="form-select w-auto"
-                value={filters.stage || 'all'}
-                onChange={(e) => setFilters({ ...filters, stage: e.target.value })}
-              >
-                <option value="all">All Stages</option>
-                <option value="applied">Applied</option>
-                <option value="interview">Interview</option>
-                <option value="offer">Offer</option>
-                <option value="hired">Hired</option>
-              </select>
-
-              <div className="d-flex align-items-center gap-2">
-                <label className="text-secondary-light small mb-0">Score ≥</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  value={filters.scoreThreshold}
-                  onChange={(e) =>
-                    setFilters({ ...filters, scoreThreshold: parseInt(e.target.value) || 0 })
-                  }
-                  style={{ width: '90px' }}
-                  min="0"
-                  max="100"
-                />
-              </div>
-
-              <button
-                className="btn btn-outline-primary d-inline-flex align-items-center gap-2 ms-auto"
-                onClick={fetchCandidates}
-                disabled={loading}
-              >
-                <Filter size={16} />
-                Apply Filters
-              </button>
             </div>
           </div>
 

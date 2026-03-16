@@ -16,8 +16,11 @@ import {
   TrendingUp,
   RefreshCw,
   Save,
-  X
+  X,
+  Filter
 } from 'lucide-react';
+import { Icon } from '@iconify/react/dist/iconify.js';
+import '../../App.css';
 import { BASE_URL } from '../../config/api.config';
 
 const OfferTracking = () => {
@@ -526,96 +529,160 @@ const OfferTracking = () => {
     <div className="container-fluid py-4">
       {/* Alert */}
       {alert && (
-        <div className={`alert alert-${alert.type === 'success' ? 'success' : 'danger'} alert-dismissible fade show mb-4`} role="alert">
+        <div
+          className={`alert alert-${alert.type === 'success' ? 'success' : 'danger'} alert-dismissible fade show mb-4`}
+          role="alert"
+        >
           <div className="d-flex align-items-center">
-            {alert.type === 'success' ? <CheckCircle size={20} className="me-2" /> : <AlertCircle size={20} className="me-2" />}
+            {alert.type === 'success' ? (
+              <CheckCircle size={20} className="me-2" />
+            ) : (
+              <AlertCircle size={20} className="me-2" />
+            )}
             {alert.message}
           </div>
         </div>
       )}
 
-      {/* Header */}
-      <div className="mb-4 d-flex justify-content-between align-items-center">
+      {/* Header - aligned with JobList/CreateJob */}
+      <div className="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
-          <h4 className="mb-2">Offer Tracking</h4>
-          <p className="text-secondary-light mb-0">Track and manage job offers</p>
+          <h4 className="fw-bold h4 d-flex align-items-center gap-2 mb-0">
+            <Icon icon="heroicons:document-check" className="text-black" style={{ fontSize: 28 }} />
+            Offer Tracking
+          </h4>
+          <p className="text-secondary mb-0 mt-1">
+            Track and manage job offers.
+          </p>
         </div>
-        <div className="d-flex flex-wrap align-items-center gap-2">
-          <button 
-            className="btn btn-primary d-inline-flex align-items-center"
-            onClick={fetchOffers}
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <RefreshCw size={16} className="me-2 spinner" />
-                <span>Refreshing...</span>
-              </>
-            ) : (
-              <>
-                <RefreshCw size={16} className="me-2" />
-                <span>Refresh</span>
-              </>
-            )}
-          </button>
-          <button 
-            className="btn btn-success d-inline-flex align-items-center"
-            onClick={openCreateModal}
-          >
-            <Plus size={18} className="me-2" />
-            <span>Create Offer</span>
-          </button>
+        <div className="d-flex flex-column align-items-end gap-2">
+          <span className="text-muted small">
+            Last updated:{' '}
+            <span className="fw-medium text-body">
+              {new Date().toLocaleDateString()}
+            </span>
+          </span>
+          <div className="d-flex flex-wrap align-items-center gap-2 justify-content-end">
+            <button
+              className="btn refresh-btn d-inline-flex align-items-center gap-2"
+              onClick={fetchOffers}
+              disabled={loading}
+            >
+              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </button>
+            <button
+              className="create-job-btn d-inline-flex align-items-center gap-2"
+              onClick={openCreateModal}
+            >
+              <Icon icon="heroicons:plus" style={{ width: 16, height: 16 }} />
+              Create Offer
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats - kpi-row layout */}
       {stats && (
-        <div className="card border shadow-none mb-4">
-          <div className="card-body d-flex">
-            <div className="text-center w-25">
-              <div className="text-secondary-light small">Total Offers</div>
-              <div className="h4 mb-0">{stats.total}</div>
+        <div className="kpi-row mb-4">
+          {[
+            {
+              title: 'Total Offers',
+              value: stats.total,
+              sub: 'All statuses',
+              icon: 'heroicons:rectangle-group',
+              bg: 'kpi-primary',
+              color: 'kpi-primary-text'
+            },
+            {
+              title: 'Sent',
+              value: stats.sent,
+              sub: 'Offers sent to candidates',
+              icon: 'heroicons:paper-airplane',
+              bg: 'kpi-info',
+              color: 'kpi-info-text'
+            },
+            {
+              title: 'Accepted',
+              value: stats.accepted,
+              sub: 'Candidates who accepted',
+              icon: 'heroicons:check-badge',
+              bg: 'kpi-success',
+              color: 'kpi-success-text'
+            },
+            {
+              title: 'Acceptance Rate',
+              value: `${stats.acceptance_rate}%`,
+              sub: 'Accepted / Sent',
+              icon: 'heroicons:chart-pie',
+              bg: 'kpi-warning',
+              color: 'kpi-warning-text'
+            }
+          ].map((item, index) => (
+            <div className="kpi-col" key={index}>
+              <div className="kpi-card">
+                <div className="kpi-card-body">
+                  <div className={`kpi-icon ${item.bg}`}>
+                    <Icon icon={item.icon} className={`kpi-icon-style ${item.color}`} />
+                  </div>
+                  <div className="kpi-content">
+                    <div className="kpi-title">{item.title}</div>
+                    <div className="kpi-value">{item.value}</div>
+                    {item.sub && <div className="kpi-sub text-muted">{item.sub}</div>}
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="text-center w-25 border-start ps-4">
-              <div className="text-secondary-light small">Sent</div>
-              <div className="h4 mb-0 text-primary">{stats.sent}</div>
-            </div>
-            <div className="text-center w-25 border-start ps-4">
-              <div className="text-secondary-light small">Accepted</div>
-              <div className="h4 mb-0 text-success">{stats.accepted}</div>
-            </div>
-            <div className="text-center w-25 border-start ps-4">
-              <div className="text-secondary-light small">Acceptance Rate</div>
-              <div className="h4 mb-0 text-danger">{stats.acceptance_rate}%</div>
-            </div>
-          </div>
+          ))}
         </div>
       )}
 
-      {/* Filters */}
-      <div className="row mb-4">
-        <div className="col-md-6">
-          <select
-            className="form-select"
-            value={filters.status}
-            onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-          >
-            <option value="">All Statuses</option>
-            <option value="Draft">Draft</option>
-            <option value="Sent">Sent</option>
-            <option value="Accepted">Accepted</option>
-            <option value="Rejected">Rejected</option>
-            <option value="Expired">Expired</option>
-          </select>
+      {/* Filters - structured like JobList filters */}
+      <div className="card border shadow-none mb-4">
+        <div className="card-header bg-transparent border-bottom py-3">
+          <h6 className="fw-semibold mb-0 d-flex align-items-center gap-2">
+            <Icon icon="heroicons:funnel" style={{ fontSize: 18 }} />
+            Filter offers
+          </h6>
         </div>
-        <div className="col-md-6">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Filter by position..."
-            value={filters.position}
-            onChange={(e) => setFilters(prev => ({ ...prev, position: e.target.value }))}
-          />
+        <div className="card-body">
+          <div className="row g-3 align-items-end">
+            <div className="col-12 col-md-4">
+              <label className="form-label small text-muted mb-1">Status</label>
+              <select
+                className="form-select"
+                value={filters.status}
+                onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))}
+              >
+                <option value="">All Statuses</option>
+                <option value="Draft">Draft</option>
+                <option value="Sent">Sent</option>
+                <option value="Accepted">Accepted</option>
+                <option value="Rejected">Rejected</option>
+                <option value="Expired">Expired</option>
+              </select>
+            </div>
+            <div className="col-12 col-md-4">
+              <label className="form-label small text-muted mb-1">Position</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Filter by position..."
+                value={filters.position}
+                onChange={(e) => setFilters((prev) => ({ ...prev, position: e.target.value }))}
+              />
+            </div>
+            <div className="col-12 col-md-4 d-flex justify-content-md-end">
+              <button
+                className="sync-btn d-inline-flex align-items-center gap-2 w-100 w-md-auto justify-content-center"
+                onClick={fetchOffers}
+                disabled={loading}
+              >
+                <Filter size={16} />
+                Apply
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { Icon } from "@iconify/react/dist/iconify.js";
 
 
 const InductionOrientation = () => {
@@ -233,7 +234,6 @@ const userInfo = {
   const [showVenueBookingModal, setShowVenueBookingModal] = useState(false);
   const [showSessionAgendaModal, setShowSessionAgendaModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [showCertificateModal, setShowCertificateModal] = useState(false);
   const [showPolicyQuizModal, setShowPolicyQuizModal] = useState(false);
   const [showPolicyModuleModal, setShowPolicyModuleModal] = useState(false);
   // Add this to your state declarations
@@ -249,7 +249,6 @@ const [showProgramDetailsModal, setShowProgramDetailsModal] = useState(false);
 // Add these to your state declarations
 const [sessions, setSessions] = useState([]);
 const [showEditSessionModal, setShowEditSessionModal] = useState(false);
-const [showSessionDetailsModal, setShowSessionDetailsModal] = useState(false);
 const [editingSession, setEditingSession] = useState(null);
 const [selectedSessionForDelete, setSelectedSessionForDelete] = useState(null);
 // ==================== EMPLOYEES DATA & STATE ====================
@@ -1234,40 +1233,17 @@ const PolicyUploadModal = () => {
   };
 
   return (
-  <div
-    className="modal show d-block"
-    style={{
-      backgroundColor: "rgba(0,0,0,0.5)",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1050,
-    }}
-  >
-    <div
-      className="modal-content bg-white"
-      style={{
-        width: "60%",
-        maxWidth: "800px",
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        maxHeight: "90vh",
-        overflowY: "auto",
-        borderRadius: "8px",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-      }}
-    >
+<div className="hrms-modal-overlay">
+  <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+
       {/* Header */}
-      <div className="modal-header bg-white border-bottom">
-            <h5 className="modal-title fw-bold">Upload New Policy</h5>
+    <div className="hrms-modal-header">
+      <h5 className="hrms-modal-title d-flex align-items-center">Upload New Policy</h5>
             <button className="btn-close" onClick={() => setShowPolicyUploadModal(false)}></button>
           </div>
           
-          <div className="modal-body pt-0">
+    {/* BODY */}
+    <div className="hrms-modal-body hrms-modal-body-scroll flex-grow-1">
             <div className="mb-3">
               <label className="form-label fw-bold">Policy Name <span className="text-danger">*</span></label>
               <input
@@ -1536,7 +1512,7 @@ const PolicyUploadModal = () => {
                 
                 <button
                   type="button"
-                  className="btn btn-sm btn-outline-primary"
+                  className="job-listings-btn"
                   onClick={handleAddQuizQuestion}
                 >
                   <i className="bi bi-plus-circle me-1"></i> Add Another Question
@@ -1635,7 +1611,7 @@ const PolicyUploadModal = () => {
                 
                 <button
                   type="button"
-                  className="btn btn-sm btn-outline-primary"
+                  className="job-listings-btn"
                   onClick={handleAddModule}
                 >
                   <i className="bi bi-plus-circle me-1"></i> Add Another Module
@@ -1644,12 +1620,12 @@ const PolicyUploadModal = () => {
             )}
           </div>
           
-          <div className="modal-footer border-0">
-            <button className="btn btn-outline-secondary" onClick={() => setShowPolicyUploadModal(false)}>
+          <div className="modal-footer border-0 bg-light">
+            <button className="cancel-btn" onClick={() => setShowPolicyUploadModal(false)}>
               Cancel
             </button>
             <button 
-              className="btn btn-primary" 
+              className="create-job-btn" 
               onClick={handleUploadPolicy}
               disabled={!policyForm.name || !policyForm.effectiveDate || !policyForm.version}
             >
@@ -1728,7 +1704,7 @@ const PolicyUploadModal = () => {
                 Cancel
               </button>
               <button 
-                className="btn btn-primary" 
+                className="create-job-btn" 
                 onClick={handleAssignTrainer}
                 disabled={!trainerAssignmentData.programId || !trainerAssignmentData.trainerName}
               >
@@ -1763,40 +1739,16 @@ const PolicyUploadModal = () => {
   const attendanceStats = getAttendanceStats();
 
     return (
-     <div
-    className="modal show d-block"
-    style={{
-      backgroundColor: "rgba(0,0,0,0.5)",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1050,
-    }}
-  >
-    <div
-      className="modal-content bg-white"
-      style={{
-        width: "60%",
-        maxWidth: "800px",
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        maxHeight: "90vh",
-        overflowY: "auto",
-        borderRadius: "8px",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-      }}
-    >
-      {/* Header */}
-      <div className="modal-header bg-white border-bottom">
-               <h5 className="modal-title fw-bold">{selectedProgram.name}</h5>
+<div className="hrms-modal-overlay">
+  <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+
+    {/* HEADER */}
+    <div className="hrms-modal-header">
+      <h5 className="hrms-modal-title d-flex align-items-center">{selectedProgram.name}</h5>
               <button className="btn-close" onClick={() => setSelectedProgram(null)}></button>
             </div>
             
-            <div className="modal-body pt-20">
+    <div className="hrms-modal-body hrms-modal-body-scroll flex-grow-1">
               <div className="row mb-12">
                 <div className="col-md-6">
                   <div className="card border h-100">
@@ -1917,12 +1869,12 @@ const PolicyUploadModal = () => {
               )}
             </div>
             
-            <div className="modal-footer border-0">
-              <button className="btn btn-outline-secondary" onClick={() => setSelectedProgram(null)}>
+              <div className="modal-footer border-0 bg-light">
+              <button className="close-btn" onClick={() => setSelectedProgram(null)}>
                 Close
               </button>
               <button 
-                className="btn btn-primary"
+                className="create-job-btn"
                 onClick={() => {
                   setSelectedProgram(null);
                   setSessionAgendaForm({...sessionAgendaForm, programId: selectedProgram.id});
@@ -2164,43 +2116,24 @@ const getProgramParticipants = (programId) => {
   const programSummary = getProgramSummary();
 
   return (
-  <div
-    className="modal show d-block"
-    style={{
-      backgroundColor: "rgba(0,0,0,0.5)",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1050,
-    }}
-  >
-    <div
-      className="modal-content bg-white"
-      style={{
-        width: "60%",
-        maxWidth: "800px",
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        maxHeight: "90vh",
-        overflowY: "auto",
-        borderRadius: "8px",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-      }}
-    >
-      {/* Header */}
-      <div className="modal-header bg-white border-bottom">
-            <h5 className="modal-title fw-bold">
-              <i className="bi bi-people me-2"></i>
-              Bulk Attendance Management
-            </h5>
-            <button className="btn-close btn-close" onClick={() => setShowBulkAttendanceModal(false)}></button>
-          </div>
-          
-          <div className="modal-body pt-0">
+<div className="hrms-modal-overlay">
+  <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+
+    {/* HEADER */}
+    <div className="hrms-modal-header">
+      <h5 className="hrms-modal-title d-flex align-items-center">
+        <i className="bi bi-people me-2"></i>
+        Bulk Attendance Management
+      </h5>
+      <button
+        className="btn-close"
+        onClick={() => setShowBulkAttendanceModal(false)}
+      ></button>
+    </div>
+
+    {/* BODY */}
+    <div className="hrms-modal-body hrms-modal-body-scroll flex-grow-1">
+
             {/* Summary Alert */}
             <div className="alert alert-info mb-4">
               <div className="row align-items-center">
@@ -2340,7 +2273,7 @@ const getProgramParticipants = (programId) => {
                     <th>Current Program</th>
                     <th>Department</th>
                     <th>Status</th>
-                    <th className="d-none d-lg-table-cell">Time</th>
+                    <th>Time</th>
                     <th>Remarks</th>
                   </tr>
                 </thead>
@@ -2483,11 +2416,12 @@ const getProgramParticipants = (programId) => {
               </table>
             </div>
 
-          </div>
-          
+    </div>
+
+    {/* FOOTER */}
           <div className="modal-footer border-0 bg-light">
             <button 
-              className="btn btn-outline-secondary" 
+              className="cancel-btn" 
               onClick={() => {
                 setShowBulkAttendanceModal(false);
                 setSelectedEmployees([]);
@@ -2498,7 +2432,7 @@ const getProgramParticipants = (programId) => {
               Cancel
             </button>
             <button 
-              className="btn btn-primary" 
+              className="create-job-btn" 
               onClick={handleSaveAttendance}
               disabled={
                 isSaving || 
@@ -2519,8 +2453,9 @@ const getProgramParticipants = (programId) => {
               )}
             </button>
           </div>
-        </div>
-      </div>
+
+  </div>
+</div>
 
   );
 };
@@ -2920,40 +2855,17 @@ const handleDeleteEmployee = (employeeId) => {
 
       {/* Add Employee Modal */}
       {showAddEmployeeModal && (
-  <div
-    className="modal show d-block"
-    style={{
-      backgroundColor: "rgba(0,0,0,0.5)",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1050,
-    }}
-  >
-    <div
-      className="modal-content bg-white"
-      style={{
-        width: "60%",
-        maxWidth: "800px",
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        maxHeight: "90vh",
-        overflowY: "auto",
-        borderRadius: "8px",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-      }}
-    >
-      {/* Header */}
-      <div className="modal-header bg-white border-bottom">
-                <h4 className="modal-title fw-bold fs-4">Add New Employee</h4>
+ <div className="hrms-modal-overlay">
+  <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+
+    {/* HEADER */}
+    <div className="hrms-modal-header">
+      <h5 className="hrms-modal-title d-flex align-items-center">Add New Employee</h5>
                 <button className="btn-close" onClick={() => setShowAddEmployeeModal(false)}></button>
               </div>
-              
-              <div className="modal-body pt-0">
+                  {/* BODY */}
+               <div className="hrms-modal-body hrms-modal-body-scroll flex-grow-1">
+
                 <div className="row">
                   <div className="col-12 col-md-6 mb-3">
                     <label className="form-label fw-bold">Employee Name <span className="text-danger">*</span></label>
@@ -3063,12 +2975,13 @@ const handleDeleteEmployee = (employeeId) => {
                 </div>
               </div>
               
-              <div className="modal-footer border-0">
-                <button className="btn btn-outline-secondary" onClick={() => setShowAddEmployeeModal(false)}>
+                {/* FOOTER */}
+          <div className="modal-footer border-0 bg-light">
+                <button className="cancel-btn" onClick={() => setShowAddEmployeeModal(false)}>
                   Cancel
                 </button>
                 <button 
-                  className="btn btn-primary" 
+                  className="create-job-btn" 
                   onClick={handleAddEmployee}
                   disabled={!employeeForm.name || !employeeForm.email || !employeeForm.employeeId}
                 >
@@ -3082,40 +2995,17 @@ const handleDeleteEmployee = (employeeId) => {
 
       {/* Edit Employee Modal */}
       {showEditEmployeeModal && editingEmployee && (
-    <div
-    className="modal show d-block"
-    style={{
-      backgroundColor: "rgba(0,0,0,0.5)",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1050,
-    }}
-  >
-    <div
-      className="modal-content bg-white"
-      style={{
-        width: "60%",
-        maxWidth: "800px",
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        maxHeight: "90vh",
-        overflowY: "auto",
-        borderRadius: "8px",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-      }}
-    >
-      {/* Header */}
-      <div className="modal-header bg-white border-bottom">
-                <h4 className="modal-title fw-bold fs-4">Edit Employee</h4>
+<div className="hrms-modal-overlay">
+  <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+
+    {/* HEADER */}
+    <div className="hrms-modal-header">
+      <h5 className="hrms-modal-title d-flex align-items-center">Edit Employee</h5>
                 <button className="btn-close" onClick={() => setShowEditEmployeeModal(false)}></button>
               </div>
               
-              <div className="modal-body pt-0">
+      {/* BODY */}
+    <div className="hrms-modal-body hrms-modal-body-scroll flex-grow-1">
                 <div className="row">
                   <div className="col-12 col-md-6 mb-3">
                     <label className="form-label fw-bold">Employee Name <span className="text-danger">*</span></label>
@@ -3250,18 +3140,20 @@ const handleDeleteEmployee = (employeeId) => {
                 </div>
               </div>
               
-              <div className="modal-footer border-0">
-                <button className="btn btn-outline-secondary" onClick={() => setShowEditEmployeeModal(false)}>
+         {/* FOOTER */}
+          <div className="modal-footer border-0 bg-light">
+                <button className="cancel-btn" onClick={() => setShowEditEmployeeModal(false)}>
                   Cancel
                 </button>
                 <button 
-                  className="btn btn-primary" 
+                  className="create-job-btn" 
                   onClick={handleEditEmployee}
                   disabled={!editingEmployee.name || !editingEmployee.email || !editingEmployee.employeeId}
                 >
                   Update Employee
                 </button>
               </div>
+
             </div>
           </div>
 
@@ -3276,40 +3168,18 @@ const handleDeleteEmployee = (employeeId) => {
     const policy = selectedPolicy || policies[0];
     
     return (
-  <div
-    className="modal show d-block"
-    style={{
-      backgroundColor: "rgba(0,0,0,0.5)",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1050,
-    }}
-  >
-    <div
-      className="modal-content bg-white"
-      style={{
-        width: "50%",
-        maxWidth: "600px",
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        maxHeight: "90vh",
-        overflowY: "auto",
-        borderRadius: "8px",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-      }}
-    >
-      {/* Header */}
-      <div className="modal-header bg-white border-bottom">
-              <h5 className="modal-title fw-bold">{policy?.name}</h5>
+<div className="hrms-modal-overlay">
+  <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+
+    {/* HEADER */}
+    <div className="hrms-modal-header">
+      <h5 className="hrms-modal-title d-flex align-items-center">{policy?.name}</h5>
               <button className="btn-close" onClick={() => setShowPolicyModal(false)}></button>
             </div>
             
-            <div className="modal-body pt-0">
+    {/* BODY */}
+    <div className="hrms-modal-body hrms-modal-body-scroll flex-grow-1">
+
               <div className="alert alert-light mb-4">
                 <div className="row">
                   <div className="col-6 col-md-3">
@@ -3362,14 +3232,14 @@ const handleDeleteEmployee = (employeeId) => {
                 </div>
               </div>
             </div>
-            
-            <div className="modal-footer border-0">
-              <button className="btn btn-outline-secondary" onClick={() => setShowPolicyModal(false)}>
+    {/* FOOTER */}
+          <div className="modal-footer border-0 bg-light">
+              <button className="close-btn" onClick={() => setShowPolicyModal(false)}>
                 Close
               </button>
               {policy?.modules && policy.modules.length > 0 && (
                 <button 
-                  className="btn btn-info"
+                  className="read-modules-btn"
                   onClick={() => {
                     setSelectedPolicy(policy);
                     setCurrentPolicyModule(0);
@@ -3382,7 +3252,7 @@ const handleDeleteEmployee = (employeeId) => {
               )}
               {policy?.quiz && policy.quiz.length > 0 && (
                 <button 
-                  className="btn btn-warning"
+                  className="take-quiz-btn"
                   onClick={() => {
                     setSelectedPolicy(policy);
                     setShowPolicyQuizModal(true);
@@ -3393,7 +3263,7 @@ const handleDeleteEmployee = (employeeId) => {
                 </button>
               )}
               <button 
-                className="btn btn-success"
+                className="add-employee"
                 onClick={() => handleCompletePolicy(policy?.id)}
               >
                 Acknowledge Policy
@@ -3487,11 +3357,11 @@ const handleDeleteEmployee = (employeeId) => {
             </div>
             
             <div className="modal-footer border-0">
-              <button className="btn btn-outline-secondary" onClick={() => setShowMaterialDistributionModal(false)}>
+              <button className="cancel-btn" onClick={() => setShowMaterialDistributionModal(false)}>
                 Cancel
               </button>
               <button 
-                className="btn btn-primary" 
+                className="create-job-btn" 
                 onClick={handleDistributeMaterial}
                 disabled={!materialForm.programId || !materialForm.materialName}
               >
@@ -3606,11 +3476,11 @@ const handleDeleteEmployee = (employeeId) => {
             </div>
             
             <div className="modal-footer border-0">
-              <button className="btn btn-outline-secondary" onClick={() => setShowVenueBookingModal(false)}>
+              <button className="cancel-btn" onClick={() => setShowVenueBookingModal(false)}>
                 Cancel
               </button>
               <button 
-                className="btn btn-primary" 
+                className="create-job-btn" 
                 onClick={handleBookVenue}
                 disabled={!venueForm.programId || !venueForm.venueName || !venueForm.bookingDate}
               >
@@ -3726,39 +3596,15 @@ const FeedbackModal = () => {
   };
 
   return (
-  <div
-    className="modal show d-block"
-    style={{
-      backgroundColor: "rgba(0,0,0,0.5)",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1050,
-    }}
-  >
-    <div
-      className="modal-content bg-white"
-      style={{
-        width: "60%",
-        maxWidth: "800px",
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        maxHeight: "90vh",
-        overflowY: "auto",
-        borderRadius: "8px",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-      }}
-    >
-      {/* Header */}
-      <div className="modal-header bg-white border-bottom">
-            <h4 className="modal-title fw-bold fs-4">
+<div className="hrms-modal-overlay">
+  <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+
+    {/* HEADER */}
+    <div className="hrms-modal-header">
+          <h5 className="hrms-modal-title d-flex align-items-center">
               <i className="bi bi-star me-2"></i>
               Program Feedback
-            </h4>
+            </h5>
             <button 
               type="button"
               className="btn-close btn-close" 
@@ -3767,7 +3613,7 @@ const FeedbackModal = () => {
             ></button>
           </div>
           
-          <div className="modal-body pt-0">
+    <div className="hrms-modal-body hrms-modal-body-scroll flex-grow-1">
             {/* Program Selection */}
             <div className="mb-4">
               <label className="form-label fw-bold">
@@ -3962,10 +3808,10 @@ const FeedbackModal = () => {
               </div>
           </div>
           
-          <div className="modal-footer border-0">
+          <div className="modal-footer border-0 bg-light">
             <button 
               type="button"
-              className="btn btn-outline-secondary" 
+              className="cancel-btn" 
               onClick={() => {
                 setShowFeedbackModal(false);
                 setSelectedFeedbackProgram(null);
@@ -3984,7 +3830,7 @@ const FeedbackModal = () => {
             </button>  
             <button 
               type="button"
-              className="btn btn-primary" 
+              className="create-job-btn" 
               onClick={handleSubmit}
               disabled={!selectedFeedbackProgram || !localFeedback.rating || localFeedback.rating === 0}
             >
@@ -4049,43 +3895,21 @@ const PolicyModuleModal = () => {
   };
 
   return (
-  <div
-    className="modal show d-block"
-    style={{
-      backgroundColor: "rgba(0,0,0,0.5)",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1050,
-    }}
-  >
-    <div
-      className="modal-content bg-white"
-      style={{
-        width: "60%",
-        maxWidth: "800px",
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        maxHeight: "90vh",
-        overflowY: "auto",
-        borderRadius: "8px",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-      }}
-    >
-      {/* Header */}
-      <div className="modal-header bg-white border-bottom">
-            <h5 className="modal-title fw-bold fs-4">
+<div className="hrms-modal-overlay">
+  <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+
+    {/* HEADER */}
+    <div className="hrms-modal-header">
+      <h5 className="hrms-modal-title d-flex align-items-center">
               <i className="bi bi-book me-2"></i>
               {policy.name}
             </h5>
             <button className="btn-close" onClick={() => setShowPolicyModuleModal(false)}></button>
           </div>
           
-          <div className="modal-body pt-0">
+    {/* BODY */}
+    <div className="hrms-modal-body hrms-modal-body-scroll flex-grow-1">
+
             {/* Progress bar */}
             <div className="mb-4">
               <div className="d-flex justify-content-between align-items-center mb-2">
@@ -4216,10 +4040,12 @@ const PolicyModuleModal = () => {
           </div>
           
           {/* Footer with Clear Action Buttons */}
-          <div className="modal-footer border-0">
+
+    {/* FOOTER */}
+          <div className="modal-footer border-0 bg-light">
             {/* Previous/Close Button */}
             <button 
-              className="btn btn-outline-secondary" 
+              className="close-btn" 
               onClick={() => {
                 if (currentPolicyModule > 0) {
                   setCurrentPolicyModule(currentPolicyModule - 1);
@@ -4236,7 +4062,7 @@ const PolicyModuleModal = () => {
             {!isLastModule ? (
               // Next Module Button - for non-last modules
               <button 
-                className="btn btn-primary"
+                className="create-job-btn"
                 onClick={handleNextModule}
                 disabled={!currentModule.read}
               >
@@ -4249,7 +4075,7 @@ const PolicyModuleModal = () => {
                 {/* First, mark as read button if not marked */}
                 {!currentModule.read && (
                   <button 
-                    className="btn btn-primary"
+                    className="create-job-btn"
                     onClick={handleMarkAsRead}
                   >
                     <i className="bi bi-check-circle me-1"></i>
@@ -4293,40 +4119,18 @@ const PolicyModuleModal = () => {
     if (!policy || !policy.quiz || policy.quiz.length === 0) return null;
 
     return (
-  <div
-    className="modal show d-block"
-    style={{
-      backgroundColor: "rgba(0,0,0,0.5)",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1050,
-    }}
-  >
-    <div
-      className="modal-content bg-white"
-      style={{
-        width: "60%",
-        maxWidth: "800px",
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        maxHeight: "90vh",
-        overflowY: "auto",
-        borderRadius: "8px",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-      }}
-    >
-      {/* Header */}
-      <div className="modal-header bg-white border-bottom">
-              <h5 className="modal-title fw-bold fs-4">{policy.name} - Quiz</h5>
+<div className="hrms-modal-overlay">
+  <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+
+    {/* HEADER */}
+    <div className="hrms-modal-header">
+      <h5 className="hrms-modal-title d-flex align-items-center">{policy.name} - Quiz</h5>
               <button className="btn-close" onClick={() => setShowPolicyQuizModal(false)}></button>
             </div>
             
-            <div className="modal-body pt-0">
+                {/* BODY */}
+    <div className="hrms-modal-body hrms-modal-body-scroll flex-grow-1">
+
               <div className="alert alert-info mb-3">
                 <strong>Instructions:</strong> Answer all questions. Passing score: {policy.passingScore}%
               </div>
@@ -4411,12 +4215,14 @@ const PolicyModuleModal = () => {
               
             </div>
             
-            <div className="modal-footer border-0">
-              <button className="btn btn-outline-secondary" onClick={() => setShowPolicyQuizModal(false)}>
+            
+    {/* FOOTER */}
+          <div className="modal-footer border-0 bg-light">
+              <button className="cancel-btn" onClick={() => setShowPolicyQuizModal(false)}>
                 Cancel
               </button>
               <button 
-                className="btn btn-primary" 
+                className="create-job-btn" 
                 onClick={() => handleSubmitQuiz(policy.id)}
                 disabled={Object.keys(quizAnswers).length < policy.quiz.length}
               >
@@ -4435,40 +4241,18 @@ const SessionDetailsModal = () => {
   if (!selectedSession) return null;
 
   return (
-  <div
-    className="modal show d-block"
-    style={{
-      backgroundColor: "rgba(0,0,0,0.5)",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1050,
-    }}
-  >
-    <div
-      className="modal-content bg-white"
-      style={{
-        width: "60%",
-        maxWidth: "800px",
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        maxHeight: "90vh",
-        overflowY: "auto",
-        borderRadius: "8px",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-      }}
-    >
-      {/* Header */}
-      <div className="modal-header bg-white border-bottom">
-            <h5 className="modal-title fw-bold">Session Details</h5>
+  <div className="hrms-modal-overlay">
+  <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+
+    {/* HEADER */}
+    <div className="hrms-modal-header">
+      <h5 className="hrms-modal-title d-flex align-items-center">Session Details</h5>
             <button className="btn-close" onClick={() => setSelectedSession(null)}></button>
           </div>
           
-          <div className="modal-body pt-0">
+          {/* BODY */}
+    <div className="hrms-modal-body hrms-modal-body-scroll flex-grow-1">
+
             <div className="card border mb-3">
               <div className="card-body">
                 <div className="mb-2">
@@ -4540,9 +4324,9 @@ const SessionDetailsModal = () => {
               </div>
             </div>
           </div>
-          
-          <div className="modal-footer border-0">
-            <button className="btn btn-outline-secondary" onClick={() => setSelectedSession(null)}>
+    {/* FOOTER */}
+          <div className="modal-footer border-0 bg-light">
+            <button className="close-btn" onClick={() => setSelectedSession(null)}>
               Close
             </button>
           </div>
@@ -4578,14 +4362,18 @@ const SessionDetailsModal = () => {
 <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
   {/* Left side - Title and description */}
   <div className="flex-shrink-1 mb-3 mb-md-0">
-    <h5 className="fw-bold mb-1">Induction & Orientation</h5>
+  <h5 className="text-3xl fw-bold text-dark mb-2 mt-3 d-flex align-items-center gap-2">
+    <Icon icon="heroicons:academic-cap" />
+    Induction & Orientation
+  </h5>
+
     <p className="text-muted mb-0">Complete onboarding management with policy acknowledgment</p>
   </div>
 
   {/* Right side - Action buttons */}
   <div className="d-flex flex-wrap justify-content-end gap-2 ms-md-auto">
     <button 
-      className="btn btn-outline-primary d-flex align-items-center gap-2"
+      className="job-listings-btn"
       onClick={() => setShowBulkAttendanceModal(true)}
     >
       <i className="bi bi-people d-none d-md-inline"></i>
@@ -4593,7 +4381,7 @@ const SessionDetailsModal = () => {
     </button>
     
     <button 
-      className="btn btn-outline-info d-flex align-items-center gap-2"
+      className="upload-policy-btn"
       onClick={() => setShowPolicyUploadModal(true)}
     >
       <i className="bi bi-upload d-none d-md-inline"></i>
@@ -4601,7 +4389,7 @@ const SessionDetailsModal = () => {
     </button>
     
     <button 
-      className="btn btn-primary d-flex align-items-center gap-2"
+      className="create-job-btn"
       onClick={() => setShowCreateProgram(true)}
     >
       <i className="bi bi-plus-circle d-none d-md-inline"></i>
@@ -4612,98 +4400,89 @@ const SessionDetailsModal = () => {
   
 </div>
 
-        {/* Statistics Cards - Responsive Grid */}
-<div className="row g-3 mb-4">
-  {/* Total Programs Card */}
-  <div className="col-6 col-md-3">
-    <div className="card border h-100">
-      <div className="card-body p-3">
-        <div className="d-flex flex-column flex-md-row justify-content-between align-items-center h-100">
-          <div className="text-center text-md-start mb-2 mb-md-0">
-            <h6 className="card-title text-muted mb-1">Total Programs</h6>
-            <h4 className="fw-bold mb-0">{inductionPrograms.length}</h4>
+{/* Statistics Cards */}
+<div className="kpi-row">
+  {[
+    {
+      title: "Total Programs",
+      value: inductionPrograms.length,
+      icon: "heroicons:calendar-days",
+      bg: "kpi-primary",
+      color: "kpi-primary-text",
+    },
+    {
+      title: "Total Participants",
+      value: inductionPrograms.reduce(
+        (sum, program) => sum + program.totalParticipants,
+        0
+      ),
+      icon: "heroicons:users",
+      bg: "kpi-success",
+      color: "kpi-success-text",
+    },
+    {
+      title: "Policy Completion",
+      value: (() => {
+        const requiredPolicies = policies.filter((p) => p.required);
+        if (requiredPolicies.length === 0) return "0%";
+
+        const totalCompletion = requiredPolicies.reduce((sum, policy) => {
+          const rate =
+            policy.completionTracking.completed /
+            policy.completionTracking.totalEmployees;
+          return sum + rate;
+        }, 0);
+
+        const averageCompletion =
+          (totalCompletion / requiredPolicies.length) * 100;
+
+        return `${Math.round(averageCompletion * 10) / 10}%`;
+      })(),
+      icon: "heroicons:document-check",
+      bg: "kpi-warning",
+      color: "kpi-warning-text",
+    },
+    {
+      title: "Avg. Rating",
+      value: (() => {
+        if (inductionPrograms.length === 0) return "0.0/5";
+
+        const totalRating = inductionPrograms.reduce(
+          (sum, program) => sum + program.overallRating,
+          0
+        );
+
+        const averageRating = totalRating / inductionPrograms.length;
+
+        return `${Math.round(averageRating * 10) / 10}/5`;
+      })(),
+      icon: "heroicons:star",
+      bg: "kpi-info",
+      color: "kpi-info-text",
+    },
+  ].map((item, index) => (
+    <div className="kpi-col" key={index}>
+      <div className="kpi-card">
+        <div className="kpi-card-body">
+          
+          {/* Icon */}
+          <div className={`kpi-icon ${item.bg}`}>
+            <Icon
+              icon={item.icon}
+              className={`kpi-icon-style ${item.color}`}
+            />
           </div>
-          <div className="bg-primary rounded-circle p-2 ms-md-2">
-            <i className="bi bi-calendar-event text-white fs-5"></i>
+
+          {/* Content */}
+          <div className="kpi-content">
+            <div className="kpi-title">{item.title}</div>
+            <div className="kpi-value">{item.value}</div>
           </div>
+
         </div>
       </div>
     </div>
-  </div>
-  
-  {/* Total Participants Card */}
-  <div className="col-6 col-md-3">
-    <div className="card border h-100">
-      <div className="card-body p-3">
-        <div className="d-flex flex-column flex-md-row justify-content-between align-items-center h-100">
-          <div className="text-center text-md-start mb-2 mb-md-0">
-            <h6 className="card-title text-muted mb-1">Total Participants</h6>
-            <h4 className="fw-bold mb-0">
-              {inductionPrograms.reduce((sum, program) => sum + program.totalParticipants, 0)}
-            </h4>
-          </div>
-          <div className="bg-success rounded-circle p-2 ms-md-2">
-            <i className="bi bi-people text-white fs-5"></i>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  {/* Policy Completion Card */}
-  <div className="col-6 col-md-3">
-    <div className="card border h-100">
-      <div className="card-body p-3">
-        <div className="d-flex flex-column flex-md-row justify-content-between align-items-center h-100">
-          <div className="text-center text-md-start mb-2 mb-md-0">
-            <h6 className="card-title text-muted mb-1">Policy Completion</h6>
-            <h4 className="fw-bold mb-0">
-              {(() => {
-                const requiredPolicies = policies.filter(p => p.required);
-                if (requiredPolicies.length === 0) return '0%';
-                
-                const totalCompletion = requiredPolicies.reduce((sum, policy) => {
-                  const rate = policy.completionTracking.completed / policy.completionTracking.totalEmployees;
-                  return sum + rate;
-                }, 0);
-                
-                const averageCompletion = (totalCompletion / requiredPolicies.length) * 100;
-                return `${Math.round(averageCompletion * 10) / 10}%`;
-              })()}
-            </h4>
-          </div>
-          <div className="bg-warning rounded-circle p-2 ms-md-2">
-            <i className="bi bi-file-check text-white fs-5"></i>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  {/* Average Rating Card */}
-  <div className="col-6 col-md-3">
-    <div className="card border h-100">
-      <div className="card-body p-3">
-        <div className="d-flex flex-column flex-md-row justify-content-between align-items-center h-100">
-          <div className="text-center text-md-start mb-2 mb-md-0">
-            <h6 className="card-title text-muted mb-1">Avg. Rating</h6>
-            <h4 className="fw-bold mb-0">
-              {(() => {
-                if (inductionPrograms.length === 0) return '0.0/5';
-                
-                const totalRating = inductionPrograms.reduce((sum, program) => sum + program.overallRating, 0);
-                const averageRating = totalRating / inductionPrograms.length;
-                return `${Math.round(averageRating * 10) / 10}/5`;
-              })()}
-            </h4>
-          </div>
-          <div className="bg-info rounded-circle p-2 ms-md-2">
-            <i className="bi bi-star text-white fs-5"></i>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  ))}
 </div>
 
 
@@ -4857,7 +4636,7 @@ const SessionDetailsModal = () => {
         <h6 className="mb-2 mb-md-0 fw-bold fs-4">Sessions Management</h6>
         <div className="d-flex gap-2">
           <button 
-            className="btn btn-sm btn-outline-primary"
+            className="job-listings-btn"
             onClick={() => setShowSessionAgendaModal(true)}
           >
             <i className="bi bi-plus me-1"></i> Add Session
@@ -4871,7 +4650,7 @@ const SessionDetailsModal = () => {
                 return;
               }
               
-              const headers = ['Session Title', 'Program', 'Date', 'Time', 'Duration', 'Trainer', 'Type', 'Venue/Link'];
+              const headers = ['Session Title', 'Program', 'Date', 'Time', 'Duration', 'Trainer', 'Type', 'Venue/Link', '	Status'];
               const data = sessions.map(session => [
                 session.sessionTitle,
                 session.programName,
@@ -4880,7 +4659,8 @@ const SessionDetailsModal = () => {
                 calculateDuration(session.startTime, session.endTime),
                 session.trainer || '-',
                 session.isVirtual ? 'Virtual' : 'In-person',
-                session.isVirtual ? session.meetingLink : session.venue
+                session.isVirtual ? session.meetingLink : session.venue,
+                session.status || '-'  // Adding Status field here
               ]);
 
               const csvContent = [
@@ -4909,7 +4689,7 @@ const SessionDetailsModal = () => {
             <h5 className="text-muted">No sessions found</h5>
             <p className="text-muted mb-4">Create your first session to get started</p>
             <button 
-              className="btn btn-primary"
+              className="create-job-btn"
               onClick={() => setShowSessionAgendaModal(true)}
             >
               <i className="bi bi-plus-circle me-2"></i>
@@ -5035,7 +4815,7 @@ const SessionDetailsModal = () => {
           </small>
         </div>
         <button 
-          className="btn btn-sm btn-outline-primary"
+          className="job-listings-btn"
           onClick={() => setShowPolicyUploadModal(true)}
         >
           <i className="bi bi-plus me-1"></i> Add Policy
@@ -5259,40 +5039,17 @@ const SessionDetailsModal = () => {
         
         {/* Enhanced Modals */}
         {showCreateProgram && (
-  <div
-    className="modal show d-block"
-    style={{
-      backgroundColor: "rgba(0,0,0,0.5)",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1050,
-    }}
-  >
-    <div
-      className="modal-content bg-white"
-      style={{
-        width: "60%",
-        maxWidth: "800px",
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        maxHeight: "90vh",
-        overflowY: "auto",
-        borderRadius: "8px",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-      }}
-    >
-      {/* Header */}
-      <div className="modal-header bg-white border-bottom">
-                  <h5 className="modal-title fw-bold">Create New Induction Program</h5>
+<div className="hrms-modal-overlay">
+  <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+
+    {/* HEADER */}
+    <div className="hrms-modal-header">
+      <h5 className="hrms-modal-title d-flex align-items-center">Create New Induction Program</h5>
                   <button className="btn-close" onClick={() => setShowCreateProgram(false)}></button>
                 </div>
                 
-                <div className="modal-body pt-0">
+                    <div className="hrms-modal-body hrms-modal-body-scroll flex-grow-1">
+
                   <div className="row">
                     <div className="col-12 col-md-6 mb-3">
                       <label className="form-label fw-bold">Program Name  <span className="text-danger">*</span></label>
@@ -5381,12 +5138,12 @@ const SessionDetailsModal = () => {
                   </div>
                 </div>
                 
-                <div className="modal-footer border-0">
-                  <button className="btn btn-outline-secondary" onClick={() => setShowCreateProgram(false)}>
+               <div className="modal-footer border-0 bg-light">
+                  <button className="cancel-btn" onClick={() => setShowCreateProgram(false)}>
                     Cancel
                   </button>
                   <button 
-                    className="btn btn-primary" 
+                    className="create-job-btn" 
                     onClick={handleCreateProgram}
                     disabled={!programForm.name || !programForm.startDate || !programForm.endDate || !programForm.location}
                   >
@@ -5400,40 +5157,17 @@ const SessionDetailsModal = () => {
         {showBulkAttendanceModal && <BulkAttendanceModal />}
         {showPolicyModal && <PolicyModal />}
         {showSessionAgendaModal && (
-  <div
-    className="modal show d-block"
-    style={{
-      backgroundColor: "rgba(0,0,0,0.5)",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1050,
-    }}
-  >
-    <div
-      className="modal-content bg-white"
-      style={{
-        width: "60%",
-        maxWidth: "800px",
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        maxHeight: "90vh",
-        overflowY: "auto",
-        borderRadius: "8px",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-      }}
-    >
-      {/* Header */}
-      <div className="modal-header bg-white border-bottom">
-              <h5 className="modal-title fw-bold">Create Session Agenda</h5>
+<div className="hrms-modal-overlay">
+  <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+
+    {/* HEADER */}
+    <div className="hrms-modal-header">
+      <h5 className="hrms-modal-title d-flex align-items-center">Create Session Agenda</h5>
               <button className="btn-close" onClick={() => setShowSessionAgendaModal(false)}></button>
             </div>
-            
-            <div className="modal-body pt-0">
+     {/* BODY */}
+    <div className="hrms-modal-body hrms-modal-body-scroll flex-grow-1">
+
               
 <div className="row mb-3">
   {/* First card - Program Select */}
@@ -5607,57 +5341,37 @@ const SessionDetailsModal = () => {
 </div>
             </div>
             
-            <div className="modal-footer border-0">
-              <button className="btn btn-outline-secondary" onClick={() => setShowSessionAgendaModal(false)}>
+    {/* FOOTER */}
+          <div className="modal-footer border-0 bg-light">
+              <button className="cancel-btn" onClick={() => setShowSessionAgendaModal(false)}>
                 Cancel
               </button>
               <button 
-                className="btn btn-primary" 
+                className="create-job-btn" 
                 onClick={handleCreateSession}
                 disabled={!sessionAgendaForm.programId || !sessionAgendaForm.sessionTitle}
               >
                 Create Session
               </button>
             </div>
+
           </div>
         </div>
 
     )}
     {showEditSessionModal && (
-  <div
-    className="modal show d-block"
-    style={{
-      backgroundColor: "rgba(0,0,0,0.5)",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1050,
-    }}
-  >
-    <div
-      className="modal-content bg-white"
-      style={{
-        width: "60%",
-        maxWidth: "800px",
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        maxHeight: "90vh",
-        overflowY: "auto",
-        borderRadius: "8px",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-      }}
-    >
-      {/* Header */}
-      <div className="modal-header bg-white border-bottom">
-            <h5 className="modal-title fw-bold mb-0">Edit Session</h5>
+<div className="hrms-modal-overlay">
+  <div className="hrms-modal hrms-modal-offer-xl animate-scale-in d-flex flex-column">
+
+    {/* HEADER */}
+    <div className="hrms-modal-header">
+      <h5 className="hrms-modal-title d-flex align-items-center">Edit Session</h5>
             <button className="btn-close" onClick={() => setShowEditSessionModal(false)}></button>
           </div>
           
-          <div className="modal-body pt-0">
+    {/* BODY */}
+    <div className="hrms-modal-body hrms-modal-body-scroll flex-grow-1">
+
             {/* Program Selection */}
 <div className="row mb-2">
   {/* First column - Select Program */}
@@ -5853,12 +5567,13 @@ const SessionDetailsModal = () => {
 
           </div>
           
-          <div className="modal-footer border-0">
-            <button className="btn btn-outline-secondary" onClick={() => setShowEditSessionModal(false)}>
+    {/* FOOTER */}
+          <div className="modal-footer border-0 bg-light">
+            <button className="cancel-btn" onClick={() => setShowEditSessionModal(false)}>
               Cancel
             </button>
             <button 
-              className="btn btn-primary" 
+              className="create-job-btn" 
               onClick={() => {
                 // Handle edit session function
                 handleEditSession(editingSession);

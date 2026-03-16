@@ -1,5 +1,7 @@
 // src/components/HRMS/Onboarding&Joining/JoiningDayManagement.jsx
 import React, { useState } from 'react';
+import { Icon } from "@iconify/react/dist/iconify.js";
+
 import {
   Grid, Paper, Typography, Button, Box, Card, CardContent,
   IconButton, TextField, FormControl, InputLabel, Select,
@@ -241,7 +243,7 @@ const JoiningDayManagement = () => {
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
             <h5 className="text-3xl fw-bold text-dark mb-2 mt-3 d-flex align-items-center gap-2">
-              <PersonAddIcon className="me-2" />
+              <Icon icon='heroicons:calendar' />
               ADD EMPLOYEE
             </h5>
           </div>
@@ -489,15 +491,15 @@ const JoiningDayManagement = () => {
                   </Box>
 
                   {/* Save Button */}
-                  <Button
-                    variant="contained"
-                    startIcon={<SaveIcon />}
-                    onClick={handleSaveProfile}
-                    fullWidth
-                    sx={{ mt: 2 }}
-                  >
-                    Save
-                  </Button>
+<Button
+  variant="contained"
+  startIcon={<SaveIcon />}
+  onClick={handleSaveProfile}
+  fullWidth
+  className="save-btn"
+>
+  Save
+</Button>
                 </CardContent>
               </Card>
             </Grid>
