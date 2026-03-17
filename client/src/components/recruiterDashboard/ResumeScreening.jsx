@@ -356,7 +356,7 @@ const ResumeScreening = () => {
             <p className="text-secondary-light mt-2 mb-0">Loading candidates...</p>
           </div>
         ) : candidates.length === 0 ? (
-          <div className="card-body text-center py-5">
+          <div className="card-body text-center py-5 justify-items-center">
             <FileText className="text-muted mb-3" size={48} />
             <h6 className="mb-2">No Candidates Yet</h6>
             <p className="text-secondary-light mb-0">

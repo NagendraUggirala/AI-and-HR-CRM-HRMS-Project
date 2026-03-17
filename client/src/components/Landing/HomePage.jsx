@@ -219,72 +219,99 @@ const ScrollAnimatedCard = ({ children, delay = 0, isVisible }) => {
 const HowItWorksSection = () => {
   const [ref, isVisible] = useIntersectionObserver(true);
 
-  const steps = [
-    { 
-      icon: '📝', 
-      title: 'Create Job', 
-      description: 'Post your job requirements and let our AI optimize',
-      color: '#4361EE', // Brighter blue
-      bgColor: '#E0E7FF', // Lighter blue bg
-      delay: 0 
-    },
-    { 
-      icon: '👥', 
-      title: 'Import Candidates', 
-      description: 'Import candidates from various sources',
-      color: '#06D6A0', // Teal green
-      bgColor: '#CCF0E8', // Light teal bg
-      delay: 150 
-    },
-    { 
-      icon: '📊', 
-      title: 'Track Pipeline', 
-      description: 'Monitor candidate progress through stages',
-      color: '#FF9E00', // Orange
-      bgColor: '#FFE5B3', // Light orange bg
-      delay: 300 
-    },
-    { 
-      icon: '🎯', 
-      title: 'Hire & Report', 
-      description: 'Make offers and generate reports',
-      color: '#E63946', // Red
-      bgColor: '#FFD6D9', // Light red bg
-      delay: 450 
-    }
-  ];
+const steps = [
+  {
+    icon: 'bi-briefcase',
+    title: 'Create Job',
+    description: 'Post your job requirements and let our AI optimize',
+    cardColor: '#E3F2FD',
+    iconColor: '#4361EE',
+    delay: 0
+  },
+  {
+    icon: 'bi-people',
+    title: 'Import Candidates',
+    description: 'Import candidates from various sources',
+    cardColor: '#E6F4EA',
+    iconColor: '#06D6A0',
+    delay: 150
+  },
+  {
+    icon: 'bi-graph-up',
+    title: 'Track Pipeline',
+    description: 'Monitor candidate progress through stages',
+    cardColor: '#FFF4E1',
+    iconColor: '#FF9E00',
+    delay: 300
+  },
+  {
+    icon: 'bi-award',
+    title: 'Hire & Report',
+    description: 'Make offers and generate reports',
+    cardColor: '#FFE3E6',
+    iconColor: '#E63946',
+    delay: 450
+  }
+];
 
-  return (
-    <div ref={ref} className='card border shadow-none session-block'>
-      <div className='card-body p-3 p-md-5'>
-        {/* Section Header */}
-        <ScrollAnimatedCard delay={0} isVisible={isVisible}>
-          <div className='text-center mb-5'>
-            <h3 className='display-6 display-md-5 fw-bold mb-3 text-primary'>How It Works</h3>
-            <p className='mt-2 mb-2 px-2 px-md-5 mx-auto' style={{ maxWidth: '800px' }}>
-              Simple 4-step process to streamline your recruitment
-            </p>
-          </div>
-        </ScrollAnimatedCard>
-
-        {/* 4 Cards in One Row */}
-        <div className="row g-4">
-          {steps.map((step, index) => (
-            <div key={index} className="col-md-3">
-              <ScrollAnimatedCard delay={step.delay} isVisible={isVisible}>
-                <CardComponent step={step} />
-              </ScrollAnimatedCard>
-            </div>
-          ))}
+return (
+  <div ref={ref} className='card border-0 shadow-none session-block'>
+    <div className='card-body p-3 p-md-5'>
+      {/* Section Header */}
+      <ScrollAnimatedCard delay={0} isVisible={isVisible}>
+        <div className='text-center mb-5'>
+          <h3 className='display-6 display-md-5 fw-bold mb-3 text-primary'>How It Works</h3>
+          <p className='mt-2 mb-2 px-2 px-md-5 mx-auto' style={{ maxWidth: '800px' }}>
+            Simple 4-step process to streamline your recruitment
+          </p>
         </div>
+      </ScrollAnimatedCard>
+
+      {/* Cards with equal width & height in one row */}
+      <div className="d-flex flex-row flex-wrap justify-content-center align-items-stretch gap-3">
+        {steps.map((step, index) => (
+          <React.Fragment key={index}>
+            <ScrollAnimatedCard delay={step.delay} isVisible={isVisible}>
+             <div
+  className="card text-center p-4 flex-fill"
+  style={{
+    backgroundColor: step.cardColor,
+    borderRadius: '1rem',
+    minWidth: '250px', // increased width
+    maxWidth: '300px', // increased width
+    height: '180px',    // decreased height
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center'
+  }}
+>
+  <i
+    className={`bi ${step.icon} mb-2`}
+    style={{ fontSize: '2rem', color: step.iconColor }}
+  ></i>
+  <h6 className="fw-bold">{step.title}</h6>
+  <p className="mb-0">{step.description}</p>
+</div>
+            </ScrollAnimatedCard>
+
+            {/* Arrow between cards */}
+            {index < steps.length - 1 && (
+              <div className="d-none d-md-flex align-items-center mx-2">
+                <i className="bi bi-arrow-right" style={{ fontSize: '2rem', color: '#aaa' }}></i>
+              </div>
+            )}
+          </React.Fragment>
+        ))}
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 // Card Component for grid layout
 const CardComponent = ({ step }) => (
-  <div 
+  <div
     className="border-0 p-3 h-100"
     style={{
       width: '100%',
@@ -310,7 +337,7 @@ const CardComponent = ({ step }) => (
       {/* Top section with icon and title */}
       <div className="d-flex align-items-center gap-2 mb-3">
         {/* Icon Circle */}
-        <div 
+        <div
           className="rounded-circle d-flex align-items-center justify-content-center"
           style={{
             width: '45px',
@@ -329,10 +356,10 @@ const CardComponent = ({ step }) => (
         >
           {step.icon}
         </div>
-        
+
         {/* Title */}
-        <h6 className="fw-bold mb-0" style={{ 
-          color: step.color, 
+        <h6 className="fw-bold mb-0" style={{
+          color: step.color,
           fontSize: '1rem'
         }}>
           {step.title}
@@ -340,7 +367,7 @@ const CardComponent = ({ step }) => (
       </div>
 
       {/* Description */}
-      <p className="text-muted mb-0 small" style={{ 
+      <p className="text-muted mb-0 small" style={{
         fontSize: '0.85rem',
         color: '#4B5563',
         lineHeight: '1.4'
@@ -378,37 +405,37 @@ const ClientFeaturesSection = ({ clients }) => {
             <ScrollAnimatedCard delay={0} isVisible={isVisible}>
               <div className="text-center text-md-start" style={{ maxWidth: '500px' }}>
                 <div
-  style={{
-    overflow: 'hidden',
-    borderRadius: '12px',
-    transition: 'all 0.4s ease',
-    animation: `fadeInUp 0.8s ease-out 0ms forwards`,
-    opacity: 0,
-    width: '100%', // Make container take full width
-    height: '180px', // Set a fixed height or use aspect ratio
-    position: 'relative' // Optional: for better image positioning
-  }}
-  onMouseEnter={(e) => {
-    e.currentTarget.style.transform = 'scale(1.05)';
-    e.currentTarget.style.boxShadow = '0 15px 30px rgba(0, 0, 0, 0.15)';
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.transform = 'scale(1)';
-    e.currentTarget.style.boxShadow = 'none';
-  }}
->
-  <img 
-    src="https://www.aihr.com/wp-content/uploads/hr-automation-cover.jpg" 
-    alt="Powerful Features"
-    style={{
-      width: '100%', // Take full width of container
-      height: '100%', // Take full height of container
-      objectFit: 'cover', // Cover the entire area without distortion
-      display: 'block' // Remove extra space below image
-    }}
-  />
-</div>
-                <h4 
+                  style={{
+                    overflow: 'hidden',
+                    borderRadius: '12px',
+                    transition: 'all 0.4s ease',
+                    animation: `fadeInUp 0.8s ease-out 0ms forwards`,
+                    opacity: 0,
+                    width: '100%', // Make container take full width
+                    height: '180px', // Set a fixed height or use aspect ratio
+                    position: 'relative' // Optional: for better image positioning
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                    e.currentTarget.style.boxShadow = '0 15px 30px rgba(0, 0, 0, 0.15)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  <img
+                    src="https://www.aihr.com/wp-content/uploads/hr-automation-cover.jpg"
+                    alt="Powerful Features"
+                    style={{
+                      width: '100%', // Take full width of container
+                      height: '100%', // Take full height of container
+                      objectFit: 'cover', // Cover the entire area without distortion
+                      display: 'block' // Remove extra space below image
+                    }}
+                  />
+                </div>
+                <h4
                   className="text-3xl text-md-4xl fw-bold text-black mb-3 mt-3"
                   style={{
                     animation: `fadeInUp 0.8s ease-out 200ms forwards`,
@@ -418,7 +445,7 @@ const ClientFeaturesSection = ({ clients }) => {
                 >
                   All in one: AI Recruiter & HR Automation, CRM, Productivity, HRMS
                 </h4>
-                <p 
+                <p
                   className="text-base text-md-lg text-dark mb-3"
                   style={{
                     animation: `fadeInUp 0.8s ease-out 400ms forwards`,
@@ -428,7 +455,7 @@ const ClientFeaturesSection = ({ clients }) => {
                 >
                   One platform for recruiting, sales, productivity, and HR. Streamline operations and grow with confidence.
                 </p>
-                <button 
+                <button
                   className="btn btn-primary"
                   style={{
                     animation: `fadeInUp 0.8s ease-out 600ms forwards`,
@@ -484,10 +511,10 @@ const ClientFeaturesSection = ({ clients }) => {
                         />
                       </div>
                     )}
-                    <div 
-                      className="rounded-circle bg-black d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
-                      style={{ 
-                        width: '44px', 
+                    <div
+                      className="rounded-circle bg-black d-flex align-items-center justify-content-center me-3 flex-shrink-0"
+                      style={{
+                        width: '44px',
                         height: '44px',
                         marginLeft: client.image ? '0.75rem' : '1rem',
                         transition: 'all 0.3s ease'
@@ -565,233 +592,406 @@ const PLATFORM_TOPICS = [
   }
 ];
 
-// What We Offer Section
-const WhatWeOfferSection = () => {
-  const [ref, isVisible] = useIntersectionObserver(true);
-  const iconMap = { Bot, Zap, FileText, BarChart3 };
-
-  return (
-    <section ref={ref} id='features' className='py-3 py-md-5'>
-      <div className='container px-3'>
-        <ScrollAnimatedCard delay={0} isVisible={isVisible}>
-          <div className='text-center mb-4 mb-md-5'>
-            <span className='badge bg-primary-subtle text-primary mb-3 px-3 py-2'>Our Platform</span>
-            <h3 className='display-6 display-md-5 fw-bold mb-3'>
-              <span style={{ color: '#3B82F6' }}>What</span> <span style={{ color: '#EC4899' }}>We</span> <span style={{ color: '#3B82F6' }}>Offer</span>
-            </h3>
-            <p className='lead text-dark mx-auto px-2' style={{ maxWidth: '600px' }}>
-              All in one: AI Recruiter & HR Automation, CRM, Productivity, and HRMS. Built for hiring teams, sales, and HR.
-            </p>
-          </div>
-        </ScrollAnimatedCard>
-
-        <div className='row g-3 g-md-4'>
-          <style>{`
-            .platform-card { position: relative; overflow: hidden; transition: all 0.3s ease; }
-            .platform-card::after { content: ''; position: absolute; bottom: 0; left: -100%; width: 100%; height: 4px; background: var(--accent, #3B82F6); transition: left 0.5s ease; }
-            .platform-card:hover::after { left: 0; }
-            .platform-card:hover { transform: translateY(-5px); }
-          `}</style>
-          {PLATFORM_TOPICS.map((topic, index) => {
-            const Icon = iconMap[topic.icon];
-            return (
-              <div key={topic.id} className='col-12 col-md-6 col-lg-6'>
-                <ScrollAnimatedCard delay={100 + index * 100} isVisible={isVisible}>
-                  <div
-                    className='card border-0 shadow-lg h-100 platform-card'
-                    style={{ backgroundColor: topic.bgLight, ['--accent']: topic.color }}
-                  >
-                    <div className='card-body p-3 p-md-4'>
-                      <div className='d-flex align-items-start mb-3'>
-                        <div className='rounded-2 d-inline-block p-2 p-md-3 mb-2 rounded-circle' style={{ backgroundColor: topic.color }}>
-                          {Icon && <Icon size={28} color="white" className="d-md-none" />}
-                          {Icon && <Icon size={36} color="white" className="d-none d-md-block" />}
-                        </div>
-                        <div className='ps-2 flex-grow-1'>
-                          <span className='badge mb-2' style={{ backgroundColor: topic.bgLight, color: topic.color }}>{topic.badge}</span>
-                          <h5 className='fw-bold mb-2 fs-6' style={{ color: topic.color }}>{topic.title}</h5>
-                          <p className='text-muted small mb-0' style={{ lineHeight: '1.5' }}>{topic.subtitle}</p>
-                        </div>
-                      </div>
-                      <ul className='list-unstyled small mb-0 pt-3 border-top'>
-                        {topic.points.map((point, i) => (
-                          <li key={i} className='d-flex align-items-center gap-2 mb-2'>
-                            <span style={{ color: topic.color }}>✓</span>
-                            <span className='text-muted'>{point}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </ScrollAnimatedCard>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-};
-
 // New AIRecruiterBody Component (Integrated directly)
 const AIRecruiterBody = () => {
   return (
-    <div style={{ background: "#f3f6fb", padding: "60px 20px", fontFamily: "Arial, sans-serif" }}>
+    <>
+      {/* HEADING */}
 
-      {/* Heading */}
-      <div style={{ textAlign: "center", maxWidth: "900px", margin: "auto" }}>
-       <h5
-  style={{
-    fontSize: "8px",
-    textAlign: "center",
-    whiteSpace: "nowrap",
-    color: "#2b5fab",
-    fontWeight: "500"
-  }}
->
-  AI-Powered HR Revolution:
-  <span style={{ color: "#f28c28" }}>
-    Recruiting, CRM, HR-AI & Productivity Unified
-  </span>
-</h5>
+      <div style={{ textAlign: "center", marginBottom: "70px" }}>
 
-        <p
-          style={{
-            marginTop: "20px",
-            fontSize: "16px",
-            color: "#333",
-            lineHeight: "1.6"
-          }}
-        >
-          “Revolutionize your HR processes with an AI-powered recruiting solution that integrates seamlessly with CRM systems. Harness HR-AI insights to optimize hiring, workforce planning, and employee engagement, boosting productivity and enabling smarter, faster decisions across your organization.”
+        <h2 style={{ fontSize: "40px", fontWeight: "700", color: "#0f2747" }}>
+          what  <span style={{ color: "#2b5fab" }}>We Offer</span>
+        </h2>
+
+
+
+        <p style={{
+          marginTop: "15px",
+          fontSize: "18px",
+          color: "#666",
+          maxWidth: "900px",
+          marginLeft: "auto",
+          marginRight: "auto",
+          lineHeight: "1.6"
+        }}>
+          All in one: <b>AI Recruiter & HR Automation</b>, <b>CRM</b>,
+          <b>Productivity</b>, and <b>HRMS</b>. Built for hiring teams,
+          sales teams, and HR departments to streamline recruitment,
+          manage customers, improve productivity, and automate HR operations
+          through a single intelligent platform.
         </p>
+
       </div>
 
-      {/* Features Title */}
-      <div style={{ textAlign: "center", marginTop: "60px" }}>
-  <h4 style={{ color: "#2b5fab", marginBottom: "10px" }}>Our Features</h4>
 
-  <h5 style={{ fontSize: "30px", fontWeight: "700" }}>
-    <span style={{ color: "#f28c28" }}>AI-Driven HR</span> & Productivity Solutions
-  </h5>
-</div>
+      {/* CARDS */}
 
-     <div
-  style={{
-    display: "flex",
-    justifyContent: "center",
-    gap: "40px",   /* space between cards */
-    marginTop: "40px",
-    flexWrap: "wrap"
-  }}
->
-  {/* Card 1 */}
-  <div style={{ textAlign: "center", maxWidth: "180px" }}>
-    <div
-      style={{
-        width: "50px",
-        height: "50px",
-        margin: "auto",
-        borderRadius: "50%",
-        background: "#e6eef9",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: "24px",   /* icon size */
-        marginBottom: "10px"
-      }}
-    >
-      🤖
-    </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,360px)", justifyContent: "center", gap: "40px" }}>
 
-    <h6
-      style={{
-        fontSize: "8px",
-        whiteSpace: "nowrap",
-        textAlign: "center",
-        marginBottom: "8px"
-      }}
-    >
-      AI Recruitment
-    </h6>
 
-    <p style={{ color: "#555", fontSize: "13px", lineHeight: "1.4" }}>
-      Automate candidate sourcing, screening, and fit analysis with intelligent AI.
-    </p>
-  </div>
+        {/* HRMS CARD */}
 
-  {/* Card 2 */}
-  <div style={{ textAlign: "center", maxWidth: "180px" }}>
-    <div
-      style={{
-        width: "50px",
-        height: "50px",
-        margin: "auto",
-        borderRadius: "50%",
-        background: "#e6eef9",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: "24px",
-        marginBottom: "10px"
-      }}
-    >
-      📊
-    </div>
+        <div style={{ perspective: "1000px" }}>
+          <div
+            style={{
+              position: "relative",
+              width: "360px",
+              height: "420px",
+              transformStyle: "preserve-3d",
+              transition: "0.7s"
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = "rotateY(180deg)"}
+            onMouseLeave={(e) => e.currentTarget.style.transform = "rotateY(0deg)"}
+          >
 
-    <h6
-      style={{
-        fontSize: "8px",
-        whiteSpace: "nowrap",
-        textAlign: "center",
-        marginBottom: "8px"
-      }}
-    >
-      CRM Integration
-    </h6>
+            {/* FRONT */}
 
-    <p style={{ color: "#555", fontSize: "13px", lineHeight: "1.4" }}>
-      Centralize candidate and client interactions for smarter, faster decision-making.
-    </p>
-  </div>
+            <div style={{
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+              background: "#fff",
+              padding: "40px",
+              borderRadius: "16px",
+              boxShadow: "0 12px 35px rgba(0,0,0,0.08)",
+              backfaceVisibility: "hidden"
+            }}>
 
-  {/* Card 3 */}
-  <div style={{ textAlign: "center", maxWidth: "180px" }}>
-    <div
-      style={{
-        width: "50px",
-        height: "50px",
-        margin: "auto",
-        borderRadius: "50%",
-        background: "#e6eef9",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: "24px",
-        marginBottom: "10px"
-      }}
-    >
-      ⚡
-    </div>
+              <i className="bi bi-people-fill" style={{ fontSize: "40px", color: "#2b5fab" }}></i>
 
-    <h6
-      style={{
-        fontSize: "8px",
-        whiteSpace: "nowrap",
-        textAlign: "center",
-        marginBottom: "8px"
-      }}
-    >
-      HR-AI & Productivity
-    </h6>
+              <div style={{ fontSize: "26px", fontWeight: "600", marginTop: "15px" }}>
+                HRMS
+              </div>
 
-    <p style={{ color: "#555", fontSize: "13px", lineHeight: "1.4" }}>
-      Optimize workforce planning, engagement, and overall productivity with AI insights.
-    </p>
-  </div>
-</div>
+              <p style={{ marginTop: "10px", color: "#555" }}>
+                Complete HR management system for employee records.
+              </p>
 
-    </div>
+              <div style={{ marginTop: "15px", lineHeight: "2" }}>
+                <div>✓ Employee Database</div>
+                <div>✓ Attendance Tracking</div>
+                <div>✓ Payroll Management</div>
+                <div>✓ Leave Management</div>
+              </div>
+
+            </div>
+
+
+            {/* BACK */}
+
+            <div style={{
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+              background: "#fff",
+              borderRadius: "16px",
+              transform: "rotateY(180deg)",
+              backfaceVisibility: "hidden",
+              overflow: "hidden"
+            }}>
+
+              <img
+                src="https://images.unsplash.com/photo-1552664730-d307ca884978"
+                style={{ width: "100%", height: "200px", objectFit: "cover" }}
+              />
+
+              <div style={{ padding: "25px" }}>
+
+                <h3>Smart HRMS Platform</h3>
+
+                <p style={{ color: "#555" }}>
+                  Centralized HR system to manage employee lifecycle and payroll efficiently.
+                </p>
+
+                <div style={{ marginTop: "10px", lineHeight: "1.8" }}>
+                  <div>✔ Employee lifecycle management</div>
+                  <div>✔ Automated payroll processing</div>
+                  <div>✔ Attendance analytics</div>
+                  <div>✔ HR reporting tools</div>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+
+
+        {/* HR AI CARD */}
+
+        <div style={{ perspective: "1000px" }}>
+          <div
+            style={{
+              position: "relative",
+              width: "360px",
+              height: "420px",
+              transformStyle: "preserve-3d",
+              transition: "0.7s"
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = "rotateY(180deg)"}
+            onMouseLeave={(e) => e.currentTarget.style.transform = "rotateY(0deg)"}
+          >
+
+            {/* FRONT */}
+
+            <div style={{
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+              background: "#fff",
+              padding: "40px",
+              borderRadius: "16px",
+              boxShadow: "0 12px 35px rgba(0,0,0,0.08)",
+              backfaceVisibility: "hidden"
+            }}>
+
+              <i className="bi bi-robot" style={{ fontSize: "40px", color: "#2b5fab" }}></i>
+
+              <div style={{ fontSize: "26px", fontWeight: "600", marginTop: "15px" }}>
+                HR AI
+              </div>
+
+              <p style={{ marginTop: "10px", color: "#555" }}>
+                AI powered recruitment and hiring automation.
+              </p>
+
+              <div style={{ marginTop: "15px", lineHeight: "2" }}>
+                <div>✓ AI Resume Screening</div>
+                <div>✓ Candidate Matching</div>
+                <div>✓ Predictive Hiring</div>
+                <div>✓ HR Analytics</div>
+              </div>
+
+            </div>
+
+
+            {/* BACK */}
+
+            <div style={{
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+              background: "#fff",
+              borderRadius: "16px",
+              transform: "rotateY(180deg)",
+              backfaceVisibility: "hidden",
+              overflow: "hidden"
+            }}>
+
+              <img
+                src="https://images.unsplash.com/photo-1677442136019-21780ecad995"
+                style={{ width: "100%", height: "200px", objectFit: "cover" }}
+              />
+
+              <div style={{ padding: "25px" }}>
+
+                <h3>AI Recruitment</h3>
+
+                <p style={{ color: "#555" }}>
+                  Automate hiring workflows and find the best candidates faster.
+                </p>
+
+                <div style={{ marginTop: "10px", lineHeight: "1.8" }}>
+                  <div>✔ AI resume screening</div>
+                  <div>✔ Candidate ranking</div>
+                  <div>✔ Interview automation</div>
+                  <div>✔ Recruitment analytics</div>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+
+
+        {/* PRODUCTIVITY CARD */}
+
+        <div style={{ perspective: "1000px" }}>
+          <div
+            style={{
+              position: "relative",
+              width: "360px",
+              height: "420px",
+              transformStyle: "preserve-3d",
+              transition: "0.7s"
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = "rotateY(180deg)"}
+            onMouseLeave={(e) => e.currentTarget.style.transform = "rotateY(0deg)"}
+          >
+
+            {/* FRONT */}
+
+            <div style={{
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+              background: "#fff",
+              padding: "40px",
+              borderRadius: "16px",
+              boxShadow: "0 12px 35px rgba(0,0,0,0.08)",
+              backfaceVisibility: "hidden"
+            }}>
+
+              <i className="bi bi-lightning-charge-fill" style={{ fontSize: "40px", color: "#2b5fab" }}></i>
+
+              <div style={{ fontSize: "26px", fontWeight: "600", marginTop: "15px" }}>
+                Productivity
+              </div>
+
+              <p style={{ marginTop: "10px", color: "#555" }}>
+                Tools designed to improve team performance.
+              </p>
+
+              <div style={{ marginTop: "15px", lineHeight: "2" }}>
+                <div>✓ Task Automation</div>
+                <div>✓ Performance Tracking</div>
+                <div>✓ Team Collaboration</div>
+                <div>✓ Analytics Dashboard</div>
+              </div>
+
+            </div>
+
+
+            {/* BACK */}
+
+            <div style={{
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+              background: "#fff",
+              borderRadius: "16px",
+              transform: "rotateY(180deg)",
+              backfaceVisibility: "hidden",
+              overflow: "hidden"
+            }}>
+
+              <img
+                src="https://images.unsplash.com/photo-1551434678-e076c223a692"
+                style={{ width: "100%", height: "200px", objectFit: "cover" }}
+              />
+
+              <div style={{ padding: "25px" }}>
+
+                <h3>Boost Productivity</h3>
+
+                <p style={{ color: "#555" }}>
+                  Smart workflow automation tools that help teams work faster and smarter.
+                </p>
+
+                <div style={{ marginTop: "10px", lineHeight: "1.8" }}>
+                  <div>✔ Workflow automation</div>
+                  <div>✔ Performance tracking</div>
+                  <div>✔ Team collaboration</div>
+                  <div>✔ Business analytics</div>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+
+
+        {/* CRM CARD */}
+
+        <div style={{ perspective: "1000px" }}>
+          <div
+            style={{
+              position: "relative",
+              width: "360px",
+              height: "420px",
+              transformStyle: "preserve-3d",
+              transition: "0.7s"
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = "rotateY(180deg)"}
+            onMouseLeave={(e) => e.currentTarget.style.transform = "rotateY(0deg)"}
+          >
+
+            {/* FRONT */}
+
+            <div style={{
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+              background: "#fff",
+              padding: "40px",
+              borderRadius: "16px",
+              boxShadow: "0 12px 35px rgba(0,0,0,0.08)",
+              backfaceVisibility: "hidden"
+            }}>
+
+              <i className="bi bi-bar-chart-line-fill" style={{ fontSize: "40px", color: "#2b5fab" }}></i>
+
+              <div style={{ fontSize: "26px", fontWeight: "600", marginTop: "15px" }}>
+                CRM
+              </div>
+
+              <p style={{ marginTop: "10px", color: "#555" }}>
+                Customer relationship management system.
+              </p>
+
+              <div style={{ marginTop: "15px", lineHeight: "2" }}>
+                <div>✓ Customer Database</div>
+                <div>✓ Sales Tracking</div>
+                <div>✓ Lead Management</div>
+                <div>✓ Client Communication</div>
+              </div>
+
+            </div>
+
+
+            {/* BACK */}
+
+            <div style={{
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+              background: "#fff",
+              borderRadius: "16px",
+              transform: "rotateY(180deg)",
+              backfaceVisibility: "hidden",
+              overflow: "hidden"
+            }}>
+
+              <img
+                src="https://images.unsplash.com/photo-1551288049-bebda4e38f71"
+                style={{ width: "100%", height: "200px", objectFit: "cover" }}
+              />
+
+              <div style={{ padding: "25px" }}>
+
+                <h3>Customer Management</h3>
+
+                <p style={{ color: "#555" }}>
+                  Track leads, manage customer data and improve sales performance.
+                </p>
+
+                <div style={{ marginTop: "10px", lineHeight: "1.8" }}>
+                  <div>✔ Lead pipeline tracking</div>
+                  <div>✔ Customer interaction history</div>
+                  <div>✔ Sales analytics</div>
+                  <div>✔ Client communication tools</div>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+
+      </div>
+    </>
+
   );
 };
 
@@ -913,7 +1113,7 @@ const Landing = () => {
   return (
     <div className='min-vh-100 d-flex flex-column'>
       <style>{animationStyles}</style>
-      
+
       <Navbar />
 
       {/* Hero Carousel */}
@@ -1000,7 +1200,7 @@ const Landing = () => {
           ))}
         </Slider>
       </section>
-        <div className="py-4">
+      <div className="py-4">
         <AIRecruiterBody />
       </div>
 
@@ -1009,17 +1209,13 @@ const Landing = () => {
         <HowItWorksSection />
       </section>
 
-      <WhatWeOfferSection />
+      {/* The duplicate "What We Offer" section has been removed */}
 
-      {/* Add AIRecruiterBody here with spacing */}
-    
-
-     
       <section id='platform-features' className='px-3 px-md-5'>
         <ClientFeaturesSection clients={clients} />
       </section>
 
-     
+
 
       {/* About Us */}
       <section className='py-3 py-md-5'>
@@ -1253,7 +1449,7 @@ const Landing = () => {
 
       {/* Testimonials */}
       <section className='container px-3 pb-5'>
-       <h3 className='display-6 display-md-5 fw-bold mb-3 mb-md-4 text-primary text-center'>AI Recruiter, CRM, Productivity & HRMS</h3>
+        <h3 className='display-6 display-md-5 fw-bold mb-3 mb-md-4 text-primary text-center'>AI Recruiter, CRM, Productivity & HRMS</h3>
 
         <Slider {...carouselSettings}>
           {[
@@ -1283,10 +1479,10 @@ const Landing = () => {
             },
           ].map((card, i) => (
             <div key={i} className='px-2'>
-              <div 
-                className='card border-0 shadow-sm text-center position-relative' 
+              <div
+                className='card border-0 shadow-sm text-center position-relative'
                 style={{
-                  minHeight: '200px', 
+                  minHeight: '200px',
                   height: '100%',
                   transition: 'all 0.3s ease',
                   cursor: 'pointer',
@@ -1337,11 +1533,11 @@ const Landing = () => {
                   <h2 className='text-white fw-bold mb-0' style={{ fontSize: '2rem', lineHeight: '1.2' }}>
                     <span style={{ fontSize: '1.9rem' }}>5 KEY</span><br />
                     <span>BENEFITS OF </span><br />
-                    <span>AI IN</span><br/>
+                    <span>AI IN</span><br />
                     <span style={{ fontSize: '3.0rem' }}>RECRUITMENT</span>
                   </h2>
                 </div>
-                
+
                 <div className='d-flex justify-content-center align-items-center' style={{ flex: 1 }}>
                   <Bot size={120} color="white" style={{ opacity: 0.9 }} />
                 </div>
@@ -1426,7 +1622,7 @@ const Landing = () => {
           <div className='text-center text-black mb-4 mb-md-5'>
             <h3 className='display-6 display-md-5 fw-bold text-primary text-center'> Pricing & Plans</h3>
           </div>
- 
+
           <div className='d-flex justify-content-center mb-5'>
             <div
               className='position-relative d-flex align-items-center'
@@ -1450,11 +1646,10 @@ const Landing = () => {
                   zIndex: 1
                 }}
               />
-             
+
               <button
-                className={`position-relative border-0 bg-transparent px-4 py-2 fw-bold text-uppercase ${
-                  !isYearly ? 'text-white' : 'text-dark'
-                }`}
+                className={`position-relative border-0 bg-transparent px-4 py-2 fw-bold text-uppercase ${!isYearly ? 'text-white' : 'text-dark'
+                  }`}
                 style={{
                   borderRadius: '20px',
                   fontSize: '14px',
@@ -1465,11 +1660,10 @@ const Landing = () => {
               >
                 MONTHLY
               </button>
-             
+
               <button
-                className={`position-relative border-0 bg-transparent px-4 py-2 fw-bold text-uppercase ${
-                  isYearly ? 'text-white' : 'text-dark'
-                }`}
+                className={`position-relative border-0 bg-transparent px-4 py-2 fw-bold text-uppercase ${isYearly ? 'text-white' : 'text-dark'
+                  }`}
                 style={{
                   borderRadius: '20px',
                   fontSize: '14px',
@@ -1517,7 +1711,7 @@ const Landing = () => {
                     >
                       {plan.name}
                     </div>
- 
+
                     <div className='card-body p-3 p-md-4 pt-4 pt-md-5'>
                       <div className='text-center mb-3 mb-md-4'>
                         <h4
@@ -1531,7 +1725,7 @@ const Landing = () => {
                           <span className='fs-6 text-black'>/{isYearly ? 'year' : 'mon'}</span>
                         </h4>
                       </div>
- 
+
                       <div className='mb-4'>
                         {plan.features.map((feature, featureIndex) => (
                           <div
@@ -1555,7 +1749,7 @@ const Landing = () => {
                           </div>
                         ))}
                       </div>
- 
+
                       <div className='text-center'>
                         <Link to='/pricing' >
                           <button
@@ -1616,7 +1810,7 @@ const Landing = () => {
                       <span>PLANS?</span>
                     </h2>
                   </div>
-                  
+
                   <div className='d-flex justify-content-center align-items-center' style={{ flex: 1 }}>
                     <BarChart3 size={100} color="white" style={{ opacity: 0.9 }} />
                   </div>
@@ -1719,8 +1913,8 @@ const Landing = () => {
                   answer: "Our AI-powered platform automates screening, scheduling, and candidate communication, freeing you to focus on building relationships."
                 }
               ].map((item, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className='card border-0 shadow-sm rounded-3 bg-white'
                   style={{
                     transition: 'all 0.3s ease',
@@ -1764,7 +1958,7 @@ const Landing = () => {
                         transition: 'max-height 0.3s ease, opacity 0.3s ease'
                       }}
                     >
-                      <p className='text-secondary-light mb-0 lh-base' style={{color:"#030108ff"}}>{item.answer}</p>
+                      <p className='text-secondary-light mb-0 lh-base' style={{ color: "#030108ff" }}>{item.answer}</p>
                     </div>
                   </div>
                 </div>
@@ -1851,7 +2045,7 @@ const Landing = () => {
 
       {/* CTA */}
       <section className='container pb-5 px-3'>
-        <div 
+        <div
           className='card bg-primary text-white border-0'
           style={{
             transition: 'all 0.3s ease'
@@ -1871,8 +2065,8 @@ const Landing = () => {
               <p className='mb-0 text-white small'>Start free, then choose a plan that scales with your team.</p>
             </div>
             <div className='d-flex align-items-center gap-2 w-100 w-md-auto justify-content-center'>
-              <Link 
-                to='/login' 
+              <Link
+                to='/login'
                 className='btn btn-light btn-sm'
                 style={{
                   transition: 'all 0.3s ease'
@@ -1888,8 +2082,8 @@ const Landing = () => {
               >
                 Get Started
               </Link>
-              <Link 
-                to='/pricing' 
+              <Link
+                to='/pricing'
                 className='btn btn-outline-light btn-sm'
                 style={{
                   transition: 'all 0.3s ease'
@@ -1932,7 +2126,7 @@ const Landing = () => {
                   placeholder='Enter your email'
                   style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: 'none', color: 'white' }}
                 />
-                <button 
+                <button
                   className='btn btn-primary btn-sm'
                   style={{
                     transition: 'all 0.3s ease'
@@ -1956,8 +2150,8 @@ const Landing = () => {
               <ul className='list-unstyled'>
                 {['Products', 'Trials', 'Services', 'Industries', 'Case studies', 'Financing'].map((item, idx) => (
                   <li key={idx} className='mb-2'>
-                    <a 
-                      href='#' 
+                    <a
+                      href='#'
                       className='text-white text-decoration-none small'
                       style={{
                         transition: 'all 0.3s ease',
@@ -1984,8 +2178,8 @@ const Landing = () => {
               <ul className='list-unstyled'>
                 {['Engage Consulting', 'Support', 'Find a partner', 'Developers', 'Business Partners'].map((item, idx) => (
                   <li key={idx} className='mb-2'>
-                    <a 
-                      href='#' 
+                    <a
+                      href='#'
                       className='text-white text-decoration-none small'
                       style={{
                         transition: 'all 0.3s ease',
