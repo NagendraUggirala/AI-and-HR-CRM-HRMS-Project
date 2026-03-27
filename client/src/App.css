@@ -135,6 +135,12 @@
   width: 800px;
   max-width: 95%;
 }
+
+/* Wider dialog for job preview / detail (e.g. CreateJob preview, full job view) */
+.job-modal-dialog-xl {
+  width: 95vw;
+  max-width: 1100px;
+}
  
 .job-modal-content {
   background: #fff;
@@ -882,7 +888,20 @@
 .create-job-preview-modal-overlay .modal-dialog {
   margin: auto;
   max-width: 900px;
-  width: 100%;
+  width: 95vw;
+}
+
+.create-job-preview-modal-overlay .modal-content {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.create-job-preview-modal-overlay .modal-body {
+  overflow-y: auto;
+  flex: 1 1 auto;
+  padding: 20px;
 }
 
 /* Required field asterisk */

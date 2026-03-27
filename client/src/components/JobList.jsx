@@ -24,7 +24,6 @@ const JobsListPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
-  const [recruiterFilter, setRecruiterFilter] = useState('All');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [selectedJobs, setSelectedJobs] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -316,9 +315,8 @@ const JobsListPage = () => {
     }
 
     const matchesStatus = statusFilter === 'All' || job.status === statusFilter;
-    const matchesLocation = recruiterFilter === 'All' || job.recruiter === recruiterFilter;
-
-    return matchesSearch && matchesDate && matchesStatus && matchesLocation;
+ 
+    return matchesSearch && matchesDate && matchesStatus;
   });
 
   // Pagination calculations
@@ -339,7 +337,7 @@ const JobsListPage = () => {
   // Reset to page 1 when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, departmentFilter, statusFilter, recruiterFilter]);
+  }, [searchTerm, departmentFilter, statusFilter]);
 
   const handleExport = () => {
     const csv = [
@@ -663,16 +661,7 @@ const JobsListPage = () => {
                 <option>On Hold</option>
               </select>
 
-              <select className="form-select w-auto" value={recruiterFilter} onChange={e => setRecruiterFilter(e.target.value)}>
-                <option>All</option>
-                <option>New York</option>
-                <option>Los Angeles</option>
-                <option>Chicago</option>
-                <option>Houston</option>
-                <option>Phoenix</option>
-                <option>Remote</option>
-              </select>
-
+              
               <div className="d-flex gap-2">
                 <button className="sync-btn d-inline-flex align-items-center gap-2" onClick={handleExport}>
                   <Icon icon="heroicons:document-arrow-down" style={{ width: 16, height: 16 }} />

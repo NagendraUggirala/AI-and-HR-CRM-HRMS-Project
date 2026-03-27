@@ -7,7 +7,7 @@ const ProtectedRoute = ({ children, requiredRole = null, superAdminOnly = false 
 
   useEffect(() => {
     const userRole = getUserRole();
-    const loginPath = superAdminOnly ? '/super-admin/login' : '/login';
+    const loginPath = '/login';
 
     // Check if user is authenticated
     if (!userRole) {
@@ -19,7 +19,7 @@ const ProtectedRoute = ({ children, requiredRole = null, superAdminOnly = false 
     // Check for Super Admin only routes
     if (superAdminOnly && userRole !== 'superadmin') {
       alert('Access denied. Super Admin only.');
-      navigate('/super-admin/login');
+      navigate('/login');
       return;
     }
 

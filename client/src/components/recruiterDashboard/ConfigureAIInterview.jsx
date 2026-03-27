@@ -56,7 +56,7 @@ const ConfigureAIInterview = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setTemplates(data || []);
@@ -286,14 +286,14 @@ const ConfigureAIInterview = () => {
       ) : templates.length === 0 ? (
         <div className="card shadow-none border">
           <div className="card-body text-center py-5">
-            <div className="d-flex align-items-center justify-content-center gap-2 mb-3">
+            <div className="d-flex flex-column align-items-center justify-content-center gap-2 mb-3">
               <Settings size={48} className="text-secondary-light" />
-              <div>
-                <h6 className="text-secondary-light mb-1">No Templates Yet</h6>
-                <p className="text-secondary-light text-sm mb-0">
-                  Create your first AI interview template to get started.
-                </p>
-              </div>
+
+              <h6 className="text-secondary-light mb-1">No Templates Yet</h6>
+              <p className="text-secondary-light text-sm mb-0">
+                Create your first AI interview template to get started.
+              </p>
+
             </div>
           </div>
         </div>
@@ -387,11 +387,11 @@ const ConfigureAIInterview = () => {
         </div>
       )}
 
-    
+
 
       {/* Create/Edit Template Modal */}
       {showModal && (
-        <div className="modal fade show" style={{display: 'block', backgroundColor: 'rgba(0,0,0,0.5)'}} onClick={() => setShowModal(false)}>
+        <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={() => setShowModal(false)}>
           <div className="modal-dialog modal-lg modal-dialog-scrollable" onClick={(e) => e.stopPropagation()}>
             <div className="modal-content">
               <div className="modal-header">
@@ -458,7 +458,7 @@ const ConfigureAIInterview = () => {
                 {/* Questions */}
                 <div className="mb-3">
                   <label className="form-label">Questions</label>
-                  
+
                   {/* Question List */}
                   {formData.questions.length > 0 && (
                     <div className="mb-3">
@@ -496,7 +496,7 @@ const ConfigureAIInterview = () => {
                           className="form-control"
                           placeholder="Enter question..."
                           value={newQuestion.q}
-                          onChange={(e) => setNewQuestion({...newQuestion, q: e.target.value})}
+                          onChange={(e) => setNewQuestion({ ...newQuestion, q: e.target.value })}
                         />
                       </div>
                       <div className="mb-3">
@@ -505,7 +505,7 @@ const ConfigureAIInterview = () => {
                           rows="2"
                           placeholder="Sample answer (optional)..."
                           value={newQuestion.a}
-                          onChange={(e) => setNewQuestion({...newQuestion, a: e.target.value})}
+                          onChange={(e) => setNewQuestion({ ...newQuestion, a: e.target.value })}
                         />
                       </div>
                       <button

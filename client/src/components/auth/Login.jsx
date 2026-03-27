@@ -44,9 +44,41 @@ const Login = () => {
  
       if (response.ok) {
         localStorage.setItem('token', data.access_token);
-        localStorage.setItem('refreshToken', data.refresh_token);
-        localStorage.setItem('userRole', data.role);
-        localStorage.setItem('userEmail', data.email);
+
+        if (data.refresh_token) {
+          localStorage.setItem('refreshToken', data.refresh_token);
+        } else {
+          localStorage.removeItem('refreshToken');
+        }
+
+        let resolvedRole = data.role;
+        let resolvedEmail = data.email;
+
+        // Fallback for older backend payloads: fetch current user to resolve role routing.
+        if ((!resolvedRole || !resolvedEmail) && data.access_token) {
+          try {
+            const meResponse = await fetch(`${BASE_URL}${API_ENDPOINTS.AUTH.CURRENT_USER}`, {
+              headers: {
+                'Authorization': `Bearer ${data.access_token}`
+              }
+            });
+            if (meResponse.ok) {
+              const meData = await meResponse.json();
+              resolvedRole = resolvedRole || meData.role;
+              resolvedEmail = resolvedEmail || meData.email;
+            }
+          } catch (meError) {
+            console.error('Failed to fetch current user after login:', meError);
+          }
+        }
+
+        if (!resolvedRole) {
+          setError('Login succeeded but role is missing. Please contact admin.');
+          return;
+        }
+
+        localStorage.setItem('userRole', resolvedRole);
+        localStorage.setItem('userEmail', resolvedEmail || formData.email);
  
         if (rememberMe) {
           localStorage.setItem('rememberMe', 'true');
@@ -54,7 +86,7 @@ const Login = () => {
           localStorage.removeItem('rememberMe');
         }
  
-        if (data.role === 'superadmin') {
+        if (resolvedRole === 'superadmin') {
           navigate('/super-admin');
         } else {
           navigate('/dashboard');

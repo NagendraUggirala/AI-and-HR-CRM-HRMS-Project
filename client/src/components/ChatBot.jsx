@@ -3,8 +3,7 @@ import {
   FaComments,
   FaPaperPlane,
   FaTimes,
-  FaRobot,
-  FaUser
+  FaRobot
 } from "react-icons/fa";
 
 const ChatBot = () => {
@@ -12,26 +11,38 @@ const ChatBot = () => {
     const text = message.toLowerCase();
 
     if (text.includes("hello") || text.includes("hi")) {
-      return "Hi 👋 How can I help you today?";
+      return "Hi 👋 I'm your AI assistant for HR, CRM & HRMS. How can I help you today?";
     }
 
-    if (text.includes("hostel")) {
-      return "We help manage hostels, PGs, bookings, rent & complaints.";
+    if (text.includes("hr") || text.includes("human resource") || text.includes("employee")) {
+      return "This platform covers HR: recruitment, leave, payroll, and employee management. Use the sidebar to open the section you need.";
+    }
+
+    if (text.includes("crm") || text.includes("deal") || text.includes("lead")) {
+      return "CRM helps you manage deals, contacts, companies, and activities. Check the CRM menu for Deals, Contacts, and Activities.";
+    }
+
+    if (text.includes("hrms") || text.includes("leave") || text.includes("payroll") || text.includes("attendance")) {
+      return "HRMS includes leave requests, payroll, attendance, and workforce management. Navigate via the HRMS / Recruiter sections.";
+    }
+
+    if (text.includes("job") || text.includes("recruit") || text.includes("candidate")) {
+      return "You can post jobs, view candidates, and manage the hiring pipeline from the Jobs and Recruiter Dashboard sections.";
+    }
+
+    if (text.includes("help") || text.includes("support")) {
+      return "I can help with HR, CRM, and HRMS questions. Ask about jobs, candidates, deals, contacts, leave, or payroll.";
     }
 
     if (text.includes("contact")) {
-      return "You can contact us at support@hostelapp.com 📧";
+      return "CRM Contacts are in the CRM menu. For app support, use the contact or support options or reach out to your administrator.";
     }
 
-    if (text.includes("price") || text.includes("cost")) {
-      return "Pricing depends on hostel size. Please contact our team 💼";
-    }
-
-    return "I'm not sure 🤔 Can you please rephrase?";
+    return "I'm your AI assistant for this HR, CRM & HRMS platform. Ask about jobs, recruitment, deals, contacts, leave, or HRMS features.";
   };
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { from: "bot", text: "Hello 👋 I’m HostelBot. How can I help you?" }
+    { from: "bot", text: "Hello 👋 I’m AI HR & CRM Assistant. Ask me about jobs, recruitment, deals, contacts, or HR features." }
   ]);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef(null);
@@ -75,7 +86,7 @@ const ChatBot = () => {
           <div className="bg-blue-600 text-white px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FaRobot />
-              <span className="font-semibold">HostelBot</span>
+              <span className="font-semibold">AI HR & CRM Assistant</span>
             </div>
             <button onClick={() => setOpen(false)}>
               <FaTimes />
@@ -109,7 +120,7 @@ const ChatBot = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-              placeholder="Type a message..."
+              placeholder="Ask about HR, CRM, jobs, or HRMS..."
               className="flex-1 px-4 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button

@@ -21,10 +21,19 @@ export const apiCall = async (endpoint, options = {}) => {
     
     // Handle successful responses
     if (response.ok) {
-      // Check if response has content
+      // 204 No Content (e.g. DELETE) has no body - do not call .json()
+      if (response.status === 204) {
+        return null;
+      }
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
-        return await response.json();
+        const text = await response.text();
+        if (!text || !text.trim()) return null;
+        try {
+          return JSON.parse(text);
+        } catch (_) {
+          return null;
+        }
       }
       return null;
     } else {
@@ -396,6 +405,25 @@ export const assessmentAPI = {
   // List assignments
   listAssignments: () =>
     apiCall('/assignments'),
+
+  // Resume screening preselected candidates (user-scoped)
+  savePreselectedCandidates: (candidateIds = [], candidateEmails = []) =>
+    apiCall('/assignments/preselect-candidates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        candidate_ids: candidateIds,
+        candidate_emails: candidateEmails
+      })
+    }),
+
+  getPreselectedCandidates: () =>
+    apiCall('/assignments/preselect-candidates'),
+
+  clearPreselectedCandidates: () =>
+    apiCall('/assignments/preselect-candidates', {
+      method: 'DELETE'
+    }),
 
   // List assignments with actual completion status
   listAssignmentsWithStatus: () =>
@@ -823,17 +851,17 @@ export const leadsAPI = {
     if (filters.company) params.append('company', filters.company);
     if (filters.owner) params.append('owner', filters.owner);
     const queryString = params.toString();
-    const url = queryString ? `/leads/?${queryString}` : '/leads/';
+    const url = queryString ? `/api/leads/?${queryString}` : '/api/leads/';
     return apiCall(url);
   },
 
   // Get lead by ID
   getById: (id) =>
-    apiCall(`/leads/${id}`),
+    apiCall(`/api/leads/${id}`),
 
   // Create lead
   create: (leadData) =>
-    apiCall('/leads/', {
+    apiCall('/api/leads/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(leadData)
@@ -841,7 +869,7 @@ export const leadsAPI = {
 
   // Update lead
   update: (id, leadData) =>
-    apiCall(`/leads/${id}`, {
+    apiCall(`/api/leads/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(leadData)
@@ -849,7 +877,7 @@ export const leadsAPI = {
 
   // Delete lead
   delete: (id) =>
-    apiCall(`/leads/${id}`, {
+    apiCall(`/api/leads/${id}`, {
       method: 'DELETE'
     })
 };
@@ -1076,6 +1104,17 @@ export const crmPipelinesAPI = {
 // ADMIN APIs
 // ==========================================
 export const adminAPI = {
+  // Compatibility users list: preferred legacy path, then current API path
+  listUsersCompat: async () => {
+    try {
+      const legacyUsers = await apiCall('/admin/user/list');
+      if (Array.isArray(legacyUsers)) return legacyUsers;
+    } catch (_) {
+      // Fallback to current API contract
+    }
+    return apiCall('/api/admin/superadmin/users');
+  },
+
   // Get all users
   getUsers: () => 
     apiCall('/api/admin/users'),

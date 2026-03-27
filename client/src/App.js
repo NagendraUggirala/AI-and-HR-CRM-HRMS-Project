@@ -8,7 +8,6 @@ import PricingPage from './components/auth/PricingPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminPanel from './components/recruiterDashboard/AdminPanel';
 import SuperAdminPanel from './components/superAdmin/SuperAdminPanel';
-import SuperAdminLogin from './components/superAdmin/SuperAdminLogin';
 import SuperAdminLayout from './components/superAdmin/SuperAdminLayout';
 import MultiTenantSetup from './components/superAdmin/MultiTenantSetup';
 import RolesPermissions from './components/superAdmin/RolesPermissions';
@@ -1558,8 +1557,6 @@ const App = () => {
 
       {/* AI Interview Portal - Public Route */}
       <Route path='/ai-interview' element={<AIInterviewPortal />} />
-
-      <Route path='/login' element={<SuperAdminLogin />} />
 
       {/* Super Admin Routes */}
       <Route

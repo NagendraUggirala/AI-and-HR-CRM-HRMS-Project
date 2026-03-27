@@ -84,7 +84,11 @@ const Leads = () => {
     };
 
     leads.forEach((lead) => {
-      const status = lead.status || "Not Contacted";
+      // Backend returns "Not_Contacted"; Kanban uses "Not Contacted"
+      const status =
+        lead.status === "Not_Contacted"
+          ? "Not Contacted"
+          : lead.status || "Not Contacted";
       if (kanban[status]) {
         kanban[status].leads.push({
           ...lead,
@@ -256,6 +260,7 @@ const Leads = () => {
       leadName: "",
       leadType: "organization",
       company: "",
+      location: "",
       value: "",
       currency: "Select",
       customCurrency: "",
@@ -304,11 +309,28 @@ const Leads = () => {
         }
       }
 
+      // Map backend enum values to form values (backend: "Not_Contacted", form: "Not Contacted")
+      const statusForForm =
+        fullLeadData.status === "Not_Contacted"
+          ? "Not Contacted"
+          : fullLeadData.status || "Not Contacted";
+      const vis = fullLeadData.visibility || "Private";
+      const visibilityForForm =
+        vis === "Private"
+          ? "private"
+          : vis === "Public"
+            ? "public"
+            : "select_people";
+      const tagsForForm = Array.isArray(fullLeadData.tags)
+        ? fullLeadData.tags.join(", ")
+        : fullLeadData.tags || "";
+
       // Map backend field names to frontend form field names
       setFormData({
         leadName: fullLeadData.name || lead.name || "",
         company: fullLeadData.company || "",
-        value: fullLeadData.value || "",
+        location: fullLeadData.location || "",
+        value: fullLeadData.value != null ? String(fullLeadData.value) : "",
         currency: predefinedCurrencies.includes(fullLeadData.currency)
           ? fullLeadData.currency
           : fullLeadData.currency
@@ -339,10 +361,10 @@ const Leads = () => {
         customOwner: owners.includes(fullLeadData.owner)
           ? ""
           : fullLeadData.owner || "",
-        tags: fullLeadData.tags || "",
+        tags: tagsForForm,
         description: fullLeadData.description || "",
-        visibility: fullLeadData.visibility || "private",
-        status: fullLeadData.status || "Not Contacted",
+        visibility: visibilityForForm,
+        status: statusForForm,
       });
 
       setShowAddLeadModal(true);
@@ -388,12 +410,55 @@ const Leads = () => {
       setError(null);
       setLoading(true);
 
+      // Map frontend status to backend enum (backend uses "Not_Contacted" with underscore)
+      const statusForApi =
+        formData.status === "Not Contacted"
+          ? "Not_Contacted"
+          : formData.status || "Not_Contacted";
+
+      // Map frontend visibility to backend enum (PascalCase: Private, Team, Public)
+      const visibilityMap = {
+        private: "Private",
+        public: "Public",
+        select_people: "Team",
+      };
+      const visibilityForApi =
+        visibilityMap[formData.visibility] ||
+        (formData.visibility ? formData.visibility.charAt(0).toUpperCase() + formData.visibility.slice(1).toLowerCase() : "Private");
+
+      // Parse value to number; backend expects Optional[int]
+      const rawValue = formData.value
+        ? String(formData.value).replace(/[^0-9.-]/g, "")
+        : "";
+      const numValue = rawValue === "" ? null : parseFloat(rawValue);
+      const valueForApi =
+        numValue != null && !isNaN(numValue) && numValue >= 0
+          ? Math.round(numValue)
+          : null;
+
+      // Tags: backend expects List[str]; convert comma-separated string to array
+      const tagsForApi = formData.tags
+        ? formData.tags
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : [];
+
+      // Currency: send null when "Select" or empty
+      const currencyForApi =
+        !formData.currency || formData.currency === "Select"
+          ? null
+          : formData.currency === "Other"
+            ? formData.customCurrency || null
+            : formData.currency;
+
       // Prepare lead data for API - map frontend fields to backend schema
       const leadData = {
-        name: formData.leadName || "Untitled Lead", // Backend expects 'name', not 'leadName'
+        name: formData.leadName || "Untitled Lead",
         company: formData.company || null,
-        value: formData.value ? String(formData.value) : null, // Backend expects string
-        currency: formData.currency || null,
+        location: formData.location || null,
+        value: valueForApi,
+        currency: currencyForApi,
         phone: formData.phone || null,
         email: formData.email || null,
         source:
@@ -404,15 +469,15 @@ const Leads = () => {
             : formData.industry,
         owner:
           formData.owner === "Other" ? formData.customOwner : formData.owner,
-        tags: formData.tags || null, // Backend expects string
+        tags: tagsForApi,
         description: formData.description || null,
-        visibility: formData.visibility || "private",
-        status: formData.status || "Not Contacted",
+        visibility: visibilityForApi,
+        status: statusForApi,
       };
 
-      // Remove empty strings and convert to null
+      // Remove empty strings and convert to null (do not overwrite value 0 or tags array)
       Object.keys(leadData).forEach((key) => {
-        if (leadData[key] === "" || leadData[key] === undefined) {
+        if (key !== "tags" && (leadData[key] === "" || leadData[key] === undefined)) {
           leadData[key] = null;
         }
       });
@@ -800,7 +865,7 @@ const Leads = () => {
                 <div
                   key={statusItem.status}
                   className="col-lg-3 col-md-6"
-                  style={{ minWidth: "320px", width: "fit-content" }}
+                  style={{ minWidth: "320px" }}
                 >
                   <div
                     className="card"
@@ -812,9 +877,9 @@ const Leads = () => {
                       paddingRight: "0px",
                       paddingBottom: "0px",
                       paddingTop: "0px",
-                      width: "fit-content",
-                      minWidth: "300px",
-                      height: "fit-content",
+                      width: "100%",
+                      minWidth: "320px",
+                      height: "100%",
                     }}
                   >
                     <div className="card-header bg-white border-bottom">
@@ -889,8 +954,8 @@ const Leads = () => {
                             <div
                               className="card border-0 shadow-sm"
                               style={{
-                                width: "fit-content",
-                                minWidth: "280px",
+                                width: "100%",
+                                minWidth: "0",
                               }}
                             >
                               <div
@@ -936,7 +1001,7 @@ const Leads = () => {
                                     <div className="d-flex align-items-center mb-1">
                                       <i className="ti ti-mail text-muted me-2"></i>
                                       <span
-                                        className="text-muted"
+                                        className="text-muted text-truncate"
                                         style={{ fontSize: "0.9rem" }}
                                       >
                                         {lead.email}
@@ -947,7 +1012,7 @@ const Leads = () => {
                                     <div className="d-flex align-items-center mb-1">
                                       <i className="ti ti-phone text-muted me-2"></i>
                                       <span
-                                        className="text-muted"
+                                        className="text-muted text-truncate"
                                         style={{ fontSize: "0.9rem" }}
                                       >
                                         {lead.phone}
@@ -958,7 +1023,7 @@ const Leads = () => {
                                     <div className="d-flex align-items-center mb-1">
                                       <i className="ti ti-map-pin text-muted me-2"></i>
                                       <span
-                                        className="text-muted"
+                                        className="text-muted text-truncate"
                                         style={{ fontSize: "0.9rem" }}
                                       >
                                         {lead.location}
@@ -966,14 +1031,8 @@ const Leads = () => {
                                     </div>
                                   )}
                                 </div>
-                                <div className="d-flex align-items-center justify-content-between border-top pt-2">
-                                  <button
-                                    type="button"
-                                    className="avatar avatar-sm avatar-rounded flex-shrink-0 bg-light d-flex align-items-center justify-content-center"
-                                  >
-                                    <i className="ti ti-building-warehouse fs-6 text-primary"></i>
-                                  </button>
-                                  <div className="d-flex align-items-center gap-1">
+                                <div className="d-flex align-items-center justify-content-end border-top pt-2">
+                                  <div className="d-flex align-items-center gap-2">
                                     <button
                                       type="button"
                                       className="btn btn-sm btn-primary"
@@ -982,7 +1041,7 @@ const Leads = () => {
                                       style={{
                                         fontSize: "12px",
                                         padding: "4px 10px",
-                                        minWidth: "65px",
+                                        minWidth: "78px",
                                       }}
                                     >
                                       <i className="ti ti-edit me-1"></i>Edit
@@ -995,7 +1054,7 @@ const Leads = () => {
                                       style={{
                                         fontSize: "12px",
                                         padding: "4px 10px",
-                                        minWidth: "75px",
+                                        minWidth: "78px",
                                       }}
                                     >
                                       <i className="ti ti-trash me-1"></i>Delete
@@ -1161,6 +1220,26 @@ const Leads = () => {
                           New
                         </button>
                       </div>
+                    </div>
+                  </div>
+
+                  <div className="col-md-12">
+                    <div className="mb-3">
+                      <label
+                        className="form-label d-inline-block mb-2"
+                        style={{ minWidth: "120px" }}
+                      >
+                        Location
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        style={{ height: "40px" }}
+                        placeholder="Enter location"
+                        name="location"
+                        value={formData.location || ""}
+                        onChange={handleFormChange}
+                      />
                     </div>
                   </div>
 
@@ -1631,7 +1710,12 @@ const Leads = () => {
               >
                 Cancel
               </button>
-              <button type="submit" className="create-job-btn">
+              <button
+                type="submit"
+                form="add_leads"
+                className="create-job-btn"
+                disabled={loading}
+              >
                 {modalType === "add" ? "Add Lead" : "Save Changes"}
               </button>
             </div>

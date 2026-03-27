@@ -796,15 +796,23 @@ const CreateJob = () => {
       {showPreview && (
         <>
           <div className='modal-backdrop fade show' style={{ zIndex: 1045 }} />
-          <div className='create-job-preview-modal-overlay' tabIndex='-1' role='dialog' onClick={() => setShowPreview(false)}>
-            <div className='modal-dialog modal-xl' role='document' onClick={e => e.stopPropagation()}>
-              <div className='modal-content'>
-                <div className='modal-header'>
-                  <h6 className='modal-title mb-0'>Job Preview</h6>
-                  <button type='button' className='btn-close' aria-label='Close' onClick={() => setShowPreview(false)} />
+          <div className='job-modal-overlay' tabIndex='-1' role='dialog' onClick={() => setShowPreview(false)}>
+            <div className='job-modal-dialog job-modal-dialog-xl' role='document' onClick={e => e.stopPropagation()}>
+              <div className='job-modal-content'>
+                <div className='job-modal-header'>
+                  <div>
+                    <p className='job-modal-subtitle'>Preview</p>
+                    <h5 className='job-modal-title mb-0'>Job Preview</h5>
+                  </div>
+                  <button type='button' className='job-modal-close' onClick={() => setShowPreview(false)} aria-label='Close'>&times;</button>
                 </div>
-                <div className='modal-body'>
+                <div className='job-modal-body job-preview-modal-wrapper'>
                   <JobPreview />
+                </div>
+                <div className='job-modal-footer'>
+                  <button type='button' className='job-btn-secondary' onClick={() => setShowPreview(false)}>
+                    Close
+                  </button>
                 </div>
               </div>
             </div>
@@ -813,42 +821,37 @@ const CreateJob = () => {
       )}
 
       {showSuccessModal && (
-        <>
-          <div className='modal d-block' tabIndex='-1' role='dialog'>
-            <div className='modal-dialog' role='document'>
-              <div className='modal-content'>
-                <div className='modal-body text-center p-24'>
-                  <div className='rounded-circle bg-success-subtle d-inline-flex align-items-center justify-content-center mb-16 w-64-px h-64-px'>
-                    <CheckCircle size={28} className='text-success' />
-                  </div>
-                  <h6 className='mb-4'>
-                    {isEditMode
-                      ? (isDraft ? 'Draft Saved!' : 'Job Updated Successfully!')
-                      : (isDraft ? 'Draft Saved!' : 'Job Posted Successfully!')}
-                  </h6>
-                  <p className='text-secondary-light mb-16'>
-                    {isEditMode
-                      ? (isDraft
-                        ? 'Your job draft has been saved. You can continue editing it later.'
-                        : 'Your job changes have been saved successfully.')
-                      : (isDraft
-                        ? 'Your job draft has been saved. You can continue editing it later.'
-                        : 'Your job listing is now live and candidates can apply.')}
-                  </p>
-                  <div className='d-flex justify-content-center gap-2'>
-                    <button type='button' className='btn btn-link' onClick={() => setShowSuccessModal(false)}>
-                      {isDraft ? 'Continue Editing' : 'Post Another Job'}
-                    </button>
-                    <button type='button' className='btn btn-primary' onClick={() => setShowSuccessModal(false)}>
-                      {isDraft ? 'Go to Drafts' : 'View Job'}
-                    </button>
-                  </div>
-                </div>
+        <div className='hrms-modal-overlay' role='dialog' aria-modal='true'>
+          <div className='hrms-modal hrms-modal-sm' role='document' onClick={e => e.stopPropagation()}>
+            <div className='hrms-modal-body text-center p-24'>
+              <div className='rounded-circle bg-success-subtle d-inline-flex align-items-center justify-content-center mb-16 w-64-px h-64-px'>
+                <CheckCircle size={28} className='text-success' />
+              </div>
+              <h6 className='mb-4'>
+                {isEditMode
+                  ? (isDraft ? 'Draft Saved!' : 'Job Updated Successfully!')
+                  : (isDraft ? 'Draft Saved!' : 'Job Posted Successfully!')}
+              </h6>
+              <p className='text-secondary-light mb-16'>
+                {isEditMode
+                  ? (isDraft
+                    ? 'Your job draft has been saved. You can continue editing it later.'
+                    : 'Your job changes have been saved successfully.')
+                  : (isDraft
+                    ? 'Your job draft has been saved. You can continue editing it later.'
+                    : 'Your job listing is now live and candidates can apply.')}
+              </p>
+              <div className='d-flex justify-content-center gap-2'>
+                <button type='button' className='btn btn-link' onClick={() => setShowSuccessModal(false)}>
+                  {isDraft ? 'Continue Editing' : 'Post Another Job'}
+                </button>
+                <button type='button' className='btn btn-primary' onClick={() => setShowSuccessModal(false)}>
+                  {isDraft ? 'Go to Drafts' : 'View Job'}
+                </button>
               </div>
             </div>
           </div>
-          <div className='modal-backdrop fade show'></div>
-        </>
+        </div>
       )}
     </div>
   );

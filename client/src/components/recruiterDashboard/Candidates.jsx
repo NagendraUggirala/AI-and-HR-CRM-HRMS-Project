@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import { AlertCircle, Upload, CheckCircle, XCircle, FileText } from 'lucide-react';
 import CandidateProfilePage from './CandidateProfilePage';
-import { BASE_URL } from '../../config/api.config';
+import { BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import '../../App.css';
 
 const CandidatesPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedCandidates, setSelectedCandidates] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -16,16 +17,51 @@ const CandidatesPage = () => {
     skills: '',
     job: '',
     stage: '',
-    recruiter: ''
+    aiScreened: ''
   });
   const [showCandidateModal, setShowCandidateModal] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
 
   // Backend integration
   const [candidates, setCandidates] = useState([]);
+  const [jobsData, setJobsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Fetch jobs from backend (for "All Jobs" filter options; same source as JobList.jsx)
+  const fetchJobs = async () => {
+    const token = localStorage.getItem('token');
+
+    if (!token) return;
+
+    try {
+      const url = `${BASE_URL}${API_ENDPOINTS.JOBS.LIST}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const transformedJobs = Array.isArray(data)
+          ? data.map(job => ({
+              id: job.id,
+              title: (job.title || '').toString().trim(),
+              department: job.department || '',
+              status: job.status || ''
+            }))
+          : [];
+        setJobsData(transformedJobs);
+      }
+    } catch (err) {
+      // Non-blocking: candidates table should still work even if job list fails.
+      console.error('❌ Error fetching jobs for filters:', err);
+    }
+  };
 
   // AI Screening state
   const [aiScreening, setAiScreening] = useState({
@@ -112,7 +148,7 @@ const CandidatesPage = () => {
     }
 
     try {
-      const response = await fetch(`${BASE_URL}/api/resume/candidates`, {
+      const response = await fetch(`${BASE_URL}/api/resume/candidates?limit=1000&show_all=true`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -152,7 +188,16 @@ const CandidatesPage = () => {
   useEffect(() => {
     fetchCandidates();
     fetchAIScreenedCandidates();
+    fetchJobs();
   }, []);
+
+  // If PipelineOverview redirects here with a stage, apply it to the Stage filter.
+  useEffect(() => {
+    const stageFromNav = location.state?.stage;
+    if (stageFromNav) {
+      setFilters(prev => ({ ...prev, stage: String(stageFromNav).toLowerCase() }));
+    }
+  }, [location.state?.stage]);
 
   const insights = {
     total: candidates.length,
@@ -196,6 +241,23 @@ const CandidatesPage = () => {
     return colors[status] || 'text-secondary';
   };
 
+  // Job options for the filter dropdown.
+  // Prefer real jobs list (same as JobList.jsx). If it fails/empty, fall back to candidate roles.
+  const jobFilterOptions = React.useMemo(() => {
+    const titlesFromJobs = jobsData
+      .map(j => j.title)
+      .filter(Boolean);
+
+    const titlesFromCandidates = candidates
+      .map(c => (c.role || '').toString().trim())
+      .filter(Boolean);
+
+    const uniqueTitles = Array.from(new Set((titlesFromJobs.length ? titlesFromJobs : titlesFromCandidates)))
+      .sort((a, b) => a.localeCompare(b));
+
+    return uniqueTitles;
+  }, [jobsData, candidates]);
+
   // Filter candidates based on search and filters
   const filteredCandidates = candidates.filter(candidate => {
     const matchesSearch = candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -206,13 +268,20 @@ const CandidatesPage = () => {
       skill.toLowerCase().includes(filters.skills.toLowerCase())
     );
     
-    const matchesJob = !filters.job || candidate.role.toLowerCase().includes(filters.job.toLowerCase());
+    const matchesJob =
+      !filters.job ||
+      candidate.role.toLowerCase().trim() === filters.job.toLowerCase().trim();
     
     const matchesStage = !filters.stage || candidate.stage.toLowerCase() === filters.stage.toLowerCase();
     
-    const matchesRecruiter = !filters.recruiter || filters.recruiter === 'AI'; // All candidates are managed by AI
+    const isAiScreened =
+      (candidate.resume_screened || '').toString().toLowerCase().trim() === 'yes' ||
+      aiScreenedEmails.has(candidate.email?.toLowerCase().trim());
+    const matchesAiScreened =
+      !filters.aiScreened ||
+      (filters.aiScreened === 'yes' ? isAiScreened : !isAiScreened);
     
-    return matchesSearch && matchesSkills && matchesJob && matchesStage && matchesRecruiter;
+    return matchesSearch && matchesSkills && matchesJob && matchesStage && matchesAiScreened;
   });
 
   const totalPages = Math.ceil(filteredCandidates.length / itemsPerPage);
@@ -288,7 +357,7 @@ const CandidatesPage = () => {
     // Check which candidates have already been screened
     try {
       const token = localStorage.getItem('token');
-      const aiScreenedResponse = await fetch(`${BASE_URL}/api/resume/candidates`, {
+      const aiScreenedResponse = await fetch(`${BASE_URL}/api/resume/candidates?limit=1000&show_all=true`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -393,6 +462,9 @@ const CandidatesPage = () => {
         formData.append('file', resumeBlob, fileName);
         formData.append('role', candidate.role);
         formData.append('experience_level', 'mid'); // Default, can be enhanced
+        // Link screening result back to the same Candidate row (by id) to avoid email mismatches from resume extraction.
+        formData.append('candidate_id', String(candidate.id));
+        formData.append('candidate_email', candidate.email || '');
 
         // Send to AI screening endpoint
         const screeningResponse = await fetch(`${BASE_URL}/api/resume/process`, {
@@ -403,27 +475,56 @@ const CandidatesPage = () => {
         if (screeningResponse.ok) {
           const result = await screeningResponse.json();
           results.push({
+            candidateId: candidate.id,
             candidate: candidate.name,
             status: result.status,
             score: result.score,
             email_status: result.email_status,
             message: `Score: ${result.score.toFixed(1)}% - ${result.status}`
           });
+
+          // Backend/database: resume/process API already updated Candidate, candidate_records, and Application tables with stage (Rejected/Applied) and resume_screened.
+          // Update UI immediately so the row reflects new stage and AI SCREENED = Yes without waiting for refetch.
+          const nextStage = result.status === 'rejected' ? 'Rejected' : 'Applied';
+          setCandidates(prev =>
+            prev.map(c =>
+              c.id === candidate.id
+                ? {
+                    ...c,
+                    stage: nextStage,
+                    status:
+                      nextStage === 'Rejected'
+                        ? 'Completed'
+                        : nextStage === 'Interview'
+                          ? 'In Progress'
+                          : nextStage === 'Offer'
+                            ? 'Awaiting Decision'
+                            : 'Pending',
+                    resume_screened: 'yes'
+                  }
+                : c
+            )
+          );
         } else {
-          const errorData = await screeningResponse.json();
+          const errorData = await screeningResponse.json().catch(() => ({}));
           results.push({
+            candidateId: candidate.id,
             candidate: candidate.name,
             status: 'error',
             message: errorData.detail || 'Processing failed'
           });
+          // Do not force stage to Rejected for generic errors.
+          // Keep the existing stage and let backend remain the source of truth.
         }
       } catch (error) {
         console.error(`Error processing ${candidate.name}:`, error);
         results.push({
+          candidateId: candidate.id,
           candidate: candidate.name,
           status: 'error',
           message: 'Network error'
         });
+        // Keep existing stage on network errors; do not force a rejection in UI.
       }
 
       // Small delay between requests to avoid overwhelming the server
@@ -441,9 +542,10 @@ const CandidatesPage = () => {
 
     // Clear selection after processing
     setSelectedCandidates([]);
-    
-    // Refresh the AI screened candidates list
-    fetchAIScreenedCandidates();
+
+    // Sync frontend with backend/DB: stage and resume_screened are already updated in DB by resume/process API; refetch so list and Pipeline stay in sync.
+    await fetchCandidates();
+    await fetchAIScreenedCandidates();
   };
 
   const closeAIScreeningModal = () => {
@@ -480,6 +582,7 @@ const CandidatesPage = () => {
               setRefreshing(true);
               await fetchCandidates();
               await fetchAIScreenedCandidates();
+              await fetchJobs();
               setRefreshing(false);
             }}
             disabled={refreshing}
@@ -637,12 +740,11 @@ const CandidatesPage = () => {
                 onChange={(e) => setFilters(prev => ({ ...prev, job: e.target.value }))}
               >
                 <option value="">All Jobs</option>
-                <option value="frontend">Frontend Developer</option>
-                <option value="backend">Backend Engineer</option>
-                <option value="qa">QA Engineer</option>
-                <option value="designer">UI Designer</option>
-                <option value="data">Data Analyst</option>
-                <option value="devops">DevOps Engineer</option>
+                {jobFilterOptions.map((title) => (
+                  <option key={title} value={title}>
+                    {title}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="col-6 col-md-4 col-lg-2">
@@ -661,14 +763,15 @@ const CandidatesPage = () => {
               </select>
             </div>
             <div className="col-6 col-md-4 col-lg-2">
-              <label className="form-label small text-muted mb-1">Recruiter</label>
+              <label className="form-label small text-muted mb-1">AI SCREENED</label>
               <select
                 className="form-select"
-                value={filters.recruiter}
-                onChange={(e) => setFilters(prev => ({ ...prev, recruiter: e.target.value }))}
+                value={filters.aiScreened}
+                onChange={(e) => setFilters(prev => ({ ...prev, aiScreened: e.target.value }))}
               >
                 <option value="">All</option>
-                <option value="AI">AI</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
               </select>
             </div>
             <div className="col-12 col-md-6 col-lg-2 d-flex justify-content-md-end">
@@ -984,7 +1087,7 @@ const CandidatesPage = () => {
                 ) : (
                   <>
                     {/* Completed State */}
-                    <div className="text-center mb-4">
+                    <div className="text-center mb-4 justify-items-center">
                       <CheckCircle size={48} className="text-success mb-3" />
                       <h5 className="mb-2">Screening Complete!</h5>
                       <p className="text-secondary-light">

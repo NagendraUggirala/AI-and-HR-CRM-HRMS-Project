@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Edit } from 'lucide-react';
 import { adminAPI } from '../../utils/api';
 import { BASE_URL } from '../../config/api.config';
@@ -13,6 +13,7 @@ const SuperAdminPanel = () => {
   const [filterRole, setFilterRole] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const hasFetchedRef = useRef(false);
   const [formData, setFormData] = useState({
     name: '',
     username: '',
@@ -34,32 +35,41 @@ const SuperAdminPanel = () => {
         return;
       }
 
-      // Fetch summary
-      const summaryResponse = await fetch(`${BASE_URL}/api/admin/superadmin/summary`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const usersList = await adminAPI.listUsersCompat();
+      const normalizedUsers = Array.isArray(usersList) ? usersList : [];
+      setUsers(normalizedUsers);
 
-      if (summaryResponse.ok) {
-        const summaryData = await summaryResponse.json();
-        setSummary(summaryData);
-        setUsers(summaryData.users || []);
-      } else {
-        const errorText = await summaryResponse.text();
-        setError('Failed to fetch admin data');
-        console.error('Error fetching summary:', errorText);
+      try {
+        const summaryData = await adminAPI.getSummary();
+        if (summaryData && typeof summaryData === 'object') {
+          setSummary({
+            total_users: Number(summaryData.total_users ?? normalizedUsers.length),
+            users: Array.isArray(summaryData.users) ? summaryData.users : normalizedUsers
+          });
+        } else {
+          setSummary({ total_users: normalizedUsers.length, users: normalizedUsers });
+        }
+      } catch (_) {
+        // If summary endpoint is unavailable, derive cards from users list.
+        setSummary({ total_users: normalizedUsers.length, users: normalizedUsers });
       }
     } catch (err) {
       console.error('Error fetching data:', err);
-      setError('Network error. Please check if backend is running.');
+      const message = String(err?.message || '');
+      if (message.includes('401') || message.includes('403') || message.toLowerCase().includes('permission')) {
+        setError('Access denied. Please login with a superadmin account.');
+      } else {
+        setError('Network error. Please check if backend is running.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    // Guard repeated DEV fetch caused by React.StrictMode double-invocation.
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
     fetchData();
   }, []);
 
@@ -468,7 +478,7 @@ const SuperAdminPanel = () => {
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         .spinner {
           animation: spin 1s linear infinite;
         }

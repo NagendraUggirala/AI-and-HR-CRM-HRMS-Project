@@ -8,10 +8,13 @@ import '../../App.css';
 const PipelineOverview = () => {
   const navigate = useNavigate();
   const [candidates, setCandidates] = useState([]);
+  const [resumeCandidates, setResumeCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStage, setSelectedStage] = useState('all');
+  /** Backend SCORE_THRESHOLD — never assume 25% */
+  const [screeningThreshold, setScreeningThreshold] = useState(null);
 
   // Fetch candidates data
   const fetchCandidates = async () => {
@@ -24,20 +27,83 @@ const PipelineOverview = () => {
     }
 
     try {
-      const response = await fetch(`${BASE_URL}/api/recruiter_dashboard/candidates`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // Load both: pipeline candidates + AI screening candidates (for Screening stage card)
+      const [candidatesRes, screeningRes, configRes] = await Promise.all([
+        fetch(`${BASE_URL}/api/recruiter_dashboard/candidates`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }),
+        fetch(`${BASE_URL}/api/resume/candidates?limit=1000&offset=0&show_all=true`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }),
+        fetch(`${BASE_URL}/api/resume/screening-config`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+      ]);
 
-      if (response.ok) {
-        const data = await response.json();
-        setCandidates(data);
-        setError(null);
+      let resolvedScreeningTh = null;
+      if (configRes.ok) {
+        try {
+          const cfg = await configRes.json();
+          const t = Number(cfg?.score_threshold);
+          if (Number.isFinite(t)) {
+            resolvedScreeningTh = t;
+            setScreeningThreshold(t);
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+
+      if (candidatesRes.ok) {
+        const data = await candidatesRes.json();
+        setCandidates(Array.isArray(data) ? data : []);
       } else {
+        setCandidates([]);
+      }
+
+      if (screeningRes.ok) {
+        const data = await screeningRes.json();
+        const inferStage = (r) => {
+          const th = r.threshold ?? resolvedScreeningTh;
+          if (th == null || !Number.isFinite(Number(th))) return 'Applied';
+          return Number(r.score) < Number(th) ? 'Rejected' : 'Applied';
+        };
+        const mapped = Array.isArray(data)
+          ? data.map((r) => ({
+              id: r.id,
+              name: r.candidate_name,
+              email: r.candidate_email,
+              role: r.role,
+              stage: r.stage || inferStage(r),
+              score: r.score,
+              threshold: r.threshold,
+              email_sent: r.email_sent,
+              resume_screened: r.resume_screened,
+              fullData: r
+            }))
+          : [];
+        setResumeCandidates(mapped);
+      } else {
+        setResumeCandidates([]);
+      }
+
+      // If both endpoints fail, show error; otherwise clear.
+      if (!candidatesRes.ok && !screeningRes.ok) {
         setError('Failed to fetch candidates');
+      } else {
+        setError(null);
       }
     } catch (err) {
       console.error('Pipeline fetch error:', err);
@@ -51,8 +117,62 @@ const PipelineOverview = () => {
     fetchCandidates();
   }, []);
 
+  const normalizeStage = (stage) => {
+    const value = (stage || '').toLowerCase();
+    if (value === 'applied') return 'Applied';
+    if (value === 'screening') return 'Screening';
+    if (value === 'interview') return 'Interview';
+    if (value === 'offer') return 'Offer';
+    if (value === 'hired') return 'Hired';
+    if (value === 'rejected') return 'Rejected';
+    return 'Applied';
+  };
+
+  const mergedCandidates = () => {
+    const byKey = new Map();
+
+    // Prefer recruiter dashboard candidate rows as primary source.
+    candidates.forEach((candidate) => {
+      const key = candidate.email?.toLowerCase().trim() || `candidate-id-${candidate.id}`;
+      byKey.set(key, {
+        ...candidate,
+        stage: normalizeStage(candidate.stage)
+      });
+    });
+
+    // Fill in missing candidates from resume screening without overwriting recruiter rows.
+    resumeCandidates.forEach((candidate) => {
+      const key = candidate.email?.toLowerCase().trim() || `resume-id-${candidate.id}`;
+      const resumeStage = normalizeStage(candidate.stage);
+      const resumeThreshold = Number.isFinite(Number(candidate.threshold))
+        ? Number(candidate.threshold)
+        : (Number.isFinite(screeningThreshold) ? screeningThreshold : null);
+      const resumeIsRejected =
+        resumeStage === 'Rejected' ||
+        (resumeThreshold != null && Number(candidate.score) < resumeThreshold);
+
+      if (!byKey.has(key)) {
+        byKey.set(key, {
+          ...candidate,
+          stage: resumeStage
+        });
+      } else if (resumeIsRejected) {
+        // If resume screening marks candidate as rejected, prefer that stage
+        // to avoid stale recruiter endpoint stage showing under non-rejected cards.
+        const existing = byKey.get(key);
+        byKey.set(key, {
+          ...existing,
+          stage: 'Rejected'
+        });
+      }
+    });
+
+    return Array.from(byKey.values());
+  };
+
   // Group candidates by stage
   const groupCandidatesByStage = () => {
+    const allCandidates = mergedCandidates();
     const stages = {
       'Applied': [],
       'Screening': [],
@@ -62,8 +182,8 @@ const PipelineOverview = () => {
       'Rejected': []
     };
 
-    candidates.forEach(candidate => {
-      const stage = candidate.stage || 'Applied';
+    allCandidates.forEach(candidate => {
+      const stage = normalizeStage(candidate.stage);
       if (stages[stage]) {
         stages[stage].push(candidate);
       }
@@ -74,13 +194,13 @@ const PipelineOverview = () => {
 
   // Filter candidates based on search and stage
   const getFilteredCandidates = () => {
-    let filtered = candidates;
+    let filtered = mergedCandidates();
 
     if (searchTerm) {
       filtered = filtered.filter(candidate =>
-        candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        candidate.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        candidate.email.toLowerCase().includes(searchTerm.toLowerCase())
+        (candidate.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (candidate.role || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (candidate.email || '').toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -122,7 +242,22 @@ const PipelineOverview = () => {
   };
 
   const StageCard = ({ stage, candidates, bgClass }) => (
-    <div className="card border shadow-none h-100">
+    <div
+      className="card border shadow-none h-100"
+      role="button"
+      tabIndex={0}
+      onClick={() => {
+        setSelectedStage(stage);
+        navigate('/candidates', { state: { stage } });
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          setSelectedStage(stage);
+          navigate('/candidates', { state: { stage } });
+        }
+      }}
+      style={{ cursor: 'pointer' }}
+    >
       <div className="card-body">
         <div className="d-flex align-items-center justify-content-between mb-3">
           <div className="d-flex align-items-center gap-2">
@@ -144,7 +279,11 @@ const PipelineOverview = () => {
             <button
               type="button"
               className="btn btn-link btn-sm p-0 text-primary text-start"
-              onClick={() => { setSelectedStage(stage); navigate('/candidates'); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedStage(stage);
+                navigate('/candidates', { state: { stage } });
+              }}
             >
               View {candidates.length - 3} more
             </button>
@@ -208,7 +347,7 @@ const PipelineOverview = () => {
       {/* KPI row - ref JobList */}
       <div className="kpi-row mb-4">
         {[
-          { title: 'Total Candidates', value: candidates.length, icon: 'heroicons:user-group', bg: 'kpi-primary', color: 'kpi-primary-text' },
+          { title: 'Total Candidates', value: Object.values(stages).reduce((sum, stageCandidates) => sum + stageCandidates.length, 0), icon: 'heroicons:user-group', bg: 'kpi-primary', color: 'kpi-primary-text' },
           { title: 'Applied', value: stages.Applied.length, icon: 'heroicons:user-plus', bg: 'kpi-info', color: 'kpi-info-text' },
           { title: 'In Interview', value: stages.Interview.length, icon: 'heroicons:chat-bubble-left-right', bg: 'kpi-warning', color: 'kpi-warning-text' },
           { title: 'Hired', value: stages.Hired.length, icon: 'heroicons:check-badge', bg: 'kpi-success', color: 'kpi-success-text' }
@@ -327,7 +466,7 @@ const PipelineOverview = () => {
                       type="button"
                       className="job-listings-btn"
                       title="View"
-                      onClick={() => navigate('/candidates')}
+                      onClick={() => navigate('/candidates', { state: { stage: selectedStage } })}
                     >
                       <Icon icon="heroicons:eye" />
                     </button>

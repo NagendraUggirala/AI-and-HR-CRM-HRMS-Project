@@ -18,7 +18,6 @@ const Contacts = () => {
   const [contactToDelete, setContactToDelete] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [selectedContacts, setSelectedContacts] = useState(new Set());
 
   // Load contacts from API
   useEffect(() => {
@@ -142,27 +141,6 @@ customLanguage: '',
     }));
   };
 
-  // Checkbox handlers for table selection
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      const allContactIds = new Set(contacts.map(c => c.id));
-      setSelectedContacts(allContactIds);
-    } else {
-      setSelectedContacts(new Set());
-    }
-  };
-
-  const handleSelectContact = (contactId) => {
-    setSelectedContacts(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(contactId)) {
-        newSet.delete(contactId);
-      } else {
-        newSet.add(contactId);
-      }
-      return newSet;
-    });
-  };
 
 const exportPDF = () => {
   const doc = new jsPDF();
@@ -421,8 +399,6 @@ const exportExcel = () => {
   saveAs(data, `contacts_${dateStr}.xlsx`);
 };
 
-  const isAllSelected = contacts.length > 0 && selectedContacts.size === contacts.length;
-  const isIndeterminate = selectedContacts.size > 0 && selectedContacts.size < contacts.length;
 
 
   const handleAddContact = () => {
@@ -768,7 +744,13 @@ customLanguage: predefinedLanguages.includes(contact.language)
   };
 
   return (
-    <div>
+    <div
+      style={{
+        backgroundColor: "#f4f6f8",
+        padding: "20px",
+        borderRadius: "12px",
+      }}
+    >
 
 
 
@@ -838,24 +820,16 @@ customLanguage: predefinedLanguages.includes(contact.language)
 </div>
       </div>
 
-      {/* Contact Table Header */}
-      <div className="card w-100 border-0 shadow-sm">
+      {/* Contact Grid Header */}
+      <div className="card w-100 p-2 border-0 shadow-sm" style={{ borderRadius: "12px" }}>
         <div className="card-body px-4 py-3 bg-white rounded-3">
           <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
 
-            {/* Left: Title + Selection Info */}
+            {/* Left: Title */}
             <div className="d-flex align-items-center gap-3">
               <h5 className="mb-0 fw-bold text-dark fs-6">
-                Contact Table
+                Contacts Grid
               </h5>
-
-              {selectedContacts.size > 0 && (
-                <span className="badge bg-primary bg-opacity-10 text-primary d-flex align-items-center gap-2 px-3 py-2 rounded-pill fw-medium">
-                  <i className="ti ti-check"></i>
-                  {selectedContacts.size}{" "}
-                  {selectedContacts.size === 1 ? "contact" : "contacts"} selected
-                </span>
-              )}
             </div>
 
             {/* Right: Sort Dropdown */}
@@ -911,351 +885,107 @@ customLanguage: predefinedLanguages.includes(contact.language)
       )}
 
 {!loading && contacts.length > 0 && (
-  <div className="card w-100">
-    <style>{`
-      .contact-table-checkbox {
-        appearance: none;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        width: 18px;
-        height: 18px;
-        border: 2px solid #d1d5db;
-        border-radius: 4px;
-        background-color: #fff;
-        cursor: pointer;
-        position: relative;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-      }
-      .contact-table-checkbox:checked {
-        background-color: #0d6efd;
-        border-color: #0d6efd;
-      }
-      .contact-table-checkbox:checked::after {
-        content: '✓';
-        color: #fff;
-        font-size: 14px;
-        font-weight: bold;
-        line-height: 1;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-      }
-      .contact-table-checkbox:indeterminate {
-        background-color: #0d6efd;
-        border-color: #0d6efd;
-      }
-      .contact-table-checkbox:indeterminate::after {
-        content: '−';
-        color: #fff;
-        font-size: 16px;
-        font-weight: bold;
-        line-height: 1;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-      }
-      .contact-table-checkbox:hover {
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1);
-      }
-      .contact-table-checkbox:focus {
-        outline: none;
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
-      }
-      .contact-avatar-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-      }
-      .contact-avatar-container img {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: cover;
-        object-position: center;
-      }
-      /* Table column width distribution */
-      .contacts-table th,
-      .contacts-table td {
-        vertical-align: middle;
-        padding: 1rem 0.75rem;
-      }
-      .contacts-table th {
-        font-weight: 600;
-        color: #4b5563;
-        background-color: #f9fafb;
-        border-bottom: 2px solid #e5e7eb;
-      }
-      .contacts-table td {
-        border-bottom: 1px solid #e5e7eb;
-      }
-    `}</style>
-    <div className="card-body p-0">
-      <div className="table-responsive">
-        <table className="table contacts-table" style={{ 
-          width: '100%',
-          borderCollapse: 'separate',
-          borderSpacing: 0
-        }}>
-          <thead>
-            <tr>
-              <th style={{ 
-                width: '3%', 
-                minWidth: '40px',
-                textAlign: 'center',
-                padding: '1rem 0.5rem'
-              }}>
-                <div className="d-flex justify-content-center align-items-center">
-                  <input
-                    className="contact-table-checkbox"
-                    type="checkbox"
-                    checked={isAllSelected}
-                    ref={(input) => {
-                      if (input) input.indeterminate = isIndeterminate;
-                    }}
-                    onChange={handleSelectAll}
-                    title={isAllSelected ? 'Unselect all' : 'Select all'}
-                  />
-                </div>
-              </th>
+  <div style={{ padding: "20px", backgroundColor: "#f4f6f8" }}>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+        gap: "20px",
+      }}
+    >
+      {contacts.map((c) => (
+        <div
+          key={c.id}
+          style={{
+            backgroundColor: "#f8fafc",
+            borderRadius: "14px",
+            padding: "18px",
+            boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+          }}
+        >
+          <div className="d-flex justify-content-start mb-3">
+            <div
+              style={{
+                width: "64px",
+                height: "64px",
+                borderRadius: "12px",
+                backgroundColor: "#e2e8f0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+              }}
+            >
+              <img
+                src={(() => {
+                  if (!c.profile_photo) return "/assets/images/users/user1.png";
+                  if (c.profile_photo.startsWith("http://") || c.profile_photo.startsWith("https://")) {
+                    return c.profile_photo;
+                  }
+                  if (c.profile_photo.startsWith("/")) {
+                    return `${BASE_URL}${c.profile_photo}`;
+                  }
+                  return `${BASE_URL}/${c.profile_photo}`;
+                })()}
+                alt={`${c.name || "Contact"}`}
+                style={{ width: "56px", height: "56px", objectFit: "cover", borderRadius: "8px" }}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/assets/images/users/user1.png";
+                }}
+              />
+            </div>
+          </div>
 
-              <th style={{ width: '18%', minWidth: '200px' }}>Contact</th>
-              <th style={{ width: '12%', minWidth: '150px' }}>Email</th>
-              <th style={{ width: '12%', minWidth: '140px' }}>Phone</th>
-              <th style={{ width: '12%', minWidth: '150px' }}>Company</th>
-              <th style={{ width: '10%', minWidth: '120px' }}>Job Title</th>
-              <th style={{ width: '12%', minWidth: '150px' }}>Location</th>
-              <th style={{ width: '10%', minWidth: '120px' }}>Industry</th>
-              <th style={{ width: '5%', minWidth: '70px', textAlign: 'center' }}>Rating</th>
-              <th style={{ 
-                width: '8%', 
-                minWidth: '160px',
-                textAlign: 'center'
-              }}>Actions</th>
-            </tr>
-          </thead>
+          <h5 style={{ fontSize: "18px", fontWeight: 600, marginBottom: "10px", lineHeight: "1.3" }}>
+            {[c.name, c.last_name].filter(Boolean).join(" ") || "Unnamed Contact"}
+          </h5>
 
-          <tbody>
-            {contacts.map((c) => (
-              <tr key={c.id} style={{ transition: 'background-color 0.2s' }}>
-                <td style={{ 
-                  textAlign: 'center',
-                  padding: '1rem 0.5rem'
-                }}>
-                  <div className="d-flex justify-content-center align-items-center">
-                    <input
-                      className="contact-table-checkbox"
-                      type="checkbox"
-                      checked={selectedContacts.has(c.id)}
-                      onChange={() => handleSelectContact(c.id)}
-                      title={selectedContacts.has(c.id) ? 'Unselect contact' : 'Select contact'}
-                    />
-                  </div>
-                </td>
-                
-                <td>
-                  <div className="d-flex align-items-center gap-2">
-                    <div
-                      className="avatar avatar-sm avatar-rounded flex-shrink-0"
-                      style={{
-                        width: '40px',
-                        height: '40px',
-                        overflow: 'hidden',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: '#f0f0f0',
-                        border: '2px solid #fff',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                      }}
-                    >
-                      <img
-                        src={(() => {
-                          if (!c.profile_photo) return '/assets/images/users/user1.png';
-                          if (c.profile_photo.startsWith('http://') || c.profile_photo.startsWith('https://')) {
-                            return c.profile_photo;
-                          }
-                          if (c.profile_photo.startsWith('/')) {
-                            return `${BASE_URL}${c.profile_photo}`;
-                          }
-                          return `${BASE_URL}/${c.profile_photo}`;
-                        })()}
-                        alt={`${c.name || 'Contact'}`}
-                        className="img-fluid"
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                          objectPosition: 'center',
-                          display: 'block'
-                        }}
-                        onError={(e) => {
-                          if (e.target.src !== '/assets/images/users/user1.png') {
-                            e.target.onerror = null;
-                            e.target.src = '/assets/images/users/user1.png';
-                          }
-                        }}
-                      />
-                    </div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div className="fw-medium text-truncate" style={{ fontWeight: 600, color: '#1f2937' }}>
-                        {c.name} {c.last_name || ''}
-                      </div>
-                      {c.owner && (
-                        <small className="text-muted d-flex align-items-center gap-1" style={{ fontSize: '0.75rem' }}>
-                          <i className="ti ti-user" style={{ fontSize: '0.75rem' }}></i>
-                          <span className="text-truncate">{c.owner}</span>
-                        </small>
-                      )}
-                    </div>
-                  </div>
-                </td>
-                
-                <td>
-                  {c.email ? (
-                    <div className="d-flex align-items-center gap-1">
-                      <i className="ti ti-mail text-gray-5 flex-shrink-0" style={{ color: '#6b7280', fontSize: '1rem' }}></i>
-                      <span className="text-truncate" style={{ color: '#4b5563' }} title={c.email}>
-                        {c.email}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-muted fst-italic">N/A</span>
-                  )}
-                </td>
-                
-                <td>
-                  <div className="d-flex flex-column" style={{ gap: '2px' }}>
-                    {c.phone_number ? (
-                      <div className="d-flex align-items-center gap-1">
-                        <i className="ti ti-phone text-gray-5 flex-shrink-0" style={{ color: '#6b7280', fontSize: '0.875rem' }}></i>
-                        <span className="text-truncate" style={{ color: '#4b5563' }}>{c.phone_number}</span>
-                      </div>
-                    ) : null}
-                    {c.phone_number2 ? (
-                      <div className="d-flex align-items-center gap-1">
-                        <i className="ti ti-phone text-gray-5 flex-shrink-0" style={{ color: '#9ca3af', fontSize: '0.75rem' }}></i>
-                        <span className="text-muted small text-truncate">{c.phone_number2}</span>
-                      </div>
-                    ) : null}
-                    {!c.phone_number && !c.phone_number2 && (
-                      <span className="text-muted fst-italic">N/A</span>
-                    )}
-                  </div>
-                </td>
-                
-                <td>
-                  {c.company_name ? (
-                    <div className="d-flex align-items-center gap-1">
-                      <i className="ti ti-building text-gray-5 flex-shrink-0" style={{ color: '#6b7280', fontSize: '1rem' }}></i>
-                      <span className="text-truncate" style={{ color: '#4b5563' }} title={c.company_name}>
-                        {c.company_name}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-muted fst-italic">N/A</span>
-                  )}
-                </td>
-                
-                <td>
-                  {c.job_title ? (
-                    <div className="d-flex align-items-center gap-1">
-                      <i className="ti ti-briefcase text-gray-5 flex-shrink-0" style={{ color: '#6b7280', fontSize: '1rem' }}></i>
-                      <span className="text-truncate" style={{ color: '#4b5563' }} title={c.job_title}>
-                        {c.job_title}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-muted fst-italic">N/A</span>
-                  )}
-                </td>
-                
-                <td>
-                  {c.location || c.city || c.state || c.country ? (
-                    <div className="d-flex align-items-center gap-1">
-                      <i className="ti ti-map-pin text-gray-5 flex-shrink-0" style={{ color: '#6b7280', fontSize: '1rem' }}></i>
-                      <span className="text-truncate" style={{ color: '#4b5563' }} title={[c.location, c.city, c.state, c.country].filter(Boolean).join(', ')}>
-                        {[c.location, c.city, c.state, c.country].filter(Boolean).join(', ') || 'N/A'}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-muted fst-italic">N/A</span>
-                  )}
-                </td>
-                
-                <td>
-                  {c.industry ? (
-                    <div className="d-flex align-items-center gap-1">
-                      <i className="ti ti-category text-gray-5 flex-shrink-0" style={{ color: '#6b7280', fontSize: '1rem' }}></i>
-                      <span className="text-truncate" style={{ color: '#4b5563' }} title={c.industry}>
-                        {c.industry}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-muted fst-italic">N/A</span>
-                  )}
-                </td>
-                
-                <td style={{ textAlign: 'center' }}>
-                  {c.ratings ? (
-                    <div className="d-flex align-items-center justify-content-center gap-1">
-                      <i className="ti ti-star-filled text-warning" style={{ fontSize: '1rem' }}></i>
-                      <span style={{ color: '#4b5563', fontWeight: 500 }}>{c.ratings}</span>
-                    </div>
-                  ) : (
-                    <span className="text-muted">-</span>
-                  )}
-                </td>
-                
-                <td style={{ textAlign: 'center' }}>
-                  <div className="d-flex align-items-center justify-content-center gap-2">
-                    <button
-                      className="btn btn-sm btn-primary d-inline-flex align-items-center gap-1"
-                      onClick={() => handleEditContact(c)}
-                      title="Edit Contact"
-                      type="button"
-                      style={{
-                        padding: '0.375rem 0.75rem',
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        borderRadius: '6px',
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      <i className="ti ti-edit" style={{ fontSize: '1rem' }}></i>
-                      <span className="d-none d-sm-inline">Edit</span>
-                    </button>
-                    <button
-                      className="btn btn-sm btn-danger d-inline-flex align-items-center gap-1"
-                      onClick={() => handleDeleteContact(c)}
-                      title="Delete Contact"
-                      type="button"
-                      style={{
-                        padding: '0.375rem 0.75rem',
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        borderRadius: '6px',
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      <i className="ti ti-trash" style={{ fontSize: '1rem' }}></i>
-                      <span className="d-none d-sm-inline">Delete</span>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          <div style={{ fontSize: "14px", color: "#475569", lineHeight: "1.8", flexGrow: 1 }}>
+            <div><strong style={{ color: "#000" }}>Email:</strong> {c.email || "N/A"}</div>
+            <div><strong style={{ color: "#000" }}>Phone:</strong> {c.phone_number || c.phone_number2 || "N/A"}</div>
+            <div><strong style={{ color: "#000" }}>Company:</strong> {c.company_name || "N/A"}</div>
+            <div><strong style={{ color: "#000" }}>Job:</strong> {c.job_title || "N/A"}</div>
+            <div><strong style={{ color: "#000" }}>Location:</strong> {[c.location, c.city, c.state, c.country].filter(Boolean).join(", ") || "N/A"}</div>
+            <div><strong style={{ color: "#000" }}>Industry:</strong> {c.industry || "N/A"}</div>
+            <div className="d-flex align-items-center gap-2">
+              <strong style={{ color: "#000" }}>Rating:</strong>
+              <span style={{ color: "#f59e0b", fontWeight: 600 }}>
+                <i className="ti ti-star-filled me-1"></i>{c.ratings || 0}
+              </span>
+            </div>
+          </div>
+
+          <div className="d-flex justify-content-around gap-2 mt-3">
+            <button
+              className="btn btn-sm btn-primary d-flex align-items-center justify-content-center"
+              onClick={() => handleEditContact(c)}
+              title="Edit Contact"
+              type="button"
+              style={{ fontSize: "12px", padding: "6px 14px", minWidth: "70px" }}
+            >
+              <Icon icon="heroicons:pencil-square" className="me-1" width="16" />
+              Edit
+            </button>
+            <button
+              className="btn btn-sm btn-danger d-flex align-items-center justify-content-center"
+              onClick={() => handleDeleteContact(c)}
+              title="Delete Contact"
+              type="button"
+              style={{ fontSize: "12px", padding: "6px 14px", minWidth: "80px" }}
+            >
+              <Icon icon="heroicons:trash" className="me-1" width="16" />
+              Delete
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+    <div className="d-flex justify-content-center align-items-center" style={{ height: "70px" }}>
+      <button className="close-btn">Load More</button>
     </div>
   </div>
 )}

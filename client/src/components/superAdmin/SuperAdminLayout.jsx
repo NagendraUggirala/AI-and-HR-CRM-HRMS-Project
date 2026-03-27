@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { logout } from '../../utils/auth';
 import { Icon } from '@iconify/react/dist/iconify.js';
 
 const SuperAdminLayout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarActive, setSidebarActive] = useState(false);
+  const [mobileMenu, setMobileMenu] = useState(false);
 
   const handleLogout = () => {
     logout();
-    navigate('/super-admin/login');
+    navigate('/login');
   };
 
   const menuItems = [
@@ -52,84 +53,105 @@ const SuperAdminLayout = ({ children }) => {
     }
   ];
 
+  const activeStyles = `
+    .sidebar-menu li > a.active-page {
+      background-color: #0d6efd !important;
+      color: #fff !important;
+      border-radius: 8px;
+    }
+    .sidebar-menu li > a.active-page .menu-icon {
+      color: #fff !important;
+    }
+  `;
+
+  const sidebarControl = () => setSidebarActive(!sidebarActive);
+  const mobileMenuControl = () => setMobileMenu(!mobileMenu);
+
   return (
-    <div className="min-vh-100 bg-light d-flex">
-      {/* Sidebar */}
-      <aside 
-        className={`bg-white border-end shadow-sm transition-all ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}
-        style={{
-          width: sidebarOpen ? '260px' : '80px',
-          minHeight: '100vh',
-          position: 'sticky',
-          top: 0,
-          transition: 'width 0.3s ease',
-          zIndex: 1000
-        }}
-      >
-        <div className="p-3 border-bottom">
-          <div className="d-flex align-items-center justify-content-between">
-            {sidebarOpen && (
-              <Link to="/super-admin" className="text-decoration-none">
-                <img src="/assets/images/168X40.jpeg" alt="logo" style={{ height: '32px' }} />
-              </Link>
-            )}
-            <button
-              className="btn btn-sm btn-outline-secondary"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
-              <Icon icon={sidebarOpen ? 'heroicons:bars-3-bottom-left' : 'heroicons:bars-3'} />
-            </button>
-          </div>
-        </div>
-
-        <nav className="p-2">
-          {menuItems.map((item, index) => (
-            <Link
-              key={index}
-              to={item.link}
-              className={`d-flex align-items-center gap-3 p-3 mb-1 rounded text-decoration-none transition ${
-                item.active
-                  ? 'bg-primary text-white'
-                  : 'text-dark hover-bg-light'
-              }`}
-              style={{
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <Icon icon={item.icon} style={{ fontSize: '20px', minWidth: '20px' }} />
-              {sidebarOpen && <span className="fw-medium">{item.title}</span>}
+    <>
+      <style>{activeStyles}</style>
+      <section className={mobileMenu ? 'overlay active' : 'overlay'}>
+        <aside
+          className={
+            sidebarActive
+              ? 'sidebar active'
+              : mobileMenu
+                ? 'sidebar sidebar-open'
+                : 'sidebar'
+          }
+        >
+          <button onClick={() => setMobileMenu(!mobileMenu)} type='button' className='sidebar-close-btn'>
+            <Icon icon='radix-icons:cross-2' />
+          </button>
+          <div>
+            <Link to='/super-admin' className='sidebar-logo'>
+              <img src='/assets/images/168X40.jpeg' alt='site logo' className='light-logo' />
+              <img src='/assets/images/168X40.jpeg' alt='site logo' className='logo-icon' />
             </Link>
-          ))}
-        </nav>
-      </aside>
+          </div>
+          <div className='sidebar-menu-area'>
+            <ul className='sidebar-menu' id='sidebar-menu'>
+              {menuItems.map((item, index) => (
+                <li key={index}>
+                  <NavLink to={item.link} className={item.active ? 'active-page' : ''}>
+                    <Icon icon={item.icon} className='menu-icon' />
+                    <span>{item.title}</span>
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
 
-      {/* Main Content */}
-      <div className="flex-grow-1 d-flex flex-column" style={{ minWidth: 0 }}>
-        {/* Header */}
-        <header className="bg-white border-bottom shadow-sm">
-          <div className="container-fluid d-flex align-items-center justify-content-between py-3">
-            <div>
-              <div className="fw-semibold text-dark">Super Admin Portal</div>
-              <small className="text-muted">Manage system-wide recruitment access</small>
-            </div>
-            <div className="d-flex gap-2 align-items-center">
-              <span className="text-muted small">
-                {localStorage.getItem('userEmail') || 'Super Admin'}
-              </span>
-              <button type="button" className="btn btn-danger btn-sm" onClick={handleLogout}>
-                <Icon icon="heroicons:arrow-right-on-rectangle" className="me-1" />
-                Logout
-              </button>
+        <main className={(sidebarActive ? 'dashboard-main active ' : 'dashboard-main') + ' bg-neutral-50'}>
+          <div className='navbar-header bg-base' style={{ minHeight: '90px' }}>
+            <div className='row align-items-center justify-content-between'>
+              <div className='col-auto'>
+                <div className='d-flex flex-wrap align-items-center gap-4'>
+                  <button type='button' className='sidebar-toggle' onClick={sidebarControl}>
+                    {sidebarActive ? (
+                      <Icon icon='iconoir:arrow-right' className='icon text-2xl non-active' />
+                    ) : (
+                      <Icon icon='heroicons:bars-3-solid' className='icon text-2xl non-active ' />
+                    )}
+                  </button>
+                  <button onClick={mobileMenuControl} type='button' className='sidebar-mobile-toggle'>
+                    <Icon icon='heroicons:bars-3-solid' className='icon' />
+                  </button>
+                  <div className='d-none d-md-block lh-sm'>
+                    <h6 className='mb-1 fw-semibold text-dark'>Super Admin Portal</h6>
+                    <span className='text-secondary-light fw-medium text-sm d-block'>
+                      Manage system-wide recruitment access
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className='col-auto'>
+                <div className='d-flex flex-wrap align-items-center gap-3'>
+                  <div className='d-none d-md-flex align-items-center'>
+                    <span
+                      className='text-muted small text-truncate'
+                      style={{ maxWidth: '280px' }}
+                      title={localStorage.getItem('userEmail') || 'Super Admin'}
+                    >
+                      {localStorage.getItem('userEmail') || 'Super Admin'}
+                    </span>
+                  </div>
+                  <button type='button' className='btn btn-danger btn-sm d-flex align-items-center' onClick={handleLogout}>
+                    <Icon icon='heroicons:arrow-right-on-rectangle' className='me-1' />
+                    Logout
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </header>
 
-        {/* Page Content */}
-        <main className="flex-grow-1" style={{ overflow: 'auto' }}>
-          {children}
+          <div className='dashboard-main-body bg-neutral-50'>
+            {children}
+          </div>
         </main>
-      </div>
-    </div>
+      </section>
+    </>
   );
 };
 

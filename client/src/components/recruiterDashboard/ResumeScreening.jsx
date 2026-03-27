@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import { Upload, FileText, CheckCircle, XCircle, Mail, Briefcase, AlertCircle, Eye } from 'lucide-react';
 import { BASE_URL } from '../../config/api.config';
+import { assessmentAPI } from '../../utils/api';
 import '../../App.css';
 
 const ResumeScreening = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(location.state?.tab || 'candidates');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null);
@@ -18,6 +20,63 @@ const ResumeScreening = () => {
     experienceLevel: 'fresher'
   });
   const [errors, setErrors] = useState({});
+  const [selectedCandidateIds, setSelectedCandidateIds] = useState([]);
+  const [loadedPreselectedCount, setLoadedPreselectedCount] = useState(0);
+  const [preselectedCandidateIds, setPreselectedCandidateIds] = useState([]);
+  /** Server SCORE_THRESHOLD (from .env); never hardcode 25 — must match backend. */
+  const [screeningThreshold, setScreeningThreshold] = useState(null);
+
+  useEffect(() => {
+    // Load candidates preselected from Resume Screening selection (saved for Assign Assessment)
+    assessmentAPI
+      .getPreselectedCandidates()
+      .then((data) => {
+        const ids = (data?.candidate_ids || []).map((id) => Number(id)).filter((n) => Number.isFinite(n));
+        setPreselectedCandidateIds(ids);
+      })
+      .catch(() => {
+        setPreselectedCandidateIds([]);
+        setLoadedPreselectedCount(0);
+      });
+  }, []);
+
+  useEffect(() => {
+    // When both candidates list and preselected IDs are ready, sync selection
+    if (!candidates || candidates.length === 0) return;
+    if (!preselectedCandidateIds || preselectedCandidateIds.length === 0) return;
+    if (selectedCandidateIds.length > 0) return; // respect current user selection
+
+    const matchedIds = candidates
+      .map((c) => Number(c.id))
+      .filter((id) => preselectedCandidateIds.includes(id));
+
+    setSelectedCandidateIds(matchedIds);
+    setLoadedPreselectedCount(matchedIds.length);
+  }, [candidates, preselectedCandidateIds, selectedCandidateIds.length]);
+
+  // Load threshold from API (same source as candidate rows' `threshold` field)
+  useEffect(() => {
+    const loadScreeningConfig = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      try {
+        const res = await fetch(`${BASE_URL}/api/resume/screening-config`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const t = Number(data?.score_threshold);
+          if (Number.isFinite(t)) setScreeningThreshold(t);
+        }
+      } catch (e) {
+        console.warn('Could not load screening-config:', e);
+      }
+    };
+    loadScreeningConfig();
+  }, []);
 
   // Fetch AI-screened candidates
   const fetchCandidates = async () => {
@@ -57,6 +116,11 @@ const ResumeScreening = () => {
         }
         
         setCandidates(data);
+        // Keep only currently visible selected candidates.
+        setSelectedCandidateIds((prev) => {
+          const visibleIds = new Set((data || []).map((c) => c.id));
+          return prev.filter((id) => visibleIds.has(id));
+        });
       } else {
         const errorText = await response.text();
         console.error('❌ Failed to fetch candidates. Status:', response.status);
@@ -159,6 +223,21 @@ const ResumeScreening = () => {
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const getCandidateThreshold = (candidate) => {
+    const threshold = Number(candidate?.threshold);
+    if (Number.isFinite(threshold)) return threshold;
+    if (Number.isFinite(screeningThreshold)) return screeningThreshold;
+    return null;
+  };
+
+  const isCandidateShortlisted = (candidate) => {
+    const stage = (candidate?.stage || '').toLowerCase();
+    if (stage) return stage !== 'rejected';
+    const th = getCandidateThreshold(candidate);
+    if (th == null) return false;
+    return Number(candidate?.score) >= th;
   };
 
   const renderUploadTab = () => {
@@ -348,8 +427,69 @@ const ResumeScreening = () => {
   };
 
   const renderCandidatesTab = () => {
+    const toggleCandidateSelection = (candidateId) => {
+      setSelectedCandidateIds((prev) =>
+        prev.includes(candidateId) ? prev.filter((id) => id !== candidateId) : [...prev, candidateId]
+      );
+    };
+
+    const allVisibleSelected = candidates.length > 0 && selectedCandidateIds.length === candidates.length;
+
+    const handleSelectAllVisible = () => {
+      if (allVisibleSelected) {
+        setSelectedCandidateIds([]);
+        return;
+      }
+      setSelectedCandidateIds(candidates.map((c) => c.id));
+    };
+
+    const handleAssignAssessment = async () => {
+      if (selectedCandidateIds.length === 0) {
+        alert('Please select at least one candidate to assign assessments.');
+        return;
+      }
+      try {
+        const selectedCandidates = candidates.filter((c) => selectedCandidateIds.includes(c.id));
+        await assessmentAPI.savePreselectedCandidates(
+          selectedCandidates.map((c) => c.id),
+          selectedCandidates.map((c) => c.candidate_email).filter(Boolean)
+        );
+        navigate('/recruiter/assign-assessment');
+      } catch (error) {
+        console.error('Failed to prepare selected candidates:', error);
+        alert('Failed to load selected candidates for assignment.');
+      }
+    };
+
     return (
       <div className="card border shadow-none mb-4">
+        <div className="card-header bg-transparent border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <span className="small text-muted">
+            Selected: <span className="fw-semibold text-dark">{selectedCandidateIds.length}</span>
+          </span>
+        </div>
+        {loadedPreselectedCount > 0 && (
+          <div className="alert alert-info mb-3 d-flex align-items-center justify-content-between mx-3">
+            <span>Loaded {loadedPreselectedCount} candidates from Resume Screening selection.</span>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary"
+              onClick={async () => {
+                try {
+                  await assessmentAPI.clearPreselectedCandidates();
+                } catch (e) {
+                  console.warn('Failed to clear preselected candidates:', e);
+                } finally {
+                  setPreselectedCandidateIds([]);
+                  setLoadedPreselectedCount(0);
+                  setSelectedCandidateIds([]);
+                }
+              }}
+            >
+              Clear preselected
+            </button>
+          </div>
+        )}
         {loadingCandidates ? (
           <div className="card-body text-center py-5">
             <Icon icon="heroicons:arrow-path" className="spin text-primary" style={{ fontSize: 32 }} />
@@ -369,6 +509,14 @@ const ResumeScreening = () => {
               <table className="table table-hover align-middle mb-0">
                 <thead className="table-light">
                   <tr>
+                    <th className="text-center" style={{ width: 48 }}>
+                      <input
+                        type="checkbox"
+                        checked={allVisibleSelected}
+                        onChange={handleSelectAllVisible}
+                        aria-label="Select all candidates"
+                      />
+                    </th>
                     <th className="text-start">CANDIDATE</th>
                     <th className="text-start">ROLE</th>
                     <th className="text-start">EXPERIENCE</th>
@@ -381,6 +529,14 @@ const ResumeScreening = () => {
                 <tbody>
                   {candidates.map((candidate) => (
                     <tr key={candidate.id}>
+                      <td className="text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedCandidateIds.includes(candidate.id)}
+                          onChange={() => toggleCandidateSelection(candidate.id)}
+                          aria-label={`Select ${candidate.candidate_name || 'candidate'}`}
+                        />
+                      </td>
                       <td>
                         <div className="d-flex flex-column">
                           <span className="fw-medium">{candidate.candidate_name || 'N/A'}</span>
@@ -414,10 +570,10 @@ const ResumeScreening = () => {
                       </td>
                       <td className="text-center">
                         <div className="d-flex align-items-center justify-content-center gap-1">
-                          <span className={`fw-semibold ${candidate.score >= 40 ? 'text-success' : 'text-danger'}`}>
-                            {candidate.score.toFixed(1)}%
+                          <span className={`fw-semibold ${isCandidateShortlisted(candidate) ? 'text-success' : 'text-danger'}`}>
+                            {Number(candidate.score || 0).toFixed(1)}%
                           </span>
-                          {candidate.score >= 40 ? (
+                          {isCandidateShortlisted(candidate) ? (
                             <CheckCircle size={16} className="text-success" />
                           ) : (
                             <XCircle size={16} className="text-danger" />
@@ -449,7 +605,7 @@ const ResumeScreening = () => {
 
   // Calculate stats
   const totalScreened = candidates.length;
-  const shortlisted = candidates.filter(c => c.score >= 40).length;
+  const shortlisted = candidates.filter((candidate) => isCandidateShortlisted(candidate)).length;
   const avgScore = candidates.length > 0 ?
     (candidates.reduce((acc, c) => acc + c.score, 0) / candidates.length).toFixed(1) :
     '0';

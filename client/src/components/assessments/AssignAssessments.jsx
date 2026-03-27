@@ -32,13 +32,14 @@ const AssignAssessments = () => {
   const [sendEmail, setSendEmail] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
+  const [loadedPreselectedCount, setLoadedPreselectedCount] = useState(0);
 
   // Fetch data
   const fetchData = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const [assessmentsData, candidatesResponse, assignmentsData] = await Promise.all([
+      const [assessmentsData, candidatesResponse, assignmentsData, preselectedData] = await Promise.all([
         assessmentAPI.list(),
         fetch(`${BASE_URL}/api/resume/candidates`, {
           method: 'GET',
@@ -47,7 +48,8 @@ const AssignAssessments = () => {
             'Authorization': `Bearer ${token}`
           }
         }),
-        assessmentAPI.listAssignments()
+        assessmentAPI.listAssignments(),
+        assessmentAPI.getPreselectedCandidates().catch(() => ({ candidate_ids: [], candidate_emails: [] }))
       ]);
       
       let candidatesData = [];
@@ -60,13 +62,22 @@ const AssignAssessments = () => {
       }
       
       setAssessments(assessmentsData || []);
-      // Filter out rejected candidates (stage = "Rejected")
-      const filteredCandidates = (candidatesData || []).filter(
-        candidate => candidate.stage?.toLowerCase() !== 'rejected'
-      );
-      console.log(`📊 Filtered ${filteredCandidates.length} candidates (excluding rejected)`);
-      setCandidates(filteredCandidates);
+      // Keep all candidates (including Rejected) so that Resume Screening preselected IDs always appear here.
+      const allCandidates = candidatesData || [];
+      console.log(`📋 Loaded ${allCandidates.length} candidates (including rejected)`);
+      setCandidates(allCandidates);
       setAssignments(assignmentsData || []);
+
+      const preselectedIds = new Set((preselectedData?.candidate_ids || []).map((id) => Number(id)));
+      if (preselectedIds.size > 0) {
+        const matchedIds = allCandidates
+          .map((c) => c.id)
+          .filter((id) => preselectedIds.has(Number(id)));
+        setSelectedCandidates(matchedIds);
+        setLoadedPreselectedCount(matchedIds.length);
+      } else {
+        setLoadedPreselectedCount(0);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
       setCandidates([]); // Set empty array on error
@@ -111,6 +122,8 @@ const AssignAssessments = () => {
   // Clear selection
   const clearSelection = () => {
     setSelectedCandidates([]);
+    setLoadedPreselectedCount(0);
+    assessmentAPI.clearPreselectedCandidates().catch(() => null);
   };
 
   // Assign assessment
@@ -146,6 +159,8 @@ const AssignAssessments = () => {
       setShowModal(false);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 5000);
+      await assessmentAPI.clearPreselectedCandidates().catch(() => null);
+      setLoadedPreselectedCount(0);
       resetForm();
       fetchData();
     } catch (error) {
@@ -329,6 +344,15 @@ Recruitment Team
             </div>
             <button type="button" className="btn-close" onClick={() => setShowSuccess(false)}></button>
           </div>
+        </div>
+      )}
+
+      {loadedPreselectedCount > 0 && (
+        <div className="alert alert-info mb-4 d-flex align-items-center justify-content-between">
+          <span>Loaded {loadedPreselectedCount} candidates from Resume Screening selection.</span>
+          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={clearSelection}>
+            Clear preselected
+          </button>
         </div>
       )}
 

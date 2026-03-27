@@ -39,16 +39,46 @@ const SuperAdminLogin = () => {
         return;
       }
 
-      if (data.role !== 'superadmin') {
+      let resolvedRole = data.role;
+      let resolvedEmail = data.email;
+
+      // Fallback for older backend payloads: resolve role via current-user endpoint.
+      if ((!resolvedRole || !resolvedEmail) && data.access_token) {
+        try {
+          const meResponse = await fetch(`${BASE_URL}${API_ENDPOINTS.AUTH.CURRENT_USER}`, {
+            headers: {
+              'Authorization': `Bearer ${data.access_token}`
+            }
+          });
+          if (meResponse.ok) {
+            const meData = await meResponse.json();
+            resolvedRole = resolvedRole || meData.role;
+            resolvedEmail = resolvedEmail || meData.email;
+          }
+        } catch (meError) {
+          console.error('Failed to fetch current user after superadmin login:', meError);
+        }
+      }
+
+      if (resolvedRole !== 'superadmin') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userEmail');
         setError('Super admin access is required for this area.');
         setLoading(false);
+        navigate('/login');
         return;
       }
 
       localStorage.setItem('token', data.access_token);
-      localStorage.setItem('refreshToken', data.refresh_token);
-      localStorage.setItem('userRole', data.role);
-      localStorage.setItem('userEmail', data.email);
+      if (data.refresh_token) {
+        localStorage.setItem('refreshToken', data.refresh_token);
+      } else {
+        localStorage.removeItem('refreshToken');
+      }
+      localStorage.setItem('userRole', resolvedRole);
+      localStorage.setItem('userEmail', resolvedEmail || formData.email);
 
       setLoading(false);
       navigate('/super-admin');
